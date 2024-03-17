@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+	--toastContainerBottom: 1.5rem;
+	--toastContainerRight: 2rem;
+	--toastContainerLeft: auto;
+	--toastContainerTop: auto;
+
+	--toastBorderRadius: 0.5rem;
+	--toastBackground: #1f2937;
+	--toastMsgPadding: 0.5rem 0.75rem;
+}
+
+._toastBtn {
+	display: none !important;
+}
+
+._toastBar {
+	display: none !important;
+}
