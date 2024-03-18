@@ -36,10 +36,12 @@
 			{#each $query.data as machine}
 				<tr class="hover:bg-gray-100">
 					<td class="pt-2 pb-4 pl-4">
-						<h1>{machine.givenName}</h1>
-						<span class="text-sm font-mono text-gray-500"
-							>{machine.name}</span
-						>
+						<a href={`machines/${machine.id}`}>
+							<h1>{machine.givenName}</h1>
+							<span class="text-sm font-mono text-gray-500"
+								>{machine.name}</span
+							>
+						</a>
 					</td>
 					<td class="pt-2 pb-4 font-mono text-gray-600">
 						{#each machine.ipAddresses as ip, i}

@@ -12,7 +12,7 @@
 	href={`${base}${to}`}
 	class={clsx(
 		"flex items-center gap-x-2 p-2 border-b-2 text-sm",
-		$page.url.pathname === `${base}${to}`
+		$page.url.pathname.startsWith(`${base}${to}`)
 			? "border-white"
 			: "border-transparent",
 	)}

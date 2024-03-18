@@ -17,9 +17,9 @@ export type Machine = {
 
 	createdAt: Date;
 	registerMethod: 'REGISTER_METHOD_UNSPECIFIED'
-		| 'REGISTER_METHOD_AUTH_KEY'
-		| 'REGISTER_METHOD_CLI'
-		| 'REGISTER_METHOD_OIDC'
+	| 'REGISTER_METHOD_AUTH_KEY'
+	| 'REGISTER_METHOD_CLI'
+	| 'REGISTER_METHOD_OIDC'
 
 	forcedTags: string[];
 	invalidTags: string[];
