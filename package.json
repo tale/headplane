@@ -30,6 +30,7 @@
 	"dependencies": {
 		"@tanstack/svelte-query": "^5.28.4",
 		"@zerodevx/svelte-toast": "^0.9.5",
-		"clsx": "^2.1.0"
+		"clsx": "^2.1.0",
+		"oauth4webapi": "^2.10.3"
 	}
 }

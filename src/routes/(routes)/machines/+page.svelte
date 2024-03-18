@@ -1,16 +1,22 @@
 <script lang="ts">
 	import { IconCircleFilled, IconCopy } from "@tabler/icons-svelte";
+	import type { PageData } from "./$types";
 	import { toast } from "@zerodevx/svelte-toast";
 	import type { Machine } from "$lib/types";
 	import clsx from "clsx";
 	import { createQuery } from "@tanstack/svelte-query";
 	import { pull } from "$lib/api";
 
+	export let data: PageData;
+
 	const query = createQuery({
 		queryKey: ["machines"],
 		queryFn: async () => {
-			const data = await pull<{ nodes: Machine[] }>("v1/node");
-			return data.nodes;
+			const apiData = await pull<{ nodes: Machine[] }>(
+				"v1/node",
+				data.apiKey,
+			);
+			return apiData.nodes;
 		},
 	});
 </script>

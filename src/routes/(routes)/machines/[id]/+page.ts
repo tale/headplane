@@ -3,15 +3,18 @@ import type { Machine } from "$lib/types";
 import type { PageLoad } from './$types';
 
 export async function load({ parent, params }: Parameters<PageLoad>[0]) {
-	const { queryClient } = await parent();
+	const { queryClient, apiKey } = await parent();
 
 	await queryClient.prefetchQuery({
 		queryKey: [`machines/${params.id}`],
 		queryFn: async () => {
-			const data = await pull<{ node: Machine }>(`v1/node/${params.id}`);
+			const data = await pull<{ node: Machine }>(`v1/node/${params.id}`, apiKey);
 			return data.node;
 		},
 	});
 
-	return { id: params.id }
+	return {
+		id: params.id,
+		apiKey,
+	}
 }

@@ -13,6 +13,7 @@
 		queryFn: async () => {
 			const response = await pull<{ node: Machine }>(
 				`v1/node/${data.id}`,
+				data.apiKey,
 			);
 			return response.node;
 		},
