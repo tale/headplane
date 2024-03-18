@@ -32,23 +32,26 @@
 				<th>Last Seen</th>
 			</tr>
 		</thead>
-		<tbody class="divide-y divide-gray-200">
+		<tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
 			{#each $query.data as machine}
-				<tr class="hover:bg-gray-100">
+				<tr class="hover:bg-zinc-100 dark:hover:bg-zinc-800">
 					<td class="pt-2 pb-4 pl-4">
 						<a href={`machines/${machine.id}`}>
 							<h1>{machine.givenName}</h1>
-							<span class="text-sm font-mono text-gray-500"
+							<span
+								class="text-sm font-mono text-gray-500 dark:text-gray-400"
 								>{machine.name}</span
 							>
 						</a>
 					</td>
-					<td class="pt-2 pb-4 font-mono text-gray-600">
+					<td
+						class="pt-2 pb-4 font-mono text-gray-600 dark:text-gray-300"
+					>
 						{#each machine.ipAddresses as ip, i}
 							<span
 								class={clsx(
 									"flex items-center gap-x-1",
-									i > 0 && "text-sm text-gray-400",
+									i > 0 && "text-sm text-gray-500",
 								)}
 							>
 								{ip}
@@ -62,7 +65,7 @@
 									<IconCopy
 										stroke={1}
 										size={16}
-										class="text-gray-400"
+										class="text-gray-400 dark:text-gray-500"
 									/>
 								</button>
 							</span>
@@ -70,7 +73,7 @@
 					</td>
 					<td>
 						<span
-							class="flex items-center gap-x-1 text-sm text-gray-500"
+							class="flex items-center gap-x-1 text-sm text-gray-500 dark:text-gray-400"
 						>
 							<IconCircleFilled
 								stroke={1}
@@ -78,8 +81,8 @@
 								class={clsx(
 									"w-4 h-4",
 									machine.online
-										? "text-green-700"
-										: "text-gray-300",
+										? "text-green-700 dark:text-green-400"
+										: "text-gray-300 dark:text-gray-500",
 								)}
 							/>
 							<p>

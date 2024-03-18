@@ -3,7 +3,7 @@
 	import { createQuery } from "@tanstack/svelte-query";
 	import { pull } from "$lib/api";
 	import type { Machine } from "$lib/types";
-	import { IconCircleFilled, IconCopy } from "@tabler/icons-svelte";
+	import { IconCircleFilled } from "@tabler/icons-svelte";
 	import Attribute from "$lib/components/Attribute.svelte";
 	import clsx from "clsx";
 
@@ -44,9 +44,7 @@
 				)}
 			/>
 		</span>
-		<div
-			class="p-4 md:p-6 border rounded-md grid grid-cols-1 lg:grid-cols-2 gap-y-2 sm:gap-x-12"
-		>
+		<div class="p-4 md:p-6 border dark:border-zinc-700 rounded-lg">
 			<Attribute key="Creator" value={$query.data.user.name} />
 			<Attribute key="Node ID" value={$query.data.id} />
 			<Attribute key="Node Name" value={$query.data.givenName} />
