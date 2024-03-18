@@ -21,8 +21,8 @@
 </script>
 
 <header class="bg-gray-800 text-white mb-16">
-	<nav class="flex items-end gap-x-8 container mx-auto">
-		<div class="flex items-center gap-x-2 p-4">
+	<nav class="container mx-auto">
+		<div class="flex items-center gap-x-2 mb-8 pt-4">
 			<IconBrandFlightradar24 stroke={1} size={24} />
 			<h1 class="text-2xl">Headplane</h1>
 		</div>
