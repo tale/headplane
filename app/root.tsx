@@ -11,6 +11,7 @@ import {
 } from '@remix-run/react'
 import clsx from 'clsx'
 
+import Toaster from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
 
 export const meta: MetaFunction = () => [
@@ -50,6 +51,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 			</head>
 			<body className='overscroll-none'>
 				{children}
+				<Toaster/>
 				<ScrollRestoration/>
 				<Scripts/>
 			</body>

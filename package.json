@@ -19,7 +19,9 @@
 		"isbot": "^4.1.0",
 		"oauth4webapi": "^2.10.3",
 		"react": "^18.2.0",
-		"react-dom": "^18.2.0"
+		"react-dom": "^18.2.0",
+		"react-hot-toast": "^2.4.1",
+		"usehooks-ts": "^3.0.2"
 	},
 	"devDependencies": {
 		"@remix-run/dev": "^2.8.1",
