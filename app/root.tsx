@@ -64,42 +64,32 @@ export function ErrorBoundary() {
 	const routing = isRouteErrorResponse(error)
 	const message = (error instanceof Error ? error.message : 'An unexpected error occurred')
 	return (
-		<html>
-			<head>
-				<title>Oh no!</title>
-				<Meta/>
-				<Links/>
-			</head>
-			<body>
-				<div className='flex min-h-screen items-center justify-center'>
-					<div className={clsx(
-						'w-1/3 border p-4 rounded-lg flex flex-col items-center text-center',
-						routing ? 'gap-2' : 'gap-4'
-					)}
-					>
-						{routing ? (
-							<>
-								<QuestionMarkCircleIcon className='text-gray-500 w-14 h-14'/>
-								<h1 className='text-2xl font-bold'>{error.status}</h1>
-								<p className='opacity-50 text-sm'>{error.statusText}</p>
-							</>
-						) : (
-							<>
-								<ExclamationTriangleIcon className='text-red-500 w-14 h-14'/>
-								<h1 className='text-2xl font-bold'>Error</h1>
-								<code className='bg-gray-100 p-1 rounded-md'>
-									{message}
-								</code>
-								<p className='opacity-50 text-sm mt-4'>
-									If you are the administrator of this site, please check your logs for information.
-								</p>
-							</>
-						)}
-					</div>
-				</div>
-				<Scripts/>
-			</body>
-		</html>
+		<div className='flex min-h-screen items-center justify-center'>
+			<div className={clsx(
+				'w-1/3 border p-4 rounded-lg flex flex-col items-center text-center',
+				routing ? 'gap-2' : 'gap-4'
+			)}
+			>
+				{routing ? (
+					<>
+						<QuestionMarkCircleIcon className='text-gray-500 w-14 h-14'/>
+						<h1 className='text-2xl font-bold'>{error.status}</h1>
+						<p className='opacity-50 text-sm'>{error.statusText}</p>
+					</>
+				) : (
+					<>
+						<ExclamationTriangleIcon className='text-red-500 w-14 h-14'/>
+						<h1 className='text-2xl font-bold'>Error</h1>
+						<code className='bg-gray-100 p-1 rounded-md'>
+							{message}
+						</code>
+						<p className='opacity-50 text-sm mt-4'>
+							If you are the administrator of this site, please check your logs for information.
+						</p>
+					</>
+				)}
+			</div>
+		</div>
 	)
 }
 

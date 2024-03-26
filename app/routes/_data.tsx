@@ -53,7 +53,6 @@ export default function Layout() {
 			<main className='container mx-auto overscroll-contain'>
 				<Outlet/>
 			</main>
-
 		</>
 	)
 }
