@@ -1,9 +1,11 @@
+/* eslint-disable unicorn/filename-case */
 import { ClipboardIcon } from '@heroicons/react/24/outline'
 import { type LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { Link, useLoaderData } from '@remix-run/react'
 import clsx from 'clsx'
 import { toast } from 'react-hot-toast/headless'
 
+import StatusCircle from '~/components/StatusCircle'
 import { type Machine } from '~/types'
 import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
@@ -34,14 +36,14 @@ export default function Page() {
 				{data.map(machine => (
 					<tr key={machine.id} className='hover:bg-zinc-100 dark:hover:bg-zinc-800'>
 						<td className='pt-2 pb-4 pl-4'>
-							<a href={`machines/${machine.id}`}>
+							<Link to={`/machines/${machine.id}`}>
 								<h1>{machine.givenName}</h1>
 								<span
 									className='text-sm font-mono text-gray-500 dark:text-gray-400'
 								>{machine.name}
 								</span
 								>
-							</a>
+							</Link>
 						</td>
 						<td className='pt-2 pb-4 font-mono text-gray-600 dark:text-gray-300'>
 							{machine.ipAddresses.map((ip, index) => (
@@ -65,18 +67,7 @@ export default function Page() {
 							<span
 								className='flex items-center gap-x-1 text-sm text-gray-500 dark:text-gray-400'
 							>
-								<svg
-									className={clsx(
-										'w-4 h-4',
-										machine.online
-											? 'text-green-700 dark:text-green-400'
-											: 'text-gray-300 dark:text-gray-500'
-									)}
-									viewBox='0 0 24 24'
-									fill='currentColor'
-								>
-									<circle cx='12' cy='12' r='8'/>
-								</svg>
+								<StatusCircle isOnline={machine.online} className='w-4 h-4'/>
 								<p>
 									{machine.online
 										? 'Connected'
