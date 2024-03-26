@@ -1,6 +1,8 @@
 # Headplane
 > An advanced UI for [juanfont/headscale](https://github.com/juanfont/headscale)
 
+![Preview](./assets/main-preview.png)
+
 Headscale is a self-hosted version of the Tailscale control server, however, it currently lacks a first-party web UI.
 This is a relatively tiny Remix app that aims to provide a usable GUI for the Headscale server.
 It's still very early in it's development, however these are some of the features that are planned.
