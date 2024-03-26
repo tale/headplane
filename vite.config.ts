@@ -6,6 +6,7 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 installGlobals()
 
 export default defineConfig({
+	base: '/admin/',
 	plugins: [remix({
 		basename: '/admin'
 	}), tsconfigPaths()]
