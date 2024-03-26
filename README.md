@@ -1,36 +1,22 @@
-# Welcome to Remix + Vite!
+# Headplane
+> An advanced UI for [juanfont/headscale](https://github.com/juanfont/headscale)
 
-📖 See the [Remix docs](https://remix.run/docs) and the [Remix Vite docs](https://remix.run/docs/en/main/future/vite) for details on supported features.
+Headscale is a self-hosted version of the Tailscale control server, however, it currently lacks a first-party web UI.
+This is a relatively tiny Remix app that aims to provide a usable GUI for the Headscale server.
+It's still very early in it's development, however these are some of the features that are planned.
 
-## Development
-
-Run the Vite dev server:
-
-```shellscript
-npm run dev
-```
+- [ ] Editable tags, machine names, users, etc
+- [ ] ACL control through Docker integration
+- [x] OIDC based login for the web UI
+- [x] Automated API key regeneration
+- [ ] Editable headscale configuration
 
 ## Deployment
+Instructions for deploying this will come soon. It will utilize Docker to support advanced features.
+If you do want to fight with the environment variables right now, the image is `ghcr.io/tale/headplane:latest`
 
-First, build your app for production:
+## Contributing
+If you would like to contribute, please install a relatively modern version of Node.js and PNPM.
+Clone this repository, run `pnpm install`, and then run `pnpm dev` to start the development server.
 
-```sh
-npm run build
-```
-
-Then run the app in production mode:
-
-```sh
-npm start
-```
-
-Now you'll need to pick a host to deploy it to.
-
-### DIY
-
-If you're familiar with deploying Node applications, the built-in Remix app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-- `build/server`
-- `build/client`
+> Copyright (c) 2024 Aarnav Tale
