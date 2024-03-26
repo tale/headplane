@@ -1,4 +1,4 @@
-import { CpuChipIcon, ServerStackIcon, UsersIcon } from '@heroicons/react/24/outline'
+import { Cog8ToothIcon, CpuChipIcon, GlobeAltIcon, LockClosedIcon, ServerStackIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Outlet } from '@remix-run/react'
 
@@ -45,8 +45,11 @@ export default function Layout() {
 						<h1 className='text-2xl'>Headplane</h1>
 					</div>
 					<div className='flex items-center gap-x-4'>
-						<TabLink to='/machines' name='Machines' icon={<ServerStackIcon className='w-4 h-4'/>}/>
-						<TabLink to='/users' name='Users' icon={<UsersIcon className='w-4 h-4'/>}/>
+						<TabLink to='/machines' name='Machines' icon={<ServerStackIcon className='w-5 h-5'/>}/>
+						<TabLink to='/users' name='Users' icon={<UsersIcon className='w-5 h-5'/>}/>
+						<TabLink to='/acls' name='Access Control' icon={<LockClosedIcon className='w-5 h-5'/>}/>
+						<TabLink to='/dns' name='DNS' icon={<GlobeAltIcon className='w-5 h-5'/>}/>
+						<TabLink to='/settings' name='Settings' icon={<Cog8ToothIcon className='w-5 h-5'/>}/>
 					</div>
 				</nav>
 			</header>
