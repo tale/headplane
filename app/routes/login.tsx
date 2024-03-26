@@ -19,8 +19,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		apiKey: normal === undefined
 	}
 
-	console.log(data)
-
 	if (!data.oidc && !data.apiKey) {
 		throw new Error('No authentication method is enabled')
 	}

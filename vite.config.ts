@@ -8,6 +8,6 @@ installGlobals()
 export default defineConfig({
 	base: '/admin/',
 	plugins: [remix({
-		basename: '/admin'
+		basename: '/admin/'
 	}), tsconfigPaths()]
 })
