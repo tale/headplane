@@ -25,60 +25,73 @@ export default function Page() {
 
 	return (
 		<table className='table-auto w-full rounded-lg'>
-			<thead>
-				<tr className='text-left'>
+			<thead className='text-gray-500 dark:text-gray-400'>
+				<tr className='text-left uppercase text-sm font-bold'>
 					<th className='pl-4'>Name</th>
 					<th>IP Addresses</th>
 					<th>Last Seen</th>
 				</tr>
 			</thead>
-			<tbody className='divide-y divide-zinc-200 dark:divide-zinc-700'>
-				{data.map(machine => (
-					<tr key={machine.id} className='hover:bg-zinc-100 dark:hover:bg-zinc-800'>
-						<td className='pt-2 pb-4 pl-4'>
-							<Link to={`/machines/${machine.id}`}>
-								<h1>{machine.givenName}</h1>
-								<span
-									className='text-sm font-mono text-gray-500 dark:text-gray-400'
-								>{machine.name}
-								</span
-								>
-							</Link>
-						</td>
-						<td className='pt-2 pb-4 font-mono text-gray-600 dark:text-gray-300'>
-							{machine.ipAddresses.map((ip, index) => (
-								<button
-									key={ip}
-									type='button'
-									className='flex items-center gap-x-1 w-full'
-									onClick={async () => {
-										await navigator.clipboard.writeText(ip)
-										toast('Copied IP address to clipboard')
-									}}
-								>
-									<span className={clsx(index === 0 ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500')}>
-										{ip}
+			<tbody className={clsx(
+				'divide-y divide-zinc-200 dark:divide-zinc-700 align-top',
+				'border-t border-zinc-200 dark:border-zinc-700'
+			)}
+			>
+				{data.map(machine => {
+					const tags = [...machine.forcedTags, ...machine.validTags]
+
+					return (
+						<tr key={machine.id} className='hover:bg-zinc-100 dark:hover:bg-zinc-800'>
+							<td className='py-2 pl-4'>
+								<Link to={`/machines/${machine.id}`}>
+									<h1>{machine.givenName}</h1>
+									<span className='text-sm font-mono text-gray-500 dark:text-gray-400'>
+										{machine.name}
 									</span>
-									<ClipboardIcon className='text-gray-400 dark:text-gray-500 w-4 h-4'/>
-								</button>
-							))}
-						</td>
-						<td>
-							<span
-								className='flex items-center gap-x-1 text-sm text-gray-500 dark:text-gray-400'
-							>
-								<StatusCircle isOnline={machine.online} className='w-4 h-4'/>
-								<p>
-									{machine.online
-										? 'Connected'
-										: new Date(
-											machine.lastSeen
-										).toLocaleString()}
-								</p>
-							</span>
-						</td>
-					</tr>
-				))}
+									<div className='flex gap-1 mt-1'>
+										{tags.map(tag => (
+											<span key={tag} className='text-xs bg-gray-200 text-gray-600 rounded-sm px-1 py-0.5'>
+												{tag}
+											</span>
+										))}
+									</div>
+								</Link>
+							</td>
+							<td className='pt-2 pb-4 font-mono text-gray-600 dark:text-gray-300'>
+								{machine.ipAddresses.map((ip, index) => (
+									<button
+										key={ip}
+										type='button'
+										className='flex items-center gap-x-1 w-full'
+										onClick={async () => {
+											await navigator.clipboard.writeText(ip)
+											toast('Copied IP address to clipboard')
+										}}
+									>
+										<span className={clsx(index === 0 ? 'text-gray-600 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500')}>
+											{ip}
+										</span>
+										<ClipboardIcon className='text-gray-400 dark:text-gray-500 w-4 h-4'/>
+									</button>
+								))}
+							</td>
+							<td className='py-2'>
+								<span
+									className='flex items-center gap-x-1 text-sm text-gray-500 dark:text-gray-400'
+								>
+									<StatusCircle isOnline={machine.online} className='w-4 h-4'/>
+									<p>
+										{machine.online
+											? 'Connected'
+											: new Date(
+												machine.lastSeen
+											).toLocaleString()}
+									</p>
+								</span>
+							</td>
+						</tr>
+					)
+				})}
 			</tbody>
 		</table>
 	)
