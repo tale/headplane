@@ -10,8 +10,8 @@ type Properties = {
 export default function Attribute({ name, value, isCopyable }: Properties) {
 	const canCopy = isCopyable ?? false
 	return (
-		<dl className='flex gap-1 text-sm'>
-			<dt className='w-1/4 shrink-0 min-w-0 truncate text-gray-700 dark:text-gray-300'>
+		<dl className='flex gap-1 text-sm w-full'>
+			<dt className='w-1/4 shrink-0 min-w-0 truncate text-gray-700 dark:text-gray-300 py-1'>
 				{name}
 			</dt>
 

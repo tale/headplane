@@ -1,4 +1,4 @@
-import { CpuChipIcon, ServerStackIcon } from '@heroicons/react/24/outline'
+import { CpuChipIcon, ServerStackIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Outlet } from '@remix-run/react'
 
@@ -46,6 +46,7 @@ export default function Layout() {
 					</div>
 					<div className='flex items-center gap-x-4'>
 						<TabLink to='/machines' name='Machines' icon={<ServerStackIcon className='w-4 h-4'/>}/>
+						<TabLink to='/users' name='Users' icon={<UsersIcon className='w-4 h-4'/>}/>
 					</div>
 				</nav>
 			</header>
