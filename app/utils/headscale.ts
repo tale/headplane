@@ -1,3 +1,13 @@
+export class HeadscaleError extends Error {
+	status: number
+
+	constructor(message: string, status: number) {
+		super(message)
+		this.name = 'HeadscaleError'
+		this.status = status
+	}
+}
+
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 export async function pull<T>(url: string, key: string) {
 	const prefix = process.env.HEADSCALE_URL!
@@ -8,7 +18,7 @@ export async function pull<T>(url: string, key: string) {
 	})
 
 	if (!response.ok) {
-		throw new Error(response.statusText)
+		throw new HeadscaleError(await response.text(), response.status)
 	}
 
 	return response.json() as Promise<T>
@@ -25,7 +35,7 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 	})
 
 	if (!response.ok) {
-		throw new Error(await response.text())
+		throw new HeadscaleError(await response.text(), response.status)
 	}
 
 	return response.json() as Promise<T>
