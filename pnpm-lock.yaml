@@ -38,6 +38,9 @@ dependencies:
   usehooks-ts:
     specifier: ^3.0.2
     version: 3.0.2(react@18.2.0)
+  yaml:
+    specifier: ^2.4.1
+    version: 2.4.1
 
 devDependencies:
   '@remix-run/dev':
@@ -6501,7 +6504,6 @@ packages:
     resolution: {integrity: sha512-pIXzoImaqmfOrL7teGUBt/T7ZDnyeGBWyXQBvOVhLkWLN37GXv8NMLK406UY6dS51JfcQHsmcW5cJ441bHg6Lg==}
     engines: {node: '>= 14'}
     hasBin: true
-    dev: true
 
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
