@@ -54,7 +54,7 @@ export default function Layout() {
 				</nav>
 			</header>
 
-			<main className='container mx-auto overscroll-contain'>
+			<main className='container mx-auto overscroll-contain mb-24'>
 				<Outlet/>
 			</main>
 		</>
