@@ -1,6 +1,6 @@
 import { Switch } from '@headlessui/react'
 import { type ActionFunctionArgs } from '@remix-run/node'
-import { json, useLoaderData } from '@remix-run/react'
+import { json, useFetcher, useLoaderData } from '@remix-run/react'
 import clsx from 'clsx'
 import { useState } from 'react'
 
@@ -34,10 +34,12 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>()
+	const fetcher = useFetcher({ key: 'dns-page' })
 	const [localOverride, setLocalOverride] = useState(data.overrideLocal)
+	const [ns, setNs] = useState('')
 
 	return (
-		<div className='flex flex-col gap-16'>
+		<div className='flex flex-col gap-16 max-w-screen-lg'>
 			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Tailnet Name</h1>
 				<p className='text-gray-700 dark:text-gray-300'>
@@ -81,6 +83,14 @@ export default function Page() {
 									'relative inline-flex h-4 w-9 items-center rounded-full'
 								)}
 								onChange={() => {
+									fetcher.submit({
+										// eslint-disable-next-line @typescript-eslint/naming-convention
+										'dns_config.override_local_dns': !localOverride
+									}, {
+										method: 'PATCH',
+										encType: 'application/json'
+									})
+
 									setLocalOverride(!localOverride)
 								}}
 							>
@@ -94,7 +104,7 @@ export default function Page() {
 							</Switch>
 						</div>
 					</div>
-					<div className='border border-gray-200 rounded-lg bg-gray-50'>
+					<div className='border border-gray-200 rounded-lg bg-gray-50 overflow-clip'>
 						{data.nameservers.map((ns, index) => (
 							<div
 								// eslint-disable-next-line react/no-array-index-key
@@ -113,6 +123,41 @@ export default function Page() {
 								</button>
 							</div>
 						))}
+						<div
+							key='add-ns'
+							className={clsx(
+								'flex items-center justify-between px-3 py-2',
+								'border-b border-gray-200 last:border-b-0',
+								'bg-white dark:bg-gray-800'
+							)}
+						>
+							<input
+								type='text'
+								className='w-full focus:ring-none focus:outline-none font-mono text-sm'
+								placeholder='Nameserver'
+								value={ns}
+								onChange={event => {
+									setNs(event.target.value)
+								}}
+							/>
+							<button
+								type='button'
+								className='text-sm text-blue-700'
+								onClick={() => {
+									fetcher.submit({
+										// eslint-disable-next-line @typescript-eslint/naming-convention
+										'dns_config.nameservers': [...data.nameservers, ns]
+									}, {
+										method: 'PATCH',
+										encType: 'application/json'
+									})
+
+									setNs('')
+								}}
+							>
+								Add
+							</button>
+						</div>
 					</div>
 					{/* TODO: Split DNS and Custom A Records */}
 				</div>
