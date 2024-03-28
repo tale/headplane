@@ -1,7 +1,7 @@
 import { access, constants, readFile, stat, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { type Document, parseDocument, visit } from 'yaml'
+import { type Document, parseDocument } from 'yaml'
 
 type Duration = `${string}s` | `${string}h` | `${string}m` | `${string}d` | `${string}y`
 
