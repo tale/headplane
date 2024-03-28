@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { getConfig } from '~/utils/config'
 
+import MagicModal from './magic'
 import RenameModal from './rename'
 
 // We do not want to expose every config value
@@ -51,7 +52,7 @@ export default function Page() {
 						event.target.select()
 					}}
 				/>
-				<RenameModal/>
+				<RenameModal name={data.baseDomain}/>
 			</div>
 			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Nameservers</h1>
@@ -59,7 +60,7 @@ export default function Page() {
 					Set the nameservers used by devices on the Tailnet
 					to resolve DNS queries.
 				</p>
-				<div className='my-8'>
+				<div className='mt-4'>
 					<div className='flex items-center justify-between mb-2'>
 						<h2 className='text-md font-medium opacity-80'>
 							Global Nameservers
@@ -106,7 +107,61 @@ export default function Page() {
 							</div>
 						))}
 					</div>
+					{/* TODO: Split DNS and Custom A Records */}
 				</div>
+			</div>
+
+			<div className='flex flex-col w-2/3'>
+				<h1 className='text-2xl font-medium mb-4'>Search Domains</h1>
+				<p className='text-gray-700 dark:text-gray-300'>
+					Set custom DNS search domains for your Tailnet.
+					When using Magic DNS, your tailnet domain is used as the first search domain.
+				</p>
+				<div className='border border-gray-200 rounded-lg bg-gray-50'>
+					{data.magicDns ? (
+						<div
+							key='magic-dns-sd'
+							className={clsx(
+								'flex items-center justify-between px-3 py-2',
+								'border-b border-gray-200 last:border-b-0'
+							)}
+						>
+							<p className='font-mono text-sm'>{data.baseDomain}</p>
+						</div>
+					) : undefined}
+					{data.searchDomains.map((sd, index) => (
+						<div
+							// eslint-disable-next-line react/no-array-index-key
+							key={index}
+							className={clsx(
+								'flex items-center justify-between px-3 py-2',
+								'border-b border-gray-200 last:border-b-0'
+							)}
+						>
+							<p className='font-mono text-sm'>{sd}</p>
+							<button
+								type='button'
+								className='text-sm text-red-700'
+							>
+								Remove
+							</button>
+						</div>
+					))}
+				</div>
+			</div>
+			<div className='flex flex-col w-2/3'>
+				<h1 className='text-2xl font-medium mb-4'>Magic DNS</h1>
+				<p className='text-gray-700 dark:text-gray-300 mb-4'>
+					Automaticall register domain names for each device
+					on the tailnet. Devices will be accessible at
+					{' '}
+					<code className='bg-gray-100 p-1 rounded-md'>
+						[device].[user].{data.baseDomain}
+					</code>
+					{' '}
+					when Magic DNS is enabled.
+				</p>
+				<MagicModal isEnabled={data.magicDns} baseDomain={data.baseDomain}/>
 			</div>
 		</div>
 	)

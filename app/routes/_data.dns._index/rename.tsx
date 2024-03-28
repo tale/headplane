@@ -1,7 +1,12 @@
 import { Dialog } from '@headlessui/react'
+import { Form } from '@remix-run/react'
 import { useState } from 'react'
 
-export default function Modal() {
+type Properties = {
+	readonly name: string;
+}
+
+export default function Modal({ name }: Properties) {
 	const [isOpen, setIsOpen] = useState(false)
 
 	return (
@@ -22,29 +27,29 @@ export default function Modal() {
 				}}
 			>
 				<div className='fixed inset-0 bg-black/30' aria-hidden='true'/>
-				<div className='fixed inset-0 flex w-screen items-center justify-center p-4'>
+				<div className='fixed inset-0 flex w-screen items-center justify-center'>
 					<Dialog.Panel className='bg-white rounded-lg p-4 w-full max-w-md'>
-						<Dialog.Title>
-							Rename Tailnet
+						<Dialog.Title className='text-lg font-bold'>
+							Rename {name}
 						</Dialog.Title>
-						<Dialog.Description>
-							<p>
-								Enter a new name for your Tailnet.
-							</p>
+						<Dialog.Description className='text-gray-500 dark:text-gray-400'>
+							Keep in mind that changing this can lead to all sorts
+							of unexpected behavior and may break existing devices
+							in your tailnet.
 						</Dialog.Description>
-						<div className='flex gap-4'>
+						<Form method='PATCH'>
 							<input
 								type='text'
-								className='border rounded-lg p-2 w-full'
-								placeholder='New name'
+								className='border rounded-lg p-2 w-full mt-4'
+								placeholder={name}
 							/>
 							<button
 								type='button'
-								className='rounded-lg px-3 py-2 bg-gray-800 text-white w-fit text-sm'
+								className='rounded-lg py-2 bg-gray-800 text-white w-full mt-2'
 							>
 								Rename
 							</button>
-						</div>
+						</Form>
 					</Dialog.Panel>
 				</div>
 			</Dialog>
