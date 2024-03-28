@@ -11,11 +11,12 @@ It's still very early in it's development, however these are some of the feature
 - [ ] ACL control through Docker integration
 - [x] OIDC based login for the web UI
 - [x] Automated API key regeneration
-- [ ] Editable headscale configuration
+- [x] Editable headscale configuration
 
 ## Deployment
 > The docker image is not available yet. For now you can build it locally with `docker build -t ghcr.io/tale/headplane:latest .`
 
+In order to use Headplane, you need to be running the Headscale 0.23 alpha or later.
 Currently I'd only recommend deploying this with Docker because environment variables are required.
 Here's a very basic `docker-compose.yaml` file that utilizes each configuration variable.
 
