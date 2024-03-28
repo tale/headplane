@@ -120,7 +120,11 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 						/>
 						<button
 							type='button'
-							className='text-sm text-blue-700'
+							className={clsx(
+								'text-sm text-blue-700',
+								newDomain.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+							)}
+							disabled={newDomain.length === 0}
 							onClick={() => {
 								fetcher.submit({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
