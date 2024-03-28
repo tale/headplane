@@ -10,7 +10,7 @@
 #
 # https://myheadscale.example.com:443
 #
-server_url: https://tailscale.example.com
+server_url: http://localhost:8080
 
 # Address to listen to / bind to on the server
 #
