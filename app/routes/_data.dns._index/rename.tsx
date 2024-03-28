@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/naming-convention */
+/* eslint-disable unicorn/no-keyword-prefix */
 import { Dialog } from '@headlessui/react'
-import { Form } from '@remix-run/react'
+import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 
 type Properties = {
@@ -8,6 +10,8 @@ type Properties = {
 
 export default function Modal({ name }: Properties) {
 	const [isOpen, setIsOpen] = useState(false)
+	const [newName, setNewName] = useState(name)
+	const fetcher = useFetcher()
 
 	return (
 		<>
@@ -37,19 +41,31 @@ export default function Modal({ name }: Properties) {
 							of unexpected behavior and may break existing devices
 							in your tailnet.
 						</Dialog.Description>
-						<Form method='PATCH'>
-							<input
-								type='text'
-								className='border rounded-lg p-2 w-full mt-4'
-								placeholder={name}
-							/>
-							<button
-								type='button'
-								className='rounded-lg py-2 bg-gray-800 text-white w-full mt-2'
-							>
-								Rename
-							</button>
-						</Form>
+						<input
+							type='text'
+							className='border rounded-lg p-2 w-full mt-4'
+							value={newName}
+							onChange={event => {
+								setNewName(event.target.value)
+							}}
+						/>
+						<button
+							type='submit'
+							className='rounded-lg py-2 bg-gray-800 text-white w-full mt-2'
+							onClick={() => {
+								fetcher.submit({
+									'dns_config.base_domain': newName
+								}, {
+									method: 'PATCH',
+									encType: 'application/json'
+								})
+
+								setIsOpen(false)
+								setNewName(name)
+							}}
+						>
+							Rename
+						</button>
 					</Dialog.Panel>
 				</div>
 			</Dialog>

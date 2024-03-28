@@ -13,6 +13,7 @@ import clsx from 'clsx'
 
 import Toaster from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
+import { getContext } from '~/utils/config'
 
 export const meta: MetaFunction = () => [
 	{ title: 'Headplane' },
@@ -23,7 +24,9 @@ export const links: LinksFunction = () => [
 	{ rel: 'stylesheet', href: stylesheet }
 ]
 
-export function loader() {
+export async function loader() {
+	await getContext()
+
 	if (!process.env.HEADSCALE_URL) {
 		throw new Error('The HEADSCALE_URL environment variable is required')
 	}

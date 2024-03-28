@@ -1,9 +1,10 @@
 import { Switch } from '@headlessui/react'
-import { useLoaderData } from '@remix-run/react'
+import { type ActionFunctionArgs } from '@remix-run/node'
+import { json, useLoaderData } from '@remix-run/react'
 import clsx from 'clsx'
 import { useState } from 'react'
 
-import { getConfig } from '~/utils/config'
+import { getConfig, patchConfig } from '~/utils/config'
 
 import MagicModal from './magic'
 import RenameModal from './rename'
@@ -23,6 +24,12 @@ export async function loader() {
 	}
 
 	return dns
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+	const data = await request.json() as Record<string, unknown>
+	await patchConfig(data)
+	return json({ success: true })
 }
 
 export default function Page() {

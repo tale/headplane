@@ -1,7 +1,7 @@
-import { readFile } from 'node:fs/promises'
+import { access, constants, readFile, stat, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { parse } from 'yaml'
+import { type Document, parseDocument, visit } from 'yaml'
 
 type Duration = `${string}s` | `${string}h` | `${string}m` | `${string}d` | `${string}y`
 
@@ -118,14 +118,79 @@ type Config = {
 	randomize_client_port: boolean;
 }
 
-let config: Config
+let config: Document
 
 export async function getConfig() {
 	if (!config) {
 		const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 		const data = await readFile(path, 'utf8')
-		config = parse(data) as Config
+		config = parseDocument(data)
 	}
 
-	return config
+	return config.toJSON() as Config
 }
+
+// This is so obscenely dangerous, please have a check around it
+export async function patchConfig(partial: Record<string, unknown>) {
+	for (const [key, value] of Object.entries(partial)) {
+		config.setIn(key.split('.'), value)
+	}
+
+	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
+	await writeFile(path, config.toString(), 'utf8')
+}
+
+type Context = {
+	isDocker: boolean;
+	hasDockerSock: boolean;
+	hasConfigWrite: boolean;
+}
+
+export let context: Context
+
+export async function getContext() {
+	if (!context) {
+		context = {
+			isDocker: await checkDocker(),
+			hasDockerSock: await checkSock(),
+			hasConfigWrite: await checkConfigWrite()
+		}
+	}
+
+	return context
+}
+
+async function checkConfigWrite() {
+	try {
+		await getConfig()
+		return true
+	} catch (error) {
+		console.error('Failed to read config file', error)
+	}
+
+	return false
+}
+
+async function checkSock() {
+	try {
+		await access('/var/run/docker.sock', constants.R_OK)
+		return true
+	} catch {}
+
+	return false
+}
+
+async function checkDocker() {
+	try {
+		await stat('/.dockerenv')
+		return true
+	} catch {}
+
+	try {
+		const data = await readFile('/proc/self/cgroup', 'utf8')
+		return data.includes('docker')
+	} catch {}
+
+	return false
+}
+
