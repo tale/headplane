@@ -7,6 +7,7 @@ services:
   headscale:
     image: 'headscale/headscale:0.23.0-alpha5'
     container_name: 'headscale'
+    restart: 'unless-stopped'
     command: 'serve'
     networks:
       - 'headplane-dev'

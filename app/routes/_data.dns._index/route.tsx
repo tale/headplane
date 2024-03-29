@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import { useState } from 'react'
 
 import { getConfig, patchConfig } from '~/utils/config'
+import { restartHeadscale } from '~/utils/docker'
 
 import Domains from './domains'
 import MagicModal from './magic'
@@ -29,42 +30,20 @@ export async function loader() {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const data = await request.json() as Record<string, unknown>
-	console.log(data)
 	await patchConfig(data)
+	await restartHeadscale()
 	return json({ success: true })
 }
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>()
-	const fetcher = useFetcher({ key: 'dns-page' })
+	const fetcher = useFetcher()
 	const [localOverride, setLocalOverride] = useState(data.overrideLocal)
 	const [ns, setNs] = useState('')
 
 	return (
 		<div className='flex flex-col gap-16 max-w-screen-lg'>
-			<div className='flex flex-col w-2/3'>
-				<h1 className='text-2xl font-medium mb-4'>Tailnet Name</h1>
-				<p className='text-gray-700 dark:text-gray-300'>
-					This is the base domain name of your Tailnet.
-					Devices are accessible at
-					{' '}
-					<code className='bg-gray-100 p-1 rounded-md'>
-						[device].[user].{data.baseDomain}
-					</code>
-					{' '}
-					when Magic DNS is enabled.
-				</p>
-				<input
-					readOnly
-					className='my-4 px-3 py-2 border rounded-lg focus:ring-none w-2/3 font-mono text-sm'
-					type='text'
-					value={data.baseDomain}
-					onFocus={event => {
-						event.target.select()
-					}}
-				/>
-				<RenameModal name={data.baseDomain}/>
-			</div>
+			<RenameModal name={data.baseDomain}/>
 			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Nameservers</h1>
 				<p className='text-gray-700 dark:text-gray-300'>

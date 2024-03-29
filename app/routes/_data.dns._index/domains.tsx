@@ -30,7 +30,7 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 	const [activeId, setActiveId] = useState<number | string | null>(null)
 	const [localDomains, setLocalDomains] = useState(searchDomains)
 	const [newDomain, setNewDomain] = useState('')
-	const fetcher = useFetcher({ key: 'search-domains' })
+	const fetcher = useFetcher()
 
 	useEffect(() => {
 		setLocalDomains(searchDomains)
@@ -154,7 +154,7 @@ type DomainProperties = {
 }
 
 function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
-	const fetcher = useFetcher({ key: 'individual-domain' })
+	const fetcher = useFetcher()
 
 	const {
 		attributes,

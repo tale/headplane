@@ -26,6 +26,7 @@
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-hot-toast": "^2.4.1",
+		"undici": "^6.10.2",
 		"usehooks-ts": "^3.0.2",
 		"yaml": "^2.4.1"
 	},
