@@ -1,9 +1,12 @@
-import { type ReactNode } from 'react'
+import clsx from 'clsx'
+import { type HTMLProps } from 'react'
 
-export default function Code({ children }: { readonly children: ReactNode }) {
+type Properties = HTMLProps<HTMLSpanElement>
+
+export default function Code(properties: Properties) {
 	return (
-		<code className='bg-gray-100 dark:bg-zinc-700 p-0.5 rounded-md'>
-			{children}
+		<code className={clsx('bg-gray-100 dark:bg-zinc-700 p-0.5 rounded-md', properties.className)}>
+			{properties.children}
 		</code>
 	)
 }

@@ -1,17 +1,13 @@
-import { ExclamationTriangleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline'
 import type { LinksFunction, MetaFunction } from '@remix-run/node'
 import {
-	isRouteErrorResponse,
 	Links,
 	Meta,
 	Outlet,
 	Scripts,
-	ScrollRestoration,
-	useRouteError
+	ScrollRestoration
 } from '@remix-run/react'
-import clsx from 'clsx'
 
-import Code from '~/components/Code'
+import { ErrorPopup } from '~/components/Error'
 import Toaster from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
 import { getContext } from '~/utils/config'
@@ -68,37 +64,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 }
 
 export function ErrorBoundary() {
-	const error = useRouteError()
-	const routing = isRouteErrorResponse(error)
-	const message = (error instanceof Error ? error.message : 'An unexpected error occurred')
-	return (
-		<div className='flex min-h-screen items-center justify-center'>
-			<div className={clsx(
-				'w-1/3 border p-4 rounded-lg flex flex-col items-center text-center',
-				routing ? 'gap-2' : 'gap-4'
-			)}
-			>
-				{routing ? (
-					<>
-						<QuestionMarkCircleIcon className='text-gray-500 w-14 h-14'/>
-						<h1 className='text-2xl font-bold'>{error.status}</h1>
-						<p className='opacity-50 text-sm'>{error.statusText}</p>
-					</>
-				) : (
-					<>
-						<ExclamationTriangleIcon className='text-red-500 w-14 h-14'/>
-						<h1 className='text-2xl font-bold'>Error</h1>
-						<Code>
-							{message}
-						</Code>
-						<p className='opacity-50 text-sm mt-4'>
-							If you are the administrator of this site, please check your logs for information.
-						</p>
-					</>
-				)}
-			</div>
-		</div>
-	)
+	return <ErrorPopup/>
 }
 
 export default function App() {
