@@ -1,6 +1,6 @@
 # Advanced Integration
 
-![Integration Preview](./assets/advanced-preview.png)
+![Integration Preview](/assets/advanced-preview.png)
 
 With the advanced integration it's possible to control Access Control Lists (ACLs) and the Headscale configuration via the Headplane UI.
 Every single aspect of this integration is optional, meaning you can only use what you want.
@@ -82,7 +82,7 @@ services:
       OIDC_CLIENT_SECRET: 'super_secret_client_secret'
 ```
 
-> For a breakdown of each configuration variable, please refer to the [Configuration](./docs/Configuration.md) guide. 
+> For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 
 > It explains what each variable does, how to configure them, and what the default values are.
 
 You may also choose to run it natively with the distributed binaries on the releases page.

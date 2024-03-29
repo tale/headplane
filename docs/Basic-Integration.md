@@ -39,7 +39,7 @@ services:
       PORT: '3000'
 ```
 
-> For a breakdown of each configuration variable, please refer to the [Configuration](./docs/Configuration.md) guide. 
+> For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 
 > It explains what each variable does, how to configure them, and what the default values are.
 
 You may also choose to run it natively with the distributed binaries on the releases page.
