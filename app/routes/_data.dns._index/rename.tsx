@@ -2,8 +2,10 @@
 /* eslint-disable unicorn/no-keyword-prefix */
 import { Dialog } from '@headlessui/react'
 import { useFetcher } from '@remix-run/react'
-import clsx from 'clsx'
 import { useState } from 'react'
+
+import Code from '~/components/Code'
+import Input from '~/components/Input'
 
 type Properties = {
 	readonly name: string;
@@ -21,18 +23,17 @@ export default function Modal({ name }: Properties) {
 				This is the base domain name of your Tailnet.
 				Devices are accessible at
 				{' '}
-				<code className='bg-gray-100 dark:bg-zinc-700 p-0.5 rounded-md'>
+				<Code>
 					[device].[user].{name}
-				</code>
+				</Code>
 				{' '}
 				when Magic DNS is enabled.
 			</p>
-			<input
+			<Input
 				readOnly
-				className={clsx(
-					'my-4 px-3 py-2 border rounded-lg focus:ring-none w-2/3 font-mono text-sm',
-					'dark:bg-zinc-800 dark:text-white dark:border-zinc-700'
-				)}
+				className='font-mono text-sm my-4'
+				// 'my-4 px-3 py-2 border rounded-lg focus:ring-none w-2/3 font-mono text-sm',
+				// 'dark:bg-zinc-800 dark:text-white dark:border-zinc-700'
 				type='text'
 				value={name}
 				onFocus={event => {
@@ -65,9 +66,9 @@ export default function Modal({ name }: Properties) {
 							of unexpected behavior and may break existing devices
 							in your tailnet.
 						</Dialog.Description>
-						<input
+						<Input
 							type='text'
-							className='border rounded-lg p-2 w-full mt-4 dark:bg-zinc-700 dark:text-white dark:border-zinc-700'
+							className='font-mono mt-4'
 							value={newName}
 							onChange={event => {
 								setNewName(event.target.value)

@@ -15,10 +15,14 @@ import {
 	verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Bars3Icon } from '@heroicons/react/24/outline'
+import { Bars3Icon, LockClosedIcon } from '@heroicons/react/24/outline'
 import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
+
+import Action from '~/components/Action'
+import Input from '~/components/Input'
+import TableList from '~/components/TableList'
 
 type Properties = {
 	readonly baseDomain?: string;
@@ -72,17 +76,12 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 					}
 				}}
 			>
-				<div className='border border-gray-200 rounded-lg bg-gray-50 overflow-clip'>
+				<TableList>
 					{baseDomain ? (
-						<div
-							key='magic-dns-sd'
-							className={clsx(
-								'flex items-center justify-between px-3 py-2',
-								'border-b border-gray-200 last:border-b-0'
-							)}
-						>
+						<TableList.Item key='magic-dns-sd'>
 							<p className='font-mono text-sm'>{baseDomain}</p>
-						</div>
+							<LockClosedIcon className='h-4 w-4'/>
+						</TableList.Item>
 					) : undefined}
 					<SortableContext
 						items={localDomains}
@@ -101,30 +100,20 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 							/> : undefined}
 						</DragOverlay>
 					</SortableContext>
-					<div
-						key='add-sd'
-						className={clsx(
-							'flex items-center justify-between px-3 py-2',
-							'border-b border-gray-200 last:border-b-0',
-							'bg-white dark:bg-gray-800'
-						)}
-					>
-						<input
+					<TableList.Item key='add-sd'>
+						<Input
+							isEmbedded
 							type='text'
-							className='w-full focus:ring-none focus:outline-none font-mono text-sm'
+							className='font-mono text-sm'
 							placeholder='Search Domain'
 							value={newDomain}
 							onChange={event => {
 								setNewDomain(event.target.value)
 							}}
 						/>
-						<button
-							type='button'
-							className={clsx(
-								'text-sm text-blue-700',
-								newDomain.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-							)}
-							disabled={newDomain.length === 0}
+						<Action
+							className='text-sm'
+							isDisabled={newDomain.length === 0}
 							onClick={() => {
 								fetcher.submit({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -138,9 +127,9 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 							}}
 						>
 							Add
-						</button>
-					</div>
-				</div>
+						</Action>
+					</TableList.Item>
+				</TableList>
 			</DndContext>
 		</div>
 	)
@@ -188,9 +177,9 @@ function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
 				{domain}
 			</p>
 			{isDrag ? undefined : (
-				<button
-					type='button'
-					className='text-sm text-red-700'
+				<Action
+					isDestructive
+					className='text-sm'
 					onClick={() => {
 						fetcher.submit({
 						// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -202,7 +191,7 @@ function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
 					}}
 				>
 					Remove
-				</button>
+				</Action>
 			)}
 		</div>
 	)

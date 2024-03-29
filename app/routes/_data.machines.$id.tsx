@@ -2,6 +2,7 @@ import { type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 
 import Attribute from '~/components/Attribute'
+import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
 import { type Machine } from '~/types'
 import { pull } from '~/utils/headscale'
@@ -41,7 +42,7 @@ export default function Page() {
 				</h1>
 				<StatusCircle isOnline={data.online} className='w-4 h-4'/>
 			</span>
-			<div className='p-4 md:p-6 border dark:border-zinc-700 rounded-lg'>
+			<Card>
 				<Attribute name='Creator' value={data.user.name}/>
 				<Attribute name='Node ID' value={data.id}/>
 				<Attribute name='Node Name' value={data.givenName}/>
@@ -68,7 +69,7 @@ export default function Page() {
 					name='Domain'
 					value={`${data.givenName}.${data.user.name}.ts.net`}
 				/>
-			</div>
+			</Card>
 		</div>
 	)
 }

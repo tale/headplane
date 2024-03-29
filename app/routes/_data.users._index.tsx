@@ -5,6 +5,7 @@ import { useLoaderData } from '@remix-run/react'
 import { toast } from 'react-hot-toast/headless'
 
 import Attribute from '~/components/Attribute'
+import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
 import { type Machine, type User } from '~/types'
 import { pull } from '~/utils/headscale'
@@ -44,7 +45,7 @@ export default function Page() {
 	return (
 		<div className='grid grid-cols-2 gap-4 auto-rows-min'>
 			{data.map(user => (
-				<div key={user.id} className='border rounded-lg p-4'>
+				<Card key={user.id}>
 					<div className='flex items-center gap-4'>
 						<UserIcon className='w-6 h-6'/>
 						<span className='text-lg font-mono'>
@@ -59,7 +60,7 @@ export default function Page() {
 							</div>
 						))}
 					</div>
-				</div>
+				</Card>
 			))}
 		</div>
 	)

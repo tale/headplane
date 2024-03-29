@@ -11,6 +11,7 @@ import {
 } from '@remix-run/react'
 import clsx from 'clsx'
 
+import Code from '~/components/Code'
 import Toaster from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
 import { getContext } from '~/utils/config'
@@ -56,7 +57,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 				<Meta/>
 				<Links/>
 			</head>
-			<body className='overscroll-none'>
+			<body className='overscroll-none dark:bg-zinc-900 dark:text-white'>
 				{children}
 				<Toaster/>
 				<ScrollRestoration/>
@@ -87,9 +88,9 @@ export function ErrorBoundary() {
 					<>
 						<ExclamationTriangleIcon className='text-red-500 w-14 h-14'/>
 						<h1 className='text-2xl font-bold'>Error</h1>
-						<code className='bg-gray-100 p-1 rounded-md'>
+						<Code>
 							{message}
-						</code>
+						</Code>
 						<p className='opacity-50 text-sm mt-4'>
 							If you are the administrator of this site, please check your logs for information.
 						</p>

@@ -2,6 +2,7 @@ import { type ActionFunctionArgs, json, type LoaderFunctionArgs, redirect } from
 import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
 import { useMemo } from 'react'
 
+import Code from '~/components/Code'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
 import { commitSession, getSession } from '~/utils/sessions'
@@ -82,9 +83,9 @@ export default function Page() {
 							Enter an API key to authenticate with Headplane. You can generate
 							one by running
 							{' '}
-							<code className='bg-gray-100 p-1 rounded-md'>
+							<Code>
 								headscale apikeys create
-							</code>
+							</Code>
 							{' '}
 							in your terminal.
 						</p>

@@ -4,6 +4,10 @@ import { json, useFetcher, useLoaderData } from '@remix-run/react'
 import clsx from 'clsx'
 import { useState } from 'react'
 
+import Action from '~/components/Action'
+import Code from '~/components/Code'
+import Input from '~/components/Input'
+import TableList from '~/components/TableList'
 import { getConfig, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
 
@@ -85,49 +89,42 @@ export default function Page() {
 							</Switch>
 						</div>
 					</div>
-					<div className='border border-gray-200 rounded-lg bg-gray-50 overflow-clip'>
+					<TableList>
 						{data.nameservers.map((ns, index) => (
-							<div
-								// eslint-disable-next-line react/no-array-index-key
-								key={index}
-								className={clsx(
-									'flex items-center justify-between px-3 py-2',
-									'border-b border-gray-200 last:border-b-0'
-								)}
-							>
+							// eslint-disable-next-line react/no-array-index-key
+							<TableList.Item key={index}>
 								<p className='font-mono text-sm'>{ns}</p>
-								<button
-									type='button'
-									className='text-sm text-red-700'
+								<Action
+									isDestructive
+									className='text-sm'
+									onClick={() => {
+										fetcher.submit({
+											// eslint-disable-next-line @typescript-eslint/naming-convention
+											'dns_config.nameservers': data.nameservers.filter((_, index_) => index_ !== index)
+										}, {
+											method: 'PATCH',
+											encType: 'application/json'
+										})
+									}}
 								>
 									Remove
-								</button>
-							</div>
+								</Action>
+							</TableList.Item>
 						))}
-						<div
-							key='add-ns'
-							className={clsx(
-								'flex items-center justify-between px-3 py-2',
-								'border-b border-gray-200 last:border-b-0',
-								'bg-white dark:bg-gray-800'
-							)}
-						>
-							<input
+						<TableList.Item>
+							<Input
+								isEmbedded
 								type='text'
-								className='w-full focus:ring-none focus:outline-none font-mono text-sm'
+								className='font-mono text-sm'
 								placeholder='Nameserver'
 								value={ns}
 								onChange={event => {
 									setNs(event.target.value)
 								}}
 							/>
-							<button
-								type='button'
-								className={clsx(
-									'text-sm text-blue-700',
-									ns.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
-								)}
-								disabled={ns.length === 0}
+							<Action
+								className='text-sm'
+								isDisabled={ns.length === 0}
 								onClick={() => {
 									fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -141,9 +138,9 @@ export default function Page() {
 								}}
 							>
 								Add
-							</button>
-						</div>
-					</div>
+							</Action>
+						</TableList.Item>
+					</TableList>
 					{/* TODO: Split DNS and Custom A Records */}
 				</div>
 			</div>
@@ -159,9 +156,9 @@ export default function Page() {
 					Automaticall register domain names for each device
 					on the tailnet. Devices will be accessible at
 					{' '}
-					<code className='bg-gray-100 p-1 rounded-md'>
+					<Code>
 						[device].[user].{data.baseDomain}
-					</code>
+					</Code>
 					{' '}
 					when Magic DNS is enabled.
 				</p>
