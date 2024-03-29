@@ -4,7 +4,7 @@ import { json, useFetcher, useLoaderData } from '@remix-run/react'
 import clsx from 'clsx'
 import { useState } from 'react'
 
-import Action from '~/components/Action'
+import Button from '~/components/Button'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
 import TableList from '~/components/TableList'
@@ -94,8 +94,8 @@ export default function Page() {
 							// eslint-disable-next-line react/no-array-index-key
 							<TableList.Item key={index}>
 								<p className='font-mono text-sm'>{ns}</p>
-								<Action
-									isDestructive
+								<Button
+									variant='destructive'
 									className='text-sm'
 									onClick={() => {
 										fetcher.submit({
@@ -108,12 +108,12 @@ export default function Page() {
 									}}
 								>
 									Remove
-								</Action>
+								</Button>
 							</TableList.Item>
 						))}
 						<TableList.Item>
 							<Input
-								isEmbedded
+								variant='embedded'
 								type='text'
 								className='font-mono text-sm'
 								placeholder='Nameserver'
@@ -122,9 +122,9 @@ export default function Page() {
 									setNs(event.target.value)
 								}}
 							/>
-							<Action
+							<Button
 								className='text-sm'
-								isDisabled={ns.length === 0}
+								disabled={ns.length === 0}
 								onClick={() => {
 									fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -138,7 +138,7 @@ export default function Page() {
 								}}
 							>
 								Add
-							</Action>
+							</Button>
 						</TableList.Item>
 					</TableList>
 					{/* TODO: Split DNS and Custom A Records */}
@@ -162,7 +162,7 @@ export default function Page() {
 					{' '}
 					when Magic DNS is enabled.
 				</p>
-				<MagicModal isEnabled={data.magicDns} baseDomain={data.baseDomain}/>
+				<MagicModal isEnabled={data.magicDns}/>
 			</div>
 		</div>
 	)

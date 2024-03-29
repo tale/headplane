@@ -20,7 +20,7 @@ import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 
-import Action from '~/components/Action'
+import Button from '~/components/Button'
 import Input from '~/components/Input'
 import TableList from '~/components/TableList'
 
@@ -102,7 +102,7 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 					</SortableContext>
 					<TableList.Item key='add-sd'>
 						<Input
-							isEmbedded
+							variant='embedded'
 							type='text'
 							className='font-mono text-sm'
 							placeholder='Search Domain'
@@ -111,9 +111,9 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 								setNewDomain(event.target.value)
 							}}
 						/>
-						<Action
+						<Button
 							className='text-sm'
-							isDisabled={newDomain.length === 0}
+							disabled={newDomain.length === 0}
 							onClick={() => {
 								fetcher.submit({
 								// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -127,7 +127,7 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 							}}
 						>
 							Add
-						</Action>
+						</Button>
 					</TableList.Item>
 				</TableList>
 			</DndContext>
@@ -177,8 +177,8 @@ function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
 				{domain}
 			</p>
 			{isDrag ? undefined : (
-				<Action
-					isDestructive
+				<Button
+					variant='destructive'
 					className='text-sm'
 					onClick={() => {
 						fetcher.submit({
@@ -191,7 +191,7 @@ function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
 					}}
 				>
 					Remove
-				</Action>
+				</Button>
 			)}
 		</div>
 	)

@@ -3,26 +3,27 @@ import { useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useState } from 'react'
 
+import Button from '~/components/Button'
+
 type Properties = {
 	readonly isEnabled: boolean;
-	readonly baseDomain: string;
 }
 
-export default function Modal({ isEnabled, baseDomain }: Properties) {
+export default function Modal({ isEnabled }: Properties) {
 	const [isOpen, setIsOpen] = useState(false)
 	const fetcher = useFetcher()
 
 	return (
 		<>
-			<button
-				type='button'
-				className='rounded-lg px-3 py-2 bg-gray-800 text-white w-fit text-sm'
+			<Button
+				variant='emphasized'
+				className='w-fit text-sm'
 				onClick={() => {
 					setIsOpen(true)
 				}}
 			>
 				{isEnabled ? 'Disable' : 'Enable'} Magic DNS
-			</button>
+			</Button>
 			<Dialog
 				className='relative z-50'
 				open={isOpen} onClose={() => {
@@ -39,11 +40,12 @@ export default function Modal({ isEnabled, baseDomain }: Properties) {
 							Devices will no longer be accessible via your tailnet domain.
 							The search domain will also be disabled.
 						</Dialog.Description>
-						<button
+						<Button
+							variant='emphasized'
 							type='submit'
 							className={clsx(
-								'rounded-lg py-2 bg-gray-800 text-white w-full mt-12',
-								isEnabled ? 'bg-red-800' : 'bg-gray-800'
+								'w-full mt-12',
+								isEnabled ? 'bg-red-800 dark:bg-red-500' : ''
 							)}
 							onClick={() => {
 								fetcher.submit({
@@ -58,7 +60,7 @@ export default function Modal({ isEnabled, baseDomain }: Properties) {
 							}}
 						>
 							{isEnabled ? 'Disable' : 'Enable'}
-						</button>
+						</Button>
 					</Dialog.Panel>
 				</div>
 			</Dialog>

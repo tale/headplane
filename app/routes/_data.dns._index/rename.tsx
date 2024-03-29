@@ -4,6 +4,7 @@ import { Dialog } from '@headlessui/react'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 
+import Button from '~/components/Button'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
 
@@ -32,23 +33,21 @@ export default function Modal({ name }: Properties) {
 			<Input
 				readOnly
 				className='font-mono text-sm my-4'
-				// 'my-4 px-3 py-2 border rounded-lg focus:ring-none w-2/3 font-mono text-sm',
-				// 'dark:bg-zinc-800 dark:text-white dark:border-zinc-700'
 				type='text'
 				value={name}
 				onFocus={event => {
 					event.target.select()
 				}}
 			/>
-			<button
-				type='button'
-				className='rounded-lg px-3 py-2 bg-gray-800 text-white w-fit text-sm'
+			<Button
+				variant='emphasized'
+				className='text-sm w-fit'
 				onClick={() => {
 					setIsOpen(true)
 				}}
 			>
 				Rename Tailnet...
-			</button>
+			</Button>
 			<Dialog
 				className='relative z-50'
 				open={isOpen} onClose={() => {

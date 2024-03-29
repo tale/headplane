@@ -38,7 +38,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Layout() {
 	return (
 		<>
-			<header className='bg-gray-800 text-white mb-16'>
+			<header className='mb-16 bg-gray-800 text-white dark:bg-gray-700'>
 				<nav className='container mx-auto'>
 					<div className='flex items-center gap-x-2 mb-8 pt-4'>
 						<CpuChipIcon className='w-8 h-8'/>
