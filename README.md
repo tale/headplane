@@ -23,14 +23,32 @@ Here's a very basic `docker-compose.yaml` file that utilizes each configuration 
 ```yaml
 version: '3.8'
 services:
+  headscale:
+    image: 'headscale/headscale:0.23.0-alpha5'
+    container_name: 'headscale'
+    restart: 'unless-stopped'
+    command: 'serve'
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+    ports:
+      - '8080:8080'
+    environment:
+      TZ: 'America/New_York'
   headplane:
     container_name: headplane
     image: ghcr.io/tale/headplane:latest
     restart: unless-stopped
+    volumes:
+      - './data:/var/lib/headscale'
+      - './configs:/etc/headscale'
+    ports:
+      - '3000:3000'
     environment:
-      HEADSCALE_URL: 'https://tailscale.example.com'
+      HEADSCALE_URL: 'http://headscale:8080'
       API_KEY: 'abcdefghijklmnopqrstuvwxyz'
       COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
+      HEADSCALE_CONTAINER: 'headscale'
       OIDC_CLIENT_ID: 'headscale'
       OIDC_ISSUER: 'https://sso.example.com'
       OIDC_CLIENT_SECRET: 'super_secret_client_secret'
@@ -49,6 +67,8 @@ services:
 
 - **`HOST`**: The host to bind the server to (default: `0.0.0.0`).
 - **`PORT`**: The port to bind the server to (default: `3000`).
+- **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
+- **`HEADSCALE_CONTAINER`**: The name of the Headscale container (for Docker integration).
 
 ### SSO/OpenID Connect
 If you want to use OpenID Connect for SSO, you'll need to provide these variables.
