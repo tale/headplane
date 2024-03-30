@@ -8,6 +8,7 @@ import Button from '~/components/Button'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
 import Notice from '~/components/Notice'
+import Spinner from '~/components/Spinner'
 import TableList from '~/components/TableList'
 import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
@@ -80,12 +81,14 @@ export default function Page() {
 							Global Nameservers
 						</h2>
 						<div className='flex gap-2 items-center'>
-							<span className='text-sm opacity-50'>Override local DNS</span>
+							<span className='text-sm opacity-50'>
+								Override local DNS
+							</span>
 							<Switch
 								checked={localOverride}
 								disabled={!data.hasConfigWrite}
 								className={clsx(
-									localOverride ? 'bg-gray-800' : 'bg-gray-200',
+									localOverride ? 'bg-gray-800 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-400',
 									'relative inline-flex h-4 w-9 items-center rounded-full'
 								)}
 								onChange={() => {
@@ -145,23 +148,27 @@ export default function Page() {
 										setNs(event.target.value)
 									}}
 								/>
-								<Button
-									className='text-sm'
-									disabled={ns.length === 0}
-									onClick={() => {
-										fetcher.submit({
-										// eslint-disable-next-line @typescript-eslint/naming-convention
-											'dns_config.nameservers': [...data.nameservers, ns]
-										}, {
-											method: 'PATCH',
-											encType: 'application/json'
-										})
+								{fetcher.state === 'idle' ? (
+									<Button
+										className='text-sm'
+										disabled={ns.length === 0}
+										onClick={() => {
+											fetcher.submit({
+												// eslint-disable-next-line @typescript-eslint/naming-convention
+												'dns_config.nameservers': [...data.nameservers, ns]
+											}, {
+												method: 'PATCH',
+												encType: 'application/json'
+											})
 
-										setNs('')
-									}}
-								>
-									Add
-								</Button>
+											setNs('')
+										}}
+									>
+										Add
+									</Button>
+								) : (
+									<Spinner className='w-3 h-3 mr-0'/>
+								)}
 							</TableList.Item>
 						) : undefined}
 					</TableList>

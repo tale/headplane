@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import { useState } from 'react'
 
 import Button from '~/components/Button'
+import Spinner from '~/components/Spinner'
 
 type Properties = {
 	readonly isEnabled: boolean;
@@ -25,6 +26,9 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 					setIsOpen(true)
 				}}
 			>
+				{fetcher.state === 'idle' ? undefined : (
+					<Spinner className='w-3 h-3'/>
+				)}
 				{isEnabled ? 'Disable' : 'Enable'} Magic DNS
 			</Button>
 			<Dialog

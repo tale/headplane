@@ -7,6 +7,7 @@ import { useState } from 'react'
 import Button from '~/components/Button'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
+import Spinner from '~/components/Spinner'
 
 type Properties = {
 	readonly name: string;
@@ -49,6 +50,9 @@ export default function Modal({ name, disabled }: Properties) {
 					setIsOpen(true)
 				}}
 			>
+				{fetcher.state === 'idle' ? undefined : (
+					<Spinner className='w-3 h-3'/>
+				)}
 				Rename Tailnet...
 			</Button>
 			<Dialog
@@ -88,7 +92,6 @@ export default function Modal({ name, disabled }: Properties) {
 								})
 
 								setIsOpen(false)
-								setNewName(name)
 							}}
 						>
 							Rename

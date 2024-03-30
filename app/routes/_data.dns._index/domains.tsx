@@ -16,12 +16,13 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { Bars3Icon, LockClosedIcon } from '@heroicons/react/24/outline'
-import { useFetcher } from '@remix-run/react'
+import { type FetcherWithComponents, useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
 
 import Button from '~/components/Button'
 import Input from '~/components/Input'
+import Spinner from '~/components/Spinner'
 import TableList from '~/components/TableList'
 
 type Properties = {
@@ -97,6 +98,7 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 								id={index + 1}
 								localDomains={localDomains}
 								disabled={disabled}
+								fetcher={fetcher}
 							/>
 						))}
 						<DragOverlay adjustScale>
@@ -106,6 +108,7 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 								localDomains={localDomains}
 								id={activeId as number - 1}
 								disabled={disabled}
+								fetcher={fetcher}
 							/> : undefined}
 						</DragOverlay>
 					</SortableContext>
@@ -121,23 +124,27 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 									setNewDomain(event.target.value)
 								}}
 							/>
-							<Button
-								className='text-sm'
-								disabled={newDomain.length === 0}
-								onClick={() => {
-									fetcher.submit({
+							{fetcher.state === 'idle' ? (
+								<Button
+									className='text-sm'
+									disabled={newDomain.length === 0}
+									onClick={() => {
+										fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
-										'dns_config.domains': [...localDomains, newDomain]
-									}, {
-										method: 'PATCH',
-										encType: 'application/json'
-									})
+											'dns_config.domains': [...localDomains, newDomain]
+										}, {
+											method: 'PATCH',
+											encType: 'application/json'
+										})
 
-									setNewDomain('')
-								}}
-							>
-								Add
-							</Button>
+										setNewDomain('')
+									}}
+								>
+									Add
+								</Button>
+							) : (
+								<Spinner className='w-3 h-3 mr-0'/>
+							)}
 						</TableList.Item>
 					)}
 				</TableList>
@@ -153,11 +160,10 @@ type DomainProperties = {
 	readonly localDomains: string[];
 	// eslint-disable-next-line react/boolean-prop-naming
 	readonly disabled?: boolean;
+	readonly fetcher: FetcherWithComponents<unknown>;
 }
 
-function Domain({ domain, id, localDomains, isDrag, disabled }: DomainProperties) {
-	const fetcher = useFetcher()
-
+function Domain({ domain, id, localDomains, isDrag, disabled, fetcher }: DomainProperties) {
 	const {
 		attributes,
 		listeners,
@@ -167,14 +173,15 @@ function Domain({ domain, id, localDomains, isDrag, disabled }: DomainProperties
 		isDragging
 	} = useSortable({ id })
 
+	// TODO: Figure out why TableList.Item breaks dndkit
 	return (
 		<div
 			ref={setNodeRef}
 			className={clsx(
 				'flex items-center justify-between px-3 py-2',
-				'border-b border-gray-200 last:border-b-0',
-				isDragging ? 'text-gray-400' : 'bg-gray-50',
-				isDrag ? 'outline outline-1 outline-gray-500' : undefined
+				'border-b border-gray-200 last:border-b-0 dark:border-zinc-800',
+				isDragging ? 'text-gray-400' : '',
+				isDrag ? 'outline outline-1 outline-gray-500 bg-gray-200 dark:bg-zinc-800' : ''
 			)}
 			style={{
 				transform: CSS.Transform.toString(transform),
@@ -198,7 +205,7 @@ function Domain({ domain, id, localDomains, isDrag, disabled }: DomainProperties
 					disabled={disabled}
 					onClick={() => {
 						fetcher.submit({
-						// eslint-disable-next-line @typescript-eslint/naming-convention
+							// eslint-disable-next-line @typescript-eslint/naming-convention
 							'dns_config.domains': localDomains.filter((_, index) => index !== id - 1)
 						}, {
 							method: 'PATCH',
