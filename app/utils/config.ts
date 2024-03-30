@@ -1,6 +1,7 @@
-import { access, constants, readFile, stat, writeFile } from 'node:fs/promises'
+import { access, constants, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
+import { type FSWatcher, watch } from 'chokidar'
 import { type Document, parseDocument } from 'yaml'
 
 type Duration = `${string}s` | `${string}h` | `${string}m` | `${string}d` | `${string}y`
@@ -120,8 +121,8 @@ type Config = {
 
 let config: Document
 
-export async function getConfig() {
-	if (!config) {
+export async function getConfig(force = false) {
+	if (!config || force) {
 		const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 		const data = await readFile(path, 'utf8')
 		config = parseDocument(data)
@@ -138,6 +139,19 @@ export async function patchConfig(partial: Record<string, unknown>) {
 
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 	await writeFile(path, config.toString(), 'utf8')
+}
+
+let watcher: FSWatcher
+
+export function registerConfigWatcher() {
+	if (watcher) {
+		return
+	}
+
+	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
+	watcher = watch(path).on('change', async () => {
+		await getConfig(true)
+	})
 }
 
 type Context = {

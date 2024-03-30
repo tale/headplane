@@ -10,7 +10,7 @@ import {
 import { ErrorPopup } from '~/components/Error'
 import Toaster from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
-import { getContext } from '~/utils/config'
+import { getContext, registerConfigWatcher } from '~/utils/config'
 
 export const meta: MetaFunction = () => [
 	{ title: 'Headplane' },
@@ -23,6 +23,7 @@ export const links: LinksFunction = () => [
 
 export async function loader() {
 	await getContext()
+	registerConfigWatcher()
 
 	if (!process.env.HEADSCALE_URL) {
 		throw new Error('The HEADSCALE_URL environment variable is required')
