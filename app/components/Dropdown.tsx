@@ -11,7 +11,7 @@ type Properties = {
 
 function Dropdown(properties: Properties) {
 	return (
-		<div className='relative'>
+		<div className={clsx('relative', properties.className)}>
 			<Menu>
 				<Button className='flex flex-col items-center'>
 					{properties.button}
@@ -26,10 +26,10 @@ function Dropdown(properties: Properties) {
 					leaveTo='transform opacity-0 scale-95'
 				>
 					<Menu.Items className={clsx(
-						'absolute right-0 w-36 mt-2 rounded-md',
+						'absolute right-0 w-fit max-w-36 mt-2 rounded-md',
 						'text-gray-700 dark:text-gray-300',
 						'bg-white dark:bg-zinc-800 text-right',
-						'overflow-hidden',
+						'overflow-hidden z-50',
 						'border border-gray-200 dark:border-zinc-700',
 						'divide-y divide-gray-200 dark:divide-zinc-700'
 					)}

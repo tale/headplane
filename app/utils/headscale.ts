@@ -48,3 +48,18 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 	return (response.json() as Promise<T>)
 }
 
+export async function del<T>(url: string, key: string) {
+	const prefix = process.env.HEADSCALE_URL!
+	const response = await fetch(`${prefix}/api/${url}`, {
+		method: 'DELETE',
+		headers: {
+			Authorization: `Bearer ${key}`
+		}
+	})
+
+	if (!response.ok) {
+		throw new HeadscaleError(await response.text(), response.status)
+	}
+
+	return (response.json() as Promise<T>)
+}
