@@ -1,10 +1,8 @@
-import { Menu, Transition } from '@headlessui/react'
 import { Cog8ToothIcon, CpuChipIcon, GlobeAltIcon, LockClosedIcon, ServerStackIcon, UserCircleIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Form, Outlet, useLoaderData, useRouteError } from '@remix-run/react'
-import clsx from 'clsx'
-import { Fragment } from 'react/jsx-runtime'
 
+import Dropdown from '~/components/Dropdown'
 import { ErrorPopup } from '~/components/Error'
 import TabLink from '~/components/TabLink'
 import { getContext } from '~/utils/config'
@@ -64,56 +62,21 @@ export default function Layout() {
 							<a href='https://github.com/juanfont/headscale' target='_blank' rel='noreferrer' className='text-gray-300 hover:text-white'>
 								Headscale
 							</a>
-							<div className='relative'>
-								<Menu>
-									<Menu.Button>
-										<UserCircleIcon className='w-8 h-8'/>
-									</Menu.Button>
-									<Transition
-										as={Fragment}
-										enter='transition ease-out duration-100'
-										enterFrom='transform opacity-0 scale-95'
-										enterTo='transform opacity-100 scale-100'
-										leave='transition ease-in duration-75'
-										leaveFrom='transform opacity-100 scale-100'
-										leaveTo='transform opacity-0 scale-95'
-									>
-										<Menu.Items className={clsx(
-											'absolute right-0 w-36 mt-2 rounded-md',
-											'text-gray-700 dark:text-gray-300',
-											'bg-white dark:bg-zinc-800 text-right',
-											'overflow-hidden',
-											'border border-gray-200 dark:border-zinc-500',
-											'divide-y divide-gray-200 dark:divide-zinc-500'
-										)}
-										>
-											<Menu.Item>
-												{() => (
-													<div className='px-4 py-2'>
-														<p>{data.user?.name}</p>
-														<p>{data.user?.email}</p>
-													</div>
-												)}
-											</Menu.Item>
-											<Menu.Item>
-												{({ active }) => (
-													<Form method='POST' action='/logout'>
-														<button
-															type='submit'
-															className={clsx(
-																'px-4 py-2 w-full text-right',
-																active ? 'bg-gray-200 dark:bg-zinc-500' : ''
-															)}
-														>
-															Logout
-														</button>
-													</Form>
-												)}
-											</Menu.Item>
-										</Menu.Items>
-									</Transition>
-								</Menu>
-							</div>
+							<Dropdown
+								button={<UserCircleIcon className='w-8 h-8'/>}
+							>
+								<Dropdown.Item variant='static'>
+									<p className='font-bold'>{data.user?.name}</p>
+									<p>{data.user?.email}</p>
+								</Dropdown.Item>
+								<Dropdown.Item className='text-red-700'>
+									<Form method='POST' action='/logout'>
+										<button type='submit'>
+											Logout
+										</button>
+									</Form>
+								</Dropdown.Item>
+							</Dropdown>
 						</div>
 					</div>
 					<div className='flex items-center gap-x-4'>
