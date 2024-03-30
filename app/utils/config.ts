@@ -212,6 +212,7 @@ async function hasAcl() {
 	}
 
 	try {
+		path = resolve(path)
 		await access(path, constants.R_OK)
 		return true
 	} catch {}
@@ -235,6 +236,7 @@ async function hasAclW() {
 	}
 
 	try {
+		path = resolve(path)
 		await access(path, constants.W_OK)
 		return true
 	} catch {}
