@@ -142,7 +142,10 @@ export async function patchConfig(partial: Record<string, unknown>) {
 
 type Context = {
 	hasDockerSock: boolean;
+	hasConfig: boolean;
 	hasConfigWrite: boolean;
+	hasAcl: boolean;
+	hasAclWrite: boolean;
 }
 
 export let context: Context
@@ -151,22 +154,14 @@ export async function getContext() {
 	if (!context) {
 		context = {
 			hasDockerSock: await checkSock(),
-			hasConfigWrite: await checkConfigWrite()
+			hasConfig: await hasConfig(),
+			hasConfigWrite: await hasConfigW(),
+			hasAcl: await hasAcl(),
+			hasAclWrite: await hasAclW()
 		}
 	}
 
 	return context
-}
-
-async function checkConfigWrite() {
-	try {
-		await getConfig()
-		return true
-	} catch (error) {
-		console.error('Failed to read config file', error)
-	}
-
-	return false
 }
 
 async function checkSock() {
@@ -178,6 +173,71 @@ async function checkSock() {
 	if (!process.env.HEADSCALE_CONTAINER) {
 		return false
 	}
+
+	return false
+}
+
+async function hasConfig() {
+	try {
+		await getConfig()
+		return true
+	} catch {}
+
+	return false
+}
+
+async function hasConfigW() {
+	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
+	try {
+		await access(path, constants.W_OK)
+		return true
+	} catch {}
+
+	return false
+}
+
+async function hasAcl() {
+	let path = process.env.ACL_FILE
+	if (!path) {
+		try {
+			const config = await getConfig()
+			path = config.acl_policy_path
+		} catch {}
+
+		return false
+	}
+
+	if (!path) {
+		return false
+	}
+
+	try {
+		await access(path, constants.R_OK)
+		return true
+	} catch {}
+
+	return false
+}
+
+async function hasAclW() {
+	let path = process.env.ACL_FILE
+	if (!path) {
+		try {
+			const config = await getConfig()
+			path = config.acl_policy_path
+		} catch {}
+
+		return false
+	}
+
+	if (!path) {
+		return false
+	}
+
+	try {
+		await access(path, constants.W_OK)
+		return true
+	} catch {}
 
 	return false
 }

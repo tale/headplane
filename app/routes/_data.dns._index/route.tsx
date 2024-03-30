@@ -18,8 +18,12 @@ import RenameModal from './rename'
 
 // We do not want to expose every config value
 export async function loader() {
-	const config = await getConfig()
 	const context = await getContext()
+	if (!context.hasConfig) {
+		throw new Error('No configuration is available')
+	}
+
+	const config = await getConfig()
 
 	const dns = {
 		prefixes: config.prefixes,
