@@ -2,7 +2,10 @@ import { type ActionFunctionArgs, json, type LoaderFunctionArgs, redirect } from
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useMemo } from 'react'
 
+import Button from '~/components/Button'
+import Card from '~/components/Card'
 import Code from '~/components/Code'
+import Input from '~/components/Input'
 import { type Key } from '~/types'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
@@ -97,7 +100,7 @@ export default function Page() {
 
 	return (
 		<div className='flex min-h-screen items-center justify-center'>
-			<div className='w-1/3 border p-4 rounded-lg'>
+			<Card className='w-96'>
 				<h1 className='text-2xl mb-8'>Login</h1>
 				{data.apiKey ? (
 					<Form method='post'>
@@ -115,7 +118,7 @@ export default function Page() {
 						{actionData?.error ? (
 							<p className='text-red-500 text-sm mb-2'>{actionData.error}</p>
 						) : undefined}
-						<input
+						<Input
 							required
 							type='text'
 							name='api-key'
@@ -124,30 +127,35 @@ export default function Page() {
 							placeholder='API Key'
 						/>
 
-						<button
+						<Button
+							variant='emphasized'
 							type='submit'
 							className='bg-gray-800 text-white rounded-md p-2 w-full mt-4'
 						>
 							Login
-						</button>
+						</Button>
 					</Form>
 				) : undefined}
 				{showOr ? (
 					<div className='flex items-center gap-x-2 py-2'>
-						<hr className='flex-1'/>
+						<hr className='flex-1 dark:border-zinc-700'/>
 						<span className='text-gray-500'>or</span>
-						<hr className='flex-1'/>
+						<hr className='flex-1 dark:border-zinc-700'/>
 					</div>
 				) : undefined}
 				{data.oidc ? (
 					<Form method='POST'>
 						<input type='hidden' name='oidc-start' value='true'/>
-						<button className='bg-gray-800 text-white rounded-md p-2 w-full' type='submit'>
+						<Button
+							variant='emphasized'
+							type='submit'
+							className='bg-gray-800 text-white rounded-md p-2 w-full'
+						>
 							Login with SSO
-						</button>
+						</Button>
 					</Form>
 				) : undefined}
-			</div>
+			</Card>
 		</div>
 	)
 }
