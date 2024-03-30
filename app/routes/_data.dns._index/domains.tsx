@@ -27,9 +27,11 @@ import TableList from '~/components/TableList'
 type Properties = {
 	readonly baseDomain?: string;
 	readonly searchDomains: string[];
+	// eslint-disable-next-line react/boolean-prop-naming
+	readonly disabled?: boolean;
 }
 
-export default function Domains({ baseDomain, searchDomains }: Properties) {
+export default function Domains({ baseDomain, searchDomains, disabled }: Properties) {
 	// eslint-disable-next-line unicorn/no-null, @typescript-eslint/ban-types
 	const [activeId, setActiveId] = useState<number | string | null>(null)
 	const [localDomains, setLocalDomains] = useState(searchDomains)
@@ -88,8 +90,14 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 						strategy={verticalListSortingStrategy}
 					>
 						{localDomains.map((sd, index) => (
-							// eslint-disable-next-line react/no-array-index-key
-							<Domain key={index} domain={sd} id={index + 1} localDomains={localDomains}/>
+							<Domain
+								// eslint-disable-next-line react/no-array-index-key
+								key={index}
+								domain={sd}
+								id={index + 1}
+								localDomains={localDomains}
+								disabled={disabled}
+							/>
 						))}
 						<DragOverlay adjustScale>
 							{activeId ? <Domain
@@ -97,38 +105,41 @@ export default function Domains({ baseDomain, searchDomains }: Properties) {
 								domain={localDomains[activeId as number - 1]}
 								localDomains={localDomains}
 								id={activeId as number - 1}
+								disabled={disabled}
 							/> : undefined}
 						</DragOverlay>
 					</SortableContext>
-					<TableList.Item key='add-sd'>
-						<Input
-							variant='embedded'
-							type='text'
-							className='font-mono text-sm'
-							placeholder='Search Domain'
-							value={newDomain}
-							onChange={event => {
-								setNewDomain(event.target.value)
-							}}
-						/>
-						<Button
-							className='text-sm'
-							disabled={newDomain.length === 0}
-							onClick={() => {
-								fetcher.submit({
-								// eslint-disable-next-line @typescript-eslint/naming-convention
-									'dns_config.domains': [...localDomains, newDomain]
-								}, {
-									method: 'PATCH',
-									encType: 'application/json'
-								})
+					{disabled ? undefined : (
+						<TableList.Item key='add-sd'>
+							<Input
+								variant='embedded'
+								type='text'
+								className='font-mono text-sm'
+								placeholder='Search Domain'
+								value={newDomain}
+								onChange={event => {
+									setNewDomain(event.target.value)
+								}}
+							/>
+							<Button
+								className='text-sm'
+								disabled={newDomain.length === 0}
+								onClick={() => {
+									fetcher.submit({
+										// eslint-disable-next-line @typescript-eslint/naming-convention
+										'dns_config.domains': [...localDomains, newDomain]
+									}, {
+										method: 'PATCH',
+										encType: 'application/json'
+									})
 
-								setNewDomain('')
-							}}
-						>
-							Add
-						</Button>
-					</TableList.Item>
+									setNewDomain('')
+								}}
+							>
+								Add
+							</Button>
+						</TableList.Item>
+					)}
 				</TableList>
 			</DndContext>
 		</div>
@@ -140,9 +151,11 @@ type DomainProperties = {
 	readonly id: number;
 	readonly isDrag?: boolean;
 	readonly localDomains: string[];
+	// eslint-disable-next-line react/boolean-prop-naming
+	readonly disabled?: boolean;
 }
 
-function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
+function Domain({ domain, id, localDomains, isDrag, disabled }: DomainProperties) {
 	const fetcher = useFetcher()
 
 	const {
@@ -169,17 +182,20 @@ function Domain({ domain, id, localDomains, isDrag }: DomainProperties) {
 			}}
 		>
 			<p className='font-mono text-sm flex items-center gap-4'>
-				<Bars3Icon
-					className='h-4 w-4 text-gray-400 focus:outline-none'
-					{...attributes}
-					{...listeners}
-				/>
+				{disabled ? undefined : (
+					<Bars3Icon
+						className='h-4 w-4 text-gray-400 focus:outline-none'
+						{...attributes}
+						{...listeners}
+					/>
+				)}
 				{domain}
 			</p>
 			{isDrag ? undefined : (
 				<Button
 					variant='destructive'
 					className='text-sm'
+					disabled={disabled}
 					onClick={() => {
 						fetcher.submit({
 						// eslint-disable-next-line @typescript-eslint/naming-convention

@@ -5,9 +5,15 @@ import { setTimeout } from 'node:timers/promises'
 
 import { Client } from 'undici'
 
+import { getContext } from './config'
 import { pull } from './headscale'
 
 export async function restartHeadscale() {
+	const context = await getContext()
+	if (!context.hasDockerSock) {
+		return
+	}
+
 	if (!process.env.HEADSCALE_CONTAINER) {
 		throw new Error('HEADSCALE_CONTAINER is not set')
 	}

@@ -141,7 +141,6 @@ export async function patchConfig(partial: Record<string, unknown>) {
 }
 
 type Context = {
-	isDocker: boolean;
 	hasDockerSock: boolean;
 	hasConfigWrite: boolean;
 }
@@ -151,7 +150,6 @@ export let context: Context
 export async function getContext() {
 	if (!context) {
 		context = {
-			isDocker: await checkDocker(),
 			hasDockerSock: await checkSock(),
 			hasConfigWrite: await checkConfigWrite()
 		}
@@ -177,20 +175,9 @@ async function checkSock() {
 		return true
 	} catch {}
 
-	return false
-}
-
-async function checkDocker() {
-	try {
-		await stat('/.dockerenv')
-		return true
-	} catch {}
-
-	try {
-		const data = await readFile('/proc/self/cgroup', 'utf8')
-		return data.includes('docker')
-	} catch {}
+	if (!process.env.HEADSCALE_CONTAINER) {
+		return false
+	}
 
 	return false
 }
-

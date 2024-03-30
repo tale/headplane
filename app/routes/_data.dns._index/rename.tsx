@@ -10,9 +10,11 @@ import Input from '~/components/Input'
 
 type Properties = {
 	readonly name: string;
+	// eslint-disable-next-line react/boolean-prop-naming
+	readonly disabled?: boolean;
 }
 
-export default function Modal({ name }: Properties) {
+export default function Modal({ name, disabled }: Properties) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [newName, setNewName] = useState(name)
 	const fetcher = useFetcher()
@@ -32,7 +34,7 @@ export default function Modal({ name }: Properties) {
 			</p>
 			<Input
 				readOnly
-				className='font-mono text-sm my-4'
+				className='font-mono text-sm my-4 w-1/2'
 				type='text'
 				value={name}
 				onFocus={event => {
@@ -42,6 +44,7 @@ export default function Modal({ name }: Properties) {
 			<Button
 				variant='emphasized'
 				className='text-sm w-fit'
+				disabled={disabled}
 				onClick={() => {
 					setIsOpen(true)
 				}}

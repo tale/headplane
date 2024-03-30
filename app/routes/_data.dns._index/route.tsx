@@ -7,8 +7,9 @@ import { useState } from 'react'
 import Button from '~/components/Button'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
+import Notice from '~/components/Notice'
 import TableList from '~/components/TableList'
-import { getConfig, patchConfig } from '~/utils/config'
+import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
 
 import Domains from './domains'
@@ -18,6 +19,8 @@ import RenameModal from './rename'
 // We do not want to expose every config value
 export async function loader() {
 	const config = await getConfig()
+	const context = await getContext()
+
 	const dns = {
 		prefixes: config.prefixes,
 		magicDns: config.dns_config.magic_dns,
@@ -29,10 +32,18 @@ export async function loader() {
 		extraRecords: config.dns_config.extra_records
 	}
 
-	return dns
+	return {
+		...dns,
+		...context
+	}
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+	const context = await getContext()
+	if (!context.hasConfigWrite) {
+		return json({ success: false })
+	}
+
 	const data = await request.json() as Record<string, unknown>
 	await patchConfig(data)
 	await restartHeadscale()
@@ -47,7 +58,12 @@ export default function Page() {
 
 	return (
 		<div className='flex flex-col gap-16 max-w-screen-lg'>
-			<RenameModal name={data.baseDomain}/>
+			{data.hasConfigWrite ? undefined : (
+				<Notice>
+					The Headscale configuration is read-only. You cannot make changes to the configuration
+				</Notice>
+			)}
+			<RenameModal name={data.baseDomain} disabled={!data.hasConfigWrite}/>
 			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Nameservers</h1>
 				<p className='text-gray-700 dark:text-gray-300'>
@@ -63,6 +79,7 @@ export default function Page() {
 							<span className='text-sm opacity-50'>Override local DNS</span>
 							<Switch
 								checked={localOverride}
+								disabled={!data.hasConfigWrite}
 								className={clsx(
 									localOverride ? 'bg-gray-800' : 'bg-gray-200',
 									'relative inline-flex h-4 w-9 items-center rounded-full'
@@ -97,6 +114,7 @@ export default function Page() {
 								<Button
 									variant='destructive'
 									className='text-sm'
+									disabled={!data.hasConfigWrite}
 									onClick={() => {
 										fetcher.submit({
 											// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -111,35 +129,37 @@ export default function Page() {
 								</Button>
 							</TableList.Item>
 						))}
-						<TableList.Item>
-							<Input
-								variant='embedded'
-								type='text'
-								className='font-mono text-sm'
-								placeholder='Nameserver'
-								value={ns}
-								onChange={event => {
-									setNs(event.target.value)
-								}}
-							/>
-							<Button
-								className='text-sm'
-								disabled={ns.length === 0}
-								onClick={() => {
-									fetcher.submit({
+						{data.hasConfigWrite ? (
+							<TableList.Item>
+								<Input
+									variant='embedded'
+									type='text'
+									className='font-mono text-sm'
+									placeholder='Nameserver'
+									value={ns}
+									onChange={event => {
+										setNs(event.target.value)
+									}}
+								/>
+								<Button
+									className='text-sm'
+									disabled={ns.length === 0}
+									onClick={() => {
+										fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
-										'dns_config.nameservers': [...data.nameservers, ns]
-									}, {
-										method: 'PATCH',
-										encType: 'application/json'
-									})
+											'dns_config.nameservers': [...data.nameservers, ns]
+										}, {
+											method: 'PATCH',
+											encType: 'application/json'
+										})
 
-									setNs('')
-								}}
-							>
-								Add
-							</Button>
-						</TableList.Item>
+										setNs('')
+									}}
+								>
+									Add
+								</Button>
+							</TableList.Item>
+						) : undefined}
 					</TableList>
 					{/* TODO: Split DNS and Custom A Records */}
 				</div>
@@ -148,6 +168,7 @@ export default function Page() {
 			<Domains
 				baseDomain={data.magicDns ? data.baseDomain : undefined}
 				searchDomains={data.searchDomains}
+				disabled={!data.hasConfigWrite}
 			/>
 
 			<div className='flex flex-col w-2/3'>
@@ -162,7 +183,7 @@ export default function Page() {
 					{' '}
 					when Magic DNS is enabled.
 				</p>
-				<MagicModal isEnabled={data.magicDns}/>
+				<MagicModal isEnabled={data.magicDns} disabled={!data.hasConfigWrite}/>
 			</div>
 		</div>
 	)

@@ -7,9 +7,11 @@ import Button from '~/components/Button'
 
 type Properties = {
 	readonly isEnabled: boolean;
+	// eslint-disable-next-line react/boolean-prop-naming
+	readonly disabled?: boolean;
 }
 
-export default function Modal({ isEnabled }: Properties) {
+export default function Modal({ isEnabled, disabled }: Properties) {
 	const [isOpen, setIsOpen] = useState(false)
 	const fetcher = useFetcher()
 
@@ -18,6 +20,7 @@ export default function Modal({ isEnabled }: Properties) {
 			<Button
 				variant='emphasized'
 				className='w-fit text-sm'
+				disabled={disabled}
 				onClick={() => {
 					setIsOpen(true)
 				}}
