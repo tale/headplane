@@ -82,7 +82,9 @@ export async function action({ request }: ActionFunctionArgs) {
 		return redirect('/machines', {
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
-				'Set-Cookie': await commitSession(session)
+				'Set-Cookie': await commitSession(session, {
+					maxAge: expiresIn
+				})
 			}
 		})
 	} catch (error) {
