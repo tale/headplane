@@ -11,11 +11,11 @@ RUN pnpm prune --prod
 
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/build /app
+COPY --from=build /app/build /app/build
 COPY --from=build /app/node_modules /app/node_modules
 RUN echo '{"type":"module"}' > /app/package.json
 
 EXPOSE 3000
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-CMD [ "node_modules/.bin/remix-serve", "server/index.js" ]
+CMD [ "node_modules/.bin/remix-serve", "./build/server/index.js" ]
