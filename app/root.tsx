@@ -22,11 +22,11 @@ export const links: LinksFunction = () => [
 ]
 
 export async function loader() {
-	await getContext()
+	const context = await getContext()
 	registerConfigWatcher()
 
-	if (!process.env.HEADSCALE_URL) {
-		throw new Error('The HEADSCALE_URL environment variable is required')
+	if (context.headscaleUrl.length === 0) {
+		throw new Error('No headscale URL was provided either by the HEADSCALE_URL environment variable or the config file')
 	}
 
 	if (!process.env.COOKIE_SECRET) {

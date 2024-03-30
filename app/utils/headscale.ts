@@ -1,3 +1,5 @@
+import { getContext } from './config'
+
 export class HeadscaleError extends Error {
 	status: number
 
@@ -15,9 +17,9 @@ export class FatalError extends Error {
 	}
 }
 
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export async function pull<T>(url: string, key: string) {
-	const prefix = process.env.HEADSCALE_URL!
+	const context = await getContext()
+	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		headers: {
 			Authorization: `Bearer ${key}`
@@ -32,7 +34,8 @@ export async function pull<T>(url: string, key: string) {
 }
 
 export async function post<T>(url: string, key: string, body?: unknown) {
-	const prefix = process.env.HEADSCALE_URL!
+	const context = await getContext()
+	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'POST',
 		body: body ? JSON.stringify(body) : undefined,
@@ -49,7 +52,8 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function del<T>(url: string, key: string) {
-	const prefix = process.env.HEADSCALE_URL!
+	const context = await getContext()
+	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'DELETE',
 		headers: {

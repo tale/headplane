@@ -161,6 +161,7 @@ type Context = {
 	hasConfigWrite: boolean;
 	hasAcl: boolean;
 	hasAclWrite: boolean;
+	headscaleUrl: string;
 }
 
 export let context: Context
@@ -172,11 +173,27 @@ export async function getContext() {
 			hasConfig: await hasConfig(),
 			hasConfigWrite: await hasConfigW(),
 			hasAcl: await hasAcl(),
-			hasAclWrite: await hasAclW()
+			hasAclWrite: await hasAclW(),
+			headscaleUrl: await getHeadscaleUrl()
 		}
 	}
 
 	return context
+}
+
+async function getHeadscaleUrl() {
+	if (process.env.HEADSCALE_URL) {
+		return process.env.HEADSCALE_URL
+	}
+
+	try {
+		const config = await getConfig()
+		if (config.server_url) {
+			return config.server_url
+		}
+	} catch {}
+
+	return ''
 }
 
 async function checkSock() {
