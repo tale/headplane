@@ -1,7 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react'
 import { XMarkIcon } from '@heroicons/react/24/outline'
 import clsx from 'clsx'
-import { Fragment, type SetStateAction, useState } from 'react'
+import { Fragment, type ReactNode, type SetStateAction, useState } from 'react'
 
 import Button from './Button'
 
@@ -10,6 +10,7 @@ type HookParameters = {
 	description?: string;
 	buttonText?: string;
 	variant?: 'danger' | 'confirm';
+	children?: ReactNode;
 
 	// Optional because the button submits
 	onConfirm?: () => void | Promise<void>;
@@ -100,11 +101,17 @@ function Modal({ parameters, isOpen, setIsOpen }: Properties) {
 									{parameters.description}
 								</Dialog.Description>
 							) : undefined}
+							{parameters.children ? (
+								<div className='mt-12 w-full'>
+									{parameters.children}
+								</div>
+							) : undefined}
 							<Button
 								variant='emphasized'
 								type='submit'
 								className={clsx(
-									'w-full mt-12',
+									'w-full',
+									parameters.children ? 'mt-4' : 'mt-12',
 									parameters.variant === 'danger'
 										? 'bg-red-800 dark:bg-red-500 focus:ring-red-500 dark:focus:ring-red-500'
 										: ''
