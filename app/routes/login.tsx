@@ -7,6 +7,7 @@ import Card from '~/components/Card'
 import Code from '~/components/Code'
 import Input from '~/components/Input'
 import { type Key } from '~/types'
+import { getContext } from '~/utils/config'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
 import { commitSession, getSession } from '~/utils/sessions'
@@ -22,9 +23,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		})
 	}
 
-	const issuer = process.env.OIDC_ISSUER
-	const id = process.env.OIDC_CLIENT_ID
-	const secret = process.env.OIDC_CLIENT_SECRET
+	const context = await getContext()
+	const issuer = context.oidcConfig?.issuer
+	const id = context.oidcConfig?.client
+	const secret = context.oidcConfig?.secret
 	const normal = process.env.DISABLE_API_KEY_LOGIN
 
 	if (issuer && (!id || !secret)) {
@@ -51,9 +53,13 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
 	const oidcStart = String(formData.get('oidc-start'))
+
 	if (oidcStart) {
-		const issuer = process.env.OIDC_ISSUER
-		const id = process.env.OIDC_CLIENT_ID
+		const context = await getContext()
+		const issuer = context.oidcConfig?.issuer
+		const id = context.oidcConfig?.client
+
+		// We know it exists here because this action only happens on OIDC
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		return startOidc(issuer!, id!, request)
 	}

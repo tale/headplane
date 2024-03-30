@@ -162,6 +162,11 @@ type Context = {
 	hasAcl: boolean;
 	hasAclWrite: boolean;
 	headscaleUrl: string;
+	oidcConfig?: {
+		issuer: string;
+		client: string;
+		secret: string;
+	};
 }
 
 export let context: Context
@@ -174,11 +179,37 @@ export async function getContext() {
 			hasConfigWrite: await hasConfigW(),
 			hasAcl: await hasAcl(),
 			hasAclWrite: await hasAclW(),
-			headscaleUrl: await getHeadscaleUrl()
+			headscaleUrl: await getHeadscaleUrl(),
+			oidcConfig: await getOidcConfig()
 		}
 	}
 
 	return context
+}
+
+async function getOidcConfig() {
+	// Check for the OIDC environment variables first
+	let issuer = process.env.OIDC_ISSUER
+	let client = process.env.OIDC_CLIENT
+	let secret = process.env.OIDC_SECRET
+
+	if (!issuer || !client || !secret) {
+		const config = await getConfig()
+		issuer = config.oidc?.issuer
+		client = config.oidc?.client_id
+		secret = config.oidc?.client_secret
+	}
+
+	// If atleast one is defined but not all 3, throw an error
+	if ((issuer || client || secret) && !(issuer && client && secret)) {
+		throw new Error('OIDC configuration is incomplete')
+	}
+
+	if (!issuer || !client || !secret) {
+		return
+	}
+
+	return { issuer, client, secret }
 }
 
 async function getHeadscaleUrl() {
