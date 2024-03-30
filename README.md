@@ -14,8 +14,6 @@ It's still very early in it's development, however these are some of the feature
 - [x] Editable headscale configuration
 
 ## Deployment
-> The docker image is not available yet. For now you can build it locally with `docker build -t ghcr.io/tale/headplane:latest .`
-
 - If you run Headscale in a Docker container, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
 - If you run Headscale natively, see the [Basic Deployment](/docs/Basic-Integration.md) guide.
 
