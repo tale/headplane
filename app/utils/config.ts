@@ -1,7 +1,7 @@
+import { type FSWatcher, watch } from 'node:fs'
 import { access, constants, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { type FSWatcher, watch } from 'chokidar'
 import { type Document, parseDocument } from 'yaml'
 
 type Duration = `${string}s` | `${string}h` | `${string}m` | `${string}d` | `${string}y`
@@ -149,7 +149,8 @@ export function registerConfigWatcher() {
 	}
 
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
-	watcher = watch(path).on('change', async () => {
+	watcher = watch(path, async () => {
+		console.log('Config file changed, reloading')
 		await getConfig(true)
 	})
 }

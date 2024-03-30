@@ -12,6 +12,7 @@ import Spinner from '~/components/Spinner'
 import TableList from '~/components/TableList'
 import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
+import { useLiveData } from '~/utils/useLiveData'
 
 import Domains from './domains'
 import MagicModal from './magic'
@@ -56,6 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Page() {
+	useLiveData({ interval: 5000 })
 	const data = useLoaderData<typeof loader>()
 	const fetcher = useFetcher()
 	const [localOverride, setLocalOverride] = useState(data.overrideLocal)
