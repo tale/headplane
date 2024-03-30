@@ -5,6 +5,10 @@ type SessionData = {
 	authState: string;
 	authNonce: string;
 	authVerifier: string;
+	user: {
+		name: string;
+		email?: string;
+	};
 }
 
 type SessionFlashData = {
@@ -23,6 +27,7 @@ export const {
 			maxAge: 60 * 60 * 24, // 24 hours
 			path: '/',
 			sameSite: 'lax',
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			secrets: [process.env.COOKIE_SECRET!],
 			secure: true
 		}

@@ -126,6 +126,11 @@ export async function finishOidc(issuer: string, client: string, secret: string,
 	})
 
 	session.set('hsApiKey', keyResponse.apiKey)
+	session.set('user', {
+		name: claims.name ? String(claims.name) : 'Anonymous',
+		email: claims.email ? String(claims.email) : undefined
+	})
+
 	return redirect('/machines', {
 		headers: {
 			// eslint-disable-next-line @typescript-eslint/naming-convention

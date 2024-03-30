@@ -1,8 +1,9 @@
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs, redirect } from '@remix-run/node'
-import { Form, Link, useActionData, useLoaderData } from '@remix-run/react'
+import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useMemo } from 'react'
 
 import Code from '~/components/Code'
+import { type Key } from '~/types'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
 import { commitSession, getSession } from '~/utils/sessions'
@@ -46,26 +47,47 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
+	const oidcStart = String(formData.get('oidc-start'))
+	if (oidcStart) {
+		const issuer = process.env.OIDC_ISSUER
+		const id = process.env.OIDC_CLIENT_ID
+		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+		return startOidc(issuer!, id!, request)
+	}
+
 	const apiKey = String(formData.get('api-key'))
 	const session = await getSession(request.headers.get('Cookie'))
 
 	// Test the API key
 	try {
-		await pull('v1/apikey', apiKey)
+		const apiKeys = await pull<{ apiKeys: Key[] }>('v1/apikey', apiKey)
+		const key = apiKeys.apiKeys.find(k => apiKey.startsWith(k.prefix))
+		if (!key) {
+			throw new Error('Invalid API key')
+		}
+
+		const expiry = new Date(key.expiration)
+		const expiresIn = expiry.getTime() - Date.now()
+		const expiresDays = Math.round(expiresIn / 1000 / 60 / 60 / 24)
+
+		session.set('hsApiKey', apiKey)
+		session.set('user', {
+			name: key.prefix,
+			email: `${expiresDays} days`
+		})
+
+		return redirect('/machines', {
+			headers: {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				'Set-Cookie': await commitSession(session)
+			}
+		})
 	} catch (error) {
 		console.error(error)
 		return json({
 			error: 'Invalid API key'
 		})
 	}
-
-	session.set('hsApiKey', apiKey)
-	return redirect('/machines', {
-		headers: {
-			// eslint-disable-next-line @typescript-eslint/naming-convention
-			'Set-Cookie': await commitSession(session)
-		}
-	})
 }
 
 export default function Page() {
@@ -118,11 +140,12 @@ export default function Page() {
 					</div>
 				) : undefined}
 				{data.oidc ? (
-					<Link to='/oidc/start'>
-						<button className='bg-gray-800 text-white rounded-md p-2 w-full' type='button'>
+					<Form method='POST'>
+						<input type='hidden' name='oidc-start' value='true'/>
+						<button className='bg-gray-800 text-white rounded-md p-2 w-full' type='submit'>
 							Login with SSO
 						</button>
-					</Link>
+					</Form>
 				) : undefined}
 			</div>
 		</div>
