@@ -43,7 +43,10 @@ export async function startOidc(issuer: string, client: string, request: Request
 	const nonce = generateRandomNonce()
 	const verifier = generateRandomCodeVerifier()
 	const challenge = await calculatePKCECodeChallenge(verifier)
+
 	const callback = new URL('/admin/oidc/callback', request.url)
+	callback.protocol = request.url.includes('localhost') ? 'http:' : 'https:'
+	callback.hostname = request.headers.get('Host') ?? ''
 	const authUrl = new URL(processed.authorization_endpoint)
 
 	authUrl.searchParams.set('client_id', oidcClient.client_id)
@@ -106,6 +109,9 @@ export async function finishOidc(issuer: string, client: string, secret: string,
 	}
 
 	const callback = new URL('/admin/oidc/callback', request.url)
+	callback.protocol = request.url.includes('localhost') ? 'http:' : 'https:'
+	callback.hostname = request.headers.get('Host') ?? ''
+
 	const tokenResponse = await authorizationCodeGrantRequest(processed, oidcClient, parameters, callback.href, verifier)
 	const challenges = parseWwwAuthenticateChallenges(tokenResponse)
 	if (challenges) {
