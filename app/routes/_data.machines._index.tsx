@@ -45,29 +45,9 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Page() {
 	useLiveData({ interval: 3000 })
 	const data = useLoaderData<typeof loader>()
-	const [activeId, setActiveId] = useState<string | undefined>(undefined)
 	const fetcher = useFetcher()
 
-	const { Modal, open } = useModal({
-		title: 'Remove Machine',
-		description: [
-			'This action is irreversible and will disconnect the machine from the Headscale server.',
-			'All data associated with this machine including ACLs and tags will be lost.'
-		].join('\n'),
-		variant: 'danger',
-		buttonText: 'Remove',
-		onConfirm: () => {
-			fetcher.submit(
-				{
-					id: activeId!
-				},
-				{
-					method: 'DELETE',
-					encType: 'application/json'
-				}
-			)
-		}
-	})
+	const { Modal, open } = useModal()
 
 	return (
 		<>
@@ -143,16 +123,70 @@ export default function Page() {
 									)}
 									>
 										<Dropdown
-											className='left-1/4 w-min'
+											className='left-1/4 cursor-pointer'
+											width='w-48'
 											button={(
 												<EllipsisHorizontalIcon className='w-5 h-5'/>
 											)}
 										>
-											<Dropdown.Item className='text-red-700'>
+											<Dropdown.Item>
 												<button
-													type='button' onClick={() => {
-														setActiveId(machine.id)
+													type='button'
+													className='text-left'
+													onClick={() => {
 														open()
+													}}
+												>
+													Edit machine name
+												</button>
+											</Dropdown.Item>
+											<Dropdown.Item>
+												<button
+													type='button'
+													className='text-left'
+													onClick={() => {
+														open()
+													}}
+												>
+													Edit route settings
+												</button>
+											</Dropdown.Item>
+											<Dropdown.Item>
+												<button
+													type='button'
+													className='text-left'
+													onClick={() => {
+														open()
+													}}
+												>
+													Edit ACL tags
+												</button>
+											</Dropdown.Item>
+											<Dropdown.Item>
+												<button
+													type='button'
+													className='text-left text-red-700'
+													onClick={() => {
+														open({
+															title: 'Remove Machine',
+															description: [
+																'This action is irreversible and will disconnect the machine from the Headscale server.',
+																'All data associated with this machine including ACLs and tags will be lost.'
+															].join('\n'),
+															variant: 'danger',
+															buttonText: 'Remove',
+															onConfirm: () => {
+																fetcher.submit(
+																	{
+																		id: machine.id
+																	},
+																	{
+																		method: 'DELETE',
+																		encType: 'application/json'
+																	}
+																)
+															}
+														})
 													}}
 												>
 													Remove

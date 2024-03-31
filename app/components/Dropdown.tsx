@@ -7,6 +7,7 @@ type Properties = {
 	readonly button: ReactNode;
 	// eslint-disable-next-line unicorn/no-keyword-prefix
 	readonly className?: string;
+	readonly width?: string;
 }
 
 function Dropdown(properties: Properties) {
@@ -26,12 +27,13 @@ function Dropdown(properties: Properties) {
 					leaveTo='transform opacity-0 scale-95'
 				>
 					<Menu.Items className={clsx(
-						'absolute right-0 w-fit max-w-36 mt-2 rounded-md',
+						'absolute right-0 mt-2 rounded-md',
 						'text-gray-700 dark:text-gray-300',
-						'bg-white dark:bg-zinc-800 text-right',
+						'bg-white dark:bg-zinc-800',
 						'overflow-hidden z-50',
 						'border border-gray-200 dark:border-zinc-700',
-						'divide-y divide-gray-200 dark:divide-zinc-700'
+						'divide-y divide-gray-200 dark:divide-zinc-700',
+						properties.width ?? 'w-36'
 					)}
 					>
 						{properties.children}
@@ -66,7 +68,7 @@ function Item(properties: ItemProperties) {
 				<div
 					{...properties}
 					className={clsx(
-						'px-4 py-2 w-full text-right',
+						'px-4 py-2 w-full',
 						'focus:outline-none focus:ring',
 						'focus:ring-gray-300 dark:focus:ring-zinc-700',
 						properties.className,

@@ -14,36 +14,60 @@ type HookParameters = {
 
 	// Optional because the button submits
 	onConfirm?: () => void | Promise<void>;
+	onOpen?: () => void | Promise<void>;
+	onClose?: () => void | Promise<void>;
 }
+
+type Overrides = Omit<HookParameters, 'onOpen' | 'onClose'>
 
 type Properties = {
 	readonly isOpen: boolean;
 	readonly setIsOpen: (value: SetStateAction<boolean>) => void;
-	readonly parameters: HookParameters;
+	readonly parameters?: HookParameters;
 }
 
-export default function useModal(properties: HookParameters) {
+export default function useModal(properties?: HookParameters) {
 	const [isOpen, setIsOpen] = useState(false)
+	const [liveProperties, setLiveProperties] = useState(properties)
+
 	return {
 		Modal: (
 			<Modal
 				isOpen={isOpen}
 				setIsOpen={setIsOpen}
-				parameters={properties}
+				parameters={liveProperties}
 			/>
 		),
 
-		open: () => {
+		open: (overrides?: Overrides) => {
+			if (!overrides && !properties) {
+				throw new Error('No properties provided')
+			}
+
 			setIsOpen(true)
+			if (properties?.onOpen) {
+				void properties.onOpen()
+			}
+
+			if (overrides) {
+				setLiveProperties(overrides)
+			}
 		},
 
 		close: () => {
 			setIsOpen(false)
+			if (properties?.onClose) {
+				void properties.onClose()
+			}
 		}
 	}
 }
 
 function Modal({ parameters, isOpen, setIsOpen }: Properties) {
+	if (!parameters) {
+		return
+	}
+
 	return (
 		<Transition
 			show={isOpen}
