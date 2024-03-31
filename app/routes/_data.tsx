@@ -69,7 +69,7 @@ export default function Layout() {
 									<p className='font-bold'>{data.user?.name}</p>
 									<p>{data.user?.email}</p>
 								</Dropdown.Item>
-								<Dropdown.Item className='text-red-700'>
+								<Dropdown.Item className='text-red-700 cursor-pointer'>
 									<Form method='POST' action='/logout'>
 										<button type='submit'>
 											Logout
