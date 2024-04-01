@@ -12,6 +12,7 @@ import Spinner from '~/components/Spinner'
 import TableList from '~/components/TableList'
 import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
+import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
 import Domains from './domains'
@@ -45,9 +46,18 @@ export async function loader() {
 }
 
 export async function action({ request }: ActionFunctionArgs) {
+	const session = await getSession(request.headers.get('Cookie'))
+	if (!session.has('hsApiKey')) {
+		return json({ success: false }, {
+			status: 401
+		})
+	}
+
 	const context = await getContext()
 	if (!context.hasConfigWrite) {
-		return json({ success: false })
+		return json({ success: false }, {
+			status: 403
+		})
 	}
 
 	const data = await request.json() as Record<string, unknown>
