@@ -123,16 +123,17 @@ export default function Page() {
 									)}
 									>
 										<Dropdown
-											className='left-1/4 cursor-pointer'
+											className='left-1/4'
 											width='w-48'
 											button={(
 												<EllipsisHorizontalIcon className='w-5 h-5'/>
 											)}
 										>
-											<Dropdown.Item>
+											<Dropdown.Item variant='static'>
 												<button
+													disabled
 													type='button'
-													className='text-left'
+													className='text-left w-full opacity-50'
 													onClick={() => {
 														open()
 													}}
@@ -140,10 +141,11 @@ export default function Page() {
 													Edit machine name
 												</button>
 											</Dropdown.Item>
-											<Dropdown.Item>
+											<Dropdown.Item variant='static'>
 												<button
+													disabled
 													type='button'
-													className='text-left'
+													className='text-left w-full opacity-50'
 													onClick={() => {
 														open()
 													}}
@@ -151,10 +153,11 @@ export default function Page() {
 													Edit route settings
 												</button>
 											</Dropdown.Item>
-											<Dropdown.Item>
+											<Dropdown.Item variant='static'>
 												<button
+													disabled
 													type='button'
-													className='text-left'
+													className='text-left w-full opacity-50'
 													onClick={() => {
 														open()
 													}}
@@ -165,7 +168,7 @@ export default function Page() {
 											<Dropdown.Item>
 												<button
 													type='button'
-													className='text-left text-red-700'
+													className='text-left text-red-700 w-full'
 													onClick={() => {
 														open({
 															title: 'Remove Machine',

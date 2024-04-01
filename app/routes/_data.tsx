@@ -71,7 +71,7 @@ export default function Layout() {
 								</Dropdown.Item>
 								<Dropdown.Item className='text-red-700 cursor-pointer'>
 									<Form method='POST' action='/logout'>
-										<button type='submit'>
+										<button type='submit' className='w-full'>
 											Logout
 										</button>
 									</Form>

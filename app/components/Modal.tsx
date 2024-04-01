@@ -126,7 +126,7 @@ function Modal({ parameters, isOpen, setIsOpen }: Properties) {
 								</Dialog.Description>
 							) : undefined}
 							{parameters.children ? (
-								<div className='mt-12 w-full'>
+								<div className='w-full mt-4'>
 									{parameters.children}
 								</div>
 							) : undefined}
@@ -134,8 +134,7 @@ function Modal({ parameters, isOpen, setIsOpen }: Properties) {
 								variant='emphasized'
 								type='submit'
 								className={clsx(
-									'w-full',
-									parameters.children ? 'mt-4' : 'mt-12',
+									'w-full mt-12',
 									parameters.variant === 'danger'
 										? 'bg-red-800 dark:bg-red-500 focus:ring-red-500 dark:focus:ring-red-500'
 										: ''
