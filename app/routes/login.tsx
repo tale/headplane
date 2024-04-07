@@ -52,7 +52,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData()
-	const oidcStart = String(formData.get('oidc-start'))
+	const oidcStart = formData.get('oidc-start')
 
 	if (oidcStart) {
 		const context = await getContext()
