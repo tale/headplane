@@ -131,6 +131,23 @@ export async function getConfig(force = false) {
 	return config.toJSON() as Config
 }
 
+export async function getAcl() {
+	let path = process.env.ACL_FILE
+	if (!path) {
+		try {
+			const config = await getConfig()
+			path = config.acl_policy_path
+		} catch {}
+	}
+
+	if (!path) {
+		return ''
+	}
+
+	const data = await readFile(path, 'utf8')
+	return data
+}
+
 // This is so obscenely dangerous, please have a check around it
 export async function patchConfig(partial: Record<string, unknown>) {
 	for (const [key, value] of Object.entries(partial)) {
@@ -139,6 +156,22 @@ export async function patchConfig(partial: Record<string, unknown>) {
 
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 	await writeFile(path, config.toString(), 'utf8')
+}
+
+export async function patchAcl(data: string) {
+	let path = process.env.ACL_FILE
+	if (!path) {
+		try {
+			const config = await getConfig()
+			path = config.acl_policy_path
+		} catch {}
+	}
+
+	if (!path) {
+		throw new Error('No ACL file defined')
+	}
+
+	await writeFile(path, data, 'utf8')
 }
 
 let watcher: FSWatcher

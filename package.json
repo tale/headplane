@@ -11,6 +11,7 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
+		"@codemirror/lang-json": "^6.0.1",
 		"@dnd-kit/core": "^6.1.0",
 		"@dnd-kit/modifiers": "^7.0.0",
 		"@dnd-kit/sortable": "^8.0.0",
@@ -20,12 +21,16 @@
 		"@remix-run/node": "^2.8.1",
 		"@remix-run/react": "^2.8.1",
 		"@remix-run/serve": "^2.8.1",
+		"@uiw/codemirror-theme-github": "^4.21.25",
+		"@uiw/react-codemirror": "^4.21.25",
 		"clsx": "^2.1.0",
 		"isbot": "^4.1.0",
 		"oauth4webapi": "^2.10.3",
 		"react": "^18.2.0",
+		"react-codemirror-merge": "^4.21.25",
 		"react-dom": "^18.2.0",
 		"react-hot-toast": "^2.4.1",
+		"remix-utils": "^7.6.0",
 		"undici": "^6.10.2",
 		"usehooks-ts": "^3.0.2",
 		"yaml": "^2.4.1"
