@@ -299,8 +299,6 @@ async function hasAcl() {
 			const config = await getConfig()
 			path = config.acl_policy_path
 		} catch {}
-
-		return false
 	}
 
 	if (!path) {
@@ -311,7 +309,9 @@ async function hasAcl() {
 		path = resolve(path)
 		await access(path, constants.R_OK)
 		return true
-	} catch {}
+	} catch (error) {
+		console.log('Cannot acquire read access to ACL file', error)
+	}
 
 	return false
 }
