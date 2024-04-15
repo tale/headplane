@@ -13,7 +13,7 @@ You can configure Headplane using environment variables.
 - **`HOST`**: The host to bind the server to (default: `0.0.0.0`).
 - **`PORT`**: The port to bind the server to (default: `3000`).
 - **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
-- **`ACL_FILE`**: The path to the ACL file (default: `/etc/headscale/acl_policy.json`).
+- **`ACL_FILE`**: The path to the ACL file (default: `/etc/headscale/acl_policy.json`, not needed if you have `acl_policy_path` in your config).
 - **`HEADSCALE_CONTAINER`**: The name of the Headscale container (required for Docker integration).
 
 ### SSO/OpenID Connect

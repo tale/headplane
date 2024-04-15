@@ -44,3 +44,7 @@ services:
 
 You may also choose to run it natively with the distributed binaries on the releases page.
 You'll need to manage running this yourself, and I would recommend making a `systemd` unit.
+
+## ACL Configuration
+If you would like to get the web ACL configuration working, you'll need to pass the `ACL_FILE` environment variable.
+This should point to the path of the ACL file on the Headscale server (ie. `ACL_FILE=/etc/headscale/acl_policy.json`).

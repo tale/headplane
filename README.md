@@ -8,7 +8,7 @@ This is a relatively tiny Remix app that aims to provide a usable GUI for the He
 It's still very early in it's development, however these are some of the features that are planned.
 
 - [ ] Editable tags, machine names, users, etc
-- [ ] ACL control through Docker integration
+- [x] ACL control through Docker integration
 - [x] OIDC based login for the web UI
 - [x] Automated API key regeneration
 - [x] Editable headscale configuration
@@ -16,6 +16,7 @@ It's still very early in it's development, however these are some of the feature
 ## Deployment
 - If you run Headscale in a Docker container, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
 - If you run Headscale natively, see the [Basic Deployment](/docs/Basic-Integration.md) guide.
+- For more configuration options, refer to the [Configuration](/docs/Configuration.md) guide.
 
 ## Contributing
 If you would like to contribute, please install a relatively modern version of Node.js and PNPM.
