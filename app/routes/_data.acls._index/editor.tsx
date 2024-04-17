@@ -11,6 +11,8 @@ import { toast } from 'react-hot-toast/headless'
 import Button from '~/components/Button'
 import Spinner from '~/components/Spinner'
 
+import Fallback from './fallback'
+
 type EditorProperties = {
 	readonly acl: string;
 	readonly setAcl: (acl: string) => void;
@@ -25,6 +27,8 @@ type EditorProperties = {
 
 export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 	const [light, setLight] = useState(false)
+	const [loading, setLoading] = useState(true)
+
 	const fetcher = useFetcher()
 	const aclType = useMemo(() => data.aclType === 'json' ? json() : yaml(), [data.aclType])
 
@@ -35,6 +39,9 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 		theme.addEventListener('change', theme => {
 			setLight(theme.matches)
 		})
+
+		// Prevents the FOUC
+		setLoading(false)
 	}, [])
 
 	return (
@@ -44,38 +51,42 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 				'rounded-b-lg rounded-tr-lg mb-2 overflow-hidden'
 			)}
 			>
-				{mode === 'edit' ? (
-					<CodeMirror
-						value={acl}
-						maxHeight='calc(100vh - 20rem)'
-						theme={light ? githubLight : githubDark}
-						extensions={[aclType]}
-						readOnly={!data.hasAclWrite}
-						onChange={value => {
-							setAcl(value)
-						}}
-					/>
+				{loading ? (
+					<Fallback acl={acl} where='client'/>
 				) : (
-					<div
-						className='overflow-y-scroll'
-						style={{ height: 'calc(100vh - 20rem)' }}
-					>
-						<CodeMirrorMerge
+					mode === 'edit' ? (
+						<CodeMirror
+							value={acl}
+							className='h-editor text-sm'
 							theme={light ? githubLight : githubDark}
-							orientation='a-b'
+							extensions={[aclType]}
+							readOnly={!data.hasAclWrite}
+							onChange={value => {
+								setAcl(value)
+							}}
+						/>
+					) : (
+						<div
+							className='overflow-y-scroll'
+							style={{ height: 'calc(100vh - 20rem)' }}
 						>
-							<CodeMirrorMerge.Original
-								readOnly
-								value={data.currentAcl}
-								extensions={[aclType]}
-							/>
-							<CodeMirrorMerge.Modified
-								readOnly
-								value={acl}
-								extensions={[aclType]}
-							/>
-						</CodeMirrorMerge>
-					</div>
+							<CodeMirrorMerge
+								theme={light ? githubLight : githubDark}
+								orientation='a-b'
+							>
+								<CodeMirrorMerge.Original
+									readOnly
+									value={data.currentAcl}
+									extensions={[aclType]}
+								/>
+								<CodeMirrorMerge.Modified
+									readOnly
+									value={acl}
+									extensions={[aclType]}
+								/>
+							</CodeMirrorMerge>
+						</div>
+					)
 				)}
 			</div>
 

@@ -13,6 +13,7 @@ import { sighupHeadscale } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
 
 import Editor from './editor'
+import Fallback from './fallback'
 
 export async function loader() {
 	const context = await getContext()
@@ -146,14 +147,14 @@ export default function Page() {
 				</Tab.List>
 				<Tab.Panels>
 					<Tab.Panel>
-						<ClientOnly>
+						<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
 							{() => (
 								<Editor data={data} acl={acl} setAcl={setAcl} mode='edit'/>
 							)}
 						</ClientOnly>
 					</Tab.Panel>
 					<Tab.Panel>
-						<ClientOnly>
+						<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
 							{() => (
 								<Editor data={data} acl={acl} setAcl={setAcl} mode='diff'/>
 							)}
@@ -170,7 +171,7 @@ export default function Page() {
 							<CubeTransparentIcon className='w-24 h-24 text-gray-300 dark:text-gray-500'/>
 							<p className='w-1/2 text-center mt-4'>
 								The Preview rules is very much still a work in progress.
-								It's a bit complicated to implement right now but hopefully it will be available soon.
+								It is a bit complicated to implement right now but hopefully it will be available soon.
 							</p>
 						</div>
 					</Tab.Panel>
