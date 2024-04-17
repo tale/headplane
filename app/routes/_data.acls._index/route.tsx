@@ -20,10 +20,11 @@ export async function loader() {
 		throw new Error('No ACL configuration is available')
 	}
 
-	const acl = await getAcl()
+	const { data, type } = await getAcl()
 	return {
 		hasAclWrite: context.hasAclWrite,
-		currentAcl: acl
+		currentAcl: data,
+		aclType: type
 	}
 }
 
@@ -85,7 +86,7 @@ export default function Page() {
 				<Tab.List className={clsx(
 					'flex border-t border-gray-200 dark:border-gray-700',
 					'w-fit rounded-t-lg overflow-hidden',
-					'text-gray-300 dark:text-gray-500'
+					'text-gray-400 dark:text-gray-500'
 				)}
 				>
 					<Tab as={Fragment}>

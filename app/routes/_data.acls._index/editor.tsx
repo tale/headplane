@@ -1,9 +1,10 @@
 import { json } from '@codemirror/lang-json'
+import { yaml } from '@codemirror/lang-yaml'
 import { useFetcher } from '@remix-run/react'
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github'
 import CodeMirror from '@uiw/react-codemirror'
 import clsx from 'clsx'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import CodeMirrorMerge from 'react-codemirror-merge'
 import { toast } from 'react-hot-toast/headless'
 
@@ -18,12 +19,14 @@ type EditorProperties = {
 	readonly data: {
 		hasAclWrite: boolean;
 		currentAcl: string;
+		aclType: string;
 	};
 }
 
 export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 	const [light, setLight] = useState(false)
 	const fetcher = useFetcher()
+	const aclType = useMemo(() => data.aclType === 'json' ? json() : yaml(), [data.aclType])
 
 	useEffect(() => {
 		const theme = window.matchMedia('(prefers-color-scheme: light)')
@@ -35,7 +38,6 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 	}, [])
 
 	return (
-
 		<>
 			<div className={clsx(
 				'border border-gray-200 dark:border-gray-700',
@@ -47,7 +49,7 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 						value={acl}
 						maxHeight='calc(100vh - 20rem)'
 						theme={light ? githubLight : githubDark}
-						extensions={[json()]}
+						extensions={[aclType]}
 						readOnly={!data.hasAclWrite}
 						onChange={value => {
 							setAcl(value)
@@ -65,12 +67,12 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 							<CodeMirrorMerge.Original
 								readOnly
 								value={data.currentAcl}
-								extensions={[json()]}
+								extensions={[aclType]}
 							/>
 							<CodeMirrorMerge.Modified
 								readOnly
 								value={acl}
-								extensions={[json()]}
+								extensions={[aclType]}
 							/>
 						</CodeMirrorMerge>
 					</div>

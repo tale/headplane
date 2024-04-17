@@ -2,7 +2,7 @@ import { type FSWatcher, watch } from 'node:fs'
 import { access, constants, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 
-import { type Document, parseDocument } from 'yaml'
+import { type Document, parse, parseDocument } from 'yaml'
 
 type Duration = `${string}s` | `${string}h` | `${string}m` | `${string}d` | `${string}y`
 
@@ -141,11 +141,19 @@ export async function getAcl() {
 	}
 
 	if (!path) {
-		return ''
+		return { data: '', type: 'json' }
 	}
 
 	const data = await readFile(path, 'utf8')
-	return data
+
+	// Naive check for YAML over JSON
+	// This is because JSON.parse doesn't support comments
+	try {
+		parse(data)
+		return { data, type: 'yaml' }
+	} catch {
+		return { data, type: 'json' }
+	}
 }
 
 // This is so obscenely dangerous, please have a check around it
@@ -339,3 +347,4 @@ async function hasAclW() {
 
 	return false
 }
+

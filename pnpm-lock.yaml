@@ -8,6 +8,9 @@ dependencies:
   '@codemirror/lang-json':
     specifier: ^6.0.1
     version: 6.0.1
+  '@codemirror/lang-yaml':
+    specifier: ^6.1.1
+    version: 6.1.1(@codemirror/view@6.26.3)
   '@dnd-kit/core':
     specifier: ^6.1.0
     version: 6.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -488,6 +491,19 @@ packages:
     dependencies:
       '@codemirror/language': 6.10.1
       '@lezer/json': 1.0.2
+    dev: false
+
+  /@codemirror/lang-yaml@6.1.1(@codemirror/view@6.26.3):
+    resolution: {integrity: sha512-HV2NzbK9bbVnjWxwObuZh5FuPCowx51mEfoFT9y3y+M37fA3+pbxx4I7uePuygFzDsAmCTwQSc/kXh/flab4uw==}
+    dependencies:
+      '@codemirror/autocomplete': 6.16.0(@codemirror/language@6.10.1)(@codemirror/state@6.4.1)(@codemirror/view@6.26.3)(@lezer/common@1.2.1)
+      '@codemirror/language': 6.10.1
+      '@codemirror/state': 6.4.1
+      '@lezer/common': 1.2.1
+      '@lezer/highlight': 1.2.0
+      '@lezer/yaml': 1.0.2
+    transitivePeerDependencies:
+      - '@codemirror/view'
     dev: false
 
   /@codemirror/language@6.10.1:
@@ -1158,6 +1174,14 @@ packages:
     resolution: {integrity: sha512-Wst46p51km8gH0ZUmeNrtpRYmdlRHUpN1DQd3GFAyKANi8WVz8c2jHYTf1CVScFaCjQw1iO3ZZdqGDxQPRErTg==}
     dependencies:
       '@lezer/common': 1.2.1
+    dev: false
+
+  /@lezer/yaml@1.0.2:
+    resolution: {integrity: sha512-XCkwuxe+eumJ28nA9e1S6XKsXz9W7V/AG+WBiWOtiIuUpKcZ/bHuvN8bLxSDREIcybSRpEd/jvphh4vgm6Ed2g==}
+    dependencies:
+      '@lezer/common': 1.2.1
+      '@lezer/highlight': 1.2.0
+      '@lezer/lr': 1.4.0
     dev: false
 
   /@mdx-js/mdx@2.3.0:
