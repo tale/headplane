@@ -46,7 +46,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const data = await request.json() as { acl: string }
 	await patchAcl(data.acl)
-	await sighupHeadscale()
+
+	if (context.hasDockerSock) {
+		await sighupHeadscale()
+	}
+
 	return json({ success: true })
 }
 
