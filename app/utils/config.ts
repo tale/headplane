@@ -231,8 +231,8 @@ export async function getContext() {
 async function getOidcConfig() {
 	// Check for the OIDC environment variables first
 	let issuer = process.env.OIDC_ISSUER
-	let client = process.env.OIDC_CLIENT
-	let secret = process.env.OIDC_SECRET
+	let client = process.env.OIDC_CLIENT_ID
+	let secret = process.env.OIDC_CLIENT_SECRET
 
 	if (!issuer || !client || !secret) {
 		const config = await getConfig()
