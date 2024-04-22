@@ -28,6 +28,7 @@
 		"isbot": "^4.1.0",
 		"oauth4webapi": "^2.10.3",
 		"react": "^18.2.0",
+		"react-aria-components": "^1.1.1",
 		"react-codemirror-merge": "^4.21.25",
 		"react-dom": "^18.2.0",
 		"react-hot-toast": "^2.4.1",

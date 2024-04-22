@@ -45,7 +45,7 @@ export default function Layout() {
 	const data = useLoaderData<typeof loader>()
 	return (
 		<>
-			<header className='mb-16 bg-gray-800 text-white dark:bg-gray-700'>
+			<header className='mb-6 bg-gray-800 text-white dark:bg-gray-700'>
 				<nav className='container mx-auto'>
 					<div className='flex items-center justify-between mb-8 pt-4'>
 						<div className='flex items-center gap-x-2'>

@@ -26,6 +26,8 @@ type Properties = {
 	readonly parameters?: HookParameters;
 }
 
+export type OpenFunction = (overrides?: Overrides) => void
+
 export default function useModal(properties?: HookParameters) {
 	const [isOpen, setIsOpen] = useState(false)
 	const [liveProperties, setLiveProperties] = useState(properties)

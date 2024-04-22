@@ -59,7 +59,7 @@ export default function Page() {
 	const [acl, setAcl] = useState(data.currentAcl)
 
 	return (
-		<div className='mx-16'>
+		<div>
 			{data.hasAclWrite ? undefined : (
 				<div className='mb-4'>
 					<Notice>
