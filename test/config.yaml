@@ -264,7 +264,7 @@ unix_socket_permission: "0777"
 # help us test it.
 # OpenID Connect
 oidc:
-  only_start_if_oidc_is_available: true
+  only_start_if_oidc_is_available: false
   issuer: "https://sso.example.com"
   client_id: "headscale"
   client_secret: "super_secret_client_secret"
