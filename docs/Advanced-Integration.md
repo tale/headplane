@@ -18,6 +18,8 @@ By default this is set to `/etc/headscale/config.yaml`.
 
 ### Access Control Lists (ACLs)
 
+![ACL Preview](/assets/acl-preview.png)
+
 Headplane will enable the `Access Controls` tab if it is able to read an ACL file from Headscale.<br>
 The ACL file path is read from the following sources in order of priority:
 
