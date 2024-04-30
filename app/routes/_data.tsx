@@ -2,8 +2,8 @@ import { Cog8ToothIcon, CpuChipIcon, GlobeAltIcon, LockClosedIcon, ServerStackIc
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Form, Outlet, useLoaderData, useRouteError } from '@remix-run/react'
 
-import Dropdown from '~/components/Dropdown'
 import { ErrorPopup } from '~/components/Error'
+import Menu from '~/components/Menu'
 import TabLink from '~/components/TabLink'
 import { getContext } from '~/utils/config'
 import { HeadscaleError, pull } from '~/utils/headscale'
@@ -62,21 +62,24 @@ export default function Layout() {
 							<a href='https://github.com/juanfont/headscale' target='_blank' rel='noreferrer' className='text-gray-300 hover:text-white'>
 								Headscale
 							</a>
-							<Dropdown
-								button={<UserCircleIcon className='w-8 h-8'/>}
-							>
-								<Dropdown.Item variant='static'>
-									<p className='font-bold'>{data.user?.name}</p>
-									<p>{data.user?.email}</p>
-								</Dropdown.Item>
-								<Dropdown.Item className='text-red-700 cursor-pointer'>
-									<Form method='POST' action='/logout'>
-										<button type='submit' className='w-full'>
-											Logout
-										</button>
-									</Form>
-								</Dropdown.Item>
-							</Dropdown>
+							<Menu>
+								<Menu.Button>
+									<UserCircleIcon className='w-8 h-8'/>
+								</Menu.Button>
+								<Menu.Items>
+									<Menu.Item className='text-right'>
+										<p className='font-bold'>{data.user?.name}</p>
+										<p>{data.user?.email}</p>
+									</Menu.Item>
+									<Menu.Item className='text-red-700 cursor-pointer'>
+										<Form method='POST' action='/logout'>
+											<button type='submit' className='w-full text-right'>
+												Logout
+											</button>
+										</Form>
+									</Menu.Item>
+								</Menu.Items>
+							</Menu>
 						</div>
 					</div>
 					<div className='flex items-center gap-x-4'>

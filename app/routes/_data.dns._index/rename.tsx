@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 /* eslint-disable unicorn/no-keyword-prefix */
-import { Dialog } from '@headlessui/react'
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 

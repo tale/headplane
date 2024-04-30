@@ -1,6 +1,7 @@
 import { useFetcher } from '@remix-run/react'
 
 import Button from '~/components/Button'
+// TODO: Remove useModal and replace with Dialog
 import useModal from '~/components/Modal'
 import Spinner from '~/components/Spinner'
 
