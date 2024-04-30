@@ -6,7 +6,7 @@ export default function Toaster() {
 
 	return (
 		<div
-			className='fixed bottom-0 right-0 p-4 w-80 h-1/2 overflow-hidden'
+			className='fixed bottom-0 right-0 p-4 w-80 h-1/2 overflow-hidden pointer-events-none'
 			onMouseEnter={startPause}
 			onMouseLeave={endPause}
 		>
