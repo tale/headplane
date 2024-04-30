@@ -1,22 +1,29 @@
+/* eslint-disable react/hook-use-state */
 import { ChevronDownIcon, ClipboardIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
 import { type FetcherWithComponents, Link } from '@remix-run/react'
-import clsx from 'clsx'
+import { useState } from 'react'
 import toast from 'react-hot-toast/headless'
 
-import Dropdown from '~/components/Dropdown'
-import type { OpenFunction } from '~/components/Modal'
+import Dialog from '~/components/Dialog'
+import Menu from '~/components/Menu'
 import StatusCircle from '~/components/StatusCircle'
 import { type Machine } from '~/types'
+import { cn } from '~/utils/cn'
+
+import Delete from './dialogs/delete'
+import Rename from './dialogs/rename'
 
 type MachineProperties = {
 	readonly machine: Machine;
-	readonly open: OpenFunction;
 	readonly fetcher: FetcherWithComponents<unknown>;
 	readonly magic?: string;
 }
 
-export default function MachineRow({ machine, open, fetcher, magic }: MachineProperties) {
+export default function MachineRow({ machine, fetcher, magic }: MachineProperties) {
 	const tags = [...machine.forcedTags, ...machine.validTags]
+	const renameState = useState(false)
+	const removeState = useState(false)
+
 	return (
 		<tr
 			key={machine.id}
@@ -27,7 +34,7 @@ export default function MachineRow({ machine, open, fetcher, magic }: MachinePro
 					to={`/machines/${machine.id}`}
 					className='group/link h-full'
 				>
-					<p className={clsx(
+					<p className={cn(
 						'font-semibold leading-snug',
 						'group-hover/link:text-blue-600',
 						'group-hover/link:dark:text-blue-400'
@@ -35,14 +42,14 @@ export default function MachineRow({ machine, open, fetcher, magic }: MachinePro
 					>
 						{machine.givenName}
 					</p>
-					<p className='text-sm text-gray-400 font-mono'>
+					<p className='text-sm text-gray-500 dark:text-gray-300 font-mono'>
 						{machine.name}
 					</p>
 					<div className='flex gap-1 mt-1'>
 						{tags.map(tag => (
 							<span
 								key={tag}
-								className={clsx(
+								className={cn(
 									'text-xs rounded-sm px-1 py-0.5',
 									'bg-gray-100 dark:bg-zinc-700',
 									'text-gray-600 dark:text-gray-300'
@@ -57,50 +64,53 @@ export default function MachineRow({ machine, open, fetcher, magic }: MachinePro
 			<td className='py-2'>
 				<div className='flex items-center gap-x-1'>
 					{machine.ipAddresses[0]}
-					<Dropdown
-						width='w-max'
-						button={(
+					<Menu>
+						<Menu.Button>
 							<ChevronDownIcon className='w-4 h-4'/>
-						)}
-					>
-						{machine.ipAddresses.map(ip => (
-							<Dropdown.Item key={ip}>
-								<button
-									type='button'
-									className={clsx(
-										'flex items-center gap-x-1.5 text-sm',
-										'justify-between w-full'
-									)}
-									onClick={async () => {
-										await navigator.clipboard.writeText(ip)
-										toast('Copied IP address to clipboard')
-									}}
+						</Menu.Button>
+						<Menu.Items>
+							{machine.ipAddresses.map(ip => (
+								<Menu.Item
+									key={ip}
+									className='hover:bg-transparent'
 								>
-									{ip}
-									<ClipboardIcon className='w-3 h-3'/>
-								</button>
-							</Dropdown.Item>
-						))}
-						{magic ? (
-							<Dropdown.Item>
-								<button
-									type='button'
-									className={clsx(
-										'flex items-center gap-x-1.5 text-sm',
-										'justify-between w-full break-keep'
-									)}
-									onClick={async () => {
-										const ip = `${machine.givenName}.${machine.user.name}.${magic}`
-										await navigator.clipboard.writeText(ip)
-										toast('Copied hostname to clipboard')
-									}}
-								>
-									{machine.givenName}.{machine.user.name}.{magic}
-									<ClipboardIcon className='w-3 h-3'/>
-								</button>
-							</Dropdown.Item>
-						) : undefined}
-					</Dropdown>
+									<button
+										type='button'
+										className={cn(
+											'flex items-center gap-x-1.5 text-sm',
+											'justify-between w-full'
+										)}
+										onClick={async () => {
+											await navigator.clipboard.writeText(ip)
+											toast('Copied IP address to clipboard')
+										}}
+									>
+										{ip}
+										<ClipboardIcon className='w-3 h-3'/>
+									</button>
+								</Menu.Item>
+							))}
+							{magic ? (
+								<Menu.Item className='hover:bg-transparent'>
+									<button
+										type='button'
+										className={cn(
+											'flex items-center gap-x-1.5 text-sm',
+											'justify-between w-full break-keep'
+										)}
+										onClick={async () => {
+											const ip = `${machine.givenName}.${machine.user.name}.${magic}`
+											await navigator.clipboard.writeText(ip)
+											toast('Copied hostname to clipboard')
+										}}
+									>
+										{machine.givenName}.{machine.user.name}.{magic}
+										<ClipboardIcon className='w-3 h-3'/>
+									</button>
+								</Menu.Item>
+							) : undefined}
+						</Menu.Items>
+					</Menu>
 				</div>
 			</td>
 			<td className='py-2'>
@@ -118,86 +128,52 @@ export default function MachineRow({ machine, open, fetcher, magic }: MachinePro
 				</span>
 			</td>
 			<td className='py-2 pr-0.5'>
-				<div className={clsx(
-					'border border-transparent rounded-lg py-0.5 w-10',
-					'group-hover:border-gray-200 dark:group-hover:border-zinc-700'
-				)}
-				>
-					<Dropdown
-						className='left-1/4'
-						width='w-48'
-						button={(
-							<EllipsisHorizontalIcon className='w-5 h-5'/>
+				<Rename
+					machine={machine}
+					fetcher={fetcher}
+					state={renameState}
+					magic={magic}
+				/>
+				<Delete
+					machine={machine}
+					fetcher={fetcher}
+					state={removeState}
+				/>
+				<Menu>
+					<Menu.Button
+						className={cn(
+							'flex items-center justify-center',
+							'border border-transparent rounded-lg py-0.5 w-10',
+							'group-hover:border-gray-200 dark:group-hover:border-zinc-700'
 						)}
 					>
-						<Dropdown.Item variant='static'>
-							<button
-								disabled
-								type='button'
-								className='text-left w-full opacity-50'
-								onClick={() => {
-									open()
-								}}
+						<EllipsisHorizontalIcon className='w-5'/>
+					</Menu.Button>
+					<Menu.Items>
+						<Menu.Item>
+							<Dialog.Button
+								className='h-full w-full text-left'
+								control={renameState}
 							>
 								Edit machine name
-							</button>
-						</Dropdown.Item>
-						<Dropdown.Item variant='static'>
-							<button
-								disabled
-								type='button'
-								className='text-left w-full opacity-50'
-								onClick={() => {
-									open()
-								}}
-							>
-								Edit route settings
-							</button>
-						</Dropdown.Item>
-						<Dropdown.Item variant='static'>
-							<button
-								disabled
-								type='button'
-								className='text-left w-full opacity-50'
-								onClick={() => {
-									open()
-								}}
-							>
-								Edit ACL tags
-							</button>
-						</Dropdown.Item>
-						<Dropdown.Item>
-							<button
-								type='button'
-								className='text-left text-red-700 w-full'
-								onClick={() => {
-									open({
-										title: 'Remove Machine',
-										description: [
-											'This action is irreversible and will disconnect the machine from the Headscale server.',
-											'All data associated with this machine including ACLs and tags will be lost.'
-										].join('\n'),
-										variant: 'danger',
-										buttonText: 'Remove',
-										onConfirm: () => {
-											fetcher.submit(
-												{
-													id: machine.id
-												},
-												{
-													method: 'DELETE',
-													encType: 'application/json'
-												}
-											)
-										}
-									})
-								}}
+							</Dialog.Button>
+						</Menu.Item>
+						<Menu.Item>
+							Edit route settings
+						</Menu.Item>
+						<Menu.Item>
+							Edit ACL tags
+						</Menu.Item>
+						<Menu.Item>
+							<Dialog.Button
+								className='w-full h-full text-left text-red-500 dark:text-red-400'
+								control={removeState}
 							>
 								Remove
-							</button>
-						</Dropdown.Item>
-					</Dropdown>
-				</div>
+							</Dialog.Button>
+						</Menu.Item>
+					</Menu.Items>
+				</Menu>
 			</td>
 		</tr>
 	)

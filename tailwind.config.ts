@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import type { Config } from 'tailwindcss'
+import colors from 'tailwindcss/colors'
+import animate from 'tailwindcss-animate'
+import aria from 'tailwindcss-react-aria-components'
 
 export default {
 	content: ['./app/**/*.{js,jsx,ts,tsx}'],
@@ -17,9 +20,13 @@ export default {
 		extend: {
 			height: {
 				editor: 'calc(100vh - 20rem)'
+			},
+			colors: {
+				main: colors.slate,
+				ui: colors.neutral
 			}
 		}
 	},
-	plugins: []
+	plugins: [animate, aria]
 } satisfies Config
 
