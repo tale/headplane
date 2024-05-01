@@ -1,7 +1,5 @@
-import { Switch } from '@headlessui/react'
 import { type ActionFunctionArgs } from '@remix-run/node'
 import { json, useFetcher, useLoaderData } from '@remix-run/react'
-import clsx from 'clsx'
 import { useState } from 'react'
 
 import Button from '~/components/Button'
@@ -9,6 +7,7 @@ import Code from '~/components/Code'
 import Input from '~/components/Input'
 import Notice from '~/components/Notice'
 import Spinner from '~/components/Spinner'
+import Switch from '~/components/Switch'
 import TableList from '~/components/TableList'
 import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
@@ -97,12 +96,9 @@ export default function Page() {
 								Override local DNS
 							</span>
 							<Switch
-								checked={localOverride}
-								disabled={!data.hasConfigWrite}
-								className={clsx(
-									localOverride ? 'bg-gray-800 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-400',
-									'relative inline-flex h-4 w-9 items-center rounded-full'
-								)}
+								label='Override local DNS'
+								defaultSelected={localOverride}
+								isDisabled={!data.hasConfigWrite}
 								onChange={() => {
 									fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -114,15 +110,7 @@ export default function Page() {
 
 									setLocalOverride(!localOverride)
 								}}
-							>
-								<span className='sr-only'>Override local DNS</span>
-								<span
-									className={clsx(
-										localOverride ? 'translate-x-6' : 'translate-x-1',
-										'inline-block h-2 w-2 transform rounded-full bg-white transition'
-									)}
-								/>
-							</Switch>
+							/>
 						</div>
 					</div>
 					<TableList>

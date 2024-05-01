@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { type Dispatch, type ReactNode, type SetStateAction } from 'react'
 import {
 	Button as AriaButton,
 	Menu as AriaMenu,
@@ -49,6 +49,31 @@ function Items(properties: Parameters<typeof AriaMenu>[0]) {
 	)
 }
 
+type ButtonProperties = Parameters<typeof AriaButton>[0] & {
+	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>];
+}
+
+function ItemButton(properties: ButtonProperties) {
+	return (
+		<MenuItem className='outline-none'>
+			<AriaButton
+				{...properties}
+				className={cn(
+					'px-4 py-2 w-full outline-none text-left',
+					'hover:bg-ui-200 dark:hover:bg-ui-700',
+					properties.className
+				)}
+				aria-label='Menu Dialog'
+				// If control is passed, set the state value
+				onPress={event => {
+					properties.onPress?.(event)
+					properties.control?.[1](true)
+				}}
+			/>
+		</MenuItem>
+	)
+}
+
 function Item(properties: Parameters<typeof MenuItem>[0]) {
 	return (
 		<MenuItem
@@ -70,4 +95,4 @@ function Menu({ children }: { readonly children: ReactNode }) {
 	)
 }
 
-export default Object.assign(Menu, { Button, Item, Items })
+export default Object.assign(Menu, { Button, Item, ItemButton, Items })

@@ -8,7 +8,7 @@ import {
 } from '@remix-run/react'
 
 import { ErrorPopup } from '~/components/Error'
-import Toaster from '~/components/Toaster'
+import { Toaster } from '~/components/Toaster'
 import stylesheet from '~/tailwind.css?url'
 import { getContext, registerConfigWatcher } from '~/utils/config'
 

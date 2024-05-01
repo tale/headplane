@@ -26,6 +26,7 @@ export default function TextField(properties: TextFieldProperties) {
 				className={cn(
 					'block px-2.5 py-1.5 w-full rounded-lg my-1',
 					'border border-ui-200 dark:border-ui-600',
+					'dark:bg-ui-800 dark:text-ui-300',
 					properties.className
 				)}
 				onChange={event => {

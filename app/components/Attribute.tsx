@@ -1,5 +1,6 @@
 import { ClipboardIcon } from '@heroicons/react/24/outline'
-import toast from 'react-hot-toast/headless'
+
+import { toast } from './Toaster'
 
 type Properties = {
 	readonly name: string;

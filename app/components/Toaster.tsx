@@ -1,47 +1,79 @@
-import { useToaster } from 'react-hot-toast/headless'
+import { XMarkIcon } from '@heroicons/react/24/outline'
+import { type AriaToastProps, useToast, useToastRegion } from '@react-aria/toast'
+import { ToastQueue, type ToastState, useToastQueue } from '@react-stately/toast'
+import { type ReactNode, useRef } from 'react'
+import { Button } from 'react-aria-components'
+import { createPortal } from 'react-dom'
+import { ClientOnly } from 'remix-utils/client-only'
 
-export default function Toaster() {
-	const { toasts, handlers } = useToaster()
-	const { startPause, endPause, calculateOffset, updateHeight } = handlers
+import { cn } from '~/utils/cn'
+
+type ToastProperties = AriaToastProps<ReactNode> & {
+	readonly state: ToastState<ReactNode>;
+}
+
+function Toast({ state, ...properties }: ToastProperties) {
+	const reference = useRef(null)
+	const { toastProps, titleProps, closeButtonProps } = useToast(properties, state, reference)
 
 	return (
 		<div
-			className='fixed bottom-0 right-0 p-4 w-80 h-1/2 overflow-hidden pointer-events-none'
-			onMouseEnter={startPause}
-			onMouseLeave={endPause}
+			{...toastProps}
+			ref={reference}
+			className={cn(
+				'bg-main-700 dark:bg-main-800 rounded-lg',
+				'text-main-100 dark:text-main-200 z-50',
+				'border border-main-600 dark:border-main-700',
+				'flex items-center justify-between p-3 pl-4 w-80'
+			)}
 		>
-			{toasts.slice(0, 6).map(toast => {
-				const offset = calculateOffset(toast, {
-					reverseOrder: false,
-					gutter: -8
-				})
-
-				// eslint-disable-next-line @typescript-eslint/ban-types
-				const reference = (element: HTMLDivElement | null) => {
-					if (element && typeof toast.height !== 'number') {
-						const { height } = element.getBoundingClientRect()
-						updateHeight(toast.id, -height)
-					}
-				}
-
-				return (
-					<div
-						key={toast.id}
-						ref={reference}
-						className='fixed bottom-4 right-4 p-4 bg-gray-800 rounded-lg text-white transition-all duration-300'
-						{...toast.ariaProps}
-						style={{
-							transform: `translateY(${offset}px) translateX(${toast.visible ? 0 : 200}%)`
-						}}
-					>
-						{typeof toast.message === 'function' ? (
-							toast.message(toast)
-						) : (
-							toast.message
-						)}
-					</div>
-				)
-			})}
+			<div {...titleProps}>{properties.toast.content}</div>
+			<Button
+				{...closeButtonProps}
+				className={cn(
+					'outline-none rounded-full p-1',
+					'hover:bg-main-600 dark:hover:bg-main-700'
+				)}
+			>
+				<XMarkIcon className='w-4 h-4'/>
+			</Button>
 		</div>
 	)
 }
+
+const toasts = new ToastQueue<ReactNode>({
+	maxVisibleToasts: 5
+})
+
+export function toast(text: string) {
+	return toasts.add(text, { timeout: 5000 })
+}
+
+export function Toaster() {
+	const reference = useRef(null)
+	const state = useToastQueue(toasts)
+	const { regionProps } = useToastRegion({}, state, reference)
+
+	return (
+		<ClientOnly>
+			{() => createPortal(
+				state.visibleToasts.length >= 0 ? (
+					<div
+						className={cn(
+							'fixed bottom-4 right-4',
+							'flex flex-col gap-4'
+						)}
+						{...regionProps}
+						ref={reference}
+					>
+						{state.visibleToasts.map(toast => (
+							<Toast key={toast.key} toast={toast} state={state}/>
+						))}
+					</div>
+				) : undefined,
+				document.body
+			)}
+		</ClientOnly>
+	)
+}
+

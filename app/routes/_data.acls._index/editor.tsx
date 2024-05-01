@@ -6,10 +6,10 @@ import CodeMirror from '@uiw/react-codemirror'
 import clsx from 'clsx'
 import { useEffect, useMemo, useState } from 'react'
 import CodeMirrorMerge from 'react-codemirror-merge'
-import { toast } from 'react-hot-toast/headless'
 
 import Button from '~/components/Button'
 import Spinner from '~/components/Spinner'
+import { toast } from '~/components/Toaster'
 
 import Fallback from './fallback'
 
@@ -48,28 +48,24 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 		<>
 			<div className={clsx(
 				'border border-gray-200 dark:border-gray-700',
-				'rounded-b-lg rounded-tr-lg mb-2 overflow-hidden'
+				'rounded-b-lg rounded-tr-lg mb-2 z-10 overflow-x-hidden'
 			)}
 			>
-				{loading ? (
-					<Fallback acl={acl} where='client'/>
-				) : (
-					mode === 'edit' ? (
-						<CodeMirror
-							value={acl}
-							className='h-editor text-sm'
-							theme={light ? githubLight : githubDark}
-							extensions={[aclType]}
-							readOnly={!data.hasAclWrite}
-							onChange={value => {
-								setAcl(value)
-							}}
-						/>
+				<div className='overflow-y-scroll h-editor text-sm'>
+					{loading ? (
+						<Fallback acl={acl} where='client'/>
 					) : (
-						<div
-							className='overflow-y-scroll'
-							style={{ height: 'calc(100vh - 20rem)' }}
-						>
+						mode === 'edit' ? (
+							<CodeMirror
+								value={acl}
+								theme={light ? githubLight : githubDark}
+								extensions={[aclType]}
+								readOnly={!data.hasAclWrite}
+								onChange={value => {
+									setAcl(value)
+								}}
+							/>
+						) : (
 							<CodeMirrorMerge
 								theme={light ? githubLight : githubDark}
 								orientation='a-b'
@@ -85,9 +81,9 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 									extensions={[aclType]}
 								/>
 							</CodeMirrorMerge>
-						</div>
-					)
-				)}
+						)
+					)}
+				</div>
 			</div>
 
 			<Button

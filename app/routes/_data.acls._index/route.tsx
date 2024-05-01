@@ -1,13 +1,12 @@
-import { Tab } from '@headlessui/react'
 import { BeakerIcon, CubeTransparentIcon, EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
-import clsx from 'clsx'
 import { useState } from 'react'
-import { Fragment } from 'react/jsx-runtime'
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
 import { ClientOnly } from 'remix-utils/client-only'
 
 import Notice from '~/components/Notice'
+import { cn } from '~/utils/cn'
 import { getAcl, getContext, patchAcl } from '~/utils/config'
 import { sighupHeadscale } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
@@ -87,100 +86,80 @@ export default function Page() {
 				</a>
 			</p>
 
-			<Tab.Group>
-				<Tab.List className={clsx(
+			<Tabs>
+				<TabList className={cn(
 					'flex border-t border-gray-200 dark:border-gray-700',
 					'w-fit rounded-t-lg overflow-hidden',
 					'text-gray-400 dark:text-gray-500'
 				)}
 				>
-					<Tab as={Fragment}>
-						{({ selected }) => (
-							<button
-								type='button'
-								className={clsx(
-									'px-4 py-2 rounded-tl-lg',
-									'focus:outline-none flex items-center gap-2',
-									'border-l border-gray-200 dark:border-gray-700',
-									selected ? 'text-gray-900 dark:text-gray-100' : ''
-								)}
-							>
-								<PencilSquareIcon className='w-5 h-5'/>
-								<p>
-									Edit file
-								</p>
-							</button>
+					<Tab
+						id='edit'
+						className={({ isSelected }) => cn(
+							'px-4 py-2 rounded-tl-lg',
+							'focus:outline-none flex items-center gap-2',
+							'border-x border-gray-200 dark:border-gray-700',
+							isSelected ? 'text-gray-900 dark:text-gray-100' : ''
 						)}
+					>
+						<PencilSquareIcon className='w-5 h-5'/>
+						<p>Edit file</p>
 					</Tab>
-					<Tab as={Fragment}>
-						{({ selected }) => (
-							<button
-								type='button'
-								className={clsx(
-									'px-4 py-2',
-									'focus:outline-none flex items-center gap-2',
-									'border-x border-gray-200 dark:border-gray-700',
-									selected ? 'text-gray-900 dark:text-gray-100' : ''
-								)}
-							>
-								<EyeIcon className='w-5 h-5'/>
-								<p>
-									Preview changes
-								</p>
-							</button>
+					<Tab
+						id='diff'
+						className={({ isSelected }) => cn(
+							'px-4 py-2',
+							'focus:outline-none flex items-center gap-2',
+							'border-x border-gray-200 dark:border-gray-700',
+							isSelected ? 'text-gray-900 dark:text-gray-100' : ''
 						)}
+					>
+						<EyeIcon className='w-5 h-5'/>
+						<p>Preview changes</p>
 					</Tab>
-					<Tab as={Fragment}>
-						{({ selected }) => (
-							<button
-								type='button'
-								className={clsx(
-									'px-4 py-2 rounded-tr-lg',
-									'focus:outline-none flex items-center gap-2',
-									'border-r border-gray-200 dark:border-gray-700',
-									selected ? 'text-gray-900 dark:text-gray-100' : ''
-								)}
-							>
-								<BeakerIcon className='w-5 h-5'/>
-								<p>
-									Preview rules
-								</p>
-							</button>
+					<Tab
+						id='preview'
+						className={({ isSelected }) => cn(
+							'px-4 py-2 rounded-tr-lg',
+							'focus:outline-none flex items-center gap-2',
+							'border-x border-gray-200 dark:border-gray-700',
+							isSelected ? 'text-gray-900 dark:text-gray-100' : ''
 						)}
+					>
+						<BeakerIcon className='w-5 h-5'/>
+						<p>Preview rules</p>
 					</Tab>
-				</Tab.List>
-				<Tab.Panels>
-					<Tab.Panel>
-						<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
-							{() => (
-								<Editor data={data} acl={acl} setAcl={setAcl} mode='edit'/>
-							)}
-						</ClientOnly>
-					</Tab.Panel>
-					<Tab.Panel>
-						<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
-							{() => (
-								<Editor data={data} acl={acl} setAcl={setAcl} mode='diff'/>
-							)}
-						</ClientOnly>
-					</Tab.Panel>
-					<Tab.Panel>
-						<div
-							className={clsx(
-								'border border-gray-200 dark:border-gray-700',
-								'rounded-b-lg rounded-tr-lg mb-4 overflow-hidden',
-								'p-16 flex flex-col items-center justify-center'
-							)}
-						>
-							<CubeTransparentIcon className='w-24 h-24 text-gray-300 dark:text-gray-500'/>
-							<p className='w-1/2 text-center mt-4'>
-								The Preview rules is very much still a work in progress.
-								It is a bit complicated to implement right now but hopefully it will be available soon.
-							</p>
-						</div>
-					</Tab.Panel>
-				</Tab.Panels>
-			</Tab.Group>
+				</TabList>
+				<TabPanel id='edit'>
+					<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
+						{() => (
+							<Editor data={data} acl={acl} setAcl={setAcl} mode='edit'/>
+						)}
+					</ClientOnly>
+				</TabPanel>
+				<TabPanel id='diff'>
+					<ClientOnly fallback={<Fallback acl={acl} where='server'/>}>
+						{() => (
+							<Editor data={data} acl={acl} setAcl={setAcl} mode='diff'/>
+						)}
+					</ClientOnly>
+				</TabPanel>
+				<TabPanel id='preview'>
+					<div
+						className={cn(
+							'border border-gray-200 dark:border-gray-700',
+							'rounded-b-lg rounded-tr-lg mb-4 overflow-hidden',
+							'p-16 flex flex-col items-center justify-center'
+						)}
+					>
+						<CubeTransparentIcon className='w-24 h-24 text-gray-300 dark:text-gray-500'/>
+						<p className='w-1/2 text-center mt-4'>
+							The Preview rules is very much still a work in progress.
+							It is a bit complicated to implement right now but hopefully it will be available soon.
+						</p>
+					</div>
+				</TabPanel>
+			</Tabs>
 		</div>
 	)
 }

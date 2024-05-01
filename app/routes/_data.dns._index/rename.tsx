@@ -47,7 +47,7 @@ export default function Modal({ name, disabled }: Properties) {
 					isDisabled={disabled}
 					className={cn(
 						'w-fit text-sm rounded-lg px-4 py-2',
-						'bg-gray-700 dark:bg-gray-800 text-white',
+						'bg-main-700 dark:bg-main-800 text-white',
 						disabled && 'opacity-50 cursor-not-allowed'
 					)}
 				>

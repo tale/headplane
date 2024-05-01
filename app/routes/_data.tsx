@@ -1,6 +1,6 @@
 import { Cog8ToothIcon, CpuChipIcon, GlobeAltIcon, LockClosedIcon, ServerStackIcon, UserCircleIcon, UsersIcon } from '@heroicons/react/24/outline'
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
-import { Form, Outlet, useLoaderData, useRouteError } from '@remix-run/react'
+import { Form, Outlet, useLoaderData } from '@remix-run/react'
 
 import { ErrorPopup } from '~/components/Error'
 import Menu from '~/components/Menu'
@@ -43,9 +43,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Layout() {
 	const data = useLoaderData<typeof loader>()
+
 	return (
 		<>
-			<header className='mb-6 bg-gray-800 text-white dark:bg-gray-700'>
+			<header className='mb-6 bg-main-700 dark:bg-main-800 text-white'>
 				<nav className='container mx-auto'>
 					<div className='flex items-center justify-between mb-8 pt-4'>
 						<div className='flex items-center gap-x-2'>
@@ -71,7 +72,7 @@ export default function Layout() {
 										<p className='font-bold'>{data.user?.name}</p>
 										<p>{data.user?.email}</p>
 									</Menu.Item>
-									<Menu.Item className='text-red-700 cursor-pointer'>
+									<Menu.Item className='text-red-500 dark:text-red-400'>
 										<Form method='POST' action='/logout'>
 											<button type='submit' className='w-full text-right'>
 												Logout
@@ -104,15 +105,9 @@ export default function Layout() {
 }
 
 export function ErrorBoundary() {
-	const data = useLoaderData<typeof loader>()
-	const error = useRouteError()
-	if (!data) {
-		throw error
-	}
-
 	return (
 		<>
-			<header className='mb-16 bg-gray-800 text-white dark:bg-gray-700'>
+			<header className='mb-16 bg-main-700 dark:bg-main-800 text-white'>
 				<nav className='container mx-auto'>
 					<div className='flex items-center gap-x-2 mb-8 pt-4'>
 						<CpuChipIcon className='w-8 h-8'/>
@@ -121,13 +116,9 @@ export function ErrorBoundary() {
 					<div className='flex items-center gap-x-4'>
 						<TabLink to='/machines' name='Machines' icon={<ServerStackIcon className='w-5 h-5'/>}/>
 						<TabLink to='/users' name='Users' icon={<UsersIcon className='w-5 h-5'/>}/>
-						{data.hasAcl ? <TabLink to='/acls' name='Access Control' icon={<LockClosedIcon className='w-5 h-5'/>}/> : undefined}
-						{data.hasConfig ? (
-							<>
-								<TabLink to='/dns' name='DNS' icon={<GlobeAltIcon className='w-5 h-5'/>}/>
-								<TabLink to='/settings' name='Settings' icon={<Cog8ToothIcon className='w-5 h-5'/>}/>
-							</>
-						) : undefined}
+						<TabLink to='/acls' name='Access Control' icon={<LockClosedIcon className='w-5 h-5'/>}/>
+						<TabLink to='/dns' name='DNS' icon={<GlobeAltIcon className='w-5 h-5'/>}/>
+						<TabLink to='/settings' name='Settings' icon={<Cog8ToothIcon className='w-5 h-5'/>}/>
 					</div>
 				</nav>
 			</header>
