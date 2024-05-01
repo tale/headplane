@@ -4,14 +4,13 @@
 ![Preview](/assets/main-preview.png)
 
 Headscale is a self-hosted version of the Tailscale control server, however, it currently lacks a first-party web UI.
-This is a relatively tiny Remix app that aims to provide a usable GUI for the Headscale server.
-It's still very early in it's development, however these are some of the features that are planned.
+Headplane aims to solve this issue by providing a GUI that can deeply integrate with the Headscale server.
+It's able to replicate nearly all of the functions of the official Tailscale SaaS UI, including:
 
-- [ ] Editable tags, machine names, users, etc
-- [x] ACL control through Docker integration
-- [x] OIDC based login for the web UI
-- [x] Automated API key regeneration
-- [x] Editable headscale configuration
+- Machine/Node expiry, network routing, name, and owner management
+- Access Control List (ACL) and tagging configuration
+- Support for OpenID Connect (OIDC) as a login provider
+- DNS and *safe* Headscale configuration management
 
 ## Deployment
 - If you run Headscale in a Docker container, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
