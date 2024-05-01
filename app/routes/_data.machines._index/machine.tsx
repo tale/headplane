@@ -2,27 +2,40 @@
 import { ChevronDownIcon, ClipboardIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
 import { type FetcherWithComponents, Link } from '@remix-run/react'
 import { useState } from 'react'
-import toast from 'react-hot-toast/headless'
 
-import Dialog from '~/components/Dialog'
 import Menu from '~/components/Menu'
 import StatusCircle from '~/components/StatusCircle'
-import { type Machine } from '~/types'
+import { toast } from '~/components/Toaster'
+import { type Machine, type Route } from '~/types'
 import { cn } from '~/utils/cn'
 
 import Delete from './dialogs/delete'
+import Expire from './dialogs/expire'
 import Rename from './dialogs/rename'
+import Routes from './dialogs/routes'
 
 type MachineProperties = {
 	readonly machine: Machine;
+	readonly routes: Route[];
 	readonly fetcher: FetcherWithComponents<unknown>;
 	readonly magic?: string;
 }
 
-export default function MachineRow({ machine, fetcher, magic }: MachineProperties) {
-	const tags = [...machine.forcedTags, ...machine.validTags]
+export default function MachineRow({ machine, routes, fetcher, magic }: MachineProperties) {
 	const renameState = useState(false)
+	const expireState = useState(false)
 	const removeState = useState(false)
+	const routesState = useState(false)
+
+	const expired = new Date(machine.expiry).getTime() < Date.now()
+	const tags = [
+		...machine.forcedTags,
+		...machine.validTags
+	]
+
+	if (expired) {
+		tags.unshift('Expired')
+	}
 
 	return (
 		<tr
@@ -70,56 +83,55 @@ export default function MachineRow({ machine, fetcher, magic }: MachinePropertie
 						</Menu.Button>
 						<Menu.Items>
 							{machine.ipAddresses.map(ip => (
-								<Menu.Item
+								<Menu.ItemButton
 									key={ip}
-									className='hover:bg-transparent'
+									type='button'
+									className={cn(
+										'flex items-center gap-x-1.5 text-sm',
+										'justify-between w-full'
+									)}
+									onPress={async () => {
+										await navigator.clipboard.writeText(ip)
+										toast('Copied IP address to clipboard')
+									}}
 								>
-									<button
-										type='button'
-										className={cn(
-											'flex items-center gap-x-1.5 text-sm',
-											'justify-between w-full'
-										)}
-										onClick={async () => {
-											await navigator.clipboard.writeText(ip)
-											toast('Copied IP address to clipboard')
-										}}
-									>
-										{ip}
-										<ClipboardIcon className='w-3 h-3'/>
-									</button>
-								</Menu.Item>
+									{ip}
+									<ClipboardIcon className='w-3 h-3'/>
+								</Menu.ItemButton>
 							))}
 							{magic ? (
-								<Menu.Item className='hover:bg-transparent'>
-									<button
-										type='button'
-										className={cn(
-											'flex items-center gap-x-1.5 text-sm',
-											'justify-between w-full break-keep'
-										)}
-										onClick={async () => {
-											const ip = `${machine.givenName}.${machine.user.name}.${magic}`
-											await navigator.clipboard.writeText(ip)
-											toast('Copied hostname to clipboard')
-										}}
-									>
-										{machine.givenName}.{machine.user.name}.{magic}
-										<ClipboardIcon className='w-3 h-3'/>
-									</button>
-								</Menu.Item>
+								<Menu.ItemButton
+									type='button'
+									className={cn(
+										'flex items-center gap-x-1.5 text-sm',
+										'justify-between w-full break-keep'
+									)}
+									onPress={async () => {
+										const ip = `${machine.givenName}.${machine.user.name}.${magic}`
+										await navigator.clipboard.writeText(ip)
+										toast('Copied hostname to clipboard')
+									}}
+								>
+									{machine.givenName}.{machine.user.name}.{magic}
+									<ClipboardIcon className='w-3 h-3'/>
+								</Menu.ItemButton>
 							) : undefined}
 						</Menu.Items>
 					</Menu>
 				</div>
 			</td>
 			<td className='py-2'>
-				<span
-					className='flex items-center gap-x-1 text-sm text-gray-500 dark:text-gray-400'
+				<span className={cn(
+					'flex items-center gap-x-1 text-sm',
+					'text-gray-500 dark:text-gray-400'
+				)}
 				>
-					<StatusCircle isOnline={machine.online} className='w-4 h-4'/>
+					<StatusCircle
+						isOnline={machine.online && !expired}
+						className='w-4 h-4'
+					/>
 					<p>
-						{machine.online
+						{machine.online && !expired
 							? 'Connected'
 							: new Date(
 								machine.lastSeen
@@ -139,6 +151,20 @@ export default function MachineRow({ machine, fetcher, magic }: MachinePropertie
 					fetcher={fetcher}
 					state={removeState}
 				/>
+				{expired ? undefined : (
+					<Expire
+						machine={machine}
+						fetcher={fetcher}
+						state={expireState}
+					/>
+				)}
+				<Routes
+					machine={machine}
+					routes={routes}
+					fetcher={fetcher}
+					state={routesState}
+				/>
+
 				<Menu>
 					<Menu.Button
 						className={cn(
@@ -150,28 +176,26 @@ export default function MachineRow({ machine, fetcher, magic }: MachinePropertie
 						<EllipsisHorizontalIcon className='w-5'/>
 					</Menu.Button>
 					<Menu.Items>
-						<Menu.Item>
-							<Dialog.Button
-								className='h-full w-full text-left'
-								control={renameState}
-							>
-								Edit machine name
-							</Dialog.Button>
-						</Menu.Item>
-						<Menu.Item>
+						<Menu.ItemButton control={renameState}>
+							Edit machine name
+						</Menu.ItemButton>
+						<Menu.ItemButton control={routesState}>
 							Edit route settings
-						</Menu.Item>
-						<Menu.Item>
+						</Menu.ItemButton>
+						<Menu.Item className='opacity-50 hover:bg-transparent'>
 							Edit ACL tags
 						</Menu.Item>
-						<Menu.Item>
-							<Dialog.Button
-								className='w-full h-full text-left text-red-500 dark:text-red-400'
-								control={removeState}
-							>
-								Remove
-							</Dialog.Button>
-						</Menu.Item>
+						{expired ? undefined : (
+							<Menu.ItemButton control={expireState}>
+								Expire
+							</Menu.ItemButton>
+						)}
+						<Menu.ItemButton
+							className='text-red-500 dark:text-red-400'
+							control={removeState}
+						>
+							Remove
+						</Menu.ItemButton>
 					</Menu.Items>
 				</Menu>
 			</td>

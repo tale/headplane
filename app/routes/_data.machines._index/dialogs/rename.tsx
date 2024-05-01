@@ -5,7 +5,6 @@ import Code from '~/components/Code'
 import Dialog from '~/components/Dialog'
 import TextField from '~/components/TextField'
 import { type Machine } from '~/types'
-import { cn } from '~/utils/cn'
 
 type RenameProperties = {
 	readonly machine: Machine;
@@ -29,7 +28,7 @@ export default function Rename({ machine, fetcher, state, magic }: RenamePropert
 							This name is shown in the admin panel, in Tailscale clients,
 							and used when generating MagicDNS names.
 						</Dialog.Text>
-						<fetcher.Form>
+						<fetcher.Form method='POST'>
 							<input type='hidden' name='_method' value='rename'/>
 							<input type='hidden' name='id' value={machine.id}/>
 							<TextField

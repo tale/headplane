@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InformationCircleIcon } from '@heroicons/react/24/outline'
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
 
 import Code from '~/components/Code'
-import { type Machine } from '~/types'
+import { type Machine, type Route } from '~/types'
 import { cn } from '~/utils/cn'
 import { getConfig, getContext } from '~/utils/config'
 import { del, post, pull } from '~/utils/headscale'
@@ -16,8 +17,8 @@ import MachineRow from './machine'
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
 
-	// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-	const data = await pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!)
+	const machines = await pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!)
+	const routes = await pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!)
 	const context = await getContext()
 
 	let magic: string | undefined
@@ -29,7 +30,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	}
 
 	return {
-		nodes: data.nodes,
+		nodes: machines.nodes,
+		routes: routes.routes,
 		magic
 	}
 }
@@ -54,9 +56,15 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	switch (method) {
 	case 'delete': {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		await del(`v1/node/${id}`, session.get('hsApiKey')!)
 		return json({ message: 'Machine removed' })
+	}
+
+	case 'expire': {
+		console.log('expire')
+		const data = await post(`v1/node/${id}/expire`, session.get('hsApiKey')!)
+		console.log(data)
+		return json({ message: 'Machine expired' })
 	}
 
 	case 'rename': {
@@ -68,9 +76,23 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		const name = String(data.get('name'))
 
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		await post(`v1/node/${id}/rename/${name}`, session.get('hsApiKey')!)
 		return json({ message: 'Machine renamed' })
+	}
+
+	case 'routes': {
+		if (!data.has('route') || !data.has('enabled')) {
+			return json({ message: 'No route or enabled provided' }, {
+				status: 400
+			})
+		}
+
+		const route = String(data.get('route'))
+		const enabled = data.get('enabled') === 'true'
+		const postfix = enabled ? 'enable' : 'disable'
+
+		await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!)
+		return json({ message: 'Route updated' })
 	}
 
 	default: {
@@ -131,6 +153,7 @@ export default function Page() {
 							key={machine.id}
 							// Typescript isn't smart enough yet
 							machine={machine as unknown as Machine}
+							routes={data.routes.filter(route => route.node.id === machine.id) as unknown as Route[]}
 							fetcher={fetcher}
 							magic={data.magic}
 						/>

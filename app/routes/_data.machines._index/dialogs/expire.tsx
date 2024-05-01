@@ -11,22 +11,22 @@ type DeleteProperties = {
 	readonly state: [boolean, Dispatch<SetStateAction<boolean>>];
 }
 
-export default function Delete({ machine, fetcher, state }: DeleteProperties) {
+export default function Expire({ machine, fetcher, state }: DeleteProperties) {
 	return (
 		<Dialog>
 			<Dialog.Panel control={state}>
 				{close => (
 					<>
 						<Dialog.Title>
-							Remove {machine.givenName}
+							Expire {machine.givenName}
 						</Dialog.Title>
 						<Dialog.Text>
-							This machine will be permanently removed from
-							your network. To re-add it, you will need to
-							reauthenticate to your tailnet from the device.
+							This will disconnect the machine from your Tailnet.
+							In order to reconnect, you will need to re-authenticate
+							from the device.
 						</Dialog.Text>
 						<fetcher.Form method='POST'>
-							<input type='hidden' name='_method' value='delete'/>
+							<input type='hidden' name='_method' value='expire'/>
 							<input type='hidden' name='id' value={machine.id}/>
 							<div className='mt-6 flex justify-end gap-2 mt-6'>
 								<Dialog.Action
@@ -45,7 +45,7 @@ export default function Delete({ machine, fetcher, state }: DeleteProperties) {
 									)}
 									onPress={close}
 								>
-									Remove
+									Expire
 								</Dialog.Action>
 							</div>
 						</fetcher.Form>
