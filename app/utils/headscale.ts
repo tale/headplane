@@ -12,7 +12,7 @@ export class HeadscaleError extends Error {
 
 export class FatalError extends Error {
 	constructor() {
-		super('The Headscale server is not accessible or the API_KEY is invalid.')
+		super('The Headscale server is not accessible or the supplied API key is invalid')
 		this.name = 'FatalError'
 	}
 }

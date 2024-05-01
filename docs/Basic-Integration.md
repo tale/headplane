@@ -28,13 +28,17 @@ services:
       - '3000:3000'
     environment:
       HEADSCALE_URL: 'http://headscale:8080'
-      API_KEY: 'abcdefghijklmnopqrstuvwxyz'
       COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
+
+      # These are all optional!
       HEADSCALE_CONTAINER: 'headscale'
+      API_KEY: 'abcdefghijklmnopqrstuvwxyz'
       OIDC_CLIENT_ID: 'headscale'
       OIDC_ISSUER: 'https://sso.example.com'
       OIDC_CLIENT_SECRET: 'super_secret_client_secret'
       DISABLE_API_KEY_LOGIN: 'true'
+
+      # These are the default values
       HOST: '0.0.0.0'
       PORT: '3000'
 ```

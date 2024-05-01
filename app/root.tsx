@@ -33,14 +33,6 @@ export async function loader() {
 		throw new Error('The COOKIE_SECRET environment variable is required')
 	}
 
-	if (!process.env.API_KEY) {
-		throw new Error('The API_KEY environment variable is required')
-	}
-
-	if (!process.env.HEADSCALE_CONTAINER) {
-		throw new Error('The HEADSCALE_CONTAINER environment variable is required')
-	}
-
 	// eslint-disable-next-line unicorn/no-null
 	return null
 }

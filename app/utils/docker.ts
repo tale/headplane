@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
+
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-constant-condition */
 import { setTimeout } from 'node:timers/promises'
@@ -6,7 +6,7 @@ import { setTimeout } from 'node:timers/promises'
 import { Client } from 'undici'
 
 import { getContext } from './config'
-import { pull } from './headscale'
+import { HeadscaleError, pull } from './headscale'
 
 export async function sighupHeadscale() {
 	const context = await getContext()
@@ -61,9 +61,16 @@ export async function restartHeadscale() {
 	let attempts = 0
 	while (true) {
 		try {
-			await pull('v1/apikey', process.env.API_KEY!)
+			// Acceptable blank because API_KEY is not required
+			await pull('v1/apikey', process.env.API_KEY ?? '')
 			return
-		} catch {
+		} catch (error) {
+			// This means the server is up but the API key is invalid
+			// This can happen if the user only uses API_KEY via cookies
+			if (error instanceof HeadscaleError && error.status === 401) {
+				break
+			}
+
 			if (attempts > 10) {
 				throw new Error('Headscale did not restart in time')
 			}

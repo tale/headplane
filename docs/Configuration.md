@@ -4,9 +4,8 @@ You can configure Headplane using environment variables.
 
 #### Required Variables
 
-- **`HEADSCALE_URL`**: The public URL of your Headscale server.
-- **`API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
 - **`COOKIE_SECRET`**: A secret used to sign cookies (use a relatively long and random string).
+- **`HEADSCALE_URL`**: The public URL of your Headscale server (not required if using the configuration file).
 
 #### Optional Variables
 
@@ -24,6 +23,7 @@ If you use the Headscale configuration integration, these are not required.
 - **`OIDC_ISSUER`**: The issuer URL of your OIDC provider.
 - **`OIDC_CLIENT_ID`**: The client ID of your OIDC provider.
 - **`OIDC_CLIENT_SECRET`**: The client secret of your OIDC provider.
+- **`API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
 - **`DISABLE_API_KEY_LOGIN`**: If you want to disable API key login, set this to `true`.
 
 Here's what an example with Authelia would look like if you used the same client for both Headscale and Headplane.

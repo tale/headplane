@@ -68,9 +68,8 @@ services:
     ports:
       - '3000:3000'
     environment:
-      # These are always required for Headplane to work
+      # This is always required for Headplane to work
       COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
-      API_KEY: 'abcdefghijklmnopqrstuvwxyz'
 
       HEADSCALE_CONTAINER: 'headscale'
       DISABLE_API_KEY_LOGIN: 'true'
@@ -82,6 +81,11 @@ services:
       OIDC_CLIENT_ID: 'headscale'
       OIDC_ISSUER: 'https://sso.example.com'
       OIDC_CLIENT_SECRET: 'super_secret_client_secret'
+
+      # This NEEDS to be set with OIDC, regardless of what's in the config
+      # This needs to be a very long-lived (999 day) API key used to create
+      # shorter ones for OIDC and allow the OIDC functionality to work
+      API_KEY: 'abcdefghijklmnopqrstuvwxyz'
 ```
 
 > For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 

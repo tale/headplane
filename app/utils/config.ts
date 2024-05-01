@@ -233,6 +233,7 @@ async function getOidcConfig() {
 	let issuer = process.env.OIDC_ISSUER
 	let client = process.env.OIDC_CLIENT_ID
 	let secret = process.env.OIDC_CLIENT_SECRET
+	const rootKey = process.env.API_KEY
 
 	if (!issuer || !client || !secret) {
 		const config = await getConfig()
@@ -248,6 +249,10 @@ async function getOidcConfig() {
 
 	if (!issuer || !client || !secret) {
 		return
+	}
+
+	if (!rootKey) {
+		throw new Error('Cannot use OIDC without the root API_KEY variable set')
 	}
 
 	return { issuer, client, secret }
