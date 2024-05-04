@@ -55,5 +55,10 @@
 	},
 	"engines": {
 		"node": ">=18.0.0"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"@react-aria/overlays@3.22.0": "patches/@react-aria__overlays@3.22.0.patch"
+		}
 	}
 }
