@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@supports (scrollbar-gutter: stable) {
+    html {
+        scrollbar-gutter: stable
+    }
+
+    html body {
+        margin-right: 0!important;
+        --removed-body-scroll-bar-size: 0 !important
+    }
+}
