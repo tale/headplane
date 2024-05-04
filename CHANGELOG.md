@@ -1,3 +1,9 @@
+### 0.1.3 (May 4, 2024)
+
+- Switched to a better icon set for the UI.
+- Support stable scrollbar gutter if supported by the browser.
+- Cleaned up the header which fixed a bug that could crash the entire application on fetch errors.
+
 ### 0.1.2 (May 1, 2024)
 
 - Added support for renaming, expiring, removing, and managing the routes of a machine.
