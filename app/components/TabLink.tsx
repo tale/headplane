@@ -13,8 +13,9 @@ export default function TabLink({ name, to, icon }: Properties) {
 		<NavLink
 			to={to}
 			className={({ isActive, isPending }) => clsx(
-				'flex items-center gap-x-2 p-2 border-b-2 text-md',
-				isActive ? 'border-white' : 'border-transparent'
+				'flex items-center gap-x-2 p-2 border-b-2 text-md text-nowrap',
+				isActive ? 'border-white' : 'border-transparent',
+				isPending && 'animate-pulse'
 			)}
 		>
 			{icon} {name}

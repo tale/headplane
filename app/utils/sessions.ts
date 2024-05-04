@@ -1,6 +1,6 @@
 import { createCookieSessionStorage } from '@remix-run/node' // Or cloudflare/deno
 
-type SessionData = {
+export type SessionData = {
 	hsApiKey: string;
 	authState: string;
 	authNonce: string;

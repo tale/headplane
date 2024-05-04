@@ -196,7 +196,7 @@ export function registerConfigWatcher() {
 	})
 }
 
-type Context = {
+export type Context = {
 	hasDockerSock: boolean;
 	hasConfig: boolean;
 	hasConfigWrite: boolean;
