@@ -75,16 +75,24 @@ export default function Page() {
 
 			<p className='mb-4 max-w-prose'>
 				The ACL file is used to define the access control rules for your network.
-				You can find more information about the ACL file in the Tailscale documentation.
+				You can find more information about the ACL file in the
 				{' '}
-				<a
-					target='_blank'
-					rel='noreferrer'
-					href='https://tailscale.com/kb/1018/acls'
-					className='text-blue-500 dark:text-blue-400 hover:underline'
+				<Link
+					to='https://tailscale.com/kb/1018/acls'
+					name='Tailscale ACL documentation'
 				>
-					More information
-				</a>
+					Tailscale ACL guide
+				</Link>
+				{' '}
+				and the
+				{' '}
+				<Link
+					to='https://headscale.net/acls'
+					name='Headscale ACL documentation'
+				>
+					Headscale docs
+				</Link>
+				.
 			</p>
 
 			<Tabs>
