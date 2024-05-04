@@ -15,7 +15,7 @@ import {
 	verticalListSortingStrategy
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Bars3Icon, LockClosedIcon } from '@heroicons/react/24/outline'
+import { LockIcon, ThreeBarsIcon } from '@primer/octicons-react'
 import { type FetcherWithComponents, useFetcher } from '@remix-run/react'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
@@ -83,7 +83,7 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 					{baseDomain ? (
 						<TableList.Item key='magic-dns-sd'>
 							<p className='font-mono text-sm'>{baseDomain}</p>
-							<LockClosedIcon className='h-4 w-4'/>
+							<LockIcon className='h-4 w-4'/>
 						</TableList.Item>
 					) : undefined}
 					<SortableContext
@@ -190,7 +190,7 @@ function Domain({ domain, id, localDomains, isDrag, disabled, fetcher }: DomainP
 		>
 			<p className='font-mono text-sm flex items-center gap-4'>
 				{disabled ? undefined : (
-					<Bars3Icon
+					<ThreeBarsIcon
 						className='h-4 w-4 text-gray-400 focus:outline-none'
 						{...attributes}
 						{...listeners}

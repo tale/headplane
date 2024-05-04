@@ -1,4 +1,4 @@
-import { ClipboardIcon } from '@heroicons/react/24/outline'
+import { CopyIcon } from '@primer/octicons-react'
 
 import { toast } from './Toaster'
 
@@ -28,7 +28,7 @@ export default function Attribute({ name, value, isCopyable }: Properties) {
 					<dd className='min-w-0 truncate px-2 py-1'>
 						{value}
 					</dd>
-					<ClipboardIcon className='text-gray-600 dark:text-gray-200 pr-2 w-max h-4'/>
+					<CopyIcon className='text-gray-600 dark:text-gray-200 pr-2 w-max h-4'/>
 				</button>
 			) : (
 				<dd className='min-w-0 truncate px-2 py-1'>

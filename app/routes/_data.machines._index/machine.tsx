@@ -1,5 +1,5 @@
 /* eslint-disable react/hook-use-state */
-import { ChevronDownIcon, ClipboardIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'
+import { ChevronDownIcon, CopyIcon, KebabHorizontalIcon } from '@primer/octicons-react'
 import { type FetcherWithComponents, Link } from '@remix-run/react'
 import { useState } from 'react'
 
@@ -96,7 +96,7 @@ export default function MachineRow({ machine, routes, fetcher, magic }: MachineP
 									}}
 								>
 									{ip}
-									<ClipboardIcon className='w-3 h-3'/>
+									<CopyIcon className='w-3 h-3'/>
 								</Menu.ItemButton>
 							))}
 							{magic ? (
@@ -113,7 +113,7 @@ export default function MachineRow({ machine, routes, fetcher, magic }: MachineP
 									}}
 								>
 									{machine.givenName}.{machine.user.name}.{magic}
-									<ClipboardIcon className='w-3 h-3'/>
+									<CopyIcon className='w-3 h-3'/>
 								</Menu.ItemButton>
 							) : undefined}
 						</Menu.Items>
@@ -173,7 +173,7 @@ export default function MachineRow({ machine, routes, fetcher, magic }: MachineP
 							'group-hover:border-gray-200 dark:group-hover:border-zinc-700'
 						)}
 					>
-						<EllipsisHorizontalIcon className='w-5'/>
+						<KebabHorizontalIcon className='w-5'/>
 					</Menu.Button>
 					<Menu.Items>
 						<Menu.ItemButton control={renameState}>

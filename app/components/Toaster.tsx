@@ -1,4 +1,4 @@
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import { XIcon } from '@primer/octicons-react'
 import { type AriaToastProps, useToast, useToastRegion } from '@react-aria/toast'
 import { ToastQueue, type ToastState, useToastQueue } from '@react-stately/toast'
 import { type ReactNode, useRef } from 'react'
@@ -35,7 +35,7 @@ function Toast({ state, ...properties }: ToastProperties) {
 					'hover:bg-main-600 dark:hover:bg-main-700'
 				)}
 			>
-				<XMarkIcon className='w-4 h-4'/>
+				<XIcon className='w-4 h-4'/>
 			</Button>
 		</div>
 	)

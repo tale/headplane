@@ -1,13 +1,12 @@
 /* eslint-disable unicorn/filename-case */
-import { ClipboardIcon, UserIcon } from '@heroicons/react/24/outline'
+import { PersonIcon } from '@primer/octicons-react'
 import { type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
-import { toast } from 'react-hot-toast/headless'
 
 import Attribute from '~/components/Attribute'
 import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
-import { type Machine, type User } from '~/types'
+import { type Machine } from '~/types'
 import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
@@ -47,7 +46,7 @@ export default function Page() {
 			{data.map(user => (
 				<Card key={user.id}>
 					<div className='flex items-center gap-4'>
-						<UserIcon className='w-6 h-6'/>
+						<PersonIcon className='w-6 h-6'/>
 						<span className='text-lg font-mono'>
 							{user.name}
 						</span>

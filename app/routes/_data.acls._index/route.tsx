@@ -1,10 +1,11 @@
-import { BeakerIcon, CubeTransparentIcon, EyeIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
+import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
 import { ClientOnly } from 'remix-utils/client-only'
 
+import Link from '~/components/Link'
 import Notice from '~/components/Notice'
 import { cn } from '~/utils/cn'
 import { getAcl, getContext, patchAcl } from '~/utils/config'
@@ -102,7 +103,7 @@ export default function Page() {
 							isSelected ? 'text-gray-900 dark:text-gray-100' : ''
 						)}
 					>
-						<PencilSquareIcon className='w-5 h-5'/>
+						<PencilIcon className='w-5 h-5'/>
 						<p>Edit file</p>
 					</Tab>
 					<Tab
@@ -152,7 +153,7 @@ export default function Page() {
 							'p-16 flex flex-col items-center justify-center'
 						)}
 					>
-						<CubeTransparentIcon className='w-24 h-24 text-gray-300 dark:text-gray-500'/>
+						<IssueDraftIcon className='w-24 h-24 text-gray-300 dark:text-gray-500'/>
 						<p className='w-1/2 text-center mt-4'>
 							The Preview rules is very much still a work in progress.
 							It is a bit complicated to implement right now but hopefully it will be available soon.

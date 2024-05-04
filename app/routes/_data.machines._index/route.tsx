@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { InformationCircleIcon } from '@heroicons/react/24/outline'
+import { InfoIcon } from '@primer/octicons-react'
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
@@ -121,7 +121,7 @@ export default function Page() {
 								{data.magic ? (
 									<TooltipTrigger delay={0}>
 										<Button>
-											<InformationCircleIcon className='w-4 h-4 text-gray-400'/>
+											<InfoIcon className='w-4 h-4'/>
 										</Button>
 										<Tooltip className={cn(
 											'text-sm max-w-xs p-2 rounded-lg mb-2',

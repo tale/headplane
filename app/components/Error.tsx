@@ -1,4 +1,4 @@
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { AlertIcon } from '@primer/octicons-react'
 import { isRouteErrorResponse, useRouteError } from '@remix-run/react'
 import { useState } from 'react'
 
@@ -23,7 +23,7 @@ export function ErrorPopup({ type = 'full' }: Properties) {
 		<Dialog>
 			<Dialog.Panel
 				className={cn(
-					type === 'embedded' ? 'pointer-events-none bg-transparent dark:bg-transparent' : '',
+					type === 'embedded' ? 'pointer-events-none bg-transparent dark:bg-transparent' : ''
 				)}
 				control={open}
 			>
@@ -33,7 +33,7 @@ export function ErrorPopup({ type = 'full' }: Properties) {
 							<Dialog.Title className='text-3xl mb-0'>
 								{routing ? error.status : 'Error'}
 							</Dialog.Title>
-							<ExclamationTriangleIcon className='w-12 h-12 text-red-500'/>
+							<AlertIcon className='w-12 h-12 text-red-500'/>
 						</div>
 						<Dialog.Text className='mt-4 text-lg'>
 							{routing ? (

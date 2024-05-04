@@ -1,4 +1,4 @@
-import { InformationCircleIcon } from '@heroicons/react/24/outline'
+import { InfoIcon } from '@primer/octicons-react'
 import clsx from 'clsx'
 import { type ReactNode } from 'react'
 
@@ -9,7 +9,7 @@ export default function Notice({ children }: { readonly children: ReactNode }) {
 			'bg-slate-400 dark:bg-slate-700'
 		)}
 		>
-			<InformationCircleIcon className='h-6 w-6 text-white'/>
+			<InfoIcon className='h-6 w-6 text-white'/>
 			{children}
 		</div>
 	)
