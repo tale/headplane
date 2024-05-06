@@ -9,7 +9,7 @@ import { cn } from '~/utils/cn'
 type TextFieldProperties = Parameters<typeof AriaTextField>[0] & {
 	readonly label: string;
 	readonly placeholder: string;
-	readonly state: [string, Dispatch<SetStateAction<string>>];
+	readonly state?: [string, Dispatch<SetStateAction<string>>];
 }
 
 export default function TextField(properties: TextFieldProperties) {
@@ -21,7 +21,7 @@ export default function TextField(properties: TextFieldProperties) {
 		>
 			<Input
 				placeholder={properties.placeholder}
-				value={properties.state[0]}
+				value={properties.state?.[0]}
 				name={properties.name}
 				className={cn(
 					'block px-2.5 py-1.5 w-full rounded-lg my-1',
@@ -30,7 +30,7 @@ export default function TextField(properties: TextFieldProperties) {
 					properties.className
 				)}
 				onChange={event => {
-					properties.state[1](event.target.value)
+					properties.state?.[1](event.target.value)
 				}}
 			/>
 		</AriaTextField>

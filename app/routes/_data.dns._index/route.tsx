@@ -1,14 +1,14 @@
 import { type ActionFunctionArgs } from '@remix-run/node'
 import { json, useFetcher, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
+import { Button, Input } from 'react-aria-components'
 
-import Button from '~/components/Button'
 import Code from '~/components/Code'
-import Input from '~/components/Input'
 import Notice from '~/components/Notice'
 import Spinner from '~/components/Spinner'
 import Switch from '~/components/Switch'
 import TableList from '~/components/TableList'
+import { cn } from '~/utils/cn'
 import { getConfig, getContext, patchConfig } from '~/utils/config'
 import { restartHeadscale } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
@@ -119,10 +119,14 @@ export default function Page() {
 							<TableList.Item key={index}>
 								<p className='font-mono text-sm'>{ns}</p>
 								<Button
-									variant='destructive'
-									className='text-sm'
-									disabled={!data.hasConfigWrite}
-									onClick={() => {
+									className={cn(
+										'text-sm',
+										'text-red-600 dark:text-red-400',
+										'hover:text-red-700 dark:hover:text-red-300',
+										!data.hasConfigWrite && 'opacity-50 cursor-not-allowed'
+									)}
+									isDisabled={!data.hasConfigWrite}
+									onPress={() => {
 										fetcher.submit({
 											// eslint-disable-next-line @typescript-eslint/naming-convention
 											'dns_config.nameservers': data.nameservers.filter((_, index_) => index_ !== index)
@@ -139,9 +143,8 @@ export default function Page() {
 						{data.hasConfigWrite ? (
 							<TableList.Item>
 								<Input
-									variant='embedded'
 									type='text'
-									className='font-mono text-sm'
+									className='font-mono text-sm bg-transparent w-full mr-2'
 									placeholder='Nameserver'
 									value={ns}
 									onChange={event => {
@@ -150,9 +153,14 @@ export default function Page() {
 								/>
 								{fetcher.state === 'idle' ? (
 									<Button
-										className='text-sm'
-										disabled={ns.length === 0}
-										onClick={() => {
+										className={cn(
+											'text-sm font-semibold',
+											'text-blue-600 dark:text-blue-400',
+											'hover:text-blue-700 dark:hover:text-blue-300',
+											ns.length === 0 && 'opacity-50 cursor-not-allowed'
+										)}
+										isDisabled={ns.length === 0}
+										onPress={() => {
 											fetcher.submit({
 												// eslint-disable-next-line @typescript-eslint/naming-convention
 												'dns_config.nameservers': [...data.nameservers, ns]
@@ -185,7 +193,7 @@ export default function Page() {
 			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Magic DNS</h1>
 				<p className='text-gray-700 dark:text-gray-300 mb-4'>
-					Automaticall register domain names for each device
+					Automatically register domain names for each device
 					on the tailnet. Devices will be accessible at
 					{' '}
 					<Code>

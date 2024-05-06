@@ -2,10 +2,10 @@
 /* eslint-disable unicorn/no-keyword-prefix */
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
+import { Input } from 'react-aria-components'
 
 import Code from '~/components/Code'
 import Dialog from '~/components/Dialog'
-import Input from '~/components/Input'
 import Spinner from '~/components/Spinner'
 import TextField from '~/components/TextField'
 import { cn } from '~/utils/cn'
@@ -35,7 +35,12 @@ export default function Modal({ name, disabled }: Properties) {
 			</p>
 			<Input
 				readOnly
-				className='font-mono text-sm my-4 w-1/2'
+				className={cn(
+					'block px-2.5 py-1.5 w-1/2 rounded-lg my-4',
+					'border border-ui-200 dark:border-ui-600',
+					'dark:bg-ui-800 dark:text-ui-300 text-sm',
+					'outline-none'
+				)}
 				type='text'
 				value={name}
 				onFocus={event => {
@@ -43,14 +48,7 @@ export default function Modal({ name, disabled }: Properties) {
 				}}
 			/>
 			<Dialog>
-				<Dialog.Button
-					isDisabled={disabled}
-					className={cn(
-						'w-fit text-sm rounded-lg px-4 py-2',
-						'bg-main-700 dark:bg-main-800 text-white',
-						disabled && 'opacity-50 cursor-not-allowed'
-					)}
-				>
+				<Dialog.Button isDisabled={disabled}>
 					{fetcher.state === 'idle' ? undefined : (
 						<Spinner className='w-3 h-3'/>
 					)}

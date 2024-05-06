@@ -1,52 +1,46 @@
 import { AlertIcon } from '@primer/octicons-react'
 import { isRouteErrorResponse, useRouteError } from '@remix-run/react'
-import { useState } from 'react'
 
 import { cn } from '~/utils/cn'
 
+import Card from './Card'
 import Code from './Code'
-import Dialog from './Dialog'
 
 type Properties = {
 	readonly type?: 'full' | 'embedded';
 }
 
 export function ErrorPopup({ type = 'full' }: Properties) {
-	// eslint-disable-next-line react/hook-use-state
-	const open = useState(true)
-
 	const error = useRouteError()
 	const routing = isRouteErrorResponse(error)
 	const message = (error instanceof Error ? error.message : 'An unexpected error occurred')
 
 	return (
-		<Dialog>
-			<Dialog.Panel
-				className={cn(
-					type === 'embedded' ? 'pointer-events-none bg-transparent dark:bg-transparent' : ''
-				)}
-				control={open}
-			>
-				{() => (
-					<>
-						<div className='flex items-center justify-between'>
-							<Dialog.Title className='text-3xl mb-0'>
-								{routing ? error.status : 'Error'}
-							</Dialog.Title>
-							<AlertIcon className='w-12 h-12 text-red-500'/>
-						</div>
-						<Dialog.Text className='mt-4 text-lg'>
-							{routing ? (
-								error.statusText
-							) : (
-								<Code>
-									{message}
-								</Code>
-							)}
-						</Dialog.Text>
-					</>
-				)}
-			</Dialog.Panel>
-		</Dialog>
+		<div
+			className={cn(
+				'flex items-center justify-center',
+				type === 'embedded'
+					? 'pointer-events-none mt-24'
+					: 'fixed inset-0 h-screen w-screen z-50'
+			)}
+		>
+			<Card>
+				<div className='flex items-center justify-between'>
+					<Card.Title className='text-3xl mb-0'>
+						{routing ? error.status : 'Error'}
+					</Card.Title>
+					<AlertIcon className='w-12 h-12 text-red-500'/>
+				</div>
+				<Card.Text className='mt-4 text-lg'>
+					{routing ? (
+						error.statusText
+					) : (
+						<Code>
+							{message}
+						</Code>
+					)}
+				</Card.Text>
+			</Card>
+		</div>
 	)
 }

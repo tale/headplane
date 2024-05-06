@@ -1,26 +1,36 @@
-import clsx from 'clsx'
-import { type ButtonHTMLAttributes, type DetailedHTMLProps } from 'react'
+import { type Dispatch, type SetStateAction } from 'react'
+import { Button as AriaButton } from 'react-aria-components'
 
-type Properties = {
-	readonly variant?: 'emphasized' | 'normal' | 'destructive';
-} & DetailedHTMLProps<ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
+import { cn } from '~/utils/cn'
 
-export default function Action(properties: Properties) {
+type ButtonProperties = Parameters<typeof AriaButton>[0] & {
+	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>];
+	readonly variant?: 'heavy' | 'light';
+}
+
+export default function Button(properties: ButtonProperties) {
 	return (
-		<button
-			type='button'
+		<AriaButton
 			{...properties}
-			className={clsx(
-				'focus:outline-none focus:ring focus:ring-1',
-				'focus:ring-blue-500 dark:focus:ring-blue-300',
-				properties.className,
-				properties.disabled && 'opacity-50 cursor-not-allowed',
-				properties.variant === 'destructive' ? 'text-red-700 dark:text-red-500' : '',
-				properties.variant === 'emphasized' ? 'rounded-lg px-4 py-2 bg-gray-800 dark:bg-gray-700 text-white' : '',
-				!properties.variant || properties.variant === 'normal' ? 'text-blue-700 dark:text-blue-400' : ''
+			className={cn(
+				'w-fit text-sm rounded-lg px-4 py-2',
+				properties.variant === 'heavy'
+					? 'bg-main-700 dark:bg-main-800'
+					: 'bg-main-200 dark:bg-main-700/30',
+				properties.variant === 'heavy'
+					? 'hover:bg-main-800 dark:hover:bg-main-700'
+					: 'hover:bg-main-300 dark:hover:bg-main-600/30',
+				properties.variant === 'heavy'
+					? 'text-white'
+					: 'text-ui-700 dark:text-ui-300',
+				properties.isDisabled && 'opacity-50 cursor-not-allowed',
+				properties.className
 			)}
-		>
-			{properties.children}
-		</button>
+			// If control is passed, set the state value
+			onPress={properties.control ? () => {
+				properties.control?.[1](true)
+			} : undefined}
+		/>
 	)
 }
+

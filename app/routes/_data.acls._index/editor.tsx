@@ -87,9 +87,9 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 			</div>
 
 			<Button
-				variant='emphasized'
-				className='text-sm w-fit mr-2'
-				onClick={() => {
+				variant='heavy'
+				className='mr-2'
+				onPress={() => {
 					fetcher.submit({
 						acl
 					}, {
@@ -105,15 +105,9 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 				)}
 				Save
 			</Button>
-			<Button
-				variant='emphasized'
-				className={clsx(
-					'text-sm w-fit bg-gray-100 dark:bg-transparent',
-					'border border-gray-200 dark:border-gray-700'
-				)}
-				onClick={() => {
-					setAcl(data.currentAcl)
-				}}
+			<Button onPress={() => {
+				setAcl(data.currentAcl)
+			}}
 			>
 				Discard Changes
 			</Button>

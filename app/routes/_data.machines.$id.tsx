@@ -42,7 +42,7 @@ export default function Page() {
 				</h1>
 				<StatusCircle isOnline={data.online} className='w-4 h-4'/>
 			</span>
-			<Card>
+			<Card variant='flat'>
 				<Attribute name='Creator' value={data.user.name}/>
 				<Attribute name='Node ID' value={data.id}/>
 				<Attribute name='Node Name' value={data.givenName}/>

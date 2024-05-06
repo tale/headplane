@@ -44,7 +44,7 @@ export default function Page() {
 	return (
 		<div className='grid grid-cols-2 gap-4 auto-rows-min'>
 			{data.map(user => (
-				<Card key={user.id}>
+				<Card key={user.id} variant='flat'>
 					<div className='flex items-center gap-4'>
 						<PersonIcon className='w-6 h-6'/>
 						<span className='text-lg font-mono'>

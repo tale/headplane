@@ -2,7 +2,6 @@ import { useFetcher } from '@remix-run/react'
 
 import Dialog from '~/components/Dialog'
 import Spinner from '~/components/Spinner'
-import { cn } from '~/utils/cn'
 
 type Properties = {
 	readonly isEnabled: boolean;
@@ -15,14 +14,7 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 
 	return (
 		<Dialog>
-			<Dialog.Button
-				isDisabled={disabled}
-				className={cn(
-					'w-fit text-sm rounded-lg px-4 py-2',
-					'bg-main-700 dark:bg-main-800 text-white',
-					disabled && 'opacity-50 cursor-not-allowed'
-				)}
-			>
+			<Dialog.Button isDisabled={disabled}>
 				{fetcher.state === 'idle' ? undefined : (
 					<Spinner className='w-3 h-3'/>
 				)}

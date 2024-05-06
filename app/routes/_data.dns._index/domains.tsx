@@ -17,13 +17,12 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { LockIcon, ThreeBarsIcon } from '@primer/octicons-react'
 import { type FetcherWithComponents, useFetcher } from '@remix-run/react'
-import clsx from 'clsx'
 import { useEffect, useState } from 'react'
+import { Button, Input } from 'react-aria-components'
 
-import Button from '~/components/Button'
-import Input from '~/components/Input'
 import Spinner from '~/components/Spinner'
 import TableList from '~/components/TableList'
+import { cn } from '~/utils/cn'
 
 type Properties = {
 	readonly baseDomain?: string;
@@ -115,9 +114,8 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 					{disabled ? undefined : (
 						<TableList.Item key='add-sd'>
 							<Input
-								variant='embedded'
 								type='text'
-								className='font-mono text-sm'
+								className='font-mono text-sm bg-transparent w-full mr-2'
 								placeholder='Search Domain'
 								value={newDomain}
 								onChange={event => {
@@ -126,9 +124,14 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 							/>
 							{fetcher.state === 'idle' ? (
 								<Button
-									className='text-sm'
-									disabled={newDomain.length === 0}
-									onClick={() => {
+									className={cn(
+										'text-sm font-semibold',
+										'text-blue-600 dark:text-blue-400',
+										'hover:text-blue-700 dark:hover:text-blue-300',
+										newDomain.length === 0 && 'opacity-50 cursor-not-allowed'
+									)}
+									isDisabled={newDomain.length === 0}
+									onPress={() => {
 										fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
 											'dns_config.domains': [...localDomains, newDomain]
@@ -177,7 +180,7 @@ function Domain({ domain, id, localDomains, isDrag, disabled, fetcher }: DomainP
 	return (
 		<div
 			ref={setNodeRef}
-			className={clsx(
+			className={cn(
 				'flex items-center justify-between px-3 py-2',
 				'border-b border-gray-200 last:border-b-0 dark:border-zinc-800',
 				isDragging ? 'text-gray-400' : '',
@@ -200,10 +203,14 @@ function Domain({ domain, id, localDomains, isDrag, disabled, fetcher }: DomainP
 			</p>
 			{isDrag ? undefined : (
 				<Button
-					variant='destructive'
-					className='text-sm'
-					disabled={disabled}
-					onClick={() => {
+					className={cn(
+						'text-sm',
+						'text-red-600 dark:text-red-400',
+						'hover:text-red-700 dark:hover:text-red-300',
+						disabled && 'opacity-50 cursor-not-allowed'
+					)}
+					isDisabled={disabled}
+					onPress={() => {
 						fetcher.submit({
 							// eslint-disable-next-line @typescript-eslint/naming-convention
 							'dns_config.domains': localDomains.filter((_, index) => index !== id - 1)

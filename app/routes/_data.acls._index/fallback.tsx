@@ -28,20 +28,12 @@ export default function Fallback({ acl, where }: FallbackProperties) {
 			{where === 'server' ? (
 				<>
 					<Button
-						disabled
-						variant='emphasized'
-						className='text-sm w-fit mr-2'
+						variant='heavy'
+						className='mr-2'
 					>
 						Save
 					</Button>
-					<Button
-						disabled
-						variant='emphasized'
-						className={clsx(
-							'text-sm w-fit bg-gray-100 dark:bg-transparent',
-							'border border-gray-200 dark:border-gray-700'
-						)}
-					>
+					<Button>
 						Discard Changes
 					</Button>
 				</>

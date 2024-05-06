@@ -23,6 +23,7 @@ function Button(properties: ButtonProperties) {
 			className={cn(
 				'w-fit text-sm rounded-lg px-4 py-2',
 				'bg-main-700 dark:bg-main-800 text-white',
+				'hover:bg-main-800 dark:hover:bg-main-700',
 				properties.isDisabled && 'opacity-50 cursor-not-allowed',
 				properties.className
 			)}

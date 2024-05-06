@@ -15,23 +15,17 @@ export default function Switch(properties: SwitchProperties) {
 		>
 			<div
 				className={cn(
-					'flex h-[26px] w-[44px] shrink-0 cursor-default',
-					'rounded-full shadow-inner bg-clip-padding',
-					'border border-solid border-white/30 p-[3px]',
-					'box-border transition duration-100 ease-in-out',
-					'outline-none group-focus-visible:ring-2 ring-black',
-
-					'bg-main-700 dark:bg-main-800',
-					'group-pressed:bg-main-800 dark:group-pressed:bg-main-900',
-					'group-selected:bg-main-900 group-selected:group-pressed:bg-main-900',
+					'flex h-[26px] w-[44px] p-[4px] shrink-0',
+					'rounded-full outline-none group-focus-visible:ring-2',
+					'bg-main-600/50 dark:bg-main-600/20 group-selected:bg-main-700',
 					properties.isDisabled && 'opacity-50 cursor-not-allowed',
 					properties.className
 				)}
 			>
 				<span className={cn(
 					'h-[18px] w-[18px] transform rounded-full',
-					'bg-white shadow transition duration-100',
-					'ease-in-out translate-x-0 group-selected:translate-x-[100%]'
+					'bg-white transition duration-100 ease-in-out',
+					'translate-x-0 group-selected:translate-x-[100%]'
 				)}
 				/>
 			</div>

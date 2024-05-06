@@ -5,7 +5,7 @@ import { useMemo } from 'react'
 import Button from '~/components/Button'
 import Card from '~/components/Card'
 import Code from '~/components/Code'
-import Input from '~/components/Input'
+import TextField from '~/components/TextField'
 import { type Key } from '~/types'
 import { getContext } from '~/utils/config'
 import { pull } from '~/utils/headscale'
@@ -108,11 +108,13 @@ export default function Page() {
 
 	return (
 		<div className='flex min-h-screen items-center justify-center'>
-			<Card className='w-96'>
-				<h1 className='text-2xl mb-8'>Login</h1>
+			<Card className='max-w-sm m-4 sm:m-0 rounded-2xl'>
+				<Card.Title>
+					Welcome to Headplane
+				</Card.Title>
 				{data.apiKey ? (
 					<Form method='post'>
-						<p className='text-sm text-gray-500 mb-4'>
+						<Card.Text className='mb-8 text-sm'>
 							Enter an API key to authenticate with Headplane. You can generate
 							one by running
 							{' '}
@@ -121,43 +123,40 @@ export default function Page() {
 							</Code>
 							{' '}
 							in your terminal.
-						</p>
+						</Card.Text>
 
 						{actionData?.error ? (
 							<p className='text-red-500 text-sm mb-2'>{actionData.error}</p>
 						) : undefined}
-						<Input
-							required
-							type='text'
+						<TextField
+							isRequired
+							label='API Key'
 							name='api-key'
-							id='api-key'
-							className='border rounded-md p-2 w-full'
 							placeholder='API Key'
 						/>
-
 						<Button
-							variant='emphasized'
+							className='w-full mt-2.5'
+							variant='heavy'
 							type='submit'
-							className='bg-gray-800 text-white rounded-md p-2 w-full mt-4'
 						>
 							Login
 						</Button>
 					</Form>
 				) : undefined}
 				{showOr ? (
-					<div className='flex items-center gap-x-2 py-2'>
-						<hr className='flex-1 dark:border-zinc-700'/>
-						<span className='text-gray-500'>or</span>
-						<hr className='flex-1 dark:border-zinc-700'/>
+					<div className='flex items-center gap-x-1.5 py-1'>
+						<hr className='flex-1 border-ui-300 dark:border-ui-800'/>
+						<span className='text-gray-500 text-sm'>or</span>
+						<hr className='flex-1 border-ui-300 dark:border-ui-800'/>
 					</div>
 				) : undefined}
 				{data.oidc ? (
 					<Form method='POST'>
 						<input type='hidden' name='oidc-start' value='true'/>
 						<Button
-							variant='emphasized'
+							className='w-full'
+							variant='heavy'
 							type='submit'
-							className='bg-gray-800 text-white rounded-md p-2 w-full'
 						>
 							Login with SSO
 						</Button>

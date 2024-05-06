@@ -46,7 +46,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 				<Meta/>
 				<Links/>
 			</head>
-			<body className='overscroll-none dark:bg-zinc-900 dark:text-white'>
+			<body className='overscroll-none dark:bg-ui-950 dark:text-ui-50'>
 				{children}
 				<Toaster/>
 				<ScrollRestoration/>
