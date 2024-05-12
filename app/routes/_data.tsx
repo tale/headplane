@@ -1,8 +1,10 @@
 import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
-import { Outlet, useLoaderData } from '@remix-run/react'
+import { Outlet, useLoaderData, useNavigation } from '@remix-run/react'
+import { ProgressBar } from 'react-aria-components'
 
 import { ErrorPopup } from '~/components/Error'
 import Header from '~/components/Header'
+import { cn } from '~/utils/cn'
 import { getContext } from '~/utils/config'
 import { HeadscaleError, pull } from '~/utils/headscale'
 import { destroySession, getSession } from '~/utils/sessions'
@@ -40,11 +42,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Layout() {
 	const data = useLoaderData<typeof loader>()
+	const nav = useNavigation()
 
 	return (
 		<>
+			<ProgressBar
+				aria-label='Loading...'
+			>
+				<div
+					className={cn(
+						'fixed top-0 left-0 z-50 w-1/2 h-1',
+						'bg-blue-500 dark:bg-blue-400 opacity-0',
+						nav.state === 'loading' && 'animate-loading opacity-100'
+					)}
+				/>
+			</ProgressBar>
 			<Header data={data}/>
-
 			<main className='container mx-auto overscroll-contain mt-4 mb-24'>
 				<Outlet/>
 			</main>

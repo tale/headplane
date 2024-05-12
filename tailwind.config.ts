@@ -24,6 +24,19 @@ export default {
 			colors: {
 				main: colors.slate,
 				ui: colors.neutral
+			},
+			keyframes: {
+				loader: {
+					from: {
+						transform: 'translateX(-100%)'
+					},
+					to: {
+						transform: 'translateX(100%)'
+					}
+				}
+			},
+			animation: {
+				loading: 'loader 0.8s infinite ease-in-out'
 			}
 		}
 	},
