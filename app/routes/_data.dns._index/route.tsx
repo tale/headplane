@@ -29,13 +29,13 @@ export async function loader() {
 
 	const dns = {
 		prefixes: config.prefixes,
-		magicDns: config.dns_config.magic_dns,
+		magicDns: config.dns_config.magic_dns ?? false,
 		baseDomain: config.dns_config.base_domain,
-		overrideLocal: config.dns_config.override_local_dns,
-		nameservers: config.dns_config.nameservers,
-		splitDns: config.dns_config.restricted_nameservers,
-		searchDomains: config.dns_config.domains,
-		extraRecords: config.dns_config.extra_records
+		overrideLocal: config.dns_config.override_local_dns ?? false,
+		nameservers: config.dns_config.nameservers ?? [],
+		splitDns: config.dns_config.restricted_nameservers ?? {},
+		searchDomains: config.dns_config.domains ?? [],
+		extraRecords: config.dns_config.extra_records ?? []
 	}
 
 	return {
