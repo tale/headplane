@@ -15,7 +15,7 @@ interface Props {
 export default function Rename({ username, magic }: Props) {
 	const submit = useSubmit()
 	const dialogState = useState(false)
-	const [newName, setNewName] = useState('')
+	const [newName, setNewName] = useState(username)
 
 	return (
 		<>
