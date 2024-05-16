@@ -2,11 +2,11 @@ import { useRevalidator } from '@remix-run/react'
 import { useEffect } from 'react'
 import { useInterval } from 'usehooks-ts'
 
-type Properties = {
-	interval: number;
+interface Props {
+	interval: number
 }
 
-export function useLiveData({ interval }: Properties) {
+export function useLiveData({ interval }: Props) {
 	const revalidator = useRevalidator()
 
 	// Handle normal stale-while-revalidate behavior
@@ -31,4 +31,5 @@ export function useLiveData({ interval }: Properties) {
 			document.removeEventListener('focus', handler)
 		}
 	}, [revalidator])
+	return revalidator
 }
