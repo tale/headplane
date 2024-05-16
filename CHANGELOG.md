@@ -5,6 +5,7 @@
 - The login page actually respects the `DISABLE_API_KEY_LOGIN` variable.
 - Implemented some fixes that should stop dialogs from hanging a webpage.
 - Upgrade to React 19 beta to take advantage of the compiler (may revert if it causes issues).
+- Upgrade other dependencies
 
 ### 0.1.3 (May 4, 2024)
 
