@@ -18,8 +18,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return redirect('/machines', {
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
-				'Set-Cookie': await commitSession(session)
-			}
+				'Set-Cookie': await commitSession(session),
+			},
 		})
 	}
 
@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const data = {
 		oidc: issuer,
-		apiKey: normal === undefined
+		apiKey: normal === undefined,
 	}
 
 	if (!data.oidc && !data.apiKey) {
@@ -82,21 +82,21 @@ export async function action({ request }: ActionFunctionArgs) {
 		session.set('hsApiKey', apiKey)
 		session.set('user', {
 			name: key.prefix,
-			email: `${expiresDays} days`
+			email: `${expiresDays.toString()} days`,
 		})
 
 		return redirect('/machines', {
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Set-Cookie': await commitSession(session, {
-					maxAge: expiresIn
-				})
-			}
+					maxAge: expiresIn,
+				}),
+			},
 		})
 	} catch (error) {
 		console.error(error)
 		return json({
-			error: 'Invalid API key'
+			error: 'Invalid API key',
 		})
 	}
 }
@@ -107,61 +107,69 @@ export default function Page() {
 	const showOr = useMemo(() => data.oidc && data.apiKey, [data])
 
 	return (
-		<div className='flex min-h-screen items-center justify-center'>
-			<Card className='max-w-sm m-4 sm:m-0 rounded-2xl'>
+		<div className="flex min-h-screen items-center justify-center">
+			<Card className="max-w-sm m-4 sm:m-0 rounded-2xl">
 				<Card.Title>
 					Welcome to Headplane
 				</Card.Title>
-				{data.apiKey ? (
-					<Form method='post'>
-						<Card.Text className='mb-8 text-sm'>
-							Enter an API key to authenticate with Headplane. You can generate
-							one by running
-							{' '}
-							<Code>
-								headscale apikeys create
-							</Code>
-							{' '}
-							in your terminal.
-						</Card.Text>
+				{data.apiKey
+					? (
+						<Form method="post">
+							<Card.Text className="mb-8 text-sm">
+								Enter an API key to authenticate with Headplane. You can generate
+								one by running
+								{' '}
+								<Code>
+									headscale apikeys create
+								</Code>
+								{' '}
+								in your terminal.
+							</Card.Text>
 
-						{actionData?.error ? (
-							<p className='text-red-500 text-sm mb-2'>{actionData.error}</p>
-						) : undefined}
-						<TextField
-							isRequired
-							label='API Key'
-							name='api-key'
-							placeholder='API Key'
-						/>
-						<Button
-							className='w-full mt-2.5'
-							variant='heavy'
-							type='submit'
-						>
-							Login
-						</Button>
-					</Form>
-				) : undefined}
-				{showOr ? (
-					<div className='flex items-center gap-x-1.5 py-1'>
-						<hr className='flex-1 border-ui-300 dark:border-ui-800'/>
-						<span className='text-gray-500 text-sm'>or</span>
-						<hr className='flex-1 border-ui-300 dark:border-ui-800'/>
-					</div>
-				) : undefined}
-				{data.oidc ? (
-					<Form method='POST'>
-						<input type='hidden' name='oidc-start' value='true'/>
-						<Button
-							className='w-full'
-							variant='heavy'
-							type='submit'
-						>
-							Login with SSO
-						</Button>
-					</Form>
-				) : undefined}
+							{actionData?.error
+								? (
+									<p className="text-red-500 text-sm mb-2">{actionData.error}</p>
+									)
+								: undefined}
+							<TextField
+								isRequired
+								label="API Key"
+								name="api-key"
+								placeholder="API Key"
+							/>
+							<Button
+								className="w-full mt-2.5"
+								variant="heavy"
+								type="submit"
+							>
+								Login
+							</Button>
+						</Form>
+						)
+					: undefined}
+				{showOr
+					? (
+						<div className="flex items-center gap-x-1.5 py-1">
+							<hr className="flex-1 border-ui-300 dark:border-ui-800" />
+							<span className="text-gray-500 text-sm">or</span>
+							<hr className="flex-1 border-ui-300 dark:border-ui-800" />
+						</div>
+						)
+					: undefined}
+				{data.oidc
+					? (
+						<Form method="POST">
+							<input type="hidden" name="oidc-start" value="true" />
+							<Button
+								className="w-full"
+								variant="heavy"
+								type="submit"
+							>
+								Login with SSO
+							</Button>
+						</Form>
+						)
+					: undefined}
 			</Card>
 		</div>
 	)
