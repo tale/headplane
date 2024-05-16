@@ -1,3 +1,11 @@
+### 0.1.4 (May 15, 2024)
+
+- Users can now be created, renamed, and deleted on the users page.
+- Machines can be dragged between users to change their ownership.
+- The login page actually respects the `DISABLE_API_KEY_LOGIN` variable.
+- Implemented some fixes that should stop dialogs from hanging a webpage.
+- Upgrade to React 19 beta to take advantage of the compiler (may revert if it causes issues).
+
 ### 0.1.3 (May 4, 2024)
 
 - Switched to a better icon set for the UI.
