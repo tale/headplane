@@ -35,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const data = {
 		oidc: issuer,
-		apiKey: normal === undefined,
+		apiKey: normal !== 'true',
 	}
 
 	if (!data.oidc && !data.apiKey) {
