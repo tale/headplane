@@ -1,8 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { getContext } from './config'
-
 
 async function findPidByName(partialCommand: string): Promise<number | null> {
     const procDir = '/proc';
