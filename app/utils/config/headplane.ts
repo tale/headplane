@@ -79,7 +79,6 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		oidc: await checkOidc(config),
 	}
 
-	console.log('Context loaded:', context)
 	return context
 }
 
