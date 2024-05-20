@@ -1,3 +1,10 @@
+### 0.1.5 (May 20, 2024)
+- Robust configuration handling with fallbacks based on the headscale source.
+- Support for `client_secret_path` on configuration file based OIDC.
+- `DISABLE_API_KEY_LOGIN` now works as expected (non 'true' values work).
+- `API_KEY` is renamed to `ROOT_API_KEY` for better clarity (old variable still works).
+- Fixed button responders not actually being invoked (should fix the ACL page).
+
 ### 0.1.4 (May 15, 2024)
 
 - Users can now be created, renamed, and deleted on the users page.
