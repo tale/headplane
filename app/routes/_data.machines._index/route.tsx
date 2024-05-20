@@ -7,7 +7,8 @@ import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
 import Code from '~/components/Code'
 import { type Machine, type Route } from '~/types'
 import { cn } from '~/utils/cn'
-import { getConfig, getContext } from '~/utils/config'
+import { loadContext } from '~/utils/config/headplane'
+import { loadConfig } from '~/utils/config/headscale'
 import { del, post, pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
@@ -21,11 +22,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!),
 	])
 
-	const context = await getContext()
+	const context = await loadContext()
 	let magic: string | undefined
 
-	if (context.hasConfig) {
-		const config = await getConfig()
+	if (context.config.read) {
+		const config = await loadConfig()
 		if (config.dns_config.magic_dns) {
 			magic = config.dns_config.base_domain
 		}

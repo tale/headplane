@@ -5,7 +5,7 @@ import { ProgressBar } from 'react-aria-components'
 import { ErrorPopup } from '~/components/Error'
 import Header from '~/components/Header'
 import { cn } from '~/utils/cn'
-import { getContext } from '~/utils/config'
+import { loadContext } from '~/utils/config/headplane'
 import { HeadscaleError, pull } from '~/utils/headscale'
 import { destroySession, getSession } from '~/utils/sessions'
 
@@ -24,8 +24,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			return redirect('/login', {
 				headers: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
-					'Set-Cookie': await destroySession(session)
-				}
+					'Set-Cookie': await destroySession(session),
+				},
 			})
 		}
 
@@ -33,10 +33,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		throw error
 	}
 
-	const context = await getContext()
+	const context = await loadContext()
 	return {
 		...context,
-		user: session.get('user')
+		user: session.get('user'),
 	}
 }
 
@@ -47,19 +47,19 @@ export default function Layout() {
 	return (
 		<>
 			<ProgressBar
-				aria-label='Loading...'
+				aria-label="Loading..."
 			>
 				<div
 					className={cn(
 						'fixed top-0 left-0 z-50 w-1/2 h-1',
 						'bg-blue-500 dark:bg-blue-400 opacity-0',
-						nav.state === 'loading' && 'animate-loading opacity-100'
+						nav.state === 'loading' && 'animate-loading opacity-100',
 					)}
 				/>
 			</ProgressBar>
-			<Header data={data}/>
-			<main className='container mx-auto overscroll-contain mt-4 mb-24'>
-				<Outlet/>
+			<Header data={data} />
+			<main className="container mx-auto overscroll-contain mt-4 mb-24">
+				<Outlet />
 			</main>
 		</>
 	)
@@ -68,8 +68,8 @@ export default function Layout() {
 export function ErrorBoundary() {
 	return (
 		<>
-			<Header/>
-			<ErrorPopup type='embedded'/>
+			<Header />
+			<ErrorPopup type="embedded" />
 		</>
 	)
 }

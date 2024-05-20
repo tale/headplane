@@ -1,4 +1,4 @@
-import { getContext } from './config'
+import { loadContext } from './config/headplane'
 
 export class HeadscaleError extends Error {
 	status: number
@@ -18,12 +18,12 @@ export class FatalError extends Error {
 }
 
 export async function pull<T>(url: string, key: string) {
-	const context = await getContext()
+	const context = await loadContext()
 	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		headers: {
-			Authorization: `Bearer ${key}`
-		}
+			Authorization: `Bearer ${key}`,
+		},
 	})
 
 	if (!response.ok) {
@@ -34,14 +34,14 @@ export async function pull<T>(url: string, key: string) {
 }
 
 export async function post<T>(url: string, key: string, body?: unknown) {
-	const context = await getContext()
+	const context = await loadContext()
 	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'POST',
 		body: body ? JSON.stringify(body) : undefined,
 		headers: {
-			Authorization: `Bearer ${key}`
-		}
+			Authorization: `Bearer ${key}`,
+		},
 	})
 
 	if (!response.ok) {
@@ -52,13 +52,13 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function del<T>(url: string, key: string) {
-	const context = await getContext()
+	const context = await loadContext()
 	const prefix = context.headscaleUrl
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'DELETE',
 		headers: {
-			Authorization: `Bearer ${key}`
-		}
+			Authorization: `Bearer ${key}`,
+		},
 	})
 
 	if (!response.ok) {

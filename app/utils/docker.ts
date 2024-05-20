@@ -1,31 +1,25 @@
-
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-constant-condition */
 import { setTimeout } from 'node:timers/promises'
 
 import { Client } from 'undici'
 
-import { getContext } from './config'
+import { loadContext } from './config/headplane'
 import { HeadscaleError, pull } from './headscale'
 
 export async function sighupHeadscale() {
-	const context = await getContext()
-	if (!context.hasDockerSock) {
+	const context = await loadContext()
+	if (!context.docker) {
 		return
 	}
 
-	if (!process.env.HEADSCALE_CONTAINER) {
-		throw new Error('HEADSCALE_CONTAINER is not set')
-	}
-
 	const client = new Client('http://localhost', {
-		socketPath: '/var/run/docker.sock'
+		socketPath: context.docker.sock,
 	})
 
-	const container = process.env.HEADSCALE_CONTAINER
 	const response = await client.request({
 		method: 'POST',
-		path: `/v1.30/containers/${container}/kill?signal=SIGHUP`
+		path: `/v1.30/containers/${context.docker.container}/kill?signal=SIGHUP`,
 	})
 
 	if (!response.statusCode || response.statusCode !== 204) {
@@ -34,23 +28,18 @@ export async function sighupHeadscale() {
 }
 
 export async function restartHeadscale() {
-	const context = await getContext()
-	if (!context.hasDockerSock) {
+	const context = await loadContext()
+	if (!context.docker) {
 		return
 	}
 
-	if (!process.env.HEADSCALE_CONTAINER) {
-		throw new Error('HEADSCALE_CONTAINER is not set')
-	}
-
 	const client = new Client('http://localhost', {
-		socketPath: '/var/run/docker.sock'
+		socketPath: context.docker.sock,
 	})
 
-	const container = process.env.HEADSCALE_CONTAINER
 	const response = await client.request({
 		method: 'POST',
-		path: `/v1.30/containers/${container}/restart`
+		path: `/v1.30/containers/${context.docker.container}/restart`,
 	})
 
 	if (!response.statusCode || response.statusCode !== 204) {

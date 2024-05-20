@@ -2,12 +2,12 @@ import { OrganizationIcon, PasskeyFillIcon } from '@primer/octicons-react'
 
 import Card from '~/components/Card'
 import Link from '~/components/Link'
-import { type Context } from '~/utils/config'
+import { HeadplaneContext } from '~/utils/config/headplane'
 
 import Add from './add'
 
 interface Props {
-	readonly oidc: NonNullable<Context['oidcConfig']>
+	readonly oidc: NonNullable<HeadplaneContext['oidc']>
 	readonly magic: string | undefined
 }
 

@@ -7,7 +7,7 @@ import Card from '~/components/Card'
 import Code from '~/components/Code'
 import TextField from '~/components/TextField'
 import { type Key } from '~/types'
-import { getContext } from '~/utils/config'
+import { loadContext } from '~/utils/config/headplane'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
 import { commitSession, getSession } from '~/utils/sessions'
@@ -23,31 +23,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		})
 	}
 
-	const context = await getContext()
-	const issuer = context.oidcConfig?.issuer
-	const id = context.oidcConfig?.client
-	const secret = context.oidcConfig?.secret
-	const normal = process.env.DISABLE_API_KEY_LOGIN
+	const context = await loadContext()
 
-	if (issuer && (!id || !secret)) {
-		throw new Error('An invalid OIDC configuration was provided')
+	// Only set if OIDC is properly enabled anyways
+	if (context.oidc?.disableKeyLogin) {
+		return startOidc(
+			context.oidc.issuer,
+			context.oidc.client,
+			request,
+		)
 	}
 
-	const data = {
-		oidc: issuer,
-		apiKey: normal !== 'true',
+	return {
+		oidc: context.oidc?.issuer,
+		apiKey: !context.oidc?.disableKeyLogin,
 	}
-
-	if (!data.oidc && !data.apiKey) {
-		throw new Error('No authentication method is enabled')
-	}
-
-	if (data.oidc && !data.apiKey) {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return startOidc(data.oidc, id!, request)
-	}
-
-	return data
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -55,13 +45,17 @@ export async function action({ request }: ActionFunctionArgs) {
 	const oidcStart = formData.get('oidc-start')
 
 	if (oidcStart) {
-		const context = await getContext()
-		const issuer = context.oidcConfig?.issuer
-		const id = context.oidcConfig?.client
+		const context = await loadContext()
+		const issuer = context.oidc?.issuer
+		const id = context.oidc?.client
+
+		if (!issuer || !id) {
+			throw new Error('An invalid OIDC configuration was provided')
+		}
 
 		// We know it exists here because this action only happens on OIDC
 		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return startOidc(issuer!, id!, request)
+		return startOidc(issuer, id, request)
 	}
 
 	const apiKey = String(formData.get('api-key'))
