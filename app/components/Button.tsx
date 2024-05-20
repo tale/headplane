@@ -4,8 +4,8 @@ import { Button as AriaButton } from 'react-aria-components'
 import { cn } from '~/utils/cn'
 
 type ButtonProperties = Parameters<typeof AriaButton>[0] & {
-	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>];
-	readonly variant?: 'heavy' | 'light';
+	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>]
+	readonly variant?: 'heavy' | 'light'
 }
 
 export default function Button(properties: ButtonProperties) {
@@ -24,13 +24,14 @@ export default function Button(properties: ButtonProperties) {
 					? 'text-white'
 					: 'text-ui-700 dark:text-ui-300',
 				properties.isDisabled && 'opacity-50 cursor-not-allowed',
-				properties.className
+				properties.className,
 			)}
 			// If control is passed, set the state value
-			onPress={properties.control ? () => {
-				properties.control?.[1](true)
-			} : undefined}
+			onPress={properties.control
+				? () => {
+						properties.control?.[1](true)
+					}
+				: properties.onPress}
 		/>
 	)
 }
-
