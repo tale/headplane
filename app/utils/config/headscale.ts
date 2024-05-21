@@ -178,7 +178,35 @@ export async function patchConfig(partial: Record<string, unknown>) {
 	}
 
 	for (const [key, value] of Object.entries(partial)) {
-		configYaml.setIn(key.split('.'), value)
+		// If the key is something like `test.bar."foo.bar"`, then we treat
+		// the foo.bar as a single key, and not as two keys, so that needs
+		// to be split correctly.
+
+		// Iterate through each character, and if we find a dot, we check if
+		// the next character is a quote, and if it is, we skip until the next
+		// quote, and then we skip the next character, which should be a dot.
+		// If it's not a quote, we split it.
+		const path = []
+		let temp = ''
+		let inQuote = false
+
+		for (const element of key) {
+			if (element === '"') {
+				inQuote = !inQuote
+			}
+
+			if (element === '.' && !inQuote) {
+				path.push(temp.replaceAll('"', ''))
+				temp = ''
+				continue
+			}
+
+			temp += element
+		}
+
+		// Push the remaining element
+		path.push(temp.replaceAll('"', ''))
+		configYaml.setIn(path, value)
 	}
 
 	config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
