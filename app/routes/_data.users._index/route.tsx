@@ -210,7 +210,7 @@ interface UserProps {
 
 function Users({ users, magic }: UserProps) {
 	return (
-		<div className="grid grid-cols-2 gap-4 auto-rows-min">
+		<div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min">
 			{users.map((user, i) => (
 				<UserCard
 					key={user.id}
@@ -266,7 +266,7 @@ function InteractiveUsers({ users, setUsers, magic }: UserProps) {
 			})
 		}}
 		>
-			<div className="grid grid-cols-2 gap-4 auto-rows-min">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min">
 				{users.map((user, i) => (
 					<UserCard
 						key={user.id}
