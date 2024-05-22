@@ -13,6 +13,14 @@ You can configure Headplane using environment variables.
 - **`PORT`**: The port to bind the server to (default: `3000`).
 - **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
 - **`ACL_FILE`**: The path to the ACL file (default: `/etc/headscale/acl_policy.json`, not needed if you have `acl_policy_path` in your config).
+
+#### Docker Integration
+The Docker integration allows Headplane to manage the Headscale docker container.
+You'll need to provide these variables if you want to use this feature.
+Keep in mind that `DOCKER_SOCK` must start with a protocol (e.g., `unix://`).
+Secure API is currently not supported.
+
+- **`DOCKER_SOCK`**: The protocol and path to the Docker socket (default: `unix:///var/run/docker.sock`).
 - **`HEADSCALE_CONTAINER`**: The name of the Headscale container (required for Docker integration).
 
 ### SSO/OpenID Connect
@@ -23,7 +31,7 @@ If you use the Headscale configuration integration, these are not required.
 - **`OIDC_ISSUER`**: The issuer URL of your OIDC provider.
 - **`OIDC_CLIENT_ID`**: The client ID of your OIDC provider.
 - **`OIDC_CLIENT_SECRET`**: The client secret of your OIDC provider.
-- **`API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
+- **`ROOT_API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
 - **`DISABLE_API_KEY_LOGIN`**: If you want to disable API key login, set this to `true`.
 
 Here's what an example with Authelia would look like if you used the same client for both Headscale and Headplane.

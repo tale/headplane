@@ -151,8 +151,7 @@ export async function finishOidc(oidc: OidcConfig, req: Request) {
 
 	const keyResponse = await post<{ apiKey: string }>(
 		'v1/apikey',
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		process.env.API_KEY!,
+		oidc.rootKey,
 		{
 			expiration: expDate,
 		},

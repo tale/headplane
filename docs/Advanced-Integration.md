@@ -30,9 +30,13 @@ The ACL file path is read from the following sources in order of priority:
 
 The Docker integration can be used to automatically reload the configuration or ACLs when they are changed.
 In order for this to work, you'll need to pass in the `HEADSCALE_CONTAINER` environment variable.
-You'll also need to ensure that `/var/run/docker.sock` is mounted if Headplane is running in a container.
 This should be either the name or ID of the Headscale container (you can retrieve this using `docker ps`).
 If the other integrations aren't setup, then Headplane will automatically disable the Docker integration.
+
+By default the integration will check for `/var/run/docker.sock`, however you can override this by
+setting the `DOCKER_SOCK` environment variable if you use a different configuration than the default.
+When setting `DOCKER_SOCK`, you'll need to include the protocol (e.g., `unix://` or `tcp://`).
+Headplane currently does not support the HTTPS protocol for the Docker socket.
 
 ## Deployment
 
@@ -85,7 +89,7 @@ services:
       # This NEEDS to be set with OIDC, regardless of what's in the config
       # This needs to be a very long-lived (999 day) API key used to create
       # shorter ones for OIDC and allow the OIDC functionality to work
-      API_KEY: 'abcdefghijklmnopqrstuvwxyz'
+      ROOT_API_KEY: 'abcdefghijklmnopqrstuvwxyz'
 ```
 
 > For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 

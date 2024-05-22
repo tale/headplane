@@ -25,7 +25,8 @@ export interface HeadplaneContext {
 	}
 
 	docker?: {
-		sock: string
+		url: string
+		sock: boolean
 		container: string
 	}
 
@@ -163,10 +164,38 @@ async function checkAcl(config?: HeadscaleConfig) {
 }
 
 async function checkDocker() {
-	const path = process.env.DOCKER_SOCK ?? '/var/run/docker.sock'
+	const path = process.env.DOCKER_SOCK ?? 'unix:///var/run/docker.sock'
+
+	let url: URL | undefined
 	try {
-		await access(path, constants.R_OK)
+		url = new URL(path)
 	} catch {
+		return
+	}
+
+	// The API is available as an HTTP endpoint
+	if (url.protocol === 'tcp:') {
+		url.protocol = 'http:'
+	}
+
+	// Check if the socket is accessible
+	if (url.protocol === 'unix:') {
+		try {
+			await access(path, constants.R_OK)
+		} catch {
+			return
+		}
+	}
+
+	if (url.protocol === 'http:') {
+		try {
+			await fetch(new URL('/v1.30/version', url).href)
+		} catch {
+			return
+		}
+	}
+
+	if (url.protocol !== 'http:' && url.protocol !== 'unix:') {
 		return
 	}
 
@@ -175,7 +204,8 @@ async function checkDocker() {
 	}
 
 	return {
-		sock: path,
+		url: url.href,
+		sock: url.protocol === 'unix:',
 		container: process.env.HEADSCALE_CONTAINER,
 	}
 }

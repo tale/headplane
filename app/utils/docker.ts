@@ -1,5 +1,3 @@
-/* eslint-disable no-await-in-loop */
-/* eslint-disable no-constant-condition */
 import { setTimeout } from 'node:timers/promises'
 
 import { Client } from 'undici'
@@ -13,9 +11,12 @@ export async function sighupHeadscale() {
 		return
 	}
 
-	const client = new Client('http://localhost', {
-		socketPath: context.docker.sock,
-	})
+	// Supports the DOCKER_SOCK environment variable
+	const client = context.docker.sock
+		? new Client('http://localhost', {
+			socketPath: context.docker.url,
+		})
+		: new Client(context.docker.url)
 
 	const response = await client.request({
 		method: 'POST',
@@ -33,9 +34,12 @@ export async function restartHeadscale() {
 		return
 	}
 
-	const client = new Client('http://localhost', {
-		socketPath: context.docker.sock,
-	})
+	// Supports the DOCKER_SOCK environment variable
+	const client = context.docker.sock
+		? new Client('http://localhost', {
+			socketPath: context.docker.url,
+		})
+		: new Client(context.docker.url)
 
 	const response = await client.request({
 		method: 'POST',
@@ -48,14 +52,15 @@ export async function restartHeadscale() {
 
 	// Wait for Headscale to restart before continuing
 	let attempts = 0
+	// eslint-disable-next-line
 	while (true) {
 		try {
-			// Acceptable blank because API_KEY is not required
-			await pull('v1/apikey', process.env.API_KEY ?? '')
+			// Acceptable blank because ROOT_API_KEY is not required
+			await pull('v1/apikey', context.oidc?.rootKey ?? '')
 			return
 		} catch (error) {
 			// This means the server is up but the API key is invalid
-			// This can happen if the user only uses API_KEY via cookies
+			// This can happen if the user only uses ROOT_API_KEY via cookies
 			if (error instanceof HeadscaleError && error.status === 401) {
 				break
 			}
