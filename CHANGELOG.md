@@ -1,3 +1,8 @@
+### 0.1.5 (May 22, 2024)
+- Added experimental support for advanced integration without Docker.
+- Fixed a crash where the Docker integration tried to use `process.env.API_KEY` instead of context.
+- Fixed a crash where `ROOT_API_KEY` was not respected in the OIDC flow.
+
 ### 0.1.5 (May 20, 2024)
 - Robust configuration handling with fallbacks based on the headscale source.
 - Support for `client_secret_path` on configuration file based OIDC.
