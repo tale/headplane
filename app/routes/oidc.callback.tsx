@@ -9,10 +9,5 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		throw new Error('An invalid OIDC configuration was provided')
 	}
 
-	return finishOidc(
-		context.oidc.issuer,
-		context.oidc.client,
-		context.oidc.secret,
-		request,
-	)
+	return finishOidc(context.oidc, request)
 }

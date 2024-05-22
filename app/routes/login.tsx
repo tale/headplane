@@ -27,11 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	// Only set if OIDC is properly enabled anyways
 	if (context.oidc?.disableKeyLogin) {
-		return startOidc(
-			context.oidc.issuer,
-			context.oidc.client,
-			request,
-		)
+		return startOidc(context.oidc, request)
 	}
 
 	return {
@@ -46,16 +42,13 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	if (oidcStart) {
 		const context = await loadContext()
-		const issuer = context.oidc?.issuer
-		const id = context.oidc?.client
 
-		if (!issuer || !id) {
+		if (!context.oidc) {
 			throw new Error('An invalid OIDC configuration was provided')
 		}
 
 		// We know it exists here because this action only happens on OIDC
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		return startOidc(issuer, id, request)
+		return startOidc(context.oidc, request)
 	}
 
 	const apiKey = String(formData.get('api-key'))
