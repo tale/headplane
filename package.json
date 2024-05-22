@@ -61,7 +61,8 @@
 		"@types/react-dom": "npm:types-react-dom@beta"
 	},
 	"engines": {
-		"node": ">=18.0.0"
+		"node": ">=20",
+		"pnpm": ">=9 <10"
 	},
 	"pnpm": {
 		"patchedDependencies": {
