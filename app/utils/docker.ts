@@ -5,7 +5,9 @@ import { Client } from 'undici'
 import { loadContext } from './config/headplane'
 import { HeadscaleError, pull } from './headscale'
 
-export async function sighupHeadscale() {
+
+
+export async function sighupHeadscaleContainer() {
 	const context = await loadContext()
 	if (!context.docker) {
 		return

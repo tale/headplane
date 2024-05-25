@@ -10,6 +10,9 @@ import Notice from '~/components/Notice'
 import { cn } from '~/utils/cn'
 import { loadAcl, loadContext, patchAcl } from '~/utils/config/headplane'
 import { sighupHeadscale } from '~/utils/docker'
+import { getAcl, getContext, patchAcl } from '~/utils/config'
+import { sighupHeadscale } from '~/utils/linux'
+import { sighupHeadscaleContainer } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
 
 import Editor from './editor'
@@ -48,6 +51,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	await patchAcl(data.acl)
 
 	if (context.docker) {
+		await sighupHeadscaleContainer()
+	} else {
 		await sighupHeadscale()
 	}
 
