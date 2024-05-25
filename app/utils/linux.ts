@@ -1,10 +1,11 @@
-import * as fs from 'fs';
+import fs from 'node:fs/promises';
 import * as path from 'path';
 
 
 async function findPidByName(partialCommand: string): Promise<number | null> {
     const procDir = '/proc';
-    const procDirs = fs.readdirSync(procDir);
+
+    const procDirs = await fs.readdir(procDir)
   
     for (const dir of procDirs) {
       const pid = parseInt(dir, 10);
@@ -12,7 +13,7 @@ async function findPidByName(partialCommand: string): Promise<number | null> {
       if (!isNaN(pid)) {
         const cmdlinePath = path.join(procDir, dir, 'cmdline');
         try {
-          const cmdline = fs.readFileSync(cmdlinePath, 'utf8');
+          const cmdline = await fs.readFile(cmdlinePath, 'utf8');
           if (cmdline.includes(partialCommand)) {
             return pid;
           }
