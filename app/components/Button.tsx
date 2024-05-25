@@ -27,9 +27,11 @@ export default function Button(properties: ButtonProperties) {
 				properties.className,
 			)}
 			// If control is passed, set the state value
-			onPress={properties.control ? () => {
-				properties.control?.[1](true)
-			} : properties.onPress}
+			onPress={properties.control
+				? () => {
+						properties.control?.[1](true)
+					}
+				: properties.onPress}
 		/>
 	)
 }
