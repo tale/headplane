@@ -13,9 +13,17 @@ It's able to replicate nearly all of the functions of the official Tailscale Saa
 - DNS and *safe* Headscale configuration management
 
 ## Deployment
-- If you run Headscale in a Docker container, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
-- If you run Headscale natively, see the [Basic Deployment](/docs/Basic-Integration.md) guide.
-- For more configuration options, refer to the [Configuration](/docs/Configuration.md) guide.
+> For more configuration options, refer to the [Configuration](/docs/Configuration.md) guide.
+
+For fully-featured deployments, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
+This includes automatic management of ACLs, DNS settings, and Headscale configuration.
+*This is the closest experience to the Tailscale UI that can be achieved with Headscale and Headplane.*
+*If you aren't sure which one to pick, we recommend this.*
+
+If your environment is not able to support the advanced deployment, you can still use the basic deployment.
+For basic deployments, see the [Basic Deployment](/docs/Basic-Integration.md) guide.
+It does not include automatic management of ACLs, DNS settings, or the Headscale configuration,
+instead requiring manual editing and reloading when making changes.
 
 ## Contributing
 If you would like to contribute, please install a relatively modern version of Node.js and PNPM.

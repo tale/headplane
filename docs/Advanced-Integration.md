@@ -4,9 +4,9 @@
 
 With the advanced integration it's possible to control Access Control Lists (ACLs) and the Headscale configuration via the Headplane UI.
 Every single aspect of this integration is optional, meaning you can only use what you want.
-If you want to use this integration, you do not need Docker and you can make it work with Headscale and Headplane running natively.
+Additionally, with an integration provider, you can automatically reload the configuration or ACLs when they are changed.
 
-### Configuration Editing
+## Configuration Editing
 
 When the configuration file is available to Headplane, the `DNS` and `Settings` tabs will become functional.
 Similar to the Tailscale UI, you'll be able to edit the configuration without needing to manually edit the file.
@@ -16,7 +16,7 @@ By default this is set to `/etc/headscale/config.yaml`.
 > One important think to note is that environment variables always take priority over the configuration file.
 > The `HEADSCALE_URL`, `OIDC_CLIENT_ID`, `OIDFC_ISSUER`, and `OIDC_CLIENT_SECRET` will be preferred over the configuration file if available.
 
-### Access Control Lists (ACLs)
+## Access Control Lists (ACLs)
 
 ![ACL Preview](/assets/acl-preview.png)
 
@@ -26,10 +26,16 @@ The ACL file path is read from the following sources in order of priority:
 - **Environment Variable**: If you set the `ACL_FILE` environment variable, Headplane will read the file from that path.
 - **Configuration Integration**: If you've set this up, then Headplane will read the `acl_policy_path` key from the configuration file.
 
+## Automatic Configuration Reload
+
+When the configuration file is changed, Headscale will need to be restarted to apply the changes.
+Similarly, when the ACL file is changed, Headscale will need to be sent a `SIGHUP` signal to reload the ACLs.
+Currently there are 2 integration providers that can do this for you:
+
 ### Docker Integration
 
-The Docker integration can be used to automatically reload the configuration or ACLs when they are changed.
-In order for this to work, you'll need to pass in the `HEADSCALE_CONTAINER` environment variable.
+To enable the Docker integration, set `HEADSCALE_INTEGRATION=docker` in the environment variables.
+Additionally, you'll need to pass in the `HEADSCALE_CONTAINER` environment variable.
 This should be either the name or ID of the Headscale container (you can retrieve this using `docker ps`).
 If the other integrations aren't setup, then Headplane will automatically disable the Docker integration.
 
@@ -38,7 +44,7 @@ setting the `DOCKER_SOCK` environment variable if you use a different configurat
 When setting `DOCKER_SOCK`, you'll need to include the protocol (e.g., `unix://` or `tcp://`).
 Headplane currently does not support the HTTPS protocol for the Docker socket.
 
-## Deployment
+#### Example Docker Deployment
 
 Requirements:
 - Headscale 0.23 alpha or later
@@ -75,6 +81,7 @@ services:
       # This is always required for Headplane to work
       COOKIE_SECRET: 'abcdefghijklmnopqrstuvwxyz'
 
+      HEADSCALE_INTEGRATION: 'docker'
       HEADSCALE_CONTAINER: 'headscale'
       DISABLE_API_KEY_LOGIN: 'true'
       HOST: '0.0.0.0'
@@ -98,9 +105,17 @@ services:
 You may also choose to run it natively with the distributed binaries on the releases page.
 You'll need to manage running this yourself, and I would recommend making a `systemd` unit.
 
+### Native Linux Integration (Beta)
+
+The native integration for Linux relies on the `/proc` directory to locate the Headscale process.
+To enable it, set the `HEADSCALE_INTEGRATION=proc` value in the environment variables.
+Because of the way this integration works, it only supports automatically reloading ACLs.
+It's still very experimental and may not work in all environments.
+
 ## Configuration Scenarios
 
-Since the configuration is fairly modular you can have a variety of different setups.<br>
+Since the configuration is fairly modular you can have a variety of different setups.
+This mostly applies to the Docker integration since the native integration isn't fully featured yet.
 Here are a few examples to inspire you and show you what can work and what can't:
 
 #### Full Integration
