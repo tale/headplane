@@ -96,7 +96,7 @@ const HeadscaleConfig = z.object({
 		allowed_users: z.array(z.string()).optional(),
 		allowed_groups: z.array(z.string()).optional(),
 		strip_email_domain: z.boolean().default(true),
-		expiry: z.string().default('180d'),
+		expiry: z.union([z.string(), z.literal(0)]).default('180d'),
 		use_expiry_from_token: z.boolean().default(false),
 	}).optional(),
 
