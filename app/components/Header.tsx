@@ -9,7 +9,11 @@ import Menu from './Menu'
 import TabLink from './TabLink'
 
 interface Properties {
-	readonly data?: HeadplaneContext & { user?: SessionData['user'] }
+	readonly data?: {
+		acl: HeadplaneContext['acl']
+		config: HeadplaneContext['config']
+		user?: SessionData['user']
+	}
 }
 
 interface LinkProperties {

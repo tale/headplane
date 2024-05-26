@@ -5,7 +5,6 @@ import Code from '~/components/Code'
 import Notice from '~/components/Notice'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig, patchConfig } from '~/utils/config/headscale'
-import { restartHeadscale } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
@@ -56,7 +55,11 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	const data = await request.json() as Record<string, unknown>
 	await patchConfig(data)
-	await restartHeadscale()
+
+	if (context.integration?.restart) {
+		await context.integration.restart()
+	}
+
 	return json({ success: true })
 }
 

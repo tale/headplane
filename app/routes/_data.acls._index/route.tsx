@@ -9,7 +9,6 @@ import Link from '~/components/Link'
 import Notice from '~/components/Notice'
 import { cn } from '~/utils/cn'
 import { loadAcl, loadContext, patchAcl } from '~/utils/config/headplane'
-import { sighupHeadscale } from '~/utils/docker'
 import { getSession } from '~/utils/sessions'
 
 import Editor from './editor'
@@ -47,8 +46,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	const data = await request.json() as { acl: string }
 	await patchAcl(data.acl)
 
-	if (context.docker) {
-		await sighupHeadscale()
+	if (context.integration?.sighup) {
+		await context.integration.sighup()
 	}
 
 	return json({ success: true })
