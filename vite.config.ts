@@ -6,8 +6,9 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 installGlobals()
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
 	base: '/admin/',
+	build: isSsrBuild ? { target: 'ES2022' } : {},
 	plugins: [
 		remix({
 			basename: '/admin/',
@@ -23,4 +24,4 @@ export default defineConfig({
 			},
 		}),
 	],
-})
+}))
