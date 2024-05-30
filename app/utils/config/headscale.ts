@@ -12,6 +12,18 @@ import { resolve } from 'node:path'
 import { type Document, parseDocument } from 'yaml'
 import { z } from 'zod'
 
+const goBool = z
+	.union([z.boolean(), z.literal('true'), z.literal('false')])
+	.transform((value) => {
+		if (typeof value === 'boolean') {
+			return value
+		}
+
+		return value === 'true'
+	})
+
+const goDuration = z.union([z.literal(0), z.string()])
+
 const HeadscaleConfig = z.object({
 	tls_letsencrypt_cache_dir: z.string().default('/var/www/cache'),
 	tls_letsencrypt_challenge_type: z.enum(['HTTP-01', 'TLS-ALPN-01']).default('HTTP-01'),
@@ -26,11 +38,11 @@ const HeadscaleConfig = z.object({
 	listen_addr: z.string(),
 	metrics_listen_addr: z.string().optional(),
 	grpc_listen_addr: z.string().default(':50443'),
-	grpc_allow_insecure: z.boolean().default(false),
+	grpc_allow_insecure: goBool.default(false),
 
-	disable_check_updates: z.boolean().default(false),
-	ephemeral_node_inactivity_timeout: z.string().default('120s'),
-	randomize_client_port: z.boolean().default(false),
+	disable_check_updates: goBool.default(false),
+	ephemeral_node_inactivity_timeout: goDuration.default('120s'),
+	randomize_client_port: goBool.default(false),
 	acl_policy_path: z.string().optional(),
 
 	acme_email: z.string().optional(),
@@ -40,7 +52,7 @@ const HeadscaleConfig = z.object({
 	unix_socket_permission: z.string().default('0o770'),
 
 	tuning: z.object({
-		batch_change_delay: z.string().default('800ms'),
+		batch_change_delay: goDuration.default('800ms'),
 		node_mapsession_buffered_chan_size: z.number().default(30),
 	}).optional(),
 
@@ -54,14 +66,14 @@ const HeadscaleConfig = z.object({
 	}).default({ level: 'info', format: 'text' }),
 
 	logtail: z.object({
-		enabled: z.boolean().default(false),
+		enabled: goBool.default(false),
 	}).default({ enabled: false }),
 
 	cli: z.object({
 		address: z.string().optional(),
 		api_key: z.string().optional(),
-		timeout: z.string().default('10s'),
-		insecure: z.boolean().default(false),
+		timeout: goDuration.default('10s'),
+		insecure: goBool.default(false),
 	}).optional(),
 
 	prefixes: z.object({
@@ -71,7 +83,7 @@ const HeadscaleConfig = z.object({
 	}),
 
 	dns_config: z.object({
-		override_local_dns: z.boolean().default(true),
+		override_local_dns: goBool.default(false),
 		nameservers: z.array(z.string()).default([]),
 		restricted_nameservers: z.record(z.array(z.string())).default({}),
 		domains: z.array(z.string()).default([]),
@@ -80,12 +92,12 @@ const HeadscaleConfig = z.object({
 			type: z.literal('A'),
 			value: z.string(),
 		})).default([]),
-		magic_dns: z.boolean().default(false),
+		magic_dns: goBool.default(false),
 		base_domain: z.string().default('headscale.net'),
 	}),
 
 	oidc: z.object({
-		only_start_if_oidc_is_available: z.boolean().default(true),
+		only_start_if_oidc_is_available: goBool.default(false),
 		issuer: z.string().optional(),
 		client_id: z.string().optional(),
 		client_secret: z.string().optional(),
@@ -95,36 +107,36 @@ const HeadscaleConfig = z.object({
 		allowed_domains: z.array(z.string()).optional(),
 		allowed_users: z.array(z.string()).optional(),
 		allowed_groups: z.array(z.string()).optional(),
-		strip_email_domain: z.boolean().default(true),
-		expiry: z.union([z.string(), z.literal(0)]).default('180d'),
-		use_expiry_from_token: z.boolean().default(false),
+		strip_email_domain: goBool.default(false),
+		expiry: goDuration.default('180d'),
+		use_expiry_from_token: goBool.default(false),
 	}).optional(),
 
 	database: z.union([
 		z.object({
 			type: z.literal('sqlite'),
-			debug: z.boolean().default(false),
+			debug: goBool.default(false),
 			sqlite: z.object({
 				path: z.string(),
 			}),
 		}),
 		z.object({
 			type: z.literal('sqlite3'),
-			debug: z.boolean().default(false),
+			debug: goBool.default(false),
 			sqlite: z.object({
 				path: z.string(),
 			}),
 		}),
 		z.object({
 			type: z.literal('postgres'),
-			debug: z.boolean().default(false),
+			debug: goBool.default(false),
 			postgres: z.object({
 				host: z.string(),
 				port: z.number(),
 				name: z.string(),
 				user: z.string(),
 				pass: z.string(),
-				ssl: z.boolean().default(false),
+				ssl: goBool.default(true),
 				max_open_conns: z.number().default(10),
 				max_idle_conns: z.number().default(10),
 				conn_max_idle_time_secs: z.number().default(3600),
@@ -134,7 +146,7 @@ const HeadscaleConfig = z.object({
 
 	derp: z.object({
 		server: z.object({
-			enabled: z.boolean().default(false),
+			enabled: goBool.default(true),
 			region_id: z.number().optional(),
 			region_code: z.string().optional(),
 			region_name: z.string().optional(),
@@ -143,13 +155,13 @@ const HeadscaleConfig = z.object({
 
 			ipv4: z.string().optional(),
 			ipv6: z.string().optional(),
-			automatically_add_embedded_derp_region: z.boolean().default(true),
+			automatically_add_embedded_derp_region: goBool.default(true),
 		}),
 
 		urls: z.array(z.string()).optional(),
 		paths: z.array(z.string()).optional(),
-		auto_update_enabled: z.boolean().default(true),
-		update_frequency: z.string().default('24h'),
+		auto_update_enabled: goBool.default(true),
+		update_frequency: goDuration.default('24h'),
 	}),
 })
 
