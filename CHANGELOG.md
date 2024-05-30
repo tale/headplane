@@ -1,4 +1,12 @@
-### 0.1.5 (May 22, 2024)
+### 0.1.7 (May 30, 2024)
+- Added support for the `HEADSCALE_INTEGRATION` variable to allow for advanced integration without Docker.
+- Fixed a bug where the `expiry` field on the Headscale configuration could cause crashes.
+- Made the strict configuration loader more lenient to allow for more flexibility.
+- Added `HEADSCALE_CONFIG_UNSTRICT`=true to revert back to a weaker configuration loader.
+- Headplane's context now only loads once at start instead of being lazy-loaded.
+- Improved logging and error propagation so that it's easier to debug issues.
+
+### 0.1.6 (May 22, 2024)
 - Added experimental support for advanced integration without Docker.
 - Fixed a crash where the Docker integration tried to use `process.env.API_KEY` instead of context.
 - Fixed a crash where `ROOT_API_KEY` was not respected in the OIDC flow.
