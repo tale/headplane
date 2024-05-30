@@ -5,6 +5,9 @@ import { kill } from 'node:process'
 
 import type { Integration } from '.'
 
+// Integration name
+const name = 'Native Linux (/proc)'
+
 // Check if we have a /proc and if it's readable
 async function preflight() {
 	if (platform() !== 'linux') {
@@ -77,4 +80,4 @@ async function sighup() {
 	}
 }
 
-export default { preflight, sighup } satisfies Integration
+export default { name, preflight, sighup } satisfies Integration

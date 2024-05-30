@@ -2,6 +2,7 @@ import docker from './docker'
 import proc from './proc'
 
 export interface Integration {
+	name: string
 	preflight: () => Promise<boolean>
 	sighup?: () => Promise<void>
 	restart?: () => Promise<void>

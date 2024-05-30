@@ -73,6 +73,13 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		oidc: await checkOidc(config),
 	}
 
+	console.log('Completed loading the Headplane Context')
+	console.log('Headscale URL:', headscaleUrl)
+	console.log('Integration:', context.integration?.name ?? 'None')
+	console.log('Config:', contextData.read ? `Found ${contextData.write ? '' : '(Read Only)'}` : 'Unavailable')
+	console.log('ACL:', context.acl.read ? `Found ${context.acl.write ? '' : '(Read Only)'}` : 'Unavailable')
+	console.log('OIDC:', context.oidc ? 'Configured' : 'Unavailable')
+
 	return context
 }
 

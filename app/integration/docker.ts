@@ -7,6 +7,9 @@ import { HeadscaleError, pull } from '~/utils/headscale'
 
 import type { Integration } from '.'
 
+// Integration name
+const name = 'Docker'
+
 let url: URL | undefined
 let container: string | undefined
 
@@ -121,4 +124,4 @@ async function restart() {
 	}
 }
 
-export default { preflight, sighup, restart } satisfies Integration
+export default { name, preflight, sighup, restart } satisfies Integration

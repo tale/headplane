@@ -103,7 +103,7 @@ const HeadscaleConfig = z.object({
 		client_secret: z.string().optional(),
 		client_secret_path: z.string().optional(),
 		scope: z.array(z.string()).default(['openid', 'profile', 'email']),
-		extra_params: z.record(z.string()).default({}),
+		extra_params: z.record(z.unknown()).default({}),
 		allowed_domains: z.array(z.string()).optional(),
 		allowed_users: z.array(z.string()).optional(),
 		allowed_groups: z.array(z.string()).optional(),
