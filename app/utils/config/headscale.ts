@@ -158,16 +158,40 @@ export type HeadscaleConfig = z.infer<typeof HeadscaleConfig>
 export let configYaml: Document | undefined
 export let config: HeadscaleConfig | undefined
 
-export async function loadConfig() {
+export async function loadConfig(path?: string) {
 	if (config) {
 		return config
 	}
 
-	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
-	const data = await readFile(path, 'utf8')
+	if (!path) {
+		throw new Error('Path is required to lazy load config')
+	}
 
+	const data = await readFile(path, 'utf8')
 	configYaml = parseDocument(data)
-	config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
+
+	try {
+		config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
+	} catch (error) {
+		if (error instanceof z.ZodError) {
+			console.log('Failed to parse the Headscale configuration file!')
+			console.log('The following schema issues were found:')
+			for (const issue of error.issues) {
+				const path = issue.path.map(String).join('.')
+				const message = issue.message
+
+				console.log(`- '${path}': ${message}`)
+			}
+
+			console.log('')
+			console.log('Please fix the configuration file and try again.')
+			console.log('Headplane will operate as if no config is present.')
+			console.log('')
+		}
+
+		throw error
+	}
+
 	return config
 }
 

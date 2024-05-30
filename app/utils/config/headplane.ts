@@ -43,12 +43,8 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		return context
 	}
 
-	let config: HeadscaleConfig | undefined
-	try {
-		config = await loadConfig()
-	} catch {}
-
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
+	const { config, contextData } = await checkConfig(path)
 
 	let headscaleUrl = process.env.HEADSCALE_URL
 	if (!headscaleUrl && !config) {
@@ -72,7 +68,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		headscaleUrl,
 		cookieSecret,
 		integration: await checkIntegration(),
-		config: await checkConfig(path, config),
+		config: contextData,
 		acl: await checkAcl(config),
 		oidc: await checkOidc(config),
 	}
@@ -121,7 +117,20 @@ export async function patchAcl(data: string) {
 	await writeFile(path, data, 'utf8')
 }
 
-async function checkConfig(path: string, config?: HeadscaleConfig) {
+async function checkConfig(path: string) {
+	let config: HeadscaleConfig | undefined
+	try {
+		config = await loadConfig(path)
+	} catch {
+		return {
+			config: undefined,
+			contextData: {
+				read: false,
+				write: false,
+			},
+		}
+	}
+
 	let write = false
 	try {
 		await access(path, constants.W_OK)
@@ -129,8 +138,11 @@ async function checkConfig(path: string, config?: HeadscaleConfig) {
 	} catch {}
 
 	return {
-		read: config ? true : false,
-		write,
+		config,
+		contextData: {
+			read: true,
+			write,
+		},
 	}
 }
 
