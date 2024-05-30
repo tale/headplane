@@ -6,8 +6,6 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 installGlobals()
 
-const ReactCompilerConfig = {}
-
 export default defineConfig({
 	base: '/admin/',
 	plugins: [
@@ -18,9 +16,9 @@ export default defineConfig({
 		babel({
 			filter: /\.[jt]sx?$/,
 			babelConfig: {
-				presets: ['@babel/preset-typescript'], // if you use TypeScript
+				presets: ['@babel/preset-typescript'],
 				plugins: [
-					['babel-plugin-react-compiler', ReactCompilerConfig],
+					['babel-plugin-react-compiler', {}],
 				],
 			},
 		}),
