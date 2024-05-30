@@ -182,6 +182,18 @@ export async function loadConfig(path?: string) {
 	const data = await readFile(path, 'utf8')
 	configYaml = parseDocument(data)
 
+	if (process.env.HEADSCALE_CONFIG_UNSTRICT === 'true') {
+		config = configYaml.toJSON() as HeadscaleConfig
+		console.log('Loaded Headscale configuration in non-strict mode')
+		console.log('By using this mode you forfeit GitHub issue support')
+		console.log('This is very dangerous and comes with a few caveats:')
+		console.log('- Headplane could very easily crash')
+		console.log('- Headplane could break your Headscale installation')
+		console.log('- The UI could throw random errors/show incorrect data')
+		console.log('')
+		return config
+	}
+
 	try {
 		config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
 	} catch (error) {
@@ -245,7 +257,10 @@ export async function patchConfig(partial: Record<string, unknown>) {
 		configYaml.setIn(path, value)
 	}
 
-	config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
+	config = process.env.HEADSCALE_CONFIG_UNSTRICT === 'true'
+		? configYaml.toJSON() as HeadscaleConfig
+		: (await HeadscaleConfig.parseAsync(configYaml.toJSON()))
+
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 	await writeFile(path, configYaml.toString(), 'utf8')
 }
