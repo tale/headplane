@@ -211,11 +211,10 @@ interface UserProps {
 function Users({ users, magic }: UserProps) {
 	return (
 		<div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min">
-			{users.map((user, i) => (
+			{users.map(user => (
 				<UserCard
 					key={user.id}
 					user={user}
-					isFirst={i === 0}
 					magic={magic}
 				/>
 			))}
@@ -267,11 +266,10 @@ function InteractiveUsers({ users, setUsers, magic }: UserProps) {
 		}}
 		>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min">
-				{users.map((user, i) => (
+				{users.map(user => (
 					<UserCard
 						key={user.id}
 						user={user}
-						isFirst={i === 0}
 						magic={magic}
 					/>
 				))}
@@ -312,11 +310,10 @@ function MachineChip({ machine }: { readonly machine: Machine }) {
 
 interface CardProps {
 	user: UserMachine
-	isFirst: boolean
 	magic?: string
 }
 
-function UserCard({ user, isFirst, magic }: CardProps) {
+function UserCard({ user, magic }: CardProps) {
 	const { isOver, setNodeRef } = useDroppable({
 		id: user.name,
 	})
@@ -339,11 +336,11 @@ function UserCard({ user, isFirst, magic }: CardProps) {
 					</div>
 					<div className="flex items-center gap-2">
 						<Rename username={user.name} magic={magic} />
-						{isFirst
-							? undefined
-							: (
+						{user.machines.length === 0
+							? (
 								<Remove username={user.name} magic={magic} />
-								)}
+								)
+							: undefined}
 					</div>
 				</div>
 				<div className="mt-4">
