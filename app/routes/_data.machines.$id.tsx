@@ -149,9 +149,9 @@ export default function Page() {
 							</p>
 						</div>
 						)
-					: [...routes, ...routes].map((route, i) => (
+					: routes.map((route, i) => (
 						<div
-							key={route.node.id}
+							key={route.id}
 							className={cn(
 								'flex items-center justify-between',
 								routes.length - 1 === i ? 'border-b pb-3 mb-2' : '',
@@ -179,7 +179,7 @@ export default function Page() {
 								</p>
 							</div>
 						</div>
-						))}
+					))}
 			</Card>
 		</div>
 	)
