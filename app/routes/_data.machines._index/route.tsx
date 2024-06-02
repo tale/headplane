@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InfoIcon } from '@primer/octicons-react'
 import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from '@remix-run/node'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { useLoaderData } from '@remix-run/react'
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
 
 import Code from '~/components/Code'
@@ -107,7 +107,6 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Page() {
 	useLiveData({ interval: 3000 })
 	const data = useLoaderData<typeof loader>()
-	const fetcher = useFetcher()
 
 	return (
 		<>
@@ -155,10 +154,8 @@ export default function Page() {
 					{data.nodes.map(machine => (
 						<MachineRow
 							key={machine.id}
-							// Typescript isn't smart enough yet
-							machine={machine as unknown as Machine}
-							routes={data.routes.filter(route => route.node.id === machine.id) as unknown as Route[]}
-							fetcher={fetcher}
+							machine={machine}
+							routes={data.routes.filter(route => route.node.id === machine.id)}
 							magic={data.magic}
 						/>
 					))}

@@ -182,15 +182,12 @@ export default function Page() {
 					<Auth magic={data.magic} />
 					)}
 			<ClientOnly fallback={
-				// @ts-expect-error: JsonifyObject is weird
 				<Users users={users} />
 			}
 			>
 				{() => (
 					<InteractiveUsers
-						// @ts-expect-error: JsonifyObject is weird
 						users={users}
-						// @ts-expect-error: JsonifyObject is weird
 						setUsers={setUsers}
 						magic={data.magic}
 					/>
