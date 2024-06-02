@@ -23,6 +23,7 @@ export default function Menu({ machine, routes, magic }: MenuProps) {
 	const routesState = useState(false)
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
+		|| machine.expiry === '0001-01-01T00:00:00Z'
 		? false
 		: new Date(machine.expiry).getTime() < Date.now()
 

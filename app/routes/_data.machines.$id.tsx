@@ -49,6 +49,7 @@ export default function Page() {
 	useLiveData({ interval: 1000 })
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
+		|| machine.expiry === '0001-01-01T00:00:00Z'
 		? false
 		: new Date(machine.expiry).getTime() < Date.now()
 
