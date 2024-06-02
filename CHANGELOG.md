@@ -1,3 +1,9 @@
+### 0.1.8 (June 2, 2024)
+- Built basic functionality for the machine overview page (by machine ID).
+- Possibly fixed an issue where expiry disabled machines' timestamps weren't handled correctly.
+- Prevent users from being deleted if they still have ownership of machines.
+- Fixed some type issues where `Date` was being used instead of `string` for timestamps.
+
 ### 0.1.7 (May 30, 2024)
 - Added support for the `HEADSCALE_INTEGRATION` variable to allow for advanced integration without Docker.
 - Fixed a bug where the `expiry` field on the Headscale configuration could cause crashes.
