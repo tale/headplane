@@ -30,6 +30,8 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=edge,branch=main
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
