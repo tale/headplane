@@ -1,18 +1,19 @@
 import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
 import { type ActionFunctionArgs, json } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { useFetcher, useLoaderData } from '@remix-run/react'
 import { useState } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
-import { ClientOnly } from 'remix-utils/client-only'
 
+import Button from '~/components/Button'
 import Link from '~/components/Link'
 import Notice from '~/components/Notice'
+import Spinner from '~/components/Spinner'
+import { toast } from '~/components/Toaster'
 import { cn } from '~/utils/cn'
 import { loadAcl, loadContext, patchAcl } from '~/utils/config/headplane'
 import { getSession } from '~/utils/sessions'
 
-import Editor from './editor'
-import Fallback from './fallback'
+import Monaco from './editor'
 
 export async function loader() {
 	const context = await loadContext()
@@ -56,6 +57,7 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Page() {
 	const data = useLoaderData<typeof loader>()
 	const [acl, setAcl] = useState(data.currentAcl)
+	const fetcher = useFetcher()
 
 	return (
 		<div>
@@ -141,18 +143,21 @@ export default function Page() {
 					</Tab>
 				</TabList>
 				<TabPanel id="edit">
-					<ClientOnly fallback={<Fallback acl={acl} where="server" />}>
-						{() => (
-							<Editor data={data} acl={acl} setAcl={setAcl} mode="edit" />
-						)}
-					</ClientOnly>
+					<Monaco
+						variant="editor"
+						language={data.aclType}
+						value={acl}
+						onChange={setAcl}
+					/>
 				</TabPanel>
 				<TabPanel id="diff">
-					<ClientOnly fallback={<Fallback acl={acl} where="server" />}>
-						{() => (
-							<Editor data={data} acl={acl} setAcl={setAcl} mode="diff" />
-						)}
-					</ClientOnly>
+					<Monaco
+						variant="editor"
+						language={data.aclType}
+						value={acl}
+						onChange={setAcl}
+						original={data.currentAcl}
+					/>
 				</TabPanel>
 				<TabPanel id="preview">
 					<div
@@ -170,6 +175,31 @@ export default function Page() {
 					</div>
 				</TabPanel>
 			</Tabs>
+			<Button
+				variant="heavy"
+				className="mr-2"
+				isDisabled={fetcher.state === 'loading' || !data.hasAclWrite || data.currentAcl === acl}
+				onPress={() => {
+					fetcher.submit({
+						acl,
+					}, {
+						method: 'PATCH',
+						encType: 'application/json',
+					})
+
+					toast('Updated tailnet ACL policy')
+				}}
+			>
+				{fetcher.state === 'idle'
+					? undefined
+					: (
+						<Spinner className="w-3 h-3" />
+						)}
+				Save
+			</Button>
+			<Button>
+				Discard Changes
+			</Button>
 		</div>
 	)
 }

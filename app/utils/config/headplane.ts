@@ -83,7 +83,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	return context
 }
 
-export async function loadAcl() {
+export async function loadAcl(): Promise<{ data: string, type: 'json' | 'yaml' }> {
 	let path = process.env.ACL_FILE
 	if (!path) {
 		try {

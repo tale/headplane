@@ -1,43 +1,24 @@
-import clsx from 'clsx'
+import Spinner from '~/components/Spinner'
+import { cn } from '~/utils/cn'
 
-import Button from '~/components/Button'
-
-type FallbackProperties = {
-	readonly acl: string;
-	readonly where: 'client' | 'server';
+interface FallbackProps {
+	readonly acl: string
 }
 
-export default function Fallback({ acl, where }: FallbackProperties) {
+export default function Fallback({ acl }: FallbackProps) {
 	return (
-		<>
-			<div className={clsx(
-				where === 'server' ? 'mb-2 overflow-hidden rounded-tr-lg rounded-b-lg' : '',
-				where === 'server' ? 'border border-gray-200 dark:border-gray-700' : ''
-			)}
-			>
-				<textarea
-					readOnly
-					className={clsx(
-						'w-full h-editor font-mono resize-none',
-						'text-sm text-gray-600 dark:text-gray-300',
-						'pl-10 pt-1 leading-snug'
-					)}
-					value={acl}
-				/>
-			</div>
-			{where === 'server' ? (
-				<>
-					<Button
-						variant='heavy'
-						className='mr-2'
-					>
-						Save
-					</Button>
-					<Button>
-						Discard Changes
-					</Button>
-				</>
-			) : undefined}
-		</>
+		<div className="inline-block relative w-full h-editor">
+			<Spinner className="w-4 h-4 absolute p-2" />
+			<textarea
+				readOnly
+				className={cn(
+					'w-full h-editor font-mono resize-none',
+					'text-sm text-gray-600 dark:text-gray-300',
+					'bg-ui-100 dark:bg-ui-800',
+					'pl-16 pr-8 pt-0.5 leading-snug',
+				)}
+				value={acl}
+			/>
+		</div>
 	)
 }

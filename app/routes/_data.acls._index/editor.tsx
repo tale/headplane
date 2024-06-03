@@ -1,36 +1,33 @@
-import { json } from '@codemirror/lang-json'
-import { yaml } from '@codemirror/lang-yaml'
-import { useFetcher } from '@remix-run/react'
-import { githubDark, githubLight } from '@uiw/codemirror-theme-github'
-import CodeMirror from '@uiw/react-codemirror'
-import clsx from 'clsx'
-import { useEffect, useMemo, useState } from 'react'
-import CodeMirrorMerge from 'react-codemirror-merge'
+import Editor, { DiffEditor, Monaco } from '@monaco-editor/react'
+import { useEffect, useState } from 'react'
+import { ClientOnly } from 'remix-utils/client-only'
 
-import Button from '~/components/Button'
-import Spinner from '~/components/Spinner'
-import { toast } from '~/components/Toaster'
+import Fallback from '~/routes/_data.acls._index/fallback'
+import { cn } from '~/utils/cn'
 
-import Fallback from './fallback'
-
-interface EditorProperties {
-	readonly acl: string
-	readonly setAcl: (acl: string) => void
-	readonly mode: 'edit' | 'diff'
-
-	readonly data: {
-		hasAclWrite: boolean
-		currentAcl: string
-		aclType: string
-	}
+interface MonacoProps {
+	variant: 'editor' | 'diff'
+	language: 'json' | 'yaml'
+	value: string
+	onChange: (value: string) => void
+	original?: string
 }
 
-export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
-	const [light, setLight] = useState(false)
-	const [loading, setLoading] = useState(true)
+function monacoCallback(monaco: Monaco) {
+	monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
+		validate: true,
+		allowComments: true,
+		schemas: [],
+		enableSchemaRequest: true,
+		trailingCommas: 'ignore',
+	})
 
-	const fetcher = useFetcher()
-	const aclType = useMemo(() => data.aclType === 'json' ? json() : yaml(), [data.aclType])
+	monaco.languages.register({ id: 'json' })
+	monaco.languages.register({ id: 'yaml' })
+}
+
+export default function MonacoEditor({ value, onChange, variant, original, language }: MonacoProps) {
+	const [light, setLight] = useState(false)
 
 	useEffect(() => {
 		const theme = window.matchMedia('(prefers-color-scheme: light)')
@@ -39,87 +36,62 @@ export default function Editor({ data, acl, setAcl, mode }: EditorProperties) {
 		theme.addEventListener('change', (theme) => {
 			setLight(theme.matches)
 		})
-
-		// Prevents the FOUC
-		setLoading(false)
 	}, [])
 
 	return (
 		<>
-			<div className={clsx(
+			<div className={cn(
 				'border border-gray-200 dark:border-gray-700',
 				'rounded-b-lg rounded-tr-lg mb-2 z-10 overflow-x-hidden',
 			)}
 			>
 				<div className="overflow-y-scroll h-editor text-sm">
-					{loading
-						? (
-							<Fallback acl={acl} where="client" />
-							)
-						: (
-								mode === 'edit'
-									? (
-										<CodeMirror
-											value={acl}
-											theme={light ? githubLight : githubDark}
-											extensions={[aclType]}
-											readOnly={!data.hasAclWrite}
-											onChange={(value) => {
-												setAcl(value)
-											}}
-										/>
-										)
-									: (
-										<CodeMirrorMerge
-											theme={light ? githubLight : githubDark}
-											orientation="a-b"
-										>
-											<CodeMirrorMerge.Original
-												readOnly
-												value={data.currentAcl}
-												extensions={[aclType]}
-											/>
-											<CodeMirrorMerge.Modified
-												readOnly
-												value={acl}
-												extensions={[aclType]}
-											/>
-										</CodeMirrorMerge>
-										)
-							)}
+					<ClientOnly fallback={<Fallback acl={value} />}>
+						{() => variant === 'editor'
+							? (
+								<Editor
+									height="100%"
+									language={language}
+									theme={light ? 'light' : 'vs-dark'}
+									value={value}
+									onChange={(updated) => {
+										if (!updated) {
+											return
+										}
+
+										if (updated !== value) {
+											onChange(updated)
+										}
+									}}
+									loading={<Fallback acl={value} />}
+									beforeMount={monacoCallback}
+									options={{
+										wordWrap: 'on',
+										minimap: { enabled: false },
+										fontSize: 14,
+									}}
+								/>
+								)
+							: (
+								<DiffEditor
+									height="100%"
+									language={language}
+									theme={light ? 'light' : 'vs-dark'}
+									original={original}
+									modified={value}
+									loading={<Fallback acl={value} />}
+									beforeMount={monacoCallback}
+									options={{
+										wordWrap: 'on',
+										minimap: { enabled: false },
+										fontSize: 13,
+									}}
+								/>
+								)}
+					</ClientOnly>
 				</div>
 			</div>
 
-			<Button
-				variant="heavy"
-				className="mr-2"
-				isDisabled={fetcher.state === 'loading' || !data.hasAclWrite || data.currentAcl === acl}
-				onPress={() => {
-					fetcher.submit({
-						acl,
-					}, {
-						method: 'PATCH',
-						encType: 'application/json',
-					})
-
-					toast('Updated tailnet ACL policy')
-				}}
-			>
-				{fetcher.state === 'idle'
-					? undefined
-					: (
-						<Spinner className="w-3 h-3" />
-						)}
-				Save
-			</Button>
-			<Button
-				isDisabled={fetcher.state === 'loading' || data.currentAcl === acl}
-				onPress={() => {
-					setAcl(data.currentAcl)
-				}}
-			>
-				Discard Changes
-			</Button>
 		</>
 	)
 }
