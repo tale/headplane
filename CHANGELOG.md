@@ -1,3 +1,9 @@
+### 0.1.9 (June 2, 2024)
+- Switch to Monaco editor with proper HuJSON and YAML syntax highlighting.
+- Utilize magic DNS hostnames for the machine overview page.
+- Fixed the expiry issue once and for all.
+- Add a nightly build with the `ghcr.io/tale/headplane:edge` tag
+
 ### 0.1.8 (June 2, 2024)
 - Built basic functionality for the machine overview page (by machine ID).
 - Possibly fixed an issue where expiry disabled machines' timestamps weren't handled correctly.
