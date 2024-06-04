@@ -129,11 +129,15 @@ export default function Page() {
 					name="Expiry"
 					value={new Date(machine.expiry).toLocaleString()}
 				/>
-				<Attribute
-					isCopyable
-					name="Domain"
-					value={`${machine.givenName}.${machine.user.name}.ts.net`}
-				/>
+				{magic
+					? (
+						<Attribute
+							isCopyable
+							name="Domain"
+							value={`${machine.givenName}.${machine.user.name}.${magic}`}
+						/>
+						)
+					: undefined}
 			</Card>
 			<h2 className="text-xl font-medium mb-4 mt-8">
 				Machine Routes
