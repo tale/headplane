@@ -1,0 +1,22 @@
+diff --git a/dist/usePreventScroll.mjs b/dist/usePreventScroll.mjs
+index 69b84ce2aec5b637a9f0ba8158b6a1ba4173c266..5e546a6e4fc3b7a0468c1c89d887a4392c010624 100644
+--- a/dist/usePreventScroll.mjs
++++ b/dist/usePreventScroll.mjs
+@@ -48,7 +48,7 @@ function $49c51c25361d4cd2$export$ee0f7cc6afcd1c18(options = {}) {
+ // For most browsers, all we need to do is set `overflow: hidden` on the root element, and
+ // add some padding to prevent the page from shifting when the scrollbar is hidden.
+ function $49c51c25361d4cd2$var$preventScrollStandard() {
+-    return (0, $7mMvr$chain)($49c51c25361d4cd2$var$setStyle(document.documentElement, 'paddingRight', `${window.innerWidth - document.documentElement.clientWidth}px`), $49c51c25361d4cd2$var$setStyle(document.documentElement, 'overflow', 'hidden'));
++    return (0, $7mMvr$chain)($49c51c25361d4cd2$var$setStyle(document.documentElement, 'overflow', 'hidden'));
+ }
+ // Mobile Safari is a whole different beast. Even with overflow: hidden,
+ // it still scrolls the page in many situations:
+@@ -161,7 +161,7 @@ function $49c51c25361d4cd2$var$preventScrollMobileSafari() {
+         // enable us to scroll the window to the top, which is required for the rest of this to work.
+         let scrollX = window.pageXOffset;
+         let scrollY = window.pageYOffset;
+-        restoreStyles = (0, $7mMvr$chain)($49c51c25361d4cd2$var$addEvent(window, 'scroll', onWindowScroll), $49c51c25361d4cd2$var$setStyle(document.documentElement, 'paddingRight', `${window.innerWidth - document.documentElement.clientWidth}px`), $49c51c25361d4cd2$var$setStyle(document.documentElement, 'overflow', 'hidden'), $49c51c25361d4cd2$var$setStyle(document.body, 'marginTop', `-${scrollY}px`), ()=>{
++        restoreStyles = (0, $7mMvr$chain)($49c51c25361d4cd2$var$addEvent(window, 'scroll', onWindowScroll), $49c51c25361d4cd2$var$setStyle(document.documentElement, 'overflow', 'hidden'), $49c51c25361d4cd2$var$setStyle(document.body, 'marginTop', `-${scrollY}px`), ()=>{
+             window.scrollTo(scrollX, scrollY);
+         });
+         // Scroll to the top. The negative margin on the body will make this appear the same.
