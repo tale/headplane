@@ -1,6 +1,19 @@
 # Advanced Integration
 
-![Integration Preview](/assets/advanced-preview.png)
+<picture>
+    <source
+        media="(prefers-color-scheme: dark)"
+        srcset="../assets/integration-dark.png"
+    >
+    <source
+        media="(prefers-color-scheme: light)"
+        srcset="../assets/integration-light.png"
+    >
+    <img
+        alt="Integration Preview"
+        src="../assets/integration-dark.png"
+    >
+</picture>
 
 With the advanced integration it's possible to control Access Control Lists (ACLs) and the Headscale configuration via the Headplane UI.
 Every single aspect of this integration is optional, meaning you can only use what you want.
@@ -18,7 +31,20 @@ By default this is set to `/etc/headscale/config.yaml`.
 
 ## Access Control Lists (ACLs)
 
-![ACL Preview](/assets/acl-preview.png)
+<picture>
+    <source
+        media="(prefers-color-scheme: dark)"
+        srcset="../assets/acls-dark.png"
+    >
+    <source
+        media="(prefers-color-scheme: light)"
+        srcset="../assets/acls-light.png"
+    >
+    <img
+        alt="ACL Preview"
+        src="../assets/acls-dark.png"
+    >
+</picture>
 
 Headplane will enable the `Access Controls` tab if it is able to read an ACL file from Headscale.<br>
 The ACL file path is read from the following sources in order of priority:
