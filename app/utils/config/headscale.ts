@@ -183,7 +183,52 @@ export async function loadConfig(path?: string) {
 	configYaml = parseDocument(data)
 
 	if (process.env.HEADSCALE_CONFIG_UNSTRICT === 'true') {
-		config = configYaml.toJSON() as HeadscaleConfig
+		const loaded = configYaml.toJSON() as Record<string, unknown>
+		config = {
+			...loaded,
+			tls_letsencrypt_cache_dir: loaded.tls_letsencrypt_cache_dir ?? '/var/www/cache',
+			tls_letsencrypt_challenge_type: loaded.tls_letsencrypt_challenge_type ?? 'HTTP-01',
+			grpc_listen_addr: loaded.grpc_listen_addr ?? ':50443',
+			grpc_allow_insecure: loaded.grpc_allow_insecure ?? false,
+			randomize_client_port: loaded.randomize_client_port ?? false,
+			unix_socket: loaded.unix_socket ?? '/var/run/headscale/headscale.sock',
+			unix_socket_permission: loaded.unix_socket_permission ?? '0o770',
+			tuning: loaded.tuning ?? {
+				batch_change_delay: '800ms',
+				node_mapsession_buffered_chan_size: 30,
+			},
+
+			log: loaded.log ?? {
+				level: 'info',
+				format: 'text',
+			},
+
+			logtail: loaded.logtail ?? {
+				enabled: false,
+			},
+
+			cli: loaded.cli ?? {
+				timeout: '10s',
+				insecure: false,
+			},
+
+			prefixes: loaded.prefixes ?? {
+				allocation: 'sequential',
+				v4: '',
+				v6: '',
+			},
+
+			dns_config: loaded.dns_config ?? {
+				override_local_dns: false,
+				nameservers: [],
+				restricted_nameservers: {},
+				domains: [],
+				extra_records: [],
+				magic_dns: false,
+				base_domain: 'headscale.net',
+			},
+		} as HeadscaleConfig
+
 		console.log('Loaded Headscale configuration in non-strict mode')
 		console.log('By using this mode you forfeit GitHub issue support')
 		console.log('This is very dangerous and comes with a few caveats:')
