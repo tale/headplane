@@ -1,4 +1,4 @@
-import { type LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 
 import Attribute from '~/components/Attribute'
@@ -12,6 +12,7 @@ import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
+import { menuAction } from './_data.machines._index/action'
 import MenuOptions from './_data.machines._index/menu'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
@@ -42,6 +43,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		routes: routes.routes.filter(route => route.node.id === params.id),
 		magic,
 	}
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+	return menuAction(request)
 }
 
 export default function Page() {
