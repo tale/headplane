@@ -1,3 +1,7 @@
+### 0.2.0 (June 23, 2024)
+- Fix the dropdown options for machines not working on the machines page.
+- Add an option to change the machine owner in the dropdown (aside from the users page).
+
 ### 0.1.9 (June 2, 2024)
 - Switch to Monaco editor with proper HuJSON and YAML syntax highlighting.
 - Utilize magic DNS hostnames for the machine overview page.
