@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 
 import Attribute from '~/components/Attribute'
 import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
-import { type Machine, Route } from '~/types'
+import { type Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
@@ -31,16 +32,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		}
 	}
 
-	const [machine, routes] = await Promise.all([
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+	const [machine, routes, users] = await Promise.all([
 		pull<{ node: Machine }>(`v1/node/${params.id}`, session.get('hsApiKey')!),
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 		pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!),
+		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
 	])
 
 	return {
 		machine: machine.node,
 		routes: routes.routes.filter(route => route.node.id === params.id),
+		users: users.users,
 		magic,
 	}
 }
@@ -50,7 +51,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { machine, magic, routes } = useLoaderData<typeof loader>()
+	const { machine, magic, routes, users } = useLoaderData<typeof loader>()
 	useLiveData({ interval: 1000 })
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
@@ -92,6 +93,7 @@ export default function Page() {
 				<MenuOptions
 					machine={machine}
 					routes={routes}
+					users={users}
 					magic={magic}
 				/>
 			</div>

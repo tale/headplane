@@ -4,7 +4,7 @@ import { Link } from '@remix-run/react'
 import Menu from '~/components/Menu'
 import StatusCircle from '~/components/StatusCircle'
 import { toast } from '~/components/Toaster'
-import { type Machine, type Route } from '~/types'
+import { type Machine, type Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 
 import MenuOptions from './menu'
@@ -12,10 +12,11 @@ import MenuOptions from './menu'
 interface Props {
 	readonly machine: Machine
 	readonly routes: Route[]
+	readonly users: User[]
 	readonly magic?: string
 }
 
-export default function MachineRow({ machine, routes, magic }: Props) {
+export default function MachineRow({ machine, routes, magic, users }: Props) {
 	const expired = machine.expiry === '0001-01-01 00:00:00'
 		|| machine.expiry === '0001-01-01T00:00:00Z'
 		? false
@@ -142,6 +143,7 @@ export default function MachineRow({ machine, routes, magic }: Props) {
 				<MenuOptions
 					machine={machine}
 					routes={routes}
+					users={users}
 					magic={magic}
 				/>
 			</td>

@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InfoIcon } from '@primer/octicons-react'
-import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from '@remix-run/node'
+import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
 
 import Code from '~/components/Code'
-import { type Machine, type Route } from '~/types'
+import { type Machine, type Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
-import { del, post, pull } from '~/utils/headscale'
+import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
@@ -18,9 +18,10 @@ import MachineRow from './machine'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
-	const [machines, routes] = await Promise.all([
+	const [machines, routes, users] = await Promise.all([
 		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
 		pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!),
+		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
 	])
 
 	const context = await loadContext()
@@ -36,6 +37,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return {
 		nodes: machines.nodes,
 		routes: routes.routes,
+		users: users.users,
 		magic,
 	}
 }
@@ -96,6 +98,7 @@ export default function Page() {
 							key={machine.id}
 							machine={machine}
 							routes={data.routes.filter(route => route.node.id === machine.id)}
+							users={data.users}
 							magic={data.magic}
 						/>
 					))}

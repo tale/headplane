@@ -2,25 +2,28 @@ import { KebabHorizontalIcon } from '@primer/octicons-react'
 import { useState } from 'react'
 
 import MenuComponent from '~/components/Menu'
-import { Machine, Route } from '~/types'
+import { Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 
 import Delete from './dialogs/delete'
 import Expire from './dialogs/expire'
+import Move from './dialogs/move'
 import Rename from './dialogs/rename'
 import Routes from './dialogs/routes'
 
 interface MenuProps {
 	machine: Machine
 	routes: Route[]
+	users: User[]
 	magic?: string
 }
 
-export default function Menu({ machine, routes, magic }: MenuProps) {
+export default function Menu({ machine, routes, magic, users }: MenuProps) {
 	const renameState = useState(false)
 	const expireState = useState(false)
 	const removeState = useState(false)
 	const routesState = useState(false)
+	const moveState = useState(false)
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
 		|| machine.expiry === '0001-01-01T00:00:00Z'
@@ -51,6 +54,12 @@ export default function Menu({ machine, routes, magic }: MenuProps) {
 				routes={routes}
 				state={routesState}
 			/>
+			<Move
+				machine={machine}
+				state={moveState}
+				users={users}
+				magic={magic}
+			/>
 
 			<MenuComponent>
 				<MenuComponent.Button
@@ -72,6 +81,9 @@ export default function Menu({ machine, routes, magic }: MenuProps) {
 					<MenuComponent.Item className="opacity-50 hover:bg-transparent">
 						Edit ACL tags
 					</MenuComponent.Item>
+					<MenuComponent.ItemButton control={moveState}>
+						Change owner
+					</MenuComponent.ItemButton>
 					{expired
 						? undefined
 						: (

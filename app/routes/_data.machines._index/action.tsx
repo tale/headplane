@@ -61,6 +61,25 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			return json({ message: 'Route updated' })
 		}
 
+		case 'move': {
+			if (!data.has('to')) {
+				return json({ message: 'No destination provided' }, {
+					status: 400,
+				})
+			}
+
+			const to = String(data.get('to'))
+
+			try {
+				await post(`v1/node/${id}/user?user=${to}`, session.get('hsApiKey')!)
+				return json({ message: `Moved node ${id} to ${to}` })
+			} catch {
+				return json({ message: `Failed to move node ${id} to ${to}` }, {
+					status: 500,
+				})
+			}
+		}
+
 		default: {
 			return json({ message: 'Invalid method' }, {
 				status: 400,
