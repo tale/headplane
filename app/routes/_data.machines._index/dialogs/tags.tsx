@@ -124,7 +124,11 @@ export default function Tags({ machine, state }: TagsProps) {
 											!tag.startsWith('tag:')
 											&& 'opacity-50 cursor-not-allowed',
 										)}
-										isDisabled={!tag.startsWith('tag:')}
+										isDisabled={
+											tag.length === 0
+											|| !tag.startsWith('tag:')
+											|| tags.includes(tag)
+										}
 										onPress={() => {
 											setTags([...tags, tag])
 											setTag('')
