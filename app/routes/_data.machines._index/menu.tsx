@@ -10,6 +10,7 @@ import Expire from './dialogs/expire'
 import Move from './dialogs/move'
 import Rename from './dialogs/rename'
 import Routes from './dialogs/routes'
+import Tags from './dialogs/tags'
 
 interface MenuProps {
 	machine: Machine
@@ -24,6 +25,7 @@ export default function Menu({ machine, routes, magic, users }: MenuProps) {
 	const removeState = useState(false)
 	const routesState = useState(false)
 	const moveState = useState(false)
+	const tagsState = useState(false)
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
 		|| machine.expiry === '0001-01-01T00:00:00Z'
@@ -54,6 +56,10 @@ export default function Menu({ machine, routes, magic, users }: MenuProps) {
 				routes={routes}
 				state={routesState}
 			/>
+			<Tags
+				machine={machine}
+				state={tagsState}
+			/>
 			<Move
 				machine={machine}
 				state={moveState}
@@ -78,9 +84,9 @@ export default function Menu({ machine, routes, magic, users }: MenuProps) {
 					<MenuComponent.ItemButton control={routesState}>
 						Edit route settings
 					</MenuComponent.ItemButton>
-					<MenuComponent.Item className="opacity-50 hover:bg-transparent">
+					<MenuComponent.ItemButton control={tagsState}>
 						Edit ACL tags
-					</MenuComponent.Item>
+					</MenuComponent.ItemButton>
 					<MenuComponent.ItemButton control={moveState}>
 						Change owner
 					</MenuComponent.ItemButton>

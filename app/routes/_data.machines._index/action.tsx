@@ -80,6 +80,23 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			}
 		}
 
+		case 'tags': {
+			const tags = data.get('tags')?.toString()
+				.split(',') ?? []
+
+			try {
+				await post(`v1/node/${id}/tags`, session.get('hsApiKey')!, {
+					tags,
+				})
+
+				return json({ message: 'Tags updated' })
+			} catch {
+				return json({ message: 'Failed to update tags' }, {
+					status: 500,
+				})
+			}
+		}
+
 		default: {
 			return json({ message: 'Invalid method' }, {
 				status: 400,
