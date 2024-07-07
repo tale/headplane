@@ -1,3 +1,9 @@
+### 0.2.1 (July 7, 2024)
+- Added the ability to manage custom DNS records on your Tailnet.
+- ACL tags for machines are now able to be changed via the machine menu.
+- Fixed a bug where the ACL editor did not show the diffs correctly.
+- Fixed an issue that stopped the "Discard changes" button in the ACL editor from working.
+
 ### 0.2.0 (June 23, 2024)
 - Fix the dropdown options for machines not working on the machines page.
 - Add an option to change the machine owner in the dropdown (aside from the users page).
