@@ -152,7 +152,7 @@ export default function Page() {
 				</TabPanel>
 				<TabPanel id="diff">
 					<Monaco
-						variant="editor"
+						variant="diff"
 						language={data.aclType}
 						value={acl}
 						onChange={setAcl}
@@ -197,7 +197,7 @@ export default function Page() {
 						)}
 				Save
 			</Button>
-			<Button>
+			<Button onPress={() => { setAcl(data.currentAcl) }}>
 				Discard Changes
 			</Button>
 		</div>
