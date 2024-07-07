@@ -8,6 +8,7 @@ import { loadConfig, patchConfig } from '~/utils/config/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
+import DNS from './dns'
 import Domains from './domains'
 import MagicModal from './magic'
 import Nameservers from './nameservers'
@@ -87,6 +88,11 @@ export default function Page() {
 			<Nameservers
 				nameservers={allNs}
 				override={data.overrideLocal}
+				isDisabled={!data.config.write}
+			/>
+
+			<DNS
+				records={data.extraRecords}
 				isDisabled={!data.config.write}
 			/>
 
