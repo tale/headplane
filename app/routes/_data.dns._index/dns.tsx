@@ -1,10 +1,8 @@
 import { useSubmit } from '@remix-run/react'
-import { useState } from 'react'
 import { Button } from 'react-aria-components'
 
 import Code from '~/components/Code'
 import Link from '~/components/Link'
-import Switch from '~/components/Switch'
 import TableList from '~/components/TableList'
 import { cn } from '~/utils/cn'
 
@@ -84,53 +82,6 @@ export default function DNS({ records, isDisabled }: Props) {
 					: (
 						<AddDNS records={records} />
 						)}
-			</div>
-		</div>
-	)
-}
-
-interface ListProps {
-	isGlobal: boolean
-	isDisabled: boolean
-	nameservers: string[]
-	name: string
-	override: boolean
-}
-
-function NameserverList({ isGlobal, isDisabled, nameservers, name, override }: ListProps) {
-	const [localOverride, setLocalOverride] = useState(override)
-	const submit = useSubmit()
-
-	return (
-		<div className="mb-8">
-			<div className="flex items-center justify-between mb-2">
-				<h2 className="text-md font-medium opacity-80">
-					{isGlobal ? 'Global Nameservers' : name}
-				</h2>
-				{isGlobal
-					? (
-						<div className="flex gap-2 items-center">
-							<span className="text-sm opacity-50">
-								Override local DNS
-							</span>
-							<Switch
-								label="Override local DNS"
-								defaultSelected={localOverride}
-								isDisabled={isDisabled}
-								onChange={() => {
-									submit({
-										'dns_config.override_local_dns': !localOverride,
-									}, {
-										method: 'PATCH',
-										encType: 'application/json',
-									})
-
-									setLocalOverride(!localOverride)
-								}}
-							/>
-						</div>
-						)
-					: undefined}
 			</div>
 		</div>
 	)
