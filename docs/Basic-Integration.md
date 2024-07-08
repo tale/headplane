@@ -1,12 +1,17 @@
 # Basic Integration
 
-The basic integration is not able to offer advanced features such as:
-- Automatic management of Access Control Lists (ACLs)
-- Management of DNS settings for your tailnet
-- Management of the Headscale configuration
+The basic integration is the simplest way to get started with Headplane.
+It's more of a preview and is heavily limited in the features it can offer
+when compared to the [Advanced Integration](/docs/Advanced-Integration.md).
 
-In order to support these features please refer to the [Advanced Integration](./docs/Advanced-Integration.md) guide.
-Note that in order to use this deployment strategy you need to run Headscale in a Docker container.
+> Note that the Advanced integration is the recommend way to run
+Headplane in a production environment.
+
+## Limitations
+- No automatic management of Access Control Lists (ACLs)
+- No management of DNS settings for your tailnet
+- No capability to edit the configuration
+- Limited support for OIDC authentication
 
 ## Deployment
 
@@ -14,11 +19,13 @@ Requirements:
 - Headscale 0.23 alpha or later
 - Headscale and Headplane need a Reverse Proxy (NGINX, Traefik, Caddy, etc)
 
-Headplane is currently best run in a Docker container due to the easy configuration.
-Here's a very basic `docker-compose.yaml` file that utilizes each configuration variable.
+Docker heavily simplifies the deployment process, but this process can be
+adopted to run natively. Follow the first section of the deployment guide
+in the [Native Integration](/docs/integration/Native.md#deployment) for a
+bare-metal or virtual machine deployment.
 
+Here is a simple Docker Compose deployment:
 ```yaml
-version: '3.8'
 services:
   headplane:
     container_name: headplane
@@ -42,12 +49,7 @@ services:
       PORT: '3000'
 ```
 
-> For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 
-> It explains what each variable does, how to configure them, and what the default values are.
-
-You may also choose to run it natively with the distributed binaries on the releases page.
-You'll need to manage running this yourself, and I would recommend making a `systemd` unit.
-
-## ACL Configuration
-If you would like to get the web ACL configuration working, you'll need to pass the `ACL_FILE` environment variable.
-This should point to the path of the ACL file on the Headscale server (ie. `ACL_FILE=/etc/headscale/acl_policy.json`).
+> For a breakdown of each configuration variable, please refer to the
+[Configuration](/docs/Configuration.md) guide. 
+> It explains what each variable does, how to configure them, and what the
+default values are.
