@@ -47,7 +47,7 @@ async function findPid() {
 	const pids = []
 
 	for (const result of results) {
-		if (result.status === 'fulfilled') {
+		if (result.status === 'fulfilled' && result.value) {
 			pids.push(result.value)
 		}
 	}
