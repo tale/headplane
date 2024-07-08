@@ -3,7 +3,7 @@ import { platform } from 'node:os'
 import { join, resolve } from 'node:path'
 import { kill } from 'node:process'
 
-import { AppsV1Api, Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node'
+import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node'
 
 import type { Integration } from '.'
 
@@ -57,24 +57,22 @@ async function preflight() {
 		return false
 	}
 
+	const skip = process.env.HEADSCALE_INTEGRATION_UNSTRICT
+	if (skip === 'true' || skip === '1') {
+		console.warn('Skipping strict Kubernetes integration check')
+		return true
+	}
+
 	// Some very ugly nesting but it's necessary
-	const deployment = process.env.DEPLOYMENT_NAME
-	if (deployment) {
-		const result = await checkDeployment(deployment, namespace)
-		if (!result) {
-			return false
-		}
-	} else {
-		const pod = process.env.POD_NAME
-		if (pod) {
-			const result = await checkPod(pod, namespace)
-			if (!result) {
-				return false
-			}
-		} else {
-			console.error('No deployment or pod name found')
-			return false
-		}
+	const pod = process.env.POD_NAME
+	if (!pod) {
+		console.error('No pod name found (POD_NAME)')
+		return false
+	}
+
+	const result = await checkPod(pod, namespace)
+	if (!result) {
+		return false
 	}
 
 	return true
@@ -113,45 +111,6 @@ async function checkPod(pod: string, namespace: string) {
 		}
 	} catch (error) {
 		console.error('Failed to check pod', error)
-		return false
-	}
-
-	return true
-}
-
-async function checkDeployment(deployment: string, namespace: string) {
-	if (deployment.trim().length === 0) {
-		console.error('Deployment name is empty')
-		return false
-	}
-
-	try {
-		const kc = new KubeConfig()
-		kc.loadFromCluster()
-
-		const kAppsV1Api = kc.makeApiClient(AppsV1Api)
-		const { response, body } = await kAppsV1Api.readNamespacedDeployment(
-			deployment,
-			namespace,
-		)
-
-		if (response.statusCode !== 200) {
-			console.error('Failed to read deployment', response.statusCode)
-			return false
-		}
-
-		const shared = body.spec?.template.spec?.shareProcessNamespace
-		if (shared === undefined) {
-			console.error('Deployment does not have shareProcessNamespace set')
-			return false
-		}
-
-		if (!shared) {
-			console.error('Deployment has disabled shareProcessNamespace')
-			return false
-		}
-	} catch (error) {
-		console.error('Failed to check deployment', error)
 		return false
 	}
 

@@ -57,8 +57,11 @@ away into a `ConfigMap` or `Secret` for easier management.
 
 The important parts of this deployment are the `HEADSCALE_INTEGRATION` and
 `DEPLOYMENT_NAME` environment variables. The `HEADSCALE_INTEGRATION` variable
-should be set to `kubernetes` and the `DEPLOYMENT_NAME` variable should be set
-to the name of the deployment (done using the Downward API below).
+should be set to `kubernetes` and the `POST_NAME` variable should be set
+to the name of the pod (done using the Downward API below).
+
+> If you are having issues with validating `shareProcessNamespace`, you can
+set `HEADSCALE_INTEGRATION_UNSTRICT` to `true` to disable the strict checks.
 
 A basic deployment of the integration would look like this. Keep in mind that
 you are responsible for setting up a reverse-proxy via an `Ingress` or `Service`
@@ -81,6 +84,7 @@ spec:
       labels:
         app: headplane
     spec:
+      shareProcessNamespace: true
       serviceAccountName: default
       containers:
       - name: headplane
@@ -90,7 +94,7 @@ spec:
           value: 'abcdefghijklmnopqrstuvwxyz'
         - name: HEADSCALE_INTEGRATION
           value: 'kubernetes'
-        - name: DEPLOYMENT_NAME
+        - name: POD_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
@@ -119,5 +123,7 @@ spec:
             claimName: headscale-config
 ```
 
-> For a breakdown of each configuration variable, please refer to the [Configuration](/docs/Configuration.md) guide. 
-> It explains what each variable does, how to configure them, and what the default values are.
+> For a breakdown of each configuration variable, please refer to the
+[Configuration](/docs/Configuration.md) guide. 
+> It explains what each variable does, how to configure them, and what the
+default values are.
