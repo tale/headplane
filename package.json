@@ -15,6 +15,7 @@
 		"@dnd-kit/modifiers": "^7.0.0",
 		"@dnd-kit/sortable": "^8.0.0",
 		"@dnd-kit/utilities": "^3.2.2",
+		"@kubernetes/client-node": "^0.21.0",
 		"@monaco-editor/react": "^4.6.0",
 		"@primer/octicons-react": "^19.10.0",
 		"@react-aria/toast": "3.0.0-beta.12",

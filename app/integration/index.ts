@@ -1,4 +1,5 @@
 import docker from './docker'
+import kubernetes from './kubernetes'
 import proc from './proc'
 
 export interface Integration {
@@ -50,6 +51,10 @@ function getIntegration(name: string) {
 		}
 		case 'proc': {
 			return proc
+		}
+		case 'kubernetes':
+		case 'k8s': {
+			return kubernetes
 		}
 		default: {
 			throw new Error(`Unknown integration: ${name}`)
