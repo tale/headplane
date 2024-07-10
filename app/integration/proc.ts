@@ -3,6 +3,8 @@ import { platform } from 'node:os'
 import { join, resolve } from 'node:path'
 import { kill } from 'node:process'
 
+import log from '~/utils/log'
+
 import { createIntegration } from './integration'
 
 interface Context {
@@ -16,6 +18,7 @@ export default createIntegration<Context>({
 	},
 	isAvailable: async ({ pid }) => {
 		if (platform() !== 'linux') {
+			log.error('INTG', '/proc is only available on Linux')
 			return false
 		}
 
@@ -48,21 +51,23 @@ export default createIntegration<Context>({
 			}
 
 			if (pids.length > 1) {
-				console.warn('Found multiple Headscale processes', pids)
-				console.log('Disabling the /proc integration')
+				log.error('INTG', 'Found %d Headscale processes: %s',
+					pids.length,
+					pids.join(', '),
+				)
 				return false
 			}
 
 			if (pids.length === 0) {
-				console.warn('Could not find Headscale process')
-				console.log('Disabling the /proc integration')
+				log.error('INTG', 'Could not find Headscale process')
 				return false
 			}
 
 			pid = pids[0]
-			console.log('Found Headscale process', pid)
+			log.info('INTG', 'Found Headscale process with PID: %d', pid)
 			return true
 		} catch {
+			log.error('INTG', 'Failed to read /proc')
 			return false
 		}
 	},
@@ -72,6 +77,7 @@ export default createIntegration<Context>({
 			return
 		}
 
+		log.info('INTG', 'Sending SIGHUP to Headscale')
 		kill(pid, 'SIGHUP')
 	},
 })

@@ -5,6 +5,8 @@ import { kill } from 'node:process'
 
 import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node'
 
+import log from '~/utils/log'
+
 import { createIntegration } from './integration'
 
 interface Context {
@@ -18,6 +20,7 @@ export default createIntegration<Context>({
 	},
 	isAvailable: async ({ pid }) => {
 		if (platform() !== 'linux') {
+			log.error('INTG', 'Kubernetes is only available on Linux')
 			return false
 		}
 
@@ -25,7 +28,7 @@ export default createIntegration<Context>({
 		try {
 			const files = await readdir(svcRoot)
 			if (files.length === 0) {
-				console.error('No Kubernetes service account found')
+				log.error('INTG', 'Kubernetes service account not found')
 				return false
 			}
 
@@ -37,11 +40,11 @@ export default createIntegration<Context>({
 			]
 
 			if (!expectedFiles.every(file => mappedFiles.has(file))) {
-				console.error('Kubernetes service account is incomplete')
+				log.error('INTG', 'Malformed Kubernetes service account')
 				return false
 			}
 		} catch (error) {
-			console.error('Failed to access Kubernetes service account', error)
+			log.error('INTG', 'Failed to access %s: %s', svcRoot, error)
 			return false
 		}
 
@@ -52,16 +55,16 @@ export default createIntegration<Context>({
 
 		// Some very ugly nesting but it's necessary
 		if (process.env.HEADSCALE_INTEGRATION_UNSTRICT === 'true') {
-			console.warn('Skipping strict Kubernetes integration check')
+			log.warn('INTG', 'Skipping strict Pod status check')
 		} else {
 			const pod = process.env.POD_NAME
 			if (!pod) {
-				console.error('No pod name found (POD_NAME)')
+				log.error('INTG', 'Missing POD_NAME variable')
 				return false
 			}
 
 			if (pod.trim().length === 0) {
-				console.error('Pod name is empty')
+				log.error('INTG', 'Pod name is empty')
 				return false
 			}
 
@@ -69,29 +72,57 @@ export default createIntegration<Context>({
 				const kc = new KubeConfig()
 				kc.loadFromCluster()
 
+				const cluster = kc.getCurrentCluster()
+				if (!cluster) {
+					log.error('INTG', 'Malformed kubeconfig')
+					return false
+				}
+
+				log.info('INTG', 'Service account connected to %s (%s)',
+					cluster.name,
+					cluster.server,
+				)
+
 				const kCoreV1Api = kc.makeApiClient(CoreV1Api)
+
+				log.info('INTG', 'Checking pod %s in namespace %s (%s)',
+					pod,
+					namespace,
+					kCoreV1Api.basePath,
+				)
+
 				const { response, body } = await kCoreV1Api.readNamespacedPod(
 					pod,
 					namespace,
 				)
 
 				if (response.statusCode !== 200) {
-					console.error('Failed to read pod', response.statusCode)
+					log.error('INTG', 'Failed to read pod info: http %d',
+						response.statusCode,
+					)
 					return false
 				}
 
 				const shared = body.spec?.shareProcessNamespace
 				if (shared === undefined) {
-					console.error('Pod does not have shareProcessNamespace set')
+					log.error(
+						'INTG',
+						'Pod does not have spec.shareProcessNamespace set',
+					)
 					return false
 				}
 
 				if (!shared) {
-					console.error('Pod has disabled shareProcessNamespace')
+					log.error(
+						'INTG',
+						'Pod has set but disabled spec.shareProcessNamespace',
+					)
 					return false
 				}
+
+				log.info('INTG', 'Pod %s enabled shared processes', pod)
 			} catch (error) {
-				console.error('Failed to check pod', error)
+				log.error('INTG', 'Failed to read pod info: %s', error)
 				return false
 			}
 		}
@@ -125,21 +156,23 @@ export default createIntegration<Context>({
 			}
 
 			if (pids.length > 1) {
-				console.warn('Found multiple Headscale processes', pids)
-				console.log('Disabling the /proc integration')
+				log.error('INTG', 'Found %d Headscale processes: %s',
+					pids.length,
+					pids.join(', '),
+				)
 				return false
 			}
 
 			if (pids.length === 0) {
-				console.warn('Could not find Headscale process')
-				console.log('Disabling the /proc integration')
+				log.error('INTG', 'Could not find Headscale process')
 				return false
 			}
 
 			pid = pids[0]
-			console.log('Found Headscale process', pid)
+			log.info('INTG', 'Found Headscale process with PID: %d', pid)
 			return true
 		} catch {
+			log.error('INTG', 'Failed to read /proc')
 			return false
 		}
 	},
@@ -149,6 +182,7 @@ export default createIntegration<Context>({
 			return
 		}
 
+		log.info('INTG', 'Sending SIGHUP to Headscale')
 		kill(pid, 'SIGHUP')
 	},
 
@@ -157,6 +191,7 @@ export default createIntegration<Context>({
 			return
 		}
 
+		log.info('INTG', 'Sending SIGTERM to Headscale')
 		kill(pid, 'SIGTERM')
 	},
 })
