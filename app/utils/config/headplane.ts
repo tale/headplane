@@ -8,14 +8,14 @@ import { resolve } from 'node:path'
 
 import { parse } from 'yaml'
 
-import { checkIntegration, Integration } from '~/integration'
+import { IntegrationFactory, loadIntegration } from '~/integration'
 
 import { HeadscaleConfig, loadConfig } from './headscale'
 
 export interface HeadplaneContext {
 	headscaleUrl: string
 	cookieSecret: string
-	integration: Integration | undefined
+	integration: IntegrationFactory | undefined
 
 	config: {
 		read: boolean
@@ -67,7 +67,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	context = {
 		headscaleUrl,
 		cookieSecret,
-		integration: await checkIntegration(),
+		integration: loadIntegration(),
 		config: contextData,
 		acl: await checkAcl(config),
 		oidc: await checkOidc(config),
