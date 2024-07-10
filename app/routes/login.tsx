@@ -80,8 +80,7 @@ export async function action({ request }: ActionFunctionArgs) {
 				}),
 			},
 		})
-	} catch (error) {
-		console.error(error)
+	} catch {
 		return json({
 			error: 'Invalid API key',
 		})

@@ -12,6 +12,8 @@ import { resolve } from 'node:path'
 import { type Document, parseDocument } from 'yaml'
 import { z } from 'zod'
 
+import log from '~/utils/log'
+
 const goBool = z
 	.union([z.boolean(), z.literal('true'), z.literal('false')])
 	.transform((value) => {
@@ -229,13 +231,13 @@ export async function loadConfig(path?: string) {
 			},
 		} as HeadscaleConfig
 
-		console.log('Loaded Headscale configuration in non-strict mode')
-		console.log('By using this mode you forfeit GitHub issue support')
-		console.log('This is very dangerous and comes with a few caveats:')
-		console.log('- Headplane could very easily crash')
-		console.log('- Headplane could break your Headscale installation')
-		console.log('- The UI could throw random errors/show incorrect data')
-		console.log('')
+		log.warn('CFGX', 'Loaded Headscale configuration in non-strict mode')
+		log.warn('CFGX', 'By using this mode you forfeit GitHub issue support')
+		log.warn('CFGX', 'This is very dangerous and comes with a few caveats:')
+		log.warn('CFGX', 'Headplane could very easily crash')
+		log.warn('CFGX', 'Headplane could break your Headscale installation')
+		log.warn('CFGX', 'The UI could throw random errors/show incorrect data')
+		log.warn('CFGX', '')
 		return config
 	}
 
@@ -243,19 +245,19 @@ export async function loadConfig(path?: string) {
 		config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			console.log('Failed to parse the Headscale configuration file!')
-			console.log('The following schema issues were found:')
+			log.error('CFGX', 'Recieved invalid configuration file')
+			log.error('CFGX', 'The following schema issues were found:')
 			for (const issue of error.issues) {
 				const path = issue.path.map(String).join('.')
 				const message = issue.message
 
-				console.log(`- '${path}': ${message}`)
+				log.error('CFGX', `  '${path}': ${message}`)
 			}
 
-			console.log('')
-			console.log('Please fix the configuration file and try again.')
-			console.log('Headplane will operate as if no config is present.')
-			console.log('')
+			log.error('CFGX', '')
+			log.error('CFGX', 'Resolve these issues and try again.')
+			log.error('CFGX', 'Headplane will operate without the config')
+			log.error('CFGX', '')
 		}
 
 		throw error

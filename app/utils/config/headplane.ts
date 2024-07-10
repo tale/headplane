@@ -9,8 +9,8 @@ import { resolve } from 'node:path'
 import { parse } from 'yaml'
 
 import { IntegrationFactory, loadIntegration } from '~/integration'
-
-import { HeadscaleConfig, loadConfig } from './headscale'
+import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale'
+import log from '~/utils/log'
 
 export interface HeadplaneContext {
 	headscaleUrl: string
@@ -67,19 +67,26 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	context = {
 		headscaleUrl,
 		cookieSecret,
-		integration: loadIntegration(),
+		integration: await loadIntegration(),
 		config: contextData,
 		acl: await checkAcl(config),
 		oidc: await checkOidc(config),
 	}
 
-	console.log('Completed loading the Headplane Context')
-	console.log('Headscale URL:', headscaleUrl)
-	console.log('Integration:', context.integration?.name ?? 'None')
-	console.log('Config:', contextData.read ? `Found ${contextData.write ? '' : '(Read Only)'}` : 'Unavailable')
-	console.log('ACL:', context.acl.read ? `Found ${context.acl.write ? '' : '(Read Only)'}` : 'Unavailable')
-	console.log('OIDC:', context.oidc ? 'Configured' : 'Unavailable')
+	log.info('CTXT', 'Starting Headplane with Context')
+	log.info('CTXT', 'HEADSCALE_URL: %s', headscaleUrl)
+	log.info('CTXT', 'Integration: %s', context.integration?.name ?? 'None')
+	log.info('CTXT', 'Config: %s', contextData.read
+		? `Found ${contextData.write ? '' : '(Read Only)'}`
+		: 'Unavailable',
+	)
 
+	log.info('CTXT', 'ACL: %s', context.acl.read
+		? `Found ${context.acl.write ? '' : '(Read Only)'}`
+		: 'Unavailable',
+	)
+
+	log.info('CTXT', 'OIDC: %s', context.oidc ? 'Configured' : 'Unavailable')
 	return context
 }
 
