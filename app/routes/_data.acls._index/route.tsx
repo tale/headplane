@@ -47,8 +47,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	const data = await request.json() as { acl: string }
 	await patchAcl(data.acl)
 
-	if (context.integration?.sighup) {
-		await context.integration.sighup()
+	if (context.integration?.onAclChange) {
+		await context.integration.onAclChange(context.integration.context)
 	}
 
 	return json({ success: true })

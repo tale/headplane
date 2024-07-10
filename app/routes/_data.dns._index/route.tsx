@@ -57,8 +57,8 @@ export async function action({ request }: ActionFunctionArgs) {
 	const data = await request.json() as Record<string, unknown>
 	await patchConfig(data)
 
-	if (context.integration?.restart) {
-		await context.integration.restart()
+	if (context.integration?.onConfigChange) {
+		await context.integration.onConfigChange(context.integration.context)
 	}
 
 	return json({ success: true })
