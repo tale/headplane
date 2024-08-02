@@ -21,19 +21,19 @@ export default createIntegration<Context>({
 		container: undefined,
 		maxAttempts: 10,
 	},
-	isAvailable: async ({ client, container }) => {
+	isAvailable: async (context) => {
 		// Check for the HEADSCALE_CONTAINER environment variable first
 		// to avoid unnecessary fetching of the Docker socket
-		container = process.env.HEADSCALE_CONTAINER
+		context.container = process.env.HEADSCALE_CONTAINER
 			?.trim()
 			.toLowerCase()
 
-		if (!container || container.length === 0) {
+		if (!context.container || context.container.length === 0) {
 			log.error('INTG', 'Missing HEADSCALE_CONTAINER variable')
 			return false
 		}
 
-		log.info('INTG', 'Using container: %s', container)
+		log.info('INTG', 'Using container: %s', context.container)
 		const path = process.env.DOCKER_SOCK ?? 'unix:///var/run/docker.sock'
 		let url: URL | undefined
 
@@ -63,7 +63,7 @@ export default createIntegration<Context>({
 				return false
 			}
 
-			client = new Client(url.href)
+			context.client = new Client(url.href)
 		}
 
 		// Check if the socket is accessible
@@ -80,30 +80,30 @@ export default createIntegration<Context>({
 				return false
 			}
 
-			client = new Client('http://localhost', {
-				socketPath: path,
+			context.client = new Client('http://localhost', {
+				socketPath: url.pathname,
 			})
 		}
 
-		return client !== undefined
+		return context.client !== undefined
 	},
 
-	onAclChange: async ({ client, container, maxAttempts }) => {
-		if (!client || !container) {
+	onAclChange: async (context) => {
+		if (!context.client || !context.container) {
 			return
 		}
 
 		log.info('INTG', 'Sending SIGHUP to Headscale via Docker')
 
 		let attempts = 0
-		while (attempts <= maxAttempts) {
-			const response = await client.request({
+		while (attempts <= context.maxAttempts) {
+			const response = await context.client.request({
 				method: 'POST',
-				path: `/v1.30/containers/${container}/kill?signal=SIGHUP`,
+				path: `/v1.30/containers/${context.container}/kill?signal=SIGHUP`,
 			})
 
 			if (response.statusCode !== 204) {
-				if (attempts < maxAttempts) {
+				if (attempts < context.maxAttempts) {
 					attempts++
 					await setTimeout(1000)
 					continue
@@ -113,25 +113,27 @@ export default createIntegration<Context>({
 				const body = await response.body.text()
 				throw new Error(`API request failed: ${stringCode} ${body}`)
 			}
+
+			break
 		}
 	},
 
-	onConfigChange: async ({ client, container, maxAttempts }) => {
-		if (!client || !container) {
+	onConfigChange: async (context) => {
+		if (!context.client || !context.container) {
 			return
 		}
 
 		log.info('INTG', 'Restarting Headscale via Docker')
 
 		let attempts = 0
-		while (attempts <= maxAttempts) {
-			const response = await client.request({
+		while (attempts <= context.maxAttempts) {
+			const response = await context.client.request({
 				method: 'POST',
-				path: `/v1.30/containers/${container}/restart`,
+				path: `/v1.30/containers/${context.container}/restart`,
 			})
 
 			if (response.statusCode !== 204) {
-				if (attempts < maxAttempts) {
+				if (attempts < context.maxAttempts) {
 					attempts++
 					await setTimeout(1000)
 					continue
@@ -141,10 +143,12 @@ export default createIntegration<Context>({
 				const body = await response.body.text()
 				throw new Error(`API request failed: ${stringCode} ${body}`)
 			}
+
+			break
 		}
 
 		attempts = 0
-		while (attempts <= maxAttempts) {
+		while (attempts <= context.maxAttempts) {
 			try {
 				await pull('v1', '')
 				return
@@ -153,13 +157,17 @@ export default createIntegration<Context>({
 					break
 				}
 
-				if (attempts < maxAttempts) {
+				if (error instanceof HeadscaleError && error.status === 404) {
+					break
+				}
+
+				if (attempts < context.maxAttempts) {
 					attempts++
 					await setTimeout(1000)
 					continue
 				}
 
-				throw new Error(`Missed restart deadline for ${container}`)
+				throw new Error(`Missed restart deadline for ${context.container}`)
 			}
 		}
 	},

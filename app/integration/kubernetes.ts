@@ -18,7 +18,7 @@ export default createIntegration<Context>({
 	context: {
 		pid: undefined,
 	},
-	isAvailable: async ({ pid }) => {
+	isAvailable: async (context) => {
 		if (platform() !== 'linux') {
 			log.error('INTG', 'Kubernetes is only available on Linux')
 			return false
@@ -168,8 +168,8 @@ export default createIntegration<Context>({
 				return false
 			}
 
-			pid = pids[0]
-			log.info('INTG', 'Found Headscale process with PID: %d', pid)
+			context.pid = pids[0]
+			log.info('INTG', 'Found Headscale process with PID: %d', context.pid)
 			return true
 		} catch {
 			log.error('INTG', 'Failed to read /proc')
@@ -177,21 +177,21 @@ export default createIntegration<Context>({
 		}
 	},
 
-	onAclChange: ({ pid }) => {
-		if (!pid) {
+	onAclChange: (context) => {
+		if (!context.pid) {
 			return
 		}
 
 		log.info('INTG', 'Sending SIGHUP to Headscale')
-		kill(pid, 'SIGHUP')
+		kill(context.pid, 'SIGHUP')
 	},
 
-	onConfigChange: ({ pid }) => {
-		if (!pid) {
+	onConfigChange: (context) => {
+		if (!context.pid) {
 			return
 		}
 
 		log.info('INTG', 'Sending SIGTERM to Headscale')
-		kill(pid, 'SIGTERM')
+		kill(context.pid, 'SIGTERM')
 	},
 })
