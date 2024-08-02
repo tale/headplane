@@ -1,3 +1,9 @@
+### 0.2.2 (August 2, 2024)
+- Added a proper Kubernetes integration which utilizes `shareProcessNamespace` for PIDs.
+- Added a new logger utility that shows categories, levels, and timestamps.
+- Reimplemented the integration system to be more resilient and log more information.
+- Fixed an issue where the /proc integration found `undefined` PIDs.
+
 ### 0.2.1 (July 7, 2024)
 - Added the ability to manage custom DNS records on your Tailnet.
 - ACL tags for machines are now able to be changed via the machine menu.
