@@ -51,6 +51,24 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 	return (response.json() as Promise<T>)
 }
 
+export async function put<T>(url: string, key: string, body?: unknown) {
+	const context = await loadContext()
+	const prefix = context.headscaleUrl
+	const response = await fetch(`${prefix}/api/${url}`, {
+		method: 'PUT',
+		body: body ? JSON.stringify(body) : undefined,
+		headers: {
+			Authorization: `Bearer ${key}`,
+		},
+	})
+
+	if (!response.ok) {
+		throw new HeadscaleError(await response.text(), response.status)
+	}
+
+	return (response.json() as Promise<T>)
+}
+
 export async function del<T>(url: string, key: string) {
 	const context = await loadContext()
 	const prefix = context.headscaleUrl

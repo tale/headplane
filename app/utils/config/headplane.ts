@@ -90,7 +90,12 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	return context
 }
 
-export async function loadAcl(): Promise<{ data: string, type: 'json' | 'yaml' }> {
+export async function loadAcl(): Promise<{
+	data: string
+	type: 'json' | 'yaml'
+	read: boolean
+	write: boolean
+}> {
 	let path = process.env.ACL_FILE
 	if (!path) {
 		try {
@@ -100,8 +105,27 @@ export async function loadAcl(): Promise<{ data: string, type: 'json' | 'yaml' }
 	}
 
 	if (!path) {
-		return { data: '', type: 'json' }
+		return {
+			data: '',
+			type: 'json',
+			read: false,
+			write: false,
+		}
 	}
+
+	// Check for attributes
+	let read = false
+	let write = false
+
+	try {
+		await access(path, constants.R_OK)
+		read = true
+	} catch {}
+
+	try {
+		await access(path, constants.W_OK)
+		write = true
+	} catch {}
 
 	const data = await readFile(path, 'utf8')
 
@@ -109,9 +133,9 @@ export async function loadAcl(): Promise<{ data: string, type: 'json' | 'yaml' }
 	// This is because JSON.parse doesn't support comments
 	try {
 		parse(data)
-		return { data, type: 'yaml' }
+		return { data, type: 'yaml', read, write }
 	} catch {
-		return { data, type: 'json' }
+		return { data, type: 'json', read, write }
 	}
 }
 

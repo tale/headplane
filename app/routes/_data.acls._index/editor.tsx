@@ -5,12 +5,12 @@ import { ClientOnly } from 'remix-utils/client-only'
 import Fallback from '~/routes/_data.acls._index/fallback'
 import { cn } from '~/utils/cn'
 
-interface MonacoProps {
-	variant: 'editor' | 'diff'
+interface Props {
+	variant: 'edit' | 'diff'
 	language: 'json' | 'yaml'
-	value: string
-	onChange: (value: string) => void
-	original?: string
+	state: [string, (value: string) => void]
+	policy?: string
+	isDisabled?: boolean
 }
 
 function monacoCallback(monaco: Monaco) {
@@ -26,7 +26,7 @@ function monacoCallback(monaco: Monaco) {
 	monaco.languages.register({ id: 'yaml' })
 }
 
-export default function MonacoEditor({ value, onChange, variant, original, language }: MonacoProps) {
+export default function MonacoEditor({ variant, language, state, policy, isDisabled }: Props) {
 	const [light, setLight] = useState(false)
 
 	useEffect(() => {
@@ -46,29 +46,30 @@ export default function MonacoEditor({ value, onChange, variant, original, langu
 			)}
 			>
 				<div className="overflow-y-scroll h-editor text-sm">
-					<ClientOnly fallback={<Fallback acl={value} />}>
-						{() => variant === 'editor'
+					<ClientOnly fallback={<Fallback acl={state[0]} />}>
+						{() => variant === 'edit'
 							? (
 								<Editor
 									height="100%"
 									language={language}
 									theme={light ? 'light' : 'vs-dark'}
-									value={value}
+									value={state[0]}
 									onChange={(updated) => {
 										if (!updated) {
 											return
 										}
 
-										if (updated !== value) {
-											onChange(updated)
+										if (updated !== state[0]) {
+											state[1](updated)
 										}
 									}}
-									loading={<Fallback acl={value} />}
+									loading={<Fallback acl={state[0]} />}
 									beforeMount={monacoCallback}
 									options={{
 										wordWrap: 'on',
 										minimap: { enabled: false },
 										fontSize: 14,
+										readOnly: isDisabled,
 									}}
 								/>
 								)
@@ -77,14 +78,15 @@ export default function MonacoEditor({ value, onChange, variant, original, langu
 									height="100%"
 									language={language}
 									theme={light ? 'light' : 'vs-dark'}
-									original={original}
-									modified={value}
-									loading={<Fallback acl={value} />}
+									original={policy}
+									modified={state[0]}
+									loading={<Fallback acl={state[0]} />}
 									beforeMount={monacoCallback}
 									options={{
 										wordWrap: 'on',
 										minimap: { enabled: false },
 										fontSize: 13,
+										readOnly: isDisabled,
 									}}
 								/>
 								)}

@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
-import { type ActionFunctionArgs, json } from '@remix-run/node'
+import { type ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
 
 import Button from '~/components/Button'
@@ -11,22 +12,71 @@ import Spinner from '~/components/Spinner'
 import { toast } from '~/components/Toaster'
 import { cn } from '~/utils/cn'
 import { loadAcl, loadContext, patchAcl } from '~/utils/config/headplane'
+import { HeadscaleError, pull, put } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 
 import Monaco from './editor'
 
-export async function loader() {
-	const context = await loadContext()
-	if (!context.acl.read) {
-		throw new Error('No ACL configuration is available')
+export async function loader({ request }: LoaderFunctionArgs) {
+	const session = await getSession(request.headers.get('Cookie'))
+
+	try {
+		const { policy } = await pull<{ policy: string }>(
+			'v1/policy',
+			session.get('hsApiKey')!,
+		)
+
+		try {
+			// We have read access, now do we have write access?
+			// Attempt to set the policy to what we just got
+			await put('v1/policy', session.get('hsApiKey')!, {
+				policy,
+			})
+
+			return {
+				hasAclWrite: true,
+				isPolicyApi: true,
+				currentAcl: policy,
+				aclType: 'json',
+			} as const
+		} catch (error) {
+			if (!(error instanceof HeadscaleError)) {
+				throw error
+			}
+
+			if (error.status === 500) {
+				return {
+					hasAclWrite: false,
+					isPolicyApi: true,
+					currentAcl: policy,
+					aclType: 'json',
+				} as const
+			}
+		}
+	} catch (error) {
+		// Propagate our errors through normal error handling
+		if (!(error instanceof HeadscaleError)) {
+			throw error
+		}
+
+		// Not on 0.23-beta1 or later
+		if (error.status === 404) {
+			const { data, type, read, write } = await loadAcl()
+			return {
+				hasAclWrite: write,
+				isPolicyApi: false,
+				currentAcl: read ? data : '',
+				aclType: type,
+			}
+		}
 	}
 
-	const { data, type } = await loadAcl()
 	return {
-		hasAclWrite: context.acl.write,
-		currentAcl: data,
-		aclType: type,
-	}
+		hasAclWrite: true,
+		isPolicyApi: true,
+		currentAcl: '',
+		aclType: 'json',
+	} as const
 }
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -37,6 +87,21 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
+	const data = await request.json() as { acl: string, api: boolean }
+	if (data.api) {
+		try {
+			await put('v1/policy', session.get('hsApiKey')!, {
+				policy: data.acl,
+			})
+
+			return json({ success: true })
+		} catch (error) {
+			return json({ success: false }, {
+				status: error instanceof HeadscaleError ? error.status : 500,
+			})
+		}
+	}
+
 	const context = await loadContext()
 	if (!context.acl.write) {
 		return json({ success: false }, {
@@ -44,7 +109,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
-	const data = await request.json() as { acl: string }
 	await patchAcl(data.acl)
 
 	if (context.integration?.onAclChange) {
@@ -56,8 +120,24 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>()
+	const fetcher = useFetcher<typeof action>()
 	const [acl, setAcl] = useState(data.currentAcl)
-	const fetcher = useFetcher()
+	const [toasted, setToasted] = useState(false)
+
+	useEffect(() => {
+		if (!fetcher.data || toasted) {
+			return
+		}
+
+		if (fetcher.data.success) {
+			toast('Updated tailnet ACL policy')
+		} else {
+			toast('Failed to update tailnet ACL policy')
+		}
+
+		setToasted(true)
+		setAcl(data.currentAcl)
+	}, [fetcher.data, toasted, data.currentAcl])
 
 	return (
 		<div>
@@ -65,10 +145,25 @@ export default function Page() {
 				? undefined
 				: (
 					<div className="mb-4">
-						<Notice>
-							The ACL policy file is readonly to Headplane.
-							You will not be able to make changes here.
-						</Notice>
+						{data.isPolicyApi
+							? (
+								<Notice className="w-fit">
+									The ACL policy is read-only. You can view the current policy
+									but you cannot make changes to it.
+									<br />
+									To resolve this, you need to set the ACL policy mode to
+									database in your Headscale configuration.
+								</Notice>
+								)
+							: (
+								<Notice className="w-fit">
+									The ACL policy is read-only. You can view the current policy
+									but you cannot make changes to it.
+									<br />
+									To resolve this, you need to configure a Headplane integration
+									or make the ACL_FILE environment variable available.
+								</Notice>
+								)}
 					</div>
 					)}
 
@@ -144,19 +239,18 @@ export default function Page() {
 				</TabList>
 				<TabPanel id="edit">
 					<Monaco
-						variant="editor"
+						isDisabled={!data.hasAclWrite}
+						variant="edit"
 						language={data.aclType}
-						value={acl}
-						onChange={setAcl}
+						state={[acl, setAcl]}
 					/>
 				</TabPanel>
 				<TabPanel id="diff">
 					<Monaco
 						variant="diff"
 						language={data.aclType}
-						value={acl}
-						onChange={setAcl}
-						original={data.currentAcl}
+						state={[acl, setAcl]}
+						policy={data.currentAcl}
 					/>
 				</TabPanel>
 				<TabPanel id="preview">
@@ -180,14 +274,14 @@ export default function Page() {
 				className="mr-2"
 				isDisabled={fetcher.state === 'loading' || !data.hasAclWrite || data.currentAcl === acl}
 				onPress={() => {
+					setToasted(false)
 					fetcher.submit({
 						acl,
+						api: data.isPolicyApi,
 					}, {
 						method: 'PATCH',
 						encType: 'application/json',
 					})
-
-					toast('Updated tailnet ACL policy')
 				}}
 			>
 				{fetcher.state === 'idle'
@@ -197,7 +291,10 @@ export default function Page() {
 						)}
 				Save
 			</Button>
-			<Button onPress={() => { setAcl(data.currentAcl) }}>
+			<Button
+				isDisabled={fetcher.state === 'loading' || data.currentAcl === acl || !data.hasAclWrite}
+				onPress={() => { setAcl(data.currentAcl) }}
+			>
 				Discard Changes
 			</Button>
 		</div>

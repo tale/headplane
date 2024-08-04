@@ -53,6 +53,11 @@ const HeadscaleConfig = z.object({
 	unix_socket: z.string().default('/var/run/headscale/headscale.sock'),
 	unix_socket_permission: z.string().default('0o770'),
 
+	policy: z.object({
+		mode: z.enum(['file', 'database']).default('file'),
+		path: z.string().optional(),
+	}).optional(),
+
 	tuning: z.object({
 		batch_change_delay: goDuration.default('800ms'),
 		node_mapsession_buffered_chan_size: z.number().default(30),
