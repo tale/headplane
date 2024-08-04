@@ -105,12 +105,7 @@ export async function loadAcl(): Promise<{
 	}
 
 	if (!path) {
-		return {
-			data: '',
-			type: 'json',
-			read: false,
-			write: false,
-		}
+		throw new Error('No ACL file defined')
 	}
 
 	// Check for attributes

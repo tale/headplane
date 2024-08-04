@@ -102,11 +102,7 @@ export default function Header({ data }: Properties) {
 			<nav className="container flex items-center gap-x-4 overflow-x-auto">
 				<TabLink to="/machines" name="Machines" icon={<ServerIcon className="w-4 h-4" />} />
 				<TabLink to="/users" name="Users" icon={<PeopleIcon className="w-4 h-4" />} />
-				{data?.acl.read
-					? (
-						<TabLink to="/acls" name="Access Control" icon={<LockIcon className="w-4 h-4" />} />
-						)
-					: undefined}
+				<TabLink to="/acls" name="Access Control" icon={<LockIcon className="w-4 h-4" />} />
 				{data?.config.read
 					? (
 						<>

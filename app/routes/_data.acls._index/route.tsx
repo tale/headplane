@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
 
 import Button from '~/components/Button'
+import Code from '~/components/Code'
 import Link from '~/components/Link'
 import Notice from '~/components/Notice'
 import Spinner from '~/components/Spinner'
@@ -26,6 +27,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			session.get('hsApiKey')!,
 		)
 
+		console.log(policy)
 		try {
 			// We have read access, now do we have write access?
 			// Attempt to set the policy to what we just got
@@ -69,6 +71,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				aclType: type,
 			}
 		}
+
+		throw error
 	}
 
 	return {
@@ -116,6 +120,82 @@ export async function action({ request }: ActionFunctionArgs) {
 	}
 
 	return json({ success: true })
+}
+
+export function ErrorBoundary() {
+	return (
+		<div>
+			<Notice className="mb-4">
+				An ACL policy is not available or an error occurred while trying to fetch it.
+			</Notice>
+			<h1 className="text-2xl font-medium mb-4">
+				Access Control List (ACL)
+			</h1>
+
+			<p className="mb-4 max-w-prose">
+				The ACL file is used to define the access control rules for your network.
+				You can find more information about the ACL file in the
+				{' '}
+				<Link
+					to="https://tailscale.com/kb/1018/acls"
+					name="Tailscale ACL documentation"
+				>
+					Tailscale ACL guide
+				</Link>
+				{' '}
+				and the
+				{' '}
+				<Link
+					to="https://headscale.net/acls"
+					name="Headscale ACL documentation"
+				>
+					Headscale docs
+				</Link>
+				.
+			</p>
+			<div>
+				<div className="max-w-prose">
+					<p className="mb-4 text-md">
+						If you are running Headscale 0.23-beta1 or later, the
+						ACL configuration is most likely set to
+						{' '}
+						<Code>file</Code>
+						{' '}
+						mode but the ACL file is not available. In order to
+						resolve this you will either need to correctly set
+						{' '}
+						<Code>policy.path</Code>
+						{' '}
+						in your Headscale configuration or set the
+						{' '}
+						<Code>policy.mode</Code>
+						{' '}
+						to
+						{' '}
+						<Code>database</Code>
+						.
+					</p>
+					<p className="mb-2 text-md">
+						If you are running an older version of Headscale, the
+						{' '}
+						<Code>ACL_FILE</Code>
+						{' '}
+						environment variable is not set. Refer to the
+						{' '}
+						<Link
+							to="https://github.com/tale/headplane/blob/main/docs/Configuration.md"
+							name="Headplane Configuration"
+						>
+							Headplane Configuration
+						</Link>
+						{' '}
+						documentation for more information on how to set the
+						ACL file and integrate it with Headscale.
+					</p>
+				</div>
+			</div>
+		</div>
+	)
 }
 
 export default function Page() {
