@@ -2,14 +2,13 @@
 # IT IS NOT AN EXAMPLE OF SOMETHING YOU DEPLOY
 # I ONLY USE IT FOR DEVELOPING HEADPLANE
 
-version: '3.9'
 networks:
   headplane-dev:
     name: 'headplane-dev'
     driver: 'bridge'
 services:
   headscale:
-    image: 'headscale/headscale:0.23.0-alpha5'
+    image: 'headscale/headscale:0.23.0-beta1'
     container_name: 'headscale'
     restart: 'unless-stopped'
     command: 'serve'
