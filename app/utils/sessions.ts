@@ -29,7 +29,7 @@ export const {
 			sameSite: 'lax',
 			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 			secrets: [process.env.COOKIE_SECRET!],
-			secure: true
+			secure: process.env.COOKIE_SECURE === 'true'
 		}
 	}
 )
