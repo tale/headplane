@@ -92,6 +92,8 @@ spec:
         env:
         - name: COOKIE_SECRET
           value: 'abcdefghijklmnopqrstuvwxyz'
+        - name: COOKIE_SECURE
+          value: 'false'
         - name: HEADSCALE_INTEGRATION
           value: 'kubernetes'
         - name: POD_NAME

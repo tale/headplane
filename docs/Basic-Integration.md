@@ -43,6 +43,7 @@ services:
       OIDC_ISSUER: 'https://sso.example.com'
       OIDC_CLIENT_SECRET: 'super_secret_client_secret'
       DISABLE_API_KEY_LOGIN: 'true'
+      COOKIE_SECURE: 'false'
 
       # These are the default values
       HOST: '0.0.0.0'
