@@ -89,18 +89,20 @@ const HeadscaleConfig = z.object({
 		v6: z.string(),
 	}),
 
-	dns_config: z.object({
-		override_local_dns: goBool.default(false),
-		nameservers: z.array(z.string()).default([]),
-		restricted_nameservers: z.record(z.array(z.string())).default({}),
-		domains: z.array(z.string()).default([]),
+	dns: z.object({
+		magic_dns: goBool.default(true),
+		base_domain: z.string().default('headscale.net'),
+		nameservers: z.object({
+			global: z.array(z.string()).default([]),
+			split: z.record(z.array(z.string())).default({}),
+		}).default({ global: [], split: {} }),
+		search_domains: z.array(z.string()).default([]),
 		extra_records: z.array(z.object({
 			name: z.string(),
 			type: z.literal('A'),
 			value: z.string(),
 		})).default([]),
-		magic_dns: goBool.default(false),
-		base_domain: z.string().default('headscale.net'),
+		use_username_in_magic_dns: goBool.default(false),
 	}),
 
 	oidc: z.object({
@@ -225,11 +227,12 @@ export async function loadConfig(path?: string) {
 				v6: '',
 			},
 
-			dns_config: loaded.dns_config ?? {
-				override_local_dns: false,
-				nameservers: [],
-				restricted_nameservers: {},
-				domains: [],
+			dns: loaded.dns ?? {
+				nameservers: {
+					global: [],
+					split: {},
+				},
+				search_domains: [],
 				extra_records: [],
 				magic_dns: false,
 				base_domain: 'headscale.net',

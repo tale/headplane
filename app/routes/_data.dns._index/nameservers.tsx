@@ -11,11 +11,10 @@ import AddNameserver from './dialogs/nameserver'
 
 interface Props {
 	nameservers: Record<string, string[]>
-	override: boolean
 	isDisabled: boolean
 }
 
-export default function Nameservers({ nameservers, override, isDisabled }: Props) {
+export default function Nameservers({ nameservers, isDisabled }: Props) {
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Nameservers</h1>
@@ -37,7 +36,6 @@ export default function Nameservers({ nameservers, override, isDisabled }: Props
 						isGlobal={key === 'global'}
 						isDisabled={isDisabled}
 						nameservers={nameservers[key]}
-						override={override}
 						name={key}
 					/>
 				))}
@@ -57,11 +55,9 @@ interface ListProps {
 	isDisabled: boolean
 	nameservers: string[]
 	name: string
-	override: boolean
 }
 
-function NameserverList({ isGlobal, isDisabled, nameservers, name, override }: ListProps) {
-	const [localOverride, setLocalOverride] = useState(override)
+function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) {
 	const submit = useSubmit()
 
 	return (
@@ -70,30 +66,6 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name, override }: L
 				<h2 className="text-md font-medium opacity-80">
 					{isGlobal ? 'Global Nameservers' : name}
 				</h2>
-				{isGlobal
-					? (
-						<div className="flex gap-2 items-center">
-							<span className="text-sm opacity-50">
-								Override local DNS
-							</span>
-							<Switch
-								label="Override local DNS"
-								defaultSelected={localOverride}
-								isDisabled={isDisabled}
-								onChange={() => {
-									submit({
-										'dns_config.override_local_dns': !localOverride,
-									}, {
-										method: 'PATCH',
-										encType: 'application/json',
-									})
-
-									setLocalOverride(!localOverride)
-								}}
-							/>
-						</div>
-						)
-					: undefined}
 			</div>
 			<TableList>
 				{nameservers.map((ns, index) => (
@@ -111,14 +83,14 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name, override }: L
 							onPress={() => {
 								if (isGlobal) {
 									submit({
-										'dns_config.nameservers': nameservers
+										'dns.nameservers.global': nameservers
 											.filter((_, i) => i !== index),
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',
 									})
 								} else {
-									const key = `dns_config.restricted_nameservers."${name}"`
+									const key = `dns.nameservers.split."${name}"`
 									submit({
 										[key]: nameservers
 											.filter((_, i) => i !== index),

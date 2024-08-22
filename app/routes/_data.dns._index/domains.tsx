@@ -134,7 +134,7 @@ export default function Domains({ baseDomain, searchDomains, disabled }: Propert
 									onPress={() => {
 										fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
-											'dns_config.domains': [...localDomains, newDomain]
+											'dns.search_domains': [...localDomains, newDomain]
 										}, {
 											method: 'PATCH',
 											encType: 'application/json'
@@ -212,8 +212,7 @@ function Domain({ domain, id, localDomains, isDrag, disabled, fetcher }: DomainP
 					isDisabled={disabled}
 					onPress={() => {
 						fetcher.submit({
-							// eslint-disable-next-line @typescript-eslint/naming-convention
-							'dns_config.domains': localDomains.filter((_, index) => index !== id - 1)
+							'dns.search_domains': localDomains.filter((_, index) => index !== id - 1)
 						}, {
 							method: 'PATCH',
 							encType: 'application/json'

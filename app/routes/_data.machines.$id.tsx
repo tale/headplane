@@ -27,8 +27,8 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	if (context.config.read) {
 		const config = await loadConfig()
-		if (config.dns_config.magic_dns) {
-			magic = config.dns_config.base_domain
+		if (config.dns.magic_dns) {
+			magic = config.dns.base_domain
 		}
 	}
 

@@ -47,7 +47,7 @@ export default function AddDNS({ records }: Props) {
 								setIp('')
 
 								submit({
-									'dns_config.extra_records': [
+									'dns.extra_records': [
 										...records,
 										{
 											name,

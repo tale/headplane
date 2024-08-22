@@ -55,7 +55,7 @@ export default function AddNameserver({ nameservers }: Props) {
 									}
 
 									submit({
-										'dns_config.restricted_nameservers': splitNs,
+										'dns.nameservers.split': splitNs,
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',
@@ -65,7 +65,7 @@ export default function AddNameserver({ nameservers }: Props) {
 									globalNs.push(ns)
 
 									submit({
-										'dns_config.nameservers': globalNs,
+										'dns.nameservers.global': globalNs,
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',

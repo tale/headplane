@@ -42,7 +42,7 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 								onPress={() => {
 									fetcher.submit({
 										// eslint-disable-next-line @typescript-eslint/naming-convention
-										'dns_config.magic_dns': !isEnabled
+										'dns.magic_dns': !isEnabled
 									}, {
 										method: 'PATCH',
 										encType: 'application/json'

@@ -24,13 +24,12 @@ export async function loader() {
 	const config = await loadConfig()
 	const dns = {
 		prefixes: config.prefixes,
-		magicDns: config.dns_config.magic_dns,
-		baseDomain: config.dns_config.base_domain,
-		overrideLocal: config.dns_config.override_local_dns,
-		nameservers: config.dns_config.nameservers,
-		splitDns: config.dns_config.restricted_nameservers,
-		searchDomains: config.dns_config.domains,
-		extraRecords: config.dns_config.extra_records,
+		magicDns: config.dns.magic_dns,
+		baseDomain: config.dns.base_domain,
+		nameservers: config.dns.nameservers.global,
+		splitDns: config.dns.nameservers.split,
+		searchDomains: config.dns.search_domains,
+		extraRecords: config.dns.extra_records,
 	}
 
 	return {
@@ -87,7 +86,6 @@ export default function Page() {
 			<RenameModal name={data.baseDomain} disabled={!data.config.write} />
 			<Nameservers
 				nameservers={allNs}
-				override={data.overrideLocal}
 				isDisabled={!data.config.write}
 			/>
 

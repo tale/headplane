@@ -80,7 +80,7 @@ export default function Modal({ name, disabled }: Properties) {
 									variant='confirm'
 									onPress={() => {
 										fetcher.submit({
-											'dns_config.base_domain': newName
+											'dns.base_domain': newName
 										}, {
 											method: 'PATCH',
 											encType: 'application/json'

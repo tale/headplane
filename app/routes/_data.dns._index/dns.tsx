@@ -63,7 +63,7 @@ export default function DNS({ records, isDisabled }: Props) {
 									isDisabled={isDisabled}
 									onPress={() => {
 										submit({
-											'dns_config.extra_records': records
+											'dns.extra_records': records
 												.filter((_, i) => i !== index),
 										}, {
 											method: 'PATCH',
