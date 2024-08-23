@@ -224,6 +224,16 @@ async function checkOidc(config?: HeadscaleConfig) {
 		throw new Error('OIDC environment variables are incomplete')
 	}
 
+	if (issuer && client && secret) {
+		return {
+			issuer,
+			client,
+			secret,
+			rootKey,
+			disableKeyLogin,
+		}
+	}
+
 	if ((!issuer || !client || !secret) && config) {
 		issuer = config.oidc?.issuer
 		client = config.oidc?.client_id
