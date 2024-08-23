@@ -1,3 +1,9 @@
+### 0.2.3 (August 23, 2024)
+- Change the minimum required version of Headscale to 0.23-beta2
+- Support the new API policy mode for Headscale 0.23-beta1
+- Switch to the new DNS configuration in Headscale 0.23-beta2 (fixes [#29](https://github.com/tale/headplane/issues/29))
+- If OIDC environment variables are defined, don't use configuration file values (fixes [#24](https://github.com/tale/headplane/issues/24))
+
 ### 0.2.2 (August 2, 2024)
 - Added a proper Kubernetes integration which utilizes `shareProcessNamespace` for PIDs.
 - Added a new logger utility that shows categories, levels, and timestamps.
