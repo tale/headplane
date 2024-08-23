@@ -37,7 +37,7 @@ that you'll NEED to setup a reverse proxy and this is incomplete:
 ```yaml
 services:
   headscale:
-    image: 'headscale/headscale:0.23.0-alpha12'
+    image: 'headscale/headscale:0.23.0-beta2'
     container_name: 'headscale'
     restart: 'unless-stopped'
     command: 'serve'

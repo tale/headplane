@@ -61,7 +61,7 @@ overriden by the `acl_policy_path` key in the configuration file if set.
 ## Deployment
 
 Requirements:
-- Headscale 0.23 alpha or later
+- Headscale 0.23 beta-2 or later
 - Headscale and Headplane need a Reverse Proxy (NGINX, Traefik, Caddy, etc)
 
 Currently there are 3 integration providers that can do this for you:

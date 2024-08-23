@@ -16,7 +16,7 @@ Headplane in a production environment.
 ## Deployment
 
 Requirements:
-- Headscale 0.23 alpha or later
+- Headscale 0.23 beta-2 or later
 - Headscale and Headplane need a Reverse Proxy (NGINX, Traefik, Caddy, etc)
 
 Docker heavily simplifies the deployment process, but this process can be

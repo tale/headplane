@@ -103,7 +103,7 @@ spec:
           mountPath: /etc/headscale
 
       - name: headscale
-        image: headscale/headscale:0.23.0-alpha12
+        image: headscale/headscale:0.23.0-beta2
         command: ['serve']
         env:
         - name: TZ
