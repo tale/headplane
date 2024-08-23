@@ -45,7 +45,6 @@ const HeadscaleConfig = z.object({
 	disable_check_updates: goBool.default(false),
 	ephemeral_node_inactivity_timeout: goDuration.default('120s'),
 	randomize_client_port: goBool.default(false),
-	acl_policy_path: z.string().optional(),
 
 	acme_email: z.string().optional(),
 	acme_url: z.string().optional(),

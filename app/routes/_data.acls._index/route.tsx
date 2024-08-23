@@ -12,7 +12,7 @@ import Notice from '~/components/Notice'
 import Spinner from '~/components/Spinner'
 import { toast } from '~/components/Toaster'
 import { cn } from '~/utils/cn'
-import { loadAcl, loadContext, patchAcl } from '~/utils/config/headplane'
+import { loadContext } from '~/utils/config/headplane'
 import { HeadscaleError, pull, put } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 
@@ -27,7 +27,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			session.get('hsApiKey')!,
 		)
 
-		console.log(policy)
 		try {
 			// We have read access, now do we have write access?
 			// Attempt to set the policy to what we just got
@@ -37,7 +36,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 			return {
 				hasAclWrite: true,
-				isPolicyApi: true,
 				currentAcl: policy,
 				aclType: 'json',
 			} as const
@@ -49,35 +47,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			if (error.status === 500) {
 				return {
 					hasAclWrite: false,
-					isPolicyApi: true,
 					currentAcl: policy,
 					aclType: 'json',
 				} as const
 			}
 		}
-	} catch (error) {
-		// Propagate our errors through normal error handling
-		if (!(error instanceof HeadscaleError)) {
-			throw error
-		}
-
-		// Not on 0.23-beta1 or later
-		if (error.status === 404) {
-			const { data, type, read, write } = await loadAcl()
-			return {
-				hasAclWrite: write,
-				isPolicyApi: false,
-				currentAcl: read ? data : '',
-				aclType: type,
-			}
-		}
-
-		throw error
-	}
+	} catch {}
 
 	return {
 		hasAclWrite: true,
-		isPolicyApi: true,
 		currentAcl: '',
 		aclType: 'json',
 	} as const
@@ -91,29 +69,18 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
-	const data = await request.json() as { acl: string, api: boolean }
-	if (data.api) {
-		try {
-			await put('v1/policy', session.get('hsApiKey')!, {
-				policy: data.acl,
-			})
+	const { acl } = await request.json() as { acl: string, api: boolean }
+	try {
+		await put('v1/policy', session.get('hsApiKey')!, {
+			policy: acl,
+		})
 
-			return json({ success: true })
-		} catch (error) {
-			return json({ success: false }, {
-				status: error instanceof HeadscaleError ? error.status : 500,
-			})
-		}
-	}
-
-	const context = await loadContext()
-	if (!context.acl.write) {
+		return json({ success: true })
+	} catch (error) {
 		return json({ success: false }, {
-			status: 403,
+			status: error instanceof HeadscaleError ? error.status : 500,
 		})
 	}
-
-	await patchAcl(data.acl)
 
 	if (context.integration?.onAclChange) {
 		await context.integration.onAclChange(context.integration.context)
@@ -225,25 +192,13 @@ export default function Page() {
 				? undefined
 				: (
 					<div className="mb-4">
-						{data.isPolicyApi
-							? (
-								<Notice className="w-fit">
-									The ACL policy is read-only. You can view the current policy
-									but you cannot make changes to it.
-									<br />
-									To resolve this, you need to set the ACL policy mode to
-									database in your Headscale configuration.
-								</Notice>
-								)
-							: (
-								<Notice className="w-fit">
-									The ACL policy is read-only. You can view the current policy
-									but you cannot make changes to it.
-									<br />
-									To resolve this, you need to configure a Headplane integration
-									or make the ACL_FILE environment variable available.
-								</Notice>
-								)}
+						<Notice className="w-fit">
+							The ACL policy is read-only. You can view the current policy
+							but you cannot make changes to it.
+							<br />
+							To resolve this, you need to set the ACL policy mode to
+							database in your Headscale configuration.
+						</Notice>
 					</div>
 					)}
 
@@ -357,7 +312,6 @@ export default function Page() {
 					setToasted(false)
 					fetcher.submit({
 						acl,
-						api: data.isPolicyApi,
 					}, {
 						method: 'PATCH',
 						encType: 'application/json',
