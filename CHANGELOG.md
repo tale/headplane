@@ -1,3 +1,9 @@
+### 0.2.4 (August 24, 2024)
+- Removed ACL management from the integration since Headscale 0.23-beta2 now supports it natively.
+- Removed the `ACL_FILE` environment variable since it's no longer needed.
+- Introduce a `COOKIE_SECURE=false` environment variable to disable HTTPS requirements for cookies.
+- Fixed a bug where removing Split DNS configurations would crash the UI.
+
 ### 0.2.3 (August 23, 2024)
 - Change the minimum required version of Headscale to 0.23-beta2
 - Support the new API policy mode for Headscale 0.23-beta1
