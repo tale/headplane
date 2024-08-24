@@ -92,14 +92,16 @@ spec:
         env:
         - name: COOKIE_SECRET
           value: 'abcdefghijklmnopqrstuvwxyz'
-        - name: COOKIE_SECURE
-          value: 'false'
         - name: HEADSCALE_INTEGRATION
           value: 'kubernetes'
         - name: POD_NAME
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+
+          # Only set this to false if you aren't behind a reverse proxy
+        - name: COOKIE_SECURE
+          value: 'false'
         volumeMounts:
         - name: headscale-config
           mountPath: /etc/headscale

@@ -68,7 +68,7 @@ services:
       HOST: '0.0.0.0'
       PORT: '3000'
         
-      # Don't turn it true unless using HTTPS
+      # Only set this to false if you aren't behind a reverse proxy
       COOKIE_SECURE: 'false'
 
       # Overrides the configuration file values if they are set in config.yaml
