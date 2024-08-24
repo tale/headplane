@@ -10,7 +10,6 @@ import TabLink from './TabLink'
 
 interface Properties {
 	readonly data?: {
-		acl: HeadplaneContext['acl']
 		config: HeadplaneContext['config']
 		user?: SessionData['user']
 	}

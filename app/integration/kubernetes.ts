@@ -177,15 +177,6 @@ export default createIntegration<Context>({
 		}
 	},
 
-	onAclChange: (context) => {
-		if (!context.pid) {
-			return
-		}
-
-		log.info('INTG', 'Sending SIGHUP to Headscale')
-		kill(context.pid, 'SIGHUP')
-	},
-
 	onConfigChange: (context) => {
 		if (!context.pid) {
 			return

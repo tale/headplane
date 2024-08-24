@@ -88,36 +88,6 @@ export default createIntegration<Context>({
 		return context.client !== undefined
 	},
 
-	onAclChange: async (context) => {
-		if (!context.client || !context.container) {
-			return
-		}
-
-		log.info('INTG', 'Sending SIGHUP to Headscale via Docker')
-
-		let attempts = 0
-		while (attempts <= context.maxAttempts) {
-			const response = await context.client.request({
-				method: 'POST',
-				path: `/v1.30/containers/${context.container}/kill?signal=SIGHUP`,
-			})
-
-			if (response.statusCode !== 204) {
-				if (attempts < context.maxAttempts) {
-					attempts++
-					await setTimeout(1000)
-					continue
-				}
-
-				const stringCode = response.statusCode.toString()
-				const body = await response.body.text()
-				throw new Error(`API request failed: ${stringCode} ${body}`)
-			}
-
-			break
-		}
-	},
-
 	onConfigChange: async (context) => {
 		if (!context.client || !context.container) {
 			return

@@ -70,14 +70,5 @@ export default createIntegration<Context>({
 			log.error('INTG', 'Failed to read /proc')
 			return false
 		}
-	},
-
-	onAclChange: (context) => {
-		if (!context.pid) {
-			return
-		}
-
-		log.info('INTG', 'Sending SIGHUP to Headscale')
-		kill(context.pid, 'SIGHUP')
-	},
+	}
 })

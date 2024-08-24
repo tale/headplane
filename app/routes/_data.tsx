@@ -35,7 +35,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const context = await loadContext()
 	return {
-		acl: context.acl,
 		config: context.config,
 		user: session.get('user'),
 	}

@@ -22,11 +22,6 @@ export interface HeadplaneContext {
 		write: boolean
 	}
 
-	acl: {
-		read: boolean
-		write: boolean
-	}
-
 	oidc?: {
 		issuer: string
 		client: string
@@ -69,7 +64,6 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		cookieSecret,
 		integration: await loadIntegration(),
 		config: contextData,
-		acl: await checkAcl(config),
 		oidc: await checkOidc(config),
 	}
 

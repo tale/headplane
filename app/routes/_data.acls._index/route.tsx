@@ -82,10 +82,6 @@ export async function action({ request }: ActionFunctionArgs) {
 		})
 	}
 
-	if (context.integration?.onAclChange) {
-		await context.integration.onAclChange(context.integration.context)
-	}
-
 	return json({ success: true })
 }
 
