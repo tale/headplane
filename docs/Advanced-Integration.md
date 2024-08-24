@@ -54,9 +54,9 @@ When the ACL file is available for editing, the `Access Controls` tab will
 become available. All of the integrations support automatic reloading of the
 ACLs when the file is changed.
 
-> By default, the ACL file is read from `/etc/headscale/acl_policy.json`. This
-can be overridden by setting the `ACL_FILE` environment variable and is also
-overriden by the `acl_policy_path` key in the configuration file if set.
+> By default, the ACL file is read from `/etc/headscale/acl_policy.json`.
+> If `policy.path` is set and `policy.mode` is set to `file`, the ACL file will
+> be read from the path specified in the configuration file instead.
 
 ## Deployment
 

@@ -142,23 +142,6 @@ export function ErrorBoundary() {
 						<Code>database</Code>
 						.
 					</p>
-					<p className="mb-2 text-md">
-						If you are running an older version of Headscale, the
-						{' '}
-						<Code>ACL_FILE</Code>
-						{' '}
-						environment variable is not set. Refer to the
-						{' '}
-						<Link
-							to="https://github.com/tale/headplane/blob/main/docs/Configuration.md"
-							name="Headplane Configuration"
-						>
-							Headplane Configuration
-						</Link>
-						{' '}
-						documentation for more information on how to set the
-						ACL file and integrate it with Headscale.
-					</p>
 				</div>
 			</div>
 		</div>

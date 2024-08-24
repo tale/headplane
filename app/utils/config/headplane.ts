@@ -81,73 +81,8 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		: 'Unavailable',
 	)
 
-	log.info('CTXT', 'ACL: %s', context.acl.read
-		? `Found ${context.acl.write ? '' : '(Read Only)'}`
-		: 'Unavailable',
-	)
-
 	log.info('CTXT', 'OIDC: %s', context.oidc ? 'Configured' : 'Unavailable')
 	return context
-}
-
-export async function loadAcl(): Promise<{
-	data: string
-	type: 'json' | 'yaml'
-	read: boolean
-	write: boolean
-}> {
-	let path = process.env.ACL_FILE
-	if (!path) {
-		try {
-			const config = await loadConfig()
-			path = config.acl_policy_path
-		} catch {}
-	}
-
-	if (!path) {
-		throw new Error('No ACL file defined')
-	}
-
-	// Check for attributes
-	let read = false
-	let write = false
-
-	try {
-		await access(path, constants.R_OK)
-		read = true
-	} catch {}
-
-	try {
-		await access(path, constants.W_OK)
-		write = true
-	} catch {}
-
-	const data = await readFile(path, 'utf8')
-
-	// Naive check for YAML over JSON
-	// This is because JSON.parse doesn't support comments
-	try {
-		parse(data)
-		return { data, type: 'yaml', read, write }
-	} catch {
-		return { data, type: 'json', read, write }
-	}
-}
-
-export async function patchAcl(data: string) {
-	let path = process.env.ACL_FILE
-	if (!path) {
-		try {
-			const config = await loadConfig()
-			path = config.acl_policy_path
-		} catch {}
-	}
-
-	if (!path) {
-		throw new Error('No ACL file defined')
-	}
-
-	await writeFile(path, data, 'utf8')
 }
 
 async function checkConfig(path: string) {
@@ -176,32 +111,6 @@ async function checkConfig(path: string) {
 			read: true,
 			write,
 		},
-	}
-}
-
-async function checkAcl(config?: HeadscaleConfig) {
-	let path = process.env.ACL_FILE
-	if (!path && config) {
-		path = config.acl_policy_path
-	}
-
-	let read = false
-	let write = false
-	if (path) {
-		try {
-			await access(path, constants.R_OK)
-			read = true
-		} catch {}
-
-		try {
-			await access(path, constants.W_OK)
-			write = true
-		} catch {}
-	}
-
-	return {
-		read,
-		write,
 	}
 }
 
