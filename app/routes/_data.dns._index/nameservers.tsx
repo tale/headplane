@@ -91,9 +91,9 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) 
 									})
 								} else {
 									const key = `dns.nameservers.split."${name}"`
+									const list = nameservers.filter((_, i) => i !== index)
 									submit({
-										[key]: nameservers
-											.filter((_, i) => i !== index),
+										[key]: list.length ? list : null,
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',

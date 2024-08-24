@@ -308,6 +308,11 @@ export async function patchConfig(partial: Record<string, unknown>) {
 
 		// Push the remaining element
 		path.push(temp.replaceAll('"', ''))
+		if (value === null) {
+			configYaml.deleteIn(path)
+			continue
+		}
+
 		configYaml.setIn(path, value)
 	}
 
