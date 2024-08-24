@@ -98,6 +98,10 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+
+          # Only set this to false if you aren't behind a reverse proxy
+        - name: COOKIE_SECURE
+          value: 'false'
         volumeMounts:
         - name: headscale-config
           mountPath: /etc/headscale

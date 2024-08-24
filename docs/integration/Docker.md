@@ -68,6 +68,9 @@ services:
       HOST: '0.0.0.0'
       PORT: '3000'
         
+      # Only set this to false if you aren't behind a reverse proxy
+      COOKIE_SECURE: 'false'
+
       # Overrides the configuration file values if they are set in config.yaml
       # If you want to share the same OIDC configuration you do not need this
       OIDC_CLIENT_ID: 'headscale'
