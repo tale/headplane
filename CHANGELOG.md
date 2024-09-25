@@ -1,3 +1,7 @@
+### 0.3.0 (September 25, 2024)
+- Bumped the minimum supported version of Headscale to 0.23.
+- Updated the UI to respect `dns.use_username_in_magic_dns`.
+
 ### 0.2.4 (August 24, 2024)
 - Removed ACL management from the integration since Headscale 0.23-beta2 now supports it natively.
 - Removed the `ACL_FILE` environment variable since it's no longer needed.
