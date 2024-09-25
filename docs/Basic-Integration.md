@@ -16,7 +16,7 @@ Headplane in a production environment.
 ## Deployment
 
 Requirements:
-- Headscale 0.23 beta-2 or later
+- Headscale 0.23 or newer
 - Headscale and Headplane need a Reverse Proxy (NGINX, Traefik, Caddy, etc)
 
 Docker heavily simplifies the deployment process, but this process can be
@@ -29,7 +29,7 @@ Here is a simple Docker Compose deployment:
 services:
   headplane:
     container_name: headplane
-    image: ghcr.io/tale/headplane:latest
+    image: ghcr.io/tale/headplane:0.3.0
     restart: unless-stopped
     ports:
       - '3000:3000'

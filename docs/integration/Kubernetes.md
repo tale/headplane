@@ -88,7 +88,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: headplane
-        image: ghcr.io/tale/headplane:latest
+        image: ghcr.io/tale/headplane:0.3.0
         env:
         - name: COOKIE_SECRET
           value: 'abcdefghijklmnopqrstuvwxyz'
@@ -107,7 +107,7 @@ spec:
           mountPath: /etc/headscale
 
       - name: headscale
-        image: headscale/headscale:0.23.0-beta2
+        image: headscale/headscale:0.23.0
         command: ['serve']
         env:
         - name: TZ

@@ -37,7 +37,7 @@ that you'll NEED to setup a reverse proxy and this is incomplete:
 ```yaml
 services:
   headscale:
-    image: 'headscale/headscale:0.23.0-beta2'
+    image: 'headscale/headscale:0.23.0'
     container_name: 'headscale'
     restart: 'unless-stopped'
     command: 'serve'
@@ -50,7 +50,7 @@ services:
       TZ: 'America/New_York'
   headplane:
     container_name: headplane
-    image: ghcr.io/tale/headplane:latest
+    image: ghcr.io/tale/headplane:0.3.0
     restart: unless-stopped
     volumes:
       - './data:/var/lib/headscale'

@@ -61,7 +61,7 @@ ACLs when the file is changed.
 ## Deployment
 
 Requirements:
-- Headscale 0.23 beta-2 or later
+- Headscale 0.23 or newer
 - Headscale and Headplane need a Reverse Proxy (NGINX, Traefik, Caddy, etc)
 
 Currently there are 3 integration providers that can do this for you:
