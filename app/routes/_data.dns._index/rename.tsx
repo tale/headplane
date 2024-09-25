@@ -28,7 +28,7 @@ export default function Modal({ name, disabled }: Properties) {
 				Devices are accessible at
 				{' '}
 				<Code>
-					[device].[user].{name}
+					[device].{name}
 				</Code>
 				{' '}
 				when Magic DNS is enabled.

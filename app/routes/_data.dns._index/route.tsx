@@ -25,7 +25,9 @@ export async function loader() {
 	const dns = {
 		prefixes: config.prefixes,
 		magicDns: config.dns.magic_dns,
-		baseDomain: config.dns.base_domain,
+		baseDomain: config.dns.use_username_in_magic_dns
+			? `[user].${config.dns.base_domain}`
+			: config.dns.base_domain,
 		nameservers: config.dns.nameservers.global,
 		splitDns: config.dns.nameservers.split,
 		searchDomains: config.dns.search_domains,
@@ -107,7 +109,7 @@ export default function Page() {
 					on the tailnet. Devices will be accessible at
 					{' '}
 					<Code>
-						[device].[user].
+						[device].
 						{data.baseDomain}
 					</Code>
 					{' '}

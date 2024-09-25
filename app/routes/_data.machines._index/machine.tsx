@@ -31,6 +31,10 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 		tags.unshift('Expired')
 	}
 
+	let prefix = magic?.startsWith('[user]')
+		? magic.replace('[user]', machine.user.name)
+		: magic
+
 	return (
 		<tr
 			key={machine.id}
@@ -102,16 +106,14 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 											'justify-between w-full break-keep',
 										)}
 										onPress={async () => {
-											const ip = `${machine.givenName}.${machine.user.name}.${magic}`
+											const ip = `${machine.givenName}.${prefix}`
 											await navigator.clipboard.writeText(ip)
 											toast('Copied hostname to clipboard')
 										}}
 									>
 										{machine.givenName}
 										.
-										{machine.user.name}
-										.
-										{magic}
+										{prefix}
 										<CopyIcon className="w-3 h-3" />
 									</Menu.ItemButton>
 									)

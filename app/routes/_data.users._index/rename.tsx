@@ -59,7 +59,6 @@ export default function Rename({ username, magic }: Props) {
 											{' '}
 											<Code>
 												[machine].
-												{newName.length > 0 ? newName : '[new-username]'}
 												.
 												{magic}
 											</Code>

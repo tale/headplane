@@ -32,6 +32,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		if (config.dns.magic_dns) {
 			magic = config.dns.base_domain
 		}
+
+		if (config.dns.use_username_in_magic_dns) {
+			magic = `[user].${magic}`
+		}
 	}
 
 	return {
@@ -76,7 +80,7 @@ export default function Page() {
 												based on their name and also at
 												{' '}
 												<Code>
-													[name].[user].
+													[name].
 													{data.magic}
 												</Code>
 											</Tooltip>

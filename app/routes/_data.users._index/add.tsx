@@ -36,7 +36,6 @@ export default function Add({ magic }: Props) {
 										{' '}
 										<Code>
 											[machine].
-											{username.length > 0 ? username : '[username]'}
 											.
 											{magic}
 										</Code>
