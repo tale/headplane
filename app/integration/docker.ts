@@ -54,11 +54,14 @@ export default createIntegration<Context>({
 		// The API is available as an HTTP endpoint and this
 		// will simplify the fetching logic in undici
 		if (url.protocol === 'tcp:') {
-			url.protocol = 'http:'
+			// Apparently setting url.protocol doesn't work anymore?
+			const fetchU = url.href.replace(url.protocol, 'http:')
+
 			try {
-				log.info('INTG', 'Checking API: %s', url.href)
-				await fetch(new URL('/v1.30/version', url).href)
-			} catch {
+				log.info('INTG', 'Checking API: %s', fetchU)
+				await fetch(new URL('/v1.30/version', fetchU).href)
+			} catch (error) {
+				log.debug('INTG', 'Failed to connect to Docker API', error)
 				log.error('INTG', 'Failed to connect to Docker API')
 				return false
 			}
