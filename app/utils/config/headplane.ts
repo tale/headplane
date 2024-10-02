@@ -13,6 +13,7 @@ import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale'
 import log from '~/utils/log'
 
 export interface HeadplaneContext {
+	debug: boolean
 	headscaleUrl: string
 	cookieSecret: string
 	integration: IntegrationFactory | undefined
@@ -38,6 +39,12 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		return context
 	}
 
+	const debug = process.env.DEBUG === 'true'
+	if (debug) {
+		log.info('CTXT', 'Debug mode is enabled! Logs will spam a lot.')
+		log.info('CTXT', 'Please disable debug mode in production.')
+	}
+
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
 	const { config, contextData } = await checkConfig(path)
 
@@ -60,6 +67,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	}
 
 	context = {
+		debug,
 		headscaleUrl,
 		cookieSecret,
 		integration: await loadIntegration(),
@@ -80,10 +88,13 @@ export async function loadContext(): Promise<HeadplaneContext> {
 }
 
 async function checkConfig(path: string) {
+	log.debug('CTXT', 'Checking config at %s', path)
+
 	let config: HeadscaleConfig | undefined
 	try {
 		config = await loadConfig(path)
 	} catch {
+		log.debug('CTXT', 'Config at %s failed to load', path)
 		return {
 			config: undefined,
 			contextData: {
@@ -95,9 +106,12 @@ async function checkConfig(path: string) {
 
 	let write = false
 	try {
+		log.debug('CTXT', 'Checking write access to %s', path)
 		await access(path, constants.W_OK)
 		write = true
-	} catch {}
+	} catch {
+		log.debug('CTXT', 'No write access to %s', path)
+	}
 
 	return {
 		config,
@@ -109,7 +123,12 @@ async function checkConfig(path: string) {
 }
 
 async function checkOidc(config?: HeadscaleConfig) {
+	log.debug('CTXT', 'Checking OIDC configuration')
+
 	const disableKeyLogin = process.env.DISABLE_API_KEY_LOGIN === 'true'
+	log.debug('CTXT', 'API Key Login Enabled: %s', !disableKeyLogin)
+
+	log.debug('CTXT', 'Checking ROOT_API_KEY and falling back to API_KEY')
 	const rootKey = process.env.ROOT_API_KEY ?? process.env.API_KEY
 	if (!rootKey) {
 		throw new Error('ROOT_API_KEY or API_KEY not set')
@@ -118,6 +137,10 @@ async function checkOidc(config?: HeadscaleConfig) {
 	let issuer = process.env.OIDC_ISSUER
 	let client = process.env.OIDC_CLIENT_ID
 	let secret = process.env.OIDC_CLIENT_SECRET
+
+	log.debug('CTXT', 'Checking OIDC environment variables')
+	log.debug('CTXT', 'Issuer: %s', issuer)
+	log.debug('CTXT', 'Client: %s', client)
 
 	if (
 		(issuer ?? client ?? secret)
@@ -143,6 +166,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 		secret = config.oidc?.client_secret
 
 		if (!secret && config.oidc?.client_secret_path) {
+			log.debug('CTXT', 'Trying to read OIDC client secret from %s', config.oidc.client_secret_path)
 			try {
 				const data = await readFile(
 					config.oidc.client_secret_path,
@@ -152,7 +176,9 @@ async function checkOidc(config?: HeadscaleConfig) {
 				if (data && data.length > 0) {
 					secret = data.trim()
 				}
-			} catch {}
+			} catch {
+				log.error('CTXT', 'Failed to read OIDC client secret from %s', config.oidc.client_secret_path)
+			}
 		}
 	}
 

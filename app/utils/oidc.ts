@@ -2,7 +2,7 @@ import { redirect } from '@remix-run/node'
 import {
 	authorizationCodeGrantRequest,
 	calculatePKCECodeChallenge,
-	type Client,
+	Client,
 	discoveryRequest,
 	generateRandomCodeVerifier,
 	generateRandomNonce,

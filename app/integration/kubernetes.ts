@@ -26,6 +26,7 @@ export default createIntegration<Context>({
 
 		const svcRoot = Config.SERVICEACCOUNT_ROOT
 		try {
+			log.debug('INTG', 'Checking Kubernetes service account at %s', svcRoot)
 			const files = await readdir(svcRoot)
 			if (files.length === 0) {
 				log.error('INTG', 'Kubernetes service account not found')
@@ -39,6 +40,7 @@ export default createIntegration<Context>({
 				Config.SERVICEACCOUNT_NAMESPACE_PATH,
 			]
 
+			log.debug('INTG', 'Looking for %s', expectedFiles.join(', '))
 			if (!expectedFiles.every(file => mappedFiles.has(file))) {
 				log.error('INTG', 'Malformed Kubernetes service account')
 				return false
@@ -48,6 +50,7 @@ export default createIntegration<Context>({
 			return false
 		}
 
+		log.debug('INTG', 'Reading Kubernetes service account at %s', svcRoot)
 		const namespace = await readFile(
 			Config.SERVICEACCOUNT_NAMESPACE_PATH,
 			'utf8',
@@ -68,7 +71,13 @@ export default createIntegration<Context>({
 				return false
 			}
 
+			log.debug('INTG', 'Checking Kubernetes pod %s in namespace %s',
+				pod,
+				namespace,
+			)
+
 			try {
+				log.debug('INTG', 'Attempgin to get cluster KubeConfig')
 				const kc = new KubeConfig()
 				kc.loadFromCluster()
 
@@ -91,6 +100,7 @@ export default createIntegration<Context>({
 					kCoreV1Api.basePath,
 				)
 
+				log.debug('INTG', 'Reading pod info for %s', pod)
 				const { response, body } = await kCoreV1Api.readNamespacedPod(
 					pod,
 					namespace,
@@ -103,6 +113,7 @@ export default createIntegration<Context>({
 					return false
 				}
 
+				log.debug('INTG', 'Got pod info: %o', body.spec)
 				const shared = body.spec?.shareProcessNamespace
 				if (shared === undefined) {
 					log.error(
@@ -127,6 +138,7 @@ export default createIntegration<Context>({
 			}
 		}
 
+		log.debug('INTG', 'Looking for namespaced process in /proc')
 		const dir = resolve('/proc')
 		try {
 			const subdirs = await readdir(dir)
@@ -139,11 +151,14 @@ export default createIntegration<Context>({
 
 				const path = join('/proc', dir, 'cmdline')
 				try {
+					log.debug('INTG', 'Reading %s', path)
 					const data = await readFile(path, 'utf8')
 					if (data.includes('headscale')) {
 						return pid
 					}
-				} catch {}
+				} catch (error) {
+					log.debug('INTG', 'Failed to read %s: %s', path, error)
+				}
 			})
 
 			const results = await Promise.allSettled(promises)
@@ -155,6 +170,7 @@ export default createIntegration<Context>({
 				}
 			}
 
+			log.debug('INTG', 'Found Headscale processes: %o', pids)
 			if (pids.length > 1) {
 				log.error('INTG', 'Found %d Headscale processes: %s',
 					pids.length,

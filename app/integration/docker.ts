@@ -24,6 +24,7 @@ export default createIntegration<Context>({
 	isAvailable: async (context) => {
 		// Check for the HEADSCALE_CONTAINER environment variable first
 		// to avoid unnecessary fetching of the Docker socket
+		log.debug('INTG', 'Checking Docker integration availability')
 		context.container = process.env.HEADSCALE_CONTAINER
 			?.trim()
 			.toLowerCase()
@@ -76,7 +77,8 @@ export default createIntegration<Context>({
 					url.pathname,
 				)
 				await access(url.pathname, constants.R_OK)
-			} catch {
+			} catch (error) {
+				log.debug('INTG', 'Failed to access Docker socket: %s', error)
 				log.error('INTG', 'Failed to access Docker socket: %s',
 					path,
 				)
@@ -100,6 +102,12 @@ export default createIntegration<Context>({
 
 		let attempts = 0
 		while (attempts <= context.maxAttempts) {
+			log.debug(
+				'INTG', 'Restarting container: %s (attempt %d)',
+				context.container,
+				attempts,
+			)
+
 			const response = await context.client.request({
 				method: 'POST',
 				path: `/v1.30/containers/${context.container}/restart`,
@@ -123,6 +131,7 @@ export default createIntegration<Context>({
 		attempts = 0
 		while (attempts <= context.maxAttempts) {
 			try {
+				log.debug('INTG', 'Checking Headscale status (attempt %d)', attempts)
 				await pull('v1', '')
 				return
 			} catch (error) {

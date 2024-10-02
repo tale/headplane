@@ -187,10 +187,12 @@ export async function loadConfig(path?: string) {
 		throw new Error('Path is required to lazy load config')
 	}
 
+	log.debug('CFGX', 'Loading Headscale configuration from %s', path)
 	const data = await readFile(path, 'utf8')
 	configYaml = parseDocument(data)
 
 	if (process.env.HEADSCALE_CONFIG_UNSTRICT === 'true') {
+		log.debug('CFGX', 'Loaded Headscale configuration in non-strict mode')
 		const loaded = configYaml.toJSON() as Record<string, unknown>
 		config = {
 			...loaded,
@@ -249,8 +251,10 @@ export async function loadConfig(path?: string) {
 	}
 
 	try {
+		log.debug('CFGX', 'Attempting to parse Headscale configuration')
 		config = await HeadscaleConfig.parseAsync(configYaml.toJSON())
 	} catch (error) {
+		log.debug('CFGX', 'Failed to load Headscale configuration')
 		if (error instanceof z.ZodError) {
 			log.error('CFGX', 'Recieved invalid configuration file')
 			log.error('CFGX', 'The following schema issues were found:')
@@ -279,7 +283,9 @@ export async function patchConfig(partial: Record<string, unknown>) {
 		throw new Error('Config not loaded')
 	}
 
+	log.debug('CFGX', 'Patching Headscale configuration')
 	for (const [key, value] of Object.entries(partial)) {
+		log.debug('CFGX', 'Patching %s with %s', key, value)
 		// If the key is something like `test.bar."foo.bar"`, then we treat
 		// the foo.bar as a single key, and not as two keys, so that needs
 		// to be split correctly.
@@ -321,5 +327,6 @@ export async function patchConfig(partial: Record<string, unknown>) {
 		: (await HeadscaleConfig.parseAsync(configYaml.toJSON()))
 
 	const path = resolve(process.env.CONFIG_FILE ?? '/etc/headscale/config.yaml')
+	log.debug('CFGX', 'Writing patched configuration to %s', path)
 	await writeFile(path, configYaml.toString(), 'utf8')
 }

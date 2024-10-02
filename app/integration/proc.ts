@@ -22,6 +22,7 @@ export default createIntegration<Context>({
 			return false
 		}
 
+		log.debug('INTG', 'Checking /proc for Headscale process')
 		const dir = resolve('/proc')
 		try {
 			const subdirs = await readdir(dir)
@@ -34,11 +35,14 @@ export default createIntegration<Context>({
 
 				const path = join('/proc', dir, 'cmdline')
 				try {
+					log.debug('INTG', 'Reading %s', path)
 					const data = await readFile(path, 'utf8')
 					if (data.includes('headscale')) {
 						return pid
 					}
-				} catch {}
+				} catch (error) {
+					log.error('INTG', 'Failed to read %s: %s', path, error)
+				}
 			})
 
 			const results = await Promise.allSettled(promises)
@@ -50,6 +54,7 @@ export default createIntegration<Context>({
 				}
 			}
 
+			log.debug('INTG', 'Found Headscale processes: %o', pids)
 			if (pids.length > 1) {
 				log.error('INTG', 'Found %d Headscale processes: %s',
 					pids.length,

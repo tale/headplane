@@ -1,4 +1,5 @@
 import { loadContext } from './config/headplane'
+import log from './log'
 
 export class HeadscaleError extends Error {
 	status: number
@@ -20,6 +21,8 @@ export class FatalError extends Error {
 export async function pull<T>(url: string, key: string) {
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
+
+	log.debug('APIC', 'GET %s', `${prefix}/api/${url}`)
 	const response = await fetch(`${prefix}/api/${url}`, {
 		headers: {
 			Authorization: `Bearer ${key}`,
@@ -27,6 +30,7 @@ export async function pull<T>(url: string, key: string) {
 	})
 
 	if (!response.ok) {
+		log.debug('APIC', 'GET %s failed with status %d', `${prefix}/api/${url}`, response.status)
 		throw new HeadscaleError(await response.text(), response.status)
 	}
 
@@ -36,6 +40,8 @@ export async function pull<T>(url: string, key: string) {
 export async function post<T>(url: string, key: string, body?: unknown) {
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
+
+	log.debug('APIC', 'POST %s', `${prefix}/api/${url}`)
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'POST',
 		body: body ? JSON.stringify(body) : undefined,
@@ -45,6 +51,7 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 	})
 
 	if (!response.ok) {
+		log.debug('APIC', 'POST %s failed with status %d', `${prefix}/api/${url}`, response.status)
 		throw new HeadscaleError(await response.text(), response.status)
 	}
 
@@ -54,6 +61,8 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 export async function put<T>(url: string, key: string, body?: unknown) {
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
+
+	log.debug('APIC', 'PUT %s', `${prefix}/api/${url}`)
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'PUT',
 		body: body ? JSON.stringify(body) : undefined,
@@ -63,6 +72,7 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 	})
 
 	if (!response.ok) {
+		log.debug('APIC', 'PUT %s failed with status %d', `${prefix}/api/${url}`, response.status)
 		throw new HeadscaleError(await response.text(), response.status)
 	}
 
@@ -72,6 +82,8 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 export async function del<T>(url: string, key: string) {
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
+
+	log.debug('APIC', 'DELETE %s', `${prefix}/api/${url}`)
 	const response = await fetch(`${prefix}/api/${url}`, {
 		method: 'DELETE',
 		headers: {
@@ -80,6 +92,7 @@ export async function del<T>(url: string, key: string) {
 	})
 
 	if (!response.ok) {
+		log.debug('APIC', 'DELETE %s failed with status %d', `${prefix}/api/${url}`, response.status)
 		throw new HeadscaleError(await response.text(), response.status)
 	}
 

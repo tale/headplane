@@ -10,6 +10,12 @@ export default {
 	error: (category: string, message: string, ...args: unknown[]) => {
 		defaultLog('ERRO', category, message, ...args)
 	},
+
+	debug: (category: string, message: string, ...args: unknown[]) => {
+		if (process.env.DEBUG === 'true') {
+			defaultLog('DEBG', category, message, ...args)
+		}
+	}
 }
 
 function defaultLog(
