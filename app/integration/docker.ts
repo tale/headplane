@@ -67,7 +67,7 @@ export default createIntegration<Context>({
 				return false
 			}
 
-			context.client = new Client(url.href)
+			context.client = new Client(fetchU)
 		}
 
 		// Check if the socket is accessible
