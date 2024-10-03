@@ -1,3 +1,8 @@
+### 0.3.1 (October 3, 2024)
+- Fixed the Docker integration to properly support custom socket paths. This regressed at some point previously.
+- Allow you to register a machine using machine keys (`nodekey:...`) on the machines page.
+- Added the option for debug logs with the `DEBUG=true` environment variable.
+
 ### 0.3.0 (September 25, 2024)
 - Bumped the minimum supported version of Headscale to 0.23.
 - Updated the UI to respect `dns.use_username_in_magic_dns`.
