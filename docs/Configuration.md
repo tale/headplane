@@ -9,6 +9,7 @@ You can configure Headplane using environment variables.
 
 #### Optional Variables
 
+- **`DEBUG`**: Enable debug logging (default: `false`).
 - **`HOST`**: The host to bind the server to (default: `0.0.0.0`).
 - **`PORT`**: The port to bind the server to (default: `3000`).
 - **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
