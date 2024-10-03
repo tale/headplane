@@ -97,6 +97,35 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			}
 		}
 
+		case 'register': {
+			const key = data.get('mkey')?.toString()
+			const user = data.get('user')?.toString()
+
+			if (!key) {
+				return json({ message: 'No machine key provided' }, {
+					status: 400,
+				})
+			}
+
+			if (!user) {
+				return json({ message: 'No user provided' }, {
+					status: 400,
+				})
+			}
+
+			try {
+				await post('v1/node/register', session.get('hsApiKey')!, {
+					user, key,
+				})
+
+				return json({ message: 'Machine registered' })
+			} catch {
+				return json({ message: 'Failed to register machine' }, {
+					status: 500,
+				})
+			}
+		}
+
 		default: {
 			return json({ message: 'Invalid method' }, {
 				status: 400,

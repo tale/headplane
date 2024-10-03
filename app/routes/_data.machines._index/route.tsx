@@ -15,6 +15,7 @@ import { useLiveData } from '~/utils/useLiveData'
 
 import { menuAction } from './action'
 import MachineRow from './machine'
+import NewMachine from './dialogs/new'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
@@ -43,6 +44,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		routes: routes.routes,
 		users: users.users,
 		magic,
+		server: context.headscaleUrl,
 	}
 }
 
@@ -56,7 +58,10 @@ export default function Page() {
 
 	return (
 		<>
-			<h1 className="text-2xl font-medium mb-4">Machines</h1>
+			<div className="flex justify-between items-center">
+				<h1 className="text-2xl font-medium mb-4">Machines</h1>
+				<NewMachine server={data.server} users={data.users} />
+			</div>
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-gray-500 dark:text-gray-400">
 					<tr className="text-left uppercase text-xs font-bold px-0.5">

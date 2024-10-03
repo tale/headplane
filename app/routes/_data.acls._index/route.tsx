@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
-import { type ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
 import { useFetcher, useLoaderData } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
+import { setTimeout } from 'node:timers/promises'
 
 import Button from '~/components/Button'
 import Code from '~/components/Code'
@@ -75,6 +76,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			policy: acl,
 		})
 
+		await setTimeout(250)
 		return json({ success: true })
 	} catch (error) {
 		return json({ success: false }, {
