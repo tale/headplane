@@ -51,8 +51,8 @@ export async function startOidc(oidc: OidcConfig, req: Request) {
 	const challenge = await calculatePKCECodeChallenge(verifier)
 
 	const callback = new URL('/admin/oidc/callback', req.url)
-	callback.protocol = req.url.includes('localhost') ? 'http:' : 'https:'
-	callback.hostname = req.headers.get('Host') ?? ''
+	callback.protocol = req.headers.get('X-Forwarded-Proto') ?? 'http:'
+	callback.host = req.headers.get('Host') ?? ''
 	const authUrl = new URL(processed.authorization_endpoint)
 
 	authUrl.searchParams.set('client_id', oidcClient.client_id)
@@ -119,8 +119,8 @@ export async function finishOidc(oidc: OidcConfig, req: Request) {
 	}
 
 	const callback = new URL('/admin/oidc/callback', req.url)
-	callback.protocol = req.url.includes('localhost') ? 'http:' : 'https:'
-	callback.hostname = req.headers.get('Host') ?? ''
+	callback.protocol = req.headers.get('X-Forwarded-Proto') ?? 'http:'
+	callback.host = req.headers.get('Host') ?? ''
 
 	const tokenResponse = await authorizationCodeGrantRequest(
 		processed,
