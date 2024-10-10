@@ -4,7 +4,7 @@ import { Link } from '@remix-run/react'
 import Menu from '~/components/Menu'
 import StatusCircle from '~/components/StatusCircle'
 import { toast } from '~/components/Toaster'
-import { type Machine, type Route, User } from '~/types'
+import { Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 
 import MenuOptions from './menu'
@@ -19,6 +19,7 @@ interface Props {
 export default function MachineRow({ machine, routes, magic, users }: Props) {
 	const expired = machine.expiry === '0001-01-01 00:00:00'
 		|| machine.expiry === '0001-01-01T00:00:00Z'
+		|| machine.expiry === null
 		? false
 		: new Date(machine.expiry).getTime() < Date.now()
 
