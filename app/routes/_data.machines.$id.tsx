@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
 
 import Attribute from '~/components/Attribute'
 import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
-import { type Machine, Route, User } from '~/types'
+import { Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
@@ -141,7 +141,7 @@ export default function Page() {
 						<Attribute
 							isCopyable
 							name="Domain"
-							value={`${machine.givenName}.${machine.user.name}.${magic}`}
+							value={`${machine.givenName}.${magic}`}
 						/>
 						)
 					: undefined}

@@ -8,10 +8,9 @@ import Dialog from '~/components/Dialog'
 
 interface Props {
 	username: string
-	magic?: string
 }
 
-export default function Remove({ username, magic }: Props) {
+export default function Remove({ username }: Props) {
 	const submit = useSubmit()
 	const dialogState = useState(false)
 
@@ -41,24 +40,6 @@ export default function Remove({ username, magic }: Props) {
 								?
 								{' '}
 								A deleted user cannot be recovered.
-								{magic
-									? (
-										<p className="text-sm mt-8 text-ui-600 dark:text-ui-300">
-											{' '}
-											Since Magic DNS is enabled, machines
-											currently accessible via
-											{' '}
-											<Code>
-												[machine].
-												{username}
-												.
-												{magic}
-											</Code>
-											{' '}
-											will become orphaned and inaccessible.
-										</p>
-										)
-									: undefined}
 							</Dialog.Text>
 							<Form
 								method="POST"

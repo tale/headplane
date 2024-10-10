@@ -3,7 +3,6 @@ import { Form, useSubmit } from '@remix-run/react'
 import { useState } from 'react'
 
 import Button from '~/components/Button'
-import Code from '~/components/Code'
 import Dialog from '~/components/Dialog'
 import TextField from '~/components/TextField'
 
@@ -40,32 +39,6 @@ export default function Rename({ username, magic }: Props) {
 								Enter a new username for
 								{' '}
 								{username}
-								?
-								{magic
-									? (
-										<p className="text-sm mt-8 text-ui-600 dark:text-ui-300">
-											{' '}
-											Since Magic DNS is enabled, machines
-											currently accessible via
-											{' '}
-											<Code>
-												[machine].
-												{username}
-												.
-												{magic}
-											</Code>
-											{' '}
-											will now become accessible via
-											{' '}
-											<Code>
-												[machine].
-												.
-												{magic}
-											</Code>
-											.
-										</p>
-										)
-									: undefined}
 							</Dialog.Text>
 							<Form
 								method="POST"
