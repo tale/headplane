@@ -1,5 +1,5 @@
-import { Form, useSubmit } from '@remix-run/react'
-import { Dispatch, SetStateAction, useState } from 'react'
+import { Form, useFetcher } from '@remix-run/react'
+import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 import { PlusIcon, ServerIcon, KeyIcon } from '@primer/octicons-react'
 import { cn } from '~/utils/cn'
 
@@ -8,6 +8,8 @@ import Dialog from '~/components/Dialog'
 import TextField from '~/components/TextField'
 import Select from '~/components/Select'
 import Menu from '~/components/Menu'
+import Spinner from '~/components/Spinner'
+import { toast } from '~/components/Toaster'
 import { Machine, User } from '~/types'
 
 export interface NewProps {
@@ -16,11 +18,26 @@ export interface NewProps {
 }
 
 export default function New(data: NewProps) {
-	const submit = useSubmit()
+	const fetcher = useFetcher()
 	const mkeyState = useState(false)
 	const pkeyState = useState(false)
 	const [mkey, setMkey] = useState('')
-	const [user, setUser] = useState(data.users[0].id)
+	const [user, setUser] = useState('')
+	const [toasted, setToasted] = useState(false)
+
+	useEffect(() => {
+		if (!fetcher.data || toasted) {
+			return
+		}
+
+		if (fetcher.data.success) {
+			toast('Registered new machine')
+		} else {
+			toast('Failed to register machine due to an invalid key')
+		}
+
+		setToasted(true)
+	}, [fetcher.data, toasted, mkey])
 
 	return (
 		<>
@@ -43,17 +60,15 @@ export default function New(data: NewProps) {
 								{' '}
 								on your device.
 							</Dialog.Text>
-							<Form
-								method="POST"
-								onSubmit={(e) => {
-									submit(e.currentTarget)
-								}}
-							>
+							<fetcher.Form method="POST" onSubmit={e => {
+								fetcher.submit(e.currentTarget)
+								close()
+							}}>
 								<input type="hidden" name="_method" value="register" />
 								<input type="hidden" name="id" value="_" />
 								<TextField
 									label='Machine Key'
-									placeholder='nodekey:ff.....'
+									placeholder='mkey:ff.....'
 									name="mkey"
 									state={[mkey, setMkey]}
 									className='my-2 font-mono'
@@ -79,12 +94,17 @@ export default function New(data: NewProps) {
 									</Dialog.Action>
 									<Dialog.Action
 										variant="confirm"
-										onPress={close}
+										isDisabled={!mkey || !mkey.trim().startsWith('mkey:') || !user}
 									>
+										{fetcher.state === 'idle'
+											? undefined
+											: (
+												<Spinner className="w-3 h-3" />
+												)}
 										Register
 									</Dialog.Action>
 								</div>
-							</Form>
+							</fetcher.Form>
 						</>
 					)}
 				</Dialog.Panel>

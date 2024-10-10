@@ -335,7 +335,7 @@ function UserCard({ user, magic }: CardProps) {
 						<Rename username={user.name} magic={magic} />
 						{user.machines.length === 0
 							? (
-								<Remove username={user.name} magic={magic} />
+								<Remove username={user.name} />
 								)
 							: undefined}
 					</div>

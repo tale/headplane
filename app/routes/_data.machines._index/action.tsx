@@ -114,13 +114,24 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			}
 
 			try {
-				await post('v1/node/register', session.get('hsApiKey')!, {
+				const qp = new URLSearchParams()
+				qp.append('user', user)
+				qp.append('key', key)
+
+				const url = `v1/node/register?${qp.toString()}`
+				await post(url, session.get('hsApiKey')!, {
 					user, key,
 				})
 
-				return json({ message: 'Machine registered' })
+				return json({
+					success: true,
+					message: 'Machine registered'
+				})
 			} catch {
-				return json({ message: 'Failed to register machine' }, {
+				return json({
+					success: false,
+					message: 'Failed to register machine'
+				}, {
 					status: 500,
 				})
 			}
