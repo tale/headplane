@@ -689,8 +689,8 @@ packages:
   '@humanwhocodes/object-schema@2.0.2':
     resolution: {integrity: sha512-6EwiSjwWYP7pTckG6I5eyFANjPhmPjUX9JRLUSfNPC7FX7zK9gyZAfUEaECL6ALTpGX5AjnBq3C9XmVWPitNpw==}
 
-  '@internationalized/date@3.5.4':
-    resolution: {integrity: sha512-qoVJVro+O0rBaw+8HPjUB1iH8Ihf8oziEnqMnvhJUSuVIrHOuZ6eNLHNvzXJKUvAtaDiqMnRlg8Z2mgh09BlUw==}
+  '@internationalized/date@3.5.6':
+    resolution: {integrity: sha512-jLxQjefH9VI5P9UQuqB6qNKnvFt1Ky1TPIzHGsIlCi7sZZoMR8SdYbBGRvM0y+Jtb+ez4ieBzmiAUcpmPYpyOw==}
 
   '@internationalized/message@3.1.4':
     resolution: {integrity: sha512-Dygi9hH1s7V9nha07pggCkvmRfDd3q2lWnMGvrJyrOwYMe1yj4D2T9BoH9I6MGR7xz0biQrtLPsqUkqXzIrBOw==}
@@ -5157,7 +5157,7 @@ snapshots:
 
   '@humanwhocodes/object-schema@2.0.2': {}
 
-  '@internationalized/date@3.5.4':
+  '@internationalized/date@3.5.6':
     dependencies:
       '@swc/helpers': 0.5.11
 
@@ -5343,7 +5343,7 @@ snapshots:
 
   '@react-aria/calendar@3.5.8(react-dom@19.0.0-rc-f38c22b244-20240704(react@19.0.0-rc-f38c22b244-20240704))(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@react-aria/i18n': 3.11.1(react@19.0.0-rc-f38c22b244-20240704)
       '@react-aria/interactions': 3.21.3(react@19.0.0-rc-f38c22b244-20240704)
       '@react-aria/live-announcer': 3.3.4
@@ -5411,7 +5411,7 @@ snapshots:
 
   '@react-aria/datepicker@3.10.1(react-dom@19.0.0-rc-f38c22b244-20240704(react@19.0.0-rc-f38c22b244-20240704))(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@internationalized/number': 3.5.3
       '@internationalized/string': 3.2.3
       '@react-aria/focus': 3.17.1(react@19.0.0-rc-f38c22b244-20240704)
@@ -5513,7 +5513,7 @@ snapshots:
 
   '@react-aria/i18n@3.11.1(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@internationalized/message': 3.1.4
       '@internationalized/number': 3.5.3
       '@internationalized/string': 3.2.3
@@ -5879,7 +5879,7 @@ snapshots:
 
   '@react-stately/calendar@3.5.1(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@react-stately/utils': 3.10.1(react@19.0.0-rc-f38c22b244-20240704)
       '@react-types/calendar': 3.4.6(react@19.0.0-rc-f38c22b244-20240704)
       '@react-types/shared': 3.23.1(react@19.0.0-rc-f38c22b244-20240704)
@@ -5936,7 +5936,7 @@ snapshots:
 
   '@react-stately/datepicker@3.9.4(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@internationalized/string': 3.2.3
       '@react-stately/form': 3.0.3(react@19.0.0-rc-f38c22b244-20240704)
       '@react-stately/overlays': 3.6.7(react@19.0.0-rc-f38c22b244-20240704)
@@ -6122,7 +6122,7 @@ snapshots:
 
   '@react-types/calendar@3.4.6(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@react-types/shared': 3.23.1(react@19.0.0-rc-f38c22b244-20240704)
       react: 19.0.0-rc-f38c22b244-20240704
 
@@ -6144,7 +6144,7 @@ snapshots:
 
   '@react-types/datepicker@3.7.4(react@19.0.0-rc-f38c22b244-20240704)':
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@react-types/calendar': 3.4.6(react@19.0.0-rc-f38c22b244-20240704)
       '@react-types/overlays': 3.8.7(react@19.0.0-rc-f38c22b244-20240704)
       '@react-types/shared': 3.23.1(react@19.0.0-rc-f38c22b244-20240704)
@@ -9205,7 +9205,7 @@ snapshots:
 
   react-aria-components@1.2.1(react-dom@19.0.0-rc-f38c22b244-20240704(react@19.0.0-rc-f38c22b244-20240704))(react@19.0.0-rc-f38c22b244-20240704):
     dependencies:
-      '@internationalized/date': 3.5.4
+      '@internationalized/date': 3.5.6
       '@internationalized/string': 3.2.3
       '@react-aria/color': 3.0.0-beta.33(react-dom@19.0.0-rc-f38c22b244-20240704(react@19.0.0-rc-f38c22b244-20240704))(react@19.0.0-rc-f38c22b244-20240704)
       '@react-aria/focus': 3.17.1(react@19.0.0-rc-f38c22b244-20240704)

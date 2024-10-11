@@ -1,4 +1,4 @@
-import { Form, useFetcher } from '@remix-run/react'
+import { Form, useFetcher, Link } from '@remix-run/react'
 import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 import { PlusIcon, ServerIcon, KeyIcon } from '@primer/octicons-react'
 import { cn } from '~/utils/cn'
@@ -20,7 +20,6 @@ export interface NewProps {
 export default function New(data: NewProps) {
 	const fetcher = useFetcher()
 	const mkeyState = useState(false)
-	const pkeyState = useState(false)
 	const [mkey, setMkey] = useState('')
 	const [user, setUser] = useState('')
 	const [toasted, setToasted] = useState(false)
@@ -124,9 +123,11 @@ export default function New(data: NewProps) {
 						<ServerIcon className='w-4 h-4 mr-2'/>
 						Register Machine Key
 					</Menu.ItemButton>
-					<Menu.ItemButton control={pkeyState} isDisabled>
-						<KeyIcon className='w-4 h-4 mr-2'/>
-						Generate Pre-auth Key
+					<Menu.ItemButton>
+						<Link to="/settings/auth-keys">
+							<KeyIcon className='w-4 h-4 mr-2'/>
+							Generate Pre-auth Key
+						</Link>
 					</Menu.ItemButton>
 				</Menu.Items>
 			</Menu>
