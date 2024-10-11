@@ -8,6 +8,15 @@ export default function Page() {
 	return (
 		<div className="flex flex-col gap-8 max-w-screen-lg">
 			<div className='flex flex-col w-2/3'>
+				<h1 className='text-2xl font-medium mb-4'>Settings</h1>
+				<p className="text-gray-700 dark:text-gray-300">
+					The settings page is still under construction.
+					As I'm able to add more features, I'll be adding them here.
+					If you require any features, feel free to open an issue on
+					the GitHub repository.
+				</p>
+			</div>
+			<div className='flex flex-col w-2/3'>
 				<h1 className='text-2xl font-medium mb-4'>Pre-Auth Keys</h1>
 				<p className="text-gray-700 dark:text-gray-300">
 					Headscale fully supports pre-authentication keys in order to
