@@ -1,3 +1,10 @@
+### 0.3.2 (October 11, 2024)
+- Implement the ability to create and expire pre-auth keys (fixes [#22](https://github.com/tale/headplane/issues/22))
+- Fix machine registration not working as expected (fixes [#27](https://github.com/tale/headplane/issues/27))
+- Removed more references to usernames in MagicDNS hostnames (fixes [#35](https://github.com/tale/headplane/issues/35))
+- Handle `null` values on machine expiry when using a database like PostgreSQL.
+- Use `X-Forwarded-Proto` and `Host` headers for building the OIDC callback URL.
+
 ### 0.3.1 (October 3, 2024)
 - Fixed the Docker integration to properly support custom socket paths. This regressed at some point previously.
 - Allow you to register a machine using machine keys (`nodekey:...`) on the machines page.
