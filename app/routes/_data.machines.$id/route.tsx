@@ -13,8 +13,8 @@ import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
-import { menuAction } from './_data.machines._index/action'
-import MenuOptions from './_data.machines._index/menu'
+import { menuAction } from '../_data.machines._index/action'
+import MenuOptions from '../_data.machines._index/menu'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))

@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InfoIcon } from '@primer/octicons-react'
-import { type ActionFunctionArgs, type LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components'
 
 import Code from '~/components/Code'
-import { type Machine, type Route, User } from '~/types'
+import Link from '~/components/Link'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
 import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
+import type { Machine, Route, User } from '~/types'
 
 import { menuAction } from './action'
 import MachineRow from './machine'
@@ -58,8 +59,20 @@ export default function Page() {
 
 	return (
 		<>
-			<div className="flex justify-between items-center">
-				<h1 className="text-2xl font-medium mb-4">Machines</h1>
+			<div className="flex justify-between items-center mb-8">
+				<div className="flex flex-col w-2/3">
+					<h1 className='text-2xl font-medium mb-4'>Machines</h1>
+					<p className='text-gray-700 dark:text-gray-300'>
+						Manage the devices connected to your Tailnet.
+						{' '}
+						<Link
+							to="https://tailscale.com/kb/1372/manage-devices"
+							name="Tailscale Manage Devices Documentation"
+						>
+							Learn more
+						</Link>
+					</p>
+				</div>
 				<NewMachine server={data.server} users={data.users} />
 			</div>
 			<table className="table-auto w-full rounded-lg">

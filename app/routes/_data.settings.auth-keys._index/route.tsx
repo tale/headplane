@@ -110,6 +110,7 @@ export default function Page() {
 	const { keys, users, server } = useLoaderData<typeof loader>()
 	const [user, setUser] = useState('All')
 	const [status, setStatus] = useState('Active')
+	useLiveData({ interval: 3000 })
 
 	const filteredKeys = keys.filter(key => {
 		if (user !== 'All' && key.user !== user) {
