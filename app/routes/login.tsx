@@ -122,6 +122,7 @@ export default function Page() {
 								label="API Key"
 								name="api-key"
 								placeholder="API Key"
+								type="password"
 							/>
 							<Button
 								className="w-full mt-2.5"
