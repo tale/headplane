@@ -24,6 +24,7 @@
 		"@remix-run/react": "^2.10.2",
 		"@remix-run/serve": "^2.10.2",
 		"clsx": "^2.1.1",
+		"dotenv": "^16.4.5",
 		"isbot": "^5.1.11",
 		"oauth4webapi": "^2.11.1",
 		"react": "19.0.0-rc-f38c22b244-20240704",

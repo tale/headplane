@@ -52,6 +52,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       isbot:
         specifier: ^5.1.11
         version: 5.1.11
