@@ -34,7 +34,6 @@ export default function NumberField(props: NumberFieldProps) {
 			)}>
 				<Input
 					className="w-full bg-transparent focus:outline-none"
-					name={props.name}
 				/>
 				<Button slot="decrement">
 					<DashIcon className="w-4 h-4" />
