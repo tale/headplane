@@ -17,7 +17,7 @@ import { loadContext } from '~/utils/config/headplane'
 import { HeadscaleError, pull, put } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 
-import Monaco from './editor'
+import { Editor, Differ } from './cm'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
@@ -254,19 +254,16 @@ export default function Page() {
 					</Tab>
 				</TabList>
 				<TabPanel id="edit">
-					<Monaco
+					<Editor
 						isDisabled={!data.hasAclWrite}
-						variant="edit"
-						language={data.aclType}
-						state={[acl, setAcl]}
+						defaultValue={data.currentAcl}
+						onChange={setAcl}
 					/>
 				</TabPanel>
 				<TabPanel id="diff">
-					<Monaco
-						variant="diff"
-						language={data.aclType}
-						state={[acl, setAcl]}
-						policy={data.currentAcl}
+					<Differ
+						left={data.currentAcl}
+						right={acl}
 					/>
 				</TabPanel>
 				<TabPanel id="preview">
