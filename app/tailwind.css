@@ -7,3 +7,24 @@
         scrollbar-gutter: stable
     }
 }
+
+.cm-merge-theme {
+	height: 100% !important;
+}
+
+.cm-mergeView {
+	height: 100% !important;
+}
+
+.cm-mergeViewEditors {
+	height: 100%;
+}
+
+.cm-mergeViewEditor {
+	height: 100% !important;
+}
+
+/* Weirdest class name characters but ok */
+.cm-mergeView .ͼ1 .cm-scroller, .cm-mergeView .ͼ1 {
+	height: 100% !important;
+}
