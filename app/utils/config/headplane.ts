@@ -35,14 +35,14 @@ export interface HeadplaneContext {
 let context: HeadplaneContext | undefined
 
 export async function loadContext(): Promise<HeadplaneContext> {
+	if (context) {
+		return context
+	}
+
 	const envFile = process.env.LOAD_ENV_FILE === 'true'
 	if (envFile) {
 		log.info('CTXT', 'Loading environment variables from .env')
 		await import('dotenv/config')
-	}
-
-	if (context) {
-		return context
 	}
 
 	const debug = process.env.DEBUG === 'true'
