@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { type DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
+import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { PersonIcon } from '@primer/octicons-react'
-import { type ActionFunctionArgs, json, type LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
 import { useActionData, useLoaderData, useSubmit } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ClientOnly } from 'remix-utils/client-only'
@@ -10,7 +10,7 @@ import Attribute from '~/components/Attribute'
 import Card from '~/components/Card'
 import StatusCircle from '~/components/StatusCircle'
 import { toast } from '~/components/Toaster'
-import { type Machine, type User } from '~/types'
+import { Machine, User } from '~/types'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
@@ -299,6 +299,7 @@ function MachineChip({ machine }: { readonly machine: Machine }) {
 			<StatusCircle isOnline={machine.online} className="w-4 h-4 px-1 w-fit" />
 			<Attribute
 				name={machine.givenName}
+				link={`machines/${machine.id}`}
 				value={machine.ipAddresses[0]}
 			/>
 		</div>

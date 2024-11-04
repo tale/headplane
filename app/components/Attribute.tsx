@@ -6,14 +6,19 @@ interface Props {
 	name: string
 	value: string
 	isCopyable?: boolean
+	link?: string
 }
 
-export default function Attribute({ name, value, isCopyable }: Props) {
+export default function Attribute({ name, value, link, isCopyable }: Props) {
 	const canCopy = isCopyable ?? false
 	return (
 		<dl className="flex gap-1 text-sm w-full">
 			<dt className="w-1/2 shrink-0 min-w-0 truncate text-gray-700 dark:text-gray-300 py-1">
-				{name}
+				{link ? (
+					<a className="hover:underline" href={link}>
+						{name}
+					</a>
+				) : name}
 			</dt>
 
 			{canCopy
