@@ -20,7 +20,7 @@ import { HeadscaleError, pull, put } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import log from '~/utils/log'
 
-import { Editor, Differ } from './cm'
+import { Editor, Differ } from './cm.client'
 import { Unavailable } from './unavailable'
 import { ErrorView } from './error'
 

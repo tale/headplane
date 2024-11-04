@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react'
 import Merge from 'react-codemirror-merge'
 import CodeMirror from '@uiw/react-codemirror'
+import * as shopify from '@shopify/lang-jsonc'
 import { ClientOnly } from 'remix-utils/client-only'
 import { ErrorBoundary } from 'react-error-boundary'
-import { jsonc } from '@shopify/lang-jsonc'
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github'
 import { useState } from 'react'
 import { cn } from '~/utils/cn'
@@ -45,7 +45,7 @@ export function Editor(props: EditorProps) {
 						<CodeMirror
 							value={props.value}
 							height="100%"
-							extensions={[jsonc()]}
+							extensions={[shopify.jsonc()]}
 							style={{ height: "100%" }}
 							theme={light ? githubLight : githubDark}
 							onChange={(value) => props.onChange(value)}
@@ -104,12 +104,12 @@ export function Differ(props: DifferProps) {
 								<Merge.Original
 									readOnly
 									value={props.left}
-									extensions={[jsonc()]}
+									extensions={[shopify.jsonc()]}
 								/>
 								<Merge.Modified
 									readOnly
 									value={props.right}
-									extensions={[jsonc()]}
+									extensions={[shopify.jsonc()]}
 								/>
 							</Merge>
 						)}
