@@ -1,7 +1,7 @@
 import { XIcon } from '@primer/octicons-react'
-import { type AriaToastProps, useToast, useToastRegion } from '@react-aria/toast'
-import { ToastQueue, type ToastState, useToastQueue } from '@react-stately/toast'
-import { type ReactNode, useRef } from 'react'
+import { AriaToastProps, useToast, useToastRegion } from '@react-aria/toast'
+import { ToastQueue, ToastState, useToastQueue } from '@react-stately/toast'
+import { ReactNode, useRef } from 'react'
 import { Button } from 'react-aria-components'
 import { createPortal } from 'react-dom'
 import { ClientOnly } from 'remix-utils/client-only'
@@ -14,6 +14,8 @@ type ToastProperties = AriaToastProps<ReactNode> & {
 
 function Toast({ state, ...properties }: ToastProperties) {
 	const reference = useRef(null)
+
+	// @ts-expect-error: RefObject doesn't map to FocusableElement?
 	const { toastProps, titleProps, closeButtonProps } = useToast(properties, state, reference)
 
 	return (
@@ -52,11 +54,15 @@ export function toast(text: string) {
 export function Toaster() {
 	const reference = useRef(null)
 	const state = useToastQueue(toasts)
+
+	// @ts-expect-error: React 19 has weird types for Portal vs Node
 	const { regionProps } = useToastRegion({}, state, reference)
 
 	return (
 		<ClientOnly>
-			{() => createPortal(
+			{
+				// @ts-expect-error: Portal doesn't match Node in React 19 yet
+				() => createPortal(
 				state.visibleToasts.length >= 0 ? (
 					<div
 						className={cn(

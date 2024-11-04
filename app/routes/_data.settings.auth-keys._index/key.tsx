@@ -39,7 +39,7 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 				<Button
 					variant="light" 
 					className="my-4"
-					onClick={async () => {
+					onPress={async () => {
 						await navigator.clipboard.writeText(
 							`tailscale up --login-server ${server} --authkey ${authKey.key}`
 						)

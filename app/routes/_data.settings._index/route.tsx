@@ -31,10 +31,7 @@ export default function Page() {
 					</Link>
 				</p>
 			</div>
-			<RemixLink
-				to="/settings/auth-keys"
-				name="Auth Keys"
-			>
+			<RemixLink to="/settings/auth-keys">
 				<span className={cn(
 					'text-lg font-medium',
 					'text-gray-700 dark:text-gray-300',

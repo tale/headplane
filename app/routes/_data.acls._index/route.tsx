@@ -55,7 +55,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	let modeGuess = 'database' // Assume database mode
 	if (context.config.read) {
 		const config = await loadConfig()
-		modeGuess = config.policy.mode
+		modeGuess = config.policy?.mode ?? 'database'
 	}
 
 	// Attempt to load the policy, for both the frontend and for checking
@@ -96,7 +96,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			return {
 				read: false,
 				write: false,
-				mode: modeGuess
+				mode: modeGuess,
+				policy: null
 			}
 		}
 
@@ -106,7 +107,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return {
 			read: true,
 			write: true,
-			mode: modeGuess
+			mode: modeGuess,
+			policy: null
 		}
 	}
 }
@@ -114,7 +116,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
 	if (!session.has('hsApiKey')) {
-		return json({ success: false }, {
+		return json({ success: false, error: null }, {
 			status: 401,
 		})
 	}
@@ -129,16 +131,18 @@ export async function action({ request }: ActionFunctionArgs) {
 			}
 		)
 
-		return json({ success: true, policy })
+		return json({ success: true, policy, error: null })
 	} catch (error) {
 		log.debug('APIC', 'Failed to update ACL policy with error %s', error)
+
+		// @ts-ignore: Shut UP we know it's a string most of the time
 		const text = JSON.parse(error.message)
 		return json({ success: false, error: text.message }, {
 			status: error instanceof HeadscaleError ? error.status : 500,
 		})
 	}
 
-	return json({ success: true })
+	return json({ success: true, error: null })
 }
 
 export default function Page() {
@@ -154,6 +158,7 @@ export default function Page() {
 			return
 		}
 
+		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data.success) {
 			toast('Updated tailnet ACL policy')
 		} else {
@@ -183,6 +188,7 @@ export default function Page() {
 		}
 
 		// If we have a failed fetcher state allow the user to try again
+		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data?.success === false) {
 			return false
 		}
@@ -231,8 +237,11 @@ export default function Page() {
 				.
 			</p>
 
-			{fetcher.data?.success === false
+			{
+				// @ts-ignore: useDebounceFetcher is not typed correctly
+				fetcher.data?.success === false
 				? (
+					// @ts-ignore: useDebounceFetcher is not typed correctly
 					<ErrorView message={fetcher.data.error} />
 				) : undefined}
 
@@ -291,7 +300,7 @@ export default function Page() {
 						</TabPanel>
 						<TabPanel id="diff">
 							<Differ
-								left={data.policy}
+								left={data?.policy ?? ''}
 								right={acl}
 							/>
 						</TabPanel>
@@ -335,13 +344,13 @@ export default function Page() {
 					<Button
 						isDisabled={disabled}
 						onPress={() => {
-							setAcl(data.policy)
+							setAcl(data?.policy ?? '')
 						}}
 					>
 						Discard Changes
 					</Button>
 				</>
-			) : <Unavailable mode={data.mode} />}
+			) : <Unavailable mode={data.mode as "database" | "file"} />}
 		</div>
 	)
 }

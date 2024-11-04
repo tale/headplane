@@ -94,7 +94,7 @@ export default function AddPreAuthKey(data: Props) {
 									onChange={() => { setReusable(!reusable) }}
 								/>
 							</div>
-							<input type="hidden" name="reusable" value={reusable} />
+							<input type="hidden" name="reusable" value={reusable.toString()} />
 							<div className="flex justify-between items-center mt-6">
 								<div>
 									<Dialog.Text className="font-semibold">
@@ -121,7 +121,7 @@ export default function AddPreAuthKey(data: Props) {
 									}}
 								/>
 							</div>
-							<input type="hidden" name="ephemeral" value={ephemeral} />
+							<input type="hidden" name="ephemeral" value={ephemeral.toString()} />
 							<div className="mt-6 flex justify-end gap-2 mt-6">
 								<Dialog.Action
 									variant="cancel"

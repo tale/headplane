@@ -18,7 +18,7 @@ export interface NewProps {
 }
 
 export default function New(data: NewProps) {
-	const fetcher = useFetcher()
+	const fetcher = useFetcher<{ success?: boolean }>()
 	const mkeyState = useState(false)
 	const [mkey, setMkey] = useState('')
 	const [user, setUser] = useState('')
