@@ -28,9 +28,6 @@ importers:
       '@dnd-kit/utilities':
         specifier: ^3.2.2
         version: 3.2.2(react@19.0.0-beta-26f2496093-20240514)
-      '@hono/node-server':
-        specifier: ^1.13.5
-        version: 1.13.5(hono@4.6.9)
       '@kubernetes/client-node':
         specifier: ^0.22.2
         version: 0.22.2
@@ -64,12 +61,12 @@ importers:
       dotenv:
         specifier: ^16.4.5
         version: 16.4.5
-      hono:
-        specifier: ^4.6.9
-        version: 4.6.9
       isbot:
         specifier: ^5.1.17
         version: 5.1.17
+      mime:
+        specifier: ^4.0.4
+        version: 4.0.4
       oauth4webapi:
         specifier: ^2.17.0
         version: 2.17.0
@@ -88,9 +85,6 @@ importers:
       react-error-boundary:
         specifier: ^4.1.2
         version: 4.1.2(react@19.0.0-beta-26f2496093-20240514)
-      remix-hono:
-        specifier: ^0.0.16
-        version: 0.0.16(typescript@5.6.3)(zod@3.23.8)
       remix-utils:
         specifier: ^7.7.0
         version: 7.7.0(@remix-run/node@2.13.1(typescript@5.6.3))(@remix-run/react@2.13.1(react-dom@19.0.0-beta-26f2496093-20240514(react@19.0.0-beta-26f2496093-20240514))(react@19.0.0-beta-26f2496093-20240514)(typescript@5.6.3))(@remix-run/router@1.20.0)(react@19.0.0-beta-26f2496093-20240514)(zod@3.23.8)
@@ -665,12 +659,6 @@ packages:
 
   '@formatjs/intl-localematcher@0.5.4':
     resolution: {integrity: sha512-zTwEpWOzZ2CiKcB93BLngUX59hQkuZjT2+SAQEscSm52peDW/getsawMcWF1rGRpMCX6D7nSJA3CzJ8gn13N/g==}
-
-  '@hono/node-server@1.13.5':
-    resolution: {integrity: sha512-lSo+CFlLqAFB4fX7ePqI9nauEn64wOfJHAfc9duYFTvAG3o416pC0nTGeNjuLHchLedH+XyWda5v79CVx1PIjg==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
 
   '@internationalized/date@3.5.6':
     resolution: {integrity: sha512-jLxQjefH9VI5P9UQuqB6qNKnvFt1Ky1TPIzHGsIlCi7sZZoMR8SdYbBGRvM0y+Jtb+ez4ieBzmiAUcpmPYpyOw==}
@@ -2279,10 +2267,6 @@ packages:
   hast-util-whitespace@2.0.1:
     resolution: {integrity: sha512-nAxA0v8+vXSBDt3AnRUNjyRIQ0rD+ntpbAp4LnPkumc5M9yUbSMa4XDU9Q6etY4f1Wp4bNgvc1yjiZtsTTrSng==}
 
-  hono@4.6.9:
-    resolution: {integrity: sha512-p/pN5yZLuZaHzyAOT2nw2/Ud6HhJHYmDNGH6Ck1OWBhPMVeM1r74jbCRwNi0gyFRjjbsGgoHbOyj7mT1PDNbTw==}
-    engines: {node: '>=16.9.0'}
-
   hosted-git-info@6.1.1:
     resolution: {integrity: sha512-r0EI+HBMcXadMrugk0GCQ+6BQV39PiWAZVfq7oIckeGiN7sjRGyQxPdft3nQekFTCQbYxLBH+/axZMeH8UX6+w==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
@@ -2737,6 +2721,11 @@ packages:
     engines: {node: '>=4'}
     hasBin: true
 
+  mime@4.0.4:
+    resolution: {integrity: sha512-v8yqInVjhXyqP6+Kw4fV3ZzeMRqEW6FotRsKXjRS5VMTNIuXsdRoAvklpoRgSqXm6o9VNH4/C0mgedko9DdLsQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+
   mimic-fn@2.1.0:
     resolution: {integrity: sha512-OqbOk5oEQeAZ8WXWydlu9HJjz9WVdEIvamMCcXmuqUYjTknH/sqsWvhQ3vgwKFRR1HpjvNBKQ37nbJgYzGqGcg==}
     engines: {node: '>=6'}
@@ -3084,10 +3073,6 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  pretty-cache-header@1.0.0:
-    resolution: {integrity: sha512-xtXazslu25CdnGnUkByU1RoOjK55TqwatJkjjJLg5ZAdz2Lngko/mmaUgeET36P2GMlNwh3fdM7FWBO717pNcw==}
-    engines: {node: '>=12.13'}
-
   pretty-format@24.9.0:
     resolution: {integrity: sha512-00ZMZUiHaJrNfk33guavqgvfJS30sLYf0f8+Srklv0AMPodGGHcoHgksZ3OThYnIvOd+8yMCn0YiEOogjlgsnA==}
     engines: {node: '>= 6'}
@@ -3251,23 +3236,6 @@ packages:
 
   remark-rehype@10.1.0:
     resolution: {integrity: sha512-EFmR5zppdBp0WQeDVZ/b66CWJipB2q2VLNFMabzDSGR66Z2fQii83G5gTBbgGEnEEA0QRussvrFHxk1HWGJskw==}
-
-  remix-hono@0.0.16:
-    resolution: {integrity: sha512-IPooI2E0eSFRV9wAgTzpsklSoOyij6Nsk6ANIugGhD9vYlovbYb2BT+siz++sLzWseZSPEtIzx/LBel203jBfQ==}
-    peerDependencies:
-      '@remix-run/cloudflare': ^2.0.0
-      i18next: ^23.0.0
-      remix-i18next: ^6.0.0
-      zod: ^3.0.0
-    peerDependenciesMeta:
-      '@remix-run/cloudflare':
-        optional: true
-      i18next:
-        optional: true
-      remix-i18next:
-        optional: true
-      zod:
-        optional: true
 
   remix-utils@7.7.0:
     resolution: {integrity: sha512-J8NhP044nrNIam/xOT1L9a4RQ9FSaA2wyrUwmN8ZT+c/+CdAAf70yfaLnvMyKcV5U+8BcURQ/aVbth77sT6jGA==}
@@ -3561,10 +3529,6 @@ packages:
 
   through2@2.0.5:
     resolution: {integrity: sha512-/mrRod8xqpA+IHSLyGCQ2s8SPHiCDEeQJSep1jqLYeEUClOFG2Qsh+4FU6G9VeqpZnGW/Su8LQGc4YKni5rYSQ==}
-
-  timestring@6.0.0:
-    resolution: {integrity: sha512-wMctrWD2HZZLuIlchlkE2dfXJh7J2KDI9Dwl+2abPYg0mswQHfOAyQW3jJg1pY5VfttSINZuKcXoB3FGypVklA==}
-    engines: {node: '>=8'}
 
   to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
@@ -4389,10 +4353,6 @@ snapshots:
   '@formatjs/intl-localematcher@0.5.4':
     dependencies:
       tslib: 2.6.2
-
-  '@hono/node-server@1.13.5(hono@4.6.9)':
-    dependencies:
-      hono: 4.6.9
 
   '@internationalized/date@3.5.6':
     dependencies:
@@ -6645,8 +6605,6 @@ snapshots:
 
   hast-util-whitespace@2.0.1: {}
 
-  hono@4.6.9: {}
-
   hosted-git-info@6.1.1:
     dependencies:
       lru-cache: 7.18.3
@@ -7230,6 +7188,8 @@ snapshots:
 
   mime@1.6.0: {}
 
+  mime@4.0.4: {}
+
   mimic-fn@2.1.0: {}
 
   minimatch@9.0.5:
@@ -7559,10 +7519,6 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  pretty-cache-header@1.0.0:
-    dependencies:
-      timestring: 6.0.0
-
   pretty-format@24.9.0:
     dependencies:
       '@jest/types': 24.9.0
@@ -7832,16 +7788,6 @@ snapshots:
       '@types/mdast': 3.0.15
       mdast-util-to-hast: 12.3.0
       unified: 10.1.2
-
-  remix-hono@0.0.16(typescript@5.6.3)(zod@3.23.8):
-    dependencies:
-      '@remix-run/server-runtime': 2.13.1(typescript@5.6.3)
-      hono: 4.6.9
-      pretty-cache-header: 1.0.0
-    optionalDependencies:
-      zod: 3.23.8
-    transitivePeerDependencies:
-      - typescript
 
   remix-utils@7.7.0(@remix-run/node@2.13.1(typescript@5.6.3))(@remix-run/react@2.13.1(react-dom@19.0.0-beta-26f2496093-20240514(react@19.0.0-beta-26f2496093-20240514))(react@19.0.0-beta-26f2496093-20240514)(typescript@5.6.3))(@remix-run/router@1.20.0)(react@19.0.0-beta-26f2496093-20240514)(zod@3.23.8):
     dependencies:
@@ -8198,8 +8144,6 @@ snapshots:
     dependencies:
       readable-stream: 2.3.8
       xtend: 4.0.2
-
-  timestring@6.0.0: {}
 
   to-fast-properties@2.0.0: {}
 

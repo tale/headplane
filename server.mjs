@@ -1,6 +1,13 @@
-#!/usr/bin/env node
+// This is a polyglot entrypoint for Headplane when running in production
+// It doesn't use any dependencies aside from @remix-run/node and mime
+// During build we bundle the used dependencies into the file so that
+// we can only need this file and a Node.js installation to run the server.
+// PREFIX is defined globally, see vite.config.ts
 
 import { access, constants } from 'node:fs/promises'
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { join, resolve } from 'node:path'
 
 function log(level, message) {
 	const date = new Date().toISOString()
@@ -28,25 +35,105 @@ try {
 	process.exit(1)
 }
 
-const { installGlobals } = await import('@remix-run/node')
-const { remix } = await import('remix-hono/handler')
-const { serve } = await import('@hono/node-server')
-const { Hono } = await import('hono')
+const {
+	createRequestHandler: remixRequestHandler,
+	createReadableStreamFromReadable,
+	writeReadableStreamToWritable
+} = await import('@remix-run/node')
+const { default: mime } = await import('mime')
 
-installGlobals()
-const app = new Hono()
 const port = process.env.PORT || 3000
 const host = process.env.HOST || '0.0.0.0'
+const buildPath = process.env.BUILD_PATH || './build'
 
-app.use('*', remix({
-	build: await import('./build/server/index.js'),
-	mode: 'production'
-}))
+// Because this is a dynamic import without an easily discernable path
+// we gain the "deoptimization" we want so that Vite doesn't bundle this
+const build = await import(resolve(join(buildPath, 'server', 'index.js')))
+const baseDir = resolve(join(buildPath, 'client'))
 
-serve({
-	fetch: app.fetch,
-	hostname: host,
-	port
+const handler = remixRequestHandler(build, 'production')
+const http = createServer(async (req, res) => {
+	const url = new URL(`http://${req.headers.host}${req.url}`)
+
+	// Before we pass any requests to our Remix handler we need to check
+	// if we can handle a raw file request. This is important for the
+	// Remix loader to work correctly.
+	//
+	// To optimize this, we send them as readable streams in the node
+	// response and we also set headers for aggressive caching.
+	if (url.pathname.startsWith(`${PREFIX}assets/`)) {
+		const filePath = join(baseDir, url.pathname.replace(PREFIX, ''))
+		const exists = existsSync(filePath)
+		const stats = statSync(filePath)
+
+		if (exists && stats.isFile()) {
+			// Build assets are cache-bust friendly so we can cache them heavily
+			if (req.url.startsWith('/build')) {
+				res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+			}
+
+			// Send the file as a readable stream
+			const fileStream = createReadStream(filePath)
+			const type = mime.getType(filePath)
+
+			res.setHeader('Content-Length', stats.size)
+			res.setHeader('Content-Type', type)
+			fileStream.pipe(res)
+			return
+		}
+	}
+
+	// Handling the request
+	const controller = new AbortController()
+	res.on('close', () => controller.abort())
+
+	const headers = new Headers()
+	for (const [key, value] of Object.entries(req.headers)) {
+		if (!value) continue
+
+		if (Array.isArray(value)) {
+			for (const v of value) {
+				headers.append(key, v)
+			}
+
+			continue
+		}
+
+		headers.append(key, value)
+	}
+
+	const remixReq = new Request(url.href, {
+		headers,
+		method: req.method,
+		signal: controller.signal,
+
+		// If we have a body we set a duplex and we load the body
+		...(req.method !== 'GET' && req.method !== 'HEAD' ? {
+				body: createReadableStreamFromReadable(req),
+				duplex: 'half'
+			} : {}
+		)
+	})
+
+	// Pass our request to the Remix handler and get a response
+	const response = await handler(remixReq, {}) // No context
+
+	// Handle our response and reply
+	res.statusCode = response.status
+	res.statusMessage = response.statusText
+
+	for (const [key, value] of response.headers.entries()) {
+		res.appendHeader(key, value)
+	}
+
+	if (response.body) {
+		await writeReadableStreamToWritable(response.body, res)
+		return
+	}
+
+	res.end()
 })
 
-log('INFO', `Running on ${host}:${port}`)
+http.listen(port, host, () => {
+	log('INFO', `Running on ${host}:${port}`)
+})
