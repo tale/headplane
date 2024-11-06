@@ -15,7 +15,7 @@ export default defineConfig(({ isSsrBuild }) => {
 	// If we have the Headplane entry we build it as a single
 	// server.mjs file that is built for production server bundle
 	// We know the remix invoked command is vite:build
-	if (!process.argv.includes('vite:build')) {
+	if (!process.argv.includes('vite:build') && !process.argv.includes('vite:dev')) {
 		return {
 			build: {
 				minify: false,
