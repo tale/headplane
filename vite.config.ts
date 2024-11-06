@@ -6,9 +6,9 @@ import tsconfigPaths from 'vite-tsconfig-paths'
 
 installGlobals()
 
-const prefix = process.env.__INTERNAL_PREFIX || '/admin/'
-if (!prefix.endsWith('/')) {
-	throw new Error('Prefix must end with a slash')
+const prefix = process.env.__INTERNAL_PREFIX || '/admin'
+if (prefix.endsWith('/')) {
+	throw new Error('Prefix must not end with a slash')
 }
 
 export default defineConfig(({ isSsrBuild }) => {
@@ -43,11 +43,11 @@ export default defineConfig(({ isSsrBuild }) => {
 	}
 
 	return ({
-		base: prefix,
+		base: `${prefix}/`,
 		build: isSsrBuild ? { target: 'ES2022' } : {},
 		plugins: [
 			remix({
-				basename: prefix,
+				basename: `${prefix}/`,
 			}),
 			tsconfigPaths(),
 			babel({

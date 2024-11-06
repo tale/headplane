@@ -13,11 +13,10 @@ RUN pnpm prune --prod
 FROM node:20-alpine
 WORKDIR /app
 COPY --from=build /app/build /app/build
-COPY --from=build /app/server.mjs /app/server.mjs
 COPY --from=build /app/node_modules /app/node_modules
 RUN echo '{"type":"module"}' > /app/package.json
 
 EXPOSE 3000
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-CMD [ "./server.mjs" ]
+CMD [ "node", "./build/headplane/server.js" ]

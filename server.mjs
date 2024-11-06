@@ -55,13 +55,32 @@ const handler = remixRequestHandler(build, 'production')
 const http = createServer(async (req, res) => {
 	const url = new URL(`http://${req.headers.host}${req.url}`)
 
+	if (!url.pathname.startsWith(PREFIX)) {
+		res.writeHead(404)
+		res.end()
+		return
+	}
+
+	// We need to handle an issue where say we are navigating to $PREFIX
+	// but Remix does not handle it without the trailing slash. This is
+	// because Remix uses the URL constructor to parse the URL and it
+	// will remove the trailing slash. We need to redirect to the correct
+	// URL so that Remix can handle it correctly.
+	if (url.pathname === PREFIX) {
+		res.writeHead(302, {
+			Location: `${PREFIX}/`
+		})
+		res.end()
+		return
+	}
+
 	// Before we pass any requests to our Remix handler we need to check
 	// if we can handle a raw file request. This is important for the
 	// Remix loader to work correctly.
 	//
 	// To optimize this, we send them as readable streams in the node
 	// response and we also set headers for aggressive caching.
-	if (url.pathname.startsWith(`${PREFIX}assets/`)) {
+	if (url.pathname.startsWith(`${PREFIX}/assets/`)) {
 		const filePath = join(baseDir, url.pathname.replace(PREFIX, ''))
 		const exists = existsSync(filePath)
 		const stats = statSync(filePath)
