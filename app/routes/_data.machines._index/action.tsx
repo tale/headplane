@@ -62,6 +62,24 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			return json({ message: 'Route updated' })
 		}
 
+		case 'exit-node': {
+			if (!data.has('routes') || !data.has('enabled')) {
+				return json({ message: 'No route or enabled provided' }, {
+					status: 400,
+				})
+			}
+
+			const routes = data.get('routes')?.toString().split(',') ?? []
+			const enabled = data.get('enabled') === 'true'
+			const postfix = enabled ? 'enable' : 'disable'
+
+			await Promise.all(routes.map(async (route) => {
+				await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!)
+			}))
+
+			return json({ message: 'Exit node updated' })
+		}
+
 		case 'move': {
 			if (!data.has('to')) {
 				return json({ message: 'No destination provided' }, {
