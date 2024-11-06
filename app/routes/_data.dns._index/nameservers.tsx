@@ -35,7 +35,7 @@ export default function Nameservers({ nameservers, isDisabled }: Props) {
 						key={key}
 						isGlobal={key === 'global'}
 						isDisabled={isDisabled}
-						nameservers={nameservers[key]}
+						nameservers={nameservers}
 						name={key}
 					/>
 				))}
@@ -59,6 +59,10 @@ interface ListProps {
 
 function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) {
 	const submit = useSubmit()
+	const list = isGlobal ? nameservers['global'] : nameservers[name]
+	if (list.length === 0) {
+		return null
+	}
 
 	return (
 		<div className="mb-8">
@@ -68,7 +72,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) 
 				</h2>
 			</div>
 			<TableList>
-				{nameservers.map((ns, index) => (
+				{list.length > 0 ? list.map((ns, index) => (
 					// eslint-disable-next-line react/no-array-index-key
 					<TableList.Item key={index}>
 						<p className="font-mono text-sm">{ns}</p>
@@ -83,17 +87,18 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) 
 							onPress={() => {
 								if (isGlobal) {
 									submit({
-										'dns.nameservers.global': nameservers
+										'dns.nameservers.global': list
 											.filter((_, i) => i !== index),
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',
 									})
 								} else {
-									const key = `dns.nameservers.split."${name}"`
-									const list = nameservers.filter((_, i) => i !== index)
 									submit({
-										[key]: list.length ? list : null,
+										'dns.nameservers.split': {
+											...nameservers,
+											[name]: list.filter((_, i) => i !== index),
+										}
 									}, {
 										method: 'PATCH',
 										encType: 'application/json',
@@ -104,7 +109,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, name }: ListProps) 
 							Remove
 						</Button>
 					</TableList.Item>
-				))}
+				)) : undefined}
 			</TableList>
 		</div>
 	)
