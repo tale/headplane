@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { useMemo } from 'react'
 
 import Attribute from '~/components/Attribute'
 import Card from '~/components/Card'
@@ -68,6 +69,22 @@ export default function Page() {
 	if (expired) {
 		tags.unshift('Expired')
 	}
+
+	// This is much easier with Object.groupBy but it's too new for us
+	const { exit, subnet } = routes.reduce((acc, route) => {
+		if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
+			acc.exit.push(route)
+			return acc
+		}
+
+		acc.subnet.push(route)
+		return acc
+	}, { exit: [], subnet: [] })
+
+	const exitEnabled = useMemo(() => {
+		if (exit.length !== 2) return false
+		return exit[0].enabled && exit[1].enabled
+	}, [exit])
 
 	return (
 		<div>
@@ -151,10 +168,26 @@ export default function Page() {
 					: undefined}
 			</Card>
 			<h2 className="text-xl font-medium mb-4 mt-8">
-				Machine Routes
+				Routing & Subnets
 			</h2>
+			{exit.length > 0
+				? (
+					<div className={cn(
+						'flex p-4 items-center justify-between',
+						'mb-4 bg-ui-100 dark:bg-ui-800 rounded-lg',
+					)}>
+
+						<p className="font-bold">
+							Exit Node
+						</p>
+						<span className="flex items-center gap-2">
+							{exitEnabled ? 'Enabled' : 'Disabled'}
+							<StatusCircle isOnline={exitEnabled} className="w-4 h-4" />
+						</span>
+					</div>
+				) : undefined}
 			<Card variant="flat" className="w-full max-w-full">
-				{routes.length === 0
+				{subnet.length === 0
 					? (
 						<div
 							className={cn(
@@ -168,12 +201,12 @@ export default function Page() {
 							</p>
 						</div>
 						)
-					: routes.map((route, i) => (
+					: subnet.map((route, i) => (
 						<div
 							key={route.id}
 							className={cn(
 								'flex items-center justify-between',
-								routes.length - 1 === i ? 'border-b pb-3 mb-2' : '',
+								subnet.length - 1 === i ? '' : 'border-b pb-3 mb-2',
 								'border-ui-100 dark:border-ui-800',
 							)}
 						>
@@ -190,12 +223,17 @@ export default function Page() {
 								</p>
 							</div>
 							<div className="text-right">
-								<p className="mb-1">
-									{route.enabled ? 'Enabled' : 'Disabled'}
-								</p>
-								<p className="text-sm text-ui-600 dark:text-ui-300">
-									{route.isPrimary ? 'Primary' : 'Secondary'}
-								</p>
+								<span className="flex items-start gap-2">
+									<div>
+										<p className="mb-1">
+											{route.enabled ? 'Enabled' : 'Disabled'}
+										</p>
+										<p className="text-sm text-ui-600 dark:text-ui-300">
+											{route.isPrimary ? 'Primary' : 'Secondary'}
+										</p>
+									</div>
+									<StatusCircle isOnline={route.enabled} className="w-4 h-4 mt-1" />
+								</span>
 							</div>
 						</div>
 					))}
