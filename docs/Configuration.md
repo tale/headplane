@@ -15,6 +15,7 @@ You can configure Headplane using environment variables.
 - **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
 - **`HEADSCALE_CONFIG_UNSTRICT`**: This will disable the strict configuration loader (default: `false`).
 - **`COOKIE_SECURE`**: This option enables the `Secure` flag for cookies, ensuring they are sent only over HTTPS, which helps prevent interception and enhances data security. It should be disabled when using HTTP instead of HTTPS (default: `true`).
+- **`LOAD_ENV_FILE`**: Tell Headplane to read the `.env` file and load it into the environment (default: `false`).
 
 #### Docker Integration
 The Docker integration allows Headplane to manage the Headscale docker container.
