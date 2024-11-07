@@ -19,6 +19,13 @@ export class FatalError extends Error {
 }
 
 export async function pull<T>(url: string, key: string) {
+	if (!key || key === 'undefined' || key.length === 0) {
+		log.error('APIC', 'Missing API key, could this be a cookie setting issue?')
+		log.error('APIC', 'Check that the hp_sess cookie is being set correctly')
+		log.error('APIC', 'If you are running without HTTPs, make sure the Secure flag is false')
+		throw new Error('Missing API key, could this be a cookie setting issue?')
+	}
+
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
 
@@ -38,6 +45,13 @@ export async function pull<T>(url: string, key: string) {
 }
 
 export async function post<T>(url: string, key: string, body?: unknown) {
+	if (!key || key === 'undefined' || key.length === 0) {
+		log.error('APIC', 'Missing API key, could this be a cookie setting issue?')
+		log.error('APIC', 'Check that the hp_sess cookie is being set correctly')
+		log.error('APIC', 'If you are running without HTTPs, make sure the Secure flag is false')
+		throw new Error('Missing API key, could this be a cookie setting issue?')
+	}
+
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
 
@@ -59,6 +73,13 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function put<T>(url: string, key: string, body?: unknown) {
+	if (!key || key === 'undefined' || key.length === 0) {
+		log.error('APIC', 'Missing API key, could this be a cookie setting issue?')
+		log.error('APIC', 'Check that the hp_sess cookie is being set correctly')
+		log.error('APIC', 'If you are running without HTTPs, make sure the Secure flag is false')
+		throw new Error('Missing API key, could this be a cookie setting issue?')
+	}
+
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
 
@@ -80,6 +101,13 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function del<T>(url: string, key: string) {
+	if (!key || key === 'undefined' || key.length === 0) {
+		log.error('APIC', 'Missing API key, could this be a cookie setting issue?')
+		log.error('APIC', 'Check that the hp_sess cookie is being set correctly')
+		log.error('APIC', 'If you are running without HTTPs, make sure the Secure flag is false')
+		throw new Error('Missing API key, could this be a cookie setting issue?')
+	}
+
 	const context = await loadContext()
 	const prefix = context.headscaleUrl
 
