@@ -80,7 +80,7 @@ export default function Routes({ machine, routes, state }: RoutesProps) {
 								: undefined}
 							{subnet.map(route => (
 								<div
-									key={route.node.id}
+									key={route.id}
 									className={cn(
 										'flex py-2 px-4 bg-ui-100 dark:bg-ui-800',
 										'items-center justify-between',

@@ -36,6 +36,35 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 		? magic.replace('[user]', machine.user.name)
 		: magic
 
+	// This is much easier with Object.groupBy but it's too new for us
+	const { exit, subnet, subnetApproved } = routes.reduce((acc, route) => {
+		if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
+			acc.exit.push(route)
+			return acc
+		}
+
+		if (route.enabled) {
+			acc.subnetApproved.push(route)
+			return acc
+		}
+
+		acc.subnet.push(route)
+		return acc
+	}, { exit: [], subnetApproved: [], subnet: [] })
+
+	const exitEnabled = useMemo(() => {
+		if (exit.length !== 2) return false
+		return exit[0].enabled && exit[1].enabled
+	}, [exit])
+
+	if (exitEnabled) {
+		tags.unshift('Exit Node')
+	}
+
+	if (subnetApproved.length > 0) {
+		tags.unshift('Subnets')
+	}
+
 	return (
 		<tr
 			key={machine.id}

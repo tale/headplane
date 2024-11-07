@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
-import { Link, useLoaderData } from '@remix-run/react'
-import { useMemo } from 'react'
+import { Link as RemixLink, useLoaderData } from '@remix-run/react'
+import { InfoIcon, GearIcon, CheckCircleIcon, SkipIcon, PersonIcon } from '@primer/octicons-react'
+import { useMemo, useState } from 'react'
 
 import Attribute from '~/components/Attribute'
+import Button from '~/components/Button'
 import Card from '~/components/Card'
+import Menu from '~/components/Menu'
+import Tooltip from '~/components/Tooltip'
 import StatusCircle from '~/components/StatusCircle'
 import { Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
@@ -13,9 +17,11 @@ import { loadConfig } from '~/utils/config/headscale'
 import { pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
+import Link from '~/components/Link'
 
 import { menuAction } from '../_data.machines._index/action'
 import MenuOptions from '../_data.machines._index/menu'
+import Routes from '../_data.machines._index/dialogs/routes'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
@@ -53,6 +59,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const { machine, magic, routes, users } = useLoaderData<typeof loader>()
+	const routesState = useState(false)
 	useLiveData({ interval: 1000 })
 
 	const expired = machine.expiry === '0001-01-01 00:00:00'
@@ -71,36 +78,52 @@ export default function Page() {
 	}
 
 	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet } = routes.reduce((acc, route) => {
+	const { exit, subnet, subnetApproved } = routes.reduce((acc, route) => {
 		if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
 			acc.exit.push(route)
 			return acc
 		}
 
+		if (route.enabled) {
+			acc.subnetApproved.push(route)
+			return acc
+		}
+
 		acc.subnet.push(route)
 		return acc
-	}, { exit: [], subnet: [] })
+	}, { exit: [], subnetApproved: [], subnet: [] })
 
 	const exitEnabled = useMemo(() => {
 		if (exit.length !== 2) return false
 		return exit[0].enabled && exit[1].enabled
 	}, [exit])
 
+	if (exitEnabled) {
+		tags.unshift('Exit Node')
+	}
+
+	if (subnetApproved.length > 0) {
+		tags.unshift('Subnets')
+	}
+
 	return (
 		<div>
 			<p className="mb-8 text-md">
-				<Link
+				<RemixLink
 					to="/machines"
 					className="font-medium"
 				>
 					All Machines
-				</Link>
+				</RemixLink>
 				<span className="mx-2">
 					/
 				</span>
 				{machine.givenName}
 			</p>
-			<div className="flex justify-between items-center">
+			<div className={cn(
+				'flex justify-between items-center',
+				'border-b border-ui-100 dark:border-ui-800',
+			)}>
 				<span className="flex items-baseline gap-x-4 text-sm mb-4">
 					<h1 className="text-2xl font-medium">
 						{machine.givenName}
@@ -109,26 +132,227 @@ export default function Page() {
 				</span>
 
 				<MenuOptions
+					className={cn(
+						'bg-ui-100 dark:bg-ui-800',
+					)}
 					machine={machine}
 					routes={routes}
 					users={users}
 					magic={magic}
+					buttonChild={
+						<Menu.Button className={cn(
+							'flex items-center justify-center gap-x-2',
+							'bg-main-200 dark:bg-main-700/30',
+							'hover:bg-main-300 dark:hover:bg-main-600/30',
+							'text-ui-700 dark:text-ui-300 mb-2',
+							'w-fit text-sm rounded-lg px-3 py-2'
+						)}>
+							<GearIcon className="w-5" />
+							Machine Settings
+						</Menu.Button>
+					}
 				/>
 			</div>
-			<div className="flex gap-1 mt-1 mb-8">
-				{tags.map(tag => (
-					<span
-						key={tag}
-						className={cn(
-							'text-xs rounded-md px-1.5 py-0.5',
-							'bg-ui-200 dark:bg-ui-800',
-							'text-ui-600 dark:text-ui-300',
-						)}
-					>
-						{tag}
+			<div className="flex gap-1 mb-4">
+				<div className="border-r border-ui-100 dark:border-ui-800 p-2 pr-4">
+					<span className="text-sm text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
+						Managed by
+						<Tooltip>
+							<Tooltip.Button>
+								<InfoIcon className="w-3.5 h-3.5" />
+							</Tooltip.Button>
+							<Tooltip.Body>
+								By default, a machine’s permissions match its creator’s.
+							</Tooltip.Body>
+						</Tooltip>
 					</span>
-				))}
+					<div className="flex items-center gap-x-2.5 mt-1">
+						<div className={cn(
+							'rounded-full h-7 w-7 flex items-center justify-center',
+							'border border-ui-200 dark:border-ui-700',
+						)}>
+							<PersonIcon className="w-4 h-4" />
+						</div>
+						{machine.user.name}
+					</div>
+				</div>
+				<div className="p-2 pl-4">
+					<p className="text-sm text-ui-600 dark:text-ui-300">
+						Status
+					</p>
+					<div className="flex gap-1 mt-1 mb-8">
+						{tags.map(tag => (
+							<span
+								key={tag}
+								className={cn(
+									'text-xs rounded-md px-1.5 py-0.5',
+									'bg-ui-200 dark:bg-ui-800',
+									'text-ui-600 dark:text-ui-300',
+								)}
+							>
+								{tag}
+							</span>
+						))}
+					</div>
+				</div>
 			</div>
+			<h2 className="text-xl font-medium mb-4 mt-8">
+				Subnets & Routing
+			</h2>
+			<Routes
+				machine={machine}
+				routes={routes}
+				state={routesState}
+			/>
+			<div className="flex items-center justify-between mb-4">
+				<p>
+					Subnets let you expose physical network routes onto Tailscale.
+					{' '}
+					<Link
+						to="https://tailscale.com/kb/1019/subnets"
+						name="Tailscale Subnets Documentation"
+					>
+						Learn More
+					</Link>
+				</p>
+				<Button
+					variant="light"
+					control={routesState}
+				>
+					Review
+				</Button>
+			</div>
+			<Card
+				variant="flat"
+				className={cn(
+					'w-full max-w-full grid sm:grid-cols-2',
+					'md:grid-cols-4 gap-8 mr-2 text-sm mb-8',
+				)}
+			>
+				<div>
+					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
+						Approved
+						<Tooltip>
+							<Tooltip.Button>
+								<InfoIcon className="w-3.5 h-3.5" />
+							</Tooltip.Button>
+							<Tooltip.Body>
+								Traffic to these routes are being
+								routed through this machine.
+							</Tooltip.Body>
+						</Tooltip>
+					</span>
+					<div className="mt-1">
+						{subnetApproved.length === 0 ? (
+							<span className="text-ui-400 dark:text-ui-300">
+								—
+							</span>
+						) : (
+							<ul className="leading-normal">
+								{subnetApproved.map(route => (
+									<li key={route.id}>
+										{route.prefix}
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+					<Button
+						className={cn(
+							'p-0 rounded-sm bg-transparent mt-1',
+							'text-blue-500 dark:text-blue-400',
+							'hover:bg-transparent',
+							'hover:text-blue-600 dark:hover:text-blue-500',
+						)}
+						control={routesState}
+					>
+						Edit
+					</Button>
+				</div>
+				<div>
+					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
+						Awaiting Approval
+						<Tooltip>
+							<Tooltip.Button>
+								<InfoIcon className="w-3.5 h-3.5" />
+							</Tooltip.Button>
+							<Tooltip.Body>
+								This machine is advertising these routes,
+								but they must be approved before traffic
+								will be routed to them.
+							</Tooltip.Body>
+						</Tooltip>
+					</span>
+					<div className="mt-1">
+						{subnet.length === 0 ? (
+							<span className="text-ui-400 dark:text-ui-300">
+								—
+							</span>
+						) : (
+							<ul className="leading-normal">
+								{subnet.map(route => (
+									<li key={route.id}>
+										{route.prefix}
+									</li>
+								))}
+							</ul>
+						)}
+					</div>
+					<Button
+						className={cn(
+							'p-0 rounded-sm bg-transparent mt-1',
+							'text-blue-500 dark:text-blue-400',
+							'hover:bg-transparent',
+							'hover:text-blue-600 dark:hover:text-blue-500',
+						)}
+						control={routesState}
+					>
+						Edit
+					</Button>
+				</div>
+				<div>
+					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
+						Exit Node
+						<Tooltip>
+							<Tooltip.Button>
+								<InfoIcon className="w-3.5 h-3.5" />
+							</Tooltip.Button>
+							<Tooltip.Body>
+								Whether this machine can act as an
+								exit node for your tailnet.
+							</Tooltip.Body>
+						</Tooltip>
+					</span>
+					<div className="mt-1">
+						{exit.length === 0 ? (
+							<span className="text-ui-400 dark:text-ui-300">
+								—
+							</span>
+						) : exitEnabled ? (
+							<span className="flex items-center gap-x-1">
+								<CheckCircleIcon className="w-3.5 h-3.5 text-green-700" />
+								Allowed
+							</span>
+						) : (
+							<span className="flex items-center gap-x-1">
+								<SkipIcon className="w-3.5 h-3.5 text-red-700" />
+								Awaiting Approval
+							</span>
+						)}
+					</div>
+					<Button
+						className={cn(
+							'p-0 rounded-sm bg-transparent mt-1',
+							'text-blue-500 dark:text-blue-400',
+							'hover:bg-transparent',
+							'hover:text-blue-600 dark:hover:text-blue-500',
+						)}
+						control={routesState}
+					>
+						Edit
+					</Button>
+				</div>
+			</Card>
 			<h2 className="text-xl font-medium mb-4">
 				Machine Details
 			</h2>
@@ -166,77 +390,6 @@ export default function Page() {
 						/>
 						)
 					: undefined}
-			</Card>
-			<h2 className="text-xl font-medium mb-4 mt-8">
-				Routing & Subnets
-			</h2>
-			{exit.length > 0
-				? (
-					<div className={cn(
-						'flex p-4 items-center justify-between',
-						'mb-4 bg-ui-100 dark:bg-ui-800 rounded-lg',
-					)}>
-
-						<p className="font-bold">
-							Exit Node
-						</p>
-						<span className="flex items-center gap-2">
-							{exitEnabled ? 'Enabled' : 'Disabled'}
-							<StatusCircle isOnline={exitEnabled} className="w-4 h-4" />
-						</span>
-					</div>
-				) : undefined}
-			<Card variant="flat" className="w-full max-w-full">
-				{subnet.length === 0
-					? (
-						<div
-							className={cn(
-								'flex py-4 px-4',
-								'items-center justify-center',
-								'text-ui-600 dark:text-ui-300',
-							)}
-						>
-							<p>
-								No routes are advertised on this machine.
-							</p>
-						</div>
-						)
-					: subnet.map((route, i) => (
-						<div
-							key={route.id}
-							className={cn(
-								'flex items-center justify-between',
-								subnet.length - 1 === i ? '' : 'border-b pb-3 mb-2',
-								'border-ui-100 dark:border-ui-800',
-							)}
-						>
-							<div>
-								<p className="font-mono mb-1">
-									{route.prefix}
-								</p>
-								<p className="text-sm text-ui-600 dark:text-ui-300">
-									{' '}
-									(Created:
-									{' '}
-									{new Date(route.createdAt).toLocaleString()}
-									)
-								</p>
-							</div>
-							<div className="text-right">
-								<span className="flex items-start gap-2">
-									<div>
-										<p className="mb-1">
-											{route.enabled ? 'Enabled' : 'Disabled'}
-										</p>
-										<p className="text-sm text-ui-600 dark:text-ui-300">
-											{route.isPrimary ? 'Primary' : 'Secondary'}
-										</p>
-									</div>
-									<StatusCircle isOnline={route.enabled} className="w-4 h-4 mt-1" />
-								</span>
-							</div>
-						</div>
-					))}
 			</Card>
 		</div>
 	)
