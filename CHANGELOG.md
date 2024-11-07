@@ -1,3 +1,13 @@
+### 0.3.4 (November 7, 2024)
+- Clicking on the machine name in the users page now takes you to the machine overview page.
+- Completely rebuilt the production server to work better outside of Docker and be lighter. More specifically, we've switched from the `@remix-run/serve` package to our own custom built server.
+- Fixed a bunch of silly issues introduced by me not typechecking the codebase.
+- Improve documentation and support when running Headplane outside of Docker.
+- Removing Split DNS records will no longer result in an error (fixes [#40](https://github.com/tale/headplane/issues/40))
+- Removing the last ACL tag on a machine no longer results in an error (fixes [#41](https://github.com/tale/headplane/issues/41))
+- Added full support for Exit Nodes in the UI and redesigned the machines page (fixes [#36](https://github.com/tale/headplane/issues/36))
+- Added a basic check to see if the API keys passed via cookies are invalid.
+
 ### 0.3.3 (October 28, 2024)
 - Added the ability to load a `.env` file from the PWD when `LOAD_ENV_FILE=true` is set as an environment variable.
 - Fixed an issue where non-English languages could not create Pre-auth keys due to a localization error
