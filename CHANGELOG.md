@@ -1,3 +1,7 @@
+### 0.3.5 (November 8, 2024)
+- Quickfix a bug where environment variables are ignored on the server.
+- Remove a nagging error about missing cookie since that happens when signed out.
+
 ### 0.3.4 (November 7, 2024)
 - Clicking on the machine name in the users page now takes you to the machine overview page.
 - Completely rebuilt the production server to work better outside of Docker and be lighter. More specifically, we've switched from the `@remix-run/serve` package to our own custom built server.
