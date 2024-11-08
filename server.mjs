@@ -8,6 +8,7 @@ import { access, constants } from 'node:fs/promises'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join, resolve } from 'node:path'
+import { env } from 'node:process'
 
 function log(level, message) {
 	const date = new Date().toISOString()
@@ -42,9 +43,9 @@ const {
 } = await import('@remix-run/node')
 const { default: mime } = await import('mime')
 
-const port = process.env.PORT || 3000
-const host = process.env.HOST || '0.0.0.0'
-const buildPath = process.env.BUILD_PATH || './build'
+const port = env.PORT || 3000
+const host = env.HOST || '0.0.0.0'
+const buildPath = env.BUILD_PATH || './build'
 
 // Because this is a dynamic import without an easily discernable path
 // we gain the "deoptimization" we want so that Vite doesn't bundle this
