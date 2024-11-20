@@ -46,7 +46,7 @@ function Select(props: SelectProps) {
 				className={cn(
 					'mt-2 rounded-md w-[var(--trigger-width)]',
 					'bg-ui-100 dark:bg-ui-800 shadow-sm',
-					'overflow-hidden z-50',
+					'z-50 overflow-y-auto',
 					'border border-ui-200 dark:border-ui-600',
 					'entering:animate-in exiting:animate-out',
 					'entering:fade-in entering:zoom-in-95',
@@ -54,7 +54,7 @@ function Select(props: SelectProps) {
 					'fill-mode-forwards origin-left-right',
 				)}
 			>
-				<ListBox>
+				<ListBox orientation="vertical">
 					{props.children}
 				</ListBox>
 			</Popover>
