@@ -50,10 +50,8 @@ export default function New(data: NewProps) {
 							<Dialog.Text className='mb-4'>
 								The machine key is given when you run
 								{' '}
-								<Code>
+								<Code isCopyable>
 									tailscale up --login-server=
-								</Code>
-								<Code>
 									{data.server}
 								</Code>
 								{' '}
