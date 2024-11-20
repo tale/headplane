@@ -1,3 +1,7 @@
+### 0.3.6 (November 20, 2024)
+- Fixed an issue where select dropdowns would not scroll (fixes [#53](https://github.com/tale/headplane/issues/53))
+- Added a button to copy the machine registration command to the clipboard (fixes [#52](https://github.com/tale/headplane/issues/52))
+
 ### 0.3.5 (November 8, 2024)
 - Quickfix a bug where environment variables are ignored on the server.
 - Remove a nagging error about missing cookie since that happens when signed out.
