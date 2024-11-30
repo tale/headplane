@@ -46,6 +46,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		users: users.users,
 		magic,
 		server: context.headscaleUrl,
+		publicServer: context.headscalePublicUrl,
 	}
 }
 
@@ -73,7 +74,10 @@ export default function Page() {
 						</Link>
 					</p>
 				</div>
-				<NewMachine server={data.server} users={data.users} />
+				<NewMachine
+					server={data.publicServer ?? data.server}
+					users={data.users}
+				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-gray-500 dark:text-gray-400">

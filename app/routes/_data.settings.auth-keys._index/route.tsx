@@ -102,7 +102,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return {
 		keys: preAuthKeys.flatMap(keys => keys.preAuthKeys),
 		users: users.users,
-		server: context.headscaleUrl,
+		server: context.headscalePublicUrl ?? context.headscaleUrl,
 	}
 }
 

@@ -9,6 +9,7 @@ You can configure Headplane using environment variables.
 
 #### Optional Variables
 
+- **`HEADSCALE_PUBLIC_URL`**: The public URL of your Headscale server (if different from `HEADSCALE_URL`).
 - **`DEBUG`**: Enable debug logging (default: `false`).
 - **`HOST`**: The host to bind the server to (default: `0.0.0.0`).
 - **`PORT`**: The port to bind the server to (default: `3000`).
