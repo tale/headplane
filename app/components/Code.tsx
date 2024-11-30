@@ -28,7 +28,7 @@ export default function Code(props: Props) {
 						'inline-flex items-center justify-center'
 					)}
 					onClick={() => {
-						navigator.clipboard.writeText(props.children as string)
+						navigator.clipboard.writeText(props.children.join(''))
 						toast('Copied to clipboard')
 						setIsCopied(true)
 						setTimeout(() => setIsCopied(false), 1000)
