@@ -36,7 +36,7 @@ export async function startOidc(oidc: OidcConfig, req: Request) {
 	const issuerUrl = new URL(oidc.issuer)
 	const oidcClient = {
 		client_id: oidc.client,
-		token_endpoint_auth_method: 'client_secret_basic',
+		token_endpoint_auth_method: oidc.method,
 	} satisfies Client
 
 	const response = await discoveryRequest(issuerUrl)
@@ -91,7 +91,7 @@ export async function finishOidc(oidc: OidcConfig, req: Request) {
 	const oidcClient = {
 		client_id: oidc.client,
 		client_secret: oidc.secret,
-		token_endpoint_auth_method: 'client_secret_basic',
+		token_endpoint_auth_method: oidc.method,
 	} satisfies Client
 
 	const response = await discoveryRequest(issuerUrl)

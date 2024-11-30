@@ -28,6 +28,7 @@ export interface HeadplaneContext {
 		client: string
 		secret: string
 		rootKey: string
+		method: string
 		disableKeyLogin: boolean
 	}
 }
@@ -143,6 +144,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 	let issuer = process.env.OIDC_ISSUER
 	let client = process.env.OIDC_CLIENT_ID
 	let secret = process.env.OIDC_CLIENT_SECRET
+	let method = process.env.OIDC_CLIENT_SECRET_METHOD ?? 'client_secret_basic'
 
 	log.debug('CTXT', 'Checking OIDC environment variables')
 	log.debug('CTXT', 'Issuer: %s', issuer)
@@ -161,6 +163,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 			issuer,
 			client,
 			secret,
+			method,
 			rootKey,
 			disableKeyLogin,
 		}
@@ -204,6 +207,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 		client,
 		secret,
 		rootKey,
+		method,
 		disableKeyLogin,
 	}
 }
