@@ -1,3 +1,9 @@
+### 0.3.7 (November 30, 2024)
+- Allow customizing the OIDC token endpoint auth method via `OIDC_CLIENT_SECRET_METHOD` (fixes [#57](https://github.com/tale/headplane/issues/57))
+- Added a `/healthz` endpoint for Kubernetes and other health checks (fixes [#59](https://github.com/tale/headplane/issues/59))
+- Allow `HEADSCALE_PUBLIC_URL` to be set if `HEADSCALE_URL` points to a different internal address (fixes [#60](https://github.com/tale/headplane/issues/60))
+- Fixed an issue where the copy machine registration command had a typo.
+
 ### 0.3.6 (November 20, 2024)
 - Fixed an issue where select dropdowns would not scroll (fixes [#53](https://github.com/tale/headplane/issues/53))
 - Added a button to copy the machine registration command to the clipboard (fixes [#52](https://github.com/tale/headplane/issues/52))
