@@ -69,3 +69,10 @@ Currently there are 3 integration providers that can do this for you:
 - [Kubernetes Integration](/docs/integration/Kubernetes.md)
 - [Native Linux Integration](/docs/integration/Native.md)
 
+Once configured, the Headplane UI will be available at the `/admin` path
+of the server you deployed it on. This is currently not configurable unless
+you build the Docker image yourself or run the Node.js server directly.
+
+Additionally, if you require access to health information for either Docker
+or Kubernetes, the `/admin/healthz` path will be available. This is useful for
+monitoring services like Prometheus or Grafana.

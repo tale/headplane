@@ -50,6 +50,10 @@ services:
       PORT: '3000'
 ```
 
+Once configured, the Headplane UI will be available at the `/admin` path
+of the server you deployed it on. This is currently not configurable unless
+you build the Docker image yourself or run the Node.js server directly.
+
 > For a breakdown of each configuration variable, please refer to the
 [Configuration](/docs/Configuration.md) guide. 
 > It explains what each variable does, how to configure them, and what the
