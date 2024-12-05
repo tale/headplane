@@ -2,6 +2,7 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 RUN npm install -g pnpm
+RUN apk add --no-cache git
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
 RUN pnpm install --frozen-lockfile
