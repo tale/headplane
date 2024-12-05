@@ -3,12 +3,19 @@ import { installGlobals } from '@remix-run/node'
 import { defineConfig } from 'vite'
 import babel from 'vite-plugin-babel'
 import tsconfigPaths from 'vite-tsconfig-paths'
+import { execSync } from 'node:child_process'
 
 installGlobals()
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin'
 if (prefix.endsWith('/')) {
 	throw new Error('Prefix must not end with a slash')
+}
+
+// Load the version via git tags
+const version = execSync('git describe --tags --always').toString().trim()
+if (!version) {
+	throw new Error('Unable to execute git describe')
 }
 
 export default defineConfig(({ isSsrBuild }) => {
@@ -45,6 +52,9 @@ export default defineConfig(({ isSsrBuild }) => {
 	return ({
 		base: `${prefix}/`,
 		build: isSsrBuild ? { target: 'ES2022' } : {},
+		define: {
+			__VERSION__: JSON.stringify(version),
+		},
 		plugins: [
 			remix({
 				basename: `${prefix}/`,

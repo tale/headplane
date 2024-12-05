@@ -1,9 +1,10 @@
-import { type LoaderFunctionArgs, redirect } from '@remix-run/node'
+import { LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Outlet, useLoaderData, useNavigation } from '@remix-run/react'
 import { ProgressBar } from 'react-aria-components'
 
 import { ErrorPopup } from '~/components/Error'
 import Header from '~/components/Header'
+import Link from '~/components/Link'
 import { cn } from '~/utils/cn'
 import { loadContext } from '~/utils/config/headplane'
 import { HeadscaleError, pull } from '~/utils/headscale'
@@ -36,8 +37,50 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const context = await loadContext()
 	return {
 		config: context.config,
+		url: context.headscalePublicUrl ?? context.headscaleUrl,
+		debug: context.debug,
 		user: session.get('user'),
 	}
+}
+
+interface FooterProps {
+	url: string
+	debug: boolean
+}
+
+function Footer({ url, debug, integration }: FooterProps) {
+	return (
+		<footer className={cn(
+			'fixed bottom-0 left-0 z-50 w-full h-14',
+			'bg-ui-100 dark:bg-ui-900 text-ui-500',
+			'flex flex-col justify-center gap-1',
+		)}>
+			<p className="container text-xs">
+				Headplane is entirely free to use.
+				{' '}
+				If you find it useful, consider
+				{' '}
+				<Link
+					to="https://github.com/sponsors/tale"
+					name="Aarnav's GitHub Sponsors"
+				>
+					donating
+				</Link>
+				{' '}
+				to support development.
+				{' '}
+			</p>
+			<p className="container text-xs opacity-75">
+				Version: {__VERSION__}
+				{' | '}
+				Connecting to
+				{' '}
+				<strong>{url}</strong>
+				{' '}
+				{debug && '(Debug mode enabled)'}
+			</p>
+		</footer>
+	)
 }
 
 export default function Layout() {
@@ -61,6 +104,7 @@ export default function Layout() {
 			<main className="container mx-auto overscroll-contain mt-4 mb-24">
 				<Outlet />
 			</main>
+			<Footer {...data} />
 		</>
 	)
 }
@@ -70,6 +114,7 @@ export function ErrorBoundary() {
 		<>
 			<Header />
 			<ErrorPopup type="embedded" />
+			<Footer url="Unknown" debug={false} />
 		</>
 	)
 }
