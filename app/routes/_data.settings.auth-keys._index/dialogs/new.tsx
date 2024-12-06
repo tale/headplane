@@ -64,13 +64,13 @@ export default function AddPreAuthKey(data: Props) {
 								Key Expiration
 							</Dialog.Text>
 							<Dialog.Text className="text-sm">
-								Set this key to expire between 1 and 90 days.
+								Set this key to expire after a certain number of days.
 							</Dialog.Text>
 							<NumberField
 								label="Expiry"
 								name="expiry"
 								minValue={1}
-								maxValue={90}
+								maxValue={365_000} // 1000 years
 								state={[expiry, setExpiry]}
 								formatOptions={{
 									style: 'unit',
