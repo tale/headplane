@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
-import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useRevalidator } from '@remix-run/react'
 import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher'
 import { useEffect, useState, useMemo } from 'react'
@@ -18,6 +18,7 @@ import { loadContext } from '~/utils/config/headplane'
 import { loadConfig } from '~/utils/config/headscale'
 import { HeadscaleError, pull, put } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
+import { send } from '~/utils/res'
 import log from '~/utils/log'
 
 import { Editor, Differ } from './cm.client'
@@ -116,9 +117,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
 	if (!session.has('hsApiKey')) {
-		return json({ success: false, error: null }, {
-			status: 401,
-		})
+		return send({ success: false, error: null }, 401)
 	}
 
 	try {
@@ -131,18 +130,18 @@ export async function action({ request }: ActionFunctionArgs) {
 			}
 		)
 
-		return json({ success: true, policy, error: null })
+		return { success: true, policy, error: null }
 	} catch (error) {
 		log.debug('APIC', 'Failed to update ACL policy with error %s', error)
 
 		// @ts-ignore: Shut UP we know it's a string most of the time
 		const text = JSON.parse(error.message)
-		return json({ success: false, error: text.message }, {
+		return send({ success: false, error: text.message }, {
 			status: error instanceof HeadscaleError ? error.status : 500,
 		})
 	}
 
-	return json({ success: true, error: null })
+	return { success: true, error: null }
 }
 
 export default function Page() {

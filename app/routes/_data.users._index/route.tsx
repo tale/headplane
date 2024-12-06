@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { PersonIcon } from '@primer/octicons-react'
-import { ActionFunctionArgs, json, LoaderFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useActionData, useLoaderData, useSubmit } from '@remix-run/react'
 import { useEffect, useState } from 'react'
 import { ClientOnly } from 'remix-utils/client-only'
@@ -17,6 +17,7 @@ import { loadConfig } from '~/utils/config/headscale'
 import { del, post, pull } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
+import { send } from '~/utils/res'
 
 import Auth from './auth'
 import Oidc from './oidc'
@@ -56,16 +57,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
 	if (!session.has('hsApiKey')) {
-		return json({ message: 'Unauthorized' }, {
-			status: 401,
-		})
+		return send({ message: 'Unauthorized' }, 401)
 	}
 
 	const data = await request.formData()
 	if (!data.has('_method')) {
-		return json({ message: 'No method provided' }, {
-			status: 400,
-		})
+		return send({ message: 'No method provided' }, 400)
 	}
 
 	const method = String(data.get('_method'))
@@ -73,9 +70,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	switch (method) {
 		case 'create': {
 			if (!data.has('username')) {
-				return json({ message: 'No name provided' }, {
-					status: 400,
-				})
+				return send({ message: 'No name provided' }, 400)
 			}
 
 			const username = String(data.get('username'))
@@ -83,39 +78,33 @@ export async function action({ request }: ActionFunctionArgs) {
 				name: username,
 			})
 
-			return json({ message: `User ${username} created` })
+			return { message: `User ${username} created` }
 		}
 
 		case 'delete': {
 			if (!data.has('username')) {
-				return json({ message: 'No name provided' }, {
-					status: 400,
-				})
+				return send({ message: 'No name provided' }, 400)
 			}
 
 			const username = String(data.get('username'))
 			await del(`v1/user/${username}`, session.get('hsApiKey')!)
-			return json({ message: `User ${username} deleted` })
+			return { message: `User ${username} deleted` }
 		}
 
 		case 'rename': {
 			if (!data.has('old') || !data.has('new')) {
-				return json({ message: 'No old or new name provided' }, {
-					status: 400,
-				})
+				return send({ message: 'No old or new name provided' }, 400)
 			}
 
 			const old = String(data.get('old'))
 			const newName = String(data.get('new'))
 			await post(`v1/user/${old}/rename/${newName}`, session.get('hsApiKey')!)
-			return json({ message: `User ${old} renamed to ${newName}` })
+			return { message: `User ${old} renamed to ${newName}` }
 		}
 
 		case 'move': {
 			if (!data.has('id') || !data.has('to') || !data.has('name')) {
-				return json({ message: 'No ID or destination provided' }, {
-					status: 400,
-				})
+				return send({ message: 'No ID or destination provided' }, 400)
 			}
 
 			const id = String(data.get('id'))
@@ -124,18 +113,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 			try {
 				await post(`v1/node/${id}/user?user=${to}`, session.get('hsApiKey')!)
-				return json({ message: `Moved ${name} to ${to}` })
+				return { message: `Moved ${name} to ${to}` }
 			} catch {
-				return json({ message: `Failed to move ${name} to ${to}` }, {
-					status: 500,
-				})
+				return send({ message: `Failed to move ${name} to ${to}` }, 500)
 			}
 		}
 
 		default: {
-			return json({ message: 'Invalid method' }, {
-				status: 400,
-			})
+			return send({ message: 'Invalid method' }, 400)
 		}
 	}
 }

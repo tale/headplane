@@ -1,21 +1,20 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { ActionFunctionArgs, json } from '@remix-run/node'
-
+import { ActionFunctionArgs } from '@remix-run/node'
 import { del, post } from '~/utils/headscale'
 import { getSession } from '~/utils/sessions'
+import { send } from '~/utils/res'
 import log from '~/utils/log'
 
 export async function menuAction(request: ActionFunctionArgs['request']) {
 	const session = await getSession(request.headers.get('Cookie'))
 	if (!session.has('hsApiKey')) {
-		return json({ message: 'Unauthorized' }, {
+		return send({ message: 'Unauthorized' }, {
 			status: 401,
 		})
 	}
 
 	const data = await request.formData()
 	if (!data.has('_method') || !data.has('id')) {
-		return json({ message: 'No method or ID provided' }, {
+		return send({ message: 'No method or ID provided' }, {
 			status: 400,
 		})
 	}
@@ -26,17 +25,17 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 	switch (method) {
 		case 'delete': {
 			await del(`v1/node/${id}`, session.get('hsApiKey')!)
-			return json({ message: 'Machine removed' })
+			return { message: 'Machine removed' }
 		}
 
 		case 'expire': {
 			await post(`v1/node/${id}/expire`, session.get('hsApiKey')!)
-			return json({ message: 'Machine expired' })
+			return { message: 'Machine expired' }
 		}
 
 		case 'rename': {
 			if (!data.has('name')) {
-				return json({ message: 'No name provided' }, {
+				return send({ message: 'No name provided' }, {
 					status: 400,
 				})
 			}
@@ -44,12 +43,12 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const name = String(data.get('name'))
 
 			await post(`v1/node/${id}/rename/${name}`, session.get('hsApiKey')!)
-			return json({ message: 'Machine renamed' })
+			return { message: 'Machine renamed' }
 		}
 
 		case 'routes': {
 			if (!data.has('route') || !data.has('enabled')) {
-				return json({ message: 'No route or enabled provided' }, {
+				return send({ message: 'No route or enabled provided' }, {
 					status: 400,
 				})
 			}
@@ -59,12 +58,12 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const postfix = enabled ? 'enable' : 'disable'
 
 			await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!)
-			return json({ message: 'Route updated' })
+			return { message: 'Route updated' }
 		}
 
 		case 'exit-node': {
 			if (!data.has('routes') || !data.has('enabled')) {
-				return json({ message: 'No route or enabled provided' }, {
+				return send({ message: 'No route or enabled provided' }, {
 					status: 400,
 				})
 			}
@@ -77,12 +76,12 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 				await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!)
 			}))
 
-			return json({ message: 'Exit node updated' })
+			return { message: 'Exit node updated' }
 		}
 
 		case 'move': {
 			if (!data.has('to')) {
-				return json({ message: 'No destination provided' }, {
+				return send({ message: 'No destination provided' }, {
 					status: 400,
 				})
 			}
@@ -91,9 +90,9 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 
 			try {
 				await post(`v1/node/${id}/user?user=${to}`, session.get('hsApiKey')!)
-				return json({ message: `Moved node ${id} to ${to}` })
+				return { message: `Moved node ${id} to ${to}` }
 			} catch {
-				return json({ message: `Failed to move node ${id} to ${to}` }, {
+				return send({ message: `Failed to move node ${id} to ${to}` }, {
 					status: 500,
 				})
 			}
@@ -110,10 +109,10 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 					tags,
 				})
 
-				return json({ message: 'Tags updated' })
+				return { message: 'Tags updated' }
 			} catch (error) {
 				log.debug('APIC', 'Failed to update tags: %s', error)
-				return json({ message: 'Failed to update tags' }, {
+				return send({ message: 'Failed to update tags' }, {
 					status: 500,
 				})
 			}
@@ -124,13 +123,13 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const user = data.get('user')?.toString()
 
 			if (!key) {
-				return json({ message: 'No machine key provided' }, {
+				return send({ message: 'No machine key provided' }, {
 					status: 400,
 				})
 			}
 
 			if (!user) {
-				return json({ message: 'No user provided' }, {
+				return send({ message: 'No user provided' }, {
 					status: 400,
 				})
 			}
@@ -145,12 +144,12 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 					user, key,
 				})
 
-				return json({
+				return {
 					success: true,
 					message: 'Machine registered'
-				})
+				}
 			} catch {
-				return json({
+				return send({
 					success: false,
 					message: 'Failed to register machine'
 				}, {
@@ -160,7 +159,7 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 		}
 
 		default: {
-			return json({ message: 'Invalid method' }, {
+			return send({ message: 'Invalid method' }, {
 				status: 400,
 			})
 		}

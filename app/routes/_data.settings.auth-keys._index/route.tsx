@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, ActionFunctionArgs, json } from '@remix-run/node'
+import { LoaderFunctionArgs, ActionFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
 import { useLiveData } from '~/utils/useLiveData'
 import { getSession } from '~/utils/sessions'
@@ -7,6 +7,7 @@ import { PreAuthKey, User } from '~/types'
 import { pull, post } from '~/utils/headscale'
 import { loadContext } from '~/utils/config/headplane'
 import { useState } from 'react'
+import { send } from '~/utils/res'
 
 import Link from '~/components/Link'
 import TableList from '~/components/TableList'
@@ -19,7 +20,7 @@ import AuthKeyRow from './key'
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
 	if (!session.has('hsApiKey')) {
-		return json({ message: 'Unauthorized' }, {
+		return send({ message: 'Unauthorized' }, {
 			status: 401,
 		})
 	}
@@ -32,7 +33,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const user = data.get('user')
 
 		if (!key || !user) {
-			return json({ message: 'Missing parameters' }, {
+			return send({ message: 'Missing parameters' }, {
 				status: 400,
 			})
 		}
@@ -46,7 +47,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			}
 		)
 
-		return json({ message: 'Pre-auth key expired' })
+		return { message: 'Pre-auth key expired' }
 	}
 
 	// Creating a new pre-auth key
@@ -57,7 +58,7 @@ export async function action({ request }: ActionFunctionArgs) {
 		const ephemeral = data.get('ephemeral')
 
 		if (!user || !expiry || !reusable || !ephemeral) {
-			return json({ message: 'Missing parameters' }, {
+			return send({ message: 'Missing parameters' }, {
 				status: 400,
 			})
 		}
@@ -80,7 +81,7 @@ export async function action({ request }: ActionFunctionArgs) {
 			}
 		)
 
-		return json({ message: 'Pre-auth key created', key })
+		return { message: 'Pre-auth key created', key }
 	}
 }
 

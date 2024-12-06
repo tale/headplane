@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs, json, type LoaderFunctionArgs, redirect } from '@remix-run/node'
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from '@remix-run/node'
 import { Form, useActionData, useLoaderData } from '@remix-run/react'
 import { useMemo } from 'react'
 
@@ -6,7 +6,7 @@ import Button from '~/components/Button'
 import Card from '~/components/Card'
 import Code from '~/components/Code'
 import TextField from '~/components/TextField'
-import { type Key } from '~/types'
+import { Key } from '~/types'
 import { loadContext } from '~/utils/config/headplane'
 import { pull } from '~/utils/headscale'
 import { startOidc } from '~/utils/oidc'
@@ -81,9 +81,9 @@ export async function action({ request }: ActionFunctionArgs) {
 			},
 		})
 	} catch {
-		return json({
+		return {
 			error: 'Invalid API key',
-		})
+		}
 	}
 }
 

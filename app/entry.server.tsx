@@ -10,6 +10,7 @@ import { loadContext } from './utils/config/headplane'
 
 await loadContext()
 
+export const streamTimeout = 5000
 export default function handleRequest(
 	request: Request,
 	responseStatusCode: number,
@@ -27,7 +28,6 @@ export default function handleRequest(
 			<RemixServer
 				context={remixContext}
 				url={request.url}
-				abortDelay={5000}
 			/>,
 			{
 				[isBot ? 'onAllReady' : 'onShellReady']() {
@@ -57,6 +57,6 @@ export default function handleRequest(
 			},
 		)
 
-		setTimeout(abort, 5000)
+		setTimeout(abort, streamTimeout + 1000)
 	})
 }

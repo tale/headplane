@@ -1,11 +1,8 @@
 import { vitePlugin as remix } from '@remix-run/dev'
-import { installGlobals } from '@remix-run/node'
 import { defineConfig } from 'vite'
 import babel from 'vite-plugin-babel'
 import tsconfigPaths from 'vite-tsconfig-paths'
 import { execSync } from 'node:child_process'
-
-installGlobals()
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin'
 if (prefix.endsWith('/')) {
@@ -58,6 +55,14 @@ export default defineConfig(({ isSsrBuild }) => {
 		plugins: [
 			remix({
 				basename: `${prefix}/`,
+				future: {
+					v3_fetcherPersist: true,
+					v3_relativeSplatPath: true,
+					v3_throwAbortReason: true,
+					v3_lazyRouteDiscovery: true,
+					v3_singleFetch: true,
+					v3_routeConfig: true
+				},
 			}),
 			tsconfigPaths(),
 			babel({
