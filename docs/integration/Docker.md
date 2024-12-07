@@ -50,7 +50,7 @@ services:
       TZ: 'America/New_York'
   headplane:
     container_name: headplane
-    image: ghcr.io/tale/headplane:0.3.7
+    image: ghcr.io/tale/headplane:0.3.8
     restart: unless-stopped
     volumes:
       - './data:/var/lib/headscale'

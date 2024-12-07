@@ -29,7 +29,7 @@ Here is a simple Docker Compose deployment:
 services:
   headplane:
     container_name: headplane
-    image: ghcr.io/tale/headplane:0.3.7
+    image: ghcr.io/tale/headplane:0.3.8
     restart: unless-stopped
     ports:
       - '3000:3000'
