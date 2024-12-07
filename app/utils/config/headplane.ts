@@ -175,7 +175,10 @@ async function checkOidc(config?: HeadscaleConfig) {
 	if (issuer && client && secret) {
 		if (!skip) {
 			log.debug('CTXT', 'Validating OIDC configuration from environment variables')
-			testOidc(issuer, client, secret)
+			const result = await testOidc(issuer, client, secret)
+			if (!result) {
+				return
+			}
 		} else {
 			log.debug('CTXT', 'OIDC_SKIP_CONFIG_VALIDATION is set')
 			log.debug('CTXT', 'Skipping OIDC configuration validation')
@@ -226,8 +229,10 @@ async function checkOidc(config?: HeadscaleConfig) {
 
 	if (config.oidc.only_start_if_oidc_is_available) {
 		log.debug('CTXT', 'Validating OIDC configuration from headscale config')
-		testOidc(issuer, client, secret)
-		return
+		const result = await testOidc(issuer, client, secret)
+		if (!result) {
+			return
+		}
 	} else {
 		log.debug('CTXT', 'OIDC validation is disabled in headscale config')
 		log.debug('CTXT', 'Skipping OIDC configuration validation')
