@@ -1,3 +1,6 @@
+### 0.3.9 (December 6, 2024)
+- Fixed a race condition bug in the OIDC validation code
+
 ### 0.3.8 (December 6, 2024)
 - Added a little HTML footer to show the login page and link to a donation page.
 - Allow creating pre-auth keys that expire past 90 days (fixes [#58](https://github.com/tale/headplane/issues/58))

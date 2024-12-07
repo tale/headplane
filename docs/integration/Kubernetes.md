@@ -88,7 +88,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: headplane
-        image: ghcr.io/tale/headplane:0.3.8
+        image: ghcr.io/tale/headplane:0.3.9
         env:
         - name: COOKIE_SECRET
           value: 'abcdefghijklmnopqrstuvwxyz'
