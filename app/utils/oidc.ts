@@ -17,6 +17,7 @@ import {
 
 import { post } from '~/utils/headscale'
 import { commitSession, getSession } from '~/utils/sessions'
+import log from '~/utils/log'
 
 import { HeadplaneContext } from './config/headplane'
 
@@ -168,4 +169,31 @@ export async function finishOidc(oidc: OidcConfig, req: Request) {
 			'Set-Cookie': await commitSession(session),
 		},
 	})
+}
+
+// Runs at application startup to validate the OIDC configuration
+export async function testOidc(issuer: string, client: string, secret: string) {
+	const oidcClient = {
+		client_id: client,
+		client_secret: secret,
+		token_endpoint_auth_method: 'client_secret_post',
+	} satisfies Client
+
+	const issuerUrl = new URL(issuer)
+
+	try {
+		log.debug('OIDC', 'Checking OIDC well-known endpoint')
+		const response = await discoveryRequest(issuerUrl)
+		const processed = await processDiscoveryResponse(issuerUrl, response)
+		if (!processed.authorization_endpoint) {
+			log.debug('OIDC', 'No authorization endpoint found on the OIDC provider')
+			return false
+		}
+
+		log.debug('OIDC', 'Found auth endpoint: %s', processed.authorization_endpoint)
+		return true
+	} catch (e) {
+		log.debug('OIDC', 'Validation failed: %s', e.message)
+		return false
+	}
 }

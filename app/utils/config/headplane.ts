@@ -10,6 +10,7 @@ import { parse } from 'yaml'
 
 import { IntegrationFactory, loadIntegration } from '~/integration'
 import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale'
+import { testOidc } from '~/utils/oidc'
 import log from '~/utils/log'
 
 export interface HeadplaneContext {
@@ -157,6 +158,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 	let client = process.env.OIDC_CLIENT_ID
 	let secret = process.env.OIDC_CLIENT_SECRET
 	let method = process.env.OIDC_CLIENT_SECRET_METHOD ?? 'client_secret_basic'
+	let skip = process.env.OIDC_SKIP_CONFIG_VALIDATION === 'true'
 
 	log.debug('CTXT', 'Checking OIDC environment variables')
 	log.debug('CTXT', 'Issuer: %s', issuer)
@@ -171,6 +173,14 @@ async function checkOidc(config?: HeadscaleConfig) {
 	}
 
 	if (issuer && client && secret) {
+		if (!skip) {
+			log.debug('CTXT', 'Validating OIDC configuration from environment variables')
+			testOidc(issuer, client, secret)
+		} else {
+			log.debug('CTXT', 'OIDC_SKIP_CONFIG_VALIDATION is set')
+			log.debug('CTXT', 'Skipping OIDC configuration validation')
+		}
+
 		return {
 			issuer,
 			client,
@@ -212,6 +222,15 @@ async function checkOidc(config?: HeadscaleConfig) {
 
 	if (!issuer || !client || !secret) {
 		return
+	}
+
+	if (config.oidc.only_start_if_oidc_is_available) {
+		log.debug('CTXT', 'Validating OIDC configuration from headscale config')
+		testOidc(issuer, client, secret)
+		return
+	} else {
+		log.debug('CTXT', 'OIDC validation is disabled in headscale config')
+		log.debug('CTXT', 'Skipping OIDC configuration validation')
 	}
 
 	return {

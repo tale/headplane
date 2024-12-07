@@ -36,6 +36,7 @@ If you use the Headscale configuration integration, these are not required.
 - **`OIDC_CLIENT_ID`**: The client ID of your OIDC provider.
 - **`OIDC_CLIENT_SECRET`**: The client secret of your OIDC provider.
 - **`OIDC_CLIENT_SECRET_METHOD`**: The method used to send the client secret (default: `client_secret_basic`).
+- **`OIDC_SKIP_CONFIG_VALIDATION`**: Skip the OIDC configuration validation (default: `false`).
 - **`ROOT_API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
 - **`DISABLE_API_KEY_LOGIN`**: If you want to disable API key login, set this to `true`.
 
