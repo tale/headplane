@@ -17,7 +17,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {
 			headers: {
-				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Set-Cookie': await commitSession(session),
 			},
 		})
@@ -74,7 +73,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		return redirect('/machines', {
 			headers: {
-				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Set-Cookie': await commitSession(session, {
 					maxAge: expiresIn,
 				}),
