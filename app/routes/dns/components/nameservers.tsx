@@ -7,7 +7,7 @@ import Switch from '~/components/Switch'
 import TableList from '~/components/TableList'
 import { cn } from '~/utils/cn'
 
-import AddNameserver from './dialogs/nameserver'
+import AddNameserver from '../dialogs/nameserver'
 
 interface Props {
 	nameservers: Record<string, string[]>

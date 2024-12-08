@@ -5,12 +5,12 @@ import MenuComponent from '~/components/Menu'
 import { Machine, Route, User } from '~/types'
 import { cn } from '~/utils/cn'
 
-import Delete from './dialogs/delete'
-import Expire from './dialogs/expire'
-import Move from './dialogs/move'
-import Rename from './dialogs/rename'
-import Routes from './dialogs/routes'
-import Tags from './dialogs/tags'
+import Delete from '../dialogs/delete'
+import Expire from '../dialogs/expire'
+import Move from '../dialogs/move'
+import Rename from '../dialogs/rename'
+import Routes from '../dialogs/routes'
+import Tags from '../dialogs/tags'
 
 interface MenuProps {
 	machine: Machine

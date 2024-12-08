@@ -4,7 +4,7 @@ import { toast } from '~/components/Toaster'
 import Code from '~/components/Code'
 import Button from '~/components/Button'
 import Attribute from '~/components/Attribute'
-import ExpireKey from './dialogs/expire'
+import ExpireKey from '../dialogs/expire'
 
 interface Props {
 	authKey: PreAuthKey

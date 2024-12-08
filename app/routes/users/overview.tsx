@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core'
 import { PersonIcon } from '@primer/octicons-react'
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
@@ -19,10 +18,10 @@ import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 import { send } from '~/utils/res'
 
-import Auth from './auth'
-import Oidc from './oidc'
-import Remove from './remove'
-import Rename from './rename'
+import Auth from './components/auth'
+import Oidc from './components/oidc'
+import Remove from './dialogs/remove'
+import Rename from './dialogs/rename'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))

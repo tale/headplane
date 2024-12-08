@@ -3,8 +3,8 @@ import { index, layout, prefix, route } from '@remix-run/route-config'
 
 export default [
 	// Utility Routes
-	index('routes/_index.tsx'),
-	route('/healthz', 'routes/healthz.tsx'),
+	index('routes/util/redirect.ts'),
+	route('/healthz', 'routes/util/healthz.ts'),
 
 	// Authentication Routes
 	route('/login', 'routes/auth/login.tsx'),
@@ -14,21 +14,17 @@ export default [
 	// All the main logged-in dashboard routes
 	layout('layouts/dashboard.tsx', [
 		...prefix('/machines', [
-			index('routes/_data.machines._index/route.tsx'),
-			route('/:id', 'routes/_data.machines.$id/route.tsx'),
+			index('routes/machines/overview.tsx'),
+			route('/:id', 'routes/machines/machine.tsx'),
 		]),
-		...prefix('/users', [
-			index('routes/_data.users._index/route.tsx'),
-		]),
-		...prefix('/dns', [
-			index('routes/_data.dns._index/route.tsx'),
-		]),
-		...prefix('/acls', [
-			index('routes/_data.acls._index/route.tsx'),
-		]),
+
+		route('/users', 'routes/users/overview.tsx'),
+		route('/acls', 'routes/acls/editor.tsx'),
+		route('/dns', 'routes/dns/overview.tsx'),
+
 		...prefix('/settings', [
-			index('routes/_data.settings._index/route.tsx'),
-			route('/auth-keys', 'routes/_data.settings.auth-keys._index/route.tsx'),
+			index('routes/settings/overview.tsx'),
+			route('/auth-keys', 'routes/settings/auth-keys.tsx'),
 		]),
 	])
 ]

@@ -6,7 +6,7 @@ import Link from '~/components/Link'
 import TableList from '~/components/TableList'
 import { cn } from '~/utils/cn'
 
-import AddDNS from './dialogs/dns'
+import AddDNS from '../dialogs/dns'
 
 interface Props {
 	records: { name: string, type: 'A', value: string }[]

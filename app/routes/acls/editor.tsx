@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData, useRevalidator } from '@remix-run/react'
@@ -21,9 +20,9 @@ import { getSession } from '~/utils/sessions'
 import { send } from '~/utils/res'
 import log from '~/utils/log'
 
-import { Editor, Differ } from './cm.client'
-import { Unavailable } from './unavailable'
-import { ErrorView } from './error'
+import { Editor, Differ } from './components/cm.client'
+import { Unavailable } from './components/unavailable'
+import { ErrorView } from './components/error'
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))

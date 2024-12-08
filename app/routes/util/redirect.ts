@@ -1,5 +1,5 @@
 import { redirect } from '@remix-run/node'
 
-export function loader() {
+export async function loader() {
 	return redirect('/machines')
 }

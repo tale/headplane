@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { InfoIcon } from '@primer/octicons-react'
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
@@ -15,7 +14,7 @@ import { useLiveData } from '~/utils/useLiveData'
 import type { Machine, Route, User } from '~/types'
 
 import { menuAction } from './action'
-import MachineRow from './machine'
+import MachineRow from './components/machine'
 import NewMachine from './dialogs/new'
 
 export async function loader({ request }: LoaderFunctionArgs) {

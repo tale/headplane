@@ -1,4 +1,4 @@
-import { type ActionFunctionArgs } from '@remix-run/node'
+import { ActionFunctionArgs } from '@remix-run/node'
 import { json, useLoaderData } from '@remix-run/react'
 
 import Code from '~/components/Code'
@@ -8,11 +8,11 @@ import { loadConfig, patchConfig } from '~/utils/config/headscale'
 import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 
-import DNS from './dns'
-import Domains from './domains'
-import MagicModal from './magic'
-import Nameservers from './nameservers'
-import RenameModal from './rename'
+import DNS from './components/dns'
+import Domains from './components/domains'
+import MagicModal from './components/magic'
+import Nameservers from './components/nameservers'
+import RenameModal from './components/rename'
 
 // We do not want to expose every config value
 export async function loader() {

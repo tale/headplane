@@ -5,7 +5,6 @@ import Spinner from '~/components/Spinner'
 
 type Properties = {
 	readonly isEnabled: boolean;
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly disabled?: boolean;
 }
 

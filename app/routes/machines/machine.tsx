@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
 import { Link as RemixLink, useLoaderData } from '@remix-run/react'
 import { InfoIcon, GearIcon, CheckCircleIcon, SkipIcon, PersonIcon } from '@primer/octicons-react'
@@ -19,9 +18,9 @@ import { getSession } from '~/utils/sessions'
 import { useLiveData } from '~/utils/useLiveData'
 import Link from '~/components/Link'
 
-import { menuAction } from '../_data.machines._index/action'
-import MenuOptions from '../_data.machines._index/menu'
-import Routes from '../_data.machines._index/dialogs/routes'
+import { menuAction } from './action'
+import MenuOptions from './components/menu'
+import Routes from './dialogs/routes'
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))

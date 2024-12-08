@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable unicorn/no-keyword-prefix */
 import { useFetcher } from '@remix-run/react'
 import { useState } from 'react'
 import { Input } from 'react-aria-components'
@@ -12,7 +10,6 @@ import { cn } from '~/utils/cn'
 
 type Properties = {
 	readonly name: string;
-	// eslint-disable-next-line react/boolean-prop-naming
 	readonly disabled?: boolean;
 }
 

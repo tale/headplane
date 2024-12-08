@@ -15,7 +15,7 @@ import Select from '~/components/Select'
 import Switch from '~/components/Switch'
 
 import AddPreAuthKey from './dialogs/new'
-import AuthKeyRow from './key'
+import AuthKeyRow from './components/key'
 
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'))
