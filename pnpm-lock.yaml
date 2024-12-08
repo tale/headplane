@@ -113,9 +113,6 @@ importers:
       '@remix-run/dev':
         specifier: ^2.15.0
         version: 2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1))
-      '@remix-run/fs-routes':
-        specifier: ^2.15.0
-        version: 2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(@remix-run/route-config@2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(typescript@5.7.2))(typescript@5.7.2)
       '@remix-run/route-config':
         specifier: ^2.15.0
         version: 2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(typescript@5.7.2)
@@ -1456,17 +1453,6 @@ packages:
       vite:
         optional: true
       wrangler:
-        optional: true
-
-  '@remix-run/fs-routes@2.15.0':
-    resolution: {integrity: sha512-AEGno1LRjxmiaWC64TN5gPwUwnBQr3lF5jzbm2tsRwl+qPbYCq+YPBrfVDcIIDRYOBf/PrByeoWjTMf8WPGGew==}
-    engines: {node: '>=18.0.0'}
-    peerDependencies:
-      '@remix-run/dev': ^2.15.0
-      '@remix-run/route-config': ^2.15.0
-      typescript: ^5.1.0
-    peerDependenciesMeta:
-      typescript:
         optional: true
 
   '@remix-run/node@2.15.0':
@@ -5854,13 +5840,6 @@ snapshots:
       - terser
       - ts-node
       - utf-8-validate
-
-  '@remix-run/fs-routes@2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(@remix-run/route-config@2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(typescript@5.7.2))(typescript@5.7.2)':
-    dependencies:
-      '@remix-run/dev': 2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1))
-      '@remix-run/route-config': 2.15.0(@remix-run/dev@2.15.0(@remix-run/react@2.15.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)(typescript@5.7.2))(@types/node@22.10.1)(typescript@5.7.2)(vite@6.0.3(@types/node@22.10.1)(jiti@1.21.6)(yaml@2.6.1)))(typescript@5.7.2)
-    optionalDependencies:
-      typescript: 5.7.2
 
   '@remix-run/node@2.15.0(typescript@5.7.2)':
     dependencies:
