@@ -9,30 +9,16 @@ import { createReadStream, existsSync, statSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { join, resolve } from 'node:path'
 import { env } from 'node:process'
+import { log } from './utils.mjs'
 
-function log(level, message) {
-	const date = new Date().toISOString()
-	console.log(`${date} (${level}) [SRVX] ${message}`)
-}
-
-log('INFO', `Running with Node.js ${process.versions.node}`)
+log('SRVX', 'INFO', `Running with Node.js ${process.versions.node}`)
 
 try {
 	await access('./node_modules/@remix-run', constants.F_OK | constants.R_OK)
-	log('INFO', 'Found node_modules dependencies')
+	log('SRVX', 'INFO', 'Found node_modules dependencies')
 } catch (error) {
-	log('ERROR', 'No node_modules found. Please run `pnpm install` first')
-	log('ERROR', error)
-	process.exit(1)
-}
-
-try {
-	await access('./build/server', constants.F_OK | constants.R_OK)
-	log('INFO', 'Found build directory')
-} catch (error) {
-	const date = new Date().toISOString()
-	log('ERROR', 'No build directory found. Please run `pnpm build` first')
-	log('ERROR', error)
+	log('SRVX', 'ERROR', 'No node_modules found. Please run `pnpm install`')
+	log('SRVX', 'ERROR', error)
 	process.exit(1)
 }
 
@@ -46,15 +32,35 @@ const { default: mime } = await import('mime')
 const port = env.PORT || 3000
 const host = env.HOST || '0.0.0.0'
 const buildPath = env.BUILD_PATH || './build'
-
-// Because this is a dynamic import without an easily discernable path
-// we gain the "deoptimization" we want so that Vite doesn't bundle this
-const build = await import(resolve(join(buildPath, 'server', 'index.js')))
 const baseDir = resolve(join(buildPath, 'client'))
 
-const handler = remixRequestHandler(build, 'production')
+if (!global.BUILD) {
+	try {
+		await access(join(buildPath, 'server'), constants.F_OK | constants.R_OK)
+		log('SRVX', 'INFO', 'Found build directory')
+	} catch (error) {
+		const date = new Date().toISOString()
+		log('SRVX', 'ERROR', 'No build found. Please run `pnpm build`')
+		log('SRVX', 'ERROR', error)
+		process.exit(1)
+	}
+
+	// Because this is a dynamic import without an easily discernable path
+	// we gain the "deoptimization" we want so that Vite doesn't bundle this
+	const build = await import(resolve(join(buildPath, 'server', 'index.js')))
+	global.BUILD = build
+	global.MODE = 'production'
+}
+
+const handler = remixRequestHandler(global.BUILD, global.MODE)
 const http = createServer(async (req, res) => {
 	const url = new URL(`http://${req.headers.host}${req.url}`)
+
+	if (global.MIDDLEWARE) {
+		await new Promise(resolve => {
+			global.MIDDLEWARE(req, res, resolve)
+		})
+	}
 
 	if (!url.pathname.startsWith(PREFIX)) {
 		res.writeHead(404)
@@ -155,5 +161,5 @@ const http = createServer(async (req, res) => {
 })
 
 http.listen(port, host, () => {
-	log('INFO', `Running on ${host}:${port}`)
+	log('SRVX', 'INFO', `Running on ${host}:${port}`)
 })

@@ -17,15 +17,18 @@ if (!version) {
 
 export default defineConfig(({ isSsrBuild }) => {
 	// If we have the Headplane entry we build it as a single
-	// server.mjs file that is built for production server bundle
+	// server/prod.mjs file that is built for production server bundle
 	// We know the remix invoked command is vite:build
-	if (!process.argv.includes('vite:build') && !process.argv.includes('vite:dev')) {
+	if (
+		process.env.NODE_ENV !== 'development' 
+		&& !process.argv.includes('vite:build')
+	) {
 		return {
 			build: {
 				minify: false,
 				target: 'esnext',
 				rollupOptions: {
-					input: './server.mjs',
+					input: './server/prod.mjs',
 					output: {
 						entryFileNames: 'server.js',
 						dir: 'build/headplane',

@@ -5,7 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"build": "remix vite:build && vite build",
-		"dev": "remix vite:dev",
+		"dev": "node server/dev.mjs",
+		"start": "node build/headplane/server.js",
 		"typecheck": "tsc"
 	},
 	"dependencies": {
@@ -43,6 +44,7 @@
 		"zod": "^3.23.8"
 	},
 	"devDependencies": {
+		"@babel/preset-typescript": "^7.26.0",
 		"@remix-run/dev": "^2.15.0",
 		"@remix-run/route-config": "^2.15.0",
 		"autoprefixer": "^10.4.20",
