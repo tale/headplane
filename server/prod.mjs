@@ -10,6 +10,7 @@ import { createServer } from 'node:http'
 import { join, resolve } from 'node:path'
 import { env } from 'node:process'
 import { log } from './utils.mjs'
+import { getWss, registerWss } from './ws.mjs'
 
 log('SRVX', 'INFO', `Running with Node.js ${process.versions.node}`)
 
@@ -142,7 +143,9 @@ const http = createServer(async (req, res) => {
 	})
 
 	// Pass our request to the Remix handler and get a response
-	const response = await handler(remixReq, {}) // No context
+	const response = await handler(remixReq, {
+		ws: getWss()
+	})
 
 	// Handle our response and reply
 	res.statusCode = response.status
@@ -160,6 +163,7 @@ const http = createServer(async (req, res) => {
 	res.end()
 })
 
+registerWss(http)
 http.listen(port, host, () => {
 	log('SRVX', 'INFO', `Running on ${host}:${port}`)
 })

@@ -103,6 +103,9 @@ importers:
       usehooks-ts:
         specifier: ^3.1.0
         version: 3.1.0(react@19.0.0)
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.0
       yaml:
         specifier: ^2.6.1
         version: 2.6.1
