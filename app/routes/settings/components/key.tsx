@@ -1,19 +1,19 @@
-import type { PreAuthKey } from '~/types'
-import { toast } from '~/components/Toaster'
+import type { PreAuthKey } from '~/types';
+import { toast } from '~/components/Toaster';
 
-import Code from '~/components/Code'
-import Button from '~/components/Button'
-import Attribute from '~/components/Attribute'
-import ExpireKey from '../dialogs/expire'
+import Code from '~/components/Code';
+import Button from '~/components/Button';
+import Attribute from '~/components/Attribute';
+import ExpireKey from '../dialogs/expire';
 
 interface Props {
-	authKey: PreAuthKey
-	server: string
+	authKey: PreAuthKey;
+	server: string;
 }
 
 export default function AuthKeyRow({ authKey, server }: Props) {
-	const createdAt = new Date(authKey.createdAt).toLocaleString()
-	const expiration = new Date(authKey.expiration).toLocaleString()
+	const createdAt = new Date(authKey.createdAt).toLocaleString();
+	const expiration = new Date(authKey.expiration).toLocaleString();
 
 	return (
 		<div className="w-full">
@@ -31,25 +31,24 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 				tailscale up --login-server {server} --authkey {authKey.key}
 			</Code>
 			<div className="flex gap-4 items-center">
-				{authKey.used || new Date(authKey.expiration) < new Date()
-					? undefined
-					: (
-						<ExpireKey authKey={authKey} />
-					)}
+				{authKey.used ||
+				new Date(authKey.expiration) < new Date() ? undefined : (
+					<ExpireKey authKey={authKey} />
+				)}
 				<Button
-					variant="light" 
+					variant="light"
 					className="my-4"
 					onPress={async () => {
 						await navigator.clipboard.writeText(
-							`tailscale up --login-server ${server} --authkey ${authKey.key}`
-						)
+							`tailscale up --login-server ${server} --authkey ${authKey.key}`,
+						);
 
-						toast('Copied command to clipboard')
+						toast('Copied command to clipboard');
 					}}
 				>
 					Copy Tailscale Command
 				</Button>
 			</div>
 		</div>
-	)
+	);
 }

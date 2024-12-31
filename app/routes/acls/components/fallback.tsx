@@ -1,8 +1,8 @@
-import Spinner from '~/components/Spinner'
-import { cn } from '~/utils/cn'
+import Spinner from '~/components/Spinner';
+import { cn } from '~/utils/cn';
 
 interface Props {
-	readonly acl: string
+	readonly acl: string;
 }
 
 export default function Fallback({ acl }: Props) {
@@ -20,5 +20,5 @@ export default function Fallback({ acl }: Props) {
 				value={acl}
 			/>
 		</div>
-	)
+	);
 }

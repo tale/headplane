@@ -1,5 +1,5 @@
-import { ChevronDownIcon } from '@primer/octicons-react'
-import { Dispatch, ReactNode, SetStateAction } from 'react'
+import { ChevronDownIcon } from '@primer/octicons-react';
+import { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
 	Button,
 	ListBox,
@@ -7,15 +7,14 @@ import {
 	Popover,
 	Select as AriaSelect,
 	SelectValue,
-} from 'react-aria-components'
-
-import { cn } from '~/utils/cn'
+} from 'react-aria-components';
+import { cn } from '~/utils/cn';
 
 type SelectProps = Parameters<typeof AriaSelect>[0] & {
-	readonly label: string
-	readonly state?: [string, Dispatch<SetStateAction<string>>]
-	readonly children: ReactNode
-}
+	readonly label: string;
+	readonly state?: [string, Dispatch<SetStateAction<string>>];
+	readonly children: ReactNode;
+};
 
 function Select(props: SelectProps) {
 	return (
@@ -24,7 +23,7 @@ function Select(props: SelectProps) {
 			aria-label={props.label}
 			selectedKey={props.state?.[0]}
 			onSelectionChange={(key) => {
-				props.state?.[1](key.toString())
+				props.state?.[1](key.toString());
 			}}
 			className={cn(
 				'block w-full rounded-lg my-1',
@@ -34,10 +33,11 @@ function Select(props: SelectProps) {
 				props.className,
 			)}
 		>
-			<Button className={cn(
-				'w-full flex items-center justify-between',
-				'px-2.5 py-1.5 rounded-lg',
-			)}
+			<Button
+				className={cn(
+					'w-full flex items-center justify-between',
+					'px-2.5 py-1.5 rounded-lg',
+				)}
 			>
 				<SelectValue />
 				<ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
@@ -54,15 +54,13 @@ function Select(props: SelectProps) {
 					'fill-mode-forwards origin-left-right',
 				)}
 			>
-				<ListBox orientation="vertical">
-					{props.children}
-				</ListBox>
+				<ListBox orientation="vertical">{props.children}</ListBox>
 			</Popover>
 		</AriaSelect>
-	)
+	);
 }
 
-type ItemProps = Parameters<typeof ListBoxItem>[0]
+type ItemProps = Parameters<typeof ListBoxItem>[0];
 
 function Item(props: ItemProps) {
 	return (
@@ -76,7 +74,7 @@ function Item(props: ItemProps) {
 		>
 			{props.children}
 		</ListBoxItem>
-	)
+	);
 }
 
-export default Object.assign(Select, { Item })
+export default Object.assign(Select, { Item });

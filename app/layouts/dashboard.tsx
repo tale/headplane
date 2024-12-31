@@ -1,24 +1,24 @@
-import { LoaderFunctionArgs, redirect } from '@remix-run/node'
-import { Outlet, useLoaderData, useNavigation } from '@remix-run/react'
-import { ProgressBar } from 'react-aria-components'
+import { LoaderFunctionArgs, redirect } from 'react-router';
+import { Outlet, useLoaderData, useNavigation } from 'react-router';
+import { ProgressBar } from 'react-aria-components';
 
-import { ErrorPopup } from '~/components/Error'
-import Header from '~/components/Header'
-import Footer from '~/components/Footer'
-import Link from '~/components/Link'
-import { cn } from '~/utils/cn'
-import { loadContext } from '~/utils/config/headplane'
-import { HeadscaleError, pull } from '~/utils/headscale'
-import { destroySession, getSession } from '~/utils/sessions'
+import { ErrorPopup } from '~/components/Error';
+import Header from '~/components/Header';
+import Footer from '~/components/Footer';
+import Link from '~/components/Link';
+import { cn } from '~/utils/cn';
+import { loadContext } from '~/utils/config/headplane';
+import { HeadscaleError, pull } from '~/utils/headscale';
+import { destroySession, getSession } from '~/utils/sessions';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'))
+	const session = await getSession(request.headers.get('Cookie'));
 	if (!session.has('hsApiKey')) {
-		return redirect('/login')
+		return redirect('/login');
 	}
 
 	try {
-		await pull('v1/apikey', session.get('hsApiKey')!)
+		await pull('v1/apikey', session.get('hsApiKey')!);
 	} catch (error) {
 		if (error instanceof HeadscaleError) {
 			// Safest to just redirect to login if we can't pull
@@ -26,31 +26,29 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				headers: {
 					'Set-Cookie': await destroySession(session),
 				},
-			})
+			});
 		}
 
 		// Otherwise propagate to boundary
-		throw error
+		throw error;
 	}
 
-	const context = await loadContext()
+	const context = await loadContext();
 	return {
 		config: context.config,
 		url: context.headscalePublicUrl ?? context.headscaleUrl,
 		debug: context.debug,
 		user: session.get('user'),
-	}
+	};
 }
 
 export default function Layout() {
-	const data = useLoaderData<typeof loader>()
-	const nav = useNavigation()
+	const data = useLoaderData<typeof loader>();
+	const nav = useNavigation();
 
 	return (
 		<>
-			<ProgressBar
-				aria-label="Loading..."
-			>
+			<ProgressBar aria-label="Loading...">
 				<div
 					className={cn(
 						'fixed top-0 left-0 z-50 w-1/2 h-1',
@@ -65,7 +63,7 @@ export default function Layout() {
 			</main>
 			<Footer {...data} />
 		</>
-	)
+	);
 }
 
 export function ErrorBoundary() {
@@ -75,5 +73,5 @@ export function ErrorBoundary() {
 			<ErrorPopup type="embedded" />
 			<Footer url="Unknown" debug={false} />
 		</>
-	)
+	);
 }

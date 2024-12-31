@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 @supports (scrollbar-gutter: stable) {
-    html {
-        scrollbar-gutter: stable
-    }
+	html {
+		scrollbar-gutter: stable;
+	}
 }
 
 .cm-merge-theme {
@@ -25,6 +25,7 @@
 }
 
 /* Weirdest class name characters but ok */
-.cm-mergeView .ͼ1 .cm-scroller, .cm-mergeView .ͼ1 {
+.cm-mergeView .ͼ1 .cm-scroller,
+.cm-mergeView .ͼ1 {
 	height: 100% !important;
 }

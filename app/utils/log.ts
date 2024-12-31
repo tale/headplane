@@ -1,22 +1,22 @@
 export default {
 	info: (category: string, message: string, ...args: unknown[]) => {
-		defaultLog('INFO', category, message, ...args)
+		defaultLog('INFO', category, message, ...args);
 	},
 
 	warn: (category: string, message: string, ...args: unknown[]) => {
-		defaultLog('WARN', category, message, ...args)
+		defaultLog('WARN', category, message, ...args);
 	},
 
 	error: (category: string, message: string, ...args: unknown[]) => {
-		defaultLog('ERRO', category, message, ...args)
+		defaultLog('ERRO', category, message, ...args);
 	},
 
 	debug: (category: string, message: string, ...args: unknown[]) => {
 		if (process.env.DEBUG === 'true') {
-			defaultLog('DEBG', category, message, ...args)
+			defaultLog('DEBG', category, message, ...args);
 		}
-	}
-}
+	},
+};
 
 function defaultLog(
 	level: string,
@@ -24,6 +24,6 @@ function defaultLog(
 	message: string,
 	...args: unknown[]
 ) {
-	const date = new Date().toISOString()
-	console.log(`${date} (${level}) [${category}] ${message}`, ...args)
+	const date = new Date().toISOString();
+	console.log(`${date} (${level}) [${category}] ${message}`, ...args);
 }

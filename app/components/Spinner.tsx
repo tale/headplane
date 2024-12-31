@@ -1,23 +1,22 @@
-import clsx from 'clsx'
+import clsx from 'clsx';
 
-type Properties = {
-	// eslint-disable-next-line unicorn/no-keyword-prefix
+interface Props {
 	className?: string;
 }
 
-export default function Spinner(properties: Properties) {
+export default function Spinner({ className }: Props) {
 	return (
-		<div className={clsx('mr-1.5 inline-block align-middle mb-0.5', properties.className)}>
+		<div className={clsx('mr-1.5 inline-block align-middle mb-0.5', className)}>
 			<div
 				className={clsx(
 					'animate-spin rounded-full w-full h-full',
 					'border-2 border-current border-t-transparent',
-					properties.className
+					className,
 				)}
-				role='status'
+				role="status"
 			>
-				<span className='sr-only'>Loading...</span>
+				<span className="sr-only">Loading...</span>
 			</div>
 		</div>
-	)
+	);
 }

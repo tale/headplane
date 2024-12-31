@@ -4,4 +4,4 @@ export type Key = {
 	expiration: string;
 	createdAt: Date;
 	lastSeen: Date;
-}
+};

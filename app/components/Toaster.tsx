@@ -1,22 +1,25 @@
-import { XIcon } from '@primer/octicons-react'
-import { AriaToastProps, useToast, useToastRegion } from '@react-aria/toast'
-import { ToastQueue, ToastState, useToastQueue } from '@react-stately/toast'
-import { ReactNode, useRef } from 'react'
-import { Button } from 'react-aria-components'
-import { createPortal } from 'react-dom'
-import { ClientOnly } from 'remix-utils/client-only'
+import { XIcon } from '@primer/octicons-react';
+import { AriaToastProps, useToast, useToastRegion } from '@react-aria/toast';
+import { ToastQueue, ToastState, useToastQueue } from '@react-stately/toast';
+import { ReactNode, useRef } from 'react';
+import { Button } from 'react-aria-components';
+import { createPortal } from 'react-dom';
+import { ClientOnly } from 'remix-utils/client-only';
+import { cn } from '~/utils/cn';
 
-import { cn } from '~/utils/cn'
-
-type ToastProperties = AriaToastProps<ReactNode> & {
+type ToastProps = AriaToastProps<ReactNode> & {
 	readonly state: ToastState<ReactNode>;
-}
+};
 
-function Toast({ state, ...properties }: ToastProperties) {
-	const reference = useRef(null)
+function Toast({ state, ...properties }: ToastProps) {
+	const reference = useRef(null);
 
 	// @ts-expect-error: RefObject doesn't map to FocusableElement?
-	const { toastProps, titleProps, closeButtonProps } = useToast(properties, state, reference)
+	const { toastProps, titleProps, closeButtonProps } = useToast(
+		properties,
+		state,
+		reference,
+	);
 
 	return (
 		<div
@@ -26,7 +29,7 @@ function Toast({ state, ...properties }: ToastProperties) {
 				'bg-main-700 dark:bg-main-800 rounded-lg',
 				'text-main-100 dark:text-main-200 z-50',
 				'border border-main-600 dark:border-main-700',
-				'flex items-center justify-between p-3 pl-4 w-80'
+				'flex items-center justify-between p-3 pl-4 w-80',
 			)}
 		>
 			<div {...titleProps}>{properties.toast.content}</div>
@@ -34,52 +37,50 @@ function Toast({ state, ...properties }: ToastProperties) {
 				{...closeButtonProps}
 				className={cn(
 					'outline-none rounded-full p-1',
-					'hover:bg-main-600 dark:hover:bg-main-700'
+					'hover:bg-main-600 dark:hover:bg-main-700',
 				)}
 			>
-				<XIcon className='w-4 h-4'/>
+				<XIcon className="w-4 h-4" />
 			</Button>
 		</div>
-	)
+	);
 }
 
 const toasts = new ToastQueue<ReactNode>({
-	maxVisibleToasts: 5
-})
+	maxVisibleToasts: 5,
+});
 
 export function toast(text: string) {
-	return toasts.add(text, { timeout: 5000 })
+	return toasts.add(text, { timeout: 5000 });
 }
 
 export function Toaster() {
-	const reference = useRef(null)
-	const state = useToastQueue(toasts)
+	const reference = useRef(null);
+	const state = useToastQueue(toasts);
 
 	// @ts-expect-error: React 19 has weird types for Portal vs Node
-	const { regionProps } = useToastRegion({}, state, reference)
+	const { regionProps } = useToastRegion({}, state, reference);
 
 	return (
 		<ClientOnly>
 			{
 				// @ts-expect-error: Portal doesn't match Node in React 19 yet
-				() => createPortal(
-				state.visibleToasts.length >= 0 ? (
-					<div
-						className={cn(
-							'fixed bottom-4 right-4',
-							'flex flex-col gap-4'
-						)}
-						{...regionProps}
-						ref={reference}
-					>
-						{state.visibleToasts.map(toast => (
-							<Toast key={toast.key} toast={toast} state={state}/>
-						))}
-					</div>
-				) : undefined,
-				document.body
-			)}
+				() =>
+					createPortal(
+						state.visibleToasts.length >= 0 ? (
+							<div
+								className={cn('fixed bottom-4 right-4', 'flex flex-col gap-4')}
+								{...regionProps}
+								ref={reference}
+							>
+								{state.visibleToasts.map((toast) => (
+									<Toast key={toast.key} toast={toast} state={state} />
+								))}
+							</div>
+						) : undefined,
+						document.body,
+					)
+			}
 		</ClientOnly>
-	)
+	);
 }
-

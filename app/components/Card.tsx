@@ -1,53 +1,43 @@
-import { type HTMLProps } from 'react'
-import { Heading as AriaHeading } from 'react-aria-components'
+import { HTMLProps } from 'react';
+import { Heading as AriaHeading } from 'react-aria-components';
+import { cn } from '~/utils/cn';
 
-import { cn } from '~/utils/cn'
-
-function Title(properties: Parameters<typeof AriaHeading>[0]) {
+function Title(props: Parameters<typeof AriaHeading>[0]) {
 	return (
 		<AriaHeading
-			{...properties}
-			slot='title'
-			className={cn(
-				'text-lg font-semibold leading-6 mb-5',
-				properties.className
-			)}
+			{...props}
+			slot="title"
+			className={cn('text-lg font-semibold leading-6 mb-5', props.className)}
 		/>
-	)
+	);
 }
 
-function Text(properties: React.HTMLProps<HTMLParagraphElement>) {
+function Text(props: React.HTMLProps<HTMLParagraphElement>) {
 	return (
-		<p
-			{...properties}
-			className={cn(
-				'text-base leading-6 my-0',
-				properties.className
-			)}
-		/>
-	)
+		<p {...props} className={cn('text-base leading-6 my-0', props.className)} />
+	);
 }
 
-type Properties = HTMLProps<HTMLDivElement> & {
+type Props = HTMLProps<HTMLDivElement> & {
 	variant?: 'raised' | 'flat';
-}
+};
 
-function Card(properties: Properties) {
+function Card(props: Props) {
 	return (
 		<div
-			{...properties}
+			{...props}
 			className={cn(
 				'w-full max-w-md overflow-hidden rounded-xl p-4',
-				properties.variant === 'flat'
+				props.variant === 'flat'
 					? 'bg-transparent shadow-none'
 					: 'bg-ui-50 dark:bg-ui-900 shadow-sm',
 				'border border-ui-200 dark:border-ui-700',
-				properties.className
+				props.className,
 			)}
 		>
-			{properties.children}
+			{props.children}
 		</div>
-	)
+	);
 }
 
-export default Object.assign(Card, { Title, Text })
+export default Object.assign(Card, { Title, Text });

@@ -1,46 +1,39 @@
-import { Form, useSubmit } from '@remix-run/react'
-import { type Dispatch, type SetStateAction } from 'react'
+import { Form, useSubmit } from 'react-router';
+import { type Dispatch, type SetStateAction } from 'react';
 
-import Dialog from '~/components/Dialog'
-import { type Machine } from '~/types'
-import { cn } from '~/utils/cn'
+import Dialog from '~/components/Dialog';
+import { type Machine } from '~/types';
+import { cn } from '~/utils/cn';
 
 interface DeleteProps {
-	readonly machine: Machine
-	readonly state: [boolean, Dispatch<SetStateAction<boolean>>]
+	readonly machine: Machine;
+	readonly state: [boolean, Dispatch<SetStateAction<boolean>>];
 }
 
 export default function Delete({ machine, state }: DeleteProps) {
-	const submit = useSubmit()
+	const submit = useSubmit();
 
 	return (
 		<Dialog>
 			<Dialog.Panel control={state}>
-				{close => (
+				{(close) => (
 					<>
-						<Dialog.Title>
-							Remove
-							{' '}
-							{machine.givenName}
-						</Dialog.Title>
+						<Dialog.Title>Remove {machine.givenName}</Dialog.Title>
 						<Dialog.Text>
-							This machine will be permanently removed from
-							your network. To re-add it, you will need to
-							reauthenticate to your tailnet from the device.
+							This machine will be permanently removed from your network. To
+							re-add it, you will need to reauthenticate to your tailnet from
+							the device.
 						</Dialog.Text>
 						<Form
 							method="POST"
 							onSubmit={(e) => {
-								submit(e.currentTarget)
+								submit(e.currentTarget);
 							}}
 						>
 							<input type="hidden" name="_method" value="delete" />
 							<input type="hidden" name="id" value={machine.id} />
 							<div className="mt-6 flex justify-end gap-2 mt-6">
-								<Dialog.Action
-									variant="cancel"
-									onPress={close}
-								>
+								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
 								<Dialog.Action
@@ -61,5 +54,5 @@ export default function Delete({ machine, state }: DeleteProps) {
 				)}
 			</Dialog.Panel>
 		</Dialog>
-	)
+	);
 }

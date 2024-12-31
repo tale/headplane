@@ -1,32 +1,37 @@
-import { BeakerIcon, EyeIcon, IssueDraftIcon, PencilIcon } from '@primer/octicons-react'
-import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useRevalidator } from '@remix-run/react'
-import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher'
-import { useEffect, useState, useMemo } from 'react'
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components'
-import { setTimeout } from 'node:timers/promises'
+import {
+	BeakerIcon,
+	EyeIcon,
+	IssueDraftIcon,
+	PencilIcon,
+} from '@primer/octicons-react';
+import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { useLoaderData, useRevalidator } from 'react-router';
+import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
+import { useEffect, useState, useMemo } from 'react';
+import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
+import { setTimeout } from 'node:timers/promises';
 
-import Button from '~/components/Button'
-import Code from '~/components/Code'
-import Link from '~/components/Link'
-import Notice from '~/components/Notice'
-import Spinner from '~/components/Spinner'
-import { toast } from '~/components/Toaster'
-import { cn } from '~/utils/cn'
-import { loadContext } from '~/utils/config/headplane'
-import { loadConfig } from '~/utils/config/headscale'
-import { HeadscaleError, pull, put } from '~/utils/headscale'
-import { getSession } from '~/utils/sessions'
-import { send } from '~/utils/res'
-import log from '~/utils/log'
+import Button from '~/components/Button';
+import Code from '~/components/Code';
+import Link from '~/components/Link';
+import Notice from '~/components/Notice';
+import Spinner from '~/components/Spinner';
+import { toast } from '~/components/Toaster';
+import { cn } from '~/utils/cn';
+import { loadContext } from '~/utils/config/headplane';
+import { loadConfig } from '~/utils/config/headscale';
+import { HeadscaleError, pull, put } from '~/utils/headscale';
+import { getSession } from '~/utils/sessions';
+import { send } from '~/utils/res';
+import log from '~/utils/log';
 
-import { Editor, Differ } from './components/cm.client'
-import { Unavailable } from './components/unavailable'
-import { ErrorView } from './components/error'
+import { Editor, Differ } from './components/cm.client';
+import { Unavailable } from './components/unavailable';
+import { ErrorView } from './components/error';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'))
-	
+	const session = await getSession(request.headers.get('Cookie'));
+
 	// The way policy is handled in 0.23 of Headscale and later is verbose.
 	// The 2 ACL policy modes are either the database one or file one
 	//
@@ -51,11 +56,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	// We can do damage control by checking for write access and if we are not
 	// able to PUT an ACL policy on the v1/policy route, we can already know
 	// that the policy is at the very-least readonly or not available.
-	const context = await loadContext()
-	let modeGuess = 'database' // Assume database mode
+	const context = await loadContext();
+	let modeGuess = 'database'; // Assume database mode
 	if (context.config.read) {
-		const config = await loadConfig()
-		modeGuess = config.policy?.mode ?? 'database'
+		const config = await loadConfig();
+		modeGuess = config.policy?.mode ?? 'database';
 	}
 
 	// Attempt to load the policy, for both the frontend and for checking
@@ -64,23 +69,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		const { policy } = await pull<{ policy: string }>(
 			'v1/policy',
 			session.get('hsApiKey')!,
-		)
+		);
 
-		let write = false // On file mode we already know it's readonly
+		let write = false; // On file mode we already know it's readonly
 		if (modeGuess === 'database' && policy.length > 0) {
 			try {
 				await put('v1/policy', session.get('hsApiKey')!, {
 					policy: policy,
-				})
+				});
 
-				write = true
+				write = true;
 			} catch (error) {
-				write = false
-				log.debug(
-					'APIC',
-					'Failed to write to ACL policy with error %s',
-					error
-				)
+				write = false;
+				log.debug('APIC', 'Failed to write to ACL policy with error %s', error);
 			}
 		}
 
@@ -88,8 +89,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			read: true,
 			write,
 			mode: modeGuess,
-			policy
-		}
+			policy,
+		};
 	} catch {
 		// If we are explicit on file mode then this is the end of the road
 		if (modeGuess === 'file') {
@@ -97,8 +98,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
 				read: false,
 				write: false,
 				mode: modeGuess,
-				policy: null
-			}
+				policy: null,
+			};
 		}
 
 		// Assume that we have write access otherwise?
@@ -108,124 +109,119 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			read: true,
 			write: true,
 			mode: modeGuess,
-			policy: null
-		}
+			policy: null,
+		};
 	}
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'))
+	const session = await getSession(request.headers.get('Cookie'));
 	if (!session.has('hsApiKey')) {
-		return send({ success: false, error: null }, 401)
+		return send({ success: false, error: null }, 401);
 	}
 
 	try {
-		const { acl } = await request.json() as { acl: string }
+		const { acl } = (await request.json()) as { acl: string };
 		const { policy } = await put<{ policy: string }>(
 			'v1/policy',
 			session.get('hsApiKey')!,
 			{
 				policy: acl,
-			}
-		)
+			},
+		);
 
-		return { success: true, policy, error: null }
+		return { success: true, policy, error: null };
 	} catch (error) {
-		log.debug('APIC', 'Failed to update ACL policy with error %s', error)
+		log.debug('APIC', 'Failed to update ACL policy with error %s', error);
 
 		// @ts-ignore: Shut UP we know it's a string most of the time
-		const text = JSON.parse(error.message)
-		return send({ success: false, error: text.message }, {
-			status: error instanceof HeadscaleError ? error.status : 500,
-		})
+		const text = JSON.parse(error.message);
+		return send(
+			{ success: false, error: text.message },
+			{
+				status: error instanceof HeadscaleError ? error.status : 500,
+			},
+		);
 	}
 
-	return { success: true, error: null }
+	return { success: true, error: null };
 }
 
 export default function Page() {
-	const data = useLoaderData<typeof loader>()
-	const fetcher = useDebounceFetcher<typeof action>()
-	const revalidator = useRevalidator()
+	const data = useLoaderData<typeof loader>();
+	const fetcher = useDebounceFetcher<typeof action>();
+	const revalidator = useRevalidator();
 
-	const [acl, setAcl] = useState(data.policy ?? '')
-	const [toasted, setToasted] = useState(false)
+	const [acl, setAcl] = useState(data.policy ?? '');
+	const [toasted, setToasted] = useState(false);
 
 	useEffect(() => {
 		if (!fetcher.data || toasted) {
-			return
+			return;
 		}
 
 		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data.success) {
-			toast('Updated tailnet ACL policy')
+			toast('Updated tailnet ACL policy');
 		} else {
-			toast('Failed to update tailnet ACL policy')
+			toast('Failed to update tailnet ACL policy');
 		}
 
-		setToasted(true)
+		setToasted(true);
 		if (revalidator.state === 'idle') {
-			revalidator.revalidate()
+			revalidator.revalidate();
 		}
-	}, [fetcher.data, toasted, data.policy])
+	}, [fetcher.data, toasted, data.policy]);
 
 	// The state for if the save and discard buttons should be disabled
 	// is pretty complicated to calculate and varies on different states.
 	const disabled = useMemo(() => {
 		if (!data.read || !data.write) {
-			return true
+			return true;
 		}
 
 		// First check our fetcher states
 		if (fetcher.state === 'loading') {
-			return true
+			return true;
 		}
 
 		if (revalidator.state === 'loading') {
-			return true
+			return true;
 		}
 
 		// If we have a failed fetcher state allow the user to try again
 		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data?.success === false) {
-			return false
+			return false;
 		}
 
-		return data.policy === acl
-	}, [data, revalidator.state, fetcher.state, fetcher.data, data.policy, acl])
+		return data.policy === acl;
+	}, [data, revalidator.state, fetcher.state, fetcher.data, data.policy, acl]);
 
 	return (
 		<div>
-			{data.read && !data.write
-				? (
-					<div className="mb-4">
-						<Notice className="w-fit">
-							The ACL policy is read-only. You can view the current policy
-							but you cannot make changes to it.
-							<br />
-							To resolve this, you need to set the ACL policy mode to
-							database in your Headscale configuration.
-						</Notice>
-					</div>
-				) : undefined}
-
-			<h1 className="text-2xl font-medium mb-4">
-				Access Control List (ACL)
-			</h1>
-
+			{data.read && !data.write ? (
+				<div className="mb-4">
+					<Notice className="w-fit">
+						The ACL policy is read-only. You can view the current policy but you
+						cannot make changes to it.
+						<br />
+						To resolve this, you need to set the ACL policy mode to database in
+						your Headscale configuration.
+					</Notice>
+				</div>
+			) : undefined}
+			<h1 className="text-2xl font-medium mb-4">Access Control List (ACL)</h1>
 			<p className="mb-4 max-w-prose">
-				The ACL file is used to define the access control rules for your network.
-				You can find more information about the ACL file in the
-				{' '}
+				The ACL file is used to define the access control rules for your
+				network. You can find more information about the ACL file in the{' '}
 				<Link
 					to="https://tailscale.com/kb/1018/acls"
 					name="Tailscale ACL documentation"
 				>
 					Tailscale ACL guide
-				</Link>
-				{' '}
-				and the
-				{' '}
+				</Link>{' '}
+				and the{' '}
 				<Link
 					to="https://headscale.net/stable/ref/acls/"
 					name="Headscale ACL documentation"
@@ -234,73 +230,71 @@ export default function Page() {
 				</Link>
 				.
 			</p>
-
 			{
 				// @ts-ignore: useDebounceFetcher is not typed correctly
-				fetcher.data?.success === false
-				? (
+				fetcher.data?.success === false ? (
 					// @ts-ignore: useDebounceFetcher is not typed correctly
 					<ErrorView message={fetcher.data.error} />
-				) : undefined}
-
+				) : undefined
+			}
 			{data.read ? (
 				<>
 					<Tabs>
-						<TabList className={cn(
-							'flex border-t border-gray-200 dark:border-gray-700',
-							'w-fit rounded-t-lg overflow-hidden',
-							'text-gray-400 dark:text-gray-500',
-						)}
+						<TabList
+							className={cn(
+								'flex border-t border-gray-200 dark:border-gray-700',
+								'w-fit rounded-t-lg overflow-hidden',
+								'text-gray-400 dark:text-gray-500',
+							)}
 						>
 							<Tab
 								id="edit"
-								className={({ isSelected }) => cn(
-									'px-4 py-2 rounded-tl-lg',
-									'focus:outline-none flex items-center gap-2',
-									'border-x border-gray-200 dark:border-gray-700',
-									isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-								)}
+								className={({ isSelected }) =>
+									cn(
+										'px-4 py-2 rounded-tl-lg',
+										'focus:outline-none flex items-center gap-2',
+										'border-x border-gray-200 dark:border-gray-700',
+										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
+									)
+								}
 							>
 								<PencilIcon className="w-5 h-5" />
 								<p>Edit file</p>
 							</Tab>
 							<Tab
 								id="diff"
-								className={({ isSelected }) => cn(
-									'px-4 py-2',
-									'focus:outline-none flex items-center gap-2',
-									'border-x border-gray-200 dark:border-gray-700',
-									isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-								)}
+								className={({ isSelected }) =>
+									cn(
+										'px-4 py-2',
+										'focus:outline-none flex items-center gap-2',
+										'border-x border-gray-200 dark:border-gray-700',
+										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
+									)
+								}
 							>
 								<EyeIcon className="w-5 h-5" />
 								<p>Preview changes</p>
 							</Tab>
 							<Tab
 								id="preview"
-								className={({ isSelected }) => cn(
-									'px-4 py-2 rounded-tr-lg',
-									'focus:outline-none flex items-center gap-2',
-									'border-x border-gray-200 dark:border-gray-700',
-									isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-								)}
+								className={({ isSelected }) =>
+									cn(
+										'px-4 py-2 rounded-tr-lg',
+										'focus:outline-none flex items-center gap-2',
+										'border-x border-gray-200 dark:border-gray-700',
+										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
+									)
+								}
 							>
 								<BeakerIcon className="w-5 h-5" />
 								<p>Preview rules</p>
 							</Tab>
 						</TabList>
 						<TabPanel id="edit">
-							<Editor
-								isDisabled={!data.write}
-								value={acl}
-								onChange={setAcl}
-							/>
+							<Editor isDisabled={!data.write} value={acl} onChange={setAcl} />
 						</TabPanel>
 						<TabPanel id="diff">
-							<Differ
-								left={data?.policy ?? ''}
-								right={acl}
-							/>
+							<Differ left={data?.policy ?? ''} right={acl} />
 						</TabPanel>
 						<TabPanel id="preview">
 							<div
@@ -312,8 +306,9 @@ export default function Page() {
 							>
 								<IssueDraftIcon className="w-24 h-24 text-gray-300 dark:text-gray-500" />
 								<p className="w-1/2 text-center mt-4">
-									The Preview rules is very much still a work in progress.
-									It is a bit complicated to implement right now but hopefully it will be available soon.
+									The Preview rules is very much still a work in progress. It is
+									a bit complicated to implement right now but hopefully it will
+									be available soon.
 								</p>
 							</div>
 						</TabPanel>
@@ -323,32 +318,35 @@ export default function Page() {
 						className="mr-2"
 						isDisabled={disabled}
 						onPress={() => {
-							setToasted(false)
-							fetcher.submit({
-								acl,
-							}, {
-								method: 'PATCH',
-								encType: 'application/json',
-							})
+							setToasted(false);
+							fetcher.submit(
+								{
+									acl,
+								},
+								{
+									method: 'PATCH',
+									encType: 'application/json',
+								},
+							);
 						}}
 					>
-						{fetcher.state === 'idle'
-							? undefined
-							: (
-								<Spinner className="w-3 h-3" />
-								)}
+						{fetcher.state === 'idle' ? undefined : (
+							<Spinner className="w-3 h-3" />
+						)}
 						Save
 					</Button>
 					<Button
 						isDisabled={disabled}
 						onPress={() => {
-							setAcl(data?.policy ?? '')
+							setAcl(data?.policy ?? '');
 						}}
 					>
 						Discard Changes
 					</Button>
 				</>
-			) : <Unavailable mode={data.mode as "database" | "file"} />}
+			) : (
+				<Unavailable mode={data.mode as 'database' | 'file'} />
+			)}
 		</div>
-	)
+	);
 }

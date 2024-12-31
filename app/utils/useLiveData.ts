@@ -1,35 +1,35 @@
-import { useRevalidator } from '@remix-run/react'
-import { useEffect } from 'react'
-import { useInterval } from 'usehooks-ts'
+import { useRevalidator } from 'react-router';
+import { useEffect } from 'react';
+import { useInterval } from 'usehooks-ts';
 
 interface Props {
-	interval: number
+	interval: number;
 }
 
 export function useLiveData({ interval }: Props) {
-	const revalidator = useRevalidator()
+	const revalidator = useRevalidator();
 
 	// Handle normal stale-while-revalidate behavior
 	useInterval(() => {
 		if (revalidator.state === 'idle') {
-			revalidator.revalidate()
+			revalidator.revalidate();
 		}
-	}, interval)
+	}, interval);
 
 	useEffect(() => {
 		const handler = () => {
 			if (revalidator.state === 'idle') {
-				revalidator.revalidate()
+				revalidator.revalidate();
 			}
-		}
+		};
 
-		window.addEventListener('online', handler)
-		document.addEventListener('focus', handler)
+		window.addEventListener('online', handler);
+		document.addEventListener('focus', handler);
 
 		return () => {
-			window.removeEventListener('online', handler)
-			document.removeEventListener('focus', handler)
-		}
-	}, [revalidator])
-	return revalidator
+			window.removeEventListener('online', handler);
+			document.removeEventListener('focus', handler);
+		};
+	}, [revalidator]);
+	return revalidator;
 }

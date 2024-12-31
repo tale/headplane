@@ -1,47 +1,47 @@
 // This is a "side-effect" but we want a lifecycle cache map of
 // peer statuses to prevent unnecessary fetches to the agent.
-import type { LoaderFunctionArgs } from 'remix'
+import type { LoaderFunctionArgs } from 'react-router';
 
-type Context = LoaderFunctionArgs['context']
-const cache: { [nodeID: string]: unknown } = {}
+type Context = LoaderFunctionArgs['context'];
+const cache: { [nodeID: string]: unknown } = {};
 
 export async function queryWS(context: Context, nodeIDs: string[]) {
-	const ws = context.ws
-	const firstClient = ws.clients.values().next().value
+	const ws = context.ws;
+	const firstClient = ws.clients.values().next().value;
 	if (!firstClient) {
-		return cache
+		return cache;
 	}
 
 	const cached = nodeIDs.map((nodeID) => {
-		const cached = cache[nodeID]
+		const cached = cache[nodeID];
 		if (cached) {
-			return cached
+			return cached;
 		}
-	})
+	});
 
 	// We only need to query the nodes that are not cached
-	const uncached = nodeIDs.filter((nodeID) => !cached.includes(nodeID))
+	const uncached = nodeIDs.filter((nodeID) => !cached.includes(nodeID));
 	if (uncached.length === 0) {
-		return cache
+		return cache;
 	}
 
-	firstClient.send(JSON.stringify({ NodeIDs: uncached }))
-	await new Promise((resolve) => {
+	firstClient.send(JSON.stringify({ NodeIDs: uncached }));
+	await new Promise<void>((resolve) => {
 		const timeout = setTimeout(() => {
-			resolve()
-		}, 3000)
+			resolve();
+		}, 3000);
 
-		firstClient.on('message', (message) => {
-			const data = JSON.parse(message.toString())
+		firstClient.on('message', (message: string) => {
+			const data = JSON.parse(message.toString());
 			if (Object.keys(data).length === 0) {
-				resolve()
+				resolve();
 			}
 
 			for (const [nodeID, status] of Object.entries(data)) {
-				cache[nodeID] = status
+				cache[nodeID] = status;
 			}
-		})
-	})
+		});
+	});
 
-	return cache
+	return cache;
 }

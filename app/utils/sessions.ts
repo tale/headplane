@@ -1,4 +1,4 @@
-import { createCookieSessionStorage } from '@remix-run/node' // Or cloudflare/deno
+import { createCookieSessionStorage } from 'react-router'; // Or cloudflare/deno
 
 export type SessionData = {
 	hsApiKey: string;
@@ -9,18 +9,14 @@ export type SessionData = {
 		name: string;
 		email?: string;
 	};
-}
+};
 
 type SessionFlashData = {
 	error: string;
-}
+};
 
-export const {
-	getSession,
-	commitSession,
-	destroySession
-} = createCookieSessionStorage<SessionData, SessionFlashData>(
-	{
+export const { getSession, commitSession, destroySession } =
+	createCookieSessionStorage<SessionData, SessionFlashData>({
 		cookie: {
 			name: 'hp_sess',
 			httpOnly: true,
@@ -29,7 +25,5 @@ export const {
 			sameSite: 'lax',
 			secrets: [process.env.COOKIE_SECRET!],
 			secure: process.env.COOKIE_SECURE !== 'false',
-		}
-	}
-)
-
+		},
+	});

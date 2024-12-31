@@ -1,24 +1,21 @@
-import type { LinksFunction, MetaFunction } from '@remix-run/node'
-import {
-	Links,
-	Meta,
-	Outlet,
-	Scripts,
-	ScrollRestoration,
-} from '@remix-run/react'
+import type { LinksFunction, MetaFunction } from 'react-router';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 
-import { ErrorPopup } from '~/components/Error'
-import { Toaster } from '~/components/Toaster'
-import stylesheet from '~/tailwind.css?url'
+import { ErrorPopup } from '~/components/Error';
+import { Toaster } from '~/components/Toaster';
+import stylesheet from '~/tailwind.css?url';
 
 export const meta: MetaFunction = () => [
 	{ title: 'Headplane' },
-	{ name: 'description', content: 'A frontend for the headscale coordination server' },
-]
+	{
+		name: 'description',
+		content: 'A frontend for the headscale coordination server',
+	},
+];
 
 export const links: LinksFunction = () => [
 	{ rel: 'stylesheet', href: stylesheet },
-]
+];
 
 export function Layout({ children }: { readonly children: React.ReactNode }) {
 	return (
@@ -36,13 +33,13 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 				<Scripts />
 			</body>
 		</html>
-	)
+	);
 }
 
 export function ErrorBoundary() {
-	return <ErrorPopup />
+	return <ErrorPopup />;
 }
 
 export default function App() {
-	return <Outlet />
+	return <Outlet />;
 }

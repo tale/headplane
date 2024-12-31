@@ -1,68 +1,69 @@
-import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react'
-import { Link } from '@remix-run/react'
+import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react';
+import { Link } from 'react-router';
 
-import Menu from '~/components/Menu'
-import StatusCircle from '~/components/StatusCircle'
-import { toast } from '~/components/Toaster'
-import { Machine, Route, User } from '~/types'
-import { cn } from '~/utils/cn'
+import Menu from '~/components/Menu';
+import StatusCircle from '~/components/StatusCircle';
+import { toast } from '~/components/Toaster';
+import { Machine, Route, User } from '~/types';
+import { cn } from '~/utils/cn';
 
-import MenuOptions from './menu'
+import MenuOptions from './menu';
 
 interface Props {
-	readonly machine: Machine
-	readonly routes: Route[]
-	readonly users: User[]
-	readonly magic?: string
+	readonly machine: Machine;
+	readonly routes: Route[];
+	readonly users: User[];
+	readonly magic?: string;
 }
 
 export default function MachineRow({ machine, routes, magic, users }: Props) {
-	const expired = machine.expiry === '0001-01-01 00:00:00'
-		|| machine.expiry === '0001-01-01T00:00:00Z'
-		|| machine.expiry === null
-		? false
-		: new Date(machine.expiry).getTime() < Date.now()
+	const expired =
+		machine.expiry === '0001-01-01 00:00:00' ||
+		machine.expiry === '0001-01-01T00:00:00Z' ||
+		machine.expiry === null
+			? false
+			: new Date(machine.expiry).getTime() < Date.now();
 
-	const tags = [
-		...machine.forcedTags,
-		...machine.validTags,
-	]
+	const tags = [...machine.forcedTags, ...machine.validTags];
 
 	if (expired) {
-		tags.unshift('Expired')
+		tags.unshift('Expired');
 	}
 
 	let prefix = magic?.startsWith('[user]')
 		? magic.replace('[user]', machine.user.name)
-		: magic
+		: magic;
 
 	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet, subnetApproved } = routes.reduce((acc, route) => {
-		if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
-			acc.exit.push(route)
-			return acc
-		}
+	const { exit, subnet, subnetApproved } = routes.reduce(
+		(acc, route) => {
+			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
+				acc.exit.push(route);
+				return acc;
+			}
 
-		if (route.enabled) {
-			acc.subnetApproved.push(route)
-			return acc
-		}
+			if (route.enabled) {
+				acc.subnetApproved.push(route);
+				return acc;
+			}
 
-		acc.subnet.push(route)
-		return acc
-	}, { exit: [], subnetApproved: [], subnet: [] })
+			acc.subnet.push(route);
+			return acc;
+		},
+		{ exit: [], subnetApproved: [], subnet: [] },
+	);
 
 	const exitEnabled = useMemo(() => {
-		if (exit.length !== 2) return false
-		return exit[0].enabled && exit[1].enabled
-	}, [exit])
+		if (exit.length !== 2) return false;
+		return exit[0].enabled && exit[1].enabled;
+	}, [exit]);
 
 	if (exitEnabled) {
-		tags.unshift('Exit Node')
+		tags.unshift('Exit Node');
 	}
 
 	if (subnetApproved.length > 0) {
-		tags.unshift('Subnets')
+		tags.unshift('Subnets');
 	}
 
 	return (
@@ -71,15 +72,13 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 			className="hover:bg-zinc-100 dark:hover:bg-zinc-800 group"
 		>
 			<td className="pl-0.5 py-2">
-				<Link
-					to={`/machines/${machine.id}`}
-					className="group/link h-full"
-				>
-					<p className={cn(
-						'font-semibold leading-snug',
-						'group-hover/link:text-blue-600',
-						'group-hover/link:dark:text-blue-400',
-					)}
+				<Link to={`/machines/${machine.id}`} className="group/link h-full">
+					<p
+						className={cn(
+							'font-semibold leading-snug',
+							'group-hover/link:text-blue-600',
+							'group-hover/link:dark:text-blue-400',
+						)}
 					>
 						{machine.givenName}
 					</p>
@@ -87,7 +86,7 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 						{machine.name}
 					</p>
 					<div className="flex gap-1 mt-1">
-						{tags.map(tag => (
+						{tags.map((tag) => (
 							<span
 								key={tag}
 								className={cn(
@@ -110,7 +109,7 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 							<ChevronDownIcon className="w-4 h-4" />
 						</Menu.Button>
 						<Menu.Items>
-							{machine.ipAddresses.map(ip => (
+							{machine.ipAddresses.map((ip) => (
 								<Menu.ItemButton
 									key={ip}
 									type="button"
@@ -119,44 +118,41 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 										'justify-between w-full',
 									)}
 									onPress={async () => {
-										await navigator.clipboard.writeText(ip)
-										toast('Copied IP address to clipboard')
+										await navigator.clipboard.writeText(ip);
+										toast('Copied IP address to clipboard');
 									}}
 								>
 									{ip}
 									<CopyIcon className="w-3 h-3" />
 								</Menu.ItemButton>
 							))}
-							{magic
-								? (
-									<Menu.ItemButton
-										type="button"
-										className={cn(
-											'flex items-center gap-x-1.5 text-sm',
-											'justify-between w-full break-keep',
-										)}
-										onPress={async () => {
-											const ip = `${machine.givenName}.${prefix}`
-											await navigator.clipboard.writeText(ip)
-											toast('Copied hostname to clipboard')
-										}}
-									>
-										{machine.givenName}
-										.
-										{prefix}
-										<CopyIcon className="w-3 h-3" />
-									</Menu.ItemButton>
-									)
-								: undefined}
+							{magic ? (
+								<Menu.ItemButton
+									type="button"
+									className={cn(
+										'flex items-center gap-x-1.5 text-sm',
+										'justify-between w-full break-keep',
+									)}
+									onPress={async () => {
+										const ip = `${machine.givenName}.${prefix}`;
+										await navigator.clipboard.writeText(ip);
+										toast('Copied hostname to clipboard');
+									}}
+								>
+									{machine.givenName}.{prefix}
+									<CopyIcon className="w-3 h-3" />
+								</Menu.ItemButton>
+							) : undefined}
 						</Menu.Items>
 					</Menu>
 				</div>
 			</td>
 			<td className="py-2">
-				<span className={cn(
-					'flex items-center gap-x-1 text-sm',
-					'text-gray-500 dark:text-gray-400',
-				)}
+				<span
+					className={cn(
+						'flex items-center gap-x-1 text-sm',
+						'text-gray-500 dark:text-gray-400',
+					)}
 				>
 					<StatusCircle
 						isOnline={machine.online && !expired}
@@ -165,9 +161,7 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 					<p>
 						{machine.online && !expired
 							? 'Connected'
-							: new Date(
-								machine.lastSeen,
-							).toLocaleString()}
+							: new Date(machine.lastSeen).toLocaleString()}
 					</p>
 				</span>
 			</td>
@@ -180,5 +174,5 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 				/>
 			</td>
 		</tr>
-	)
+	);
 }

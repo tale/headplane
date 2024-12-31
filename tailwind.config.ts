@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import type { Config } from 'tailwindcss'
-import colors from 'tailwindcss/colors'
-import animate from 'tailwindcss-animate'
-import aria from 'tailwindcss-react-aria-components'
+import type { Config } from 'tailwindcss';
+import colors from 'tailwindcss/colors';
+import animate from 'tailwindcss-animate';
+import aria from 'tailwindcss-react-aria-components';
 
 export default {
 	content: ['./app/**/*.{js,jsx,ts,tsx}'],
@@ -10,10 +10,10 @@ export default {
 		container: {
 			center: true,
 			padding: {
-				'DEFAULT': '1rem',
-				'sm': '2rem',
-				'lg': '4rem',
-				'xl': '5rem',
+				DEFAULT: '1rem',
+				sm: '2rem',
+				lg: '4rem',
+				xl: '5rem',
 				'2xl': '6rem',
 			},
 		},
@@ -41,4 +41,4 @@ export default {
 		},
 	},
 	plugins: [animate, aria],
-} satisfies Config
+} satisfies Config;

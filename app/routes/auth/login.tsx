@@ -1,75 +1,75 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from '@remix-run/node'
-import { Form, useActionData, useLoaderData } from '@remix-run/react'
-import { useMemo } from 'react'
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from 'react-router';
+import { Form, useActionData, useLoaderData } from 'react-router';
+import { useMemo } from 'react';
 
-import Button from '~/components/Button'
-import Card from '~/components/Card'
-import Code from '~/components/Code'
-import TextField from '~/components/TextField'
-import { Key } from '~/types'
-import { loadContext } from '~/utils/config/headplane'
-import { pull } from '~/utils/headscale'
-import { startOidc } from '~/utils/oidc'
-import { commitSession, getSession } from '~/utils/sessions'
+import Button from '~/components/Button';
+import Card from '~/components/Card';
+import Code from '~/components/Code';
+import TextField from '~/components/TextField';
+import { Key } from '~/types';
+import { loadContext } from '~/utils/config/headplane';
+import { pull } from '~/utils/headscale';
+import { startOidc } from '~/utils/oidc';
+import { commitSession, getSession } from '~/utils/sessions';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'))
+	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {
 			headers: {
 				'Set-Cookie': await commitSession(session),
 			},
-		})
+		});
 	}
 
-	const context = await loadContext()
+	const context = await loadContext();
 
 	// Only set if OIDC is properly enabled anyways
 	if (context.oidc?.disableKeyLogin) {
-		return startOidc(context.oidc, request)
+		return startOidc(context.oidc, request);
 	}
 
 	return {
 		oidc: context.oidc?.issuer,
 		apiKey: !context.oidc?.disableKeyLogin,
-	}
+	};
 }
 
 export async function action({ request }: ActionFunctionArgs) {
-	const formData = await request.formData()
-	const oidcStart = formData.get('oidc-start')
+	const formData = await request.formData();
+	const oidcStart = formData.get('oidc-start');
 
 	if (oidcStart) {
-		const context = await loadContext()
+		const context = await loadContext();
 
 		if (!context.oidc) {
-			throw new Error('An invalid OIDC configuration was provided')
+			throw new Error('An invalid OIDC configuration was provided');
 		}
 
 		// We know it exists here because this action only happens on OIDC
-		return startOidc(context.oidc, request)
+		return startOidc(context.oidc, request);
 	}
 
-	const apiKey = String(formData.get('api-key'))
-	const session = await getSession(request.headers.get('Cookie'))
+	const apiKey = String(formData.get('api-key'));
+	const session = await getSession(request.headers.get('Cookie'));
 
 	// Test the API key
 	try {
-		const apiKeys = await pull<{ apiKeys: Key[] }>('v1/apikey', apiKey)
-		const key = apiKeys.apiKeys.find(k => apiKey.startsWith(k.prefix))
+		const apiKeys = await pull<{ apiKeys: Key[] }>('v1/apikey', apiKey);
+		const key = apiKeys.apiKeys.find((k) => apiKey.startsWith(k.prefix));
 		if (!key) {
-			throw new Error('Invalid API key')
+			throw new Error('Invalid API key');
 		}
 
-		const expiry = new Date(key.expiration)
-		const expiresIn = expiry.getTime() - Date.now()
-		const expiresDays = Math.round(expiresIn / 1000 / 60 / 60 / 24)
+		const expiry = new Date(key.expiration);
+		const expiresIn = expiry.getTime() - Date.now();
+		const expiresDays = Math.round(expiresIn / 1000 / 60 / 60 / 24);
 
-		session.set('hsApiKey', apiKey)
+		session.set('hsApiKey', apiKey);
 		session.set('user', {
 			name: key.prefix,
 			email: `${expiresDays.toString()} days`,
-		})
+		});
 
 		return redirect('/machines', {
 			headers: {
@@ -77,85 +77,62 @@ export async function action({ request }: ActionFunctionArgs) {
 					maxAge: expiresIn,
 				}),
 			},
-		})
+		});
 	} catch {
 		return {
 			error: 'Invalid API key',
-		}
+		};
 	}
 }
 
 export default function Page() {
-	const data = useLoaderData<typeof loader>()
-	const actionData = useActionData<typeof action>()
-	const showOr = useMemo(() => data.oidc && data.apiKey, [data])
+	const data = useLoaderData<typeof loader>();
+	const actionData = useActionData<typeof action>();
+	const showOr = useMemo(() => data.oidc && data.apiKey, [data]);
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
 			<Card className="max-w-sm m-4 sm:m-0 rounded-2xl">
-				<Card.Title>
-					Welcome to Headplane
-				</Card.Title>
-				{data.apiKey
-					? (
-						<Form method="post">
-							<Card.Text className="mb-8 text-sm">
-								Enter an API key to authenticate with Headplane. You can generate
-								one by running
-								{' '}
-								<Code>
-									headscale apikeys create
-								</Code>
-								{' '}
-								in your terminal.
-							</Card.Text>
+				<Card.Title>Welcome to Headplane</Card.Title>
+				{data.apiKey ? (
+					<Form method="post">
+						<Card.Text className="mb-8 text-sm">
+							Enter an API key to authenticate with Headplane. You can generate
+							one by running <Code>headscale apikeys create</Code> in your
+							terminal.
+						</Card.Text>
 
-							{actionData?.error
-								? (
-									<p className="text-red-500 text-sm mb-2">{actionData.error}</p>
-									)
-								: undefined}
-							<TextField
-								isRequired
-								label="API Key"
-								name="api-key"
-								placeholder="API Key"
-								type="password"
-							/>
-							<Button
-								className="w-full mt-2.5"
-								variant="heavy"
-								type="submit"
-							>
-								Login
-							</Button>
-						</Form>
-						)
-					: undefined}
-				{showOr
-					? (
-						<div className="flex items-center gap-x-1.5 py-1">
-							<hr className="flex-1 border-ui-300 dark:border-ui-800" />
-							<span className="text-gray-500 text-sm">or</span>
-							<hr className="flex-1 border-ui-300 dark:border-ui-800" />
-						</div>
-						)
-					: undefined}
-				{data.oidc
-					? (
-						<Form method="POST">
-							<input type="hidden" name="oidc-start" value="true" />
-							<Button
-								className="w-full"
-								variant="heavy"
-								type="submit"
-							>
-								Login with SSO
-							</Button>
-						</Form>
-						)
-					: undefined}
+						{actionData?.error ? (
+							<p className="text-red-500 text-sm mb-2">{actionData.error}</p>
+						) : undefined}
+						<TextField
+							isRequired
+							label="API Key"
+							name="api-key"
+							placeholder="API Key"
+							type="password"
+						/>
+						<Button className="w-full mt-2.5" variant="heavy" type="submit">
+							Login
+						</Button>
+					</Form>
+				) : undefined}
+				{showOr ? (
+					<div className="flex items-center gap-x-1.5 py-1">
+						<hr className="flex-1 border-ui-300 dark:border-ui-800" />
+						<span className="text-gray-500 text-sm">or</span>
+						<hr className="flex-1 border-ui-300 dark:border-ui-800" />
+					</div>
+				) : undefined}
+				{data.oidc ? (
+					<Form method="POST">
+						<input type="hidden" name="oidc-start" value="true" />
+						<Button className="w-full" variant="heavy" type="submit">
+							Login with SSO
+						</Button>
+					</Form>
+				) : undefined}
 			</Card>
 		</div>
-	)
+	);
 }

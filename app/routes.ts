@@ -1,5 +1,5 @@
 //import { flatRoutes } from '@remix-run/fs-routes'
-import { index, layout, prefix, route } from '@remix-run/route-config'
+import { index, layout, prefix, route } from '@react-router/dev/routes';
 
 export default [
 	// Utility Routes
@@ -26,6 +26,5 @@ export default [
 			index('routes/settings/overview.tsx'),
 			route('/auth-keys', 'routes/settings/auth-keys.tsx'),
 		]),
-	])
-]
-
+	]),
+];
