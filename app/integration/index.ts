@@ -1,7 +1,7 @@
 import log from '~/utils/log';
 
 import dockerIntegration from './docker';
-import { IntegrationFactory } from './integration';
+import type { IntegrationFactory } from './integration';
 import kubernetesIntegration from './kubernetes';
 import procIntegration from './proc';
 

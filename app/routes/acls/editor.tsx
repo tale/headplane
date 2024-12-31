@@ -4,7 +4,7 @@ import {
 	IssueDraftIcon,
 	PencilIcon,
 } from '@primer/octicons-react';
-import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useRevalidator } from 'react-router';
 import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
 import { useEffect, useState, useMemo } from 'react';

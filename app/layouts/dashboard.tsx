@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, redirect } from 'react-router';
+import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { Outlet, useLoaderData, useNavigation } from 'react-router';
 import { ProgressBar } from 'react-aria-components';
 

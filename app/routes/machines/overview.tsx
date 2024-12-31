@@ -1,5 +1,5 @@
 import { InfoIcon } from '@primer/octicons-react';
-import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 

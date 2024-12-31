@@ -1,8 +1,8 @@
 import { KebabHorizontalIcon } from '@primer/octicons-react';
-import { ReactNode, useState } from 'react';
+import { type ReactNode, useState } from 'react';
 
 import MenuComponent from '~/components/Menu';
-import { Machine, Route, User } from '~/types';
+import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 
 import Delete from '../dialogs/delete';

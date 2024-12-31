@@ -1,5 +1,5 @@
 import { ChevronDownIcon } from '@primer/octicons-react';
-import { Dispatch, ReactNode, SetStateAction } from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
 	Button,
 	ListBox,

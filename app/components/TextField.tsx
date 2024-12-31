@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { Input, TextField as AriaTextField } from 'react-aria-components';
 import { cn } from '~/utils/cn';
 

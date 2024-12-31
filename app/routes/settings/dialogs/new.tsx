@@ -12,7 +12,7 @@ import Link from '~/components/Link';
 import Spinner from '~/components/Spinner';
 
 import { cn } from '~/utils/cn';
-import { User } from '~/types';
+import type { User } from '~/types';
 
 interface Props {
 	users: User[];

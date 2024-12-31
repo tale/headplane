@@ -4,7 +4,7 @@ import { type Dispatch, type SetStateAction, useState } from 'react';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import Select from '~/components/Select';
-import { type Machine, User } from '~/types';
+import type { Machine, User } from '~/types';
 
 interface MoveProps {
 	readonly machine: Machine;

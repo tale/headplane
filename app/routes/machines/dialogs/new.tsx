@@ -10,7 +10,7 @@ import Select from '~/components/Select';
 import Menu from '~/components/Menu';
 import Spinner from '~/components/Spinner';
 import { toast } from '~/components/Toaster';
-import { Machine, User } from '~/types';
+import { Machine, type User } from '~/types';
 
 export interface NewProps {
 	server: string;

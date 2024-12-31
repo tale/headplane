@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { HTMLProps } from 'react';
+import type { HTMLProps } from 'react';
 
 function TableList(props: HTMLProps<HTMLDivElement>) {
 	return (

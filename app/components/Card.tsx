@@ -1,4 +1,4 @@
-import { HTMLProps } from 'react';
+import type { HTMLProps } from 'react';
 import { Heading as AriaHeading } from 'react-aria-components';
 import { cn } from '~/utils/cn';
 

@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs } from 'react-router';
 import { del, post } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions';
 import { send } from '~/utils/res';

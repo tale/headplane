@@ -1,6 +1,6 @@
-import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+import { type DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
 import { PersonIcon } from '@primer/octicons-react';
-import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useActionData, useLoaderData, useSubmit } from 'react-router';
 import { useEffect, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
@@ -9,7 +9,7 @@ import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
-import { Machine, User } from '~/types';
+import type { Machine, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';

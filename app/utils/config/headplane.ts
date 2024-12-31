@@ -8,8 +8,8 @@ import { resolve } from 'node:path';
 
 import { parse } from 'yaml';
 
-import { IntegrationFactory, loadIntegration } from '~/integration';
-import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
+import { type IntegrationFactory, loadIntegration } from '~/integration';
+import { type HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
 import { testOidc } from '~/utils/oidc';
 import log from '~/utils/log';
 
@@ -160,8 +160,8 @@ async function checkOidc(config?: HeadscaleConfig) {
 	let issuer = process.env.OIDC_ISSUER;
 	let client = process.env.OIDC_CLIENT_ID;
 	let secret = process.env.OIDC_CLIENT_SECRET;
-	let method = process.env.OIDC_CLIENT_SECRET_METHOD ?? 'client_secret_basic';
-	let skip = process.env.OIDC_SKIP_CONFIG_VALIDATION === 'true';
+	const method = process.env.OIDC_CLIENT_SECRET_METHOD ?? 'client_secret_basic';
+	const skip = process.env.OIDC_SKIP_CONFIG_VALIDATION === 'true';
 
 	log.debug('CTXT', 'Checking OIDC environment variables');
 	log.debug('CTXT', 'Issuer: %s', issuer);

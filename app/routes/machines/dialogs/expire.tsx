@@ -1,8 +1,8 @@
 import { Form, useSubmit } from 'react-router';
-import { type Dispatch, type SetStateAction } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 
 import Dialog from '~/components/Dialog';
-import { type Machine } from '~/types';
+import type { Machine } from '~/types';
 import { cn } from '~/utils/cn';
 
 interface ExpireProps {

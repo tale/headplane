@@ -1,4 +1,4 @@
-import { LoaderFunctionArgs, data } from 'react-router';
+import { type LoaderFunctionArgs, data } from 'react-router';
 import { loadContext } from '~/utils/config/headplane';
 import { finishOidc } from '~/utils/oidc';
 

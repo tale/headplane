@@ -1,9 +1,9 @@
-import { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
+import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import { useLiveData } from '~/utils/useLiveData';
 import { getSession } from '~/utils/sessions';
 import { Link as RemixLink } from 'react-router';
-import { PreAuthKey, User } from '~/types';
+import type { PreAuthKey, User } from '~/types';
 import { pull, post } from '~/utils/headscale';
 import { loadContext } from '~/utils/config/headplane';
 import { useState } from 'react';

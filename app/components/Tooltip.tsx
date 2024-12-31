@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import {
 	Button as AriaButton,
 	Tooltip as AriaTooltip,

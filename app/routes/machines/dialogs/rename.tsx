@@ -4,7 +4,7 @@ import { type Dispatch, type SetStateAction, useState } from 'react';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import TextField from '~/components/TextField';
-import { type Machine } from '~/types';
+import type { Machine } from '~/types';
 
 interface RenameProps {
 	readonly machine: Machine;

@@ -1,10 +1,10 @@
 import { useFetcher } from 'react-router';
-import { Dispatch, SetStateAction, useMemo } from 'react';
+import { type Dispatch, type SetStateAction, useMemo } from 'react';
 
 import Dialog from '~/components/Dialog';
 import Switch from '~/components/Switch';
 import Link from '~/components/Link';
-import { Machine, Route } from '~/types';
+import type { Machine, Route } from '~/types';
 import { cn } from '~/utils/cn';
 
 interface RoutesProps {

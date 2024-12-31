@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
-import { Machine, Route, User } from '~/types';
+import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 
 import MenuOptions from './menu';
@@ -30,7 +30,7 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 		tags.unshift('Expired');
 	}
 
-	let prefix = magic?.startsWith('[user]')
+	const prefix = magic?.startsWith('[user]')
 		? magic.replace('[user]', machine.user.name)
 		: magic;
 

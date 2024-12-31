@@ -1,4 +1,4 @@
-import { useState, HTMLProps } from 'react';
+import { useState, type HTMLProps } from 'react';
 import { CopyIcon, CheckIcon } from '@primer/octicons-react';
 import { cn } from '~/utils/cn';
 import { toast } from '~/components/Toaster';

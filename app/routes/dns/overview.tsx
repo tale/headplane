@@ -1,4 +1,4 @@
-import { ActionFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs } from 'react-router';
 import { json, useLoaderData } from 'react-router';
 
 import Code from '~/components/Code';

@@ -2,7 +2,7 @@ import { redirect } from 'react-router';
 import {
 	authorizationCodeGrantRequest,
 	calculatePKCECodeChallenge,
-	Client,
+	type Client,
 	discoveryRequest,
 	generateRandomCodeVerifier,
 	generateRandomNonce,
@@ -19,7 +19,7 @@ import { post } from '~/utils/headscale';
 import { commitSession, getSession } from '~/utils/sessions';
 import log from '~/utils/log';
 
-import { HeadplaneContext } from './config/headplane';
+import type { HeadplaneContext } from './config/headplane';
 
 type OidcConfig = NonNullable<HeadplaneContext['oidc']>;
 

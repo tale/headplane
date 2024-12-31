@@ -12,7 +12,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LockIcon, ThreeBarsIcon } from '@primer/octicons-react';
-import { FetcherWithComponents, useFetcher } from 'react-router';
+import { type FetcherWithComponents, useFetcher } from 'react-router';
 import { useEffect, useState } from 'react';
 import { Button, Input } from 'react-aria-components';
 

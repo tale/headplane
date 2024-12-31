@@ -1,7 +1,7 @@
 import { XIcon } from '@primer/octicons-react';
-import { AriaToastProps, useToast, useToastRegion } from '@react-aria/toast';
-import { ToastQueue, ToastState, useToastQueue } from '@react-stately/toast';
-import { ReactNode, useRef } from 'react';
+import { type AriaToastProps, useToast, useToastRegion } from '@react-aria/toast';
+import { ToastQueue, type ToastState, useToastQueue } from '@react-stately/toast';
+import { type ReactNode, useRef } from 'react';
 import { Button } from 'react-aria-components';
 import { createPortal } from 'react-dom';
 import { ClientOnly } from 'remix-utils/client-only';

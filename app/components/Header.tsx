@@ -10,8 +10,8 @@ import {
 import { Form } from 'react-router';
 
 import { cn } from '~/utils/cn';
-import { HeadplaneContext } from '~/utils/config/headplane';
-import { SessionData } from '~/utils/sessions';
+import type { HeadplaneContext } from '~/utils/config/headplane';
+import type { SessionData } from '~/utils/sessions';
 
 import Menu from './Menu';
 import TabLink from './TabLink';

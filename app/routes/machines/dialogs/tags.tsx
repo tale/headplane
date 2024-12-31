@@ -1,11 +1,11 @@
 import { PlusIcon, XIcon } from '@primer/octicons-react';
 import { Form, useSubmit } from 'react-router';
-import { Dispatch, SetStateAction, useState } from 'react';
+import { type Dispatch, type SetStateAction, useState } from 'react';
 import { Button, Input } from 'react-aria-components';
 
 import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
-import { Machine } from '~/types';
+import type { Machine } from '~/types';
 import { cn } from '~/utils/cn';
 
 interface TagsProps {

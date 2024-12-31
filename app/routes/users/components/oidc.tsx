@@ -2,7 +2,7 @@ import { OrganizationIcon, PasskeyFillIcon } from '@primer/octicons-react';
 
 import Card from '~/components/Card';
 import Link from '~/components/Link';
-import { HeadplaneContext } from '~/utils/config/headplane';
+import type { HeadplaneContext } from '~/utils/config/headplane';
 
 import Add from '../dialogs/add';
 

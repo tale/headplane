@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { HTMLProps } from 'react';
+import type { HTMLProps } from 'react';
 
 type Props = HTMLProps<SVGElement> & {
 	readonly isOnline: boolean;

@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { Link as RemixLink, useLoaderData } from 'react-router';
 import {
 	InfoIcon,
@@ -15,7 +15,7 @@ import Card from '~/components/Card';
 import Menu from '~/components/Menu';
 import Tooltip from '~/components/Tooltip';
 import StatusCircle from '~/components/StatusCircle';
-import { Machine, Route, User } from '~/types';
+import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';

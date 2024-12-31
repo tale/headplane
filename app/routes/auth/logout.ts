@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, redirect } from 'react-router';
+import { type ActionFunctionArgs, redirect } from 'react-router';
 import { destroySession, getSession } from '~/utils/sessions';
 
 export async function loader() {

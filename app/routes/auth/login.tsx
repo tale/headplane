@@ -1,4 +1,4 @@
-import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from 'react-router';
+import { type ActionFunctionArgs, type LoaderFunctionArgs, redirect } from 'react-router';
 import { Form, useActionData, useLoaderData } from 'react-router';
 import { useMemo } from 'react';
 
@@ -6,7 +6,7 @@ import Button from '~/components/Button';
 import Card from '~/components/Card';
 import Code from '~/components/Code';
 import TextField from '~/components/TextField';
-import { Key } from '~/types';
+import type { Key } from '~/types';
 import { loadContext } from '~/utils/config/headplane';
 import { pull } from '~/utils/headscale';
 import { startOidc } from '~/utils/oidc';
