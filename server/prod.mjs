@@ -11,11 +11,15 @@ import { join, resolve } from 'node:path';
 import { env } from 'node:process';
 import { log } from './utils.mjs';
 import { getWss, registerWss } from './ws.mjs';
+import {
+	createReadableStreamFromReadable,
+	writeReadableStreamToWritable,
+} from './streams.mjs';
 
 log('SRVX', 'INFO', `Running with Node.js ${process.versions.node}`);
 
 try {
-	await access('./node_modules/@react-router', constants.F_OK | constants.R_OK);
+	await access('./node_modules/react-router', constants.F_OK | constants.R_OK);
 	log('SRVX', 'INFO', 'Found node_modules dependencies');
 } catch (error) {
 	log('SRVX', 'ERROR', 'No node_modules found. Please run `pnpm install`');
@@ -23,11 +27,7 @@ try {
 	process.exit(1);
 }
 
-const {
-	createRequestHandler: remixRequestHandler,
-	createReadableStreamFromReadable,
-	writeReadableStreamToWritable,
-} = await import('@react-router/node');
+const { createRequestHandler } = await import('react-router');
 const { default: mime } = await import('mime');
 
 const port = env.PORT || 3000;
@@ -53,8 +53,7 @@ if (!global.BUILD) {
 	global.MODE = 'production';
 }
 
-console.log(remixRequestHandler);
-const handler = remixRequestHandler(global.BUILD, global.MODE);
+const handler = createRequestHandler(global.BUILD, global.MODE);
 const http = createServer(async (req, res) => {
 	const url = new URL(`http://${req.headers.host}${req.url}`);
 
