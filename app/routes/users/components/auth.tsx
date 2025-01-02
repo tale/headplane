@@ -24,7 +24,7 @@ export default function Auth({ magic }: Props) {
 						experience when using Headscale.
 						{' '}
 						<Link
-							to="https://headscale.net/oidc"
+							to="https://headscale.net/stable/ref/oidc"
 							name="Headscale OIDC Documentation"
 						>
 							Learn more

@@ -28,7 +28,7 @@ export default function DNS({ records, isDisabled }: Props) {
 				records are supported.
 				{' '}
 				<Link
-					to="https://headscale.net/dns-records/"
+					to="https://headscale.net/stable/ref/dns"
 					name="Headscale DNS Records documentation"
 				>
 					Learn More

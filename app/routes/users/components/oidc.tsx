@@ -30,7 +30,7 @@ export default function Oidc({ oidc, magic }: Props) {
 						Groups and user information do not automatically sync.
 						{' '}
 						<Link
-							to="https://headscale.net/oidc"
+							to="https://headscale.net/stable/ref/oidc"
 							name="Headscale OIDC Documentation"
 						>
 							Learn more
