@@ -227,7 +227,7 @@ export default function Page() {
 				and the
 				{' '}
 				<Link
-					to="https://headscale.net/acls"
+					to="https://headscale.net/stable/ref/acls/"
 					name="Headscale ACL documentation"
 				>
 					Headscale docs
