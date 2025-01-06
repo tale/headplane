@@ -35,8 +35,8 @@ const HeadscaleConfig = z.object({
 	tls_letsencrypt_hostname: z.string().optional(),
 	tls_letsencrypt_listen: z.string().optional(),
 
-	tls_cert_path: z.string().optional(),
-	tls_key_path: z.string().optional(),
+	tls_cert_path: z.string().nullish(),
+	tls_key_path: z.string().nullish(),
 
 	server_url: z.string().regex(/^https?:\/\//),
 	listen_addr: z.string(),
@@ -128,7 +128,7 @@ const HeadscaleConfig = z.object({
 			issuer: z.string().optional(),
 			client_id: z.string().optional(),
 			client_secret: z.string().optional(),
-			client_secret_path: z.string().optional(),
+			client_secret_path: z.string().nullish(),
 			scope: z.array(z.string()).default(['openid', 'profile', 'email']),
 			extra_params: z.record(z.unknown()).default({}),
 			allowed_domains: z.array(z.string()).optional(),
