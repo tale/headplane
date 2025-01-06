@@ -1,6 +1,6 @@
 import type { ActionFunctionArgs } from 'react-router';
 import { del, post } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions';
+import { getSession } from '~/utils/sessions.server';
 import { send } from '~/utils/res';
 import log from '~/utils/log';
 

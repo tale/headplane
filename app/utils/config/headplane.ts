@@ -8,10 +8,11 @@ import { resolve } from 'node:path';
 
 import { parse } from 'yaml';
 
-import { type IntegrationFactory, loadIntegration } from '~/integration';
-import { type HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
+import { IntegrationFactory, loadIntegration } from '~/integration';
+import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
 import { testOidc } from '~/utils/oidc';
 import log from '~/utils/log';
+import { initSessionManager } from '~/utils/sessions.server';
 
 export interface HeadplaneContext {
 	debug: boolean;
@@ -36,12 +37,25 @@ export interface HeadplaneContext {
 }
 
 let context: HeadplaneContext | undefined;
+let loadLock = false;
 
 export async function loadContext(): Promise<HeadplaneContext> {
 	if (context) {
 		return context;
 	}
 
+	if (loadLock) {
+		return new Promise((resolve) => {
+			const interval = setInterval(() => {
+				if (context) {
+					clearInterval(interval);
+					resolve(context);
+				}
+			}, 100);
+		});
+	}
+
+	loadLock = true;
 	const envFile = process.env.LOAD_ENV_FILE === 'true';
 	if (envFile) {
 		log.info('CTXT', 'Loading environment variables from .env');
@@ -68,7 +82,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		headscaleUrl = headscaleUrl ?? config.server_url;
 		if (!headscalePublicUrl) {
 			// Fallback to the config value if the env var is not set
-			headscalePublicUrl = config.public_url;
+			headscalePublicUrl = config.server_url;
 		}
 	}
 
@@ -80,6 +94,9 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	if (!cookieSecret) {
 		throw new Error('COOKIE_SECRET not set');
 	}
+
+	// Initialize Session Management
+	initSessionManager();
 
 	context = {
 		debug,
@@ -107,6 +124,7 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	);
 
 	log.info('CTXT', 'OIDC: %s', context.oidc ? 'Configured' : 'Unavailable');
+	loadLock = false;
 	return context;
 }
 
@@ -235,7 +253,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 		return;
 	}
 
-	if (config.oidc.only_start_if_oidc_is_available) {
+	if (config?.oidc?.only_start_if_oidc_is_available) {
 		log.debug('CTXT', 'Validating OIDC configuration from headscale config');
 		const result = await testOidc(issuer, client, secret);
 		if (!result) {

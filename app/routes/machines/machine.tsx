@@ -20,7 +20,7 @@ import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions';
+import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 import Link from '~/components/Link';
 

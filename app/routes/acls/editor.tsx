@@ -21,7 +21,7 @@ import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { HeadscaleError, pull, put } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions';
+import { getSession } from '~/utils/sessions.server';
 import { send } from '~/utils/res';
 import log from '~/utils/log';
 

@@ -16,7 +16,7 @@ import {
 } from 'oauth4webapi';
 
 import { post } from '~/utils/headscale';
-import { commitSession, getSession } from '~/utils/sessions';
+import { commitSession, getSession } from '~/utils/sessions.server';
 import log from '~/utils/log';
 
 import type { HeadplaneContext } from './config/headplane';

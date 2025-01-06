@@ -1,5 +1,5 @@
 import { type ActionFunctionArgs, redirect } from 'react-router';
-import { destroySession, getSession } from '~/utils/sessions';
+import { destroySession, getSession } from '~/utils/sessions.server';
 
 export async function loader() {
 	return redirect('/machines');

@@ -9,7 +9,7 @@ import Link from '~/components/Link';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { HeadscaleError, pull } from '~/utils/headscale';
-import { destroySession, getSession } from '~/utils/sessions';
+import { destroySession, getSession } from '~/utils/sessions.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));

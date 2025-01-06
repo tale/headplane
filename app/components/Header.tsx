@@ -11,7 +11,7 @@ import { Form } from 'react-router';
 
 import { cn } from '~/utils/cn';
 import type { HeadplaneContext } from '~/utils/config/headplane';
-import type { SessionData } from '~/utils/sessions';
+import type { SessionData } from '~/utils/sessions.server';
 
 import Menu from './Menu';
 import TabLink from './TabLink';

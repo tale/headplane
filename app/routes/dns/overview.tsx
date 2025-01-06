@@ -1,11 +1,11 @@
 import type { ActionFunctionArgs } from 'react-router';
-import { json, useLoaderData } from 'react-router';
+import { data, useLoaderData } from 'react-router';
 
 import Code from '~/components/Code';
 import Notice from '~/components/Notice';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig, patchConfig } from '~/utils/config/headscale';
-import { getSession } from '~/utils/sessions';
+import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 
 import DNS from './components/dns';
