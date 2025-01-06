@@ -1,5 +1,5 @@
 import { useFetcher } from 'react-router';
-import { type Dispatch, type SetStateAction, useMemo } from 'react';
+import { Dispatch, SetStateAction, useMemo } from 'react';
 
 import Dialog from '~/components/Dialog';
 import Switch from '~/components/Switch';
@@ -18,7 +18,10 @@ export default function Routes({ machine, routes, state }: RoutesProps) {
 	const fetcher = useFetcher();
 
 	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet } = routes.reduce(
+	const { exit, subnet } = routes.reduce<{
+		exit: Route[];
+		subnet: Route[];
+	}>(
 		(acc, route) => {
 			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
 				acc.exit.push(route);

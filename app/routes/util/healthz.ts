@@ -22,5 +22,5 @@ export async function loader() {
 		}
 	}
 
-	return { status: 'OK' };
+	return data({ status: 'OK' });
 }

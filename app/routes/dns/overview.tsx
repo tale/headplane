@@ -43,22 +43,22 @@ export async function loader() {
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (!session.has('hsApiKey')) {
-		return send({ success: false }, 401);
+		return data({ success: false }, { status: 401 });
 	}
 
 	const context = await loadContext();
 	if (!context.config.write) {
-		return send({ success: false }, 403);
+		return data({ success: false }, { status: 403 });
 	}
 
-	const data = (await request.json()) as Record<string, unknown>;
-	await patchConfig(data);
+	const patch = (await request.json()) as Record<string, unknown>;
+	await patchConfig(patch);
 
 	if (context.integration?.onConfigChange) {
 		await context.integration.onConfigChange(context.integration.context);
 	}
 
-	return { success: true };
+	return data({ success: true });
 }
 
 export default function Page() {

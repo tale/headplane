@@ -81,7 +81,11 @@ export default function Page() {
 	}
 
 	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet, subnetApproved } = routes.reduce(
+	const { exit, subnet, subnetApproved } = routes.reduce<{
+		exit: Route[];
+		subnet: Route[];
+		subnetApproved: Route[];
+	}>(
 		(acc, route) => {
 			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
 				acc.exit.push(route);
@@ -133,7 +137,6 @@ export default function Page() {
 				</span>
 
 				<MenuOptions
-					className={cn('bg-ui-100 dark:bg-ui-800')}
 					machine={machine}
 					routes={routes}
 					users={users}

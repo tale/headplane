@@ -1,4 +1,4 @@
-import { useState, type HTMLProps } from 'react';
+import { useState, HTMLProps } from 'react';
 import { CopyIcon, CheckIcon } from '@primer/octicons-react';
 import { cn } from '~/utils/cn';
 import { toast } from '~/components/Toaster';
@@ -20,7 +20,7 @@ export default function Code(props: Props) {
 			>
 				{props.children}
 			</code>
-			{props.isCopyable && props.children ? (
+			{props.isCopyable ? (
 				<button
 					className={cn(
 						'ml-1 p-1 rounded-md',
@@ -29,6 +29,10 @@ export default function Code(props: Props) {
 						'inline-flex items-center justify-center',
 					)}
 					onClick={() => {
+						if (!props.children) {
+							throw new Error('Made copyable without children');
+						}
+
 						navigator.clipboard.writeText(props.children.join(''));
 						toast('Copied to clipboard');
 						setIsCopied(true);

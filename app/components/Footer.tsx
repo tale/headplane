@@ -1,12 +1,16 @@
 import { cn } from '~/utils/cn';
 import Link from '~/components/Link';
 
+declare global {
+	const __VERSION__: string;
+}
+
 interface FooterProps {
 	url: string;
 	debug: boolean;
 }
 
-export default function Footer({ url, debug, integration }: FooterProps) {
+export default function Footer({ url, debug }: FooterProps) {
 	return (
 		<footer
 			className={cn(

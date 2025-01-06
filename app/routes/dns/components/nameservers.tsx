@@ -48,7 +48,7 @@ export default function Nameservers({ nameservers, isDisabled }: Props) {
 interface ListProps {
 	isGlobal: boolean;
 	isDisabled: boolean;
-	nameservers: string[];
+	nameservers: Record<string, string[]>;
 	name: string;
 }
 

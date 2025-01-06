@@ -5,8 +5,8 @@ import {
 	PencilIcon,
 } from '@primer/octicons-react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData, useRevalidator } from 'react-router';
-import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
+import { useLoaderData, useRevalidator, useFetcher } from 'react-router';
+//import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
 import { useEffect, useState, useMemo } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import { setTimeout } from 'node:timers/promises';
@@ -149,7 +149,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>();
-	const fetcher = useDebounceFetcher<typeof action>();
+	const fetcher = useFetcher<typeof action>();
 	const revalidator = useRevalidator();
 
 	const [acl, setAcl] = useState(data.policy ?? '');

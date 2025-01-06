@@ -1,6 +1,6 @@
 import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react';
 import { Link } from 'react-router';
-
+import { useMemo } from 'react';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
@@ -35,7 +35,11 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 		: magic;
 
 	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet, subnetApproved } = routes.reduce(
+	const { exit, subnet, subnetApproved } = routes.reduce<{
+		exit: Route[];
+		subnetApproved: Route[];
+		subnet: Route[];
+	}>(
 		(acc, route) => {
 			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
 				acc.exit.push(route);
