@@ -74,7 +74,7 @@ export function Toaster() {
 					createPortal(
 						state.visibleToasts.length >= 0 ? (
 							<div
-								className={cn('fixed bottom-4 right-4', 'flex flex-col gap-4')}
+								className={cn('fixed bottom-20 right-4', 'flex flex-col gap-4')}
 								{...regionProps}
 								ref={reference}
 							>
