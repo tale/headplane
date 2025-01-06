@@ -1,5 +1,6 @@
 import { cn } from '~/utils/cn';
 import Link from '~/components/Link';
+import Tooltip from '~/components/Tooltip';
 
 declare global {
 	const __VERSION__: string;
@@ -33,7 +34,12 @@ export default function Footer({ url, debug }: FooterProps) {
 			<p className="container text-xs opacity-75">
 				Version: {__VERSION__}
 				{' | '}
-				Connecting to <strong>{url}</strong> {debug && '(Debug mode enabled)'}
+				Connecting to
+				{' '}
+				<strong className="blur-xs hover:blur-none">
+					{url}
+				</strong>
+				{debug && ' (Debug mode enabled)'}
 			</p>
 		</footer>
 	);

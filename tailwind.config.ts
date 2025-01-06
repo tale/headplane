@@ -18,6 +18,9 @@ export default {
 			},
 		},
 		extend: {
+			blur: {
+				xs: '2px',
+			},
 			height: {
 				editor: 'calc(100vh - 20rem)',
 			},
