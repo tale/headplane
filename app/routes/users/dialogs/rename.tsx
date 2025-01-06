@@ -21,7 +21,7 @@ export default function Rename({ username, magic }: Props) {
 			<Button
 				variant="light"
 				control={dialogState}
-				className="rounded-full p-0 w-8 h-8"
+				className="rounded-full p-0 w-8 h-8 flex items-center justify-center"
 			>
 				<PencilIcon className="w-4 h-4" />
 			</Button>

@@ -19,7 +19,7 @@ export default function Remove({ username }: Props) {
 			<Button
 				variant="light"
 				control={dialogState}
-				className="rounded-full p-0 w-8 h-8"
+				className="rounded-full p-0 w-8 h-8 flex items-center justify-center"
 			>
 				<XIcon className="w-4 h-4" />
 			</Button>

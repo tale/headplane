@@ -34,6 +34,7 @@ export default function Add({ magic }: Props) {
 							method="POST"
 							onSubmit={(event) => {
 								submit(event.currentTarget);
+								setUsername('');
 							}}
 						>
 							<input type="hidden" name="_method" value="create" />
