@@ -1,4 +1,3 @@
-//import { flatRoutes } from '@remix-run/fs-routes'
 import { index, layout, prefix, route } from '@react-router/dev/routes';
 
 export default [
