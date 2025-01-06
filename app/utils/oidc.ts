@@ -2,7 +2,8 @@ import { redirect } from 'react-router';
 import {
 	authorizationCodeGrantRequest,
 	calculatePKCECodeChallenge,
-	type Client,
+	Client,
+	ClientAuthenticationMethod,
 	discoveryRequest,
 	generateRandomCodeVerifier,
 	generateRandomNonce,
@@ -34,10 +35,12 @@ export async function startOidc(oidc: OidcConfig, req: Request) {
 		});
 	}
 
+	// TODO: Properly validate the method is a valid type
+	const method = oidc.method as ClientAuthenticationMethod;
 	const issuerUrl = new URL(oidc.issuer);
 	const oidcClient = {
 		client_id: oidc.client,
-		token_endpoint_auth_method: oidc.method,
+		token_endpoint_auth_method: method
 	} satisfies Client;
 
 	const response = await discoveryRequest(issuerUrl);
@@ -88,11 +91,13 @@ export async function finishOidc(oidc: OidcConfig, req: Request) {
 		});
 	}
 
+	// TODO: Properly validate the method is a valid type
+	const method = oidc.method as ClientAuthenticationMethod;
 	const issuerUrl = new URL(oidc.issuer);
 	const oidcClient = {
 		client_id: oidc.client,
 		client_secret: oidc.secret,
-		token_endpoint_auth_method: oidc.method,
+		token_endpoint_auth_method: method,
 	} satisfies Client;
 
 	const response = await discoveryRequest(issuerUrl);
