@@ -14,7 +14,7 @@ import { getWss, registerWss } from './ws.mjs';
 import {
 	createReadableStreamFromReadable,
 	writeReadableStreamToWritable,
-} from './streams.mjs';
+} from '@react-router/node';
 
 log('SRVX', 'INFO', `Running with Node.js ${process.versions.node}`);
 
