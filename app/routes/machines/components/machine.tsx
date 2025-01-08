@@ -4,19 +4,21 @@ import { useMemo } from 'react';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
-import type { Machine, Route, User } from '~/types';
+import type { Machine, Route, User, HostInfo } from '~/types';
 import { cn } from '~/utils/cn';
+import * as hinfo from '~/utils/host-info';
 
 import MenuOptions from './menu';
 
 interface Props {
-	readonly machine: Machine;
-	readonly routes: Route[];
-	readonly users: User[];
-	readonly magic?: string;
+	machine: Machine;
+	routes: Route[];
+	users: User[];
+	magic?: string;
+	stats?: HostInfo;
 }
 
-export default function MachineRow({ machine, routes, magic, users }: Props) {
+export default function MachineRow({ machine, routes, magic, users, stats }: Props) {
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||
 		machine.expiry === '0001-01-01T00:00:00Z' ||
@@ -150,6 +152,22 @@ export default function MachineRow({ machine, routes, magic, users }: Props) {
 						</Menu.Items>
 					</Menu>
 				</div>
+			</td>
+			<td className="py-2">
+					{stats !== undefined ? (
+						<>
+						<p className="font-semibold leading-snug">
+							{hinfo.getTSVersion(stats)}
+						</p>
+						<p className="text-sm text-gray-500 dark:text-gray-300">
+							{hinfo.getOSInfo(stats)}
+						</p>
+						</>
+					) : (
+						<p className="text-sm text-gray-500 dark:text-gray-300">
+							Unknown
+						</p>
+					)}
 			</td>
 			<td className="py-2">
 				<span

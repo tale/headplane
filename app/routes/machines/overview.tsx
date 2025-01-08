@@ -12,12 +12,13 @@ import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 import type { Machine, Route, User } from '~/types';
+import { queryAgent, initAgentSocket } from '~/utils/ws-agent';
 
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	const [machines, routes, users] = await Promise.all([
 		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
@@ -25,6 +26,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
 	]);
 
+	initAgentSocket(lC);
+
+	const stats = await queryAgent(machines.nodes.map((node) => node.nodeKey));
 	const context = await loadContext();
 	let magic: string | undefined;
 
@@ -44,6 +48,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		routes: routes.routes,
 		users: users.users,
 		magic,
+		stats,
 		server: context.headscaleUrl,
 		publicServer: context.headscalePublicUrl,
 	};
@@ -107,6 +112,7 @@ export default function Page() {
 								) : undefined}
 							</div>
 						</th>
+						<th className="pb-2">Version</th>
 						<th className="pb-2">Last Seen</th>
 					</tr>
 				</thead>
@@ -125,6 +131,7 @@ export default function Page() {
 							)}
 							users={data.users}
 							magic={data.magic}
+							stats={data.stats?.[machine.nodeKey]}
 						/>
 					))}
 				</tbody>

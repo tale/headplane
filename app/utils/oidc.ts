@@ -1,4 +1,5 @@
 import { redirect } from 'react-router';
+import * as client from 'openid-client';
 import {
 	authorizationCodeGrantRequest,
 	calculatePKCECodeChallenge,
@@ -21,8 +22,130 @@ import { commitSession, getSession } from '~/utils/sessions.server';
 import log from '~/utils/log';
 
 import type { HeadplaneContext } from './config/headplane';
+import { z } from 'zod';
 
-type OidcConfig = NonNullable<HeadplaneContext['oidc']>;
+const oidcConfigSchema = z.object({
+	issuer: z.string(),
+	clientId: z.string(),
+	clientSecret: z.string(),
+	tokenEndpointAuthMethod: z
+		.enum(['client_secret_post', 'client_secret_basic'])
+		.default('client_secret_basic'),
+	idTokenSigningAlg: z
+		.enum([
+			'RS256',
+			'RS384',
+			'RS512',
+			'ES256',
+			'ES384',
+			'ES512',
+			'PS256',
+			'PS384',
+			'PS512',
+		])
+		.default('RS256'),
+	idTokenEncryptionAlg: z
+		.enum(['RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256'])
+		.default('RSA-OAEP'),
+	idTokenEncryptionEnc: z
+		.enum([
+			'A128CBC-HS256',
+			'A192CBC-HS384',
+			'A256CBC-HS512',
+			'A128GCM',
+			'A192GCM',
+			'A256GCM',
+		])
+		.default('A256GCM'),
+});
+
+declare global {
+	const __PREFIX__: string;
+}
+
+export type OidcConfig = z.infer<typeof oidcConfigSchema>;
+
+// We try our best to infer the callback URI of our Headplane instance
+// By default it is always /<base_path>/oidc/callback
+export function getRedirectUri(req: Request) {
+	const base = __PREFIX__ ?? '/admin'; // Fallback
+	const url = new URL(`${base}/oidc/callback`, req.url);
+	let host = req.headers.get('Host');
+	if (!host) {
+		host = req.headers.get('X-Forwarded-Host');
+	}
+
+	if (!host) {
+		log.error('OIDC', 'Unable to find a host header');
+		log.error('OIDC', 'Ensure either Host or X-Forwarded-Host is set');
+		throw new Error('Could not determine reverse proxy host');
+	}
+
+	const proto = req.headers.get('X-Forwarded-Proto');
+	if (!proto) {
+		log.warn('OIDC', 'No X-Forwarded-Proto header found');
+		log.warn('OIDC', 'Assuming your Headplane instance runs behind HTTP');
+	}
+
+	url.protocol = proto ?? 'http:';
+	url.host = host;
+	return url.href;
+}
+
+export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
+	const config = await client.discovery(
+		oidc.issuer, 
+		oidc.clientId,
+		oidc.clientSecret,
+	);
+
+	let codeVerifier: string, codeChallenge: string;
+	codeVerifier = client.randomPKCECodeVerifier();
+	codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
+
+	let params: Record<string, string> = {
+		redirect_uri,
+		scope: 'openid profile email',
+		code_challenge: codeChallenge,
+		code_challenge_method: 'S256',
+	}
+
+	// PKCE is backwards compatible with non-PKCE servers
+	// so if we don't support it, just set our nonce
+	if (!config.serverMetadata().supportsPKCE()) {
+		params.nonce = client.randomNonce();
+	}
+
+	const url = client.buildAuthorizationUrl(config, params);
+	return {
+		url: url.href,
+		codeVerifier,
+		nonce: params.nonce,
+	};
+}
+
+interface FlowOptions {
+	redirect_uri: string;
+	codeVerifier: string;
+	nonce?: string;
+}
+
+export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
+	const config = await client.discovery(
+		oidc.issuer,
+		oidc.clientId,
+		oidc.clientSecret,
+	);
+
+	let subject: string, accessToken: string;
+	const tokens = await client.authorizationCodeGrant(config, new URL(options.redirect_uri), {
+		pkceCodeVerifier: options.codeVerifier,
+		expectedNonce: options.nonce,
+		idTokenExpected: true
+	})
+
+	console.log(tokens);
+}
 
 export async function startOidc(oidc: OidcConfig, req: Request) {
 	const session = await getSession(req.headers.get('Cookie'));
@@ -35,12 +158,13 @@ export async function startOidc(oidc: OidcConfig, req: Request) {
 		});
 	}
 
+
 	// TODO: Properly validate the method is a valid type
 	const method = oidc.method as ClientAuthenticationMethod;
 	const issuerUrl = new URL(oidc.issuer);
 	const oidcClient = {
 		client_id: oidc.client,
-		token_endpoint_auth_method: method
+		token_endpoint_auth_method: method,
 	} satisfies Client;
 
 	const response = await discoveryRequest(issuerUrl);

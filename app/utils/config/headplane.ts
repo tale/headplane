@@ -13,6 +13,7 @@ import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
 import { testOidc } from '~/utils/oidc';
 import log from '~/utils/log';
 import { initSessionManager } from '~/utils/sessions.server';
+import { initAgentCache } from '~/utils/ws-agent';
 
 export interface HeadplaneContext {
 	debug: boolean;
@@ -20,6 +21,12 @@ export interface HeadplaneContext {
 	headscalePublicUrl?: string;
 	cookieSecret: string;
 	integration: IntegrationFactory | undefined;
+
+	cache: {
+		enabled: boolean;
+		path: string;
+		defaultTTL: number;
+	}
 
 	config: {
 		read: boolean;
@@ -98,6 +105,18 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	// Initialize Session Management
 	initSessionManager();
 
+	const cacheEnabled = process.env.AGENT_CACHE_DISABLED !== 'true';
+	const cachePath = process.env.AGENT_CACHE_PATH ?? '/etc/headplane/agent.cache';
+	const cacheTTL = 300 * 1000; // 5 minutes
+
+	// Load agent cache
+	if (cacheEnabled) {
+		log.info('CTXT', 'Initializing Agent Cache');
+		log.debug('CTXT', 'Cache Path: %s', cachePath);
+		log.debug('CTXT', 'Cache TTL: %d', cacheTTL);
+		await initAgentCache(cacheTTL, cachePath);
+	}
+
 	context = {
 		debug,
 		headscaleUrl,
@@ -105,6 +124,11 @@ export async function loadContext(): Promise<HeadplaneContext> {
 		cookieSecret,
 		integration: await loadIntegration(),
 		config: contextData,
+		cache: {
+			enabled: cacheEnabled,
+			path: cachePath,
+			defaultTTL: cacheTTL,
+		},
 		oidc: await checkOidc(config),
 	};
 
