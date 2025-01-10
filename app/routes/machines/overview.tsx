@@ -86,7 +86,7 @@ export default function Page() {
 				<thead className="text-gray-500 dark:text-gray-400">
 					<tr className="text-left uppercase text-xs font-bold px-0.5">
 						<th className="pb-2">Name</th>
-						<th className="pb-2">
+						<th className="pb-2 w-1/4">
 							<div className="flex items-center gap-x-1">
 								Addresses
 								{data.magic ? (

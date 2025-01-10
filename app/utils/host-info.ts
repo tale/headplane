@@ -16,7 +16,7 @@ export function getOSInfo(host: HostInfo) {
 	const formattedOS = formatOS(OS);
 
 	// Trim in case OSVersion is empty
-	return `${formattedOS} ${OSVersion}`.trim();
+	return `${formattedOS} ${OSVersion ?? ''}`.trim();
 }
 
 function formatOS(os?: string) {
