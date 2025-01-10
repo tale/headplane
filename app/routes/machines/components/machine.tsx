@@ -159,7 +159,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 						<p className="font-semibold leading-snug">
 							{hinfo.getTSVersion(stats)}
 						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-300">
+						<p className="text-sm text-gray-500 dark:text-gray-300 max-w-48 truncate">
 							{hinfo.getOSInfo(stats)}
 						</p>
 						</>

@@ -1,4 +1,4 @@
-import type { HostInfo } from '~/utils/types';
+import type { HostInfo } from '~/types';
 
 export function getTSVersion(host: HostInfo) {
 	const { IPNVersion } = host;

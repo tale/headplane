@@ -4,7 +4,7 @@ import { setTimeout as pSetTimeout } from 'node:timers/promises';
 import type { LoaderFunctionArgs } from 'react-router';
 import type { HostInfo } from '~/types';
 import { WebSocket } from 'ws';
-import { log } from './log';
+import log from './log';
 
 // Essentially a HashMap which invalidates entries after a certain time.
 // It also is capable of syncing as a compressed file to disk.
@@ -13,6 +13,7 @@ class TimedCache<K, V> {
 	private _timeCache = new Map<K, number>();
 	private defaultTTL: number;
 	private filepath: string;
+	private writeLock = false;
 
 	constructor(defaultTTL: number, filepath: string) {
 		this.defaultTTL = defaultTTL;
@@ -51,21 +52,28 @@ class TimedCache<K, V> {
 				this._timeCache.set(key, expires);
 			}
 		} catch (e) {
-			if (e['code'] !== 'ENOENT') {
-				// log.error('CACH', 'Failed to load cache from file', e);
+			if (e.code === 'ENOENT') {
+				log.debug('CACH', 'Cache file not found, creating new cache');
 				return;
 			}
 
-			// log.debug('CACH', 'Cache file not found, creating new cache');
+			log.error('CACH', 'Failed to load cache from file', e);
 		}
 	}
 
 	private async syncToFile() {
+		while (this.writeLock) {
+			await pSetTimeout(100);
+		}
+
+		this.writeLock = true;
 		const data = Array.from(this._cache.entries()).map(([key, value]) => {
 			return { key, value, expires: this._timeCache.get(key) }
 		});
 
 		await writeFile(this.filepath, JSON.stringify(data), 'utf-8');
+		await this.loadFromFile();
+		this.writeLock = false;
 	}
 }
 
@@ -92,7 +100,7 @@ export async function queryAgent(nodes: string[]) {
 
 	const cached: Record<string, HostInfo> = {};
 	await Promise.all(nodes.map(async node => {
-		const cachedData = await cache.get(node);
+		const cachedData = await cache?.get(node);
 		if (cachedData) {
 			cached[node] = cachedData;
 		}
@@ -114,17 +122,17 @@ export async function queryAgent(nodes: string[]) {
 	agentSocket.send(JSON.stringify({ NodeIDs: uncached }));
 	const returnData = await new Promise<Record<string, HostInfo> | void>((resolve, reject) => {
 		const timeout = setTimeout(() => {
-			agentSocket.removeAllListeners('message');
+			agentSocket?.removeAllListeners('message');
 			resolve();
 		}, 3000);
 
-		agentSocket.on('message', async (message: string) => {
+		agentSocket?.on('message', async (message: string) => {
 			const data = JSON.parse(message.toString());
 			if (Object.keys(data).length === 0) {
 				resolve();
 			}
 
-			agentSocket.removeAllListeners('message');
+			agentSocket?.removeAllListeners('message');
 			resolve(data);
 		});
 	});
