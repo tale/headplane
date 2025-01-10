@@ -1,26 +1,32 @@
 import { loadContext } from '~/utils/config/headplane';
 import { HeadscaleError, pull } from '~/utils/headscale';
-import { data } from 'react-router';
 import log from '~/utils/log';
 
 export async function loader() {
 	const context = await loadContext();
+	const prefix = context.headscaleUrl;
+	const health = new URL('health', prefix);
+	log.debug('APIC', 'GET %s', health.toString());
+	let healthy = false
 
 	try {
-		// Doesn't matter, we just need a 401
-		await pull('v1/', 'wrongkey');
-	} catch (e) {
-		if (!(e instanceof HeadscaleError)) {
-			log.debug('Healthz', 'Headscale is not reachable');
-			return data(
-				{
-					status: 'NOT OK',
-					error: e.message,
-				},
-				{ status: 500 },
-			);
+		const res = await fetch(health.toString(), {
+			headers: {
+				'Accept': 'application/json',
+			},
+		});
+
+		if (res.status === 200) {
+			healthy = true;
 		}
+	} catch (e) {
+		log.debug('APIC', 'GET %s failed with error %s', health.toString(), e);
 	}
 
-	return data({ status: 'OK' });
+	return new Response(JSON.stringify({ status: healthy ? 'OK' : 'ERROR' }), {
+		status: healthy ? 200 : 500,
+		headers: {
+			'Content-Type': 'application/json',
+		},
+	});
 }
