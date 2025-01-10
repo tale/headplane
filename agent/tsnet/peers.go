@@ -14,7 +14,7 @@ import (
 // Returns the raw hostinfo for a peer based on node ID.
 func (s *TSAgent) GetStatusForPeer(id string) (*tailcfg.HostinfoView, error) {
 	if !strings.HasPrefix(id, "nodekey:") {
-		return nil, fmt.Errorf("invalid node ID")
+		return nil, fmt.Errorf("invalid node ID: %s", id)
 	}
 
 	if s.Debug {
@@ -29,7 +29,12 @@ func (s *TSAgent) GetStatusForPeer(id string) (*tailcfg.HostinfoView, error) {
 	nodeKey, err := key.ParseNodePublicUntyped(mem.S(id[8:]))
 	peer := status.Peer[nodeKey]
 	if peer == nil {
-		return nil, nil
+		// Check if we are on Self.
+		if status.Self.PublicKey == nodeKey {
+			peer = status.Self
+		} else {
+			return nil, nil
+		}
 	}
 
 	ip := peer.TailscaleIPs[0].String()
