@@ -156,7 +156,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 			<td className="py-2">
 					{stats !== undefined ? (
 						<>
-						<p className="font-semibold leading-snug">
+						<p className="leading-snug">
 							{hinfo.getTSVersion(stats)}
 						</p>
 						<p className="text-sm text-gray-500 dark:text-gray-300 max-w-48 truncate">

@@ -143,5 +143,5 @@ export async function queryAgent(nodes: string[]) {
 		}
 	}
 
-	return returnData
+	return returnData ? { ...cached, ...returnData } : cached;
 }
