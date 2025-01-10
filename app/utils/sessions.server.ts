@@ -2,12 +2,14 @@ import { Session, SessionStorage, createCookieSessionStorage } from 'react-route
 
 export type SessionData = {
 	hsApiKey: string;
-	authState: string;
-	authNonce: string;
-	authVerifier: string;
+	oidc_state: string;
+	oidc_code_verif: string;
+	oidc_nonce: string;
 	user: {
+		subject: string;
 		name: string;
 		email?: string;
+		username?: string;
 	};
 };
 

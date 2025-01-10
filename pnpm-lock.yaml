@@ -67,9 +67,9 @@ importers:
       mime:
         specifier: ^4.0.6
         version: 4.0.6
-      oauth4webapi:
-        specifier: ^2.17.0
-        version: 2.17.0
+      openid-client:
+        specifier: ^6.1.7
+        version: 6.1.7
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -126,8 +126,8 @@ importers:
         specifier: ^10.4.20
         version: 10.4.20(postcss@8.4.49)
       babel-plugin-react-compiler:
-        specifier: 19.0.0-beta-df7b47d-20241124
-        version: 19.0.0-beta-df7b47d-20241124
+        specifier: 19.0.0-beta-55955c9-20241229
+        version: 19.0.0-beta-55955c9-20241229
       postcss:
         specifier: ^8.4.49
         version: 8.4.49
@@ -1609,8 +1609,8 @@ packages:
   babel-dead-code-elimination@1.0.8:
     resolution: {integrity: sha512-og6HQERk0Cmm+nTT4Od2wbPtgABXFMPaHACjbKLulZIFMkYyXZLkUGuAxdgpMJBrxyt/XFpSz++lNzjbcMnPkQ==}
 
-  babel-plugin-react-compiler@19.0.0-beta-df7b47d-20241124:
-    resolution: {integrity: sha512-93iSASR20HNsotcOTQ+KPL0zpgfRFVWL86AtXpmHp995HuMVnC9femd8Winr3GxkPEh8lEOyaw3nqY4q2HUm5w==}
+  babel-plugin-react-compiler@19.0.0-beta-55955c9-20241229:
+    resolution: {integrity: sha512-APpa9fRiG5UN5kxnB/vznaSBKbXwAWZs6QshN3MLntzWa4cUhOxzUSd7Ohmr5sLQaM0ZHjjOg07pw1ZoR7+Oog==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -2137,9 +2137,6 @@ packages:
 
   oauth-sign@0.9.0:
     resolution: {integrity: sha512-fexhUFFPTGV8ybAtSIGbV6gOkSv8UtRbDBnAyLQw4QPKkgNlsH2ByPGtMUqdWkos6YCRmAqViwgZrJc/mRDzZQ==}
-
-  oauth4webapi@2.17.0:
-    resolution: {integrity: sha512-lbC0Z7uzAFNFyzEYRIC+pkSVvDHJTbEW+dYlSBAlCYDe6RxUkJ26bClhk8ocBZip1wfI9uKTe0fm4Ib4RHn6uQ==}
 
   oauth4webapi@3.1.4:
     resolution: {integrity: sha512-eVfN3nZNbok2s/ROifO0UAc5G8nRoLSbrcKJ09OqmucgnhXEfdIQOR4gq1eJH1rN3gV7rNw62bDEgftsgFtBEg==}
@@ -4664,7 +4661,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  babel-plugin-react-compiler@19.0.0-beta-df7b47d-20241124:
+  babel-plugin-react-compiler@19.0.0-beta-55955c9-20241229:
     dependencies:
       '@babel/types': 7.26.3
 
@@ -5050,8 +5047,7 @@ snapshots:
 
   jiti@1.21.7: {}
 
-  jose@5.9.6:
-    optional: true
+  jose@5.9.6: {}
 
   js-tokens@4.0.0: {}
 
@@ -5183,10 +5179,7 @@ snapshots:
 
   oauth-sign@0.9.0: {}
 
-  oauth4webapi@2.17.0: {}
-
-  oauth4webapi@3.1.4:
-    optional: true
+  oauth4webapi@3.1.4: {}
 
   object-assign@4.1.1: {}
 
@@ -5200,7 +5193,6 @@ snapshots:
     dependencies:
       jose: 5.9.6
       oauth4webapi: 3.1.4
-    optional: true
 
   package-json-from-dist@1.0.1: {}
 

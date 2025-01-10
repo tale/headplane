@@ -13,10 +13,15 @@ import TextField from '~/components/TextField';
 import type { Key } from '~/types';
 import { loadContext } from '~/utils/config/headplane';
 import { pull } from '~/utils/headscale';
-import { startOidc } from '~/utils/oidc';
+import {
+	startOidc,
+	beginAuthFlow,
+	getRedirectUri
+} from '~/utils/oidc';
 import { commitSession, getSession } from '~/utils/sessions.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
+
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {
@@ -30,7 +35,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	// Only set if OIDC is properly enabled anyways
 	if (context.oidc?.disableKeyLogin) {
-		return startOidc(context.oidc, request);
+		return redirect('/oidc/start');
 	}
 
 	return {
@@ -42,6 +47,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData();
 	const oidcStart = formData.get('oidc-start');
+	const session = await getSession(request.headers.get('Cookie'));
 
 	if (oidcStart) {
 		const context = await loadContext();
@@ -50,12 +56,10 @@ export async function action({ request }: ActionFunctionArgs) {
 			throw new Error('An invalid OIDC configuration was provided');
 		}
 
-		// We know it exists here because this action only happens on OIDC
-		return startOidc(context.oidc, request);
+		return redirect('/oidc/start');
 	}
 
 	const apiKey = String(formData.get('api-key'));
-	const session = await getSession(request.headers.get('Cookie'));
 
 	// Test the API key
 	try {
@@ -71,6 +75,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		session.set('hsApiKey', apiKey);
 		session.set('user', {
+			subject: 'unknown-non-oauth',
 			name: key.prefix,
 			email: `${expiresDays.toString()} days`,
 		});

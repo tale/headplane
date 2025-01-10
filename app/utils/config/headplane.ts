@@ -37,6 +37,7 @@ export interface HeadplaneContext {
 		issuer: string;
 		client: string;
 		secret: string;
+		redirectUri?: string;
 		rootKey: string;
 		method: string;
 		disableKeyLogin: boolean;
@@ -204,10 +205,15 @@ async function checkOidc(config?: HeadscaleConfig) {
 	let secret = process.env.OIDC_CLIENT_SECRET;
 	const method = process.env.OIDC_CLIENT_SECRET_METHOD ?? 'client_secret_basic';
 	const skip = process.env.OIDC_SKIP_CONFIG_VALIDATION === 'true';
+	const redirectUri = process.env.OIDC_REDIRECT_URI;
 
 	log.debug('CTXT', 'Checking OIDC environment variables');
 	log.debug('CTXT', 'Issuer: %s', issuer);
 	log.debug('CTXT', 'Client: %s', client);
+	log.debug('CTXT', 'Token Auth Method: %s', method);
+	if (redirectUri) {
+		log.debug('CTXT', 'Redirect URI: %s', redirectUri);
+	}
 
 	if (
 		(issuer ?? client ?? secret) &&
@@ -223,7 +229,17 @@ async function checkOidc(config?: HeadscaleConfig) {
 				'CTXT',
 				'Validating OIDC configuration from environment variables',
 			);
-			const result = await testOidc(issuer, client, secret);
+
+			// This is a hold-over from the old code
+			// TODO: Rewrite checkOIDC in the context loader
+			const oidcConfig = {
+				issuer: issuer,
+				clientId: client,
+				clientSecret: secret,
+				tokenEndpointAuthMethod: method,
+			}
+
+			const result = await testOidc(oidcConfig)
 			if (!result) {
 				return;
 			}
@@ -236,6 +252,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 			issuer,
 			client,
 			secret,
+			redirectUri,
 			method,
 			rootKey,
 			disableKeyLogin,
@@ -279,7 +296,14 @@ async function checkOidc(config?: HeadscaleConfig) {
 
 	if (config?.oidc?.only_start_if_oidc_is_available) {
 		log.debug('CTXT', 'Validating OIDC configuration from headscale config');
-		const result = await testOidc(issuer, client, secret);
+		const oidcConfig = {
+			issuer: issuer,
+			clientId: client,
+			clientSecret: secret,
+			tokenEndpointAuthMethod: method,
+		}
+
+		const result = await testOidc(oidcConfig)
 		if (!result) {
 			return;
 		}
@@ -292,6 +316,7 @@ async function checkOidc(config?: HeadscaleConfig) {
 		issuer,
 		client,
 		secret,
+		redirectUri,
 		rootKey,
 		method,
 		disableKeyLogin,

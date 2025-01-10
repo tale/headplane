@@ -1,24 +1,5 @@
 import { redirect } from 'react-router';
 import * as client from 'openid-client';
-import {
-	authorizationCodeGrantRequest,
-	calculatePKCECodeChallenge,
-	Client,
-	ClientAuthenticationMethod,
-	discoveryRequest,
-	generateRandomCodeVerifier,
-	generateRandomNonce,
-	generateRandomState,
-	getValidatedIdTokenClaims,
-	isOAuth2Error,
-	parseWwwAuthenticateChallenges,
-	processAuthorizationCodeOpenIDResponse,
-	processDiscoveryResponse,
-	validateAuthResponse,
-} from 'oauth4webapi';
-
-import { post } from '~/utils/headscale';
-import { commitSession, getSession } from '~/utils/sessions.server';
 import log from '~/utils/log';
 
 import type { HeadplaneContext } from './config/headplane';
@@ -28,35 +9,10 @@ const oidcConfigSchema = z.object({
 	issuer: z.string(),
 	clientId: z.string(),
 	clientSecret: z.string(),
+	redirectUri: z.string().optional(),
 	tokenEndpointAuthMethod: z
-		.enum(['client_secret_post', 'client_secret_basic'])
+		.enum(['client_secret_post', 'client_secret_basic', 'client_secret_jwt'])
 		.default('client_secret_basic'),
-	idTokenSigningAlg: z
-		.enum([
-			'RS256',
-			'RS384',
-			'RS512',
-			'ES256',
-			'ES384',
-			'ES512',
-			'PS256',
-			'PS384',
-			'PS512',
-		])
-		.default('RS256'),
-	idTokenEncryptionAlg: z
-		.enum(['RSA1_5', 'RSA-OAEP', 'RSA-OAEP-256'])
-		.default('RSA-OAEP'),
-	idTokenEncryptionEnc: z
-		.enum([
-			'A128CBC-HS256',
-			'A192CBC-HS384',
-			'A256CBC-HS512',
-			'A128GCM',
-			'A192GCM',
-			'A256GCM',
-		])
-		.default('A256GCM'),
 });
 
 declare global {
@@ -67,6 +23,7 @@ export type OidcConfig = z.infer<typeof oidcConfigSchema>;
 
 // We try our best to infer the callback URI of our Headplane instance
 // By default it is always /<base_path>/oidc/callback
+// (This can ALWAYS be overridden through the OidcConfig)
 export function getRedirectUri(req: Request) {
 	const base = __PREFIX__ ?? '/admin'; // Fallback
 	const url = new URL(`${base}/oidc/callback`, req.url);
@@ -92,22 +49,38 @@ export function getRedirectUri(req: Request) {
 	return url.href;
 }
 
+function clientAuthMethod(method: string): (secret: string) => client.ClientAuth {
+	switch (method) {
+		case 'client_secret_post':
+			return client.ClientSecretPost
+		case 'client_secret_basic':
+			return client.ClientSecretBasic
+		case 'client_secret_jwt':
+			return client.ClientSecretJwt
+		default:
+			throw new Error('Invalid client authentication method');
+	}
+}
+
 export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 	const config = await client.discovery(
-		oidc.issuer, 
+		new URL(oidc.issuer),
 		oidc.clientId,
 		oidc.clientSecret,
+		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
 	);
 
 	let codeVerifier: string, codeChallenge: string;
 	codeVerifier = client.randomPKCECodeVerifier();
 	codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
-	let params: Record<string, string> = {
+	const params: Record<string, string> = {
 		redirect_uri,
 		scope: 'openid profile email',
 		code_challenge: codeChallenge,
 		code_challenge_method: 'S256',
+		token_endpoint_auth_method: oidc.tokenEndpointAuthMethod,
+		state: client.randomState(),
 	}
 
 	// PKCE is backwards compatible with non-PKCE servers
@@ -120,213 +93,122 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 	return {
 		url: url.href,
 		codeVerifier,
-		nonce: params.nonce,
+		state: params.state,
+		nonce: params.nonce ?? '<none>',
 	};
 }
 
 interface FlowOptions {
 	redirect_uri: string;
 	codeVerifier: string;
+	state: string;
 	nonce?: string;
 }
 
 export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 	const config = await client.discovery(
-		oidc.issuer,
+		new URL(oidc.issuer),
 		oidc.clientId,
 		oidc.clientSecret,
+		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
 	);
 
 	let subject: string, accessToken: string;
 	const tokens = await client.authorizationCodeGrant(config, new URL(options.redirect_uri), {
 		pkceCodeVerifier: options.codeVerifier,
 		expectedNonce: options.nonce,
+		expectedState: options.state,
 		idTokenExpected: true
-	})
-
-	console.log(tokens);
-}
-
-export async function startOidc(oidc: OidcConfig, req: Request) {
-	const session = await getSession(req.headers.get('Cookie'));
-	if (session.has('hsApiKey')) {
-		return redirect('/', {
-			status: 302,
-			headers: {
-				'Set-Cookie': await commitSession(session),
-			},
-		});
-	}
-
-
-	// TODO: Properly validate the method is a valid type
-	const method = oidc.method as ClientAuthenticationMethod;
-	const issuerUrl = new URL(oidc.issuer);
-	const oidcClient = {
-		client_id: oidc.client,
-		token_endpoint_auth_method: method,
-	} satisfies Client;
-
-	const response = await discoveryRequest(issuerUrl);
-	const processed = await processDiscoveryResponse(issuerUrl, response);
-	if (!processed.authorization_endpoint) {
-		throw new Error('No authorization endpoint found on the OIDC provider');
-	}
-
-	const state = generateRandomState();
-	const nonce = generateRandomNonce();
-	const verifier = generateRandomCodeVerifier();
-	const challenge = await calculatePKCECodeChallenge(verifier);
-
-	const callback = new URL('/admin/oidc/callback', req.url);
-	callback.protocol = req.headers.get('X-Forwarded-Proto') ?? 'http:';
-	callback.host = req.headers.get('Host') ?? '';
-	const authUrl = new URL(processed.authorization_endpoint);
-
-	authUrl.searchParams.set('client_id', oidcClient.client_id);
-	authUrl.searchParams.set('response_type', 'code');
-	authUrl.searchParams.set('redirect_uri', callback.href);
-	authUrl.searchParams.set('scope', 'openid profile email');
-	authUrl.searchParams.set('code_challenge', challenge);
-	authUrl.searchParams.set('code_challenge_method', 'S256');
-	authUrl.searchParams.set('state', state);
-	authUrl.searchParams.set('nonce', nonce);
-
-	session.set('authState', state);
-	session.set('authNonce', nonce);
-	session.set('authVerifier', verifier);
-
-	return redirect(authUrl.href, {
-		status: 302,
-		headers: {
-			'Set-Cookie': await commitSession(session),
-		},
 	});
-}
 
-export async function finishOidc(oidc: OidcConfig, req: Request) {
-	const session = await getSession(req.headers.get('Cookie'));
-	if (session.has('hsApiKey')) {
-		return redirect('/', {
-			status: 302,
-			headers: {
-				'Set-Cookie': await commitSession(session),
-			},
-		});
+	const claims = tokens.claims();
+	if (!claims?.sub) {
+		throw new Error('No subject found in OIDC claims');
 	}
 
-	// TODO: Properly validate the method is a valid type
-	const method = oidc.method as ClientAuthenticationMethod;
-	const issuerUrl = new URL(oidc.issuer);
-	const oidcClient = {
-		client_id: oidc.client,
-		client_secret: oidc.secret,
-		token_endpoint_auth_method: method,
-	} satisfies Client;
-
-	const response = await discoveryRequest(issuerUrl);
-	const processed = await processDiscoveryResponse(issuerUrl, response);
-	if (!processed.authorization_endpoint) {
-		throw new Error('No authorization endpoint found on the OIDC provider');
-	}
-
-	const state = session.get('authState');
-	const nonce = session.get('authNonce');
-	const verifier = session.get('authVerifier');
-	if (!state || !nonce || !verifier) {
-		throw new Error('No OIDC state found in the session');
-	}
-
-	const parameters = validateAuthResponse(
-		processed,
-		oidcClient,
-		new URL(req.url),
-		state,
+	const user = await client.fetchUserInfo(
+		config,
+		tokens.access_token,
+		claims.sub,
 	);
 
-	if (isOAuth2Error(parameters)) {
-		throw new Error('Invalid response from the OIDC provider');
-	}
-
-	const callback = new URL('/admin/oidc/callback', req.url);
-	callback.protocol = req.headers.get('X-Forwarded-Proto') ?? 'http:';
-	callback.host = req.headers.get('Host') ?? '';
-
-	const tokenResponse = await authorizationCodeGrantRequest(
-		processed,
-		oidcClient,
-		parameters,
-		callback.href,
-		verifier,
-	);
-
-	const challenges = parseWwwAuthenticateChallenges(tokenResponse);
-	if (challenges) {
-		throw new Error('Recieved a challenge from the OIDC provider');
-	}
-
-	const result = await processAuthorizationCodeOpenIDResponse(
-		processed,
-		oidcClient,
-		tokenResponse,
-		nonce,
-	);
-
-	if (isOAuth2Error(result)) {
-		throw new Error('Invalid response from the OIDC provider');
-	}
-
-	const claims = getValidatedIdTokenClaims(result);
-	const expDate = new Date(claims.exp * 1000).toISOString();
-
-	const keyResponse = await post<{ apiKey: string }>(
-		'v1/apikey',
-		oidc.rootKey,
-		{
-			expiration: expDate,
-		},
-	);
-
-	session.set('hsApiKey', keyResponse.apiKey);
-	session.set('user', {
+	return {
+		subject: claims.sub,
 		name: claims.name ? String(claims.name) : 'Anonymous',
 		email: claims.email ? String(claims.email) : undefined,
-	});
-
-	return redirect('/machines', {
-		headers: {
-			'Set-Cookie': await commitSession(session),
-		},
-	});
+		username: claims.preferred_username ? String(claims.preferred_username) : undefined,
+	}
 }
 
-// Runs at application startup to validate the OIDC configuration
-export async function testOidc(issuer: string, client: string, secret: string) {
-	const oidcClient = {
-		client_id: client,
-		client_secret: secret,
-		token_endpoint_auth_method: 'client_secret_post',
-	} satisfies Client;
+export function formatError(error: unknown) {
+	if (error instanceof client.ResponseBodyError) {
+		return {
+			code: error.code,
+			error: {
+				name: error.error,
+				description: error.error_description,
+			},
+		};
+	}
 
-	const issuerUrl = new URL(issuer);
+	if (error instanceof client.AuthorizationResponseError) {
+		return {
+			code: error.code,
+			error: {
+				name: error.error,
+				description: error.error_description,
+			},
+		};
+	}
 
-	try {
-		log.debug('OIDC', 'Checking OIDC well-known endpoint');
-		const response = await discoveryRequest(issuerUrl);
-		const processed = await processDiscoveryResponse(issuerUrl, response);
-		if (!processed.authorization_endpoint) {
-			log.debug('OIDC', 'No authorization endpoint found on the OIDC provider');
-			return false;
-		}
+	if (error instanceof client.WWWAuthenticateChallengeError) {
+		return {
+			code: error.code,
+			error: {
+				name: error.name,
+				description: error.message,
+				challenges: error.cause,
+			},
+		};
+	}
 
-		log.debug(
-			'OIDC',
-			'Found auth endpoint: %s',
-			processed.authorization_endpoint,
-		);
-		return true;
-	} catch (e) {
-		log.debug('OIDC', 'Validation failed: %s', e.message);
+	log.error('OIDC', 'Unknown error: %s', error);
+	return {
+		code: 500,
+		error: {
+			name: 'Internal Server Error',
+			description: 'An unknown error occurred',
+		},
+	};
+}
+
+export async function testOidc(oidc: OidcConfig) {
+	log.debug('OIDC', 'Discovering OIDC configuration from %s', oidc.issuer);
+	const config = await client.discovery(
+		new URL(oidc.issuer),
+		oidc.clientId,
+		oidc.clientSecret,
+		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+	);
+
+	const meta = config.serverMetadata();
+	if (meta.authorization_endpoint === undefined) {
 		return false;
 	}
+
+	log.debug('OIDC', 'Authorization endpoint: %s', meta.authorization_endpoint);
+	log.debug('OIDC', 'Token endpoint: %s', meta.token_endpoint);
+
+	if (meta.response_types_supported.includes('code') === false) {
+		log.error('OIDC', 'OIDC server does not support code flow');
+		return false;
+	}
+
+	if (meta.token_endpoint_auth_methods_supported.includes(oidc.tokenEndpointAuthMethod) === false) {
+		log.error('OIDC', 'OIDC server does not support %s', oidc.tokenEndpointAuthMethod);
+		return false;
+	}
+
+	log.debug('OIDC', 'OIDC configuration is valid');
+	return true;
 }

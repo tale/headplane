@@ -27,5 +27,6 @@ export default defineConfig({
 	},
 	define: {
 		__VERSION__: JSON.stringify(version),
+		__PREFIX__: JSON.stringify(prefix),
 	},
 });
