@@ -12,6 +12,7 @@ type Config struct {
 	TSControlURL string
 	TSAuthKey    string
 	HPControlURL string
+	HPAuthKey    string
 }
 
 const (
@@ -20,6 +21,7 @@ const (
 	TSControlURLEnv = "HP_AGENT_TS_SERVER"
 	TSAuthKeyEnv    = "HP_AGENT_TS_AUTHKEY"
 	HPControlURLEnv = "HP_AGENT_HP_SERVER"
+	HPAuthKeyEnv	= "HP_AGENT_HP_AUTHKEY"
 )
 
 // Load reads the agent configuration from environment variables.
@@ -30,6 +32,7 @@ func Load() (*Config, error) {
 		TSControlURL: os.Getenv(TSControlURLEnv),
 		TSAuthKey:    os.Getenv(TSAuthKeyEnv),
 		HPControlURL: os.Getenv(HPControlURLEnv),
+		HPAuthKey:    os.Getenv(HPAuthKeyEnv),
 	}
 
 	if os.Getenv(DebugEnv) == "true" {

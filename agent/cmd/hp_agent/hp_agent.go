@@ -24,7 +24,13 @@ func main() {
 	agent.StartAndFetchID()
 	defer agent.Shutdown()
 
-	ws, err := hpagent.NewSocket(agent, cfg.HPControlURL, cfg.Debug)
+	ws, err := hpagent.NewSocket(
+		agent,
+		cfg.HPControlURL,
+		cfg.HPAuthKey,
+		cfg.Debug,
+	)
+
 	if err != nil {
 		log.Fatalf("Failed to create websocket: %s", err)
 	}

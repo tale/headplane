@@ -24,6 +24,10 @@ func validateRequired(config *Config) error {
 		return fmt.Errorf("%s is required", TSAuthKeyEnv)
 	}
 
+	if config.HPAuthKey == "" {
+		return fmt.Errorf("%s is required", HPAuthKeyEnv)
+	}
+
 	return nil
 }
 
@@ -34,6 +38,7 @@ func validateTSReady(config *Config) error {
 		testURL = testURL[:len(testURL)-1]
 	}
 
+	// TODO: Consequences of switching to /health (headscale only)
 	testURL = fmt.Sprintf("%s/key?v=109", testURL)
 	resp, err := http.Get(testURL)
 	if err != nil {

@@ -16,7 +16,7 @@ type Socket struct {
 }
 
 // Creates a new websocket connection to the Headplane server.
-func NewSocket(agent *tsnet.TSAgent, controlURL string, debug bool) (*Socket, error) {
+func NewSocket(agent *tsnet.TSAgent, controlURL, authKey string, debug bool) (*Socket, error) {
 	wsURL, err := httpToWs(controlURL)
 	if err != nil {
 		return nil, err
@@ -24,6 +24,9 @@ func NewSocket(agent *tsnet.TSAgent, controlURL string, debug bool) (*Socket, er
 
 	headers := http.Header{}
 	headers.Add("X-Headplane-TS-Node-ID", agent.ID)
+
+	auth := fmt.Sprintf("Bearer %s", authKey)
+	headers.Add("Authorization", auth)
 
 	log.Printf("dialing websocket at %s", wsURL)
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, headers)
