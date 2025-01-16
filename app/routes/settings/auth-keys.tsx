@@ -137,7 +137,7 @@ export default function Page() {
 			const expiry = new Date(key.expiration);
 
 			if (status === 'Active') {
-				return !(expiry < now) && !key.used;
+				return !(expiry < now) && (!key.used || key.reusable);
 			}
 
 			if (status === 'Used/Expired') {
