@@ -13,6 +13,7 @@ import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 import type { Machine, Route, User } from '~/types';
 import { queryAgent, initAgentSocket } from '~/utils/ws-agent';
+import { ErrorPopup } from '~/components/Error'
 
 import { menuAction } from './action';
 import MachineRow from './components/machine';
@@ -138,4 +139,10 @@ export default function Page() {
 			</table>
 		</>
 	);
+}
+
+export function ErrorBoundary() {
+	return (
+		<ErrorPopup type="embedded" />
+	)
 }

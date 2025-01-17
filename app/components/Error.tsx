@@ -8,7 +8,6 @@ interface Props {
 	type?: 'full' | 'embedded';
 }
 
-
 function getMessage(error: Error | unknown) {
 	if (!(error instanceof Error)) {
 		return "An unknown error occurred";
@@ -18,9 +17,9 @@ function getMessage(error: Error | unknown) {
 
 	// Traverse the error chain to find the root cause
 	if (error.cause) {
-		rootError = error.cause;
+		rootError = error.cause as Error;
 		while (rootError.cause) {
-			rootError = rootError.cause;
+			rootError = rootError.cause as Error;
 		}
 	}
 

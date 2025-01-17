@@ -17,10 +17,8 @@ import Menu from './Menu';
 import TabLink from './TabLink';
 
 interface Props {
-	data?: {
-		config: HeadplaneContext['config'];
-		user?: SessionData['user'];
-	};
+	config: HeadplaneContext['config'];
+	user?: SessionData['user'];
 }
 
 interface LinkProps {
@@ -45,7 +43,7 @@ function Link({ href, text, isMenu }: LinkProps) {
 	);
 }
 
-export default function Header({ data }: Props) {
+export default function Header(data: Props) {
 	return (
 		<header className="bg-main-700 dark:bg-main-800 text-ui-50">
 			<div className="container flex items-center justify-between py-4">
@@ -57,7 +55,7 @@ export default function Header({ data }: Props) {
 					<Link href="https://tailscale.com/download" text="Download" />
 					<Link href="https://github.com/tale/headplane" text="GitHub" />
 					<Link href="https://github.com/juanfont/headscale" text="Headscale" />
-					{data?.user ? (
+					{data.user ? (
 						<Menu>
 							<Menu.Button
 								className={cn(
@@ -122,7 +120,7 @@ export default function Header({ data }: Props) {
 					name="Access Control"
 					icon={<LockIcon className="w-4 h-4" />}
 				/>
-				{data?.config.read ? (
+				{data.config.read ? (
 					<>
 						<TabLink
 							to="/dns"

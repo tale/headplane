@@ -13,15 +13,10 @@ import TextField from '~/components/TextField';
 import type { Key } from '~/types';
 import { loadContext } from '~/utils/config/headplane';
 import { pull } from '~/utils/headscale';
-import {
-	startOidc,
-	beginAuthFlow,
-	getRedirectUri
-} from '~/utils/oidc';
+import { beginAuthFlow, getRedirectUri } from '~/utils/oidc';
 import { commitSession, getSession } from '~/utils/sessions.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
-
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {

@@ -15,7 +15,7 @@ export default function Footer({ url, debug }: FooterProps) {
 	return (
 		<footer
 			className={cn(
-				'fixed bottom-0 left-0 z-50 w-full h-14',
+				'fixed bottom-0 left-0 z-40 w-full h-14',
 				'bg-ui-100 dark:bg-ui-900 text-ui-500',
 				'flex flex-col justify-center gap-1',
 				'border-t border-ui-200 dark:border-ui-800',
