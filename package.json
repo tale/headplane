@@ -4,8 +4,8 @@
 	"sideEffects": false,
 	"type": "module",
 	"scripts": {
-		"build": "react-router build && vite build --config server/vite.config.ts",
-		"dev": "node server/dev.mjs",
+		"build": "react-router build && vite build -c server/vite.config.ts",
+		"dev": "vite-node -w -c server/vite.config.ts server/entry.ts",
 		"start": "node build/headplane/server.js",
 		"typecheck": "tsc"
 	},
@@ -40,6 +40,7 @@
 		"tailwindcss-react-aria-components": "^1.2.0",
 		"undici": "^7.2.0",
 		"usehooks-ts": "^3.1.0",
+		"vite-node": "^3.0.1",
 		"ws": "^8.18.0",
 		"yaml": "^2.7.0",
 		"zod": "^3.24.1"
