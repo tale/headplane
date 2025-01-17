@@ -86,6 +86,10 @@ export async function initAgentCache(defaultTTL: number, filepath: string) {
 
 let agentSocket: WebSocket | undefined;
 export function initAgentSocket(context: LoaderFunctionArgs['context']) {
+	if (!context.ws) {
+		return;
+	};
+
 	const client = context.ws.clients.values().next().value;
 	agentSocket = client;
 }
