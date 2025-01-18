@@ -2,19 +2,19 @@ import {
 	GearIcon,
 	GlobeIcon,
 	LockIcon,
-	PaperAirplaneIcon,
 	PeopleIcon,
 	PersonIcon,
 	ServerIcon,
 } from '@primer/octicons-react';
-import { Form } from 'react-router';
+import { CircleUser, PlaneTakeoff } from 'lucide-react';
+import { Form, NavLink } from 'react-router';
+import type { ReactNode } from 'react';
 
 import { cn } from '~/utils/cn';
 import type { HeadplaneContext } from '~/utils/config/headplane';
 import type { SessionData } from '~/utils/sessions.server';
 
 import Menu from './Menu';
-import TabLink from './TabLink';
 
 interface Props {
 	config: HeadplaneContext['config'];
@@ -24,19 +24,43 @@ interface Props {
 interface LinkProps {
 	href: string;
 	text: string;
-	isMenu?: boolean;
 }
 
-function Link({ href, text, isMenu }: LinkProps) {
+interface TabLinkProps {
+	name: string;
+	to: string;
+	icon: ReactNode;
+}
+
+function TabLink({ name, to, icon }: TabLinkProps) {
+	return (
+		<div className="relative py-2">
+			<NavLink
+				to={to}
+				prefetch="intent"
+				className={({ isActive }) =>
+					cn(
+						'px-3 py-2 flex items-center rounded-md text-nowrap gap-x-2',
+						'after:absolute after:bottom-0 after:left-3 after:right-3',
+						'after:h-0.5 after:bg-headplane-900 dark:after:bg-headplane-200',
+						'hover:bg-headplane-200 dark:hover:bg-headplane-900',
+						isActive ? 'after:visible' : 'after:invisible',
+					)
+				}
+			>
+				{icon} {name}
+			</NavLink>
+		</div>
+	);
+}
+
+function Link({ href, text }: LinkProps) {
 	return (
 		<a
 			href={href}
 			target="_blank"
 			rel="noreferrer"
-			className={cn(
-				!isMenu &&
-					'text-ui-300 hover:text-ui-50 hover:underline hidden sm:block',
-			)}
+			className="hidden sm:block hover:underline text-sm"
 		>
 			{text}
 		</a>
@@ -45,11 +69,16 @@ function Link({ href, text, isMenu }: LinkProps) {
 
 export default function Header(data: Props) {
 	return (
-		<header className="bg-main-700 dark:bg-main-800 text-ui-50">
+		<header className={cn(
+			'bg-headplane-100 dark:bg-headplane-950',
+			'text-headplane-800 dark:text-headplane-200',
+			'dark:border-b dark:border-headplane-800',
+			'shadow-inner',
+		)}>
 			<div className="container flex items-center justify-between py-4">
 				<div className="flex items-center gap-x-2">
-					<PaperAirplaneIcon className="w-6 h-6" />
-					<h1 className="text-2xl">Headplane</h1>
+					<PlaneTakeoff />
+					<h1 className="text-2xl font-semibold">headplane</h1>
 				</div>
 				<div className="flex items-center gap-x-4">
 					<Link href="https://tailscale.com/download" text="Download" />
@@ -59,13 +88,11 @@ export default function Header(data: Props) {
 						<Menu>
 							<Menu.Button
 								className={cn(
-									'rounded-full h-9 w-9',
-									'border border-main-600 dark:border-main-700',
-									'hover:bg-main-600 dark:hover:bg-main-700',
-									'flex items-center justify-center',
+									'rounded-full h-8 w-8',
+									'hover:bg-headplane-200 dark:hover:bg-headplane-800',
 								)}
 							>
-								<PersonIcon className="h-5 w-5 mt-0.5" />
+								<CircleUser className="w-full h-full" />
 							</Menu.Button>
 							<Menu.Items>
 								<Menu.Item className="text-right">
@@ -105,7 +132,7 @@ export default function Header(data: Props) {
 					) : undefined}
 				</div>
 			</div>
-			<nav className="container flex items-center gap-x-4 overflow-x-auto">
+			<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
 				<TabLink
 					to="/machines"
 					name="Machines"

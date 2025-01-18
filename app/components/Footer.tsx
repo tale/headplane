@@ -16,9 +16,10 @@ export default function Footer({ url, debug }: FooterProps) {
 		<footer
 			className={cn(
 				'fixed bottom-0 left-0 z-40 w-full h-14',
-				'bg-ui-100 dark:bg-ui-900 text-ui-500',
-				'flex flex-col justify-center gap-1',
-				'border-t border-ui-200 dark:border-ui-800',
+				'flex flex-col justify-center gap-1 shadow-inner',
+				'bg-headplane-100 dark:bg-headplane-950',
+				'text-headplane-800 dark:text-headplane-200',
+				'dark:border-t dark:border-headplane-800',
 			)}
 		>
 			<p className="container text-xs">
@@ -33,7 +34,7 @@ export default function Footer({ url, debug }: FooterProps) {
 			</p>
 			<p className="container text-xs opacity-75">
 				Version: {__VERSION__}
-				{' | '}
+				{' — '}
 				Connecting to
 				{' '}
 				<strong className="blur-xs hover:blur-none">
