@@ -1,5 +1,4 @@
 import { defineConfig } from 'vite';
-import { VitePluginNode } from 'vite-plugin-node';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin';
