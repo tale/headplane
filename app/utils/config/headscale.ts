@@ -119,7 +119,6 @@ const HeadscaleConfig = z.object({
 				}),
 			)
 			.default([]),
-		use_username_in_magic_dns: goBool.default(false),
 	}),
 
 	oidc: z

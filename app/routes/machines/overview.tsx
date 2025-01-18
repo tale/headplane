@@ -38,10 +38,6 @@ export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 		if (config.dns.magic_dns) {
 			magic = config.dns.base_domain;
 		}
-
-		if (config.dns.use_username_in_magic_dns) {
-			magic = `[user].${magic}`;
-		}
 	}
 
 	return {
