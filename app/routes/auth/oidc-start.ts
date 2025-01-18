@@ -30,6 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	session.set('oidc_code_verif', data.codeVerifier);
 	session.set('oidc_state', data.state);
 	session.set('oidc_nonce', data.nonce);
+	session.set('oidc_redirect_uri', redirectUri)
 
 	return redirect(data.url, {
 		status: 302,

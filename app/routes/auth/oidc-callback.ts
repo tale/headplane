@@ -34,13 +34,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const codeVerifier = session.get('oidc_code_verif');
 	const state = session.get('oidc_state');
 	const nonce = session.get('oidc_nonce');
+	const redirectUri = session.get('oidc_redirect_uri');
 
 	if (!codeVerifier || !state || !nonce) {
 		return send({ error: 'Missing OIDC state' }, { status: 400 });
 	}
 
+	// Reconstruct the redirect URI using the query parameters
+	// and the one we saved in the session
+	const flowRedirectUri = new URL(redirectUri);
+	flowRedirectUri.search = url.search;
+
 	const flowOptions = {
-		redirect_uri: request.url,
+		redirect_uri: flowRedirectUri.toString(),
 		codeVerifier,
 		state,
 		nonce: nonce === '<none>' ? undefined : nonce,
