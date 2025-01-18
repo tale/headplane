@@ -111,12 +111,12 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	const cacheTTL = 300 * 1000; // 5 minutes
 
 	// Load agent cache
-	if (cacheEnabled) {
-		log.info('CTXT', 'Initializing Agent Cache');
-		log.debug('CTXT', 'Cache Path: %s', cachePath);
-		log.debug('CTXT', 'Cache TTL: %d', cacheTTL);
-		await initAgentCache(cacheTTL, cachePath);
-	}
+	// if (cacheEnabled) {
+	// 	log.info('CTXT', 'Initializing Agent Cache');
+	// 	log.debug('CTXT', 'Cache Path: %s', cachePath);
+	// 	log.debug('CTXT', 'Cache TTL: %d', cacheTTL);
+	// 	await initAgentCache(cacheTTL, cachePath);
+	// }
 
 	context = {
 		debug,

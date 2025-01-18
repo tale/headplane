@@ -27,7 +27,7 @@ export default [
 			...prefix('/settings', [
 				index('routes/settings/overview.tsx'),
 				route('/auth-keys', 'routes/settings/auth-keys.tsx'),
-				route('/local-agent', 'routes/settings/local-agent.tsx'),
+				// route('/local-agent', 'routes/settings/local-agent.tsx'),
 			]),
 		]),
 	]),

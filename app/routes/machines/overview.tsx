@@ -113,7 +113,7 @@ export default function Page() {
 								) : undefined}
 							</div>
 						</th>
-						<th className="pb-2">Version</th>
+						{/**<th className="pb-2">Version</th>**/}
 						<th className="pb-2">Last Seen</th>
 					</tr>
 				</thead>

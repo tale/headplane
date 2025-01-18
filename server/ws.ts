@@ -3,6 +3,9 @@ import log from '~server/log'
 
 const server = new WebSocketServer({ noServer: true });
 export function initWebsocket() {
+	// TODO: Finish this and make public
+	return;
+
 	const key = process.env.LOCAL_AGENT_AUTHKEY;
 	if (!key) {
 		return;

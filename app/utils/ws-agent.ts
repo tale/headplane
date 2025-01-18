@@ -97,6 +97,7 @@ export function initAgentSocket(context: LoaderFunctionArgs['context']) {
 // Check the cache and then attempt the websocket query
 // If we aren't connected to an agent, then debug log and return the cache
 export async function queryAgent(nodes: string[]) {
+	return; 
 	if (!cache) {
 		log.error('CACH', 'Cache not initialized');
 		return;

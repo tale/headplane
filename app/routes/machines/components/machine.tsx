@@ -153,6 +153,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 					</Menu>
 				</div>
 			</td>
+			{/**
 			<td className="py-2">
 					{stats !== undefined ? (
 						<>
@@ -169,6 +170,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 						</p>
 					)}
 			</td>
+			**/}
 			<td className="py-2">
 				<span
 					className={cn(

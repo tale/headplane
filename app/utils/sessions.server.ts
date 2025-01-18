@@ -5,6 +5,7 @@ export type SessionData = {
 	oidc_state: string;
 	oidc_code_verif: string;
 	oidc_nonce: string;
+	agent_onboarding: boolean;
 	user: {
 		subject: string;
 		name: string;

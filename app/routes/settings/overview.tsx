@@ -4,6 +4,8 @@ import { Link as RemixLink } from 'react-router';
 import { ArrowRightIcon } from '@primer/octicons-react';
 import { cn } from '~/utils/cn';
 
+import AgentSection from './components/agent';
+
 export default function Page() {
 	return (
 		<div className="flex flex-col gap-8 max-w-screen-lg">
@@ -30,16 +32,17 @@ export default function Page() {
 				</p>
 			</div>
 			<RemixLink to="/settings/auth-keys">
-				<span
+				<div
 					className={cn(
-						'text-lg font-medium',
+						'text-lg font-medium flex items-center',
 						'text-gray-700 dark:text-gray-300',
 					)}
 				>
 					Manage Auth Keys
 					<ArrowRightIcon className="w-5 h-5 ml-2" />
-				</span>
+				</div>
 			</RemixLink>
+			{/**<AgentSection />**/}
 		</div>
 	);
 }
