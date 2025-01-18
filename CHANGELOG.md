@@ -1,3 +1,16 @@
+### 0.4.0 (January 6, 2025)
+- Switched from Remix.run to React-Router
+- Fixed an issue where some config fields were marked as required even if they weren't (fixes [#66](https://github.com/tale/headplane/issues/66))
+- Fixed an issue where the toasts would be obscured by the footer (fixes [#68](https://github.com/tale/headplane/issues/68))
+- The footer now blurs your Headscale URL as a privacy measure
+- Updated to the next stable beta of the React Compiler
+- Changed `/healthz` to use a well-known endpoint instead of trying an invalid API key
+- Support `OIDC_REDIRECT_URI` to force a specific redirect URI
+- Redo the OIDC integration for better error handling and configuration
+- Gracefully handle when Headscale is unreachable instead of crashing the dashboard
+- Reusable Pre-Auth Keys no longer show expired when used (PR [#88](https://github.com/tale/headplane/pull/88))
+- Tweaked some CSS issues in the UI
+
 ### 0.3.9 (December 6, 2024)
 - Fixed a race condition bug in the OIDC validation code
 
