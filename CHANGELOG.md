@@ -1,4 +1,7 @@
-### 0.4.0 (January 6, 2025)
+### 0.4.1 (January 18, 2025)
+- Fixed an urgent issue where the OIDC redirect URI would mismatch.
+
+### 0.4.0 (January 18, 2025)
 - Switched from Remix.run to React-Router
 - Fixed an issue where some config fields were marked as required even if they weren't (fixes [#66](https://github.com/tale/headplane/issues/66))
 - Fixed an issue where the toasts would be obscured by the footer (fixes [#68](https://github.com/tale/headplane/issues/68))
