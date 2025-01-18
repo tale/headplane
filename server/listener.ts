@@ -120,7 +120,7 @@ export const listener: RequestListener = async (req, res) => {
 
 	const response = devtools
 		? await stacksafeTry(devtools, frameworkReq, appContext())
-		: await prodHandler(frameworkReq, appContext());
+		: await prodHandler?.(frameworkReq, appContext());
 
 	res.statusCode = response.status;
 	res.statusMessage = response.statusText;

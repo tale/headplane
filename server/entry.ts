@@ -28,7 +28,7 @@ if (ws) {
 	});
 }
 
-server.listen(port, host, () => {
+server.listen(Number(port), host, () => {
 	log.info('SRVX', 'Running on %s:%s', host, port);
 });
 
