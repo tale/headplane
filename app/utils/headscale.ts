@@ -20,6 +20,22 @@ export class FatalError extends Error {
 	}
 }
 
+export async function healthcheck() {
+	const context = await loadContext();
+	const prefix = context.headscaleUrl;
+	log.debug('APIC', 'GET /health');
+
+	const health = new URL('health', prefix);
+	const response = await fetch(health.toString(), {
+		headers: {
+			Accept: 'application/json'
+		}
+	})
+
+	// Intentionally not catching
+	return response.status === 200;
+}
+
 export async function pull<T>(url: string, key: string) {
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
