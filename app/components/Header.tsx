@@ -62,6 +62,7 @@ export default function Header(data: Props) {
 									'rounded-full h-9 w-9',
 									'border border-main-600 dark:border-main-700',
 									'hover:bg-main-600 dark:hover:bg-main-700',
+									'flex items-center justify-center',
 								)}
 							>
 								<PersonIcon className="h-5 w-5 mt-0.5" />
