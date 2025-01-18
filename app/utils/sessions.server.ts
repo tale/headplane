@@ -24,7 +24,7 @@ type SessionStore = SessionStorage<SessionData, SessionFlashData>;
 let sessionStorage: SessionStore | null = null;
 export function initSessionManager() {
 	if (sessionStorage) {
-		throw new Error('Session manager already initialized');
+		return;
 	}
 
 	sessionStorage = createCookieSessionStorage<SessionData, SessionFlashData>({
