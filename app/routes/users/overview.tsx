@@ -13,6 +13,7 @@ import { ClientOnly } from 'remix-utils/client-only';
 import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
 import StatusCircle from '~/components/StatusCircle';
+import { ErrorPopup } from '~/components/Error';
 import { toast } from '~/components/Toaster';
 import type { Machine, User } from '~/types';
 import { cn } from '~/utils/cn';
@@ -318,4 +319,10 @@ function UserCard({ user, magic }: CardProps) {
 			</Card>
 		</div>
 	);
+}
+
+export function ErrorBoundary() {
+	return (
+		<ErrorPopup type="embedded" />
+	)
 }
