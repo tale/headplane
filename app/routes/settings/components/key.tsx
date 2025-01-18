@@ -31,7 +31,7 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 				tailscale up --login-server {server} --authkey {authKey.key}
 			</Code>
 			<div className="flex gap-4 items-center">
-				{authKey.used ||
+				{authKey.used && !authKey.reusable ||
 				new Date(authKey.expiration) < new Date() ? undefined : (
 					<ExpireKey authKey={authKey} />
 				)}
