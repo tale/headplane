@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, LinksFunction, MetaFunction } from 'react-router';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from 'react-router';
 import { loadContext } from '~/utils/config/headplane';
+import '@fontsource-variable/inter'
 
 import { ProgressBar } from 'react-aria-components';
 import { ErrorPopup } from '~/components/Error';
@@ -30,7 +31,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 				<Meta />
 				<Links />
 			</head>
-			<body className="overscroll-none dark:bg-ui-950 dark:text-ui-50">
+			<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
 				{children}
 				<Toaster />
 				<ScrollRestoration />

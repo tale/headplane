@@ -96,7 +96,7 @@ export default function Page() {
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
-			<Card className="max-w-sm m-4 sm:m-0 rounded-2xl">
+			<Card className="max-w-sm m-4 sm:m-0" variant="raised">
 				<Card.Title>Welcome to Headplane</Card.Title>
 				{data.apiKey ? (
 					<Form method="post">
@@ -117,7 +117,7 @@ export default function Page() {
 							type="password"
 						/>
 						<Button className="w-full mt-2.5" variant="heavy" type="submit">
-							Login
+							Sign In
 						</Button>
 					</Form>
 				) : undefined}
@@ -131,8 +131,8 @@ export default function Page() {
 				{data.oidc ? (
 					<Form method="POST">
 						<input type="hidden" name="oidc-start" value="true" />
-						<Button className="w-full" variant="heavy" type="submit">
-							Login with SSO
+						<Button className="w-full" type="submit">
+							Single Sign-On
 						</Button>
 					</Form>
 				) : undefined}

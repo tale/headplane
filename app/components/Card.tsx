@@ -1,16 +1,6 @@
-import type { HTMLProps } from 'react';
-import { Heading as AriaHeading } from 'react-aria-components';
+import React from 'react';
+import Title from '~/components/Title';
 import { cn } from '~/utils/cn';
-
-function Title(props: Parameters<typeof AriaHeading>[0]) {
-	return (
-		<AriaHeading
-			{...props}
-			slot="title"
-			className={cn('text-lg font-semibold leading-6 mb-5', props.className)}
-		/>
-	);
-}
 
 function Text(props: React.HTMLProps<HTMLParagraphElement>) {
 	return (
@@ -18,20 +8,24 @@ function Text(props: React.HTMLProps<HTMLParagraphElement>) {
 	);
 }
 
-type Props = HTMLProps<HTMLDivElement> & {
+type Props = React.HTMLProps<HTMLDivElement> & {
 	variant?: 'raised' | 'flat';
 };
 
-function Card(props: Props) {
+interface Props extends React.HTMLProps<HTMLDivElement> {
+	variant?: 'raised' | 'flat';
+}
+
+function Card({ variant = 'raised', ...props }: Props) {
 	return (
 		<div
 			{...props}
 			className={cn(
-				'w-full max-w-md overflow-hidden rounded-xl p-4',
-				props.variant === 'flat'
+				'w-full max-w-md overflow-hidden rounded-3xl p-5',
+				variant === 'flat'
 					? 'bg-transparent shadow-none'
-					: 'bg-ui-50 dark:bg-ui-900 shadow-sm',
-				'border border-ui-200 dark:border-ui-700',
+					: 'bg-headplane-50/50 dark:bg-headplane-950/50 shadow-sm',
+				'border border-headplane-100 dark:border-headplane-800',
 				props.className,
 			)}
 		>

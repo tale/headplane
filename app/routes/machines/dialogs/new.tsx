@@ -103,13 +103,7 @@ export default function New(data: NewProps) {
 				</Dialog.Panel>
 			</Dialog>
 			<Menu>
-				<Menu.Button
-					className={cn(
-						'w-fit text-sm rounded-lg px-4 py-2',
-						'bg-main-700 dark:bg-main-800 text-white',
-						'hover:bg-main-800 dark:hover:bg-main-700',
-					)}
-				>
+				<Menu.Button variant="heavy">
 					Add Device
 				</Menu.Button>
 				<Menu.Items>

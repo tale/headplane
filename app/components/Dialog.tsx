@@ -1,4 +1,6 @@
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import React, { Dispatch, ReactNode, SetStateAction } from 'react';
+import Button, { ButtonProps } from '~/components/Button';
+import Title from '~/components/Title';
 import {
 	Button as AriaButton,
 	Dialog as AriaDialog,
@@ -9,64 +11,16 @@ import {
 } from 'react-aria-components';
 import { cn } from '~/utils/cn';
 
-type ButtonProps = Parameters<typeof AriaButton>[0] & {
-	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>];
-};
-
-function Button(props: ButtonProps) {
-	return (
-		<AriaButton
-			{...props}
-			aria-label="Dialog"
-			className={cn(
-				'w-fit text-sm rounded-lg px-4 py-2',
-				'bg-main-700 dark:bg-main-800 text-white',
-				'hover:bg-main-800 dark:hover:bg-main-700',
-				props.isDisabled && 'opacity-50 cursor-not-allowed',
-				props.className,
-			)}
-			// If control is passed, set the state value
-			onPress={
-				props.control
-					? () => {
-							props.control?.[1](true);
-						}
-					: undefined
-			}
-		/>
-	);
+interface ActionProps extends ButtonProps {
+	variant: 'cancel' | 'confirm';
 }
-
-type ActionProps = Parameters<typeof AriaButton>[0] & {
-	readonly variant: 'cancel' | 'confirm';
-};
 
 function Action(props: ActionProps) {
 	return (
-		<AriaButton
+		<Button
 			{...props}
 			type={props.variant === 'confirm' ? 'submit' : 'button'}
-			className={cn(
-				'px-4 py-2 rounded-lg',
-				props.isDisabled && 'opacity-50 cursor-not-allowed',
-				props.variant === 'cancel'
-					? 'text-ui-700 dark:text-ui-300'
-					: 'text-ui-300 dark:text-ui-300',
-				props.variant === 'confirm'
-					? 'bg-main-700 dark:bg-main-700 pressed:bg-main-800 dark:pressed:bg-main-800'
-					: 'bg-ui-200 dark:bg-ui-800 pressed:bg-ui-300 dark:pressed:bg-ui-700',
-				props.className,
-			)}
-		/>
-	);
-}
-
-function Title(props: Parameters<typeof AriaHeading>[0]) {
-	return (
-		<AriaHeading
-			{...props}
-			slot="title"
-			className={cn('text-lg font-semibold leading-6 mb-5', props.className)}
+			variant={props.variant === 'cancel' ? 'light' : 'heavy'}
 		/>
 	);
 }
@@ -100,7 +54,7 @@ function Panel({ children, control, className }: PanelProps) {
 		>
 			<Modal
 				className={cn(
-					'w-full max-w-md overflow-hidden rounded-xl p-4',
+					'w-full max-w-md overflow-hidden rounded-2xl p-4',
 					'bg-ui-50 dark:bg-ui-900 shadow-lg',
 					'entering:animate-in exiting:animate-out',
 					'dark:border dark:border-ui-700',

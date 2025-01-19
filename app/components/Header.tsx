@@ -86,14 +86,9 @@ export default function Header(data: Props) {
 					<Link href="https://github.com/juanfont/headscale" text="Headscale" />
 					{data.user ? (
 						<Menu>
-							<Menu.Button
-								className={cn(
-									'rounded-full h-8 w-8',
-									'hover:bg-headplane-200 dark:hover:bg-headplane-800',
-								)}
-							>
-								<CircleUser className="w-full h-full" />
-							</Menu.Button>
+							<Menu.IconButton className="p-0">
+								<CircleUser />
+							</Menu.IconButton>
 							<Menu.Items>
 								<Menu.Item className="text-right">
 									<p className="font-bold">{data.user.name}</p>

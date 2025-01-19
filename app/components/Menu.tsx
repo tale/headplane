@@ -1,4 +1,6 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import Button from '~/components/Button';
+import IconButton from '~/components/IconButton';
 import {
 	Button as AriaButton,
 	Menu as AriaMenu,
@@ -7,16 +9,6 @@ import {
 	Popover,
 } from 'react-aria-components';
 import { cn } from '~/utils/cn';
-
-function Button(props: Parameters<typeof AriaButton>[0]) {
-	return (
-		<AriaButton
-			{...props}
-			className={cn('outline-none', props.className)}
-			aria-label="Menu"
-		/>
-	);
-}
 
 function Items(props: Parameters<typeof AriaMenu>[0]) {
 	return (
@@ -88,4 +80,10 @@ function Menu({ children }: { children: ReactNode }) {
 	return <MenuTrigger>{children}</MenuTrigger>;
 }
 
-export default Object.assign(Menu, { Button, Item, ItemButton, Items });
+export default Object.assign(Menu, {
+	IconButton,
+	Button,
+	Item,
+	ItemButton,
+	Items
+});

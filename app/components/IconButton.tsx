@@ -4,13 +4,14 @@ import { Button as AriaButton } from 'react-aria-components';
 import { useButton } from 'react-aria';
 import { cn } from '~/utils/cn';
 
-export interface ButtonProps extends React.HTMLProps<HTMLButtonElement> {
+interface Props extends React.HTMLProps<HTMLButtonElement> {
 	variant?: 'heavy'
 	isDisabled?: boolean
-	children?: React.ReactNode
+	children: React.ReactNode
+	label: string
 }
 
-export default function Button({ variant = 'light', ...props }: Props) {
+export default function IconButton({ variant = 'light', ...props }: Props) {
 	const ref = useRef<HTMLButtonElement | null>(null);
 	const { buttonProps } = useButton(props, ref);
 
@@ -18,8 +19,9 @@ export default function Button({ variant = 'light', ...props }: Props) {
 		<button
 			ref={ref}
 			{...buttonProps}
+			aria-label={props.label}
 			className={cn(
-				'w-fit text-sm rounded-xl px-3 py-2',
+				'rounded-full flex items-center justify-center p-1',
 				'focus:outline-none focus:ring',
 				props.isDisabled && 'opacity-60 cursor-not-allowed',
 				...(variant === 'heavy'
