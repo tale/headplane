@@ -111,9 +111,12 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 				<div className="flex items-center gap-x-1">
 					{machine.ipAddresses[0]}
 					<Menu>
-						<Menu.Button>
+						<Menu.IconButton
+							className="bg-transparent"
+							label="IP Addresses"
+						>
 							<ChevronDownIcon className="w-4 h-4" />
-						</Menu.Button>
+						</Menu.IconButton>
 						<Menu.Items>
 							{machine.ipAddresses.map((ip) => (
 								<Menu.ItemButton

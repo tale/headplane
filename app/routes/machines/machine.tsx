@@ -64,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const { machine, magic, routes, users } = useLoaderData<typeof loader>();
-	const routesState = useState(false);
+	const [showRouting, setShowRouting] = useState(false);
 	useLiveData({ interval: 1000 });
 
 	const expired =
@@ -201,7 +201,11 @@ export default function Page() {
 				</div>
 			</div>
 			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
-			<Routes machine={machine} routes={routes} state={routesState} />
+			<Routes
+				machine={machine}
+				routes={routes}
+				state={[showRouting, setShowRouting]}
+			/>
 			<div className="flex items-center justify-between mb-4">
 				<p>
 					Subnets let you expose physical network routes onto Tailscale.{' '}
@@ -212,7 +216,7 @@ export default function Page() {
 						Learn More
 					</Link>
 				</p>
-				<Button variant="light" control={routesState}>
+				<Button onPress={() => setShowRouting(true)}>
 					Review
 				</Button>
 			</div>
@@ -247,13 +251,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
+						onPress={() => setShowRouting(true)}
 						className={cn(
-							'p-0 rounded-sm bg-transparent mt-1',
+							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
-							'hover:bg-transparent',
-							'hover:text-blue-600 dark:hover:text-blue-500',
 						)}
-						control={routesState}
 					>
 						Edit
 					</Button>
@@ -283,13 +285,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
+						onPress={() => setShowRouting(true)}
 						className={cn(
-							'p-0 rounded-sm bg-transparent mt-1',
+							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
-							'hover:bg-transparent',
-							'hover:text-blue-600 dark:hover:text-blue-500',
 						)}
-						control={routesState}
 					>
 						Edit
 					</Button>
@@ -322,13 +322,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
+						onPress={() => setShowRouting(true)}
 						className={cn(
-							'p-0 rounded-sm bg-transparent mt-1',
+							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
-							'hover:bg-transparent',
-							'hover:text-blue-600 dark:hover:text-blue-500',
 						)}
-						control={routesState}
 					>
 						Edit
 					</Button>

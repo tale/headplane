@@ -1,8 +1,8 @@
-import { XIcon } from '@primer/octicons-react';
+import { X } from 'lucide-react';
 import { Form, useSubmit } from 'react-router';
 import { useState } from 'react';
 
-import Button from '~/components/Button';
+import IconButton from '~/components/IconButton';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 
@@ -12,19 +12,18 @@ interface Props {
 
 export default function Remove({ username }: Props) {
 	const submit = useSubmit();
-	const dialogState = useState(false);
+	const [dialog, setDialog] = useState(false);
 
 	return (
 		<>
-			<Button
-				variant="light"
-				control={dialogState}
-				className="rounded-full p-0 w-8 h-8 flex items-center justify-center"
+			<IconButton
+				label={`Delete ${username}`}
+				onPress={() => setDialog(true)}
 			>
-				<XIcon className="w-4 h-4" />
-			</Button>
-			<Dialog control={dialogState}>
-				<Dialog.Panel control={dialogState}>
+				<X className="p-0.5" />
+			</IconButton>
+			<Dialog control={[dialog, setDialog]}>
+				<Dialog.Panel control={[dialog, setDialog]}>
 					{(close) => (
 						<>
 							<Dialog.Title>Delete {username}?</Dialog.Title>

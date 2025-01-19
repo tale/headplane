@@ -1,8 +1,8 @@
-import { PencilIcon } from '@primer/octicons-react';
+import { Pencil } from 'lucide-react';
 import { Form, useSubmit } from 'react-router';
 import { useState } from 'react';
 
-import Button from '~/components/Button';
+import IconButton from '~/components/IconButton';
 import Dialog from '~/components/Dialog';
 import TextField from '~/components/TextField';
 
@@ -13,20 +13,19 @@ interface Props {
 
 export default function Rename({ username, magic }: Props) {
 	const submit = useSubmit();
-	const dialogState = useState(false);
+	const [dialog, setDialog] = useState(false);
 	const [newName, setNewName] = useState(username);
 
 	return (
 		<>
-			<Button
-				variant="light"
-				control={dialogState}
-				className="rounded-full p-0 w-8 h-8 flex items-center justify-center"
+			<IconButton
+				label={`Rename ${username}`}
+				onPress={() => setDialog(true)}
 			>
-				<PencilIcon className="w-4 h-4" />
-			</Button>
-			<Dialog control={dialogState}>
-				<Dialog.Panel control={dialogState}>
+				<Pencil className="p-1" />
+			</IconButton>
+			<Dialog control={[dialog, setDialog]}>
+				<Dialog.Panel control={[dialog, setDialog]}>
 					{(close) => (
 						<>
 							<Dialog.Title>Rename {username}?</Dialog.Title>

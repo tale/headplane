@@ -1,17 +1,17 @@
 import React, { Dispatch, ReactNode, SetStateAction } from 'react';
 import Button, { ButtonProps } from '~/components/Button';
 import Title from '~/components/Title';
+import Text from '~/components/Text';
+import Card from '~/components/Card';
 import {
-	Button as AriaButton,
 	Dialog as AriaDialog,
 	DialogTrigger,
-	Heading as AriaHeading,
 	Modal,
 	ModalOverlay,
 } from 'react-aria-components';
 import { cn } from '~/utils/cn';
 
-interface ActionProps extends ButtonProps {
+interface ActionProps extends Omit<ButtonProps, 'variant'> {
 	variant: 'cancel' | 'confirm';
 }
 
@@ -25,10 +25,16 @@ function Action(props: ActionProps) {
 	);
 }
 
-function Text(props: React.HTMLProps<HTMLParagraphElement>) {
+interface GutterProps {
+	children: ReactNode;
+}
+
+function Gutter({ children }: GutterProps) {
 	return (
-		<p {...props} className={cn('text-base leading-6 my-0', props.className)} />
-	);
+		<div className="mt-6 flex justify-end gap-2 mt-6">
+			{children}
+		</div>
+	)
 }
 
 interface PanelProps {
@@ -42,29 +48,28 @@ function Panel({ children, control, className }: PanelProps) {
 		<ModalOverlay
 			aria-hidden="true"
 			className={cn(
-				'fixed inset-0 h-screen w-screen z-50 bg-black/30',
-				'flex items-center justify-center dark:bg-black/70',
+				'fixed inset-0 h-screen w-screen z-50',
+				'flex items-center justify-center',
+				'bg-headplane-900/15 dark:bg-headplane-900/30',
 				'entering:animate-in exiting:animate-out',
-				'entering:fade-in entering:duration-200 entering:ease-out',
-				'exiting:fade-out exiting:duration-100 exiting:ease-in',
+				'entering:fade-in entering:duration-100 entering:ease-out',
+				'exiting:fade-out exiting:duration-50 exiting:ease-in',
 				className,
 			)}
 			isOpen={control ? control[0] : undefined}
 			onOpenChange={control ? control[1] : undefined}
 		>
-			<Modal
-				className={cn(
-					'w-full max-w-md overflow-hidden rounded-2xl p-4',
-					'bg-ui-50 dark:bg-ui-900 shadow-lg',
-					'entering:animate-in exiting:animate-out',
-					'dark:border dark:border-ui-700',
-					'entering:zoom-in-95 entering:ease-out entering:duration-200',
-					'exiting:zoom-out-95 exiting:ease-in exiting:duration-100',
-				)}
-			>
-				<AriaDialog role="alertdialog" className="outline-none relative">
-					{({ close }) => children(close)}
-				</AriaDialog>
+			<Modal className={cn(
+				'bg-white dark:bg-headplane-900 rounded-3xl w-full max-w-lg',
+				'entering:animate-in exiting:animate-out',
+				'entering:zoom-in-95 entering:ease-out entering:duration-100',
+				'exiting:zoom-out-95 exiting:ease-in exiting:duration-50',
+			)}>
+				<Card variant="flat" className="w-full max-w-lg">
+					<AriaDialog role="alertdialog" className="outline-none">
+						{({ close }) => children(close)}
+					</AriaDialog>
+				</Card>
 			</Modal>
 		</ModalOverlay>
 	);
@@ -83,4 +88,11 @@ function Dialog({ children, control }: DialogProps) {
 	return <DialogTrigger>{children}</DialogTrigger>;
 }
 
-export default Object.assign(Dialog, { Button, Title, Text, Panel, Action });
+export default Object.assign(Dialog, {
+	Action,
+	Button,
+	Gutter,
+	Panel,
+	Title,
+	Text,
+});

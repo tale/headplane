@@ -1,16 +1,15 @@
 import type { Dispatch, SetStateAction } from 'react';
 import React, { useRef } from 'react';
-import { Button as AriaButton } from 'react-aria-components';
-import { useButton } from 'react-aria';
+import { useButton, type AriaButtonOptions } from 'react-aria';
 import { cn } from '~/utils/cn';
 
-export interface ButtonProps extends React.HTMLProps<HTMLButtonElement> {
-	variant?: 'heavy'
-	isDisabled?: boolean
+export interface ButtonProps extends AriaButtonOptions<'button'> {
+	variant?: 'heavy' | 'light'
+	className?: string
 	children?: React.ReactNode
 }
 
-export default function Button({ variant = 'light', ...props }: Props) {
+export default function Button({ variant = 'light', ...props }: ButtonProps) {
 	const ref = useRef<HTMLButtonElement | null>(null);
 	const { buttonProps } = useButton(props, ref);
 

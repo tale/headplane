@@ -1,16 +1,7 @@
 import React from 'react';
 import Title from '~/components/Title';
+import Text from '~/components/Text';
 import { cn } from '~/utils/cn';
-
-function Text(props: React.HTMLProps<HTMLParagraphElement>) {
-	return (
-		<p {...props} className={cn('text-base leading-6 my-0', props.className)} />
-	);
-}
-
-type Props = React.HTMLProps<HTMLDivElement> & {
-	variant?: 'raised' | 'flat';
-};
 
 interface Props extends React.HTMLProps<HTMLDivElement> {
 	variant?: 'raised' | 'flat';
