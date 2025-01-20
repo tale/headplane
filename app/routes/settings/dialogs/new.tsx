@@ -124,7 +124,7 @@ export default function AddPreAuthKey(data: Props) {
 								name="ephemeral"
 								value={ephemeral.toString()}
 							/>
-							<div className="mt-6 flex justify-end gap-2 mt-6">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
@@ -138,7 +138,7 @@ export default function AddPreAuthKey(data: Props) {
 									)}
 									Generate
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</fetcher.Form>
 					</>
 				)}

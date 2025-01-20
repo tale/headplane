@@ -139,14 +139,14 @@ export default function AddNameserver({ nameservers }: Props) {
 									</Dialog.Text>
 								</>
 							) : undefined}
-							<div className="mt-6 flex justify-end gap-2 mt-6">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
 								<Dialog.Action variant="confirm" onPress={close}>
 									Add
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</Form>
 					</>
 				)}

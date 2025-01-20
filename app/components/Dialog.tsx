@@ -31,7 +31,7 @@ interface GutterProps {
 
 function Gutter({ children }: GutterProps) {
 	return (
-		<div className="mt-6 flex justify-end gap-2 mt-6">
+		<div className="mt-6 flex justify-end gap-4 mt-6">
 			{children}
 		</div>
 	)

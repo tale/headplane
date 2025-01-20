@@ -82,7 +82,7 @@ export default function AddDNS({ records }: Props) {
 									address <Code>{ip}</Code> already exists.
 								</p>
 							) : undefined}
-							<div className="mt-6 flex justify-end gap-2 mt-8">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
@@ -93,7 +93,7 @@ export default function AddDNS({ records }: Props) {
 								>
 									Add
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</Form>
 					</>
 				)}

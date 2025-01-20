@@ -31,7 +31,7 @@ export default function Expire({ machine, state }: ExpireProps) {
 						>
 							<input type="hidden" name="_method" value="expire" />
 							<input type="hidden" name="id" value={machine.id} />
-							<div className="mt-6 flex justify-end gap-2 mt-6">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
@@ -47,7 +47,7 @@ export default function Expire({ machine, state }: ExpireProps) {
 								>
 									Expire
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</Form>
 					</>
 				)}

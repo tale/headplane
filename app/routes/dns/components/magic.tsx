@@ -27,7 +27,7 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 							Devices will no longer be accessible via your tailnet domain. The
 							search domain will also be disabled.
 						</Dialog.Text>
-						<div className="mt-6 flex justify-end gap-2 mt-6">
+						<Dialog.Gutter>
 							<Dialog.Action variant="cancel" onPress={close}>
 								Cancel
 							</Dialog.Action>
@@ -50,7 +50,7 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 							>
 								{isEnabled ? 'Disable' : 'Enable'} Magic DNS
 							</Dialog.Action>
-						</div>
+						</Dialog.Gutter>
 					</>
 				)}
 			</Dialog.Panel>

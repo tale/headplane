@@ -159,7 +159,7 @@ export default function Routes({ machine, routes, state }: RoutesProps) {
 								</div>
 							)}
 						</div>
-						<div className="mt-6 flex justify-end gap-2 mt-6">
+						<Dialog.Gutter>
 							<Dialog.Action
 								variant="cancel"
 								isDisabled={fetcher.state === 'submitting'}
@@ -167,7 +167,7 @@ export default function Routes({ machine, routes, state }: RoutesProps) {
 							>
 								Close
 							</Dialog.Action>
-						</div>
+						</Dialog.Gutter>
 					</>
 				)}
 			</Dialog.Panel>

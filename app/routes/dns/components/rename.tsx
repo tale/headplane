@@ -60,7 +60,7 @@ export default function Modal({ name, disabled }: Properties) {
 								state={[newName, setNewName]}
 								className="my-2"
 							/>
-							<div className="mt-6 flex justify-end gap-2 mt-6">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
@@ -82,7 +82,7 @@ export default function Modal({ name, disabled }: Properties) {
 								>
 									Rename
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</>
 					)}
 				</Dialog.Panel>

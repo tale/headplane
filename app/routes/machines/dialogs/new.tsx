@@ -81,7 +81,7 @@ export default function New(data: NewProps) {
 										</Select.Item>
 									))}
 								</Select>
-								<div className="mt-6 flex justify-end gap-2 mt-6">
+								<Dialog.Gutter>
 									<Dialog.Action variant="cancel" onPress={close}>
 										Cancel
 									</Dialog.Action>
@@ -96,7 +96,7 @@ export default function New(data: NewProps) {
 										)}
 										Register
 									</Dialog.Action>
-								</div>
+								</Dialog.Gutter>
 							</fetcher.Form>
 						</>
 					)}

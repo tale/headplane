@@ -62,14 +62,14 @@ export default function Rename({ machine, state, magic }: RenameProps) {
 									</p>
 								)
 							) : undefined}
-							<div className="mt-6 flex justify-end gap-2 mt-6">
+							<Dialog.Gutter>
 								<Dialog.Action variant="cancel" onPress={close}>
 									Cancel
 								</Dialog.Action>
 								<Dialog.Action variant="confirm" onPress={close}>
 									Rename
 								</Dialog.Action>
-							</div>
+							</Dialog.Gutter>
 						</Form>
 					</>
 				)}
