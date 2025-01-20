@@ -24,9 +24,36 @@ export default {
 			height: {
 				editor: 'calc(100vh - 20rem)',
 			},
+			fontFamily: {
+				sans: [
+					'Inter',
+					'-apple-system',
+					'BlinkMacSystemFont',
+					'Helvetica',
+					'Arial',
+					'sans-serif',
+				],
+			},
+			transitionDuration: {
+				25: '25ms',
+				50: '50ms',
+			},
 			colors: {
 				main: colors.slate,
 				ui: colors.neutral,
+				headplane: {
+					50: '#F2F2F2',
+					100: '#E6E6E6',
+					200: '#CCCCCC',
+					300: '#B3B3B3',
+					400: '#999999',
+					500: '#808080',
+					600: '#666666',
+					700: '#4D4D4D',
+					800: '#343434',
+					900: '#1A1A1A',
+					950: '#0D0D0D',
+				},
 			},
 			keyframes: {
 				loader: {
