@@ -1,20 +1,21 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { Link as RemixLink, useLoaderData } from 'react-router';
 import {
-	InfoIcon,
-	GearIcon,
 	CheckCircleIcon,
-	SkipIcon,
+	GearIcon,
+	InfoIcon,
 	PersonIcon,
+	SkipIcon,
 } from '@primer/octicons-react';
 import { useMemo, useState } from 'react';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { Link as RemixLink, useLoaderData } from 'react-router';
 
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
+import Link from '~/components/Link';
 import Menu from '~/components/Menu';
-import Tooltip from '~/components/Tooltip';
 import StatusCircle from '~/components/StatusCircle';
+import Tooltip from '~/components/Tooltip';
 import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
@@ -22,7 +23,6 @@ import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
-import Link from '~/components/Link';
 
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
@@ -74,7 +74,7 @@ export default function Page() {
 			? false
 			: new Date(machine.expiry).getTime() < Date.now();
 
-	const tags = [...machine.forcedTags, ...machine.validTags];
+	const tags = [...new Set([...machine.forcedTags, ...machine.validTags])];
 
 	if (expired) {
 		tags.unshift('Expired');
@@ -216,9 +216,7 @@ export default function Page() {
 						Learn More
 					</Link>
 				</p>
-				<Button onPress={() => setShowRouting(true)}>
-					Review
-				</Button>
+				<Button onPress={() => setShowRouting(true)}>Review</Button>
 			</div>
 			<Card
 				variant="flat"

@@ -1,10 +1,10 @@
 import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react';
-import { Link } from 'react-router';
 import { useMemo } from 'react';
+import { Link } from 'react-router';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
-import type { Machine, Route, User, HostInfo } from '~/types';
+import type { HostInfo, Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 import * as hinfo from '~/utils/host-info';
 
@@ -18,7 +18,13 @@ interface Props {
 	stats?: HostInfo;
 }
 
-export default function MachineRow({ machine, routes, magic, users, stats }: Props) {
+export default function MachineRow({
+	machine,
+	routes,
+	magic,
+	users,
+	stats,
+}: Props) {
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||
 		machine.expiry === '0001-01-01T00:00:00Z' ||
@@ -26,7 +32,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 			? false
 			: new Date(machine.expiry).getTime() < Date.now();
 
-	const tags = [...machine.forcedTags, ...machine.validTags];
+	const tags = [...new Set([...machine.forcedTags, ...machine.validTags])];
 
 	if (expired) {
 		tags.unshift('Expired');
@@ -111,10 +117,7 @@ export default function MachineRow({ machine, routes, magic, users, stats }: Pro
 				<div className="flex items-center gap-x-1">
 					{machine.ipAddresses[0]}
 					<Menu>
-						<Menu.IconButton
-							className="bg-transparent"
-							label="IP Addresses"
-						>
+						<Menu.IconButton className="bg-transparent" label="IP Addresses">
 							<ChevronDownIcon className="w-4 h-4" />
 						</Menu.IconButton>
 						<Menu.Items>
