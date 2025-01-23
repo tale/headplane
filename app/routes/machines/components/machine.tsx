@@ -1,6 +1,7 @@
 import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router';
+import Chip from '~/components/Chip';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
@@ -99,16 +100,7 @@ export default function MachineRow({
 					</p>
 					<div className="flex gap-1 mt-1">
 						{tags.map((tag) => (
-							<span
-								key={tag}
-								className={cn(
-									'text-xs rounded-md px-1.5 py-0.5',
-									'bg-ui-200 dark:bg-ui-800',
-									'text-ui-600 dark:text-ui-300',
-								)}
-							>
-								{tag}
-							</span>
+							<Chip key={tag} text={tag} />
 						))}
 					</div>
 				</Link>
