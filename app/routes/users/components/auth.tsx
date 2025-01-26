@@ -34,7 +34,7 @@ export default function Auth({ magic }: Props) {
 						You can add, remove, and rename users here.
 					</p>
 					<div className="flex items-center gap-2 mt-4">
-						<Add magic={magic} />
+						<Add />
 					</div>
 				</div>
 			</div>

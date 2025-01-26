@@ -1,6 +1,5 @@
 import { KebabHorizontalIcon } from '@primer/octicons-react';
-import { type ReactNode, useState } from 'react';
-
+import React, { useState } from 'react';
 import MenuComponent from '~/components/Menu';
 import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
@@ -17,8 +16,10 @@ interface MenuProps {
 	routes: Route[];
 	users: User[];
 	magic?: string;
-	buttonChild?: ReactNode;
+	buttonChild?: React.ReactNode;
 }
+
+type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
 
 export default function Menu({
 	machine,
@@ -27,12 +28,7 @@ export default function Menu({
 	users,
 	buttonChild,
 }: MenuProps) {
-	const renameState = useState(false);
-	const expireState = useState(false);
-	const removeState = useState(false);
-	const routesState = useState(false);
-	const moveState = useState(false);
-	const tagsState = useState(false);
+	const [modal, setModal] = useState<Modal>(null);
 
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||
@@ -43,12 +39,63 @@ export default function Menu({
 
 	return (
 		<>
-			<Rename machine={machine} state={renameState} magic={magic} />
-			<Delete machine={machine} state={removeState} />
-			{expired ? undefined : <Expire machine={machine} state={expireState} />}
-			<Routes machine={machine} routes={routes} state={routesState} />
-			<Tags machine={machine} state={tagsState} />
-			<Move machine={machine} state={moveState} users={users} magic={magic} />
+			{modal === 'remove' && (
+				<Delete
+					machine={machine}
+					isOpen={modal === 'remove'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
+			{modal === 'move' && (
+				<Move
+					machine={machine}
+					users={users}
+					isOpen={modal === 'move'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
+			{modal === 'rename' && (
+				<Rename
+					machine={machine}
+					magic={magic}
+					isOpen={modal === 'rename'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
+			{modal === 'routes' && (
+				<Routes
+					machine={machine}
+					routes={routes}
+					isOpen={modal === 'routes'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
+			{modal === 'tags' && (
+				<Tags
+					machine={machine}
+					isOpen={modal === 'tags'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
+			{expired && modal === 'expire' ? undefined : (
+				<Expire
+					machine={machine}
+					isOpen={modal === 'expire'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
 
 			<MenuComponent>
 				{buttonChild ?? (
@@ -63,26 +110,26 @@ export default function Menu({
 					</MenuComponent.Button>
 				)}
 				<MenuComponent.Items>
-					<MenuComponent.ItemButton control={renameState}>
+					<MenuComponent.ItemButton onPress={() => setModal('rename')}>
 						Edit machine name
 					</MenuComponent.ItemButton>
-					<MenuComponent.ItemButton control={routesState}>
+					<MenuComponent.ItemButton onPress={() => setModal('routes')}>
 						Edit route settings
 					</MenuComponent.ItemButton>
-					<MenuComponent.ItemButton control={tagsState}>
+					<MenuComponent.ItemButton onPress={() => setModal('tags')}>
 						Edit ACL tags
 					</MenuComponent.ItemButton>
-					<MenuComponent.ItemButton control={moveState}>
+					<MenuComponent.ItemButton onPress={() => setModal('move')}>
 						Change owner
 					</MenuComponent.ItemButton>
 					{expired ? undefined : (
-						<MenuComponent.ItemButton control={expireState}>
+						<MenuComponent.ItemButton onPress={() => setModal('expire')}>
 							Expire
 						</MenuComponent.ItemButton>
 					)}
 					<MenuComponent.ItemButton
 						className="text-red-500 dark:text-red-400"
-						control={removeState}
+						onPress={() => setModal('remove')}
 					>
 						Remove
 					</MenuComponent.ItemButton>

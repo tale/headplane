@@ -1,5 +1,4 @@
 import { useFetcher } from 'react-router';
-
 import Dialog from '~/components/Dialog';
 import Spinner from '~/components/Spinner';
 
@@ -8,6 +7,8 @@ type Properties = {
 	readonly disabled?: boolean;
 };
 
+// TODO: Use form action instead of JSON patching
+// AND FIX JSON END OF UNEXPECTED INPUT
 export default function Modal({ isEnabled, disabled }: Properties) {
 	const fetcher = useFetcher();
 
@@ -17,42 +18,26 @@ export default function Modal({ isEnabled, disabled }: Properties) {
 				{fetcher.state === 'idle' ? undefined : <Spinner className="w-3 h-3" />}
 				{isEnabled ? 'Disable' : 'Enable'} Magic DNS
 			</Dialog.Button>
-			<Dialog.Panel>
-				{(close) => (
-					<>
-						<Dialog.Title>
-							{isEnabled ? 'Disable' : 'Enable'} Magic DNS
-						</Dialog.Title>
-						<Dialog.Text>
-							Devices will no longer be accessible via your tailnet domain. The
-							search domain will also be disabled.
-						</Dialog.Text>
-						<Dialog.Gutter>
-							<Dialog.Action variant="cancel" onPress={close}>
-								Cancel
-							</Dialog.Action>
-							<Dialog.Action
-								variant="confirm"
-								onPress={() => {
-									fetcher.submit(
-										{
-											// eslint-disable-next-line @typescript-eslint/naming-convention
-											'dns.magic_dns': !isEnabled,
-										},
-										{
-											method: 'PATCH',
-											encType: 'application/json',
-										},
-									);
-
-									close();
-								}}
-							>
-								{isEnabled ? 'Disable' : 'Enable'} Magic DNS
-							</Dialog.Action>
-						</Dialog.Gutter>
-					</>
-				)}
+			<Dialog.Panel
+				onSubmit={() => {
+					fetcher.submit(
+						{
+							'dns.magic_dns': !isEnabled,
+						},
+						{
+							method: 'PATCH',
+							encType: 'application/json',
+						},
+					);
+				}}
+			>
+				<Dialog.Title>
+					{isEnabled ? 'Disable' : 'Enable'} Magic DNS
+				</Dialog.Title>
+				<Dialog.Text>
+					Devices will no longer be accessible via your tailnet domain. The
+					search domain will also be disabled.
+				</Dialog.Text>
 			</Dialog.Panel>
 		</Dialog>
 	);

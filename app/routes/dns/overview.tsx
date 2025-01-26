@@ -49,7 +49,12 @@ export async function action({ request }: ActionFunctionArgs) {
 		return data({ success: false }, { status: 403 });
 	}
 
-	const patch = (await request.json()) as Record<string, unknown>;
+	const textData = await request.text();
+	if (!textData) {
+		return data({ success: true });
+	}
+
+	const patch = JSON.parse(textData) as Record<string, unknown>;
 	await patchConfig(patch);
 
 	if (context.integration?.onConfigChange) {

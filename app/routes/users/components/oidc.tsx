@@ -41,7 +41,7 @@ export default function Oidc({ oidc, magic }: Props) {
 						manage users through your OIDC provider.
 					</p>
 					<div className="flex items-center gap-2 mt-4">
-						<Add magic={magic} />
+						<Add />
 					</div>
 				</div>
 			</div>

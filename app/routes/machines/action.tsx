@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs } from 'react-router';
 import { del, post } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions.server';
-import { send } from '~/utils/res';
 import log from '~/utils/log';
+import { send } from '~/utils/res';
+import { getSession } from '~/utils/sessions.server';
 
 export async function menuAction(request: ActionFunctionArgs['request']) {
 	const session = await getSession(request.headers.get('Cookie'));

@@ -1,6 +1,6 @@
-import { useFetcher } from 'react-router';
 import { useState } from 'react';
 import { Input } from 'react-aria-components';
+import { useFetcher } from 'react-router';
 
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
@@ -13,6 +13,7 @@ type Properties = {
 	readonly disabled?: boolean;
 };
 
+// TODO: Switch to form submit instead of JSON patch
 export default function Modal({ name, disabled }: Properties) {
 	const [newName, setNewName] = useState(name);
 	const fetcher = useFetcher();
@@ -45,46 +46,30 @@ export default function Modal({ name, disabled }: Properties) {
 					)}
 					Rename Tailnet
 				</Dialog.Button>
-				<Dialog.Panel>
-					{(close) => (
-						<>
-							<Dialog.Title>Rename Tailnet</Dialog.Title>
-							<Dialog.Text>
-								Keep in mind that changing this can lead to all sorts of
-								unexpected behavior and may break existing devices in your
-								tailnet.
-							</Dialog.Text>
-							<TextField
-								label="Tailnet name"
-								placeholder="ts.net"
-								state={[newName, setNewName]}
-								className="my-2"
-							/>
-							<Dialog.Gutter>
-								<Dialog.Action variant="cancel" onPress={close}>
-									Cancel
-								</Dialog.Action>
-								<Dialog.Action
-									variant="confirm"
-									onPress={() => {
-										fetcher.submit(
-											{
-												'dns.base_domain': newName,
-											},
-											{
-												method: 'PATCH',
-												encType: 'application/json',
-											},
-										);
-
-										close();
-									}}
-								>
-									Rename
-								</Dialog.Action>
-							</Dialog.Gutter>
-						</>
-					)}
+				<Dialog.Panel
+					onSubmit={() => {
+						fetcher.submit(
+							{
+								'dns.base_domain': newName,
+							},
+							{
+								method: 'PATCH',
+								encType: 'application/json',
+							},
+						);
+					}}
+				>
+					<Dialog.Title>Rename Tailnet</Dialog.Title>
+					<Dialog.Text>
+						Keep in mind that changing this can lead to all sorts of unexpected
+						behavior and may break existing devices in your tailnet.
+					</Dialog.Text>
+					<TextField
+						label="Tailnet name"
+						placeholder="ts.net"
+						state={[newName, setNewName]}
+						className="my-2"
+					/>
 				</Dialog.Panel>
 			</Dialog>
 		</div>

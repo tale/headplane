@@ -21,10 +21,12 @@ import Title from '~/components/Title';
 import { cn } from '~/utils/cn';
 
 export interface DialogProps extends OverlayTriggerProps {
-	children: [
-		React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
-		React.ReactElement<DialogPanelProps>,
-	];
+	children:
+		| [
+				React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
+				React.ReactElement<DialogPanelProps>,
+		  ]
+		| React.ReactElement<DialogPanelProps>;
 }
 
 function Dialog(props: DialogProps) {
@@ -36,34 +38,53 @@ function Dialog(props: DialogProps) {
 		state,
 	);
 
-	const [button, panel] = props.children;
+	if (Array.isArray(props.children)) {
+		const [button, panel] = props.children;
+		return (
+			<>
+				{cloneElement(button, triggerProps)}
+				{state.isOpen && (
+					<DModal state={state}>
+						{cloneElement(panel, {
+							...overlayProps,
+							close: () => state.close(),
+						})}
+					</DModal>
+				)}
+			</>
+		);
+	}
+
 	return (
-		<>
-			{cloneElement(button, triggerProps)}
-			{state.isOpen && (
-				<DModal state={state}>
-					{cloneElement(panel, {
-						...overlayProps,
-						close: () => state.close(),
-					})}
-				</DModal>
-			)}
-		</>
+		<DModal state={state}>
+			{cloneElement(props.children, {
+				...overlayProps,
+				close: () => state.close(),
+			})}
+		</DModal>
 	);
 }
 
 export interface DialogPanelProps extends AriaDialogProps {
 	children: React.ReactNode;
-	variant?: 'normal' | 'destructive';
+	variant?: 'normal' | 'destructive' | 'unactionable';
 	onSubmit?: React.FormEventHandler<HTMLFormElement>;
 	method?: HTMLFormMethod;
+	isDisabled?: boolean;
 
 	// Anonymous (passed by parent)
 	close?: () => void;
 }
 
 function Panel(props: DialogPanelProps) {
-	const { children, onSubmit, close, variant, method = 'POST' } = props;
+	const {
+		children,
+		onSubmit,
+		isDisabled,
+		close,
+		variant,
+		method = 'POST',
+	} = props;
 	const ref = useRef<HTMLFormElement | null>(null);
 	const { dialogProps } = useDialog(
 		{
@@ -93,14 +114,22 @@ function Panel(props: DialogPanelProps) {
 			<Card className="w-full max-w-lg">
 				{children}
 				<div className="mt-6 flex justify-end gap-4">
-					<Button onPress={close}>Cancel</Button>
-					<Button
-						type="submit"
-						variant={variant === 'destructive' ? 'danger' : 'heavy'}
-						isDisabled={!(ref.current?.checkVisibility() ?? false)}
-					>
-						Confirm
-					</Button>
+					{variant === 'unactionable' ? (
+						<Button onPress={close}>Close</Button>
+					) : (
+						<>
+							<Button onPress={close}>Cancel</Button>
+							<Button
+								type="submit"
+								variant={variant === 'destructive' ? 'danger' : 'heavy'}
+								isDisabled={
+									isDisabled || !(ref.current?.checkValidity() ?? true)
+								}
+							>
+								Confirm
+							</Button>
+						</>
+					)}
 				</div>
 			</Card>
 		</Form>

@@ -1,61 +1,24 @@
-import { Form, useSubmit } from 'react-router';
-import { useState } from 'react';
-
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
-import TextField from '~/components/TextField';
+import Input from '~/components/Input';
 
-interface Props {
-	magic?: string;
-}
-
-export default function Add({ magic }: Props) {
-	const [username, setUsername] = useState('');
-	const submit = useSubmit();
-
+export default function Add() {
 	return (
 		<Dialog>
 			<Dialog.Button>Add a new user</Dialog.Button>
-
 			<Dialog.Panel>
-				{(close) => (
-					<>
-						<Dialog.Title>Add a new user</Dialog.Title>
-						<Dialog.Text className="mb-8">
-							Enter a username to create a new user.{' '}
-							{magic ? (
-								<>
-									Since Magic DNS is enabled, machines will be accessible via{' '}
-									<Code>[machine]. .{magic}</Code>.
-								</>
-							) : undefined}
-						</Dialog.Text>
-						<Form
-							method="POST"
-							onSubmit={(event) => {
-								submit(event.currentTarget);
-								setUsername('');
-							}}
-						>
-							<input type="hidden" name="_method" value="create" />
-							<TextField
-								label="Username"
-								placeholder="my-new-user"
-								name="username"
-								state={[username, setUsername]}
-								className="my-2"
-							/>
-							<Dialog.Gutter>
-								<Dialog.Action variant="cancel" onPress={close}>
-									Cancel
-								</Dialog.Action>
-								<Dialog.Action variant="confirm" onPress={close}>
-									Create
-								</Dialog.Action>
-							</Dialog.Gutter>
-						</Form>
-					</>
-				)}
+				<Dialog.Title>Add a new user</Dialog.Title>
+				<Dialog.Text className="mb-8">
+					Enter a username to create a new user. Usernames can be addressed when
+					managing ACL policies.
+				</Dialog.Text>
+				<input type="hidden" name="_method" value="create" />
+				<Input
+					isRequired
+					name="username"
+					label="Username"
+					placeholder="my-new-user"
+				/>
 			</Dialog.Panel>
 		</Dialog>
 	);

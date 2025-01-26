@@ -1,19 +1,19 @@
 import { InfoIcon } from '@primer/octicons-react';
+import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
-import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 
 import Code from '~/components/Code';
+import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
+import type { Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
-import type { Machine, Route, User } from '~/types';
-import { queryAgent, initAgentSocket } from '~/utils/ws-agent';
-import { ErrorPopup } from '~/components/Error'
+import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
 import { menuAction } from './action';
 import MachineRow from './components/machine';
@@ -138,7 +138,5 @@ export default function Page() {
 }
 
 export function ErrorBoundary() {
-	return (
-		<ErrorPopup type="embedded" />
-	)
+	return <ErrorPopup type="embedded" />;
 }

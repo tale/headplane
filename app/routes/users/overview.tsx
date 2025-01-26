@@ -1,28 +1,23 @@
-import {
-	DataRef,
-	DndContext,
-	useDraggable,
-	useDroppable,
-} from '@dnd-kit/core';
+import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
 import { PersonIcon } from '@primer/octicons-react';
+import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useActionData, useLoaderData, useSubmit } from 'react-router';
-import { useEffect, useState } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 
 import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
-import StatusCircle from '~/components/StatusCircle';
 import { ErrorPopup } from '~/components/Error';
+import StatusCircle from '~/components/StatusCircle';
 import { toast } from '~/components/Toaster';
 import type { Machine, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { del, post, pull } from '~/utils/headscale';
+import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
-import { send } from '~/utils/res';
 
 import Auth from './components/auth';
 import Oidc from './components/oidc';
@@ -305,7 +300,7 @@ function UserCard({ user, magic }: CardProps) {
 						<span className="text-lg font-mono">{user.name}</span>
 					</div>
 					<div className="flex items-center gap-2">
-						<Rename username={user.name} magic={magic} />
+						<Rename username={user.name} />
 						{user.machines.length === 0 ? (
 							<Remove username={user.name} />
 						) : undefined}
@@ -322,7 +317,5 @@ function UserCard({ user, magic }: CardProps) {
 }
 
 export function ErrorBoundary() {
-	return (
-		<ErrorPopup type="embedded" />
-	)
+	return <ErrorPopup type="embedded" />;
 }

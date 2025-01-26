@@ -1,17 +1,10 @@
-import { RepoForkedIcon } from '@primer/octicons-react';
-import { useFetcher } from 'react-router';
 import { useState } from 'react';
-
+import { useFetcher } from 'react-router';
 import Dialog from '~/components/Dialog';
-import TextField from '~/components/TextField';
-import NumberField from '~/components/NumberField';
-import Tooltip from '~/components/Tooltip';
+import Link from '~/components/Link';
+import NumberInput from '~/components/NumberInput';
 import Select from '~/components/Select';
 import Switch from '~/components/Switch';
-import Link from '~/components/Link';
-import Spinner from '~/components/Spinner';
-
-import { cn } from '~/utils/cn';
 import type { User } from '~/types';
 
 interface Props {
@@ -31,117 +24,76 @@ export default function AddPreAuthKey(data: Props) {
 		<Dialog>
 			<Dialog.Button className="my-4">Create pre-auth key</Dialog.Button>
 			<Dialog.Panel>
-				{(close) => (
-					<>
-						<Dialog.Title>Generate auth key</Dialog.Title>
-						<fetcher.Form
-							method="POST"
-							onSubmit={(e) => {
-								fetcher.submit(e.currentTarget);
-								close();
-							}}
-						>
-							<Dialog.Text className="font-semibold">User</Dialog.Text>
-							<Dialog.Text className="text-sm">
-								Attach this key to a user
-							</Dialog.Text>
-							<Select
-								label="Owner"
-								name="user"
-								placeholder="Select a user"
-								state={[user, setUser]}
+				<Dialog.Title>Generate auth key</Dialog.Title>
+				<Dialog.Text className="font-semibold">User</Dialog.Text>
+				<Dialog.Text className="text-sm">Attach this key to a user</Dialog.Text>
+				<Select
+					label="Owner"
+					name="user"
+					placeholder="Select a user"
+					state={[user, setUser]}
+				>
+					{data.users.map((user) => (
+						<Select.Item key={user.id} id={user.name}>
+							{user.name}
+						</Select.Item>
+					))}
+				</Select>
+				<NumberInput
+					isRequired
+					name="expiry"
+					label="Key Expiration"
+					description="Set this key to expire after a certain number of days."
+					minValue={1}
+					maxValue={365_000} // 1000 years
+					defaultValue={90}
+					formatOptions={{
+						style: 'unit',
+						unit: 'day',
+						unitDisplay: 'short',
+					}}
+				/>
+				<div className="flex justify-between items-center mt-6">
+					<div>
+						<Dialog.Text className="font-semibold">Reusable</Dialog.Text>
+						<Dialog.Text className="text-sm">
+							Use this key to authenticate more than one device.
+						</Dialog.Text>
+					</div>
+					<Switch
+						label="Reusable"
+						name="reusable"
+						defaultSelected={reusable}
+						onChange={() => {
+							setReusable(!reusable);
+						}}
+					/>
+				</div>
+				<input type="hidden" name="reusable" value={reusable.toString()} />
+				<div className="flex justify-between items-center mt-6">
+					<div>
+						<Dialog.Text className="font-semibold">Ephemeral</Dialog.Text>
+						<Dialog.Text className="text-sm">
+							Devices authenticated with this key will be automatically removed
+							once they go offline.{' '}
+							<Link
+								to="https://tailscale.com/kb/1111/ephemeral-nodes"
+								name="Tailscale Ephemeral Nodes Documentation"
 							>
-								{data.users.map((user) => (
-									<Select.Item key={user.id} id={user.name}>
-										{user.name}
-									</Select.Item>
-								))}
-							</Select>
-							<Dialog.Text className="font-semibold mt-4">
-								Key Expiration
-							</Dialog.Text>
-							<Dialog.Text className="text-sm">
-								Set this key to expire after a certain number of days.
-							</Dialog.Text>
-							<NumberField
-								label="Expiry"
-								name="expiry"
-								minValue={1}
-								maxValue={365_000} // 1000 years
-								state={[expiry, setExpiry]}
-								formatOptions={{
-									style: 'unit',
-									unit: 'day',
-									unitDisplay: 'short',
-								}}
-							/>
-							<div className="flex justify-between items-center mt-6">
-								<div>
-									<Dialog.Text className="font-semibold">Reusable</Dialog.Text>
-									<Dialog.Text className="text-sm">
-										Use this key to authenticate more than one device.
-									</Dialog.Text>
-								</div>
-								<Switch
-									label="Reusable"
-									name="reusable"
-									defaultSelected={reusable}
-									onChange={() => {
-										setReusable(!reusable);
-									}}
-								/>
-							</div>
-							<input
-								type="hidden"
-								name="reusable"
-								value={reusable.toString()}
-							/>
-							<div className="flex justify-between items-center mt-6">
-								<div>
-									<Dialog.Text className="font-semibold">Ephemeral</Dialog.Text>
-									<Dialog.Text className="text-sm">
-										Devices authenticated with this key will be automatically
-										removed once they go offline.{' '}
-										<Link
-											to="https://tailscale.com/kb/1111/ephemeral-nodes"
-											name="Tailscale Ephemeral Nodes Documentation"
-										>
-											Learn more
-										</Link>
-									</Dialog.Text>
-								</div>
-								<Switch
-									label="Ephemeral"
-									name="ephemeral"
-									defaultSelected={ephemeral}
-									onChange={() => {
-										setEphemeral(!ephemeral);
-									}}
-								/>
-							</div>
-							<input
-								type="hidden"
-								name="ephemeral"
-								value={ephemeral.toString()}
-							/>
-							<Dialog.Gutter>
-								<Dialog.Action variant="cancel" onPress={close}>
-									Cancel
-								</Dialog.Action>
-								<Dialog.Action
-									variant="confirm"
-									onPress={close}
-									isDisabled={!user || !expiry}
-								>
-									{fetcher.state === 'idle' ? undefined : (
-										<Spinner className="w-3 h-3" />
-									)}
-									Generate
-								</Dialog.Action>
-							</Dialog.Gutter>
-						</fetcher.Form>
-					</>
-				)}
+								Learn more
+							</Link>
+						</Dialog.Text>
+					</div>
+					<Switch
+						label="Ephemeral"
+						name="ephemeral"
+						defaultSelected={ephemeral}
+						onChange={() => {
+							setEphemeral(!ephemeral);
+						}}
+					/>
+				</div>
+				<input type="hidden" name="ephemeral" value={ephemeral.toString()} />
 			</Dialog.Panel>
 		</Dialog>
 	);

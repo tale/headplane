@@ -1,5 +1,5 @@
-import { Form, useSubmit } from 'react-router';
 import { useMemo, useState } from 'react';
+import { useSubmit } from 'react-router';
 
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
@@ -23,80 +23,61 @@ export default function AddDNS({ records }: Props) {
 		return lookup.value === ip;
 	}, [records, name, ip]);
 
+	// TODO: Ditch useSubmit here (non JSON form)
 	return (
 		<Dialog>
 			<Dialog.Button>Add DNS record</Dialog.Button>
-			<Dialog.Panel>
-				{(close) => (
-					<>
-						<Dialog.Title>Add DNS record</Dialog.Title>
-						<Dialog.Text>
-							Enter the domain and IP address for the new DNS record.
-						</Dialog.Text>
-						<Form
-							method="POST"
-							onSubmit={(event) => {
-								event.preventDefault();
-								if (!name || !ip) return;
+			<Dialog.Panel
+				onSubmit={(event) => {
+					event.preventDefault();
+					if (!name || !ip) return;
 
-								setName('');
-								setIp('');
-
-								submit(
-									{
-										'dns.extra_records': [
-											...records,
-											{
-												name,
-												type: 'A',
-												value: ip,
-											},
-										],
-									},
-									{
-										method: 'PATCH',
-										encType: 'application/json',
-									},
-								);
-
-								close();
-							}}
-						>
-							<TextField
-								label="Domain"
-								placeholder="test.example.com"
-								name="domain"
-								state={[name, setName]}
-								className={cn('mt-2', isDuplicate && 'outline outline-red-500')}
-							/>
-							<TextField
-								label="IP Address"
-								placeholder="101.101.101.101"
-								name="ip"
-								state={[ip, setIp]}
-								className={cn(isDuplicate && 'outline outline-red-500')}
-							/>
-							{isDuplicate ? (
-								<p className="text-sm opacity-50">
-									A record with the domain name <Code>{name}</Code> and IP
-									address <Code>{ip}</Code> already exists.
-								</p>
-							) : undefined}
-							<Dialog.Gutter>
-								<Dialog.Action variant="cancel" onPress={close}>
-									Cancel
-								</Dialog.Action>
-								<Dialog.Action
-									variant="confirm"
-									onPress={close}
-									isDisabled={isDuplicate}
-								>
-									Add
-								</Dialog.Action>
-							</Dialog.Gutter>
-						</Form>
-					</>
-				)}
+					setName('');
+					setIp('');
+					submit(
+						{
+							'dns.extra_records': [
+								...records,
+								{
+									name,
+									type: 'A',
+									value: ip,
+								},
+							],
+						},
+						{
+							method: 'PATCH',
+							encType: 'application/json',
+						},
+					);
+				}}
+			>
+				<Dialog.Title>Add DNS record</Dialog.Title>
+				<Dialog.Text>
+					Enter the domain and IP address for the new DNS record.
+				</Dialog.Text>
+				<TextField
+					isRequired
+					label="Domain"
+					placeholder="test.example.com"
+					name="domain"
+					state={[name, setName]}
+					className={cn('mt-2', isDuplicate && 'outline outline-red-500')}
+				/>
+				<TextField
+					isRequired
+					label="IP Address"
+					placeholder="101.101.101.101"
+					name="ip"
+					state={[ip, setIp]}
+					className={cn(isDuplicate && 'outline outline-red-500')}
+				/>
+				{isDuplicate ? (
+					<p className="text-sm opacity-50">
+						A record with the domain name <Code>{name}</Code> and IP address{' '}
+						<Code>{ip}</Code> already exists.
+					</p>
+				) : undefined}
 			</Dialog.Panel>
 		</Dialog>
 	);
