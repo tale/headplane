@@ -1,7 +1,7 @@
-import { useState, HTMLProps } from 'react';
-import { CopyIcon, CheckIcon } from '@primer/octicons-react';
+import { CheckIcon, CopyIcon } from '@primer/octicons-react';
+import { HTMLProps, useState } from 'react';
 import { cn } from '~/utils/cn';
-import { toast } from '~/components/Toaster';
+import toast from '~/utils/toast';
 
 interface Props extends HTMLProps<HTMLSpanElement> {
 	isCopyable?: boolean;
@@ -22,6 +22,7 @@ export default function Code(props: Props) {
 			</code>
 			{props.isCopyable ? (
 				<button
+					type="button"
 					className={cn(
 						'ml-1 p-1 rounded-md',
 						'bg-ui-100 dark:bg-ui-800',

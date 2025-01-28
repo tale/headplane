@@ -1,89 +1,150 @@
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import Button from '~/components/Button';
-import IconButton from '~/components/IconButton';
+import React, { useRef, cloneElement } from 'react';
+import { type AriaMenuProps, Key, Placement, useMenuTrigger } from 'react-aria';
+import { useMenu, useMenuItem, useMenuSection, useSeparator } from 'react-aria';
+import { Item, Section } from 'react-stately';
 import {
-	Button as AriaButton,
-	Menu as AriaMenu,
-	MenuItem,
-	MenuTrigger,
-	Popover,
-} from 'react-aria-components';
-import { cn } from '~/utils/cn';
+	type MenuTriggerProps,
+	Node,
+	TreeState,
+	useMenuTriggerState,
+	useTreeState,
+} from 'react-stately';
+import Button, { ButtonProps } from '~/components/Button';
+import IconButton, { IconButtonProps } from '~/components/IconButton';
+import Popover from '~/components/Popover';
+import cn from '~/utils/cn';
 
-function Items(props: Parameters<typeof AriaMenu>[0]) {
+interface MenuProps extends MenuTriggerProps {
+	placement?: Placement;
+	children: [
+		React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
+		React.ReactElement<MenuPanelProps>,
+	];
+}
+
+// TODO: onAction is called twice for some reason?
+function Menu(props: MenuProps) {
+	const { placement = 'bottom' } = props;
+	const state = useMenuTriggerState(props);
+	const ref = useRef<HTMLButtonElement | null>(null);
+	const { menuTriggerProps, menuProps } = useMenuTrigger<object>(
+		{},
+		state,
+		ref,
+	);
+
+	// cloneElement is necessary because the button is a union type
+	// of multiple things and we need to join props from our hooks
+	const [button, panel] = props.children;
 	return (
-		<Popover
+		<div>
+			{cloneElement(button, {
+				...menuTriggerProps,
+				ref,
+			})}
+			{state.isOpen && (
+				<Popover state={state} triggerRef={ref} placement={placement}>
+					{cloneElement(panel, {
+						...menuProps,
+						autoFocus: state.focusStrategy ?? true,
+						onClose: () => state.close(),
+					})}
+				</Popover>
+			)}
+		</div>
+	);
+}
+
+interface MenuPanelProps extends AriaMenuProps<object> {
+	onClose?: () => void;
+}
+
+function Panel(props: MenuPanelProps) {
+	const state = useTreeState(props);
+	const ref = useRef(null);
+
+	const { menuProps } = useMenu(props, state, ref);
+	return (
+		<ul
+			{...menuProps}
+			ref={ref}
+			className="pt-1 pb-1 shadow-xs rounded-md min-w-[200px] focus:outline-none"
+		>
+			{[...state.collection].map((item) => (
+				<MenuSection key={item.key} section={item} state={state} />
+			))}
+		</ul>
+	);
+}
+
+interface MenuSectionProps<T> {
+	section: Node<T>;
+	state: TreeState<T>;
+}
+
+function MenuSection<T>({ section, state }: MenuSectionProps<T>) {
+	const { itemProps, groupProps } = useMenuSection({
+		heading: section.rendered,
+		'aria-label': section['aria-label'],
+	});
+
+	const { separatorProps } = useSeparator({
+		elementType: 'li',
+	});
+
+	return (
+		<>
+			{section.key !== state.collection.getFirstKey() ? (
+				<li
+					{...separatorProps}
+					className="border-t border-gray-300 mx-2 mt-1 mb-1"
+				/>
+			) : undefined}
+			<li {...itemProps}>
+				<ul {...groupProps}>
+					{[...section.childNodes].map((item) => (
+						<MenuItem key={item.key} item={item} state={state} />
+					))}
+				</ul>
+			</li>
+		</>
+	);
+}
+
+interface MenuItemProps<T> {
+	item: Node<T>;
+	state: TreeState<T>;
+}
+
+function MenuItem<T>({ item, state }: MenuItemProps<T>) {
+	const ref = useRef<HTMLLIElement | null>(null);
+	const { menuItemProps } = useMenuItem({ key: item.key }, state, ref);
+
+	const isFocused = state.selectionManager.focusedKey === item.key;
+	const isDisabled = state.selectionManager.isDisabled(item.key);
+
+	return (
+		<li
+			{...menuItemProps}
+			ref={ref}
 			className={cn(
-				'mt-2 rounded-md',
-				'bg-ui-50 dark:bg-ui-800',
-				'overflow-hidden z-50',
-				'border border-ui-200 dark:border-ui-600',
-				'entering:animate-in exiting:animate-out',
-				'entering:fade-in entering:zoom-in-95',
-				'exiting:fade-out exiting:zoom-out-95',
-				'fill-mode-forwards origin-left-right',
+				'py-2 px-3 mx-1 rounded-lg',
+				'focus:outline-none select-none',
+				isFocused && 'bg-headplane-100/50 dark:bg-headplane-800',
+				isDisabled
+					? 'text-headplane-400 dark:text-headplane-600'
+					: 'hover:bg-headplane-100/50 dark:hover:bg-headplane-800 cursor-pointer',
 			)}
 		>
-			<AriaMenu
-				{...props}
-				className={cn(
-					'outline-none',
-					'divide-y divide-ui-200 dark:divide-ui-600',
-					props.className,
-				)}
-			>
-				{props.children}
-			</AriaMenu>
-		</Popover>
+			{item.rendered}
+		</li>
 	);
-}
-
-type ButtonProps = Parameters<typeof AriaButton>[0] & {
-	readonly control?: [boolean, Dispatch<SetStateAction<boolean>>];
-};
-
-function ItemButton(props: ButtonProps) {
-	return (
-		<MenuItem className="outline-none">
-			<AriaButton
-				{...props}
-				className={cn(
-					'px-4 py-2 w-full outline-none text-left',
-					'hover:bg-ui-200 dark:hover:bg-ui-700',
-					props.className,
-				)}
-				aria-label="Menu Dialog"
-				// If control is passed, set the state value
-				onPress={(event) => {
-					props.onPress?.(event);
-					props.control?.[1](true);
-				}}
-			/>
-		</MenuItem>
-	);
-}
-
-function Item(props: Parameters<typeof MenuItem>[0]) {
-	return (
-		<MenuItem
-			{...props}
-			className={cn(
-				'px-4 py-2 w-full outline-none',
-				'hover:bg-ui-200 dark:hover:bg-ui-700',
-				props.className,
-			)}
-		/>
-	);
-}
-
-function Menu({ children }: { children: ReactNode }) {
-	return <MenuTrigger>{children}</MenuTrigger>;
 }
 
 export default Object.assign(Menu, {
-	IconButton,
 	Button,
+	IconButton,
+	Panel,
+	Section,
 	Item,
-	ItemButton,
-	Items
 });

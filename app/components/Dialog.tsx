@@ -111,7 +111,7 @@ function Panel(props: DialogPanelProps) {
 				'bg-white dark:bg-headplane-900',
 			)}
 		>
-			<Card className="w-full max-w-lg">
+			<Card className="w-full max-w-lg" variant="flat">
 				{children}
 				<div className="mt-6 flex justify-end gap-4">
 					{variant === 'unactionable' ? (

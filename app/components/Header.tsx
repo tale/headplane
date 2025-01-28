@@ -1,20 +1,18 @@
 import {
-	GearIcon,
-	GlobeIcon,
-	LockIcon,
-	PeopleIcon,
-	PersonIcon,
-	ServerIcon,
-} from '@primer/octicons-react';
-import { CircleUser, PlaneTakeoff } from 'lucide-react';
-import { Form, NavLink } from 'react-router';
+	CircleUser,
+	Globe2,
+	Lock,
+	PlaneTakeoff,
+	Server,
+	Settings,
+	Users,
+} from 'lucide-react';
 import type { ReactNode } from 'react';
-
-import { cn } from '~/utils/cn';
+import { NavLink, useSubmit } from 'react-router';
+import Menu from '~/components/Menu';
+import cn from '~/utils/cn';
 import type { HeadplaneContext } from '~/utils/config/headplane';
 import type { SessionData } from '~/utils/sessions.server';
-
-import Menu from './Menu';
 
 interface Props {
 	config: HeadplaneContext['config'];
@@ -40,7 +38,7 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 				prefetch="intent"
 				className={({ isActive }) =>
 					cn(
-						'px-3 py-2 flex items-center rounded-md text-nowrap gap-x-2',
+						'px-3 py-2 flex items-center rounded-md text-nowrap gap-x-2.5',
 						'after:absolute after:bottom-0 after:left-3 after:right-3',
 						'after:h-0.5 after:bg-headplane-900 dark:after:bg-headplane-200',
 						'hover:bg-headplane-200 dark:hover:bg-headplane-900',
@@ -68,13 +66,17 @@ function Link({ href, text }: LinkProps) {
 }
 
 export default function Header(data: Props) {
+	const submit = useSubmit();
+
 	return (
-		<header className={cn(
-			'bg-headplane-100 dark:bg-headplane-950',
-			'text-headplane-800 dark:text-headplane-200',
-			'dark:border-b dark:border-headplane-800',
-			'shadow-inner',
-		)}>
+		<header
+			className={cn(
+				'bg-headplane-100 dark:bg-headplane-950',
+				'text-headplane-800 dark:text-headplane-200',
+				'dark:border-b dark:border-headplane-800',
+				'shadow-inner',
+			)}
+		>
 			<div className="container flex items-center justify-between py-4">
 				<div className="flex items-center gap-x-2">
 					<PlaneTakeoff />
@@ -86,43 +88,35 @@ export default function Header(data: Props) {
 					<Link href="https://github.com/juanfont/headscale" text="Headscale" />
 					{data.user ? (
 						<Menu>
-							<Menu.IconButton className="p-0">
+							<Menu.IconButton label="User">
 								<CircleUser />
 							</Menu.IconButton>
-							<Menu.Items>
-								<Menu.Item className="text-right">
-									<p className="font-bold">{data.user.name}</p>
-									<p>{data.user.email}</p>
-								</Menu.Item>
-								<Menu.Item className="text-right sm:hidden">
-									<Link
-										isMenu
-										href="https://tailscale.com/download"
-										text="Download"
-									/>
-								</Menu.Item>
-								<Menu.Item className="text-right sm:hidden">
-									<Link
-										isMenu
-										href="https://github.com/tale/headplane"
-										text="GitHub"
-									/>
-								</Menu.Item>
-								<Menu.Item className="text-right sm:hidden">
-									<Link
-										isMenu
-										href="https://github.com/juanfont/headscale"
-										text="Headscale"
-									/>
-								</Menu.Item>
-								<Menu.Item className="text-red-500 dark:text-red-400">
-									<Form method="POST" action="/logout">
-										<button type="submit" className="w-full text-right">
-											Logout
-										</button>
-									</Form>
-								</Menu.Item>
-							</Menu.Items>
+							<Menu.Panel
+								onAction={(key) => {
+									if (key === 'logout') {
+										submit(
+											{},
+											{
+												method: 'POST',
+												action: '/logout',
+											},
+										);
+									}
+								}}
+								disabledKeys={['profile']}
+							>
+								<Menu.Section>
+									<Menu.Item key="profile" textValue="Profile">
+										<div className="text-black dark:text-headplane-50">
+											<p className="font-bold">{data.user.name}</p>
+											<p>{data.user.email}</p>
+										</div>
+									</Menu.Item>
+									<Menu.Item key="logout" textValue="Logout">
+										<p className="text-red-500 dark:text-red-400">Logout</p>
+									</Menu.Item>
+								</Menu.Section>
+							</Menu.Panel>
 						</Menu>
 					) : undefined}
 				</div>
@@ -131,29 +125,21 @@ export default function Header(data: Props) {
 				<TabLink
 					to="/machines"
 					name="Machines"
-					icon={<ServerIcon className="w-4 h-4" />}
+					icon={<Server className="w-5" />}
 				/>
-				<TabLink
-					to="/users"
-					name="Users"
-					icon={<PeopleIcon className="w-4 h-4" />}
-				/>
+				<TabLink to="/users" name="Users" icon={<Users className="w-5" />} />
 				<TabLink
 					to="/acls"
 					name="Access Control"
-					icon={<LockIcon className="w-4 h-4" />}
+					icon={<Lock className="w-5" />}
 				/>
 				{data.config.read ? (
 					<>
-						<TabLink
-							to="/dns"
-							name="DNS"
-							icon={<GlobeIcon className="w-4 h-4" />}
-						/>
+						<TabLink to="/dns" name="DNS" icon={<Globe2 className="w-5" />} />
 						<TabLink
 							to="/settings"
 							name="Settings"
-							icon={<GearIcon className="w-4 h-4" />}
+							icon={<Settings className="w-5" />}
 						/>
 					</>
 				) : undefined}

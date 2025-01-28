@@ -1,79 +1,166 @@
-import { ChevronDownIcon } from '@primer/octicons-react';
-import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { Check, ChevronDown } from 'lucide-react';
+import { useRef } from 'react';
 import {
-	Button,
-	ListBox,
-	ListBoxItem,
-	Popover,
-	Select as AriaSelect,
-	SelectValue,
-} from 'react-aria-components';
-import { cn } from '~/utils/cn';
+	AriaComboBoxProps,
+	AriaListBoxOptions,
+	useButton,
+	useComboBox,
+	useFilter,
+	useListBox,
+	useOption,
+} from 'react-aria';
+import { Item, ListState, Node, useComboBoxState } from 'react-stately';
+import Popover from '~/components/Popover';
+import cn from '~/utils/cn';
 
-type SelectProps = Parameters<typeof AriaSelect>[0] & {
-	readonly label: string;
-	readonly state?: [string, Dispatch<SetStateAction<string>>];
-	readonly children: ReactNode;
-};
+export interface SelectProps extends AriaComboBoxProps<object> {}
 
 function Select(props: SelectProps) {
+	const { contains } = useFilter({ sensitivity: 'base' });
+	const state = useComboBoxState({ ...props, defaultFilter: contains });
+
+	const buttonRef = useRef<HTMLButtonElement | null>(null);
+	const inputRef = useRef<HTMLInputElement | null>(null);
+	const listBoxRef = useRef<HTMLUListElement | null>(null);
+	const popoverRef = useRef<HTMLDivElement | null>(null);
+
+	const {
+		buttonProps: triggerProps,
+		inputProps,
+		listBoxProps,
+		labelProps,
+		descriptionProps,
+	} = useComboBox(
+		{
+			...props,
+			inputRef,
+			buttonRef,
+			listBoxRef,
+			popoverRef,
+		},
+		state,
+	);
+
+	const { buttonProps } = useButton(triggerProps, buttonRef);
 	return (
-		<AriaSelect
-			{...props}
-			aria-label={props.label}
-			selectedKey={props.state?.[0]}
-			onSelectionChange={(key) => {
-				props.state?.[1](key.toString());
-			}}
-			className={cn(
-				'block w-full rounded-lg my-1',
-				'border border-ui-200 dark:border-ui-600',
-				'bg-white dark:bg-ui-800 dark:text-ui-300',
-				'focus-within:outline-6',
-				props.className,
+		<div className="flex flex-col">
+			<label
+				{...labelProps}
+				// TODO: THIS IS WRONG, use useId
+				htmlFor={props['aria-labelledby']}
+				className={cn(
+					'text-xs font-medium px-3 mb-0.5',
+					'text-headplane-700 dark:text-headplane-100',
+				)}
+			>
+				{props.label}
+			</label>
+			<div
+				className={cn(
+					'flex rounded-xl focus:outline-none focus-within:ring',
+					'bg-white dark:bg-headplane-900',
+					'border border-headplane-100 dark:border-headplane-800',
+				)}
+			>
+				<input
+					{...inputProps}
+					ref={inputRef}
+					className="outline-none px-3 py-2 rounded-l-xl w-full bg-transparent"
+				/>
+				<button
+					{...buttonProps}
+					ref={buttonRef}
+					className={cn(
+						'flex items-center justify-center p-1 rounded-lg m-1',
+						'bg-headplane-100 dark:bg-headplane-700/30 font-medium',
+						'hover:bg-headplane-200/90 dark:hover:bg-headplane-800/30',
+					)}
+				>
+					<ChevronDown className="p-0.5" />
+				</button>
+			</div>
+			{props.description && (
+				<div
+					{...descriptionProps}
+					className={cn(
+						'text-xs px-3 mt-1',
+						'text-headplane-500 dark:text-headplane-400',
+					)}
+				>
+					{props.description}
+				</div>
 			)}
-		>
-			<Button
-				className={cn(
-					'w-full flex items-center justify-between',
-					'px-2.5 py-1.5 rounded-lg',
-				)}
-			>
-				<SelectValue />
-				<ChevronDownIcon className="w-4 h-4" aria-hidden="true" />
-			</Button>
-			<Popover
-				className={cn(
-					'mt-2 rounded-md w-[var(--trigger-width)]',
-					'bg-ui-100 dark:bg-ui-800 shadow-sm',
-					'z-50 overflow-y-auto',
-					'border border-ui-200 dark:border-ui-600',
-					'entering:animate-in exiting:animate-out',
-					'entering:fade-in entering:zoom-in-95',
-					'exiting:fade-out exiting:zoom-out-95',
-					'fill-mode-forwards origin-left-right',
-				)}
-			>
-				<ListBox orientation="vertical">{props.children}</ListBox>
-			</Popover>
-		</AriaSelect>
+			{state.isOpen && (
+				<Popover
+					popoverRef={popoverRef}
+					triggerRef={inputRef}
+					state={state}
+					isNonModal
+					placement="bottom start"
+					className="w-full max-w-xs"
+				>
+					<ListBox {...listBoxProps} listBoxRef={listBoxRef} state={state} />
+				</Popover>
+			)}
+		</div>
 	);
 }
 
-type ItemProps = Parameters<typeof ListBoxItem>[0];
+interface ListBoxProps extends AriaListBoxOptions<object> {
+	listBoxRef?: React.RefObject<HTMLUListElement | null>;
+	state: ListState<object>;
+}
 
-function Item(props: ItemProps) {
+function ListBox(props: ListBoxProps) {
+	const { listBoxRef, state } = props;
+	const ref = listBoxRef ?? useRef<HTMLUListElement | null>(null);
+	const { listBoxProps } = useListBox(props, state, ref);
+
 	return (
-		<ListBoxItem
-			{...props}
+		<ul
+			{...listBoxProps}
+			ref={listBoxRef}
+			className="w-full max-h-72 overflow-auto outline-none pt-1"
+		>
+			{[...state.collection].map((item) => (
+				<Option key={item.key} item={item} state={state} />
+			))}
+		</ul>
+	);
+}
+
+interface OptionProps {
+	item: Node<unknown>;
+	state: ListState<unknown>;
+}
+
+function Option({ item, state }: OptionProps) {
+	const ref = useRef<HTMLLIElement | null>(null);
+	const { optionProps, isDisabled, isSelected, isFocused } = useOption(
+		{
+			key: item.key,
+		},
+		state,
+		ref,
+	);
+
+	return (
+		<li
+			{...optionProps}
+			ref={ref}
 			className={cn(
-				'px-4 py-2 w-full outline-none w-full',
-				'hover:bg-ui-200 dark:hover:bg-ui-700',
-				props.className,
+				'flex items-center justify-between',
+				'py-2 px-3 mx-1 rounded-lg mb-1',
+				'focus:outline-none select-none',
+				isFocused || isSelected
+					? 'bg-headplane-100/50 dark:bg-headplane-800'
+					: 'hover:bg-headplane-100/50 dark:hover:bg-headplane-800',
+				isDisabled && 'text-headplane-300 dark:text-headplane-600',
 			)}
 		>
-			{props.children}
-		</ListBoxItem>
+			{item.rendered}
+			{isSelected && <Check className="p-0.5" />}
+		</li>
 	);
 }
 

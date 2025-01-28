@@ -36,6 +36,7 @@ export default function NumberInput(props: InputProps) {
 		<div className="flex flex-col">
 			<label
 				{...labelProps}
+				// TODO: This is WRONG use useId
 				htmlFor={name}
 				className={cn(
 					'text-xs font-medium px-3 mb-0.5',
@@ -58,7 +59,7 @@ export default function NumberInput(props: InputProps) {
 					required={props.isRequired}
 					name={name}
 					ref={ref}
-					className="w-full pl-3 py-2 rounded-l-xl focus:outline-none"
+					className="w-full pl-3 py-2 rounded-l-xl bg-transparent focus:outline-none"
 				/>
 				<IconButton
 					{...decrementButtonProps}

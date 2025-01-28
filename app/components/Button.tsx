@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from 'react';
 import React, { useRef } from 'react';
 import { type AriaButtonOptions, useButton } from 'react-aria';
 import { cn } from '~/utils/cn';
@@ -7,10 +6,12 @@ export interface ButtonProps extends AriaButtonOptions<'button'> {
 	variant?: 'heavy' | 'light' | 'danger';
 	className?: string;
 	children?: React.ReactNode;
+	ref?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export default function Button({ variant = 'light', ...props }: ButtonProps) {
-	const ref = useRef<HTMLButtonElement | null>(null);
+	// In case the button is used as a trigger ref
+	const ref = props.ref ?? useRef<HTMLButtonElement | null>(null);
 	const { buttonProps } = useButton(props, ref);
 
 	return (
