@@ -23,7 +23,11 @@
 		"rules": {
 			"recommended": true,
 			"style": {
-				"useImportType": "off"
+				"useImportType": "off",
+				"noNonNullAssertion": "off"
+			},
+			"correctness": {
+				"useExhaustiveDependencies": "off"
 			}
 		}
 	},
