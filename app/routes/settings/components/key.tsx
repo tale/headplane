@@ -1,9 +1,9 @@
-import { toast } from '~/components/Toaster';
 import type { PreAuthKey } from '~/types';
 
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Code from '~/components/Code';
+import toast from '~/utils/toast';
 import ExpireKey from '../dialogs/expire';
 
 interface Props {

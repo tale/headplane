@@ -1,9 +1,6 @@
-import { redirect } from 'react-router';
 import * as client from 'openid-client';
-import log from '~/utils/log';
-
-import type { HeadplaneContext } from './config/headplane';
 import { z } from 'zod';
+import log from '~/utils/log';
 
 const oidcConfigSchema = z.object({
 	issuer: z.string(),
@@ -49,14 +46,16 @@ export function getRedirectUri(req: Request) {
 	return url.href;
 }
 
-function clientAuthMethod(method: string): (secret: string) => client.ClientAuth {
+function clientAuthMethod(
+	method: string,
+): (secret: string) => client.ClientAuth {
 	switch (method) {
 		case 'client_secret_post':
-			return client.ClientSecretPost
+			return client.ClientSecretPost;
 		case 'client_secret_basic':
-			return client.ClientSecretBasic
+			return client.ClientSecretBasic;
 		case 'client_secret_jwt':
-			return client.ClientSecretJwt
+			return client.ClientSecretJwt;
 		default:
 			throw new Error('Invalid client authentication method');
 	}
@@ -67,12 +66,11 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 		new URL(oidc.issuer),
 		oidc.clientId,
 		oidc.clientSecret,
-		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
 	);
 
-	let codeVerifier: string, codeChallenge: string;
-	codeVerifier = client.randomPKCECodeVerifier();
-	codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
+	const codeVerifier = client.randomPKCECodeVerifier();
+	const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
 	const params: Record<string, string> = {
 		redirect_uri,
@@ -81,7 +79,7 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 		code_challenge_method: 'S256',
 		token_endpoint_auth_method: oidc.tokenEndpointAuthMethod,
 		state: client.randomState(),
-	}
+	};
 
 	// PKCE is backwards compatible with non-PKCE servers
 	// so if we don't support it, just set our nonce
@@ -110,16 +108,22 @@ export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 		new URL(oidc.issuer),
 		oidc.clientId,
 		oidc.clientSecret,
-		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
 	);
 
-	let subject: string, accessToken: string;
-	const tokens = await client.authorizationCodeGrant(config, new URL(options.redirect_uri), {
-		pkceCodeVerifier: options.codeVerifier,
-		expectedNonce: options.nonce,
-		expectedState: options.state,
-		idTokenExpected: true
-	});
+	let subject: string;
+	let accessToken: string;
+
+	const tokens = await client.authorizationCodeGrant(
+		config,
+		new URL(options.redirect_uri),
+		{
+			pkceCodeVerifier: options.codeVerifier,
+			expectedNonce: options.nonce,
+			expectedState: options.state,
+			idTokenExpected: true,
+		},
+	);
 
 	const claims = tokens.claims();
 	if (!claims?.sub) {
@@ -136,8 +140,10 @@ export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 		subject: claims.sub,
 		name: claims.name ? String(claims.name) : 'Anonymous',
 		email: claims.email ? String(claims.email) : undefined,
-		username: claims.preferred_username ? String(claims.preferred_username) : undefined,
-	}
+		username: claims.preferred_username
+			? String(claims.preferred_username)
+			: undefined,
+	};
 }
 
 export function formatError(error: unknown) {
@@ -188,7 +194,7 @@ export async function testOidc(oidc: OidcConfig) {
 		new URL(oidc.issuer),
 		oidc.clientId,
 		oidc.clientSecret,
-		new clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
 	);
 
 	const meta = config.serverMetadata();
@@ -199,14 +205,33 @@ export async function testOidc(oidc: OidcConfig) {
 	log.debug('OIDC', 'Authorization endpoint: %s', meta.authorization_endpoint);
 	log.debug('OIDC', 'Token endpoint: %s', meta.token_endpoint);
 
-	if (meta.response_types_supported.includes('code') === false) {
-		log.error('OIDC', 'OIDC server does not support code flow');
-		return false;
+	if (meta.response_types_supported) {
+		if (meta.response_types_supported.includes('code') === false) {
+			log.error('OIDC', 'OIDC server does not support code flow');
+			return false;
+		}
+	} else {
+		log.warn('OIDC', 'OIDC server does not advertise response_types_supported');
 	}
 
-	if (meta.token_endpoint_auth_methods_supported.includes(oidc.tokenEndpointAuthMethod) === false) {
-		log.error('OIDC', 'OIDC server does not support %s', oidc.tokenEndpointAuthMethod);
-		return false;
+	if (meta.token_endpoint_auth_methods_supported) {
+		if (
+			meta.token_endpoint_auth_methods_supported.includes(
+				oidc.tokenEndpointAuthMethod,
+			) === false
+		) {
+			log.error(
+				'OIDC',
+				'OIDC server does not support %s',
+				oidc.tokenEndpointAuthMethod,
+			);
+			return false;
+		}
+	} else {
+		log.warn(
+			'OIDC',
+			'OIDC server does not advertise token_endpoint_auth_methods_supported',
+		);
 	}
 
 	log.debug('OIDC', 'OIDC configuration is valid');

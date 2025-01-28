@@ -13,12 +13,8 @@ interface Props {
 
 // TODO: Tags
 export default function AddPreAuthKey(data: Props) {
-	const fetcher = useFetcher();
-	const [user, setUser] = useState('');
 	const [reusable, setReusable] = useState(false);
 	const [ephemeral, setEphemeral] = useState(false);
-	const [aclTags, setAclTags] = useState([]);
-	const [expiry, setExpiry] = useState(90);
 
 	return (
 		<Dialog>
@@ -28,15 +24,13 @@ export default function AddPreAuthKey(data: Props) {
 				<Dialog.Text className="font-semibold">User</Dialog.Text>
 				<Dialog.Text className="text-sm">Attach this key to a user</Dialog.Text>
 				<Select
+					isRequired
 					label="Owner"
 					name="user"
 					placeholder="Select a user"
-					state={[user, setUser]}
 				>
 					{data.users.map((user) => (
-						<Select.Item key={user.id} id={user.name}>
-							{user.name}
-						</Select.Item>
+						<Select.Item key={user.name}>{user.name}</Select.Item>
 					))}
 				</Select>
 				<NumberInput

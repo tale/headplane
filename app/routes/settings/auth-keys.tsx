@@ -183,14 +183,14 @@ export default function Page() {
 					<Select
 						label="Filter by User"
 						placeholder="Select a user"
-						state={[user, setUser]}
+						onSelectionChange={(value) => setUser(value?.toString() ?? '')}
 					>
-						<Select.Item id="All">All</Select.Item>
-						{users.map((user) => (
-							<Select.Item key={user.id} id={user.name}>
-								{user.name}
-							</Select.Item>
-						))}
+						{[
+							<Select.Item key="All">All</Select.Item>,
+							...users.map((user) => (
+								<Select.Item key={user.name}>{user.name}</Select.Item>
+							)),
+						]}
 					</Select>
 				</div>
 				<div className="w-full">

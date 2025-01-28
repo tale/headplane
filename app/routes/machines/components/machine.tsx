@@ -4,11 +4,11 @@ import { Link } from 'react-router';
 import Chip from '~/components/Chip';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
-import { toast } from '~/components/Toaster';
 import type { HostInfo, Machine, Route, User } from '~/types';
 import { cn } from '~/utils/cn';
 import * as hinfo from '~/utils/host-info';
 
+import toast from '~/utils/toast';
 import MenuOptions from './menu';
 
 interface Props {
