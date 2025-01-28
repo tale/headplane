@@ -1,6 +1,6 @@
 import { InfoIcon } from '@primer/octicons-react';
 import type { ReactNode } from 'react';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface Props {
 	className?: string;

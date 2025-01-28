@@ -4,7 +4,7 @@ import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
 import Switch from '~/components/Switch';
 import type { Machine, Route } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface RoutesProps {
 	machine: Machine;

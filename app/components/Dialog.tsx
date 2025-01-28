@@ -18,7 +18,7 @@ import Card from '~/components/Card';
 import IconButton, { IconButtonProps } from '~/components/IconButton';
 import Text from '~/components/Text';
 import Title from '~/components/Title';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 export interface DialogProps extends OverlayTriggerProps {
 	children:

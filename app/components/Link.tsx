@@ -1,5 +1,5 @@
 import { LinkExternalIcon } from '@primer/octicons-react';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface Props {
 	to: string;

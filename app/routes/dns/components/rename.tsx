@@ -5,7 +5,7 @@ import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 import Spinner from '~/components/Spinner';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 type Properties = {
 	readonly name: string;

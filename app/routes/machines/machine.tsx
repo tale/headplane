@@ -18,7 +18,7 @@ import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
 import type { Machine, Route, User } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';

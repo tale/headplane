@@ -1,5 +1,5 @@
 import Spinner from '~/components/Spinner';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface Props {
 	readonly acl: string;

@@ -5,7 +5,7 @@ import Chip from '~/components/Chip';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
 import type { HostInfo, Machine, Route, User } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import * as hinfo from '~/utils/host-info';
 
 import toast from '~/utils/toast';

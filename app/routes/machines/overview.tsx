@@ -7,7 +7,7 @@ import Code from '~/components/Code';
 import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
 import type { Machine, Route, User } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';

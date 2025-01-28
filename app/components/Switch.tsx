@@ -1,5 +1,5 @@
 import { Switch as AriaSwitch } from 'react-aria-components';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 type SwitchProps = Parameters<typeof AriaSwitch>[0] & {
 	readonly label: string;

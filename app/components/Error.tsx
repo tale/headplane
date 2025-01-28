@@ -1,6 +1,6 @@
 import { AlertIcon } from '@primer/octicons-react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import Card from './Card';
 import Code from './Code';
 
@@ -10,7 +10,7 @@ interface Props {
 
 function getMessage(error: Error | unknown) {
 	if (!(error instanceof Error)) {
-		return "An unknown error occurred";
+		return 'An unknown error occurred';
 	}
 
 	let rootError = error;

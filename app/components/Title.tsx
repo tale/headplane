@@ -1,5 +1,5 @@
 import React from 'react';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 export interface TitleProps {
 	children: React.ReactNode;
@@ -8,8 +8,6 @@ export interface TitleProps {
 
 export default function Title({ children, className }: TitleProps) {
 	return (
-		<h3 className={cn('text-2xl font-bold mb-6', className)}>
-			{children}
-		</h3>
+		<h3 className={cn('text-2xl font-bold mb-6', className)}>{children}</h3>
 	);
 }

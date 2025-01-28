@@ -4,7 +4,7 @@ import {
 	Tooltip as AriaTooltip,
 	TooltipTrigger,
 } from 'react-aria-components';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface Props {
 	children: ReactNode;

@@ -1,10 +1,10 @@
-import { useSubmit } from 'react-router';
 import { Button } from 'react-aria-components';
+import { useSubmit } from 'react-router';
 
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import TableList from '~/components/TableList';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 import AddDNS from '../dialogs/dns';
 
@@ -37,7 +37,7 @@ export default function DNS({ records, isDisabled }: Props) {
 						</TableList.Item>
 					) : (
 						records.map((record, index) => (
-							<TableList.Item key={index}>
+							<TableList.Item key={`${record.name}-${record.value}`}>
 								<div className="flex gap-24">
 									<div className="flex gap-2">
 										<p className="font-mono text-sm font-bold">{record.type}</p>

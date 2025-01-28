@@ -1,6 +1,6 @@
 import { CheckIcon, CopyIcon } from '@primer/octicons-react';
 import { HTMLProps, useState } from 'react';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import toast from '~/utils/toast';
 
 interface Props extends HTMLProps<HTMLSpanElement> {

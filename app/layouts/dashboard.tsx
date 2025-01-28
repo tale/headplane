@@ -1,7 +1,7 @@
 import { XCircleFillIcon } from '@primer/octicons-react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { Outlet, useLoaderData } from 'react-router';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { HeadscaleError, healthcheck, pull } from '~/utils/headscale';
 import log from '~/utils/log';
 import { destroySession, getSession } from '~/utils/sessions.server';

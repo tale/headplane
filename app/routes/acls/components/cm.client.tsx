@@ -1,12 +1,12 @@
-import React, { useEffect } from 'react';
-import Merge from 'react-codemirror-merge';
-import CodeMirror from '@uiw/react-codemirror';
 import * as shopify from '@shopify/lang-jsonc';
-import { ClientOnly } from 'remix-utils/client-only';
-import { ErrorBoundary } from 'react-error-boundary';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
+import CodeMirror from '@uiw/react-codemirror';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
-import { cn } from '~/utils/cn';
+import Merge from 'react-codemirror-merge';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ClientOnly } from 'remix-utils/client-only';
+import cn from '~/utils/cn';
 
 import Fallback from './fallback';
 

@@ -2,7 +2,7 @@ import { Cog, Ellipsis } from 'lucide-react';
 import { useState } from 'react';
 import Menu from '~/components/Menu';
 import type { Machine, Route, User } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import Delete from '../dialogs/delete';
 import Expire from '../dialogs/expire';
 import Move from '../dialogs/move';

@@ -1,5 +1,5 @@
-import { cn } from '~/utils/cn';
 import { AlertIcon } from '@primer/octicons-react';
+import cn from '~/utils/cn';
 
 import Card from '~/components/Card';
 import Code from '~/components/Code';

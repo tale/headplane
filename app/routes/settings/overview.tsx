@@ -1,8 +1,8 @@
-import Link from '~/components/Link';
-import Button from '~/components/Button';
-import { Link as RemixLink } from 'react-router';
 import { ArrowRightIcon } from '@primer/octicons-react';
-import { cn } from '~/utils/cn';
+import { Link as RemixLink } from 'react-router';
+import Button from '~/components/Button';
+import Link from '~/components/Link';
+import cn from '~/utils/cn';
 
 import AgentSection from './components/agent';
 

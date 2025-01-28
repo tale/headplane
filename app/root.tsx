@@ -13,7 +13,7 @@ import { ProgressBar } from 'react-aria-components';
 import { ErrorPopup } from '~/components/Error';
 import ToastProvider from '~/components/ToastProvider';
 import stylesheet from '~/tailwind.css?url';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { useToastQueue } from '~/utils/toast';
 
 export const meta: MetaFunction = () => [

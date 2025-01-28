@@ -10,7 +10,7 @@ import Card from '~/components/Card';
 import { ErrorPopup } from '~/components/Error';
 import StatusCircle from '~/components/StatusCircle';
 import type { Machine, User } from '~/types';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { del, post, pull } from '~/utils/headscale';

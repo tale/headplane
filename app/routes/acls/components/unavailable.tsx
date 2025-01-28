@@ -1,8 +1,8 @@
-import { cn } from '~/utils/cn';
 import { AlertIcon } from '@primer/octicons-react';
+import cn from '~/utils/cn';
 
-import Code from '~/components/Code';
 import Card from '~/components/Card';
+import Code from '~/components/Code';
 
 interface Props {
 	mode: 'file' | 'database';

@@ -1,11 +1,8 @@
-import { useSubmit } from 'react-router';
-import { useState } from 'react';
 import { Button } from 'react-aria-components';
-
+import { useSubmit } from 'react-router';
 import Link from '~/components/Link';
-import Switch from '~/components/Switch';
 import TableList from '~/components/TableList';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 import AddNameserver from '../dialogs/nameserver';
 
@@ -59,7 +56,7 @@ function NameserverList({
 	name,
 }: ListProps) {
 	const submit = useSubmit();
-	const list = isGlobal ? nameservers['global'] : nameservers[name];
+	const list = isGlobal ? nameservers.global : nameservers[name];
 	if (list.length === 0) {
 		return null;
 	}
@@ -74,8 +71,7 @@ function NameserverList({
 			<TableList>
 				{list.length > 0
 					? list.map((ns, index) => (
-							// eslint-disable-next-line react/no-array-index-key
-							<TableList.Item key={index}>
+							<TableList.Item key={ns}>
 								<p className="font-mono text-sm">{ns}</p>
 								<Button
 									className={cn(

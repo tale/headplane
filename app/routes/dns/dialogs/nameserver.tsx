@@ -6,7 +6,7 @@ import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 import Switch from '~/components/Switch';
 import Tooltip from '~/components/Tooltip';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 interface Props {
 	nameservers: Record<string, string[]>;

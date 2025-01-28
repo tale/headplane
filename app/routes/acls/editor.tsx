@@ -16,7 +16,7 @@ import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { HeadscaleError, pull, put } from '~/utils/headscale';

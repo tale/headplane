@@ -18,7 +18,7 @@ import { type FetcherWithComponents, useFetcher } from 'react-router';
 
 import Spinner from '~/components/Spinner';
 import TableList from '~/components/TableList';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 type Properties = {
 	readonly baseDomain?: string;

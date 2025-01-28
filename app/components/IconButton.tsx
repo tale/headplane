@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { type AriaButtonOptions, useButton } from 'react-aria';
-import { cn } from '~/utils/cn';
+import cn from '~/utils/cn';
 
 export interface IconButtonProps extends AriaButtonOptions<'button'> {
 	variant?: 'heavy' | 'light';

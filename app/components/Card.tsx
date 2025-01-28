@@ -1,7 +1,7 @@
 import React from 'react';
-import Title from '~/components/Title';
 import Text from '~/components/Text';
-import { cn } from '~/utils/cn';
+import Title from '~/components/Title';
+import cn from '~/utils/cn';
 
 interface Props extends React.HTMLProps<HTMLDivElement> {
 	variant?: 'raised' | 'flat';
