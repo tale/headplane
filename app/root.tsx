@@ -1,14 +1,20 @@
-import type { LoaderFunctionArgs, LinksFunction, MetaFunction } from 'react-router';
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from 'react-router';
-import { loadContext } from '~/utils/config/headplane';
-import '@fontsource-variable/inter'
+import type { LinksFunction, MetaFunction } from 'react-router';
+import {
+	Links,
+	Meta,
+	Outlet,
+	Scripts,
+	ScrollRestoration,
+	useNavigation,
+} from 'react-router';
+import '@fontsource-variable/inter';
 
 import { ProgressBar } from 'react-aria-components';
 import { ErrorPopup } from '~/components/Error';
-// TODO: Make this a default export
-import { Toaster } from '~/components/Toaster';
+import ToastProvider from '~/components/ToastProvider';
 import stylesheet from '~/tailwind.css?url';
 import { cn } from '~/utils/cn';
+import { useToastQueue } from '~/utils/toast';
 
 export const meta: MetaFunction = () => [
 	{ title: 'Headplane' },
@@ -23,6 +29,8 @@ export const links: LinksFunction = () => [
 ];
 
 export function Layout({ children }: { readonly children: React.ReactNode }) {
+	const toastQueue = useToastQueue();
+
 	return (
 		<html lang="en">
 			<head>
@@ -33,7 +41,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 			</head>
 			<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
 				{children}
-				<Toaster />
+				<ToastProvider queue={toastQueue} />
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -61,5 +69,5 @@ export default function App() {
 			</ProgressBar>
 			<Outlet />
 		</>
-	)
+	);
 }

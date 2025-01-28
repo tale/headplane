@@ -9,7 +9,6 @@ import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
 import { ErrorPopup } from '~/components/Error';
 import StatusCircle from '~/components/StatusCircle';
-import { toast } from '~/components/Toaster';
 import type { Machine, User } from '~/types';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
@@ -19,6 +18,7 @@ import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 
+import toast from '~/utils/toast';
 import Auth from './components/auth';
 import Oidc from './components/oidc';
 import Remove from './dialogs/remove';

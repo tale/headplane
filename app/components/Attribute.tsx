@@ -1,5 +1,5 @@
 import { CopyIcon } from '@primer/octicons-react';
-import { toast } from './Toaster';
+import toast from '~/utils/toast';
 
 interface Props {
 	name: string;

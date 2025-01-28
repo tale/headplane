@@ -1,33 +1,33 @@
+import { setTimeout } from 'node:timers/promises';
 import {
 	BeakerIcon,
 	EyeIcon,
 	IssueDraftIcon,
 	PencilIcon,
 } from '@primer/octicons-react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData, useRevalidator, useFetcher } from 'react-router';
 //import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
-import { setTimeout } from 'node:timers/promises';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { useFetcher, useLoaderData, useRevalidator } from 'react-router';
 
 import Button from '~/components/Button';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
-import { toast } from '~/components/Toaster';
 import { cn } from '~/utils/cn';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { HeadscaleError, pull, put } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions.server';
-import { send } from '~/utils/res';
 import log from '~/utils/log';
+import { send } from '~/utils/res';
+import { getSession } from '~/utils/sessions.server';
 
-import { Editor, Differ } from './components/cm.client';
-import { Unavailable } from './components/unavailable';
+import toast from '~/utils/toast';
+import { Differ, Editor } from './components/cm.client';
 import { ErrorView } from './components/error';
+import { Unavailable } from './components/unavailable';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
@@ -143,8 +143,6 @@ export async function action({ request }: ActionFunctionArgs) {
 			},
 		);
 	}
-
-	return { success: true, error: null };
 }
 
 export default function Page() {

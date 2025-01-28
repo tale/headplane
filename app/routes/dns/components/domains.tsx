@@ -1,20 +1,20 @@
 /* eslint-disable unicorn/no-keyword-prefix */
-import { closestCorners, DndContext, DragOverlay } from '@dnd-kit/core';
+import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import {
 	restrictToParentElement,
 	restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
 import {
-	arrayMove,
 	SortableContext,
+	arrayMove,
 	useSortable,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LockIcon, ThreeBarsIcon } from '@primer/octicons-react';
-import { type FetcherWithComponents, useFetcher } from 'react-router';
 import { useEffect, useState } from 'react';
 import { Button, Input } from 'react-aria-components';
+import { type FetcherWithComponents, useFetcher } from 'react-router';
 
 import Spinner from '~/components/Spinner';
 import TableList from '~/components/TableList';
@@ -91,8 +91,7 @@ export default function Domains({
 					>
 						{localDomains.map((sd, index) => (
 							<Domain
-								// eslint-disable-next-line react/no-array-index-key
-								key={index}
+								key={sd}
 								domain={sd}
 								id={index + 1}
 								localDomains={localDomains}
