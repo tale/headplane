@@ -26,9 +26,7 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
 					defaultSelectedKey={machine.user.id}
 				>
 					{users.map((user) => (
-						<Select.Item key={user.id} id={user.name}>
-							{user.name}
-						</Select.Item>
+						<Select.Item key={user.id}>{user.name}</Select.Item>
 					))}
 				</Select>
 			</Dialog.Panel>

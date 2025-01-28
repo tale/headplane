@@ -3,8 +3,8 @@ import { useState } from 'react';
 import { useSubmit } from 'react-router';
 
 import Dialog from '~/components/Dialog';
+import Input from '~/components/Input';
 import Switch from '~/components/Switch';
-import TextField from '~/components/TextField';
 import Tooltip from '~/components/Tooltip';
 import { cn } from '~/utils/cn';
 
@@ -68,16 +68,12 @@ export default function AddNameserver({ nameservers }: Props) {
 				}}
 			>
 				<Dialog.Title>Add nameserver</Dialog.Title>
-				<Dialog.Text className="font-semibold">Nameserver</Dialog.Text>
-				<Dialog.Text className="text-sm">
-					Use this IPv4 or IPv6 address to resolve names.
-				</Dialog.Text>
-				<TextField
-					label="DNS Server"
+				<Input
+					label="Nameserver"
+					description="Use this IPv4 or IPv6 address to resolve names."
 					placeholder="1.2.3.4"
 					name="ns"
-					state={[ns, setNs]}
-					className="mt-2 mb-8"
+					onChange={setNs}
 				/>
 				<div className="flex items-center justify-between">
 					<div className="block">
@@ -118,12 +114,11 @@ export default function AddNameserver({ nameservers }: Props) {
 				{split ? (
 					<>
 						<Dialog.Text className="font-semibold mt-8">Domain</Dialog.Text>
-						<TextField
+						<Input
 							label="Domain"
 							placeholder="example.com"
 							name="domain"
-							state={[domain, setDomain]}
-							className="my-2"
+							onChange={setDomain}
 						/>
 						<Dialog.Text className="text-sm">
 							Only single-label or fully-qualified queries matching this suffix

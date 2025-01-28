@@ -1,19 +1,17 @@
+import { useMemo } from 'react';
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 	redirect,
 } from 'react-router';
 import { Form, useActionData, useLoaderData } from 'react-router';
-import { useMemo } from 'react';
-
 import Button from '~/components/Button';
 import Card from '~/components/Card';
 import Code from '~/components/Code';
-import TextField from '~/components/TextField';
+import Input from '~/components/Input';
 import type { Key } from '~/types';
 import { loadContext } from '~/utils/config/headplane';
 import { pull } from '~/utils/headscale';
-import { beginAuthFlow, getRedirectUri } from '~/utils/oidc';
 import { commitSession, getSession } from '~/utils/sessions.server';
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -109,7 +107,7 @@ export default function Page() {
 						{actionData?.error ? (
 							<p className="text-red-500 text-sm mb-2">{actionData.error}</p>
 						) : undefined}
-						<TextField
+						<Input
 							isRequired
 							label="API Key"
 							name="api-key"

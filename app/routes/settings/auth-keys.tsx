@@ -1,21 +1,18 @@
-import type { LoaderFunctionArgs, ActionFunctionArgs } from 'react-router';
-import { useLoaderData } from 'react-router';
-import { useLiveData } from '~/utils/useLiveData';
-import { getSession } from '~/utils/sessions.server';
-import { Link as RemixLink } from 'react-router';
-import type { PreAuthKey, User } from '~/types';
-import { pull, post } from '~/utils/headscale';
-import { loadContext } from '~/utils/config/headplane';
 import { useState } from 'react';
-import { send } from '~/utils/res';
-
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
+import { useLoaderData } from 'react-router';
+import { Link as RemixLink } from 'react-router';
 import Link from '~/components/Link';
-import TableList from '~/components/TableList';
 import Select from '~/components/Select';
-import Switch from '~/components/Switch';
-
-import AddPreAuthKey from './dialogs/new';
+import TableList from '~/components/TableList';
+import type { PreAuthKey, User } from '~/types';
+import { loadContext } from '~/utils/config/headplane';
+import { post, pull } from '~/utils/headscale';
+import { send } from '~/utils/res';
+import { getSession } from '~/utils/sessions.server';
+import { useLiveData } from '~/utils/useLiveData';
 import AuthKeyRow from './components/key';
+import AddPreAuthKey from './dialogs/new';
 
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
@@ -156,6 +153,7 @@ export default function Page() {
 		return true;
 	});
 
+	// TODO: Fix the selects
 	return (
 		<div className="flex flex-col w-2/3">
 			<p className="mb-8 text-md">
@@ -202,13 +200,13 @@ export default function Page() {
 					<Select
 						label="Filter by status"
 						placeholder="Select a status"
-						state={[status, setStatus]}
+						defaultSelectedKey="Active"
 					>
-						<Select.Item id="All">All</Select.Item>
-						<Select.Item id="Active">Active</Select.Item>
-						<Select.Item id="Used/Expired">Used/Expired</Select.Item>
-						<Select.Item id="Reusable">Reusable</Select.Item>
-						<Select.Item id="Ephemeral">Ephemeral</Select.Item>
+						<Select.Item key="All">All</Select.Item>
+						<Select.Item>Active</Select.Item>
+						<Select.Item>Used/Expired</Select.Item>
+						<Select.Item>Reusable</Select.Item>
+						<Select.Item>Ephemeral</Select.Item>
 					</Select>
 				</div>
 			</div>

@@ -1,10 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useSubmit } from 'react-router';
-
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
-import TextField from '~/components/TextField';
-import { cn } from '~/utils/cn';
+import Input from '~/components/Input';
 
 interface Props {
 	records: { name: string; type: 'A'; value: string }[];
@@ -56,28 +54,29 @@ export default function AddDNS({ records }: Props) {
 				<Dialog.Text>
 					Enter the domain and IP address for the new DNS record.
 				</Dialog.Text>
-				<TextField
-					isRequired
-					label="Domain"
-					placeholder="test.example.com"
-					name="domain"
-					state={[name, setName]}
-					className={cn('mt-2', isDuplicate && 'outline outline-red-500')}
-				/>
-				<TextField
-					isRequired
-					label="IP Address"
-					placeholder="101.101.101.101"
-					name="ip"
-					state={[ip, setIp]}
-					className={cn(isDuplicate && 'outline outline-red-500')}
-				/>
-				{isDuplicate ? (
-					<p className="text-sm opacity-50">
-						A record with the domain name <Code>{name}</Code> and IP address{' '}
-						<Code>{ip}</Code> already exists.
-					</p>
-				) : undefined}
+				<div className="flex flex-col gap-2 mt-4">
+					<Input
+						isRequired
+						label="Domain"
+						placeholder="test.example.com"
+						onChange={setName}
+						isInvalid={isDuplicate}
+					/>
+					<Input
+						isRequired
+						label="IP Address"
+						placeholder="101.101.101.101"
+						name="ip"
+						onChange={setIp}
+						isInvalid={isDuplicate}
+					/>
+					{isDuplicate ? (
+						<p className="text-sm opacity-50">
+							A record with the domain name <Code>{name}</Code> and IP address{' '}
+							<Code>{ip}</Code> already exists.
+						</p>
+					) : undefined}
+				</div>
 			</Dialog.Panel>
 		</Dialog>
 	);

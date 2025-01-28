@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
-import TextField from '~/components/TextField';
+import Input from '~/components/Input';
 import type { Machine } from '~/types';
 
 interface RenameProps {
@@ -29,11 +29,10 @@ export default function Rename({
 				</Dialog.Text>
 				<input type="hidden" name="_method" value="rename" />
 				<input type="hidden" name="id" value={machine.id} />
-				<TextField
+				<Input
 					label="Machine name"
 					placeholder="Machine name"
 					name="name"
-					className="my-2"
 					defaultValue={machine.givenName}
 					onChange={setName}
 				/>

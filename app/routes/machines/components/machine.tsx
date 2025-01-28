@@ -79,6 +79,14 @@ export default function MachineRow({
 		tags.unshift('Subnets');
 	}
 
+	const ipOptions = useMemo(() => {
+		if (magic) {
+			return [...machine.ipAddresses, `${machine.givenName}.${prefix}`];
+		}
+
+		return machine.ipAddresses;
+	}, [magic, machine.ipAddresses]);
+
 	return (
 		<tr
 			key={machine.id}
@@ -108,46 +116,32 @@ export default function MachineRow({
 			<td className="py-2">
 				<div className="flex items-center gap-x-1">
 					{machine.ipAddresses[0]}
-					<Menu>
+					<Menu placement="bottom end">
 						<Menu.IconButton className="bg-transparent" label="IP Addresses">
 							<ChevronDownIcon className="w-4 h-4" />
 						</Menu.IconButton>
-						<Menu.Items>
-							{machine.ipAddresses.map((ip) => (
-								<Menu.ItemButton
-									key={ip}
-									type="button"
-									className={cn(
-										'flex items-center gap-x-1.5 text-sm',
-										'justify-between w-full',
-									)}
-									onPress={async () => {
-										await navigator.clipboard.writeText(ip);
-										toast('Copied IP address to clipboard');
-									}}
-								>
-									{ip}
-									<CopyIcon className="w-3 h-3" />
-								</Menu.ItemButton>
-							))}
-							{magic ? (
-								<Menu.ItemButton
-									type="button"
-									className={cn(
-										'flex items-center gap-x-1.5 text-sm',
-										'justify-between w-full break-keep',
-									)}
-									onPress={async () => {
-										const ip = `${machine.givenName}.${prefix}`;
-										await navigator.clipboard.writeText(ip);
-										toast('Copied hostname to clipboard');
-									}}
-								>
-									{machine.givenName}.{prefix}
-									<CopyIcon className="w-3 h-3" />
-								</Menu.ItemButton>
-							) : undefined}
-						</Menu.Items>
+						<Menu.Panel
+							onAction={async (key) => {
+								await navigator.clipboard.writeText(key.toString());
+								toast('Copied IP address to clipboard');
+							}}
+						>
+							<Menu.Section>
+								{ipOptions.map((ip) => (
+									<Menu.Item key={ip} textValue={ip}>
+										<div
+											className={cn(
+												'flex items-center justify-between',
+												'text-sm w-full gap-x-6',
+											)}
+										>
+											{ip}
+											<CopyIcon className="w-3 h-3" />
+										</div>
+									</Menu.Item>
+								))}
+							</Menu.Section>
+						</Menu.Panel>
 					</Menu>
 				</div>
 			</td>

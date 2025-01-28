@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Input } from 'react-aria-components';
 import { useFetcher } from 'react-router';
 
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
+import Input from '~/components/Input';
 import Spinner from '~/components/Spinner';
-import TextField from '~/components/TextField';
 import { cn } from '~/utils/cn';
 
 type Properties = {
@@ -19,21 +18,15 @@ export default function Modal({ name, disabled }: Properties) {
 	const fetcher = useFetcher();
 
 	return (
-		<div className="flex flex-col w-2/3">
-			<h1 className="text-2xl font-medium mb-4">Tailnet Name</h1>
-			<p className="text-gray-700 dark:text-gray-300">
+		<div className="flex flex-col w-2/3 gap-y-4">
+			<h1 className="text-2xl font-medium mb-2">Tailnet Name</h1>
+			<p>
 				This is the base domain name of your Tailnet. Devices are accessible at{' '}
 				<Code>[device].{name}</Code> when Magic DNS is enabled.
 			</p>
 			<Input
-				readOnly
-				className={cn(
-					'block px-2.5 py-1.5 w-1/2 rounded-lg my-4',
-					'border border-ui-200 dark:border-ui-600',
-					'dark:bg-ui-800 dark:text-ui-300 text-sm',
-					'outline-none',
-				)}
-				type="text"
+				isReadOnly
+				className="w-3/5 font-medium text-sm"
 				value={name}
 				onFocus={(event) => {
 					event.target.select();
@@ -64,11 +57,10 @@ export default function Modal({ name, disabled }: Properties) {
 						Keep in mind that changing this can lead to all sorts of unexpected
 						behavior and may break existing devices in your tailnet.
 					</Dialog.Text>
-					<TextField
+					<Input
 						label="Tailnet name"
 						placeholder="ts.net"
-						state={[newName, setNewName]}
-						className="my-2"
+						onChange={setNewName}
 					/>
 				</Dialog.Panel>
 			</Dialog>

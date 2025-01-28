@@ -138,24 +138,11 @@ export default function Page() {
 				</span>
 
 				<MenuOptions
+					isFullButton
 					machine={machine}
 					routes={routes}
 					users={users}
 					magic={magic}
-					buttonChild={
-						<Menu.Button
-							className={cn(
-								'flex items-center justify-center gap-x-2',
-								'bg-main-200 dark:bg-main-700/30',
-								'hover:bg-main-300 dark:hover:bg-main-600/30',
-								'text-ui-700 dark:text-ui-300 mb-2',
-								'w-fit text-sm rounded-lg px-3 py-2',
-							)}
-						>
-							<GearIcon className="w-5" />
-							Machine Settings
-						</Menu.Button>
-					}
 				/>
 			</div>
 			<div className="flex gap-1 mb-4">
@@ -196,7 +183,8 @@ export default function Page() {
 			<Routes
 				machine={machine}
 				routes={routes}
-				state={[showRouting, setShowRouting]}
+				isOpen={showRouting}
+				setIsOpen={setShowRouting}
 			/>
 			<div className="flex items-center justify-between mb-4">
 				<p>

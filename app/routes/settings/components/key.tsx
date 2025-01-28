@@ -1,9 +1,9 @@
-import type { PreAuthKey } from '~/types';
 import { toast } from '~/components/Toaster';
+import type { PreAuthKey } from '~/types';
 
-import Code from '~/components/Code';
-import Button from '~/components/Button';
 import Attribute from '~/components/Attribute';
+import Button from '~/components/Button';
+import Code from '~/components/Code';
 import ExpireKey from '../dialogs/expire';
 
 interface Props {
@@ -31,7 +31,7 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 				tailscale up --login-server {server} --authkey {authKey.key}
 			</Code>
 			<div className="flex gap-4 items-center">
-				{authKey.used && !authKey.reusable ||
+				{(authKey.used && !authKey.reusable) ||
 				new Date(authKey.expiration) < new Date() ? undefined : (
 					<ExpireKey authKey={authKey} />
 				)}
