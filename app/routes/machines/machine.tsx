@@ -150,9 +150,7 @@ export default function Page() {
 					<span className="text-sm text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
 						Managed by
 						<Tooltip>
-							<Tooltip.Button>
-								<InfoIcon className="w-3.5 h-3.5" />
-							</Tooltip.Button>
+							<InfoIcon className="w-3.5 h-3.5" />
 							<Tooltip.Body>
 								By default, a machine’s permissions match its creator’s.
 							</Tooltip.Body>
@@ -209,9 +207,7 @@ export default function Page() {
 					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
 						Approved
 						<Tooltip>
-							<Tooltip.Button>
-								<InfoIcon className="w-3.5 h-3.5" />
-							</Tooltip.Button>
+							<InfoIcon className="w-3.5 h-3.5" />
 							<Tooltip.Body>
 								Traffic to these routes are being routed through this machine.
 							</Tooltip.Body>
@@ -242,9 +238,7 @@ export default function Page() {
 					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
 						Awaiting Approval
 						<Tooltip>
-							<Tooltip.Button>
-								<InfoIcon className="w-3.5 h-3.5" />
-							</Tooltip.Button>
+							<InfoIcon className="w-3.5 h-3.5" />
 							<Tooltip.Body>
 								This machine is advertising these routes, but they must be
 								approved before traffic will be routed to them.
@@ -276,9 +270,7 @@ export default function Page() {
 					<span className="text-ui-600 dark:text-ui-300 flex items-center gap-x-1">
 						Exit Node
 						<Tooltip>
-							<Tooltip.Button>
-								<InfoIcon className="w-3.5 h-3.5" />
-							</Tooltip.Button>
+							<InfoIcon className="w-3.5 h-3.5" />
 							<Tooltip.Body>
 								Whether this machine can act as an exit node for your tailnet.
 							</Tooltip.Body>

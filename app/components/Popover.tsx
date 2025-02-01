@@ -34,7 +34,7 @@ export default function Popover(props: PopoverProps) {
 				{...popoverProps}
 				ref={ref}
 				className={cn(
-					'z-10 shadow-sm rounded-xl overflow-hidden',
+					'z-10 shadow-sm rounded-xl',
 					'bg-white dark:bg-headplane-900',
 					'border border-headplane-200 dark:border-headplane-800',
 					className,

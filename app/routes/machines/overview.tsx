@@ -1,5 +1,4 @@
 import { InfoIcon } from '@primer/octicons-react';
-import { Button, Tooltip, TooltipTrigger } from 'react-aria-components';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 
@@ -15,6 +14,7 @@ import { getSession } from '~/utils/sessions.server';
 import { useLiveData } from '~/utils/useLiveData';
 import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
+import Tooltip from '~/components/Tooltip';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
@@ -81,31 +81,23 @@ export default function Page() {
 			</div>
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-gray-500 dark:text-gray-400">
-					<tr className="text-left uppercase text-xs font-bold px-0.5">
+					<tr className="text-left px-0.5">
 						<th className="pb-2">Name</th>
 						<th className="pb-2 w-1/4">
 							<div className="flex items-center gap-x-1">
-								Addresses
+								<p className="uppercase text-xs font-bold">Addresses</p>
 								{data.magic ? (
-									<TooltipTrigger delay={0}>
-										<Button>
-											<InfoIcon className="w-4 h-4" />
-										</Button>
-										<Tooltip
-											className={cn(
-												'text-sm max-w-xs p-2 rounded-lg mb-2',
-												'bg-white dark:bg-zinc-800',
-												'border border-gray-200 dark:border-zinc-700',
-											)}
-										>
+									<Tooltip>
+										<InfoIcon className="w-4 h-4" />
+										<Tooltip.Body className="font-normal">
 											Since MagicDNS is enabled, you can access devices based on
 											their name and also at{' '}
 											<Code>
 												[name].
 												{data.magic}
 											</Code>
-										</Tooltip>
-									</TooltipTrigger>
+										</Tooltip.Body>
+									</Tooltip>
 								) : undefined}
 							</div>
 						</th>

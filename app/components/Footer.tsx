@@ -1,5 +1,4 @@
 import Link from '~/components/Link';
-import Tooltip from '~/components/Tooltip';
 import cn from '~/utils/cn';
 
 declare global {

@@ -12,7 +12,7 @@ function Card({ variant = 'raised', ...props }: Props) {
 		<div
 			{...props}
 			className={cn(
-				'w-full max-w-md overflow-hidden rounded-3xl p-5',
+				'w-full max-w-md rounded-3xl p-5',
 				variant === 'flat'
 					? 'bg-transparent shadow-none'
 					: 'bg-headplane-50/50 dark:bg-headplane-950/50 shadow-sm',

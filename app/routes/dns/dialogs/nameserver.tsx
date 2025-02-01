@@ -1,6 +1,7 @@
 import { RepoForkedIcon } from '@primer/octicons-react';
 import { useState } from 'react';
 import { useSubmit } from 'react-router';
+import Chip from '~/components/Chip';
 
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
@@ -82,16 +83,11 @@ export default function AddNameserver({ nameservers }: Props) {
 								Restrict to domain
 							</Dialog.Text>
 							<Tooltip>
-								<Tooltip.Button
-									className={cn(
-										'text-xs rounded-md px-1.5 py-0.5',
-										'bg-ui-200 dark:bg-ui-800',
-										'text-ui-600 dark:text-ui-300',
-									)}
-								>
-									<RepoForkedIcon className="w-4 h-4 mr-0.5" />
-									Split DNS
-								</Tooltip.Button>
+								<Chip
+									text="Split DNS"
+									leftIcon={<RepoForkedIcon className="w-4 h-4 mr-0.5" />}
+									className={cn('inline-flex items-center')}
+								/>
 								<Tooltip.Body>
 									Only clients that support split DNS (Tailscale v1.8 or later
 									for most platforms) will use this nameserver. Older clients
