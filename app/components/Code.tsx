@@ -1,52 +1,53 @@
-import { CheckIcon, CopyIcon } from '@primer/octicons-react';
-import { HTMLProps, useState } from 'react';
+import { Check, Copy } from 'lucide-react';
+import { HTMLProps } from 'react';
 import cn from '~/utils/cn';
 import toast from '~/utils/toast';
 
-interface Props extends HTMLProps<HTMLSpanElement> {
+export interface CodeProps extends HTMLProps<HTMLSpanElement> {
 	isCopyable?: boolean;
+	children: string | string[];
 }
 
-export default function Code(props: Props) {
-	const [isCopied, setIsCopied] = useState(false);
-
+export default function Code({ isCopyable, children, className }: CodeProps) {
 	return (
-		<>
-			<code
-				className={cn(
-					'bg-ui-100 dark:bg-ui-800 p-0.5 rounded-md',
-					props.className,
-				)}
-			>
-				{props.children}
-			</code>
-			{props.isCopyable ? (
+		<code
+			className={cn(
+				'bg-headplane-100 dark:bg-headplane-800 px-1 py-0.5 font-mono',
+				'rounded-lg focus-within:outline-none focus-within:ring-2',
+				className,
+			)}
+		>
+			{isCopyable ? (
 				<button
 					type="button"
-					className={cn(
-						'ml-1 p-1 rounded-md',
-						'bg-ui-100 dark:bg-ui-800',
-						'text-ui-500 dark:text-ui-400',
-						'inline-flex items-center justify-center',
-					)}
-					onClick={() => {
-						if (!props.children) {
-							throw new Error('Made copyable without children');
+					className="inline-flex items-center gap-x-1"
+					onClick={async (event) => {
+						const text = Array.isArray(children)
+							? children.join(' ')
+							: children;
+
+						const svgs = event.currentTarget.querySelectorAll('svg');
+						for (const svg of svgs) {
+							svg.toggleAttribute('data-copied', true);
 						}
 
-						navigator.clipboard.writeText(props.children.join(''));
+						await navigator.clipboard.writeText(text);
 						toast('Copied to clipboard');
-						setIsCopied(true);
-						setTimeout(() => setIsCopied(false), 1000);
+
+						setTimeout(() => {
+							for (const svg of svgs) {
+								svg.toggleAttribute('data-copied', false);
+							}
+						}, 1000);
 					}}
 				>
-					{isCopied ? (
-						<CheckIcon className="h-3 w-3" />
-					) : (
-						<CopyIcon className="h-3 w-3" />
-					)}
+					{children}
+					<Check className="h-4.5 w-4.5 p-1 hidden data-[copied]:block" />
+					<Copy className="h-4.5 w-4.5 p-1 block data-[copied]:hidden" />
 				</button>
-			) : undefined}
-		</>
+			) : (
+				children
+			)}
+		</code>
 	);
 }
