@@ -10,7 +10,6 @@ import { loadContext } from '~/utils/config/headplane';
 import { post, pull } from '~/utils/headscale';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
-import { useLiveData } from '~/utils/useLiveData';
 import AuthKeyRow from './components/key';
 import AddPreAuthKey from './dialogs/new';
 
@@ -122,7 +121,6 @@ export default function Page() {
 	const { keys, users, server } = useLoaderData<typeof loader>();
 	const [user, setUser] = useState('All');
 	const [status, setStatus] = useState('Active');
-	useLiveData({ interval: 3000 });
 
 	const filteredKeys = keys.filter((key) => {
 		if (user !== 'All' && key.user !== user) {

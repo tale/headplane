@@ -23,7 +23,6 @@ import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
-import { useLiveData } from '~/utils/useLiveData';
 
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
@@ -66,7 +65,6 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Page() {
 	const { machine, magic, routes, users } = useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
-	useLiveData({ interval: 1000 });
 
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||

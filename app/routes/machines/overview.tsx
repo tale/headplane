@@ -11,7 +11,6 @@ import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
-import { useLiveData } from '~/utils/useLiveData';
 import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
 import Tooltip from '~/components/Tooltip';
@@ -56,7 +55,6 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	useLiveData({ interval: 3000 });
 	const data = useLoaderData<typeof loader>();
 
 	return (

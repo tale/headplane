@@ -16,7 +16,6 @@ import { loadConfig } from '~/utils/config/headscale';
 import { del, post, pull } from '~/utils/headscale';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
-import { useLiveData } from '~/utils/useLiveData';
 
 import toast from '~/utils/toast';
 import Auth from './components/auth';
@@ -129,7 +128,6 @@ export default function Page() {
 	const data = useLoaderData<typeof loader>();
 	const [users, setUsers] = useState(data.users);
 	const actionData = useActionData<typeof action>();
-	useLiveData({ interval: 3000 });
 
 	useEffect(() => {
 		if (!actionData) {
