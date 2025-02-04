@@ -90,7 +90,6 @@ export async function action({ request }: ActionFunctionArgs) {
 export default function Page() {
 	const data = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
-	const showOr = useMemo(() => data.oidc && data.apiKey, [data]);
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
@@ -98,7 +97,7 @@ export default function Page() {
 				<Card.Title>Welcome to Headplane</Card.Title>
 				{data.apiKey ? (
 					<Form method="post">
-						<Card.Text className="mb-8 text-sm">
+						<Card.Text>
 							Enter an API key to authenticate with Headplane. You can generate
 							one by running <Code>headscale apikeys create</Code> in your
 							terminal.
@@ -109,27 +108,33 @@ export default function Page() {
 						) : undefined}
 						<Input
 							isRequired
+							labelHidden
 							label="API Key"
 							name="api-key"
 							placeholder="API Key"
 							type="password"
+							className="mt-4 mb-2"
 						/>
-						<Button className="w-full mt-2.5" variant="heavy" type="submit">
+						<Button className="w-full" variant="heavy" type="submit">
 							Sign In
 						</Button>
 					</Form>
 				) : undefined}
-				{showOr ? (
-					<div className="flex items-center gap-x-1.5 py-1">
-						<hr className="flex-1 border-ui-300 dark:border-ui-800" />
-						<span className="text-gray-500 text-sm">or</span>
-						<hr className="flex-1 border-ui-300 dark:border-ui-800" />
-					</div>
-				) : undefined}
 				{data.oidc ? (
 					<Form method="POST">
+						{!data.apiKey ? (
+							<Card.Text className="mb-6">
+								Sign in with your authentication provider to continue. Your
+								administrator has disabled API key login.
+							</Card.Text>
+						) : undefined}
+
 						<input type="hidden" name="oidc-start" value="true" />
-						<Button className="w-full" type="submit">
+						<Button
+							className="w-full mt-2"
+							variant={data.apiKey ? 'light' : 'heavy'}
+							type="submit"
+						>
 							Single Sign-On
 						</Button>
 					</Form>

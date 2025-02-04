@@ -119,31 +119,31 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 export default function Page() {
 	const { keys, users, server } = useLoaderData<typeof loader>();
-	const [user, setUser] = useState('All');
-	const [status, setStatus] = useState('Active');
+	const [user, setUser] = useState('__headplane_all');
+	const [status, setStatus] = useState('active');
 
 	const filteredKeys = keys.filter((key) => {
-		if (user !== 'All' && key.user !== user) {
+		if (user !== '__headplane_all' && key.user !== user) {
 			return false;
 		}
 
-		if (status !== 'All') {
+		if (status !== 'all') {
 			const now = new Date();
 			const expiry = new Date(key.expiration);
 
-			if (status === 'Active') {
+			if (status === 'active') {
 				return !(expiry < now) && (!key.used || key.reusable);
 			}
 
-			if (status === 'Used/Expired') {
+			if (status === 'expired') {
 				return key.used || expiry < now;
 			}
 
-			if (status === 'Reusable') {
+			if (status === 'reusable') {
 				return key.reusable;
 			}
 
-			if (status === 'Ephemeral') {
+			if (status === 'ephemeral') {
 				return key.ephemeral;
 			}
 		}
@@ -160,8 +160,8 @@ export default function Page() {
 				</RemixLink>
 				<span className="mx-2">/</span> Pre-Auth Keys
 			</p>
-			<h1 className="text-2xl font-medium mb-4">Pre-Auth Keys</h1>
-			<p className="text-gray-700 dark:text-gray-300 mb-4">
+			<h1 className="text-2xl font-medium mb-2">Pre-Auth Keys</h1>
+			<p className="mb-4">
 				Headscale fully supports pre-authentication keys in order to easily add
 				devices to your Tailnet. To learn more about using pre-authentication
 				keys, visit the{' '}
@@ -173,40 +173,34 @@ export default function Page() {
 				</Link>
 			</p>
 			<AddPreAuthKey users={users} />
-			<div className="flex justify-between gap-4 mt-4">
-				<div className="w-full">
-					<p className="text-sm text-gray-500 dark:text-gray-300">
-						Filter by user
-					</p>
-					<Select
-						label="Filter by User"
-						placeholder="Select a user"
-						onSelectionChange={(value) => setUser(value?.toString() ?? '')}
-					>
-						{[
-							<Select.Item key="All">All</Select.Item>,
-							...users.map((user) => (
-								<Select.Item key={user.name}>{user.name}</Select.Item>
-							)),
-						]}
-					</Select>
-				</div>
-				<div className="w-full">
-					<p className="text-sm text-gray-500 dark:text-gray-300">
-						Filter by status
-					</p>
-					<Select
-						label="Filter by status"
-						placeholder="Select a status"
-						defaultSelectedKey="Active"
-					>
-						<Select.Item key="All">All</Select.Item>
-						<Select.Item>Active</Select.Item>
-						<Select.Item>Used/Expired</Select.Item>
-						<Select.Item>Reusable</Select.Item>
-						<Select.Item>Ephemeral</Select.Item>
-					</Select>
-				</div>
+			<div className="flex items-center gap-4 mt-4">
+				<Select
+					label="Filter by User"
+					placeholder="Select a user"
+					className="w-full"
+					defaultSelectedKey="__headplane_all"
+					onSelectionChange={(value) => setUser(value?.toString() ?? '')}
+				>
+					{[
+						<Select.Item key="__headplane_all">All</Select.Item>,
+						...users.map((user) => (
+							<Select.Item key={user.name}>{user.name}</Select.Item>
+						)),
+					]}
+				</Select>
+				<Select
+					label="Filter by status"
+					placeholder="Select a status"
+					className="w-full"
+					defaultSelectedKey="active"
+					onSelectionChange={(value) => setStatus(value?.toString() ?? '')}
+				>
+					<Select.Item key="all">All</Select.Item>
+					<Select.Item key="active">Active</Select.Item>
+					<Select.Item key="expired">Used/Expired</Select.Item>
+					<Select.Item key="reusable">Reusable</Select.Item>
+					<Select.Item key="ephemeral">Ephemeral</Select.Item>
+				</Select>
 			</div>
 			<TableList className="mt-4">
 				{filteredKeys.length === 0 ? (

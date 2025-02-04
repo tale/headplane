@@ -253,7 +253,7 @@ function MachineChip({ machine }: { readonly machine: Machine }) {
 			ref={setNodeRef}
 			className={cn(
 				'flex items-center w-full gap-2 py-1',
-				'hover:bg-ui-100 dark:hover:bg-ui-800 rounded-lg',
+				'hover:bg-headplane-50 dark:hover:bg-headplane-950 rounded-xl',
 			)}
 			style={{
 				transform: transform
@@ -263,7 +263,7 @@ function MachineChip({ machine }: { readonly machine: Machine }) {
 			{...listeners}
 			{...attributes}
 		>
-			<StatusCircle isOnline={machine.online} className="w-4 h-4 px-1 w-fit" />
+			<StatusCircle isOnline={machine.online} className="px-1 h-4 w-fit" />
 			<Attribute
 				name={machine.givenName}
 				link={`machines/${machine.id}`}
@@ -289,7 +289,7 @@ function UserCard({ user, magic }: CardProps) {
 				variant="flat"
 				className={cn(
 					'max-w-full w-full overflow-visible h-full',
-					isOver ? 'bg-ui-100 dark:bg-ui-800' : '',
+					isOver ? 'bg-headplane-100 dark:bg-headplane-800' : '',
 				)}
 			>
 				<div className="flex items-center justify-between">

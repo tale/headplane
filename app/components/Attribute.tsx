@@ -54,7 +54,7 @@ export default function Attribute({
 							}, 1000);
 						}}
 					>
-						{value}
+						<p className="truncate">{value}</p>
 						<Check className="h-4.5 w-4.5 p-1 hidden data-[copied]:block" />
 						<Copy className="h-4.5 w-4.5 p-1 block data-[copied]:hidden" />
 					</button>

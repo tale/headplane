@@ -23,7 +23,7 @@ export default function Rename({
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Panel>
 				<Dialog.Title>Edit machine name for {machine.givenName}</Dialog.Title>
-				<Dialog.Text>
+				<Dialog.Text className="mb-6">
 					This name is shown in the admin panel, in Tailscale clients, and used
 					when generating MagicDNS names.
 				</Dialog.Text>
@@ -38,7 +38,7 @@ export default function Rename({
 				/>
 				{magic ? (
 					name.length > 0 && name !== machine.givenName ? (
-						<p className="text-sm text-gray-500 dark:text-gray-300 leading-tight">
+						<p className="text-sm text-headplane-600 dark:text-headplane-300 leading-tight mt-2">
 							This machine will be accessible by the hostname{' '}
 							<Code className="text-sm">
 								{name.toLowerCase().replaceAll(/\s+/g, '-')}
@@ -48,7 +48,7 @@ export default function Rename({
 							will no longer point to this machine.
 						</p>
 					) : (
-						<p className="text-sm text-gray-500 dark:text-gray-300 leading-tight">
+						<p className="text-sm text-headplane-600 dark:text-headplane-300 leading-tight mt-2">
 							This machine is accessible by the hostname{' '}
 							<Code className="text-sm">{machine.givenName}</Code>.
 						</p>

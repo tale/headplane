@@ -17,7 +17,7 @@ export default function DNS({ records, isDisabled }: Props) {
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">DNS Records</h1>
-			<p className="text-gray-700 dark:text-gray-300">
+			<p>
 				Headscale supports adding custom DNS records to your Tailnet. As of now,
 				only <Code>A</Code> records are supported.{' '}
 				<Link

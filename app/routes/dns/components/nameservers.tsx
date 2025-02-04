@@ -14,7 +14,7 @@ export default function Nameservers({ nameservers, isDisabled }: Props) {
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Nameservers</h1>
-			<p className="text-gray-700 dark:text-gray-300">
+			<p>
 				Set the nameservers used by devices on the Tailnet to resolve DNS
 				queries.{' '}
 				<Link

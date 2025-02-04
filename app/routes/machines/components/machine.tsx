@@ -90,7 +90,7 @@ export default function MachineRow({
 	return (
 		<tr
 			key={machine.id}
-			className="hover:bg-zinc-100 dark:hover:bg-zinc-800 group"
+			className="group hover:bg-headplane-50 dark:hover:bg-headplane-950"
 		>
 			<td className="pl-0.5 py-2">
 				<Link to={`/machines/${machine.id}`} className="group/link h-full">
@@ -103,9 +103,7 @@ export default function MachineRow({
 					>
 						{machine.givenName}
 					</p>
-					<p className="text-sm text-gray-500 dark:text-gray-300 font-mono">
-						{machine.name}
-					</p>
+					<p className="text-sm font-mono opacity-50">{machine.name}</p>
 					<div className="flex gap-1 mt-1">
 						{tags.map((tag) => (
 							<Chip key={tag} text={tag} />
@@ -152,12 +150,12 @@ export default function MachineRow({
 						<p className="leading-snug">
 							{hinfo.getTSVersion(stats)}
 						</p>
-						<p className="text-sm text-gray-500 dark:text-gray-300 max-w-48 truncate">
+						<p className="text-sm opacity-50 max-w-48 truncate">
 							{hinfo.getOSInfo(stats)}
 						</p>
 						</>
 					) : (
-						<p className="text-sm text-gray-500 dark:text-gray-300">
+						<p className="text-sm opacity-50">
 							Unknown
 						</p>
 					)}
@@ -167,7 +165,7 @@ export default function MachineRow({
 				<span
 					className={cn(
 						'flex items-center gap-x-1 text-sm',
-						'text-gray-500 dark:text-gray-400',
+						'text-headplane-600 dark:text-headplane-300',
 					)}
 				>
 					<StatusCircle

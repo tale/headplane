@@ -1,14 +1,19 @@
-import { LinkExternalIcon } from '@primer/octicons-react';
+import { ExternalLink } from 'lucide-react';
 import cn from '~/utils/cn';
 
-interface Props {
+export interface LinkProps {
 	to: string;
 	name: string;
 	children: string;
 	className?: string;
 }
 
-export default function Link({ to, name: alt, children, className }: Props) {
+export default function Link({
+	to,
+	name: alt,
+	children,
+	className,
+}: LinkProps) {
 	return (
 		<a
 			href={to}
@@ -16,14 +21,14 @@ export default function Link({ to, name: alt, children, className }: Props) {
 			target="_blank"
 			rel="noreferrer"
 			className={cn(
-				'inline-flex items-center gap-x-1',
+				'inline-flex items-center gap-x-0.5',
 				'text-blue-500 hover:text-blue-700',
 				'dark:text-blue-400 dark:hover:text-blue-300',
 				className,
 			)}
 		>
 			{children}
-			<LinkExternalIcon className="h-3 w-3" />
+			<ExternalLink className="w-3.5" />
 		</a>
 	);
 }

@@ -9,7 +9,7 @@ export default function AgentSection() {
 		<>
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Local Agent</h1>
-				<p className="text-gray-700 dark:text-gray-300">
+				<p>
 					Headplane provides a local agent that can be installed on a server to
 					provide additional features including viewing device information and
 					SSH access via the web interface (soon). To learn more about the agent
@@ -23,12 +23,7 @@ export default function AgentSection() {
 				</p>
 			</div>
 			<RemixLink to="/settings/local-agent">
-				<div
-					className={cn(
-						'text-lg font-medium flex items-center',
-						'text-gray-700 dark:text-gray-300',
-					)}
-				>
+				<div className={cn('text-lg font-medium flex items-center')}>
 					Manage Agent
 					<ArrowRightIcon className="w-5 h-5 ml-2" />
 				</div>

@@ -24,8 +24,7 @@ import cn from '~/utils/cn';
 type Properties = {
 	readonly baseDomain?: string;
 	readonly searchDomains: string[];
-	// eslint-disable-next-line react/boolean-prop-naming
-	readonly disabled?: boolean;
+	readonly disabled?: boolean; // TODO: isDisabled
 };
 
 export default function Domains({
@@ -33,7 +32,6 @@ export default function Domains({
 	searchDomains,
 	disabled,
 }: Properties) {
-	// eslint-disable-next-line unicorn/no-null, @typescript-eslint/ban-types
 	const [activeId, setActiveId] = useState<number | string | null>(null);
 	const [localDomains, setLocalDomains] = useState(searchDomains);
 	const [newDomain, setNewDomain] = useState('');
@@ -46,7 +44,7 @@ export default function Domains({
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Search Domains</h1>
-			<p className="text-gray-700 dark:text-gray-300 mb-2">
+			<p className="mb-4">
 				Set custom DNS search domains for your Tailnet. When using Magic DNS,
 				your tailnet domain is used as the first search domain.
 			</p>
@@ -57,7 +55,6 @@ export default function Domains({
 					setActiveId(event.active.id);
 				}}
 				onDragEnd={(event) => {
-					// eslint-disable-next-line unicorn/no-null
 					setActiveId(null);
 					const { active, over } = event;
 					if (!over) {
@@ -82,7 +79,12 @@ export default function Domains({
 				<TableList>
 					{baseDomain ? (
 						<TableList.Item key="magic-dns-sd">
-							<div className="flex items-center gap-4">
+							<div
+								className={cn(
+									'flex items-center gap-4',
+									disabled ? 'flex-row-reverse justify-between w-full' : '',
+								)}
+							>
 								<Lock className="p-0.5" />
 								<p className="font-mono text-sm py-0.5">{baseDomain}</p>
 							</div>
@@ -138,7 +140,6 @@ export default function Domains({
 									onPress={() => {
 										fetcher.submit(
 											{
-												// eslint-disable-next-line @typescript-eslint/naming-convention
 												'dns.search_domains': [...localDomains, newDomain],
 											},
 											{
@@ -204,11 +205,6 @@ function Domain({
 			<p className="font-mono text-sm flex items-center gap-4">
 				{disabled ? undefined : (
 					<GripVertical {...attributes} {...listeners} className="p-0.5" />
-					// <ThreeBarsIcon
-					// 	className="h-4 w-4 text-gray-400 focus:outline-none"
-					// 	{...attributes}
-					// 	{...listeners}
-					// />
 				)}
 				{domain}
 			</p>

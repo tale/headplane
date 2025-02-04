@@ -59,10 +59,10 @@ export default function Page() {
 
 	return (
 		<>
-			<div className="flex justify-between items-center mb-8">
+			<div className="flex justify-between items-center mb-6">
 				<div className="flex flex-col w-2/3">
-					<h1 className="text-2xl font-medium mb-4">Machines</h1>
-					<p className="text-gray-700 dark:text-gray-300">
+					<h1 className="text-2xl font-medium mb-2">Machines</h1>
+					<p>
 						Manage the devices connected to your Tailnet.{' '}
 						<Link
 							to="https://tailscale.com/kb/1372/manage-devices"
@@ -78,9 +78,9 @@ export default function Page() {
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
-				<thead className="text-gray-500 dark:text-gray-400">
+				<thead className="text-headplane-600 dark:text-headplane-300">
 					<tr className="text-left px-0.5">
-						<th className="pb-2">Name</th>
+						<th className="uppercase text-xs font-bold pb-2">Name</th>
 						<th className="pb-2 w-1/4">
 							<div className="flex items-center gap-x-1">
 								<p className="uppercase text-xs font-bold">Addresses</p>
@@ -99,14 +99,14 @@ export default function Page() {
 								) : undefined}
 							</div>
 						</th>
-						{/**<th className="pb-2">Version</th>**/}
-						<th className="pb-2">Last Seen</th>
+						{/**<th className="uppercase text-xs font-bold pb-2">Version</th>**/}
+						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
 					</tr>
 				</thead>
 				<tbody
 					className={cn(
-						'divide-y divide-zinc-200 dark:divide-zinc-700 align-top',
-						'border-t border-zinc-200 dark:border-zinc-700',
+						'divide-y divide-headplane-100 dark:divide-headplane-800 align-top',
+						'border-t border-headplane-100 dark:border-headplane-800',
 					)}
 				>
 					{data.nodes.map((machine) => (

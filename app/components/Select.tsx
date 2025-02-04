@@ -14,7 +14,9 @@ import { Item, ListState, Node, useComboBoxState } from 'react-stately';
 import Popover from '~/components/Popover';
 import cn from '~/utils/cn';
 
-export interface SelectProps extends AriaComboBoxProps<object> {}
+export interface SelectProps extends AriaComboBoxProps<object> {
+	className?: string;
+}
 
 function Select(props: SelectProps) {
 	const { contains } = useFilter({ sensitivity: 'base' });
@@ -45,7 +47,7 @@ function Select(props: SelectProps) {
 
 	const { buttonProps } = useButton(triggerProps, buttonRef);
 	return (
-		<div className="flex flex-col">
+		<div className={cn('flex flex-col', props.className)}>
 			<label
 				{...labelProps}
 				htmlFor={id}

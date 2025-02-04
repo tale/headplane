@@ -1,11 +1,11 @@
-import clsx from 'clsx';
 import type { HTMLProps } from 'react';
+import cn from '~/utils/cn';
 
 function TableList(props: HTMLProps<HTMLDivElement>) {
 	return (
 		<div
 			{...props}
-			className={clsx(
+			className={cn(
 				'rounded-xl',
 				'border border-headplane-100 dark:border-headplane-800',
 				props.className,
@@ -20,7 +20,7 @@ function Item(props: HTMLProps<HTMLDivElement>) {
 	return (
 		<div
 			{...props}
-			className={clsx(
+			className={cn(
 				'flex items-center justify-between p-2 last:border-b-0',
 				'border-b border-headplane-100 dark:border-headplane-800',
 				props.className,

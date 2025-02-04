@@ -2,18 +2,17 @@
 // Functionally only used for all sorts of sanity checks across headplane.
 //
 // Around the codebase, this is referred to as the context
+// TODO: Fix the TRASH that is this env var mess
+// - Zod needs to be used for the config
+// - Switch to YAML for the config file
 
-import { access, constants, readFile, writeFile } from 'node:fs/promises';
+import { constants, access, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-
-import { parse } from 'yaml';
-
 import { IntegrationFactory, loadIntegration } from '~/integration';
 import { HeadscaleConfig, loadConfig } from '~/utils/config/headscale';
-import { testOidc } from '~/utils/oidc';
 import log from '~/utils/log';
+import { testOidc } from '~/utils/oidc';
 import { initSessionManager } from '~/utils/sessions.server';
-import { initAgentCache } from '~/utils/ws-agent';
 
 export interface HeadplaneContext {
 	debug: boolean;
@@ -26,7 +25,7 @@ export interface HeadplaneContext {
 		enabled: boolean;
 		path: string;
 		defaultTTL: number;
-	}
+	};
 
 	config: {
 		read: boolean;
@@ -107,7 +106,8 @@ export async function loadContext(): Promise<HeadplaneContext> {
 	initSessionManager();
 
 	const cacheEnabled = process.env.AGENT_CACHE_DISABLED !== 'true';
-	const cachePath = process.env.AGENT_CACHE_PATH ?? '/etc/headplane/agent.cache';
+	const cachePath =
+		process.env.AGENT_CACHE_PATH ?? '/etc/headplane/agent.cache';
 	const cacheTTL = 300 * 1000; // 5 minutes
 
 	// Load agent cache
@@ -237,9 +237,9 @@ async function checkOidc(config?: HeadscaleConfig) {
 				clientId: client,
 				clientSecret: secret,
 				tokenEndpointAuthMethod: method,
-			}
+			};
 
-			const result = await testOidc(oidcConfig)
+			const result = await testOidc(oidcConfig);
 			if (!result) {
 				return;
 			}
@@ -301,9 +301,9 @@ async function checkOidc(config?: HeadscaleConfig) {
 			clientId: client,
 			clientSecret: secret,
 			tokenEndpointAuthMethod: method,
-		}
+		};
 
-		const result = await testOidc(oidcConfig)
+		const result = await testOidc(oidcConfig);
 		if (!result) {
 			return;
 		}

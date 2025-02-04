@@ -94,7 +94,7 @@ export default function Page() {
 
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Magic DNS</h1>
-				<p className="text-gray-700 dark:text-gray-300 mb-4">
+				<p className="mb-4">
 					Automatically register domain names for each device on the tailnet.
 					Devices will be accessible at{' '}
 					<Code>

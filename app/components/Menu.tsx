@@ -97,7 +97,10 @@ function MenuSection<T>({ section, state }: MenuSectionProps<T>) {
 			{section.key !== state.collection.getFirstKey() ? (
 				<li
 					{...separatorProps}
-					className="border-t border-gray-300 mx-2 mt-1 mb-1"
+					className={cn(
+						'mx-2 mt-1 mb-1 border-t',
+						'border-headplane-200 dark:border-headplane-800',
+					)}
 				/>
 			) : undefined}
 			<li {...itemProps}>

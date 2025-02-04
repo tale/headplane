@@ -1,4 +1,4 @@
-import { Plus, X } from 'lucide-react';
+import { Plus, TagsIcon, X } from 'lucide-react';
 import { useState } from 'react';
 import Button from '~/components/Button';
 import Dialog from '~/components/Dialog';
@@ -38,15 +38,10 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 				<input type="hidden" name="tags" value={tags.join(',')} />
 				<TableList className="mt-4">
 					{tags.length === 0 ? (
-						<div
-							className={cn(
-								'flex py-4 px-4 bg-ui-100 dark:bg-ui-800',
-								'items-center justify-center rounded-t-lg',
-								'text-ui-600 dark:text-ui-300',
-							)}
-						>
-							<p>No tags are set on this machine.</p>
-						</div>
+						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+							<TagsIcon />
+							<p className="font-semibold">No tags are set on this machine</p>
+						</TableList.Item>
 					) : (
 						tags.map((item) => (
 							<TableList.Item className="font-mono" key={item} id={item}>

@@ -1,8 +1,10 @@
+import { GlobeLock, RouteOff } from 'lucide-react';
 import { useMemo } from 'react';
 import { useFetcher } from 'react-router';
 import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
 import Switch from '~/components/Switch';
+import TableList from '~/components/TableList';
 import type { Machine, Route } from '~/types';
 import cn from '~/utils/cn';
 
@@ -59,32 +61,17 @@ export default function Routes({
 						Learn More
 					</Link>
 				</Dialog.Text>
-				<div
-					className={cn(
-						'rounded-lg overflow-y-auto my-2',
-						'divide-y divide-zinc-200 dark:divide-zinc-700 align-top',
-						'border border-zinc-200 dark:border-zinc-700',
-					)}
-				>
+				<TableList className="mt-4">
 					{subnet.length === 0 ? (
-						<div
-							className={cn(
-								'flex py-4 px-4 bg-ui-100 dark:bg-ui-800',
-								'items-center justify-center',
-								'text-ui-600 dark:text-ui-300',
-							)}
-						>
-							<p>No routes are advertised on this machine.</p>
-						</div>
+						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+							<RouteOff />
+							<p className="font-semibold">
+								No routes are advertised by this machine
+							</p>
+						</TableList.Item>
 					) : undefined}
 					{subnet.map((route) => (
-						<div
-							key={route.id}
-							className={cn(
-								'flex py-2 px-4 bg-ui-100 dark:bg-ui-800',
-								'items-center justify-between',
-							)}
-						>
+						<TableList.Item key={route.id}>
 							<p>{route.prefix}</p>
 							<Switch
 								defaultSelected={route.enabled}
@@ -101,9 +88,9 @@ export default function Routes({
 									});
 								}}
 							/>
-						</div>
+						</TableList.Item>
 					))}
-				</div>
+				</TableList>
 				<Dialog.Text className="font-bold mt-8">Exit nodes</Dialog.Text>
 				<Dialog.Text>
 					Allow your network to route internet traffic through this machine.{' '}
@@ -114,30 +101,14 @@ export default function Routes({
 						Learn More
 					</Link>
 				</Dialog.Text>
-				<div
-					className={cn(
-						'rounded-lg overflow-y-auto my-2',
-						'divide-y divide-zinc-200 dark:divide-zinc-700 align-top',
-						'border border-zinc-200 dark:border-zinc-700',
-					)}
-				>
+				<TableList className="mt-4">
 					{exit.length === 0 ? (
-						<div
-							className={cn(
-								'flex py-4 px-4 bg-ui-100 dark:bg-ui-800',
-								'items-center justify-center',
-								'text-ui-600 dark:text-ui-300',
-							)}
-						>
-							<p>This machine is not an exit node.</p>
-						</div>
+						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+							<GlobeLock />
+							<p className="font-semibold">This machine is not an exit node</p>
+						</TableList.Item>
 					) : (
-						<div
-							className={cn(
-								'flex py-2 px-4 bg-ui-100 dark:bg-ui-800',
-								'items-center justify-between',
-							)}
-						>
+						<TableList.Item>
 							<p>Use as exit node</p>
 							<Switch
 								defaultSelected={exitEnabled}
@@ -154,9 +125,9 @@ export default function Routes({
 									});
 								}}
 							/>
-						</div>
+						</TableList.Item>
 					)}
-				</div>
+				</TableList>
 			</Dialog.Panel>
 		</Dialog>
 	);

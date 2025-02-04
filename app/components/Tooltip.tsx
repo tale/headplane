@@ -12,6 +12,7 @@ export interface TooltipProps extends AriaTooltipProps {
 	children: [React.ReactElement, React.ReactElement<TooltipBodyProps>];
 }
 
+// TODO: Fix Button accessibility outline + invoke
 function Tooltip(props: TooltipProps) {
 	const state = useTooltipTriggerState({
 		...props,

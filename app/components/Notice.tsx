@@ -1,23 +1,16 @@
-import { InfoIcon } from '@primer/octicons-react';
-import type { ReactNode } from 'react';
-import cn from '~/utils/cn';
+import { CircleSlash2 } from 'lucide-react';
+import React from 'react';
+import Card from '~/components/Card';
 
-interface Props {
-	className?: string;
-	children: ReactNode;
+export interface NoticeProps {
+	children: React.ReactNode;
 }
 
-export default function Notice({ children, className }: Props) {
+export default function Notice({ children }: NoticeProps) {
 	return (
-		<div
-			className={cn(
-				'p-4 rounded-md w-full flex items-center gap-3',
-				'bg-ui-200 dark:bg-ui-800',
-				className,
-			)}
-		>
-			<InfoIcon className="h-6 w-6 text-ui-700 dark:text-ui-200" />
+		<Card className="flex w-full max-w-full gap-4 font-semibold">
+			<CircleSlash2 />
 			{children}
-		</div>
+		</Card>
 	);
 }

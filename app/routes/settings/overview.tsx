@@ -11,7 +11,7 @@ export default function Page() {
 		<div className="flex flex-col gap-8 max-w-screen-lg">
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Settings</h1>
-				<p className="text-gray-700 dark:text-gray-300">
+				<p>
 					The settings page is still under construction. As I'm able to add more
 					features, I'll be adding them here. If you require any features, feel
 					free to open an issue on the GitHub repository.
@@ -19,7 +19,7 @@ export default function Page() {
 			</div>
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Pre-Auth Keys</h1>
-				<p className="text-gray-700 dark:text-gray-300">
+				<p>
 					Headscale fully supports pre-authentication keys in order to easily
 					add devices to your Tailnet. To learn more about using
 					pre-authentication keys, visit the{' '}
@@ -32,12 +32,7 @@ export default function Page() {
 				</p>
 			</div>
 			<RemixLink to="/settings/auth-keys">
-				<div
-					className={cn(
-						'text-lg font-medium flex items-center',
-						'text-gray-700 dark:text-gray-300',
-					)}
-				>
+				<div className="text-lg font-medium flex items-center">
 					Manage Auth Keys
 					<ArrowRightIcon className="w-5 h-5 ml-2" />
 				</div>
