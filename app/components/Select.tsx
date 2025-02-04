@@ -6,6 +6,7 @@ import {
 	useButton,
 	useComboBox,
 	useFilter,
+	useId,
 	useListBox,
 	useOption,
 } from 'react-aria';
@@ -18,6 +19,7 @@ export interface SelectProps extends AriaComboBoxProps<object> {}
 function Select(props: SelectProps) {
 	const { contains } = useFilter({ sensitivity: 'base' });
 	const state = useComboBoxState({ ...props, defaultFilter: contains });
+	const id = useId(props.id);
 
 	const buttonRef = useRef<HTMLButtonElement | null>(null);
 	const inputRef = useRef<HTMLInputElement | null>(null);
@@ -46,8 +48,7 @@ function Select(props: SelectProps) {
 		<div className="flex flex-col">
 			<label
 				{...labelProps}
-				// TODO: THIS IS WRONG, use useId
-				htmlFor={props['aria-labelledby']}
+				htmlFor={id}
 				className={cn(
 					'text-xs font-medium px-3 mb-0.5',
 					'text-headplane-700 dark:text-headplane-100',
@@ -65,7 +66,9 @@ function Select(props: SelectProps) {
 				<input
 					{...inputProps}
 					ref={inputRef}
+					id={id}
 					className="outline-none px-3 py-2 rounded-l-xl w-full bg-transparent"
+					data-1p-ignore
 				/>
 				<button
 					{...buttonProps}

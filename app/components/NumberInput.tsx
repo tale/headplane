@@ -2,6 +2,7 @@ import { Minus, Plus } from 'lucide-react';
 import { useRef } from 'react';
 import {
 	type AriaNumberFieldProps,
+	useId,
 	useLocale,
 	useNumberField,
 } from 'react-aria';
@@ -19,6 +20,7 @@ export default function NumberInput(props: InputProps) {
 	const { locale } = useLocale();
 	const state = useNumberFieldState({ ...props, locale });
 	const ref = useRef<HTMLInputElement | null>(null);
+	const id = useId(props.id);
 
 	const {
 		labelProps,
@@ -36,8 +38,7 @@ export default function NumberInput(props: InputProps) {
 		<div className="flex flex-col">
 			<label
 				{...labelProps}
-				// TODO: This is WRONG use useId
-				htmlFor={name}
+				htmlFor={id}
 				className={cn(
 					'text-xs font-medium px-3 mb-0.5',
 					'text-headplane-700 dark:text-headplane-100',
@@ -56,6 +57,7 @@ export default function NumberInput(props: InputProps) {
 			>
 				<input
 					{...inputProps}
+					id={id}
 					required={props.isRequired}
 					name={name}
 					ref={ref}
