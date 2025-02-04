@@ -14,13 +14,15 @@ export default function Code({ isCopyable, children, className }: CodeProps) {
 			className={cn(
 				'bg-headplane-100 dark:bg-headplane-800 px-1 py-0.5 font-mono',
 				'rounded-lg focus-within:outline-none focus-within:ring-2',
+				isCopyable && 'relative pr-7',
 				className,
 			)}
 		>
-			{isCopyable ? (
+			{children}
+			{isCopyable && (
 				<button
 					type="button"
-					className="inline-flex items-center gap-x-1"
+					className="bottom-0 right-0 absolute"
 					onClick={async (event) => {
 						const text = Array.isArray(children)
 							? children.join(' ')
@@ -41,12 +43,9 @@ export default function Code({ isCopyable, children, className }: CodeProps) {
 						}, 1000);
 					}}
 				>
-					{children}
 					<Check className="h-4.5 w-4.5 p-1 hidden data-[copied]:block" />
 					<Copy className="h-4.5 w-4.5 p-1 block data-[copied]:hidden" />
 				</button>
-			) : (
-				children
 			)}
 		</code>
 	);
