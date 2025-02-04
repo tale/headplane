@@ -1,7 +1,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 RUN apk add --no-cache git
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
