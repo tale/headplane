@@ -68,8 +68,8 @@
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"engines": {
-		"node": ">=20",
-		"pnpm": ">=9 <10"
+		"node": ">=22",
+		"pnpm": ">=10 <11"
 	},
 	"pnpm": {
 		"patchedDependencies": {

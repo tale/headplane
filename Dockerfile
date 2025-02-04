@@ -1,7 +1,7 @@
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
-RUN npm install -g pnpm@9
+RUN npm install -g pnpm@10
 RUN apk add --no-cache git
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
@@ -11,7 +11,7 @@ COPY . .
 RUN pnpm run build
 RUN pnpm prune --prod
 
-FROM node:20-alpine
+FROM node:22-alpine
 WORKDIR /app
 COPY --from=build /app/build /app/build
 COPY --from=build /app/node_modules /app/node_modules
