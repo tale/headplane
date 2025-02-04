@@ -1,29 +1,18 @@
-import { setTimeout } from 'node:timers/promises';
-import {
-	BeakerIcon,
-	EyeIcon,
-	IssueDraftIcon,
-	PencilIcon,
-} from '@primer/octicons-react';
-//import { useDebounceFetcher } from 'remix-utils/use-debounce-fetcher';
+import { Construction, Eye, FlaskConical, Pencil } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { Tab, TabList, TabPanel, Tabs } from 'react-aria-components';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useFetcher, useLoaderData, useRevalidator } from 'react-router';
-
 import Button from '~/components/Button';
-import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
-import cn from '~/utils/cn';
+import Tabs from '~/components/Tabs';
 import { loadContext } from '~/utils/config/headplane';
 import { loadConfig } from '~/utils/config/headscale';
 import { HeadscaleError, pull, put } from '~/utils/headscale';
 import log from '~/utils/log';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
-
 import toast from '~/utils/toast';
 import { Differ, Editor } from './components/cm.client';
 import { ErrorView } from './components/error';
@@ -134,7 +123,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	} catch (error) {
 		log.debug('APIC', 'Failed to update ACL policy with error %s', error);
 
-		// @ts-ignore: Shut UP we know it's a string most of the time
+		// @ts-ignore: TODO: Shut UP we know it's a string most of the time
 		const text = JSON.parse(error.message);
 		return send(
 			{ success: false, error: text.message },
@@ -158,7 +147,6 @@ export default function Page() {
 			return;
 		}
 
-		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data.success) {
 			toast('Updated tailnet ACL policy');
 		} else {
@@ -188,7 +176,6 @@ export default function Page() {
 		}
 
 		// If we have a failed fetcher state allow the user to try again
-		// @ts-ignore: useDebounceFetcher is not typed correctly
 		if (fetcher.data?.success === false) {
 			return false;
 		}
@@ -228,88 +215,52 @@ export default function Page() {
 				</Link>
 				.
 			</p>
-			{
-				// @ts-ignore: useDebounceFetcher is not typed correctly
-				fetcher.data?.success === false ? (
-					// @ts-ignore: useDebounceFetcher is not typed correctly
-					<ErrorView message={fetcher.data.error} />
-				) : undefined
-			}
+			{fetcher.data?.success === false ? (
+				<ErrorView message={fetcher.data.error} />
+			) : undefined}
 			{data.read ? (
 				<>
-					<Tabs>
-						<TabList
-							className={cn(
-								'flex border-t border-gray-200 dark:border-gray-700',
-								'w-fit rounded-t-lg overflow-hidden',
-								'text-gray-400 dark:text-gray-500',
-							)}
+					<Tabs label="ACL Editor" className="mb-4">
+						<Tabs.Item
+							key="edit"
+							title={
+								<div className="flex items-center gap-2">
+									<Pencil className="p-1" />
+									<span>Edit file</span>
+								</div>
+							}
 						>
-							<Tab
-								id="edit"
-								className={({ isSelected }) =>
-									cn(
-										'px-4 py-2 rounded-tl-lg',
-										'focus:outline-none flex items-center gap-2',
-										'border-x border-gray-200 dark:border-gray-700',
-										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-									)
-								}
-							>
-								<PencilIcon className="w-5 h-5" />
-								<p>Edit file</p>
-							</Tab>
-							<Tab
-								id="diff"
-								className={({ isSelected }) =>
-									cn(
-										'px-4 py-2',
-										'focus:outline-none flex items-center gap-2',
-										'border-x border-gray-200 dark:border-gray-700',
-										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-									)
-								}
-							>
-								<EyeIcon className="w-5 h-5" />
-								<p>Preview changes</p>
-							</Tab>
-							<Tab
-								id="preview"
-								className={({ isSelected }) =>
-									cn(
-										'px-4 py-2 rounded-tr-lg',
-										'focus:outline-none flex items-center gap-2',
-										'border-x border-gray-200 dark:border-gray-700',
-										isSelected ? 'text-gray-900 dark:text-gray-100' : '',
-									)
-								}
-							>
-								<BeakerIcon className="w-5 h-5" />
-								<p>Preview rules</p>
-							</Tab>
-						</TabList>
-						<TabPanel id="edit">
 							<Editor isDisabled={!data.write} value={acl} onChange={setAcl} />
-						</TabPanel>
-						<TabPanel id="diff">
+						</Tabs.Item>
+						<Tabs.Item
+							key="diff"
+							title={
+								<div className="flex items-center gap-2">
+									<Eye className="p-1" />
+									<span>Preview changes</span>
+								</div>
+							}
+						>
 							<Differ left={data?.policy ?? ''} right={acl} />
-						</TabPanel>
-						<TabPanel id="preview">
-							<div
-								className={cn(
-									'border border-gray-200 dark:border-gray-700',
-									'rounded-b-lg rounded-tr-lg mb-4 overflow-hidden',
-									'p-16 flex flex-col items-center justify-center',
-								)}
-							>
-								<IssueDraftIcon className="w-24 h-24 text-gray-300 dark:text-gray-500" />
+						</Tabs.Item>
+						<Tabs.Item
+							key="preview"
+							title={
+								<div className="flex items-center gap-2">
+									<FlaskConical className="p-1" />
+									<span>Preview rules</span>
+								</div>
+							}
+						>
+							<div className="flex flex-col items-center py-8">
+								<Construction />
 								<p className="w-1/2 text-center mt-4">
-									The Preview rules is very much still a work in progress. It is
-									a bit complicated to implement right now but hopefully it will
-									be available soon.
+									Previewing rules is not available yet. This feature is still
+									in development and is pretty complicated to implement.
+									Hopefully I will be able to get to it soon.
 								</p>
 							</div>
-						</TabPanel>
+						</Tabs.Item>
 					</Tabs>
 					<Button
 						variant="heavy"

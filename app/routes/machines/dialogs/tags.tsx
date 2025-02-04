@@ -1,8 +1,10 @@
-import { PlusIcon, XIcon } from '@primer/octicons-react';
+import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
-import { Button, Input } from 'react-aria-components';
+import Button from '~/components/Button';
 import Dialog from '~/components/Dialog';
+import Input from '~/components/Input';
 import Link from '~/components/Link';
+import TableList from '~/components/TableList';
 import type { Machine } from '~/types';
 import cn from '~/utils/cn';
 
@@ -34,76 +36,55 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 				<input type="hidden" name="_method" value="tags" />
 				<input type="hidden" name="id" value={machine.id} />
 				<input type="hidden" name="tags" value={tags.join(',')} />
-				<div
-					className={cn(
-						'border border-ui-300 rounded-lg overflow-visible',
-						'dark:border-ui-700 dark:text-ui-300 mt-4',
-					)}
-				>
-					<div className="divide-y divide-ui-200 dark:divide-ui-600">
-						{tags.length === 0 ? (
-							<div
-								className={cn(
-									'flex py-4 px-4 bg-ui-100 dark:bg-ui-800',
-									'items-center justify-center rounded-t-lg',
-									'text-ui-600 dark:text-ui-300',
-								)}
-							>
-								<p>No tags are set on this machine.</p>
-							</div>
-						) : (
-							tags.map((item) => (
-								<div
-									key={item}
-									id={item}
-									className={cn(
-										'px-2.5 py-1.5 flex',
-										'items-center justify-between',
-										'font-mono text-sm',
-									)}
+				<TableList className="mt-4">
+					{tags.length === 0 ? (
+						<div
+							className={cn(
+								'flex py-4 px-4 bg-ui-100 dark:bg-ui-800',
+								'items-center justify-center rounded-t-lg',
+								'text-ui-600 dark:text-ui-300',
+							)}
+						>
+							<p>No tags are set on this machine.</p>
+						</div>
+					) : (
+						tags.map((item) => (
+							<TableList.Item className="font-mono" key={item} id={item}>
+								{item}
+								<Button
+									className="rounded-md p-0.5"
+									onPress={() => {
+										setTags(tags.filter((tag) => tag !== item));
+									}}
 								>
-									{item}
-									<Button
-										className="rounded-full p-0 w-6 h-6"
-										onPress={() => {
-											setTags(tags.filter((tag) => tag !== item));
-										}}
-									>
-										<XIcon className="w-4 h-4" />
-									</Button>
-								</div>
-							))
-						)}
-					</div>
-					<div
+									<X className="p-1" />
+								</Button>
+							</TableList.Item>
+						))
+					)}
+					<TableList.Item
 						className={cn(
-							'flex px-2.5 py-1.5 w-full',
-							'border-t border-ui-300 dark:border-ui-700',
-							'rounded-b-lg justify-between items-center',
-							'dark:bg-ui-800 dark:text-ui-300',
-							'focus-within:ring-2 focus-within:ring-blue-600',
+							'rounded-b-xl focus-within:ring',
 							tag.length > 0 &&
-								!tag.startsWith('tag:') &&
-								'outline outline-red-500',
+								(!tag.startsWith('tag:') || tags.includes(tag)) &&
+								'ring ring-red-500 ring-opacity-50',
 						)}
 					>
 						<Input
+							labelHidden
+							label="Add a tag"
 							placeholder="tag:example"
+							onChange={setTag}
 							className={cn(
-								'bg-transparent w-full',
-								'border-none focus:ring-0',
-								'focus:outline-none font-mono text-sm',
-								'dark:bg-transparent dark:text-ui-300',
+								'border-none font-mono p-0',
+								'rounded-none focus:ring-0 w-full',
 							)}
-							value={tag}
-							onChange={(e) => {
-								setTag(e.currentTarget.value);
-							}}
 						/>
 						<Button
 							className={cn(
-								'rounded-lg p-0 h-6 w-6',
-								!tag.startsWith('tag:') && 'opacity-50 cursor-not-allowed',
+								'rounded-md p-0.5',
+								(!tag.startsWith('tag:') || tags.includes(tag)) &&
+									'opacity-50 cursor-not-allowed',
 							)}
 							isDisabled={
 								tag.length === 0 ||
@@ -115,10 +96,10 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 								setTag('');
 							}}
 						>
-							<PlusIcon className="w-4 h-4" />
+							<Plus className="p-1" />
 						</Button>
-					</div>
-				</div>
+					</TableList.Item>
+				</TableList>
 			</Dialog.Panel>
 		</Dialog>
 	);

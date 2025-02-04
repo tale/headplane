@@ -11,10 +11,11 @@ import {
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { LockIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import { GripVertical, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Button, Input } from 'react-aria-components';
 import { type FetcherWithComponents, useFetcher } from 'react-router';
+import Button from '~/components/Button';
+import Input from '~/components/Input';
 
 import Spinner from '~/components/Spinner';
 import TableList from '~/components/TableList';
@@ -81,8 +82,10 @@ export default function Domains({
 				<TableList>
 					{baseDomain ? (
 						<TableList.Item key="magic-dns-sd">
-							<p className="font-mono text-sm">{baseDomain}</p>
-							<LockIcon className="h-4 w-4" />
+							<div className="flex items-center gap-4">
+								<Lock className="p-0.5" />
+								<p className="font-mono text-sm py-0.5">{baseDomain}</p>
+							</div>
 						</TableList.Item>
 					) : undefined}
 					<SortableContext
@@ -116,20 +119,20 @@ export default function Domains({
 						<TableList.Item key="add-sd">
 							<Input
 								type="text"
-								className="font-mono text-sm bg-transparent w-full mr-2"
+								className={cn(
+									'border-none font-mono p-0',
+									'rounded-none focus:ring-0 w-full',
+								)}
 								placeholder="Search Domain"
-								value={newDomain}
-								onChange={(event) => {
-									setNewDomain(event.target.value);
-								}}
+								onChange={setNewDomain}
+								label="Search Domain"
+								labelHidden
 							/>
 							{fetcher.state === 'idle' ? (
 								<Button
 									className={cn(
-										'text-sm font-semibold',
-										'text-blue-600 dark:text-blue-400',
-										'hover:text-blue-700 dark:hover:text-blue-300',
-										newDomain.length === 0 && 'opacity-50 cursor-not-allowed',
+										'px-2 py-1 rounded-md',
+										'text-blue-500 dark:text-blue-400',
 									)}
 									isDisabled={newDomain.length === 0}
 									onPress={() => {
@@ -165,8 +168,7 @@ type DomainProperties = {
 	readonly id: number;
 	readonly isDrag?: boolean;
 	readonly localDomains: string[];
-	// eslint-disable-next-line react/boolean-prop-naming
-	readonly disabled?: boolean;
+	readonly disabled?: boolean; // TODO: isDisabled
 	readonly fetcher: FetcherWithComponents<unknown>;
 };
 
@@ -187,17 +189,12 @@ function Domain({
 		isDragging,
 	} = useSortable({ id });
 
-	// TODO: Figure out why TableList.Item breaks dndkit
 	return (
-		<div
+		<TableList.Item
 			ref={setNodeRef}
 			className={cn(
-				'flex items-center justify-between px-3 py-2',
-				'border-b border-gray-200 last:border-b-0 dark:border-zinc-800',
-				isDragging ? 'text-gray-400' : '',
-				isDrag
-					? 'outline outline-1 outline-gray-500 bg-gray-200 dark:bg-zinc-800'
-					: '',
+				isDragging ? 'opacity-50' : '',
+				isDrag ? 'ring bg-white dark:bg-headplane-900' : '',
 			)}
 			style={{
 				transform: CSS.Transform.toString(transform),
@@ -206,21 +203,20 @@ function Domain({
 		>
 			<p className="font-mono text-sm flex items-center gap-4">
 				{disabled ? undefined : (
-					<ThreeBarsIcon
-						className="h-4 w-4 text-gray-400 focus:outline-none"
-						{...attributes}
-						{...listeners}
-					/>
+					<GripVertical {...attributes} {...listeners} className="p-0.5" />
+					// <ThreeBarsIcon
+					// 	className="h-4 w-4 text-gray-400 focus:outline-none"
+					// 	{...attributes}
+					// 	{...listeners}
+					// />
 				)}
 				{domain}
 			</p>
 			{isDrag ? undefined : (
 				<Button
 					className={cn(
-						'text-sm',
-						'text-red-600 dark:text-red-400',
-						'hover:text-red-700 dark:hover:text-red-300',
-						disabled && 'opacity-50 cursor-not-allowed',
+						'px-2 py-1 rounded-md',
+						'text-red-500 dark:text-red-400',
 					)}
 					isDisabled={disabled}
 					onPress={() => {
@@ -240,6 +236,6 @@ function Domain({
 					Remove
 				</Button>
 			)}
-		</div>
+		</TableList.Item>
 	);
 }

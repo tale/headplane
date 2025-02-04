@@ -1,9 +1,8 @@
-import { Button } from 'react-aria-components';
 import { useSubmit } from 'react-router';
+import Button from '~/components/Button';
 import Link from '~/components/Link';
 import TableList from '~/components/TableList';
 import cn from '~/utils/cn';
-
 import AddNameserver from '../dialogs/nameserver';
 
 interface Props {
@@ -75,10 +74,8 @@ function NameserverList({
 								<p className="font-mono text-sm">{ns}</p>
 								<Button
 									className={cn(
-										'text-sm',
-										'text-red-600 dark:text-red-400',
-										'hover:text-red-700 dark:hover:text-red-300',
-										isDisabled && 'opacity-50 cursor-not-allowed',
+										'px-2 py-1 rounded-md',
+										'text-red-500 dark:text-red-400',
 									)}
 									isDisabled={isDisabled}
 									onPress={() => {

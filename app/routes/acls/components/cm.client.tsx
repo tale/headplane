@@ -1,13 +1,11 @@
 import * as shopify from '@shopify/lang-jsonc';
-import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
+import { xcodeDark, xcodeLight } from '@uiw/codemirror-theme-xcode';
 import CodeMirror from '@uiw/react-codemirror';
-import React, { useEffect } from 'react';
-import { useState } from 'react';
+import { BookCopy, CircleX } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Merge from 'react-codemirror-merge';
 import { ErrorBoundary } from 'react-error-boundary';
 import { ClientOnly } from 'remix-utils/client-only';
-import cn from '~/utils/cn';
-
 import Fallback from './fallback';
 
 interface EditorProps {
@@ -27,39 +25,28 @@ export function Editor(props: EditorProps) {
 	});
 
 	return (
-		<div
-			className={cn(
-				'border border-gray-200 dark:border-gray-700',
-				'rounded-b-lg rounded-tr-lg mb-2 z-10 overflow-x-hidden',
-			)}
-		>
-			<div className="overflow-y-scroll h-editor text-sm">
-				<ErrorBoundary
-					fallback={
-						<p
-							className={cn(
-								'w-full h-full flex items-center justify-center',
-								'text-gray-400 dark:text-gray-500 text-xl',
-							)}
-						>
-							Failed to load the editor.
-						</p>
-					}
-				>
-					<ClientOnly fallback={<Fallback acl={props.value} />}>
-						{() => (
-							<CodeMirror
-								value={props.value}
-								height="100%"
-								extensions={[shopify.jsonc()]}
-								style={{ height: '100%' }}
-								theme={light ? githubLight : githubDark}
-								onChange={(value) => props.onChange(value)}
-							/>
-						)}
-					</ClientOnly>
-				</ErrorBoundary>
-			</div>
+		<div className="overflow-y-scroll h-editor text-sm">
+			<ErrorBoundary
+				fallback={
+					<div className="flex flex-col items-center gap-2.5 py-8">
+						<CircleX />
+						<p className="text-lg font-semibold">Failed to load the editor.</p>
+					</div>
+				}
+			>
+				<ClientOnly fallback={<Fallback acl={props.value} />}>
+					{() => (
+						<CodeMirror
+							value={props.value}
+							height="100%"
+							extensions={[shopify.jsonc()]}
+							style={{ height: '100%' }}
+							theme={light ? xcodeLight : xcodeDark}
+							onChange={(value) => props.onChange(value)}
+						/>
+					)}
+				</ClientOnly>
+			</ErrorBoundary>
 		</div>
 	);
 }
@@ -80,41 +67,27 @@ export function Differ(props: DifferProps) {
 	});
 
 	return (
-		<div
-			className={cn(
-				'border border-gray-200 dark:border-gray-700',
-				'rounded-b-lg rounded-tr-lg mb-2 z-10 overflow-x-hidden',
-			)}
-		>
-			<div className="overflow-y-scroll h-editor text-sm">
-				{props.left === props.right ? (
-					<p
-						className={cn(
-							'w-full h-full flex items-center justify-center',
-							'text-gray-400 dark:text-gray-500 text-xl',
-						)}
-					>
-						No changes
-					</p>
-				) : (
+		<div className="text-sm">
+			{props.left === props.right ? (
+				<div className="flex flex-col items-center gap-2.5 py-8">
+					<BookCopy />
+					<p className="text-lg font-semibold">No changes</p>
+				</div>
+			) : (
+				<div className="h-editor overflow-y-scroll">
 					<ErrorBoundary
 						fallback={
-							<p
-								className={cn(
-									'w-full h-full flex items-center justify-center',
-									'text-gray-400 dark:text-gray-500 text-xl',
-								)}
-							>
-								Failed to load the editor.
-							</p>
+							<div className="flex flex-col items-center gap-2.5 py-8">
+								<CircleX />
+								<p className="text-lg font-semibold">
+									Failed to load the editor.
+								</p>
+							</div>
 						}
 					>
 						<ClientOnly fallback={<Fallback acl={props.right} />}>
 							{() => (
-								<Merge
-									orientation="a-b"
-									theme={light ? githubLight : githubDark}
-								>
+								<Merge orientation="a-b" theme={light ? xcodeLight : xcodeDark}>
 									<Merge.Original
 										readOnly
 										value={props.left}
@@ -129,8 +102,8 @@ export function Differ(props: DifferProps) {
 							)}
 						</ClientOnly>
 					</ErrorBoundary>
-				)}
-			</div>
+				</div>
+			)}
 		</div>
 	);
 }

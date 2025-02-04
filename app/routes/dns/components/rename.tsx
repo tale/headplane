@@ -26,7 +26,9 @@ export default function Modal({ name, disabled }: Properties) {
 			</p>
 			<Input
 				isReadOnly
+				labelHidden
 				className="w-3/5 font-medium text-sm"
+				label="Tailnet name"
 				value={name}
 				onFocus={(event) => {
 					event.target.select();

@@ -6,9 +6,8 @@ function TableList(props: HTMLProps<HTMLDivElement>) {
 		<div
 			{...props}
 			className={clsx(
-				'border border-gray-300 rounded-lg overflow-clip',
-				'dark:border-zinc-700 dark:text-gray-300',
-				// 'dark:bg-zinc-800',
+				'rounded-xl',
+				'border border-headplane-100 dark:border-headplane-800',
 				props.className,
 			)}
 		>
@@ -22,9 +21,8 @@ function Item(props: HTMLProps<HTMLDivElement>) {
 		<div
 			{...props}
 			className={clsx(
-				'flex items-center justify-between px-3 py-2',
-				'border-b border-gray-200 last:border-b-0',
-				'dark:border-zinc-800',
+				'flex items-center justify-between p-2 last:border-b-0',
+				'border-b border-headplane-100 dark:border-headplane-800',
 				props.className,
 			)}
 		>
