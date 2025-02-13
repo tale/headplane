@@ -1,8 +1,8 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
-import { loadContext } from '~/utils/config/headplane';
-import { getSession, commitSession } from '~/utils/sessions.server';
-import { finishAuthFlow, getRedirectUri, formatError } from '~/utils/oidc';
+import { finishAuthFlow, formatError, getRedirectUri } from '~/utils/oidc';
 import { send } from '~/utils/res';
+import { commitSession, getSession } from '~/utils/sessions.server';
+import { hp_getConfig } from '~/utils/state';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	// Check if we have 0 query parameters
@@ -13,22 +13,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
-		return redirect('/machines')
+		return redirect('/machines');
 	}
 
-	// This is a hold-over from the old code
-	// TODO: Rewrite checkOIDC in the context loader
-	const { oidc } = await loadContext();
+	const { oidc } = hp_getConfig();
 	if (!oidc) {
 		throw new Error('An invalid OIDC configuration was provided');
-	}
-
-	const oidcConfig = {
-		issuer: oidc.issuer,
-		clientId: oidc.client,
-		clientSecret: oidc.secret,
-		redirectUri: oidc.redirectUri,
-		tokenEndpointAuthMethod: oidc.method,
 	}
 
 	const codeVerifier = session.get('oidc_code_verif');
@@ -36,7 +26,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const nonce = session.get('oidc_nonce');
 	const redirectUri = session.get('oidc_redirect_uri');
 
-	if (!codeVerifier || !state || !nonce) {
+	if (!codeVerifier || !state || !nonce || !redirectUri) {
 		return send({ error: 'Missing OIDC state' }, { status: 400 });
 	}
 
@@ -50,10 +40,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		codeVerifier,
 		state,
 		nonce: nonce === '<none>' ? undefined : nonce,
-	}
+	};
 
 	try {
-		const user = await finishAuthFlow(oidcConfig, flowOptions);
+		const user = await finishAuthFlow(oidc, flowOptions);
 		session.set('user', user);
 		session.unset('oidc_code_verif');
 		session.unset('oidc_state');
@@ -63,21 +53,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		// keys because they are currently non-deletable in the headscale
 		// database. Look at this in the future once we have a solution
 		// or we have permissioned API keys.
-		session.set('hsApiKey', oidc.rootKey);
+		session.set('hsApiKey', oidc.headscale_api_key);
 		return redirect('/machines', {
 			headers: {
 				'Set-Cookie': await commitSession(session),
 			},
 		});
 	} catch (error) {
-		return new Response(
-			JSON.stringify(formatError(error)),
-			{
-				status: 500,
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			}
-		);
+		return new Response(JSON.stringify(formatError(error)), {
+			status: 500,
+			headers: {
+				'Content-Type': 'application/json',
+			},
+		});
 	}
 }

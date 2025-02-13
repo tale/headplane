@@ -1,0 +1,57 @@
+# Configuration for the Headplane server and web application
+server:
+    host: "0.0.0.0"
+    port: 3000
+
+    # The secret used to encode and decode web sessions
+    # Ensure that this is exactly 32 characters long
+    cookie_secret: "<change_me_to_something_secure!>"
+
+    # Should the cookies only work over HTTPS?
+    # Set to false if running via HTTP without a proxy
+    # (I recommend this is true in production)
+    cookie_secure: true
+
+# Headscale specific settings to allow Headplane to talk
+# to Headscale and access deep integration features
+headscale:
+    # The URL to your Headscale instance
+    # (All API requests are routed through this URL)
+    url: "http://headscale:5000"
+
+    # Optional, public URL if they differ
+    # This affects certain parts of the web UI
+    # public_url: "https://headscale.example.com"
+
+    # Path to the Headscale configuration file
+    # This is optional, but HIGHLY recommended for the best experience
+    # If this is read only, Headplane will show your configuration settings
+    # in the Web UI, but they cannot be changed.
+    config_path: "/etc/headscale/config.yaml"
+
+    # Headplane internally validates the Headscale configuration
+    # to ensure that it changes the configuration in a safe way.
+    # If you want to disable this validation, set this to false.
+    config_strict: true
+
+# OIDC Configuration for simpler authentication
+# (This is optional, but recommended for the best experience)
+oidc:
+    issuer: "https://accounts.google.com"
+    client_id: "your-client-id"
+    client_secret: "<your-client-secret>"
+    disable_api_key_login: false
+    token_endpoint_auth_method: "client_secret_post"
+
+    # If you are using OIDC, you need to generate an API key
+    # that can be used to authenticate other sessions when signing in.
+    #
+    # This can be done with `headscale apikeys create --expiration 999d`
+    headscale_api_key: "<your-headscale-api-key>"
+
+    # Optional, but highly recommended otherwise Headplane
+    # will attempt to automatically guess this from the issuer
+    #
+    # This should point to your publicly accessibly URL
+    # for your Headplane instance with /admin/oidc/callback
+    redirect_uri: "http://localhost:3000/admin/oidc/callback"

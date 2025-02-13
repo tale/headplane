@@ -26,6 +26,7 @@
 		"@uiw/codemirror-theme-github": "^4.23.7",
 		"@uiw/codemirror-theme-xcode": "^4.23.8",
 		"@uiw/react-codemirror": "^4.23.7",
+		"arktype": "^2.0.4",
 		"clsx": "^2.1.1",
 		"dotenv": "^16.4.7",
 		"isbot": "^5.1.19",

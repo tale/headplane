@@ -11,12 +11,11 @@ import { ErrorPopup } from '~/components/Error';
 import StatusCircle from '~/components/StatusCircle';
 import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
-import { loadContext } from '~/utils/config/headplane';
-import { loadConfig } from '~/utils/config/headscale';
 import { del, post, pull } from '~/utils/headscale';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
 
+import { hp_getConfig, hs_getConfig } from '~/utils/state';
 import toast from '~/utils/toast';
 import Auth from './components/auth';
 import Oidc from './components/oidc';
@@ -36,11 +35,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
 	}));
 
-	const context = await loadContext();
+	const context = hp_getConfig();
+	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
 
-	if (context.config.read) {
-		const config = await loadConfig();
+	if (mode !== 'no') {
 		if (config.dns.magic_dns) {
 			magic = config.dns.base_domain;
 		}
@@ -152,11 +151,7 @@ export default function Page() {
 				Manage the users in your network and their permissions. Tip: You can
 				drag machines between users to change ownership.
 			</p>
-			{data.oidc ? (
-				<Oidc oidc={data.oidc} magic={data.magic} />
-			) : (
-				<Auth magic={data.magic} />
-			)}
+			{data.oidc ? <Oidc oidc={data.oidc} /> : <Auth magic={data.magic} />}
 			<ClientOnly fallback={<Users users={users} />}>
 				{() => (
 					<InteractiveUsers

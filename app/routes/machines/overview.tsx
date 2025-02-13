@@ -7,13 +7,12 @@ import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { loadContext } from '~/utils/config/headplane';
-import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
 import Tooltip from '~/components/Tooltip';
+import { hp_getConfig, hs_getConfig } from '~/utils/state';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
@@ -29,11 +28,12 @@ export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 	initAgentSocket(lC);
 
 	const stats = await queryAgent(machines.nodes.map((node) => node.nodeKey));
-	const context = await loadContext();
+	const context = hp_getConfig();
+	const { mode, config } = hs_getConfig();
+
 	let magic: string | undefined;
 
-	if (context.config.read) {
-		const config = await loadConfig();
+	if (mode !== 'no') {
 		if (config.dns.magic_dns) {
 			magic = config.dns.base_domain;
 		}
@@ -45,8 +45,8 @@ export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 		users: users.users,
 		magic,
 		stats,
-		server: context.headscaleUrl,
-		publicServer: context.headscalePublicUrl,
+		server: context.headscale.url,
+		publicServer: context.headscale.public_url,
 	};
 }
 

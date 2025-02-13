@@ -1,5 +1,5 @@
-import { loadContext } from './config/headplane';
-import log from './log';
+import log from '~/utils/log';
+import { hp_getConfig } from '~/utils/state';
 
 export class HeadscaleError extends Error {
 	status: number;
@@ -21,16 +21,16 @@ export class FatalError extends Error {
 }
 
 export async function healthcheck() {
-	const context = await loadContext();
-	const prefix = context.headscaleUrl;
+	const context = hp_getConfig();
+	const prefix = context.headscale.url;
 	log.debug('APIC', 'GET /health');
 
 	const health = new URL('health', prefix);
 	const response = await fetch(health.toString(), {
 		headers: {
-			Accept: 'application/json'
-		}
-	})
+			Accept: 'application/json',
+		},
+	});
 
 	// Intentionally not catching
 	return response.status === 200;
@@ -41,8 +41,8 @@ export async function pull<T>(url: string, key: string) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = await loadContext();
-	const prefix = context.headscaleUrl;
+	const context = hp_getConfig();
+	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'GET %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -69,8 +69,8 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = await loadContext();
-	const prefix = context.headscaleUrl;
+	const context = hp_getConfig();
+	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'POST %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -99,8 +99,8 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = await loadContext();
-	const prefix = context.headscaleUrl;
+	const context = hp_getConfig();
+	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'PUT %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -129,8 +129,8 @@ export async function del<T>(url: string, key: string) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = await loadContext();
-	const prefix = context.headscaleUrl;
+	const context = hp_getConfig();
+	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'DELETE %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {

@@ -1,22 +1,12 @@
 import * as client from 'openid-client';
-import { z } from 'zod';
 import log from '~/utils/log';
-
-const oidcConfigSchema = z.object({
-	issuer: z.string(),
-	clientId: z.string(),
-	clientSecret: z.string(),
-	redirectUri: z.string().optional(),
-	tokenEndpointAuthMethod: z
-		.enum(['client_secret_post', 'client_secret_basic', 'client_secret_jwt'])
-		.default('client_secret_basic'),
-});
+import { HeadplaneConfig } from '~/utils/state';
 
 declare global {
 	const __PREFIX__: string;
 }
 
-export type OidcConfig = z.infer<typeof oidcConfigSchema>;
+type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
 
 // We try our best to infer the callback URI of our Headplane instance
 // By default it is always /<base_path>/oidc/callback
@@ -64,9 +54,9 @@ function clientAuthMethod(
 export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 	const config = await client.discovery(
 		new URL(oidc.issuer),
-		oidc.clientId,
-		oidc.clientSecret,
-		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		oidc.client_id,
+		oidc.client_secret,
+		clientAuthMethod(oidc.token_endpoint_auth_method)(oidc.client_secret),
 	);
 
 	const codeVerifier = client.randomPKCECodeVerifier();
@@ -77,7 +67,7 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 		scope: 'openid profile email',
 		code_challenge: codeChallenge,
 		code_challenge_method: 'S256',
-		token_endpoint_auth_method: oidc.tokenEndpointAuthMethod,
+		token_endpoint_auth_method: oidc.token_endpoint_auth_method,
 		state: client.randomState(),
 	};
 
@@ -106,9 +96,9 @@ interface FlowOptions {
 export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 	const config = await client.discovery(
 		new URL(oidc.issuer),
-		oidc.clientId,
-		oidc.clientSecret,
-		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		oidc.client_id,
+		oidc.client_secret,
+		clientAuthMethod(oidc.token_endpoint_auth_method)(oidc.client_secret),
 	);
 
 	let subject: string;
@@ -192,9 +182,9 @@ export async function testOidc(oidc: OidcConfig) {
 	log.debug('OIDC', 'Discovering OIDC configuration from %s', oidc.issuer);
 	const config = await client.discovery(
 		new URL(oidc.issuer),
-		oidc.clientId,
-		oidc.clientSecret,
-		clientAuthMethod(oidc.tokenEndpointAuthMethod)(oidc.clientSecret),
+		oidc.client_id,
+		oidc.client_secret,
+		clientAuthMethod(oidc.token_endpoint_auth_method)(oidc.client_secret),
 	);
 
 	const meta = config.serverMetadata();
@@ -217,13 +207,13 @@ export async function testOidc(oidc: OidcConfig) {
 	if (meta.token_endpoint_auth_methods_supported) {
 		if (
 			meta.token_endpoint_auth_methods_supported.includes(
-				oidc.tokenEndpointAuthMethod,
+				oidc.token_endpoint_auth_method,
 			) === false
 		) {
 			log.error(
 				'OIDC',
 				'OIDC server does not support %s',
-				oidc.tokenEndpointAuthMethod,
+				oidc.token_endpoint_auth_method,
 			);
 			return false;
 		}

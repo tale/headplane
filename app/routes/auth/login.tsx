@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
@@ -10,9 +9,9 @@ import Card from '~/components/Card';
 import Code from '~/components/Code';
 import Input from '~/components/Input';
 import type { Key } from '~/types';
-import { loadContext } from '~/utils/config/headplane';
 import { pull } from '~/utils/headscale';
 import { commitSession, getSession } from '~/utils/sessions.server';
+import { hp_getConfig } from '~/utils/state';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
@@ -24,16 +23,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		});
 	}
 
-	const context = await loadContext();
+	const context = hp_getConfig();
 
 	// Only set if OIDC is properly enabled anyways
-	if (context.oidc?.disableKeyLogin) {
+	if (context.oidc?.disable_api_key_login) {
 		return redirect('/oidc/start');
 	}
 
 	return {
 		oidc: context.oidc?.issuer,
-		apiKey: !context.oidc?.disableKeyLogin,
+		apiKey: !context.oidc?.disable_api_key_login,
 	};
 }
 
@@ -43,7 +42,7 @@ export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 
 	if (oidcStart) {
-		const context = await loadContext();
+		const context = hp_getConfig();
 
 		if (!context.oidc) {
 			throw new Error('An invalid OIDC configuration was provided');

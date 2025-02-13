@@ -6,10 +6,10 @@ import Link from '~/components/Link';
 import Select from '~/components/Select';
 import TableList from '~/components/TableList';
 import type { PreAuthKey, User } from '~/types';
-import { loadContext } from '~/utils/config/headplane';
 import { post, pull } from '~/utils/headscale';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
+import { hp_getConfig } from '~/utils/state';
 import AuthKeyRow from './components/key';
 import AddPreAuthKey from './dialogs/new';
 
@@ -91,7 +91,7 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export async function loader({ request }: LoaderFunctionArgs) {
-	const context = await loadContext();
+	const context = hp_getConfig();
 	const session = await getSession(request.headers.get('Cookie'));
 	const users = await pull<{ users: User[] }>(
 		'v1/user',
@@ -113,7 +113,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	return {
 		keys: preAuthKeys.flatMap((keys) => keys.preAuthKeys),
 		users: users.users,
-		server: context.headscalePublicUrl ?? context.headscaleUrl,
+		server: context.headscale.public_url ?? context.headscale.url,
 	};
 }
 

@@ -1,36 +1,27 @@
-import { type LoaderFunctionArgs, data, redirect } from 'react-router';
-import { commitSession, getSession } from '~/utils/sessions.server';
-import { send } from '~/utils/res';
+import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { beginAuthFlow, getRedirectUri } from '~/utils/oidc';
-import { loadContext } from '~/utils/config/headplane';
+import { commitSession, getSession } from '~/utils/sessions.server';
+import { hp_getConfig } from '~/utils/state';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
-		return redirect('/machines')
+		return redirect('/machines');
 	}
 
 	// This is a hold-over from the old code
 	// TODO: Rewrite checkOIDC in the context loader
-	const { oidc } = await loadContext();
+	const { oidc } = hp_getConfig();
 	if (!oidc) {
 		throw new Error('An invalid OIDC configuration was provided');
 	}
 
-	const oidcConfig = {
-		issuer: oidc.issuer,
-		clientId: oidc.client,
-		clientSecret: oidc.secret,
-		redirectUri: oidc.redirectUri,
-		tokenEndpointAuthMethod: oidc.method,
-	}
-
-	const redirectUri = oidcConfig.redirectUri ?? getRedirectUri(request);
-	const data = await beginAuthFlow(oidcConfig, redirectUri);
+	const redirectUri = oidc.redirect_uri ?? getRedirectUri(request);
+	const data = await beginAuthFlow(oidc, redirectUri);
 	session.set('oidc_code_verif', data.codeVerifier);
 	session.set('oidc_state', data.state);
 	session.set('oidc_nonce', data.nonce);
-	session.set('oidc_redirect_uri', redirectUri)
+	session.set('oidc_redirect_uri', redirectUri);
 
 	return redirect(data.url, {
 		status: 302,

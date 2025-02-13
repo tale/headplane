@@ -1,4 +1,8 @@
-import { Session, SessionStorage, createCookieSessionStorage } from 'react-router';
+import {
+	Session,
+	SessionStorage,
+	createCookieSessionStorage,
+} from 'react-router';
 
 export type SessionData = {
 	hsApiKey: string;
@@ -23,7 +27,7 @@ type SessionStore = SessionStorage<SessionData, SessionFlashData>;
 
 // TODO: Add args to this function to allow custom domain/config
 let sessionStorage: SessionStore | null = null;
-export function initSessionManager() {
+export function initSessionManager(secret: string, secure: boolean) {
 	if (sessionStorage) {
 		return;
 	}
@@ -35,8 +39,8 @@ export function initSessionManager() {
 			maxAge: 60 * 60 * 24, // 24 hours
 			path: '/',
 			sameSite: 'lax',
-			secrets: [process.env.COOKIE_SECRET!],
-			secure: process.env.COOKIE_SECURE !== 'false',
+			secrets: [secret],
+			secure,
 		},
 	});
 }
@@ -47,6 +51,20 @@ export function getSession(cookie: string | null) {
 	}
 
 	return sessionStorage.getSession(cookie);
+}
+
+export async function auth(request: Request) {
+	if (!sessionStorage) {
+		return false;
+	}
+
+	const cookie = request.headers.get('Cookie');
+	const session = await sessionStorage.getSession(cookie);
+	if (!session.has('hsApiKey')) {
+		return false;
+	}
+
+	return true;
 }
 
 export function destroySession(session: Session) {

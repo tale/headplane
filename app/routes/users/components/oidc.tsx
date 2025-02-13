@@ -1,17 +1,14 @@
 import { OrganizationIcon, PasskeyFillIcon } from '@primer/octicons-react';
-
 import Card from '~/components/Card';
 import Link from '~/components/Link';
-import type { HeadplaneContext } from '~/utils/config/headplane';
-
+import { HeadplaneConfig } from '~/utils/state';
 import Add from '../dialogs/add';
 
 interface Props {
-	readonly oidc: NonNullable<HeadplaneContext['oidc']>;
-	readonly magic: string | undefined;
+	readonly oidc: NonNullable<HeadplaneConfig['oidc']>;
 }
 
-export default function Oidc({ oidc, magic }: Props) {
+export default function Oidc({ oidc }: Props) {
 	return (
 		<Card variant="flat" className="mb-8 w-full max-w-full p-0">
 			<div className="flex flex-col md:flex-row">

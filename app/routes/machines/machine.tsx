@@ -11,10 +11,9 @@ import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { loadContext } from '~/utils/config/headplane';
-import { loadConfig } from '~/utils/config/headscale';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
+import { hs_getConfig } from '~/utils/state';
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
@@ -25,11 +24,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		throw new Error('No machine ID provided');
 	}
 
-	const context = await loadContext();
+	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
 
-	if (context.config.read) {
-		const config = await loadConfig();
+	if (mode !== 'no') {
 		if (config.dns.magic_dns) {
 			magic = config.dns.base_domain;
 		}

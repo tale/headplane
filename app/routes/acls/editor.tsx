@@ -7,12 +7,11 @@ import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
 import Tabs from '~/components/Tabs';
-import { loadContext } from '~/utils/config/headplane';
-import { loadConfig } from '~/utils/config/headscale';
 import { HeadscaleError, pull, put } from '~/utils/headscale';
 import log from '~/utils/log';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
+import { hs_getConfig } from '~/utils/state';
 import toast from '~/utils/toast';
 import { Differ, Editor } from './components/cm.client';
 import { ErrorView } from './components/error';
@@ -45,10 +44,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	// We can do damage control by checking for write access and if we are not
 	// able to PUT an ACL policy on the v1/policy route, we can already know
 	// that the policy is at the very-least readonly or not available.
-	const context = await loadContext();
+	const { mode, config } = hs_getConfig();
 	let modeGuess = 'database'; // Assume database mode
-	if (context.config.read) {
-		const config = await loadConfig();
+	if (mode !== 'no') {
 		modeGuess = config.policy?.mode ?? 'database';
 	}
 
@@ -187,7 +185,7 @@ export default function Page() {
 		<div>
 			{data.read && !data.write ? (
 				<div className="mb-4">
-					<Notice className="w-fit">
+					<Notice>
 						The ACL policy is read-only. You can view the current policy but you
 						cannot make changes to it.
 						<br />

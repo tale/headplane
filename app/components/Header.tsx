@@ -11,11 +11,10 @@ import type { ReactNode } from 'react';
 import { NavLink, useSubmit } from 'react-router';
 import Menu from '~/components/Menu';
 import cn from '~/utils/cn';
-import type { HeadplaneContext } from '~/utils/config/headplane';
 import type { SessionData } from '~/utils/sessions.server';
 
 interface Props {
-	config: HeadplaneContext['config'];
+	configAvailable: boolean;
 	user?: SessionData['user'];
 }
 
@@ -133,7 +132,7 @@ export default function Header(data: Props) {
 					name="Access Control"
 					icon={<Lock className="w-5" />}
 				/>
-				{data.config.read ? (
+				{data.configAvailable ? (
 					<>
 						<TabLink to="/dns" name="DNS" icon={<Globe2 className="w-5" />} />
 						<TabLink
