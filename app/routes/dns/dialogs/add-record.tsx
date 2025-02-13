@@ -1,15 +1,13 @@
 import { useMemo, useState } from 'react';
-import { useSubmit } from 'react-router';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 
 interface Props {
-	records: { name: string; type: 'A'; value: string }[];
+	records: { name: string; type: 'A' | string; value: string }[];
 }
 
-export default function AddDNS({ records }: Props) {
-	const submit = useSubmit();
+export default function AddRecord({ records }: Props) {
 	const [name, setName] = useState('');
 	const [ip, setIp] = useState('');
 
@@ -21,44 +19,22 @@ export default function AddDNS({ records }: Props) {
 		return lookup.value === ip;
 	}, [records, name, ip]);
 
-	// TODO: Ditch useSubmit here (non JSON form)
 	return (
 		<Dialog>
 			<Dialog.Button>Add DNS record</Dialog.Button>
-			<Dialog.Panel
-				onSubmit={(event) => {
-					event.preventDefault();
-					if (!name || !ip) return;
-
-					setName('');
-					setIp('');
-					submit(
-						{
-							'dns.extra_records': [
-								...records,
-								{
-									name,
-									type: 'A',
-									value: ip,
-								},
-							],
-						},
-						{
-							method: 'PATCH',
-							encType: 'application/json',
-						},
-					);
-				}}
-			>
+			<Dialog.Panel>
 				<Dialog.Title>Add DNS record</Dialog.Title>
 				<Dialog.Text>
 					Enter the domain and IP address for the new DNS record.
 				</Dialog.Text>
 				<div className="flex flex-col gap-2 mt-4">
+					<input type="hidden" name="action_id" value="add_record" />
+					<input type="hidden" name="record_type" value="A" />
 					<Input
 						isRequired
 						label="Domain"
 						placeholder="test.example.com"
+						name="record_name"
 						onChange={setName}
 						isInvalid={isDuplicate}
 					/>
@@ -66,7 +42,7 @@ export default function AddDNS({ records }: Props) {
 						isRequired
 						label="IP Address"
 						placeholder="101.101.101.101"
-						name="ip"
+						name="record_value"
 						onChange={setIp}
 						isInvalid={isDuplicate}
 					/>

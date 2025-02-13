@@ -1,16 +1,16 @@
-import { useSubmit } from 'react-router';
+import { Form } from 'react-router';
 import Button from '~/components/Button';
 import Link from '~/components/Link';
 import TableList from '~/components/TableList';
 import cn from '~/utils/cn';
-import AddNameserver from '../dialogs/nameserver';
+import AddNS from '../dialogs/add-ns';
 
 interface Props {
 	nameservers: Record<string, string[]>;
 	isDisabled: boolean;
 }
 
-export default function Nameservers({ nameservers, isDisabled }: Props) {
+export default function ManageNS({ nameservers, isDisabled }: Props) {
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Nameservers</h1>
@@ -35,7 +35,7 @@ export default function Nameservers({ nameservers, isDisabled }: Props) {
 					/>
 				))}
 
-				{isDisabled ? undefined : <AddNameserver nameservers={nameservers} />}
+				{isDisabled ? undefined : <AddNS nameservers={nameservers} />}
 			</div>
 		</div>
 	);
@@ -54,7 +54,6 @@ function NameserverList({
 	nameservers,
 	name,
 }: ListProps) {
-	const submit = useSubmit();
 	const list = isGlobal ? nameservers.global : nameservers[name];
 	if (list.length === 0) {
 		return null;
@@ -69,46 +68,28 @@ function NameserverList({
 			</div>
 			<TableList>
 				{list.length > 0
-					? list.map((ns, index) => (
+					? list.map((ns) => (
 							<TableList.Item key={ns}>
 								<p className="font-mono text-sm">{ns}</p>
-								<Button
-									className={cn(
-										'px-2 py-1 rounded-md',
-										'text-red-500 dark:text-red-400',
-									)}
-									isDisabled={isDisabled}
-									onPress={() => {
-										if (isGlobal) {
-											submit(
-												{
-													'dns.nameservers.global': list.filter(
-														(_, i) => i !== index,
-													),
-												},
-												{
-													method: 'PATCH',
-													encType: 'application/json',
-												},
-											);
-										} else {
-											submit(
-												{
-													'dns.nameservers.split': {
-														...nameservers,
-														[name]: list.filter((_, i) => i !== index),
-													},
-												},
-												{
-													method: 'PATCH',
-													encType: 'application/json',
-												},
-											);
-										}
-									}}
-								>
-									Remove
-								</Button>
+								<Form method="POST">
+									<input type="hidden" name="action_id" value="remove_ns" />
+									<input type="hidden" name="ns" value={ns} />
+									<input
+										type="hidden"
+										name="split_name"
+										value={isGlobal ? 'global' : name}
+									/>
+									<Button
+										isDisabled={isDisabled}
+										type="submit"
+										className={cn(
+											'px-2 py-1 rounded-md',
+											'text-red-500 dark:text-red-400',
+										)}
+									>
+										Remove
+									</Button>
+								</Form>
 							</TableList.Item>
 						))
 					: undefined}

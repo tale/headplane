@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/no-keyword-prefix */
 import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
 import {
 	restrictToParentElement,
@@ -13,29 +12,25 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { type FetcherWithComponents, useFetcher } from 'react-router';
+import { type FetcherWithComponents, Form, useFetcher } from 'react-router';
 import Button from '~/components/Button';
 import Input from '~/components/Input';
-
-import Spinner from '~/components/Spinner';
 import TableList from '~/components/TableList';
 import cn from '~/utils/cn';
 
-type Properties = {
-	readonly baseDomain?: string;
-	readonly searchDomains: string[];
-	readonly disabled?: boolean; // TODO: isDisabled
-};
+interface Props {
+	searchDomains: string[];
+	isDisabled: boolean;
+	magic?: string;
+}
 
-export default function Domains({
-	baseDomain,
+export default function ManageDomains({
 	searchDomains,
-	disabled,
-}: Properties) {
+	isDisabled,
+	magic,
+}: Props) {
 	const [activeId, setActiveId] = useState<number | string | null>(null);
 	const [localDomains, setLocalDomains] = useState(searchDomains);
-	const [newDomain, setNewDomain] = useState('');
-	const fetcher = useFetcher();
 
 	useEffect(() => {
 		setLocalDomains(searchDomains);
@@ -77,16 +72,16 @@ export default function Domains({
 				}}
 			>
 				<TableList>
-					{baseDomain ? (
+					{magic ? (
 						<TableList.Item key="magic-dns-sd">
 							<div
 								className={cn(
 									'flex items-center gap-4',
-									disabled ? 'flex-row-reverse justify-between w-full' : '',
+									isDisabled ? 'flex-row-reverse justify-between w-full' : '',
 								)}
 							>
 								<Lock className="p-0.5" />
-								<p className="font-mono text-sm py-0.5">{baseDomain}</p>
+								<p className="font-mono text-sm py-0.5">{magic}</p>
 							</div>
 						</TableList.Item>
 					) : undefined}
@@ -99,63 +94,49 @@ export default function Domains({
 								key={sd}
 								domain={sd}
 								id={index + 1}
-								localDomains={localDomains}
-								disabled={disabled}
-								fetcher={fetcher}
+								isDisabled={isDisabled}
 							/>
 						))}
 						<DragOverlay adjustScale>
 							{activeId ? (
 								<Domain
-									isDrag
+									isDragging
 									domain={localDomains[(activeId as number) - 1]}
-									localDomains={localDomains}
 									id={(activeId as number) - 1}
-									disabled={disabled}
-									fetcher={fetcher}
+									isDisabled={isDisabled}
 								/>
 							) : undefined}
 						</DragOverlay>
 					</SortableContext>
-					{disabled ? undefined : (
+					{isDisabled ? undefined : (
 						<TableList.Item key="add-sd">
-							<Input
-								type="text"
-								className={cn(
-									'border-none font-mono p-0',
-									'rounded-none focus:ring-0 w-full',
-								)}
-								placeholder="Search Domain"
-								onChange={setNewDomain}
-								label="Search Domain"
-								labelHidden
-							/>
-							{fetcher.state === 'idle' ? (
+							<Form
+								method="POST"
+								className="flex items-center justify-between w-full"
+							>
+								<input type="hidden" name="action_id" value="add_domain" />
+								<Input
+									type="text"
+									className={cn(
+										'border-none font-mono p-0 text-sm',
+										'rounded-none focus:ring-0 w-full ml-1',
+									)}
+									placeholder="Search Domain"
+									label="Search Domain"
+									name="domain"
+									labelHidden
+									isRequired
+								/>
 								<Button
+									type="submit"
 									className={cn(
 										'px-2 py-1 rounded-md',
 										'text-blue-500 dark:text-blue-400',
 									)}
-									isDisabled={newDomain.length === 0}
-									onPress={() => {
-										fetcher.submit(
-											{
-												'dns.search_domains': [...localDomains, newDomain],
-											},
-											{
-												method: 'PATCH',
-												encType: 'application/json',
-											},
-										);
-
-										setNewDomain('');
-									}}
 								>
 									Add
 								</Button>
-							) : (
-								<Spinner className="w-3 h-3 mr-0" />
-							)}
+							</Form>
 						</TableList.Item>
 					)}
 				</TableList>
@@ -164,38 +145,29 @@ export default function Domains({
 	);
 }
 
-type DomainProperties = {
-	readonly domain: string;
-	readonly id: number;
-	readonly isDrag?: boolean;
-	readonly localDomains: string[];
-	readonly disabled?: boolean; // TODO: isDisabled
-	readonly fetcher: FetcherWithComponents<unknown>;
-};
+interface DomainProps {
+	domain: string;
+	id: number;
+	isDragging?: boolean;
+	isDisabled: boolean;
+}
 
-function Domain({
-	domain,
-	id,
-	localDomains,
-	isDrag,
-	disabled,
-	fetcher,
-}: DomainProperties) {
+function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 	const {
 		attributes,
 		listeners,
 		setNodeRef,
 		transform,
 		transition,
-		isDragging,
+		isDragging: isSortableDragging,
 	} = useSortable({ id });
 
 	return (
 		<TableList.Item
 			ref={setNodeRef}
 			className={cn(
-				isDragging ? 'opacity-50' : '',
-				isDrag ? 'ring bg-white dark:bg-headplane-900' : '',
+				isSortableDragging ? 'opacity-50' : '',
+				isDragging ? 'ring bg-white dark:bg-headplane-900' : '',
 			)}
 			style={{
 				transform: CSS.Transform.toString(transform),
@@ -203,34 +175,30 @@ function Domain({
 			}}
 		>
 			<p className="font-mono text-sm flex items-center gap-4">
-				{disabled ? undefined : (
-					<GripVertical {...attributes} {...listeners} className="p-0.5" />
+				{isDisabled ? undefined : (
+					<GripVertical
+						{...attributes}
+						{...listeners}
+						className="p-0.5 focus:ring outline-none rounded-md"
+					/>
 				)}
 				{domain}
 			</p>
-			{isDrag ? undefined : (
-				<Button
-					className={cn(
-						'px-2 py-1 rounded-md',
-						'text-red-500 dark:text-red-400',
-					)}
-					isDisabled={disabled}
-					onPress={() => {
-						fetcher.submit(
-							{
-								'dns.search_domains': localDomains.filter(
-									(_, index) => index !== id - 1,
-								),
-							},
-							{
-								method: 'PATCH',
-								encType: 'application/json',
-							},
-						);
-					}}
-				>
-					Remove
-				</Button>
+			{isDragging ? undefined : (
+				<Form method="POST">
+					<input type="hidden" name="action_id" value="remove_domain" />
+					<input type="hidden" name="domain" value={domain} />
+					<Button
+						type="submit"
+						isDisabled={isDisabled}
+						className={cn(
+							'px-2 py-1 rounded-md',
+							'text-red-500 dark:text-red-400',
+						)}
+					>
+						Remove
+					</Button>
+				</Form>
 			)}
 		</TableList.Item>
 	);

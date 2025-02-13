@@ -1,19 +1,17 @@
-import { useSubmit } from 'react-router';
+import { Form } from 'react-router';
 import Button from '~/components/Button';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import TableList from '~/components/TableList';
 import cn from '~/utils/cn';
-import AddDNS from '../dialogs/dns';
+import AddRecord from '../dialogs/add-record';
 
 interface Props {
-	records: { name: string; type: 'A'; value: string }[];
+	records: { name: string; type: 'A' | string; value: string }[];
 	isDisabled: boolean;
 }
 
-export default function DNS({ records, isDisabled }: Props) {
-	const submit = useSubmit();
-
+export default function ManageRecords({ records, isDisabled }: Props) {
 	return (
 		<div className="flex flex-col w-2/3">
 			<h1 className="text-2xl font-medium mb-4">DNS Records</h1>
@@ -50,34 +48,27 @@ export default function DNS({ records, isDisabled }: Props) {
 									</div>
 									<p className="font-mono text-sm">{record.value}</p>
 								</div>
-								<Button
-									className={cn(
-										'px-2 py-1 rounded-md',
-										'text-red-500 dark:text-red-400',
-									)}
-									isDisabled={isDisabled}
-									onPress={() => {
-										submit(
-											{
-												'dns.extra_records': records.filter(
-													(_, i) => i !== index,
-												),
-											},
-											{
-												method: 'PATCH',
-												encType: 'application/json',
-											},
-										);
-									}}
-								>
-									Remove
-								</Button>
+								<Form method="POST">
+									<input type="hidden" name="action_id" value="remove_record" />
+									<input type="hidden" name="record_name" value={record.name} />
+									<input type="hidden" name="record_type" value={record.type} />
+									<Button
+										type="submit"
+										isDisabled={isDisabled}
+										className={cn(
+											'px-2 py-1 rounded-md',
+											'text-red-500 dark:text-red-400',
+										)}
+									>
+										Remove
+									</Button>
+								</Form>
 							</TableList.Item>
 						))
 					)}
 				</TableList>
 
-				{isDisabled ? undefined : <AddDNS records={records} />}
+				{isDisabled ? undefined : <AddRecord records={records} />}
 			</div>
 		</div>
 	);

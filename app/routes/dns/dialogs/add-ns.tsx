@@ -1,8 +1,6 @@
 import { RepoForkedIcon } from '@primer/octicons-react';
-import { useState } from 'react';
-import { useSubmit } from 'react-router';
+import { useMemo, useState } from 'react';
 import Chip from '~/components/Chip';
-
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 import Switch from '~/components/Switch';
@@ -14,69 +12,40 @@ interface Props {
 }
 
 export default function AddNameserver({ nameservers }: Props) {
-	const submit = useSubmit();
 	const [split, setSplit] = useState(false);
 	const [ns, setNs] = useState('');
 	const [domain, setDomain] = useState('');
 
+	const isInvalid = useMemo(() => {
+		if (ns === '') return false;
+		// Test if it's a valid IPv4 or IPv6 address
+		const ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+		const ipv6 = /^([0-9a-fA-F:]+:+)+[0-9a-fA-F]+$/;
+		if (!ipv4.test(ns) && !ipv6.test(ns)) return true;
+
+		if (split) {
+			return nameservers[domain]?.includes(ns);
+		}
+
+		return Object.values(nameservers).some((nsList) => nsList.includes(ns));
+	}, [nameservers, ns]);
+
 	return (
 		<Dialog>
 			<Dialog.Button>Add nameserver</Dialog.Button>
-			<Dialog.Panel
-				onSubmit={(event) => {
-					event.preventDefault();
-					if (!ns) return;
-					if (split) {
-						const splitNs: Record<string, string[]> = {};
-						for (const [key, value] of Object.entries(nameservers)) {
-							if (key === 'global') continue;
-							splitNs[key] = value;
-						}
-
-						if (Object.keys(splitNs).includes(domain)) {
-							splitNs[domain].push(ns);
-						} else {
-							splitNs[domain] = [ns];
-						}
-
-						submit(
-							{
-								'dns.nameservers.split': splitNs,
-							},
-							{
-								method: 'PATCH',
-								encType: 'application/json',
-							},
-						);
-					} else {
-						const globalNs = nameservers.global;
-						globalNs.push(ns);
-
-						submit(
-							{
-								'dns.nameservers.global': globalNs,
-							},
-							{
-								method: 'PATCH',
-								encType: 'application/json',
-							},
-						);
-					}
-
-					setNs('');
-					setDomain('');
-					setSplit(false);
-				}}
-			>
-				<Dialog.Title>Add nameserver</Dialog.Title>
+			<Dialog.Panel>
+				<Dialog.Title className="mb-4">Add nameserver</Dialog.Title>
+				<input type="hidden" name="action_id" value="add_ns" />
 				<Input
+					isRequired
 					label="Nameserver"
 					description="Use this IPv4 or IPv6 address to resolve names."
 					placeholder="1.2.3.4"
 					name="ns"
 					onChange={setNs}
+					isInvalid={isInvalid}
 				/>
-				<div className="flex items-center justify-between">
+				<div className="flex items-center justify-between mt-8">
 					<div className="block">
 						<div className="inline-flex items-center gap-2">
 							<Dialog.Text className="font-semibold">
@@ -99,21 +68,16 @@ export default function AddNameserver({ nameservers }: Props) {
 							This nameserver will only be used for some domains.
 						</Dialog.Text>
 					</div>
-					<Switch
-						label="Split DNS"
-						defaultSelected={split}
-						onChange={() => {
-							setSplit(!split);
-						}}
-					/>
+					<Switch label="Split DNS" onChange={setSplit} />
 				</div>
 				{split ? (
 					<>
 						<Dialog.Text className="font-semibold mt-8">Domain</Dialog.Text>
 						<Input
+							isRequired={split === true}
 							label="Domain"
 							placeholder="example.com"
-							name="domain"
+							name="split_name"
 							onChange={setDomain}
 						/>
 						<Dialog.Text className="text-sm">
@@ -121,7 +85,9 @@ export default function AddNameserver({ nameservers }: Props) {
 							should use the nameserver.
 						</Dialog.Text>
 					</>
-				) : undefined}
+				) : (
+					<input type="hidden" name="split_name" value="global" />
+				)}
 			</Dialog.Panel>
 		</Dialog>
 	);
