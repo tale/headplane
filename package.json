@@ -5,7 +5,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build && vite build -c server/vite.config.ts",
-		"dev": "vite-node -w -c server/vite.config.ts server/entry.ts",
+		"dev": "HEADPLANE_LOAD_ENV_OVERRIDES=true vite-node -w -c server/vite.config.ts server/entry.ts",
 		"start": "node build/headplane/server.js",
 		"typecheck": "tsc"
 	},
