@@ -90,10 +90,13 @@ export default function MachineRow({
 	return (
 		<tr
 			key={machine.id}
-			className="group hover:bg-headplane-50 dark:hover:bg-headplane-950"
+			className="'group hover:bg-headplane-50 dark:hover:bg-headplane-950"
 		>
-			<td className="pl-0.5 py-2">
-				<Link to={`/machines/${machine.id}`} className="group/link h-full">
+			<td className="pl-0.5 py-2 focus-within:ring">
+				<Link
+					to={`/machines/${machine.id}`}
+					className={cn('group/link h-full focus:outline-none')}
+				>
 					<p
 						className={cn(
 							'font-semibold leading-snug',

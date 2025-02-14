@@ -12,7 +12,6 @@ export interface TooltipProps extends AriaTooltipProps {
 	children: [React.ReactElement, React.ReactElement<TooltipBodyProps>];
 }
 
-// TODO: Fix Button accessibility outline + invoke
 function Tooltip(props: TooltipProps) {
 	const state = useTooltipTriggerState({
 		...props,
@@ -37,7 +36,10 @@ function Tooltip(props: TooltipProps) {
 			<button
 				ref={ref}
 				{...triggerProps}
-				className="flex items-center justify-center"
+				className={cn(
+					'flex items-center justify-center',
+					'focus:outline-none focus:ring rounded-xl',
+				)}
 			>
 				{component}
 			</button>
