@@ -11,7 +11,7 @@ to undefined behavior or the service not restarting.
 ### Deployment
 
 1. Follow the instructions to install Headscale from the
-[Linux Installation Guide](https://headscale.net/setup/install/official).
+[Linux Installation Guide](https://headscale.net/stable/setup/install/official/).
 
 2. Install [Node.js](https://nodejs.org/en/download/package-manager)
 version 20 or higher (your package manager most likely already has this).
