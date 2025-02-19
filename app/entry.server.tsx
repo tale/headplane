@@ -8,7 +8,7 @@ import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
 import { hp_loadConfig } from '~/utils/context/loader';
 
-await hp_loadConfig();
+hp_loadConfig();
 export const streamTimeout = 5_000;
 
 export default function handleRequest(
