@@ -10,10 +10,14 @@ import Code from '~/components/Code';
 import Input from '~/components/Input';
 import type { Key } from '~/types';
 import { pull } from '~/utils/headscale';
+import { noContext } from '~/utils/log';
 import { commitSession, getSession } from '~/utils/sessions.server';
-import { hp_getConfig } from '~/utils/state';
+import type { AppContext } from '~server/context/app';
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {
@@ -23,28 +27,37 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		});
 	}
 
-	const context = hp_getConfig();
+	if (!context) {
+		throw noContext();
+	}
 
 	// Only set if OIDC is properly enabled anyways
-	if (context.oidc?.disable_api_key_login) {
+	const ctx = context.context;
+	if (ctx.oidc?.disable_api_key_login) {
 		return redirect('/oidc/start');
 	}
 
 	return {
-		oidc: context.oidc?.issuer,
-		apiKey: !context.oidc?.disable_api_key_login,
+		oidc: ctx.oidc?.issuer,
+		apiKey: !ctx.oidc?.disable_api_key_login,
 	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+	request,
+	context,
+}: ActionFunctionArgs<AppContext>) {
 	const formData = await request.formData();
 	const oidcStart = formData.get('oidc-start');
 	const session = await getSession(request.headers.get('Cookie'));
 
 	if (oidcStart) {
-		const context = hp_getConfig();
+		if (!context) {
+			throw noContext();
+		}
 
-		if (!context.oidc) {
+		const ctx = context.context;
+		if (!ctx.oidc) {
 			throw new Error('An invalid OIDC configuration was provided');
 		}
 

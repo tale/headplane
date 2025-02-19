@@ -2,7 +2,7 @@ import type { ActionFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Notice from '~/components/Notice';
-import { hs_getConfig } from '~/utils/state';
+import { hs_getConfig } from '~/utils/config/loader';
 import ManageDomains from './components/manage-domains';
 import ManageNS from './components/manage-ns';
 import ManageRecords from './components/manage-records';

@@ -1,17 +1,13 @@
-import { type RequestListener } from 'node:http';
-import { resolve, join } from 'node:path'
-import { createServer } from 'vite'
-import { createRequestHandler } from 'react-router'
-import { access, constants } from 'node:fs/promises';
 import { createReadStream, existsSync, statSync } from 'node:fs';
+import { type RequestListener } from 'node:http';
+import { join, resolve } from 'node:path';
 import {
 	createReadableStreamFromReadable,
 	writeReadableStreamToWritable,
 } from '@react-router/node';
-import mime from 'mime/lite'
-
-import { loadDevtools, stacksafeTry } from '~server/dev';
-import { appContext } from '~server/ws';
+import mime from 'mime/lite';
+import appContext from '~server/context/app';
+import { loadDevtools, stacksafeTry } from '~server/dev/hot-server';
 import prodBuild from '~server/prod-handler';
 
 declare global {
@@ -19,13 +15,9 @@ declare global {
 	const __hp_prefix: string;
 }
 
-const devtools = import.meta.env.DEV
-	? await loadDevtools()
-	: undefined;
+const devtools = import.meta.env.DEV ? await loadDevtools() : undefined;
 
-const prodHandler = import.meta.env.PROD
-	? await prodBuild()
-	: undefined;
+const prodHandler = import.meta.env.PROD ? await prodBuild() : undefined;
 
 const buildPath = process.env.BUILD_PATH ?? './build';
 const baseDir = resolve(join(buildPath, 'client'));
@@ -113,14 +105,21 @@ export const listener: RequestListener = async (req, res) => {
 		// If we have a body, we set the duplex and load it
 		...(req.method !== 'GET' && req.method !== 'HEAD'
 			? {
-				body: createReadableStreamFromReadable(req),
-				duplex: 'half',
-			} : {}),
+					body: createReadableStreamFromReadable(req),
+					duplex: 'half',
+				}
+			: {}),
 	});
 
 	const response = devtools
 		? await stacksafeTry(devtools, frameworkReq, appContext())
 		: await prodHandler?.(frameworkReq, appContext());
+
+	if (!response) {
+		res.writeHead(404);
+		res.end();
+		return;
+	}
 
 	res.statusCode = response.status;
 	res.statusMessage = response.statusText;
@@ -134,4 +133,4 @@ export const listener: RequestListener = async (req, res) => {
 	}
 
 	res.end();
-}
+};

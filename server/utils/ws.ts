@@ -1,5 +1,5 @@
-import WebSocket, { WebSocketServer } from 'ws'
-import log from '~server/log'
+import WebSocket, { WebSocketServer } from 'ws';
+import log from '~server/utils/log';
 
 const server = new WebSocketServer({ noServer: true });
 export function initWebsocket() {
@@ -13,13 +13,13 @@ export function initWebsocket() {
 
 	log.info('CACH', 'Initializing agent WebSocket');
 	server.on('connection', (ws, req) => {
+		// biome-ignore lint: this file is not USED
 		const auth = req.headers['authorization'];
 		if (auth !== `Bearer ${key}`) {
 			log.warn('CACH', 'Invalid agent WebSocket connection');
 			ws.close(1008, 'ERR_INVALID_AUTH');
 			return;
 		}
-
 
 		const nodeID = req.headers['x-headplane-ts-node-id'];
 		if (!nodeID) {
@@ -46,7 +46,7 @@ export function initWebsocket() {
 			log.error('CACH', 'Closing agent WebSocket connection');
 			log.error('CACH', 'Agent WebSocket error: %s', error);
 			ws.close(1011, 'ERR_INTERNAL_ERROR');
-		})
+		});
 	});
 
 	return server;
@@ -56,5 +56,5 @@ export function appContext() {
 	return {
 		ws: server,
 		wsAuthKey: process.env.LOCAL_AGENT_AUTHKEY,
-	}
+	};
 }

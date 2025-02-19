@@ -109,9 +109,13 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const to = String(data.get('to'));
 
 			try {
-				await post(`v1/node/${id}/user?user=${to}`, session.get('hsApiKey')!);
+				await post(`v1/node/${id}/user`, session.get('hsApiKey')!, {
+					user: to,
+				});
+
 				return { message: `Moved node ${id} to ${to}` };
-			} catch {
+			} catch (error) {
+				console.error(error);
 				return send(
 					{ message: `Failed to move node ${id} to ${to}` },
 					{

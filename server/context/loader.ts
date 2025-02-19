@@ -1,11 +1,9 @@
 import { constants, access, readFile } from 'node:fs/promises';
 import { type } from 'arktype';
 import { parseDocument } from 'yaml';
-import { hs_loadConfig } from '~/utils/config/loader';
-import log, { hp_loadLogger } from '~/utils/log';
-import mutex from '~/utils/mutex';
 import { testOidc } from '~/utils/oidc';
-import { initSessionManager } from '~/utils/sessions.server';
+import log, { hpServer_loadLogger } from '~server/utils/log';
+import mutex from '~server/utils/mutex';
 import { HeadplaneConfig, coalesceConfig, validateConfig } from './parser';
 
 const envBool = type('string | undefined').pipe((v) => {
@@ -67,7 +65,7 @@ export async function hp_loadConfig() {
 	}
 
 	// Load our debug based logger before ANYTHING
-	hp_loadLogger(envs.HEADPLANE_DEBUG_LOG);
+	hpServer_loadLogger(envs.HEADPLANE_DEBUG_LOG);
 
 	if (envs.HEADPLANE_CONFIG_PATH) {
 		path = envs.HEADPLANE_CONFIG_PATH;
@@ -104,17 +102,11 @@ export async function hp_loadConfig() {
 		process.exit(1);
 	}
 
-	if (config.headscale.config_path) {
-		await hs_loadConfig(config);
-	}
-
 	if (config.oidc?.strict_validation) {
 		testOidc(config.oidc);
 	}
 
 	runtimeConfig = config;
-
-	initSessionManager(config.server.cookie_secret, config.server.cookie_secure);
 	runtimeLock.release();
 }
 

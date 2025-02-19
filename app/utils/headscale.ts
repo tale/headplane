@@ -1,6 +1,7 @@
-import log from '~/utils/log';
-import { hp_getConfig } from '~/utils/state';
+import log, { noContext } from '~/utils/log';
+import { AppContext } from '~server/context/app';
 
+type Context = AppContext['context'];
 export class HeadscaleError extends Error {
 	status: number;
 
@@ -20,8 +21,20 @@ export class FatalError extends Error {
 	}
 }
 
+let context: Context | undefined = undefined;
+export function hp_storeContext(ctx: Context) {
+	if (context) {
+		return;
+	}
+
+	context = ctx;
+}
+
 export async function healthcheck() {
-	const context = hp_getConfig();
+	if (!context) {
+		throw noContext();
+	}
+
 	const prefix = context.headscale.url;
 	log.debug('APIC', 'GET /health');
 
@@ -37,11 +50,14 @@ export async function healthcheck() {
 }
 
 export async function pull<T>(url: string, key: string) {
+	if (!context) {
+		throw noContext();
+	}
+
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = hp_getConfig();
 	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'GET %s', `${prefix}/api/${url}`);
@@ -65,11 +81,14 @@ export async function pull<T>(url: string, key: string) {
 }
 
 export async function post<T>(url: string, key: string, body?: unknown) {
+	if (!context) {
+		throw noContext();
+	}
+
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = hp_getConfig();
 	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'POST %s', `${prefix}/api/${url}`);
@@ -95,11 +114,14 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function put<T>(url: string, key: string, body?: unknown) {
+	if (!context) {
+		throw noContext();
+	}
+
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = hp_getConfig();
 	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'PUT %s', `${prefix}/api/${url}`);
@@ -125,11 +147,14 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function del<T>(url: string, key: string) {
+	if (!context) {
+		throw noContext();
+	}
+
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const context = hp_getConfig();
 	const prefix = context.headscale.url;
 
 	log.debug('APIC', 'DELETE %s', `${prefix}/api/${url}`);

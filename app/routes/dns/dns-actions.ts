@@ -1,7 +1,6 @@
 import { ActionFunctionArgs, data } from 'react-router';
-import { hs_patchConfig } from '~/utils/config/loader';
+import { hs_getConfig, hs_patchConfig } from '~/utils/config/loader';
 import { auth } from '~/utils/sessions.server';
-import { hs_getConfig } from '~/utils/state';
 
 export async function dnsAction({ request }: ActionFunctionArgs) {
 	const session = await auth(request);

@@ -1,10 +1,14 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
-import { finishAuthFlow, formatError, getRedirectUri } from '~/utils/oidc';
+import { noContext } from '~/utils/log';
+import { finishAuthFlow, formatError } from '~/utils/oidc';
 import { send } from '~/utils/res';
 import { commitSession, getSession } from '~/utils/sessions.server';
-import { hp_getConfig } from '~/utils/state';
+import type { AppContext } from '~server/context/app';
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<AppContext>) {
 	// Check if we have 0 query parameters
 	const url = new URL(request.url);
 	if (url.searchParams.toString().length === 0) {
@@ -16,7 +20,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		return redirect('/machines');
 	}
 
-	const { oidc } = hp_getConfig();
+	if (!context) {
+		throw noContext();
+	}
+
+	const { oidc } = context.context;
 	if (!oidc) {
 		throw new Error('An invalid OIDC configuration was provided');
 	}

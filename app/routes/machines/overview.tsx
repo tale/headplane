@@ -12,12 +12,17 @@ import { getSession } from '~/utils/sessions.server';
 import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
 import Tooltip from '~/components/Tooltip';
-import { hp_getConfig, hs_getConfig } from '~/utils/state';
+import { hs_getConfig } from '~/utils/config/loader';
+import { noContext } from '~/utils/log';
+import { AppContext } from '~server/context/app';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
 
-export async function loader({ request, context: lC }: LoaderFunctionArgs) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
 	const [machines, routes, users] = await Promise.all([
 		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
@@ -25,10 +30,14 @@ export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
 	]);
 
-	initAgentSocket(lC);
+	if (!context) {
+		throw noContext();
+	}
+
+	initAgentSocket(context);
 
 	const stats = await queryAgent(machines.nodes.map((node) => node.nodeKey));
-	const context = hp_getConfig();
+	const ctx = context.context;
 	const { mode, config } = hs_getConfig();
 
 	let magic: string | undefined;
@@ -45,8 +54,8 @@ export async function loader({ request, context: lC }: LoaderFunctionArgs) {
 		users: users.users,
 		magic,
 		stats,
-		server: context.headscale.url,
-		publicServer: context.headscale.public_url,
+		server: ctx.headscale.url,
+		publicServer: ctx.headscale.public_url,
 	};
 }
 

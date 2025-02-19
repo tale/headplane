@@ -1,9 +1,7 @@
 import { type } from 'arktype';
-import log from '~/utils/log';
+import log from '~server/utils/log';
 
-// TODO: ALLOW HEADSCALE CONFIG TO OVERRIDE HEADPLANE CONFIG MAYBE FOR OIDC?
 export type HeadplaneConfig = typeof headplaneConfig.infer;
-
 const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
 const serverConfig = type({
 	host: 'string.ip',

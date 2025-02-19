@@ -1,24 +1,39 @@
 import { PassThrough } from 'node:stream';
-
 import { createReadableStreamFromReadable } from '@react-router/node';
 import { isbot } from 'isbot';
 import type { RenderToPipeableStreamOptions } from 'react-dom/server';
 import { renderToPipeableStream } from 'react-dom/server';
 import type { AppLoadContext, EntryContext } from 'react-router';
 import { ServerRouter } from 'react-router';
-import { hp_loadConfig } from '~/utils/context/loader';
+import { hs_loadConfig } from '~/utils/config/loader';
+import { hp_storeContext } from '~/utils/headscale';
+import { hp_loadLogger } from '~/utils/log';
+import { initSessionManager } from '~/utils/sessions.server';
+import type { AppContext } from '~server/context/app';
 
-hp_loadConfig();
 export const streamTimeout = 5_000;
 
+// TODO: checkOidc
 export default function handleRequest(
 	request: Request,
 	responseStatusCode: number,
 	responseHeaders: Headers,
 	routerContext: EntryContext,
-	loadContext: AppLoadContext,
+	loadContext: AppContext,
 ) {
+	const { context } = loadContext;
 	return new Promise((resolve, reject) => {
+		initSessionManager(
+			context.server.cookie_secret,
+			context.server.cookie_secure,
+		);
+
+		// This is a promise but we don't need to wait for it to finish
+		// before we start rendering the shell since it only loads once.
+		hs_loadConfig(context);
+		hp_storeContext(context);
+		hp_loadLogger(context.debug);
+
 		let shellRendered = false;
 		const userAgent = request.headers.get('user-agent');
 

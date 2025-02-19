@@ -7,17 +7,18 @@ import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
 import Tabs from '~/components/Tabs';
+import { hs_getConfig } from '~/utils/config/loader';
 import { HeadscaleError, pull, put } from '~/utils/headscale';
 import log from '~/utils/log';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
-import { hs_getConfig } from '~/utils/state';
 import toast from '~/utils/toast';
+import type { AppContext } from '~server/context/app';
 import { Differ, Editor } from './components/cm.client';
 import { ErrorView } from './components/error';
 import { Unavailable } from './components/unavailable';
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
 
 	// The way policy is handled in 0.23 of Headscale and later is verbose.

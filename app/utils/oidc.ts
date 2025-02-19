@@ -1,12 +1,11 @@
 import * as client from 'openid-client';
 import log from '~/utils/log';
-import { HeadplaneConfig } from '~/utils/state';
+import type { AppContext } from '~server/context/app';
 
+type OidcConfig = NonNullable<AppContext['context']['oidc']>;
 declare global {
 	const __PREFIX__: string;
 }
-
-type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
 
 // We try our best to infer the callback URI of our Headplane instance
 // By default it is always /<base_path>/oidc/callback

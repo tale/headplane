@@ -1,8 +1,8 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
 import { Document, parseDocument } from 'yaml';
-import { HeadplaneConfig } from '~/utils/context/parser';
 import log from '~/utils/log';
 import mutex from '~/utils/mutex';
+import type { HeadplaneConfig } from '~server/context/parser';
 import { HeadscaleConfig, validateConfig } from './parser';
 
 let runtimeYaml: Document | undefined = undefined;
@@ -13,7 +13,7 @@ let runtimeStrict = true;
 
 const runtimeLock = mutex();
 
-type ConfigModes =
+export type ConfigModes =
 	| {
 			mode: 'rw' | 'ro';
 			config: HeadscaleConfig;

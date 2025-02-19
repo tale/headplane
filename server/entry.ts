@@ -1,8 +1,9 @@
+// import { initWebsocket } from '~server/ws';
+import { constants, access } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { hp_getConfig, hp_loadConfig } from '~server/context/loader';
 import { listener } from '~server/listener';
-import { initWebsocket } from '~server/ws';
-import { access, constants } from 'node:fs/promises';
-import log from '~server/log';
+import log from '~server/utils/log';
 
 log.info('SRVX', 'Running Node.js %s', process.versions.node);
 
@@ -15,21 +16,26 @@ try {
 	process.exit(1);
 }
 
+await hp_loadConfig();
 const server = createServer(listener);
-const port = process.env.PORT || 3000;
-const host = process.env.HOST || '0.0.0.0';
 
-const ws = initWebsocket();
-if (ws) {
-	server.on('upgrade', (req, socket, head) => {
-		ws.handleUpgrade(req, socket, head, (ws) => {
-			ws.emit('connection', ws, req);
-		});
-	});
-}
+// const ws = initWebsocket();
+// if (ws) {
+// 	server.on('upgrade', (req, socket, head) => {
+// 		ws.handleUpgrade(req, socket, head, (ws) => {
+// 			ws.emit('connection', ws, req);
+// 		});
+// 	});
+// }
 
-server.listen(Number(port), host, () => {
-	log.info('SRVX', 'Running on %s:%s', host, port);
+const context = hp_getConfig();
+server.listen(context.server.port, context.server.host, () => {
+	log.info(
+		'SRVX',
+		'Running on %s:%s',
+		context.server.host,
+		context.server.port,
+	);
 });
 
 if (import.meta.hot) {
@@ -41,5 +47,3 @@ if (import.meta.hot) {
 		server.close();
 	});
 }
-
-// export const app = listener;

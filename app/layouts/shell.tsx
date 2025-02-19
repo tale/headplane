@@ -6,25 +6,34 @@ import {
 } from 'react-router';
 import Footer from '~/components/Footer';
 import Header from '~/components/Header';
+import { hs_getConfig } from '~/utils/config/loader';
+import { noContext } from '~/utils/log';
 import { getSession } from '~/utils/sessions.server';
-import { hp_getConfig, hs_getConfig } from '~/utils/state';
+import type { AppContext } from '~server/context/app';
 
 // This loads the bare minimum for the application to function
 // So we know that if context fails to load then well, oops?
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (!session.has('hsApiKey')) {
 		return redirect('/login');
 	}
 
-	const context = hp_getConfig();
+	if (!context) {
+		throw noContext();
+	}
+
+	const ctx = context.context;
 	const { mode, config } = hs_getConfig();
 
 	return {
 		config,
-		url: context.headscale.public_url ?? context.headscale.url,
+		url: ctx.headscale.public_url ?? ctx.headscale.url,
 		configAvailable: mode !== 'no',
-		debug: context.debug,
+		debug: ctx.debug,
 		user: session.get('user'),
 	};
 }
