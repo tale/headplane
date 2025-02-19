@@ -2,7 +2,7 @@ import { DataRef, DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
 import { PersonIcon } from '@primer/octicons-react';
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useActionData, useLoaderData, useSubmit } from 'react-router';
+import { useLoaderData, useSubmit } from 'react-router';
 import { ClientOnly } from 'remix-utils/client-only';
 
 import Attribute from '~/components/Attribute';
@@ -11,16 +11,14 @@ import { ErrorPopup } from '~/components/Error';
 import StatusCircle from '~/components/StatusCircle';
 import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
-import { del, post, pull } from '~/utils/headscale';
-import { send } from '~/utils/res';
+import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 
 import { hp_getConfig, hs_getConfig } from '~/utils/state';
-import toast from '~/utils/toast';
-import Auth from './components/auth';
-import Oidc from './components/oidc';
-import Remove from './dialogs/remove';
-import Rename from './dialogs/rename';
+import ManageBanner from './components/manage-banner';
+import DeleteUser from './dialogs/delete-user';
+import RenameUser from './dialogs/rename-user';
+import { userAction } from './user-actions';
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
@@ -52,94 +50,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
-	if (!session.has('hsApiKey')) {
-		return send({ message: 'Unauthorized' }, 401);
-	}
-
-	const data = await request.formData();
-	if (!data.has('_method')) {
-		return send({ message: 'No method provided' }, 400);
-	}
-
-	const method = String(data.get('_method'));
-
-	switch (method) {
-		case 'create': {
-			if (!data.has('username')) {
-				return send({ message: 'No name provided' }, 400);
-			}
-
-			const username = String(data.get('username'));
-			await post('v1/user', session.get('hsApiKey')!, {
-				name: username,
-			});
-
-			return { message: `User ${username} created` };
-		}
-
-		case 'delete': {
-			if (!data.has('username')) {
-				return send({ message: 'No name provided' }, 400);
-			}
-
-			const username = String(data.get('username'));
-			await del(`v1/user/${username}`, session.get('hsApiKey')!);
-			return { message: `User ${username} deleted` };
-		}
-
-		case 'rename': {
-			if (!data.has('old') || !data.has('new')) {
-				return send({ message: 'No old or new name provided' }, 400);
-			}
-
-			const old = String(data.get('old'));
-			const newName = String(data.get('new'));
-			await post(`v1/user/${old}/rename/${newName}`, session.get('hsApiKey')!);
-			return { message: `User ${old} renamed to ${newName}` };
-		}
-
-		case 'move': {
-			if (!data.has('id') || !data.has('to') || !data.has('name')) {
-				return send({ message: 'No ID or destination provided' }, 400);
-			}
-
-			const id = String(data.get('id'));
-			const to = String(data.get('to'));
-			const name = String(data.get('name'));
-
-			try {
-				await post(`v1/node/${id}/user?user=${to}`, session.get('hsApiKey')!);
-				return { message: `Moved ${name} to ${to}` };
-			} catch {
-				return send({ message: `Failed to move ${name} to ${to}` }, 500);
-			}
-		}
-
-		default: {
-			return send({ message: 'Invalid method' }, 400);
-		}
-	}
+export async function action(data: ActionFunctionArgs) {
+	return userAction(data);
 }
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>();
-	const [users, setUsers] = useState(data.users);
-	const actionData = useActionData<typeof action>();
+	const [users, setUsers] = useState<UserMachine[]>(data.users);
 
-	useEffect(() => {
-		if (!actionData) {
-			return;
-		}
-
-		toast(actionData.message);
-		if (actionData.message.startsWith('Failed')) {
-			setUsers(data.users);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [actionData]);
-
+	// This useEffect is entirely for the purpose of updating the users when the
+	// drag and drop changes the machines between users. It's pretty hacky, but
+	// the idea is to treat data.users as the source of truth and update the
+	// local state when it changes.
 	useEffect(() => {
 		setUsers(data.users);
 	}, [data.users]);
@@ -151,7 +73,7 @@ export default function Page() {
 				Manage the users in your network and their permissions. Tip: You can
 				drag machines between users to change ownership.
 			</p>
-			{data.oidc ? <Oidc oidc={data.oidc} /> : <Auth magic={data.magic} />}
+			<ManageBanner oidc={data.oidc} />
 			<ClientOnly fallback={<Users users={users} />}>
 				{() => (
 					<InteractiveUsers
@@ -218,10 +140,9 @@ function InteractiveUsers({ users, setUsers, magic }: UserProps) {
 
 				setUsers?.(newUsers);
 				const data = new FormData();
-				data.append('_method', 'move');
-				data.append('id', active.id.toString());
-				data.append('to', over.id.toString());
-				data.append('name', reference.current.givenName);
+				data.append('action_id', 'change_owner');
+				data.append('user_id', over.id.toString());
+				data.append('node_id', reference.current.id);
 
 				submit(data, {
 					method: 'POST',
@@ -293,9 +214,9 @@ function UserCard({ user, magic }: CardProps) {
 						<span className="text-lg font-mono">{user.name}</span>
 					</div>
 					<div className="flex items-center gap-2">
-						<Rename username={user.name} />
+						<RenameUser user={user} />
 						{user.machines.length === 0 ? (
-							<Remove username={user.name} />
+							<DeleteUser user={user} />
 						) : undefined}
 					</div>
 				</div>

@@ -53,6 +53,7 @@ export function getSession(cookie: string | null) {
 	return sessionStorage.getSession(cookie);
 }
 
+export type ServerSession = Session<SessionData, SessionFlashData>;
 export async function auth(request: Request) {
 	if (!sessionStorage) {
 		return false;
@@ -64,7 +65,7 @@ export async function auth(request: Request) {
 		return false;
 	}
 
-	return true;
+	return session;
 }
 
 export function destroySession(session: Session) {
