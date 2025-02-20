@@ -6,6 +6,19 @@ import log, { hpServer_loadLogger } from '~server/utils/log';
 import mutex from '~server/utils/mutex';
 import { HeadplaneConfig, coalesceConfig, validateConfig } from './parser';
 
+declare global {
+	let __cookie_context: {
+		cookie_secret: string;
+		cookie_secure: boolean;
+	};
+
+	let __hs_context: {
+		url: string;
+		config_path?: string;
+		config_strict?: boolean;
+	};
+}
+
 const envBool = type('string | undefined').pipe((v) => {
 	return ['1', 'true', 'yes', 'on'].includes(v?.toLowerCase() ?? '');
 });
@@ -33,7 +46,6 @@ export function hp_getConfig() {
 	}
 
 	const config = runtimeConfig;
-
 	runtimeLock.release();
 	return config;
 }
@@ -105,6 +117,19 @@ export async function hp_loadConfig() {
 	if (config.oidc?.strict_validation) {
 		testOidc(config.oidc);
 	}
+
+	// @ts-expect-error: If we remove globalThis we get a runtime error
+	globalThis.__cookie_context = {
+		cookie_secret: config.server.cookie_secret,
+		cookie_secure: config.server.cookie_secure,
+	};
+
+	// @ts-expect-error: If we remove globalThis we get a runtime error
+	globalThis.__hs_context = {
+		url: config.headscale.url,
+		config_path: config.headscale.config_path,
+		config_strict: config.headscale.config_strict,
+	};
 
 	runtimeConfig = config;
 	runtimeLock.release();

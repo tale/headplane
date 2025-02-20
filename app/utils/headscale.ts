@@ -1,7 +1,5 @@
 import log, { noContext } from '~/utils/log';
-import { AppContext } from '~server/context/app';
 
-type Context = AppContext['context'];
 export class HeadscaleError extends Error {
 	status: number;
 
@@ -21,21 +19,13 @@ export class FatalError extends Error {
 	}
 }
 
-let context: Context | undefined = undefined;
-export function hp_storeContext(ctx: Context) {
-	if (context) {
-		return;
-	}
-
-	context = ctx;
+interface HeadscaleContext {
+	url: string;
 }
 
+declare const global: typeof globalThis & { __hs_context: HeadscaleContext };
 export async function healthcheck() {
-	if (!context) {
-		throw noContext();
-	}
-
-	const prefix = context.headscale.url;
+	const prefix = __hs_context.url;
 	log.debug('APIC', 'GET /health');
 
 	const health = new URL('health', prefix);
@@ -50,15 +40,11 @@ export async function healthcheck() {
 }
 
 export async function pull<T>(url: string, key: string) {
-	if (!context) {
-		throw noContext();
-	}
-
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const prefix = context.headscale.url;
+	const prefix = __hs_context.url;
 
 	log.debug('APIC', 'GET %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -81,15 +67,11 @@ export async function pull<T>(url: string, key: string) {
 }
 
 export async function post<T>(url: string, key: string, body?: unknown) {
-	if (!context) {
-		throw noContext();
-	}
-
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const prefix = context.headscale.url;
+	const prefix = __hs_context.url;
 
 	log.debug('APIC', 'POST %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -114,15 +96,11 @@ export async function post<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function put<T>(url: string, key: string, body?: unknown) {
-	if (!context) {
-		throw noContext();
-	}
-
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const prefix = context.headscale.url;
+	const prefix = __hs_context.url;
 
 	log.debug('APIC', 'PUT %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {
@@ -147,15 +125,11 @@ export async function put<T>(url: string, key: string, body?: unknown) {
 }
 
 export async function del<T>(url: string, key: string) {
-	if (!context) {
-		throw noContext();
-	}
-
 	if (!key || key === 'undefined' || key.length === 0) {
 		throw new Error('Missing API key, could this be a cookie setting issue?');
 	}
 
-	const prefix = context.headscale.url;
+	const prefix = __hs_context.url;
 
 	log.debug('APIC', 'DELETE %s', `${prefix}/api/${url}`);
 	const response = await fetch(`${prefix}/api/${url}`, {

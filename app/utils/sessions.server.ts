@@ -1,8 +1,4 @@
-import {
-	Session,
-	SessionStorage,
-	createCookieSessionStorage,
-} from 'react-router';
+import { Session, createCookieSessionStorage } from 'react-router';
 
 export type SessionData = {
 	hsApiKey: string;
@@ -23,42 +19,28 @@ type SessionFlashData = {
 	error: string;
 };
 
-type SessionStore = SessionStorage<SessionData, SessionFlashData>;
-
-// TODO: Add args to this function to allow custom domain/config
-let sessionStorage: SessionStore | null = null;
-export function initSessionManager(secret: string, secure: boolean) {
-	if (sessionStorage) {
-		return;
-	}
-
-	sessionStorage = createCookieSessionStorage<SessionData, SessionFlashData>({
-		cookie: {
-			name: 'hp_sess',
-			httpOnly: true,
-			maxAge: 60 * 60 * 24, // 24 hours
-			path: '/',
-			sameSite: 'lax',
-			secrets: [secret],
-			secure,
-		},
-	});
-}
+// TODO: Domain config in cookies
+const sessionStorage = createCookieSessionStorage<
+	SessionData,
+	SessionFlashData
+>({
+	cookie: {
+		name: 'hp_sess',
+		httpOnly: true,
+		maxAge: 60 * 60 * 24, // 24 hours
+		path: '/',
+		sameSite: 'lax',
+		secrets: [__cookie_context.cookie_secret],
+		secure: __cookie_context.cookie_secure,
+	},
+});
 
 export function getSession(cookie: string | null) {
-	if (!sessionStorage) {
-		throw new Error('Session manager not initialized');
-	}
-
 	return sessionStorage.getSession(cookie);
 }
 
 export type ServerSession = Session<SessionData, SessionFlashData>;
 export async function auth(request: Request) {
-	if (!sessionStorage) {
-		return false;
-	}
-
 	const cookie = request.headers.get('Cookie');
 	const session = await sessionStorage.getSession(cookie);
 	if (!session.has('hsApiKey')) {
@@ -69,17 +51,9 @@ export async function auth(request: Request) {
 }
 
 export function destroySession(session: Session) {
-	if (!sessionStorage) {
-		throw new Error('Session manager not initialized');
-	}
-
 	return sessionStorage.destroySession(session);
 }
 
 export function commitSession(session: Session, opts?: { maxAge?: number }) {
-	if (!sessionStorage) {
-		throw new Error('Session manager not initialized');
-	}
-
 	return sessionStorage.commitSession(session, opts);
 }

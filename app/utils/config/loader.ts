@@ -9,8 +9,6 @@ let runtimeYaml: Document | undefined = undefined;
 let runtimeConfig: HeadscaleConfig | undefined = undefined;
 let runtimePath: string | undefined = undefined;
 let runtimeMode: 'rw' | 'ro' | 'no' = 'no';
-let runtimeStrict = true;
-
 const runtimeLock = mutex();
 
 export type ConfigModes =
@@ -42,9 +40,12 @@ export function hs_getConfig(): ConfigModes {
 	};
 }
 
-export async function hs_loadConfig(context: HeadplaneConfig) {
+export async function hs_loadConfig(path?: string, strict?: boolean) {
+	if (runtimeConfig !== undefined) {
+		return;
+	}
+
 	runtimeLock.acquire();
-	const path = context.headscale.config_path;
 	if (!path) {
 		runtimeLock.release();
 		return;
@@ -62,8 +63,7 @@ export async function hs_loadConfig(context: HeadplaneConfig) {
 		return;
 	}
 
-	runtimeStrict = context.headscale.config_strict ?? true;
-	const config = validateConfig(rawConfig, runtimeStrict);
+	const config = validateConfig(rawConfig, strict ?? true);
 	if (!config) {
 		runtimeMode = 'no';
 	}
@@ -194,3 +194,6 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 	await writeFile(runtimePath, runtimeYaml.toString(), 'utf8');
 	runtimeLock.release();
 }
+
+// IMPORTANT THIS IS A SIDE EFFECT ON INIT
+hs_loadConfig(__hs_context.config_path, __hs_context.config_strict);
