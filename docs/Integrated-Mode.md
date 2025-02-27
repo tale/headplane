@@ -52,10 +52,10 @@ services:
     restart: unless-stopped
     command: serve
     ports:
-	  - '8080:8080'
+      - '8080:8080'
     volumes:
       - './headscale-data:/var/lib/headscale'
-	  - './headscale-config:/etc/headscale'
+      - './headscale-config:/etc/headscale'
 
 ```
 
