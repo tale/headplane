@@ -1,5 +1,6 @@
 import { constants, access, readFile } from 'node:fs/promises';
 import { type } from 'arktype';
+import dotenv from 'dotenv';
 import { parseDocument } from 'yaml';
 import { testOidc } from '~/utils/oidc';
 import log, { hpServer_loadLogger } from '~server/utils/log';
@@ -27,7 +28,6 @@ const envBool = type('string | undefined').pipe((v) => {
 
 const rootEnvs = type({
 	HEADPLANE_DEBUG_LOG: envBool,
-	HEADPLANE_LOAD_ENV_FILE: envBool,
 	HEADPLANE_LOAD_ENV_OVERRIDES: envBool,
 	HEADPLANE_CONFIG_PATH: 'string | undefined',
 }).onDeepUndeclaredKey('reject');
@@ -65,7 +65,6 @@ export async function hp_loadConfig() {
 	const envs = rootEnvs({
 		HEADPLANE_DEBUG_LOG: process.env.HEADPLANE_DEBUG_LOG,
 		HEADPLANE_CONFIG_PATH: process.env.HEADPLANE_CONFIG_PATH,
-		HEADPLANE_LOAD_ENV_FILE: process.env.HEADPLANE_LOAD_ENV_FILE,
 		HEADPLANE_LOAD_ENV_OVERRIDES: process.env.HEADPLANE_LOAD_ENV_OVERRIDES,
 	});
 
@@ -97,12 +96,10 @@ export async function hp_loadConfig() {
 		debug: envs.HEADPLANE_DEBUG_LOG,
 	});
 
-	if (envs.HEADPLANE_LOAD_ENV_FILE) {
-		log.info('CFGX', 'Loading a .env file if one exists');
-		await import('dotenv/config');
-	}
-
 	if (config && envs.HEADPLANE_LOAD_ENV_OVERRIDES) {
+		log.info('CFGX', 'Loading a .env file if one exists');
+		dotenv.config();
+
 		log.info(
 			'CFGX',
 			'Loading environment variables to override the configuration',

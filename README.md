@@ -1,5 +1,5 @@
 # Headplane
-> An advanced UI for [juanfont/headscale](https://github.com/juanfont/headscale)
+> A feature-complete web UI for [Headscale](https://headscale.net)
 
 <picture>
     <source
@@ -16,30 +16,62 @@
     >
 </picture>
 
-Headscale is a self-hosted version of the Tailscale control server, however, it currently lacks a first-party web UI.
-Headplane aims to solve this issue by providing a GUI that can deeply integrate with the Headscale server.
-It's able to replicate nearly all of the functions of the official Tailscale SaaS UI, including:
+Headscale is the de-facto self-hosted version of Tailscale, a popular Wireguard
+based VPN service. By default, it does not ship with a web UI, which is where
+Headplane comes in. Headplane is a feature-complete web UI for Headscale, allowing
+you to manage your nodes, networks, and ACLs with ease.
 
-- Machine/Node expiry, network routing, name, and owner management
-- Access Control List (ACL) and tagging configuration
+Headplane aims to replicate the functionality offered by the official Tailscale
+product and dashboard, being one of the most feature complete Headscale UIs available.
+These are some of the features that Headplane offers:
+
+- Machine management, including expiry, network routing, name, and owner management
+- Access Control List (ACL) and tagging configuration for ACL enforcement
 - Support for OpenID Connect (OIDC) as a login provider
-- DNS and *safe* Headscale configuration management
+- The ability to edit DNS settings and automatically provision Headscale
+- Configurability for Headscale's settings
 
 ## Deployment
-> For more configuration options, refer to the [Configuration](/docs/Configuration.md) guide.
+Headplane runs as a server-based web-application, meaning you'll need a server to run it.
+It's available as a Docker image (recommended) or through a manual installation.
+There are 2 ways to deploy Headplane:
 
-For fully-featured deployments, see the [Advanced Deployment](/docs/Advanced-Integration.md) guide.
-This includes automatic management of ACLs, DNS settings, and Headscale configuration.
-*This is the closest experience to the Tailscale UI that can be achieved with Headscale and Headplane.*
-*If you aren't sure which one to pick, we recommend this.*
+- ### [Integrated Mode (Recommended)](/docs/Integrated-Mode.md)
+  Integrated mode unlocks all the features of Headplane and is the most
+  feature-complete deployment method. It communicates with Headscale directly.
 
-If your environment is not able to support the advanced deployment, you can still use the basic deployment.
-For basic deployments, see the [Basic Deployment](/docs/Basic-Integration.md) guide.
-It does not include automatic management of ACLs, DNS settings, or the Headscale configuration,
-instead requiring manual editing and reloading when making changes.
+- ### [Simple Mode](/docs/Simple-Mode.md)
+  Simple mode does not include the automatic management of DNS and Headplane
+  settings, requiring manual editing and reloading when making changes.
 
-## Contributing
-If you would like to contribute, please install a relatively modern version of Node.js and PNPM.
-Clone this repository, run `pnpm install`, and then run `pnpm dev` to start the development server.
+<picture>
+    <source
+        media="(prefers-color-scheme: dark)"
+        srcset="./assets/acls-dark.png"
+    >
+    <source
+        media="(prefers-color-scheme: light)"
+        srcset="./assets/acls-light.png"
+    >
+    <img
+        alt="ACLs"
+        src="./assets/acls-dark.png"
+    >
+</picture>
 
-> Copyright (c) 2024 Aarnav Tale
+<picture>
+    <source
+        media="(prefers-color-scheme: dark)"
+        srcset="./assets/machine-dark.png"
+    >
+    <source
+        media="(prefers-color-scheme: light)"
+        srcset="./assets/machine-light.png"
+    >
+    <img
+        alt="Machine Management"
+        src="./assets/machine-dark.png"
+    >
+</picture>
+
+> Copyright (c) 2025 Aarnav Tale

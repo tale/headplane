@@ -54,6 +54,10 @@ integration:
         # are set correctly. Turn this off if you are having issues with
         # shareProcessNamespace not being validated correctly.
         validate_manifest: true
+        # This should be the name of the Pod running Headscale and Headplane.
+        # If this isn't static you should be using the Kubernetes Downward API
+        # to set this value (refer to docs/Integrated-Mode.md for more info).
+        pod_name: "headscale"
 
     # Proc is the "Native" integration that only works when Headscale and
     # Headplane are running outside of a container. There is no configuration,

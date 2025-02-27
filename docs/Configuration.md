@@ -1,62 +1,86 @@
 # Configuration
+> Previous versions of Headplane used environment variables without a configuration file.
+> Since 0.5, you will need to manually migrate your configuration to the new format.
 
-You can configure Headplane using environment variables.
+Headplane uses a configuration file to manage its settings
+([**config.example.yaml**](./config.example.yaml)). By default, Headplane looks
+for a the file at `/etc/headplane/config.yaml`. This can be changed using the
+**`HEADPLANE_CONFIG_PATH`** environment variable to point to a different location.
 
-#### Required Variables
+## Environment Variables
+It is also possible to override the configuration file using environment variables.
+These changes get merged *after* the configuration file is loaded, so they will take precedence.
+Environment variables follow this pattern: **`HEADPLANE_<SECTION>__<KEY_NAME>`**.
+For example, to override `oidc.client_secret`, you would set `HEADPLANE_OIDC__CLIENT_SECRET`
+to the value that you want.
 
-- **`COOKIE_SECRET`**: A secret used to sign cookies (use a relatively long and random string).
-- **`HEADSCALE_URL`**: The public URL of your Headscale server (not required if using the configuration file).
+Here are a few more examples:
 
-#### Optional Variables
+- `HEADPLANE_HEADSCALE__URL`: `headscale.url`
+- `HEADPLANE_SERVER__PORT`: `server.port`
 
-- **`HEADSCALE_PUBLIC_URL`**: The public URL of your Headscale server (if different from `HEADSCALE_URL`).
-- **`DEBUG`**: Enable debug logging (default: `false`).
-- **`HOST`**: The host to bind the server to (default: `0.0.0.0`).
-- **`PORT`**: The port to bind the server to (default: `3000`).
-- **`CONFIG_FILE`**: The path to the Headscale `config.yaml` (default: `/etc/headscale/config.yaml`).
-- **`HEADSCALE_CONFIG_UNSTRICT`**: This will disable the strict configuration loader (default: `false`).
-- **`COOKIE_SECURE`**: This option enables the `Secure` flag for cookies, ensuring they are sent only over HTTPS, which helps prevent interception and enhances data security. It should be disabled when using HTTP instead of HTTPS (default: `true`).
-- **`LOAD_ENV_FILE`**: Tell Headplane to read the `.env` file and load it into the environment (default: `false`).
+**This functionality is NOT enabled by default!**
+To enable it, set the environment variable **`HEADPLANE_LOAD_ENV_OVERRIDES=true`**.
+Setting this also tells Headplane to load the relative `.env` file into the environment.
 
-#### Docker Integration
-The Docker integration allows Headplane to manage the Headscale docker container.
-You'll need to provide these variables if you want to use this feature.
-Keep in mind that `DOCKER_SOCK` must start with a protocol (e.g., `unix://`).
-Secure API is currently not supported.
+## Debugging
+To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment variable.
+This will enable all debug logs for Headplane, which could fill up log space very quickly.
+This is not recommended in production environments.
 
-- **`DOCKER_SOCK`**: The protocol and path to the Docker socket (default: `unix:///var/run/docker.sock`).
-- **`HEADSCALE_CONTAINER`**: The name of the Headscale container (required for Docker integration).
+## Reverse Proxying
+Reverse proxying is very common when deploying web applications. Headscale and
+Headplane are very similar in this regard. You can use the same configuration
+of any reverse proxy you are familiar with. Here is an example of how to do it
+using Traefik:
 
-### SSO/OpenID Connect
-If you want to use OpenID Connect for SSO, you'll need to provide these variables.
-Headplane will utilize the expiry of your tokens to determine the expiry of the session.
-If you use the Headscale configuration integration, these are not required.
-
-- **`OIDC_ISSUER`**: The issuer URL of your OIDC provider.
-- **`OIDC_CLIENT_ID`**: The client ID of your OIDC provider.
-- **`OIDC_CLIENT_SECRET`**: The client secret of your OIDC provider.
-- **`OIDC_CLIENT_SECRET_METHOD`**: The method used to send the client secret (default: `client_secret_basic`).
-- **`OIDC_REDIRECT_URI`**: The redirect URI for the OIDC provider (recommended, otherwise guessed).
-- **`OIDC_SKIP_CONFIG_VALIDATION`**: Skip the OIDC configuration validation (default: `false`).
-- **`ROOT_API_KEY`**: An API key used to issue new ones for sessions (keep expiry fairly long).
-- **`DISABLE_API_KEY_LOGIN`**: If you want to disable API key login, set this to `true`.
-
-Here's what an example with Authelia would look like if you used the same client for both Headscale and Headplane.
-Keep in mind that the recommended deployment would be putting Headplane behind /admin on a reverse proxy.
-If you use a different domain than the Headscale server, you'll need to make sure that Headscale responds with CORS headers.
+> The important part here is the CORS middleware. This is required for the
+> frontend to communicate with the backend. If you are using a different reverse
+> proxy, make sure to add the necessary headers to allow the frontend to communicate
+> with the backend.
 
 ```yaml
-- client_id: 'headscale'
-  client_name: 'Headscale and Headplane'
-  public: false
-  authorization_policy: 'two_factor'
-  redirect_uris:
-      - 'https://headscale.example.com/oidc/callback'
-      - 'https://headscale.example.com/admin/oidc/callback'
-  scopes:
-      - 'openid'
-      - 'profile'
-      - 'email'
-  userinfo_signed_response_alg: 'none'
-  client_secret: 'my_super_secret_client_secret'
-```
+http:
+  routers:
+    headscale:
+      rule: 'Host(`headscale.tale.me`)'
+      service: 'headscale'
+      middlewares:
+        - 'cors'
+
+    rewrite:
+      rule: 'Host(`headscale.tale.me`) && Path(`/`)'
+      service: 'headscale'
+      middlewares:
+        - 'rewrite'
+
+    headplane:
+      rule: 'Host(`headscale.tale.me`) && PathPrefix(`/admin`)'
+      service: 'headplane'
+
+  services:
+    headscale:
+      loadBalancer:
+        servers:
+          - url: 'http://headscale:8080'
+
+    headplane:
+      loadBalancer:
+        servers:
+          - url: 'http://headplane:3000'
+
+  middlewares:
+    rewrite:
+      addPrefix:
+        prefix: '/admin'
+    cors:
+      headers:
+        accessControlAllowHeaders: '*'
+        accessControlAllowMethods:
+          - 'GET'
+          - 'POST'
+          - 'PUT'
+        accessControlAllowOriginList:
+          - 'https://headscale.tale.me'
+        accessControlMaxAge: 100
+        addVaryHeader: true
