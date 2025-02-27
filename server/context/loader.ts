@@ -17,6 +17,8 @@ declare global {
 		config_path?: string;
 		config_strict?: boolean;
 	};
+
+	let __integration_context: HeadplaneConfig['integration'];
 }
 
 const envBool = type('string | undefined').pipe((v) => {
@@ -130,6 +132,9 @@ export async function hp_loadConfig() {
 		config_path: config.headscale.config_path,
 		config_strict: config.headscale.config_strict,
 	};
+
+	// @ts-expect-error: If we remove globalThis we get a runtime error
+	globalThis.__integration_context = config.integration;
 
 	runtimeConfig = config;
 	runtimeLock.release();

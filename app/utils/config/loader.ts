@@ -1,8 +1,8 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
 import { Document, parseDocument } from 'yaml';
+import { hp_getIntegration } from '~/utils/integration/loader';
 import log from '~/utils/log';
 import mutex from '~/utils/mutex';
-import type { HeadplaneConfig } from '~server/context/parser';
 import { HeadscaleConfig, validateConfig } from './parser';
 
 let runtimeYaml: Document | undefined = undefined;
@@ -182,8 +182,8 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 
 	// Revalidate the configuration
 	const newRawConfig = runtimeYaml.toJSON() as unknown;
-	runtimeConfig = runtimeStrict
-		? validateConfig(newRawConfig, runtimeStrict)
+	runtimeConfig = __hs_context.config_strict
+		? validateConfig(newRawConfig, true)
 		: (newRawConfig as HeadscaleConfig);
 
 	log.debug(
@@ -197,3 +197,4 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 
 // IMPORTANT THIS IS A SIDE EFFECT ON INIT
 hs_loadConfig(__hs_context.config_path, __hs_context.config_strict);
+hp_getIntegration();

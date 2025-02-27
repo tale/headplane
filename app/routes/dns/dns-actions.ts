@@ -1,5 +1,6 @@
 import { ActionFunctionArgs, data } from 'react-router';
 import { hs_getConfig, hs_patchConfig } from '~/utils/config/loader';
+import { hp_getIntegration } from '~/utils/integration/loader';
 import { auth } from '~/utils/sessions.server';
 
 export async function dnsAction({ request }: ActionFunctionArgs) {
@@ -39,8 +40,6 @@ export async function dnsAction({ request }: ActionFunctionArgs) {
 		default:
 			return data({ success: false }, 400);
 	}
-
-	// TODO: Integration update
 }
 
 async function renameTailnet(formData: FormData) {
@@ -55,6 +54,8 @@ async function renameTailnet(formData: FormData) {
 			value: newName,
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function toggleMagic(formData: FormData) {
@@ -69,6 +70,8 @@ async function toggleMagic(formData: FormData) {
 			value: newState === 'enabled',
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function removeNs(formData: FormData) {
@@ -104,6 +107,8 @@ async function removeNs(formData: FormData) {
 			},
 		]);
 	}
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function addNs(formData: FormData) {
@@ -141,6 +146,8 @@ async function addNs(formData: FormData) {
 			},
 		]);
 	}
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function removeDomain(formData: FormData) {
@@ -162,6 +169,8 @@ async function removeDomain(formData: FormData) {
 			value: domains,
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function addDomain(formData: FormData) {
@@ -184,6 +193,8 @@ async function addDomain(formData: FormData) {
 			value: domains,
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function removeRecord(formData: FormData) {
@@ -209,6 +220,8 @@ async function removeRecord(formData: FormData) {
 			value: records,
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }
 
 async function addRecord(formData: FormData) {
@@ -234,4 +247,6 @@ async function addRecord(formData: FormData) {
 			value: records,
 		},
 	]);
+
+	await hp_getIntegration()?.onConfigChange();
 }

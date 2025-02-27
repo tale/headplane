@@ -1,24 +1,25 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { platform } from 'node:os';
 import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
-
+import { setTimeout } from 'node:timers/promises';
 import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node';
-
+import { HeadscaleError, healthcheck } from '~/utils/headscale';
 import log from '~/utils/log';
+import { HeadplaneConfig } from '~server/context/parser';
+import { Integration } from './abstract';
 
-import { createIntegration } from './integration';
+// TODO: Upgrade to the new CoreV1Api from @kubernetes/client-node
+type T = NonNullable<HeadplaneConfig['integration']>['kubernetes'];
+export default class KubernetesIntegration extends Integration<T> {
+	private pid: number | undefined;
+	private maxAttempts = 10;
 
-interface Context {
-	pid: number | undefined;
-}
+	get name() {
+		return 'Kubernetes (k8s)';
+	}
 
-export default createIntegration<Context>({
-	name: 'Kubernetes (k8s)',
-	context: {
-		pid: undefined,
-	},
-	isAvailable: async (context) => {
+	async isAvailable() {
 		if (platform() !== 'linux') {
 			log.error('INTG', 'Kubernetes is only available on Linux');
 			return false;
@@ -191,21 +192,58 @@ export default createIntegration<Context>({
 				return false;
 			}
 
-			context.pid = pids[0];
-			log.info('INTG', 'Found Headscale process with PID: %d', context.pid);
+			this.pid = pids[0];
+			log.info('INTG', 'Found Headscale process with PID: %d', this.pid);
 			return true;
 		} catch {
 			log.error('INTG', 'Failed to read /proc');
 			return false;
 		}
-	},
+	}
 
-	onConfigChange: (context) => {
-		if (!context.pid) {
+	async onConfigChange() {
+		if (!this.pid) {
 			return;
 		}
 
-		log.info('INTG', 'Sending SIGTERM to Headscale');
-		kill(context.pid, 'SIGTERM');
-	},
-});
+		try {
+			log.info('INTG', 'Sending SIGTERM to Headscale');
+			kill(this.pid, 'SIGTERM');
+		} catch (error) {
+			log.error('INTG', 'Failed to send SIGTERM to Headscale: %s', error);
+			log.debug('INTG', 'kill(1) error: %o', error);
+		}
+
+		await setTimeout(1000);
+		let attempts = 0;
+		while (attempts <= this.maxAttempts) {
+			try {
+				log.debug('INTG', 'Checking Headscale status (attempt %d)', attempts);
+				await healthcheck();
+				log.info('INTG', 'Headscale is up and running');
+				return;
+			} catch (error) {
+				if (error instanceof HeadscaleError && error.status === 401) {
+					break;
+				}
+
+				if (error instanceof HeadscaleError && error.status === 404) {
+					break;
+				}
+
+				if (attempts < this.maxAttempts) {
+					attempts++;
+					await setTimeout(1000);
+					continue;
+				}
+
+				log.error(
+					'INTG',
+					'Missed restart deadline for Headscale (pid %d)',
+					this.pid,
+				);
+				return;
+			}
+		}
+	}
+}

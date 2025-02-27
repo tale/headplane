@@ -29,17 +29,46 @@ const headscaleConfig = type({
 	config_strict: stringToBool,
 }).onDeepUndeclaredKey('reject');
 
+const dockerConfig = type({
+	enabled: stringToBool,
+	container_name: 'string',
+	socket: 'string = "unix:///var/run/docker.sock"',
+});
+
+const kubernetesConfig = type({
+	enabled: stringToBool,
+	validate_manifest: stringToBool,
+});
+
+const procConfig = type({
+	enabled: stringToBool,
+});
+
+const integrationConfig = type({
+	'docker?': dockerConfig,
+	'kubernetes?': kubernetesConfig,
+	'proc?': procConfig,
+}).onDeepUndeclaredKey('reject');
+
 const headplaneConfig = type({
 	debug: stringToBool,
 	server: serverConfig,
 	'oidc?': oidcConfig,
+	'integration?': integrationConfig,
 	headscale: headscaleConfig,
 }).onDeepUndeclaredKey('reject');
+
+const partialIntegrationConfig = type({
+	'docker?': dockerConfig.partial(),
+	'kubernetes?': kubernetesConfig.partial(),
+	'proc?': procConfig.partial(),
+}).partial();
 
 const partialHeadplaneConfig = type({
 	debug: stringToBool,
 	server: serverConfig.partial(),
 	'oidc?': oidcConfig.partial(),
+	'integration?': partialIntegrationConfig,
 	headscale: headscaleConfig.partial(),
 }).partial();
 

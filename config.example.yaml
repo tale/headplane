@@ -34,6 +34,36 @@ headscale:
     # If you want to disable this validation, set this to false.
     config_strict: true
 
+# Integration configurations for Headplane to interact with Headscale
+# Only one of these should be enabled at a time or you will get errors
+integration:
+    docker:
+        enabled: false
+        # The name (or ID) of the container running Headscale
+        container_name: "headscale"
+        # The path to the Docker socket (do not change this if you are unsure)
+        # Docker socket paths must start with unix:// or tcp:// and at the moment
+        # https connections are not supported.
+        socket: "unix:///var/run/docker.dock"
+    # Please refer to docs/integration/Kubernetes.md for more information
+    # on how to configure the Kubernetes integration. There are requirements in
+    # order to allow Headscale to be controlled by Headplane in a cluster.
+    kubernetes:
+        enabled: false
+        # Validates the manifest for the Pod to ensure all of the criteria
+        # are set correctly. Turn this off if you are having issues with
+        # shareProcessNamespace not being validated correctly.
+        validate_manifest: true
+
+    # Proc is the "Native" integration that only works when Headscale and
+    # Headplane are running outside of a container. There is no configuration,
+    # but you need to ensure that the Headplane process can terminate the
+    # Headscale process.
+    #
+    # (If they are both running under systemd as sudo, this will work).
+    proc:
+        enabled: false
+
 # OIDC Configuration for simpler authentication
 # (This is optional, but recommended for the best experience)
 oidc:
