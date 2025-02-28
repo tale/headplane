@@ -1,3 +1,14 @@
+### 0.5 (February 27, 2025)
+- Completely redesigned the UI from the ground up for accessibility and performance.
+- Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
+- If the config is read-only, the options are still visible, just disabled (fixes [#48](https://github.com/tale/headplane/issues/48))
+- Added support for Headscale 0.25.0 (this drops support for any older versions).
+- Fixed issues where renaming, deleting, and changing node owners via users was not possible (fixes [#91](https://github.com/tale/headplane/issues/91))
+- Operations now have significantly less moving parts and better error handling.
+- Updated to `pnpm` 10 and Node.js 22.
+- Settings that were previously shared like `public_url` or `oidc` are now separate within Headplane/Headscale. This is a rather large breaking change but fixes cases where a user may choose to utilize Headscale OIDC for Tailscale but not for the Headplane UI.
+- Deprecate the `latest` tag in Docker for explicit versioning and `edge` for nightly builds.
+
 ### 0.4.1 (January 18, 2025)
 - Fixed an urgent issue where the OIDC redirect URI would mismatch.
 
