@@ -1,4 +1,5 @@
 import { constants, access, readFile } from 'node:fs/promises';
+import { env } from 'node:process';
 import { type } from 'arktype';
 import dotenv from 'dotenv';
 import { parseDocument } from 'yaml';
@@ -63,9 +64,9 @@ export async function hp_loadConfig() {
 	let path = HEADPLANE_DEFAULT_CONFIG_PATH;
 
 	const envs = rootEnvs({
-		HEADPLANE_DEBUG_LOG: process.env.HEADPLANE_DEBUG_LOG,
-		HEADPLANE_CONFIG_PATH: process.env.HEADPLANE_CONFIG_PATH,
-		HEADPLANE_LOAD_ENV_OVERRIDES: process.env.HEADPLANE_LOAD_ENV_OVERRIDES,
+		HEADPLANE_DEBUG_LOG: env.HEADPLANE_DEBUG_LOG,
+		HEADPLANE_CONFIG_PATH: env.HEADPLANE_CONFIG_PATH,
+		HEADPLANE_LOAD_ENV_OVERRIDES: env.HEADPLANE_LOAD_ENV_OVERRIDES,
 	});
 
 	if (envs instanceof type.errors) {
@@ -79,7 +80,6 @@ export async function hp_loadConfig() {
 
 	// Load our debug based logger before ANYTHING
 	hpServer_loadLogger(envs.HEADPLANE_DEBUG_LOG);
-
 	if (envs.HEADPLANE_CONFIG_PATH) {
 		path = envs.HEADPLANE_CONFIG_PATH;
 	}
@@ -117,20 +117,17 @@ export async function hp_loadConfig() {
 		testOidc(config.oidc);
 	}
 
-	// @ts-expect-error: If we remove globalThis we get a runtime error
 	globalThis.__cookie_context = {
 		cookie_secret: config.server.cookie_secret,
 		cookie_secure: config.server.cookie_secure,
 	};
 
-	// @ts-expect-error: If we remove globalThis we get a runtime error
 	globalThis.__hs_context = {
 		url: config.headscale.url,
 		config_path: config.headscale.config_path,
 		config_strict: config.headscale.config_strict,
 	};
 
-	// @ts-expect-error: If we remove globalThis we get a runtime error
 	globalThis.__integration_context = config.integration;
 
 	runtimeConfig = config;
@@ -190,7 +187,7 @@ function coalesceEnv(config: HeadplaneConfig) {
 	const rootKeys: string[] = rootEnvs.props.map((prop) => prop.key);
 
 	// Typescript is still insanely stupid at nullish filtering
-	const vars = Object.entries(process.env).filter(([key, value]) => {
+	const vars = Object.entries(env).filter(([key, value]) => {
 		if (!value) {
 			return false;
 		}

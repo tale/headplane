@@ -9,20 +9,19 @@ import mime from 'mime/lite';
 import appContext from '~server/context/app';
 import { loadDevtools, stacksafeTry } from '~server/dev/hot-server';
 import prodBuild from '~server/prod-handler';
+import { hp_loadConfig } from './context/loader';
 
 declare global {
 	// Prefix is a build-time constant
 	const __hp_prefix: string;
 }
 
-const devtools = import.meta.env.DEV ? await loadDevtools() : undefined;
-
-const prodHandler = import.meta.env.PROD ? await prodBuild() : undefined;
-
-const buildPath = process.env.BUILD_PATH ?? './build';
-const baseDir = resolve(join(buildPath, 'client'));
-
 export const listener: RequestListener = async (req, res) => {
+	await hp_loadConfig();
+	const devtools = import.meta.env.DEV ? await loadDevtools() : undefined;
+	const prodHandler = import.meta.env.PROD ? await prodBuild() : undefined;
+	const baseDir = resolve(join('./build', 'client'));
+
 	const url = new URL(`http://${req.headers.host}${req.url}`);
 
 	// build:strip
