@@ -37,6 +37,7 @@ const dockerConfig = type({
 
 const kubernetesConfig = type({
 	enabled: stringToBool,
+	pod_name: 'string',
 	validate_manifest: stringToBool,
 });
 

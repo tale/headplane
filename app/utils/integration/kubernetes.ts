@@ -58,10 +58,10 @@ export default class KubernetesIntegration extends Integration<T> {
 		);
 
 		// Some very ugly nesting but it's necessary
-		if (process.env.HEADSCALE_INTEGRATION_UNSTRICT === 'true') {
+		if (this.context.validate_manifest === false) {
 			log.warn('INTG', 'Skipping strict Pod status check');
 		} else {
-			const pod = process.env.POD_NAME;
+			const pod = this.context.pod_name;
 			if (!pod) {
 				log.error('INTG', 'Missing POD_NAME variable');
 				return false;
