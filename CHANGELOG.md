@@ -1,3 +1,6 @@
+### 0.5.2 (February 28, 2025)
+- Hotfixed an issue where the server bundle got reloaded on each request
+
 ### 0.5.1 (February 28, 2025)
 - Fixed an issue that caused the entire server to crash on start
 - Fixed the published semver tags from Docker
