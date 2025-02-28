@@ -6,6 +6,8 @@ import {
 	writeReadableStreamToWritable,
 } from '@react-router/node';
 import mime from 'mime/lite';
+import type { RequestHandler } from 'react-router';
+import type { ViteDevServer } from 'vite';
 import appContext from '~server/context/app';
 import { loadDevtools, stacksafeTry } from '~server/dev/hot-server';
 import prodBuild from '~server/prod-handler';
@@ -16,18 +18,30 @@ declare global {
 	const __hp_prefix: string;
 }
 
-export const listener: RequestListener = async (req, res) => {
+// biome-ignore lint/suspicious/noExplicitAny: Who cares man
+let devtools: { server: ViteDevServer; handler: any } | undefined = undefined;
+let prodHandler: RequestHandler | undefined = undefined;
+let loaded = false;
+
+async function loadGlobals() {
 	await hp_loadConfig();
-	const devtools = import.meta.env.DEV ? await loadDevtools() : undefined;
-	const prodHandler = import.meta.env.PROD ? await prodBuild() : undefined;
-	const baseDir = resolve(join('./build', 'client'));
+	devtools = import.meta.env.DEV ? await loadDevtools() : undefined;
+	prodHandler = import.meta.env.PROD ? await prodBuild() : undefined;
+	loaded = true;
+}
+
+const baseDir = resolve(join('./build', 'client'));
+export const listener: RequestListener = async (req, res) => {
+	if (!loaded) {
+		await loadGlobals();
+	}
 
 	const url = new URL(`http://${req.headers.host}${req.url}`);
 
 	// build:strip
 	if (devtools) {
 		await new Promise((resolve) => {
-			devtools.server.middlewares(req, res, resolve);
+			devtools?.server.middlewares(req, res, resolve);
 		});
 	}
 
