@@ -19,7 +19,7 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.0
+    image: ghcr.io/tale/headplane:0.5.1
     container_name: headplane
     restart: unless-stopped
     ports:
