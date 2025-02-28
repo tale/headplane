@@ -1,3 +1,8 @@
+### 0.5.1 (February 28, 2025)
+- Fixed an issue that caused the entire server to crash on start
+- Fixed the published semver tags from Docker
+- Fixed the Kubernetes integration not reading the config
+
 ### 0.5 (February 27, 2025)
 - Completely redesigned the UI from the ground up for accessibility and performance.
 - Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
