@@ -8,7 +8,7 @@ import log, { hpServer_loadLogger } from '~server/utils/log';
 import mutex from '~server/utils/mutex';
 import { HeadplaneConfig, coalesceConfig, validateConfig } from './parser';
 
-declare global {
+declare namespace globalThis {
 	let __cookie_context: {
 		cookie_secret: string;
 		cookie_secure: boolean;
