@@ -1,3 +1,8 @@
+### 0.5.3 (March 1, 2025)
+- Fixed an issue where Headplane expected the incorrect config value for OIDC scope (fixes [#111](https://github.com/tale/headplane/issues/111))
+- Added an ARIA indicator for when an input is required and fixed the confirm buttons (fixed [#116](https://github.com/tale/headplane/issues/116))
+- Fixed a typo in the docs that defaulted to `/var/run/docker.dock` for the Docker socket (via [#112](https://github.com/tale/headplane/pull/112))
+
 ### 0.5.2 (February 28, 2025)
 - Hotfixed an issue where the server bundle got reloaded on each request
 
