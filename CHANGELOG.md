@@ -7,6 +7,10 @@
 - Fixed the Kubernetes integration not reading the config
 
 ### 0.5 (February 27, 2025)
+> This release is a major overhaul and contains a significant breaking change.
+> We now use a config file for all settings instead of environment variables.
+> Please see [config.example.yaml](/config.example.yaml) for the new format.
+
 - Completely redesigned the UI from the ground up for accessibility and performance.
 - Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
 - If the config is read-only, the options are still visible, just disabled (fixes [#48](https://github.com/tale/headplane/issues/48))
