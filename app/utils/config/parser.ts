@@ -105,8 +105,8 @@ const headscaleConfig = type({
 		magic_dns: goBool.default(true),
 		base_domain: 'string = "headscale.net"',
 		nameservers: type({
-			global: 'string[]',
-			split: 'Record<string, string[]>',
+			'global?': 'string[]',
+			'split?': 'Record<string, string[]>',
 		}).default(() => ({ global: [], split: {} })),
 		search_domains: type('string[]').default(() => []),
 		extra_records: type({
@@ -129,7 +129,7 @@ const headscaleConfig = type({
 		client_secret_path: 'string?',
 		expiry: goDuration.default('180d'),
 		use_expiry_from_token: goBool.default(false),
-		scope: 'string = "profile email"',
+		scope: type('string[]').default(() => ['openid', 'email', 'profile']),
 		extra_params: 'Record<string, string>?',
 		allowed_domains: 'string[]?',
 		allowed_groups: 'string[]?',
