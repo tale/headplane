@@ -44,7 +44,7 @@ integration:
         # The path to the Docker socket (do not change this if you are unsure)
         # Docker socket paths must start with unix:// or tcp:// and at the moment
         # https connections are not supported.
-        socket: "unix:///var/run/docker.dock"
+        socket: "unix:///var/run/docker.sock"
     # Please refer to docs/integration/Kubernetes.md for more information
     # on how to configure the Kubernetes integration. There are requirements in
     # order to allow Headscale to be controlled by Headplane in a cluster.
