@@ -7,6 +7,10 @@
 - Fixed the Kubernetes integration not reading the config
 
 ### 0.5 (February 27, 2025)
+
+> [!IMPORTANT]  
+> This release introduces breaking changes. Headplane version 0.5.0 and above expect Headscale's oidc.scope to be a string instead of an array. (Change `scope: ["openid", "profile", "email"]` to `scope: "openid profile email"`) If not changed, https://github.com/tale/headplane/issues/111 will occur and Headplane will be limited to Simple Mode.
+
 - Completely redesigned the UI from the ground up for accessibility and performance.
 - Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
 - If the config is read-only, the options are still visible, just disabled (fixes [#48](https://github.com/tale/headplane/issues/48))
