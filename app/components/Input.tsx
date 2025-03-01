@@ -1,3 +1,4 @@
+import { Asterisk } from 'lucide-react';
 import { useRef } from 'react';
 import { type AriaTextFieldProps, useId, useTextField } from 'react-aria';
 import cn from '~/utils/cn';
@@ -9,6 +10,7 @@ export interface InputProps extends AriaTextFieldProps<HTMLInputElement> {
 	className?: string;
 }
 
+// TODO: Custom isInvalid logic for custom error messages
 export default function Input(props: InputProps) {
 	const { label, labelHidden, className } = props;
 	const ref = useRef<HTMLInputElement | null>(null);
@@ -42,6 +44,9 @@ export default function Input(props: InputProps) {
 				)}
 			>
 				{label}
+				{props.isRequired && (
+					<Asterisk className="inline w-3.5 text-red-500 pb-1 ml-0.5" />
+				)}
 			</label>
 			<input
 				{...inputProps}

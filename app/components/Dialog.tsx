@@ -122,9 +122,7 @@ function Panel(props: DialogPanelProps) {
 							<Button
 								type="submit"
 								variant={variant === 'destructive' ? 'danger' : 'heavy'}
-								isDisabled={
-									isDisabled || !(ref.current?.checkValidity() ?? true)
-								}
+								isDisabled={isDisabled}
 							>
 								Confirm
 							</Button>
