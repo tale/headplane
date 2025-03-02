@@ -152,7 +152,7 @@ spec:
         env:
         # Set these if the pod name for Headscale is not static
         # We will use the downward API to get the pod name instead
-        - name: HEADPLANE_ENV_LOAD_OVERRIDES
+        - name: HEADPLANE_LOAD_ENV_OVERRIDES
           value: 'true'
         - name: 'HEADPLANE_INTEGRATION__KUBERNETES__POD_NAME'
           valueFrom:
