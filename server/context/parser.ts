@@ -8,6 +8,17 @@ const serverConfig = type({
 	port: type('string | number.integer').pipe((v) => Number(v)),
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
+	agent: type({
+		authkey: 'string',
+		ttl: 'number.integer = 180000', // Default to 3 minutes
+		cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
+	})
+		.onDeepUndeclaredKey('reject')
+		.default(() => ({
+			authkey: '',
+			ttl: 180000,
+			cache_path: '/var/lib/headplane/agent_cache.json',
+		})),
 });
 
 const oidcConfig = type({

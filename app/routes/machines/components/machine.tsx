@@ -146,24 +146,18 @@ export default function MachineRow({
 					</Menu>
 				</div>
 			</td>
-			{/**
 			<td className="py-2">
-					{stats !== undefined ? (
-						<>
-						<p className="leading-snug">
-							{hinfo.getTSVersion(stats)}
-						</p>
+				{stats !== undefined ? (
+					<>
+						<p className="leading-snug">{hinfo.getTSVersion(stats)}</p>
 						<p className="text-sm opacity-50 max-w-48 truncate">
 							{hinfo.getOSInfo(stats)}
 						</p>
-						</>
-					) : (
-						<p className="text-sm opacity-50">
-							Unknown
-						</p>
-					)}
+					</>
+				) : (
+					<p className="text-sm opacity-50">Unknown</p>
+				)}
 			</td>
-			**/}
 			<td className="py-2">
 				<span
 					className={cn(

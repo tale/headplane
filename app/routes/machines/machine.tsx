@@ -148,16 +148,18 @@ export default function Page() {
 						{machine.user.name}
 					</div>
 				</div>
-				<div className="p-2 pl-4">
-					<p className="text-sm text-headplane-600 dark:text-headplane-300">
-						Status
-					</p>
-					<div className="flex gap-1 mt-1 mb-8">
-						{tags.map((tag) => (
-							<Chip key={tag} text={tag} />
-						))}
+				{tags.length > 0 ? (
+					<div className="p-2 pl-4">
+						<p className="text-sm text-headplane-600 dark:text-headplane-300">
+							Status
+						</p>
+						<div className="flex gap-1 mt-1 mb-8">
+							{tags.map((tag) => (
+								<Chip key={tag} text={tag} />
+							))}
+						</div>
 					</div>
-				</div>
+				) : undefined}
 			</div>
 			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
 			<Routes
