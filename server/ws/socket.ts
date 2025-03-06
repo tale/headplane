@@ -10,7 +10,7 @@ export function initWebsocket(authKey: string) {
 	log.info('SRVX', 'Starting a WebSocket server for agent connections');
 	server.on('connection', (ws, req) => {
 		const tailnetID = req.headers['x-headplane-tailnet-id'];
-		if (!tailnetID) {
+		if (!tailnetID || typeof tailnetID !== 'string') {
 			log.warn(
 				'SRVX',
 				'Rejecting an agent WebSocket connection without a tailnet ID',
@@ -29,6 +29,7 @@ export function initWebsocket(authKey: string) {
 			return;
 		}
 
+		agents.set(tailnetID, ws);
 		const pinger = setInterval(() => {
 			if (ws.readyState !== WebSocket.OPEN) {
 				clearInterval(pinger);
@@ -40,6 +41,7 @@ export function initWebsocket(authKey: string) {
 
 		ws.on('close', () => {
 			clearInterval(pinger);
+			agents.delete(tailnetID);
 		});
 
 		ws.on('error', (error) => {
@@ -54,6 +56,7 @@ export function initWebsocket(authKey: string) {
 	return server;
 }
 
+const agents = new Map<string, WebSocket>();
 export function hp_getAgents() {
-	return server.clients;
+	return agents;
 }

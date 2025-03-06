@@ -28,8 +28,7 @@ export async function hp_agentRequest(nodeList: string[]) {
 	// Request to all connected agents (we can have multiple)
 	// Luckily we can parse all the data at once through message parsing
 	// and then overlapping cache entries will be overwritten by time
-	const agents = [...hp_getAgents()];
-	console.log(agents);
+	const agents = hp_getAgents();
 
 	// Deduplicate the list of nodes
 	const NodeIDs = [...new Set(nodeList)];
@@ -40,7 +39,7 @@ export async function hp_agentRequest(nodeList: string[]) {
 	// Await so that data loads on first request without racing
 	// Since we do agent.once() we NEED to wait for it to finish
 	await Promise.allSettled(
-		agents.map(async (agent) => {
+		[...agents].map(async ([id, agent]) => {
 			agent.send(JSON.stringify({ NodeIDs }));
 			await new Promise<void>((resolve) => {
 				// Just as a safety measure, we set a maximum timeout of 3 seconds
@@ -48,6 +47,7 @@ export async function hp_agentRequest(nodeList: string[]) {
 
 				agent.once('message', (data) => {
 					const parsed = JSON.parse(data.toString());
+					log.debug('CACH', 'Received agent data from %s', id);
 					for (const [node, info] of Object.entries<HostInfo>(parsed)) {
 						cache?.set(node, info);
 						log.debug('CACH', 'Cached %s', node);
