@@ -126,13 +126,38 @@ export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 	);
 
 	return {
-		subject: claims.sub,
-		name: claims.name ? String(claims.name) : 'Anonymous',
-		email: claims.email ? String(claims.email) : undefined,
-		username: claims.preferred_username
-			? String(claims.preferred_username)
-			: undefined,
+		subject: user.sub,
+		name: getName(user, claims),
+		email: user.email ?? claims.email?.toString(),
+		username: user.preferred_username ?? claims.preferred_username?.toString(),
 	};
+}
+
+function getName(user: client.UserInfoResponse, claims: client.IDToken) {
+	if (user.name) {
+		return user.name;
+	}
+
+	if (claims.name && typeof claims.name === 'string') {
+		return claims.name;
+	}
+
+	if (user.given_name && user.family_name) {
+		return `${user.given_name} ${user.family_name}`;
+	}
+
+	if (user.preferred_username) {
+		return user.preferred_username;
+	}
+
+	if (
+		claims.preferred_username &&
+		typeof claims.preferred_username === 'string'
+	) {
+		return claims.preferred_username;
+	}
+
+	return 'Anonymous';
 }
 
 export function formatError(error: unknown) {
