@@ -13,13 +13,17 @@
     types
     ;
   cfg = config.services.headplane;
+  settingsFormat = pkgs.formats.yaml {};
+  settingsFile = settingsFormat.generate "headplane-config.yaml" cfg.settings;
 in {
   options.services.headplane = {
     enable = mkEnableOption "headplane";
     package = mkPackageOption pkgs "headplane" {};
 
     settings = mkOption {
-      type = with types; attrsOf (oneOf [str int bool]);
+      type = types.submodule {
+        freeformType = settingsFormat.type;
+      };
       default = {};
     };
 
@@ -56,10 +60,7 @@ in {
   config = mkIf cfg.enable {
     environment.systemPackages = [cfg.package];
 
-    environment.etc."headplane/config.yaml".source = let
-      format = pkgs.formats.yaml {};
-      headplaneConfig = format.generate "headplane-config.yaml" cfg.settings;
-    in "${headplaneConfig}";
+    environment.etc."headplane/config.yaml".source = "${settingsFile}";
 
     systemd.services.headplane-agent =
       mkIf cfg.agent.enable
