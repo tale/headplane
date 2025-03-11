@@ -21,7 +21,7 @@ export default function New(data: NewProps) {
 	return (
 		<>
 			<Dialog isOpen={pushDialog} onOpenChange={setPushDialog}>
-				<Dialog.Panel isDisabled={!mkey.trim().startsWith('mkey:')}>
+				<Dialog.Panel isDisabled={mkey.length < 1}>
 					<Dialog.Title>Register Machine Key</Dialog.Title>
 					<Dialog.Text className="mb-4">
 						The machine key is given when you run{' '}
@@ -36,7 +36,7 @@ export default function New(data: NewProps) {
 					<Input
 						isRequired
 						label="Machine Key"
-						placeholder="mkey:ff....."
+						placeholder="AbCd..."
 						validationBehavior="native"
 						name="mkey"
 						onChange={setMkey}
