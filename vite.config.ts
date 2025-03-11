@@ -13,7 +13,7 @@ if (prefix.endsWith('/')) {
 
 const version = fs.readFileSync("version", "utf8");
 if (!version) {
-	throw new Error('Unable to execute git describe');
+	throw new Error('Unable to read ./version');
 }
 
 export default defineConfig({
