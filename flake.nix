@@ -26,21 +26,21 @@ rec {
         inherit system;
         overlays = [devshell.overlays.default];
       };
-      headplane = pkgs.callPackage ./nix/package.nix {};
     in {
       formatter = pkgs.alejandra;
-      packages = {
-        inherit headplane;
+      packages = rec {
+        headplane = pkgs.callPackage ./nix/package.nix {};
+        headplane-agent = pkgs.callPackage ./nix/agent.nix {};
         default = headplane;
       };
       devShell = pkgs.devshell.mkShell rec {
         name = description;
         motd = let
-          providedPackages =
-            pkgs.lib.fold
-            (pkg: acc: acc + "\n\t* ${pkgs.lib.getName pkg}")
-            ""
-            packages;
+          providedPackages = pkgs.lib.concatStringsSep "\n" (
+            pkgs.lib.map
+            (pkg: "\t* ${pkgs.lib.getName pkg}")
+            (pkgs.lib.reverseList packages)
+          );
         in ''
           Entered '${description}' development environment.
 
@@ -48,6 +48,7 @@ rec {
           ${providedPackages}
         '';
         packages = [
+          pkgs.go
           pkgs.nodejs-slim_22
           pkgs.pnpm_10
           pkgs.typescript-language-server
@@ -56,7 +57,10 @@ rec {
       };
     })
     // {
-      overlays.default = final: prev: {headplane = final.callPackage ./nix/package.nix {};};
+      overlays.default = final: prev: {
+        headplane = final.callPackage ./nix/package.nix {};
+        headplane-agent = final.callPackage ./nix/agent.nix {};
+      };
       nixosModules.headplane = import ./nix/module.nix;
     };
 }
