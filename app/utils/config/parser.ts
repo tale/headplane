@@ -106,7 +106,7 @@ const headscaleConfig = type({
 		base_domain: 'string = "headscale.net"',
 		nameservers: type({
 			'global?': 'string[]',
-			'split?': 'Record<string, string[]>',
+			'split': type('Record<string, string[]>').default(() => ({})),
 		}).default(() => ({ global: [], split: {} })),
 		search_domains: type('string[]').default(() => []),
 		extra_records: type({
