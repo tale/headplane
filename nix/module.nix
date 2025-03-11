@@ -19,7 +19,7 @@ in {
     package = mkPackageOption pkgs "headplane" {};
 
     settings = mkOption {
-      type = with types; attrsOf (oneOf [str int]);
+      type = with types; attrsOf (oneOf [str int bool]);
       default = {};
     };
 
