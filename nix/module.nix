@@ -32,8 +32,7 @@ in {
       description = "Headscale Web UI";
 
       wantedBy = ["multi-user.target"];
-      # TODO: Integrate with `headscale` service.
-      after = ["network.target"];
+      after = ["network.target" "headscale.service"];
 
       environment = mapAttrs (_: toString) cfg.settings;
 
