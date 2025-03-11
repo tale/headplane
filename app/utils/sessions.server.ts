@@ -12,6 +12,7 @@ export type SessionData = {
 		name: string;
 		email?: string;
 		username?: string;
+		picture?: string;
 	};
 };
 

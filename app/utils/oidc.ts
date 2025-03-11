@@ -130,6 +130,7 @@ export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
 		name: getName(user, claims),
 		email: user.email ?? claims.email?.toString(),
 		username: user.preferred_username ?? claims.preferred_username?.toString(),
+		picture: user.picture,
 	};
 }
 
