@@ -39,6 +39,7 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r {build,node_modules} $out/share/headplane/
     sed -i 's;/build/source/node_modules/react-router/dist/development/index.mjs;react-router;' $out/share/headplane/build/headplane/server.js
     sed -i 's;define_process_env_default.PORT;process.env.PORT;' $out/share/headplane/build/headplane/server.js
+    sed -i "s;$PWD;../..;" $out/share/headplane/build/headplane/server.js
     makeWrapper ${lib.getExe nodejs_22} $out/bin/headplane \
         --chdir $out/share/headplane \
         --set BUILD_PATH $out/share/headplane/build \
