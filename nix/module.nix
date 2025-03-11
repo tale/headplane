@@ -6,7 +6,6 @@
 }: let
   inherit
     (lib)
-    mapAttrs
     mkEnableOption
     mkIf
     mkOption
@@ -57,6 +56,11 @@ in {
   config = mkIf cfg.enable {
     environment.systemPackages = [cfg.package];
 
+    environment.etc."headplane/config.yaml".source = let
+      format = pkgs.formats.yaml {};
+      headplaneConfig = format.generate "headplane-config.yaml" cfg.settings;
+    in "${headplaneConfig}";
+
     systemd.services.headplane-agent =
       mkIf cfg.agent.enable
       {
@@ -93,8 +97,6 @@ in {
       wantedBy = ["multi-user.target"];
       after = ["headscale.service"];
       requires = ["headscale.service"];
-
-      environment = mapAttrs (_: toString) cfg.settings;
 
       serviceConfig = {
         User = config.services.headscale.user;
