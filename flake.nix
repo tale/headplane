@@ -28,10 +28,9 @@ rec {
       };
     in {
       formatter = pkgs.alejandra;
-      packages = rec {
+      packages = {
         headplane = pkgs.callPackage ./nix/package.nix {};
         headplane-agent = pkgs.callPackage ./nix/agent.nix {};
-        default = headplane;
       };
       devShell = pkgs.devshell.mkShell rec {
         name = description;

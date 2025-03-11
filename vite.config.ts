@@ -2,7 +2,7 @@ import { reactRouter } from '@react-router/dev/vite';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { execSync } from 'node:child_process';
+import fs from 'node:fs';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
 
@@ -11,8 +11,7 @@ if (prefix.endsWith('/')) {
 	throw new Error('Prefix must not end with a slash');
 }
 
-// Load the version via git tags
-const version = execSync('git describe --tags --always').toString().trim();
+const version = fs.readFileSync("version", "utf8");
 if (!version) {
 	throw new Error('Unable to execute git describe');
 }
