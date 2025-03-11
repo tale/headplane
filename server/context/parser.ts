@@ -24,7 +24,8 @@ const serverConfig = type({
 const oidcConfig = type({
 	issuer: 'string.url',
 	client_id: 'string',
-	client_secret: 'string',
+	client_secret: 'string?',
+	client_secret_path: 'string?',
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
 	redirect_uri: 'string.url?',

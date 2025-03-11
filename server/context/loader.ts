@@ -3,7 +3,7 @@ import { env } from 'node:process';
 import { type } from 'arktype';
 import dotenv from 'dotenv';
 import { parseDocument } from 'yaml';
-import { testOidc } from '~/utils/oidc';
+import { getOidcSecret, testOidc } from '~/utils/oidc';
 import log, { hpServer_loadLogger } from '~server/utils/log';
 import mutex from '~server/utils/mutex';
 import { HeadplaneConfig, coalesceConfig, validateConfig } from './parser';
@@ -18,6 +18,11 @@ declare namespace globalThis {
 		url: string;
 		config_path?: string;
 		config_strict?: boolean;
+	};
+
+	let __oidc_context: {
+		valid: boolean;
+		secret: string;
 	};
 
 	let __integration_context: HeadplaneConfig['integration'];
@@ -113,8 +118,27 @@ export async function hp_loadConfig() {
 		process.exit(1);
 	}
 
-	if (config.oidc?.strict_validation) {
-		testOidc(config.oidc);
+	// OIDC Related Checks
+	if (config.oidc) {
+		if (!config.oidc.client_secret && !config.oidc.client_secret_path) {
+			log.error('CFGX', 'OIDC configuration is missing a secret, disabling');
+			log.error(
+				'CFGX',
+				'Please specify either `oidc.client_secret` or `oidc.client_secret_path`',
+			);
+		}
+
+		if (config.oidc?.strict_validation) {
+			const result = await testOidc(config.oidc);
+			if (!result) {
+				log.error('CFGX', 'OIDC configuration failed validation, disabling');
+			}
+
+			globalThis.__oidc_context = {
+				valid: result,
+				secret: getOidcSecret() ?? '',
+			};
+		}
 	}
 
 	globalThis.__cookie_context = {

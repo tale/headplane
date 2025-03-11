@@ -11,6 +11,7 @@ import Input from '~/components/Input';
 import type { Key } from '~/types';
 import { pull } from '~/utils/headscale';
 import { noContext } from '~/utils/log';
+import { oidcEnabled } from '~/utils/oidc';
 import { commitSession, getSession } from '~/utils/sessions.server';
 import type { AppContext } from '~server/context/app';
 
@@ -33,12 +34,12 @@ export async function loader({
 
 	// Only set if OIDC is properly enabled anyways
 	const ctx = context.context;
-	if (ctx.oidc?.disable_api_key_login) {
+	if (oidcEnabled() && ctx.oidc?.disable_api_key_login) {
 		return redirect('/oidc/start');
 	}
 
 	return {
-		oidc: ctx.oidc?.issuer,
+		oidc: oidcEnabled(),
 		apiKey: !ctx.oidc?.disable_api_key_login,
 	};
 }
@@ -132,7 +133,7 @@ export default function Page() {
 						</Button>
 					</Form>
 				) : undefined}
-				{data.oidc ? (
+				{data.oidc === true ? (
 					<Form method="POST">
 						{!data.apiKey ? (
 							<Card.Text className="mb-6">

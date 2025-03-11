@@ -73,7 +73,15 @@ integration:
 oidc:
     issuer: "https://accounts.google.com"
     client_id: "your-client-id"
+
+    # The client secret for the OIDC client
+    # Either this or `client_secret_path` must be set for OIDC to work
     client_secret: "<your-client-secret>"
+    # You can alternatively set `client_secret_path` to read the secret from disk.
+    # The path specified can resolve environment variables, making integration
+    # with systemd's `LoadCredential` straightforward:
+    # client_secret_path: "${CREDENTIALS_DIRECTORY}/oidc_client_secret"
+
     disable_api_key_login: false
     token_endpoint_auth_method: "client_secret_post"
 
