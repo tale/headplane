@@ -51,6 +51,7 @@ export async function loader({
 		magic,
 		server: ctx.headscale.url,
 		publicServer: ctx.headscale.public_url,
+		agents: context.agents,
 	};
 }
 
@@ -124,6 +125,7 @@ export default function Page() {
 							users={data.users}
 							magic={data.magic}
 							stats={stats?.[machine.nodeKey]}
+							isAgent={data.agents.includes(machine.id)}
 						/>
 					))}
 				</tbody>

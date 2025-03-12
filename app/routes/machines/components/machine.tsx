@@ -15,6 +15,7 @@ interface Props {
 	machine: Machine;
 	routes: Route[];
 	users: User[];
+	isAgent?: boolean;
 	magic?: string;
 	stats?: HostInfo;
 }
@@ -22,8 +23,9 @@ interface Props {
 export default function MachineRow({
 	machine,
 	routes,
-	magic,
 	users,
+	isAgent,
+	magic,
 	stats,
 }: Props) {
 	const expired =
@@ -77,6 +79,10 @@ export default function MachineRow({
 
 	if (subnetApproved.length > 0) {
 		tags.unshift('Subnets');
+	}
+
+	if (isAgent) {
+		tags.unshift('Headplane Agent');
 	}
 
 	const ipOptions = useMemo(() => {
