@@ -72,11 +72,11 @@ in {
         requires = ["headplane.service"];
 
         environment = {
-          HP_AGENT_HOSTNAME = cfg.agent.hostname;
-          HP_AGENT_TS_SERVER = cfg.agent.tsServer;
-          HP_AGENT_TS_AUTHKEY = cfg.agent.tsAuthkey;
-          HP_AGENT_HP_SERVER = cfg.agent.hpServer;
-          HP_AGENT_HP_AUTHKEY = cfg.agent.hpAuthkey;
+          HEADPLANE_AGENT_HOSTNAME = cfg.agent.hostname;
+          HEADPLANE_AGENT_TS_SERVER = cfg.agent.tsServer;
+          HEADPLANE_AGENT_TS_AUTHKEY = cfg.agent.tsAuthkey;
+          HEADPLANE_AGENT_HP_SERVER = cfg.agent.hpServer;
+          HEADPLANE_AGENT_HP_AUTHKEY = cfg.agent.hpAuthkey;
         };
 
         serviceConfig = {
