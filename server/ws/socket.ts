@@ -1,12 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws';
 import log from '~server/utils/log';
 
-const server = new WebSocketServer({ noServer: true });
-export function initWebsocket(authKey: string) {
-	if (authKey.length === 0) {
-		return;
-	}
-
+export function initWebsocket(server: WebSocketServer, authKey: string) {
 	log.info('SRVX', 'Starting a WebSocket server for agent connections');
 	server.on('connection', (ws, req) => {
 		const tailnetID = req.headers['x-headplane-tailnet-id'];
