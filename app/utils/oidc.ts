@@ -6,10 +6,6 @@ import log from '~server/utils/log';
 type OidcConfig = NonNullable<AppContext['context']['oidc']>;
 declare global {
 	const __PREFIX__: string;
-	const __oidc_context: {
-		valid: boolean;
-		secret: string;
-	};
 }
 
 // We try our best to infer the callback URI of our Headplane instance
@@ -260,7 +256,7 @@ export function formatError(error: unknown) {
 }
 
 export function oidcEnabled() {
-	return __oidc_valid;
+	return __oidc_context.valid;
 }
 
 export async function testOidc(oidc: OidcConfig) {
