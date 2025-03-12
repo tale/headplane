@@ -26,13 +26,17 @@ rec {
         inherit system;
         overlays = [devshell.overlays.default];
       };
-    in {
+    in rec {
       formatter = pkgs.alejandra;
       packages = {
         headplane = pkgs.callPackage ./nix/package.nix {};
         headplane-agent = pkgs.callPackage ./nix/agent.nix {};
       };
-      devShell = pkgs.devshell.mkShell rec {
+      checks.default = pkgs.symlinkJoin {
+        name = "headplane-with-agent";
+        paths = [packages.headplane packages.headplane-agent];
+      };
+      devShells.default = pkgs.devshell.mkShell rec {
         name = description;
         motd = let
           providedPackages = pkgs.lib.concatStringsSep "\n" (

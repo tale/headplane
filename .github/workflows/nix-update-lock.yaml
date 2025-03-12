@@ -1,23 +1,19 @@
 on:
-  pull_request:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    tags:
-      - v?[0-9]+.[0-9]+.[0-9]+*
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  schedule:
+    - cron: '0 0 * * 0'
  
 jobs:
-  nix-ci:
+  update-flake-inputs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
+      - uses: DeterminateSystems/update-flake-lock@main
         with:
-          determinate: true
+          pr-title: "Update flake.lock"
+          pr-labels: |
+            dependencies
+            automated
       - uses: DeterminateSystems/flake-checker-action@main
       - run: nix flake check --all-systems
