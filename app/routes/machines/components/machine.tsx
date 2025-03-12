@@ -15,6 +15,7 @@ interface Props {
 	machine: Machine;
 	routes: Route[];
 	users: User[];
+	isAgent?: boolean;
 	magic?: string;
 	stats?: HostInfo;
 }
@@ -22,8 +23,9 @@ interface Props {
 export default function MachineRow({
 	machine,
 	routes,
-	magic,
 	users,
+	isAgent,
+	magic,
 	stats,
 }: Props) {
 	const expired =
@@ -77,6 +79,10 @@ export default function MachineRow({
 
 	if (subnetApproved.length > 0) {
 		tags.unshift('Subnets');
+	}
+
+	if (isAgent) {
+		tags.unshift('Headplane Agent');
 	}
 
 	const ipOptions = useMemo(() => {
@@ -146,24 +152,18 @@ export default function MachineRow({
 					</Menu>
 				</div>
 			</td>
-			{/**
 			<td className="py-2">
-					{stats !== undefined ? (
-						<>
-						<p className="leading-snug">
-							{hinfo.getTSVersion(stats)}
-						</p>
+				{stats !== undefined ? (
+					<>
+						<p className="leading-snug">{hinfo.getTSVersion(stats)}</p>
 						<p className="text-sm opacity-50 max-w-48 truncate">
 							{hinfo.getOSInfo(stats)}
 						</p>
-						</>
-					) : (
-						<p className="text-sm opacity-50">
-							Unknown
-						</p>
-					)}
+					</>
+				) : (
+					<p className="text-sm opacity-50">Unknown</p>
+				)}
 			</td>
-			**/}
 			<td className="py-2">
 				<span
 					className={cn(

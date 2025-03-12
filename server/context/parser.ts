@@ -8,12 +8,24 @@ const serverConfig = type({
 	port: type('string | number.integer').pipe((v) => Number(v)),
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
+	agent: type({
+		authkey: 'string',
+		ttl: 'number.integer = 180000', // Default to 3 minutes
+		cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
+	})
+		.onDeepUndeclaredKey('reject')
+		.default(() => ({
+			authkey: '',
+			ttl: 180000,
+			cache_path: '/var/lib/headplane/agent_cache.json',
+		})),
 });
 
 const oidcConfig = type({
 	issuer: 'string.url',
 	client_id: 'string',
-	client_secret: 'string',
+	client_secret: 'string?',
+	client_secret_path: 'string?',
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
 	redirect_uri: 'string.url?',

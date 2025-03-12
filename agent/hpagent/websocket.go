@@ -2,11 +2,12 @@ package hpagent
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"github.com/tale/headplane/agent/tsnet"
 	"log"
 	"net/http"
 	"net/url"
+
+	"github.com/gorilla/websocket"
+	"github.com/tale/headplane/agent/tsnet"
 )
 
 type Socket struct {
@@ -23,7 +24,7 @@ func NewSocket(agent *tsnet.TSAgent, controlURL, authKey string, debug bool) (*S
 	}
 
 	headers := http.Header{}
-	headers.Add("X-Headplane-TS-Node-ID", agent.ID)
+	headers.Add("X-Headplane-Tailnet-ID", agent.ID)
 
 	auth := fmt.Sprintf("Bearer %s", authKey)
 	headers.Add("Authorization", auth)

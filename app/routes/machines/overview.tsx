@@ -9,11 +9,11 @@ import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
-import { initAgentSocket, queryAgent } from '~/utils/ws-agent';
 
 import Tooltip from '~/components/Tooltip';
 import { hs_getConfig } from '~/utils/config/loader';
 import { noContext } from '~/utils/log';
+import useAgent from '~/utils/useAgent';
 import { AppContext } from '~server/context/app';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
@@ -34,12 +34,8 @@ export async function loader({
 		throw noContext();
 	}
 
-	initAgentSocket(context);
-
-	const stats = await queryAgent(machines.nodes.map((node) => node.nodeKey));
 	const ctx = context.context;
 	const { mode, config } = hs_getConfig();
-
 	let magic: string | undefined;
 
 	if (mode !== 'no') {
@@ -53,9 +49,9 @@ export async function loader({
 		routes: routes.routes,
 		users: users.users,
 		magic,
-		stats,
 		server: ctx.headscale.url,
 		publicServer: ctx.headscale.public_url,
+		agents: context.agents,
 	};
 }
 
@@ -65,6 +61,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>();
+	const { data: stats } = useAgent(data.nodes.map((node) => node.nodeKey));
 
 	return (
 		<>
@@ -108,7 +105,7 @@ export default function Page() {
 								) : undefined}
 							</div>
 						</th>
-						{/**<th className="uppercase text-xs font-bold pb-2">Version</th>**/}
+						<th className="uppercase text-xs font-bold pb-2">Version</th>
 						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
 					</tr>
 				</thead>
@@ -127,7 +124,8 @@ export default function Page() {
 							)}
 							users={data.users}
 							magic={data.magic}
-							stats={data.stats?.[machine.nodeKey]}
+							stats={stats?.[machine.nodeKey]}
+							isAgent={data.agents.includes(machine.id)}
 						/>
 					))}
 				</tbody>

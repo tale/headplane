@@ -14,11 +14,16 @@ import cn from '~/utils/cn';
 import { hs_getConfig } from '~/utils/config/loader';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
+import type { AppContext } from '~server/context/app';
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function loader({
+	request,
+	params,
+	context,
+}: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (!params.id) {
 		throw new Error('No machine ID provided');
@@ -44,6 +49,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		routes: routes.routes.filter((route) => route.node.id === params.id),
 		users: users.users,
 		magic,
+		agent: context?.agents.includes(machine.node.id),
 	};
 }
 
@@ -52,8 +58,10 @@ export async function action({ request }: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { machine, magic, routes, users } = useLoaderData<typeof loader>();
+	const { machine, magic, routes, users, agent } =
+		useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
+	console.log(machine.expiry);
 
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||
@@ -66,6 +74,10 @@ export default function Page() {
 
 	if (expired) {
 		tags.unshift('Expired');
+	}
+
+	if (agent) {
+		tags.unshift('Headplane Agent');
 	}
 
 	// This is much easier with Object.groupBy but it's too new for us
@@ -148,16 +160,18 @@ export default function Page() {
 						{machine.user.name}
 					</div>
 				</div>
-				<div className="p-2 pl-4">
-					<p className="text-sm text-headplane-600 dark:text-headplane-300">
-						Status
-					</p>
-					<div className="flex gap-1 mt-1 mb-8">
-						{tags.map((tag) => (
-							<Chip key={tag} text={tag} />
-						))}
+				{tags.length > 0 ? (
+					<div className="p-2 pl-4">
+						<p className="text-sm text-headplane-600 dark:text-headplane-300">
+							Status
+						</p>
+						<div className="flex gap-1 mt-1 mb-8">
+							{tags.map((tag) => (
+								<Chip key={tag} text={tag} />
+							))}
+						</div>
 					</div>
-				</div>
+				) : undefined}
 			</div>
 			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
 			<Routes

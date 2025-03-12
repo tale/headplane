@@ -1,19 +1,21 @@
+import { readFile } from 'node:fs/promises';
 import { reactRouter } from '@react-router/dev/vite';
+import autoprefixer from 'autoprefixer';
+import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import fs from 'node:fs';
-import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin';
 if (prefix.endsWith('/')) {
 	throw new Error('Prefix must not end with a slash');
 }
 
-const version = fs.readFileSync("version", "utf8");
+// Load the version via package.json
+const pkg = await readFile('package.json', 'utf-8');
+const { version } = JSON.parse(pkg);
 if (!version) {
-	throw new Error('Unable to read ./version');
+	throw new Error('Unable to read version from package.json');
 }
 
 export default defineConfig({

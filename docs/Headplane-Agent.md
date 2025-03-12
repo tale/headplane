@@ -1,5 +1,8 @@
 # Headplane Agent
 
+> This is currently not available in Headplane.
+> It is incomplete and will land within the next few releases.
+
 The Headplane agent is a lightweight service that runs alongside the Headscale server.
 It's used to interface with devices on your network locally, unlocking the following:
 
@@ -19,17 +22,12 @@ Agent binaries are available on the [releases](https://github.com/tale/headplane
 The Docker image is available through the `ghcr.io/tale/headplane-agent` tag.
 
 The agent requires the following environment variables to be set:
-- **`HP_AGENT_HOSTNAME`**: A hostname you want to use for the agent.
-- **`HP_AGENT_TS_SERVER`**: The URL to your Headscale instance.
-- **`HP_AGENT_TS_AUTHKEY`**: An authorization key to authenticate with Headscale (see below).
-- **`HP_AGENT_HP_SERVER`**: The URL to your Headplane instance.
-- **`HP_AGENT_HP_AUTHKEY`**: The generated auth key to authenticate with Headplane.
+- **`HEADPLANE_AGENT_DEBUG`**: Enable debug logging if `true`.
+- **`HEADPLANE_AGENT_HOSTNAME`**: A hostname you want to use for the agent.
+- **`HEADPLANE_AGENT_TS_SERVER`**: The URL to your Headscale instance.
+- **`HEADPLANE_AGENT_TS_AUTHKEY`**: An authorization key to authenticate with Headscale (see below).
+- **`HEADPLANE_AGENT_HP_SERVER`**: The URL to your Headplane instance, including the subpath (eg. `https://headplane.example.com/admin`).
+- **`HEADPLANE_AGENT_HP_AUTHKEY`**: The generated auth key to authenticate with Headplane.
 
 If you already have Headplane setup, you can generate all of these values within
 the Headplane UI. Navigate to the `Settings` page and click `Agent` to get started.
-
-HP_AGENT_HOSTNAME=headplane-agent
-HP_AGENT_TS_SERVER=http://localhost:8080
-#HP_AGENT_AUTH_KEY=3e0cd749021e5984267cde4b0a5a2ac32c1859e56f7911aa
-HP_AGENT_TS_AUTHKEY=a4dab065c735cb4eae4f12804cf7e111206f9c7c9247c629
-HP_AGENT_HP_SERVER=http://localhost:3000/admin

@@ -1,8 +1,9 @@
 package config
 
 import (
-	_ "github.com/joho/godotenv/autoload"
 	"os"
+
+	_ "github.com/joho/godotenv/autoload"
 )
 
 // Config represents the configuration for the agent.
@@ -16,12 +17,12 @@ type Config struct {
 }
 
 const (
-	DebugEnv        = "HP_AGENT_DEBUG"
-	HostnameEnv     = "HP_AGENT_HOSTNAME"
-	TSControlURLEnv = "HP_AGENT_TS_SERVER"
-	TSAuthKeyEnv    = "HP_AGENT_TS_AUTHKEY"
-	HPControlURLEnv = "HP_AGENT_HP_SERVER"
-	HPAuthKeyEnv	= "HP_AGENT_HP_AUTHKEY"
+	DebugEnv        = "HEADPLANE_AGENT_DEBUG"
+	HostnameEnv     = "HEADPLANE_AGENT_HOSTNAME"
+	TSControlURLEnv = "HEADPLANE_AGENT_TS_SERVER"
+	TSAuthKeyEnv    = "HEADPLANE_AGENT_TS_AUTHKEY"
+	HPControlURLEnv = "HEADPLANE_AGENT_HP_SERVER"
+	HPAuthKeyEnv    = "HEADPLANE_AGENT_HP_AUTHKEY"
 )
 
 // Load reads the agent configuration from environment variables.

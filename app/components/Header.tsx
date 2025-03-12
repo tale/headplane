@@ -91,8 +91,19 @@ export default function Header(data: Props) {
 					<Link href="https://github.com/juanfont/headscale" text="Headscale" />
 					{data.user ? (
 						<Menu>
-							<Menu.IconButton label="User">
-								<CircleUser />
+							<Menu.IconButton
+								label="User"
+								className={cn(data.user.picture ? 'p-0' : '')}
+							>
+								{data.user.picture ? (
+									<img
+										src={data.user.picture}
+										alt={data.user.name}
+										className="w-8 h-8 rounded-full"
+									/>
+								) : (
+									<CircleUser />
+								)}
 							</Menu.IconButton>
 							<Menu.Panel
 								onAction={(key) => {
