@@ -8,8 +8,8 @@ export default function useAgent(nodeIds: string[], interval = 3000) {
 		() => new URLSearchParams({ node_ids: nodeIds.join(',') }),
 		[nodeIds],
 	);
-	const idRef = useRef<string[]>(nodeIds);
 
+	const idRef = useRef<string[]>([]);
 	useEffect(() => {
 		if (idRef.current.join(',') !== nodeIds.join(',')) {
 			fetcher.load(`/api/agent?${qp.toString()}`);
