@@ -104,8 +104,39 @@ in {
         Restart = "always";
         RestartSec = 5;
 
+        # Security
+        NoNewPrivileges = true;
+        PrivateDevices = true;
+        ProtectClock = true;
+        ProtectKernelLogs = true;
+        ProtectControlGroups = true;
+        ProtectKernelModules = true;
+        PrivateMounts = true;
+        # Should work, but for some reason can not find Headscale process if enabled,
+        # even though, both run under the same user.
+        # ProtectProc = "invisible";
+        PrivateTmp = true;
+        PrivateUsers = true;
+        ProtectHome = true;
+        ProtectSystem = "strict";
+        RestrictRealtime = true;
+        RestrictNamespaces = true;
+        ProtectHostname = true;
+        LockPersonality = true;
+        RestrictSUIDSGID = true;
+        RemoveIPC = true;
+        SystemCallArchitectures = "native";
+        MemoryDenyWriteExecute = false; # Required by V8 JavaScript engine.
+        ProtectKernelTunables = true;
+        UMask = "0777"; # No files are created anyway.
+        RestrictAddressFamilies = "AF_INET AF_INET6"; # Required to open IPv4 or IPv6 sockets.
+        CapabilityBoundingSet = ["CAP_KILL"]; # Required to send SIGTERM to Headscale.
+        AmbientCapabilities = ["CAP_KILL"]; # Required to send SIGTERM to Headscale.
+
         # TODO: Harden `systemd` security according to the "The Principle of Least Power".
         # See: `$ systemd-analyze security headplane`.
+        # TODO: Trace used system calls, and restrict everything else.
+        # TODO: Set `PrivateNetwork = true` and setup `headplane.socket`.
       };
     };
   };
