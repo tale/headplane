@@ -32,6 +32,10 @@ in {
         options = {
           enable = mkEnableOption "headplane-agent";
           package = mkPackageOption pkgs "headplane-agent" {};
+          debug = mkOption {
+            type = types.bool;
+            description = "Enable debug logging if true.";
+          };
           hostname = mkOption {
             type = types.str;
             description = "A hostname you want to use for the agent.";
@@ -46,7 +50,7 @@ in {
           };
           hpServer = mkOption {
             type = types.str;
-            description = "The URL to your Headplane instance.";
+            description = "The URL to your Headplane instance, including the subpath (eg. https://headplane.example.com/admin).";
           };
           hpAuthKey = mkOption {
             type = types.str;
@@ -72,6 +76,10 @@ in {
         requires = ["headplane.service"];
 
         environment = {
+          HEADPLANE_AGENT_DEBUG =
+            if cfg.agent.debug
+            then "true"
+            else "false";
           HEADPLANE_AGENT_HOSTNAME = cfg.agent.hostname;
           HEADPLANE_AGENT_TS_SERVER = cfg.agent.tsServer;
           HEADPLANE_AGENT_TS_AUTHKEY = cfg.agent.tsAuthkey;
