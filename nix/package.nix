@@ -9,7 +9,7 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "headplane";
-  version = builtins.replaceStrings ["\n"] [""] (builtins.readFile ../version);
+  version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
   src = ../.;
 
   nativeBuildInputs = [
