@@ -1,20 +1,36 @@
 {
   config,
-  pkgs,
   lib,
+  pkgs,
   ...
 }: let
   inherit
     (lib)
+    attrsToList
+    listToAttrs
+    map
     mkEnableOption
     mkIf
     mkOption
     mkPackageOption
+    typeOf
     types
     ;
   cfg = config.services.headplane;
   settingsFormat = pkgs.formats.yaml {};
   settingsFile = settingsFormat.generate "headplane-config.yaml" cfg.settings;
+  agentEnv = listToAttrs (map (n: {
+    name = n.name;
+    value =
+      if ((typeOf n.value) == "bool")
+      then
+        (
+          if (n.value)
+          then "true"
+          else "false"
+        )
+      else n.value;
+  }) (attrsToList cfg.agent.settings));
 in {
   options.services.headplane = {
     enable = mkEnableOption "headplane";
@@ -25,6 +41,7 @@ in {
         freeformType = settingsFormat.type;
       };
       default = {};
+      description = "Headplane config, generates a YAML config. See: https://github.com/tale/headplane/blob/main/config.example.yaml.";
     };
 
     agent = mkOption {
@@ -32,29 +49,10 @@ in {
         options = {
           enable = mkEnableOption "headplane-agent";
           package = mkPackageOption pkgs "headplane-agent" {};
-          debug = mkOption {
-            type = types.bool;
-            description = "Enable debug logging if true.";
-          };
-          hostname = mkOption {
-            type = types.str;
-            description = "A hostname you want to use for the agent.";
-          };
-          tsServer = mkOption {
-            type = types.str;
-            description = "The URL to your Headscale instance.";
-          };
-          tsAuthKey = mkOption {
-            type = types.str;
-            description = "An authorization key to authenticate with Headscale (see below).";
-          };
-          hpServer = mkOption {
-            type = types.str;
-            description = "The URL to your Headplane instance, including the subpath (eg. https://headplane.example.com/admin).";
-          };
-          hpAuthKey = mkOption {
-            type = types.str;
-            description = "The generated auth key to authenticate with Headplane.";
+          settings = mkOption {
+            type = types.attrsOf [types.str types.bool];
+            description = "Headplane agent env vars config. See: https://github.com/tale/headplane/blob/main/docs/Headplane-Agent.md";
+            default = {};
           };
         };
       };
@@ -62,9 +60,10 @@ in {
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [cfg.package];
-
-    environment.etc."headplane/config.yaml".source = "${settingsFile}";
+    environment = {
+      systemPackages = [cfg.package];
+      etc."headplane/config.yaml".source = "${settingsFile}";
+    };
 
     systemd.services.headplane-agent =
       mkIf cfg.agent.enable
@@ -75,17 +74,7 @@ in {
         after = ["headplane.service"];
         requires = ["headplane.service"];
 
-        environment = {
-          HEADPLANE_AGENT_DEBUG =
-            if cfg.agent.debug
-            then "true"
-            else "false";
-          HEADPLANE_AGENT_HOSTNAME = cfg.agent.hostname;
-          HEADPLANE_AGENT_TS_SERVER = cfg.agent.tsServer;
-          HEADPLANE_AGENT_TS_AUTHKEY = cfg.agent.tsAuthkey;
-          HEADPLANE_AGENT_HP_SERVER = cfg.agent.hpServer;
-          HEADPLANE_AGENT_HP_AUTHKEY = cfg.agent.hpAuthkey;
-        };
+        environment = agentEnv;
 
         serviceConfig = {
           User = config.services.headscale.user;
@@ -96,7 +85,7 @@ in {
           RestartSec = 5;
 
           # TODO: Harden `systemd` security according to the "The Principle of Least Power".
-          # See: `$ systemd-analyze security headplane`.
+          # See: `$ systemd-analyze security headplane-agent`.
         };
       };
 
