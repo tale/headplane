@@ -1,0 +1,23 @@
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - v?[0-9]+.[0-9]+.[0-9]+*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+ 
+jobs:
+  nix-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+      - uses: DeterminateSystems/flake-checker-action@main
+      - run: nix flake check --all-systems
