@@ -74,4 +74,12 @@ There are 2 ways to deploy Headplane:
     >
 </picture>
 
+### NixOS Deployment
+Integration with Nix provided:
+* development environment
+* building packages
+* NixOS module
+
+See [./docs/Nix.md](./docs/Nix.md) for details.
+
 > Copyright (c) 2025 Aarnav Tale
