@@ -118,6 +118,11 @@ export async function loader({
 		}),
 	);
 
+        // Upstream Headscale API is returning user emails instead of user names
+        preAuthKeys.forEach((preauthkey_item, index) => {
+	    preauthkey_item.user = preauthkey_item.user.split('@')[0]
+	});
+	
 	return {
 		keys: preAuthKeys.flatMap((keys) => keys.preAuthKeys),
 		users: users.users,
