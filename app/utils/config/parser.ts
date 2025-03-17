@@ -49,7 +49,7 @@ export type HeadscaleConfig = typeof headscaleConfig.infer;
 const headscaleConfig = type({
 	server_url: 'string',
 	listen_addr: 'string',
-	metrics_listen_addr: 'string?',
+	'metrics_listen_addr?': 'string',
 	grpc_listen_addr: 'string = ":50433"',
 	grpc_allow_insecure: goBool.default(false),
 	noise: {
@@ -83,13 +83,13 @@ const headscaleConfig = type({
 	database: databaseConfig,
 
 	acme_url: 'string = "https://acme-v02.api.letsencrypt.org/directory"',
-	acme_email: 'string | ""',
-	tls_letsencrypt_hostname: 'string | ""',
+	acme_email: 'string = ""',
+	tls_letsencrypt_hostname: 'string = ""',
 	tls_letsencrypt_cache_dir: 'string = "/var/lib/headscale/cache"',
 	tls_letsencrypt_challenge_type: 'string = "HTTP-01"',
 	tls_letsencrypt_listen: 'string = ":http"',
-	tls_cert_path: 'string?',
-	tls_key_path: 'string?',
+	'tls_cert_path?': 'string',
+	'tls_key_path?': 'string',
 
 	log: type({
 		format: 'string = "text"',
