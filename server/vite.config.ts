@@ -1,10 +1,14 @@
+import { createRequire } from 'node:module';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { devDependencies } from '../package.json';
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin';
 if (prefix.endsWith('/')) {
 	throw new Error('Prefix must not end with a slash');
 }
+
+const require = createRequire(import.meta.url);
 
 export default defineConfig({
 	define: {
@@ -13,16 +17,31 @@ export default defineConfig({
 	resolve: {
 		preserveSymlinks: true,
 		alias: {
+			buffer: 'node:buffer',
+			crypto: 'node:crypto',
+			events: 'node:events',
+			fs: 'node:fs',
+			net: 'node:net',
+			http: 'node:http',
+			https: 'node:https',
+			os: 'node:os',
+			path: 'node:path',
 			stream: 'node:stream',
-			crypto: 'node:crypto'
+			tls: 'node:tls',
+			url: 'node:url',
+			zlib: 'node:zlib',
+			ws: require.resolve('ws'),
 		},
 	},
 	plugins: [tsconfigPaths()],
 	build: {
 		minify: false,
 		target: 'esnext',
+		lib: {
+			entry: 'server/entry.ts',
+			formats: ['es'],
+		},
 		rollupOptions: {
-			input: './server/entry.ts',
 			treeshake: {
 				moduleSideEffects: false,
 			},
@@ -31,19 +50,22 @@ export default defineConfig({
 				dir: 'build/headplane',
 				banner: '#!/usr/bin/env node\n',
 			},
-			// external: (id) => id.startsWith('node:') || id === 'ws',
+
+			// We are selecting a list of dependencies we want to include
+			// We are only including our production dependencies
 			external: (id) => {
-				// Resolve happens before side-effects are removed
-				// ie. vite import because of viteDevServer
-				if (/node_modules/.test(id)) {
+				if (id.startsWith('node:')) {
 					return true;
 				}
 
-				return id.startsWith('node:')
-					|| id === 'ws'
-					|| id === 'mime/lite'
-					|| id === '@react-router/node';
-			}
+				const match = id.match(/node_modules\/([^/]+)/);
+				if (match) {
+					const dep = match[1];
+					if ((devDependencies as Record<string, string>)[dep]) {
+						return true;
+					}
+				}
+			},
 		},
-	}
-})
+	},
+});
