@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router';
 import Dialog from '~/components/Dialog';
 import type { Machine } from '~/types';
 
@@ -8,9 +9,14 @@ interface DeleteProps {
 }
 
 export default function Delete({ machine, isOpen, setIsOpen }: DeleteProps) {
+	const navigate = useNavigate();
+
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Panel variant="destructive">
+			<Dialog.Panel
+				variant="destructive"
+				onSubmit={() => navigate('/machines')}
+			>
 				<Dialog.Title>Remove {machine.givenName}</Dialog.Title>
 				<Dialog.Text>
 					This machine will be permanently removed from your network. To re-add
