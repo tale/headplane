@@ -35,7 +35,8 @@ const oidcConfig = type({
 }).onDeepUndeclaredKey('reject');
 
 const headscaleConfig = type({
-	url: 'string.url',
+	url: type('string.url').pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v)),
+	tls_cert_path: 'string?',
 	public_url: 'string.url?',
 	config_path: 'string?',
 	config_strict: stringToBool,
