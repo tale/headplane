@@ -3,13 +3,6 @@ description: Report an issue with Headplane
 assignees: [tale]
 labels: [bug, triage]
 body:
-    - type: input
-      attributes:
-          label: Title
-          description: A short summary of the issue
-          placeholder: e.g. "Error when uploading a file"
-      validations:
-          required: true
     - type: textarea
       attributes:
           label: Description
