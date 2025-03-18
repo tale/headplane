@@ -1,5 +1,5 @@
 import { type } from 'arktype';
-import log from '~/utils/log';
+import log from '~server/utils/log';
 
 const goBool = type('boolean | "true" | "false"').pipe((v) => {
 	if (v === 'true') return true;

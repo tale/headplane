@@ -1,19 +1,45 @@
-export function hpServer_loadLogger(debug: boolean) {
+import {
+	hp_getSingleton,
+	hp_getSingletonUnsafe,
+	hp_setSingleton,
+} from '~server/context/global';
+
+export interface Logger {
+	info: (category: string, message: string, ...args: unknown[]) => void;
+	warn: (category: string, message: string, ...args: unknown[]) => void;
+	error: (category: string, message: string, ...args: unknown[]) => void;
+	debug: (category: string, message: string, ...args: unknown[]) => void;
+}
+
+export function hp_loadLogger(debug: boolean) {
+	const newLog = { ...log };
 	if (debug) {
-		log.debug = (category: string, message: string, ...args: unknown[]) => {
+		newLog.debug = (category: string, message: string, ...args: unknown[]) => {
 			defaultLog('DEBG', category, message, ...args);
 		};
 
-		log.info('CFGX', 'Debug logging enabled');
-		log.info(
+		newLog.info('CFGX', 'Debug logging enabled');
+		newLog.info(
 			'CFGX',
 			'This is very verbose and should only be used for debugging purposes',
 		);
-		log.info(
+		newLog.info(
 			'CFGX',
 			'If you run this in production, your storage COULD fill up quickly',
 		);
 	}
+
+	hp_setSingleton('logger', newLog);
+}
+
+function defaultLog(
+	level: string,
+	category: string,
+	message: string,
+	...args: unknown[]
+) {
+	const date = new Date().toISOString();
+	console.log(`${date} (${level}) [${category}] ${message}`, ...args);
 }
 
 const log = {
@@ -32,14 +58,4 @@ const log = {
 	debug: (category: string, message: string, ...args: unknown[]) => {},
 };
 
-function defaultLog(
-	level: string,
-	category: string,
-	message: string,
-	...args: unknown[]
-) {
-	const date = new Date().toISOString();
-	console.log(`${date} (${level}) [${category}] ${message}`, ...args);
-}
-
-export default log;
+export default hp_getSingletonUnsafe('logger') ?? log;

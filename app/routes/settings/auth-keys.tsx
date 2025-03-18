@@ -7,12 +7,38 @@ import Select from '~/components/Select';
 import TableList from '~/components/TableList';
 import type { PreAuthKey, User } from '~/types';
 import { post, pull } from '~/utils/headscale';
-import { noContext } from '~/utils/log';
 import { send } from '~/utils/res';
 import { getSession } from '~/utils/sessions.server';
-import type { AppContext } from '~server/context/app';
+import { hp_getConfig } from '~server/context/global';
 import AuthKeyRow from './components/key';
 import AddPreAuthKey from './dialogs/new';
+
+export async function loader({ request }: LoaderFunctionArgs) {
+	const session = await getSession(request.headers.get('Cookie'));
+	const users = await pull<{ users: User[] }>(
+		'v1/user',
+		session.get('hsApiKey')!,
+	);
+
+	const context = hp_getConfig();
+	const preAuthKeys = await Promise.all(
+		users.users.map((user) => {
+			const qp = new URLSearchParams();
+			qp.set('user', user.name);
+
+			return pull<{ preAuthKeys: PreAuthKey[] }>(
+				`v1/preauthkey?${qp.toString()}`,
+				session.get('hsApiKey')!,
+			);
+		}),
+	);
+
+	return {
+		keys: preAuthKeys.flatMap((keys) => keys.preAuthKeys),
+		users: users.users,
+		server: context.headscale.public_url ?? context.headscale.url,
+	};
+}
 
 export async function action({ request }: ActionFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
@@ -89,40 +115,6 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		return { message: 'Pre-auth key created', key };
 	}
-}
-
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
-	const session = await getSession(request.headers.get('Cookie'));
-	const users = await pull<{ users: User[] }>(
-		'v1/user',
-		session.get('hsApiKey')!,
-	);
-
-	if (!context) {
-		throw noContext();
-	}
-
-	const ctx = context.context;
-	const preAuthKeys = await Promise.all(
-		users.users.map((user) => {
-			const qp = new URLSearchParams();
-			qp.set('user', user.name);
-
-			return pull<{ preAuthKeys: PreAuthKey[] }>(
-				`v1/preauthkey?${qp.toString()}`,
-				session.get('hsApiKey')!,
-			);
-		}),
-	);
-
-	return {
-		keys: preAuthKeys.flatMap((keys) => keys.preAuthKeys),
-		users: users.users,
-		server: ctx.headscale.public_url ?? ctx.headscale.url,
-	};
 }
 
 export default function Page() {

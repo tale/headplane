@@ -1,5 +1,5 @@
 import { healthcheck } from '~/utils/headscale';
-import log from '~/utils/log';
+import log from '~server/utils/log';
 
 export async function loader() {
 	let healthy = false;

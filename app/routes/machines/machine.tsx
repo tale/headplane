@@ -14,16 +14,12 @@ import cn from '~/utils/cn';
 import { hs_getConfig } from '~/utils/config/loader';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
-import type { AppContext } from '~server/context/app';
+import { hp_getSingleton } from '~server/context/global';
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 
-export async function loader({
-	request,
-	params,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
+export async function loader({ request, params }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (!params.id) {
 		throw new Error('No machine ID provided');
@@ -49,7 +45,7 @@ export async function loader({
 		routes: routes.routes.filter((route) => route.node.id === params.id),
 		users: users.users,
 		magic,
-		agent: context?.agents.includes(machine.node.id),
+		agent: [...hp_getSingleton('ws_agents').keys()].includes(machine.node.id),
 	};
 }
 
@@ -61,7 +57,6 @@ export default function Page() {
 	const { machine, magic, routes, users, agent } =
 		useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
-	console.log(machine.expiry);
 
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||

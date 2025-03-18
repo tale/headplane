@@ -1,25 +1,24 @@
 import { type LoaderFunctionArgs, redirect } from 'react-router';
-import { noContext } from '~/utils/log';
 import { beginAuthFlow, getRedirectUri } from '~/utils/oidc';
+import { send } from '~/utils/res';
 import { commitSession, getSession } from '~/utils/sessions.server';
-import type { AppContext } from '~server/context/app';
+import { hp_getConfig, hp_getSingleton } from '~server/context/global';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines');
 	}
 
-	if (!context) {
-		throw noContext();
-	}
+	const { oidc } = hp_getConfig();
+	try {
+		if (!oidc) {
+			throw new Error('OIDC is not enabled');
+		}
 
-	const { oidc } = context.context;
-	if (!oidc) {
-		throw new Error('An invalid OIDC configuration was provided');
+		hp_getSingleton('oidc_client');
+	} catch {
+		return send({ error: 'OIDC is not enabled' }, { status: 400 });
 	}
 
 	const redirectUri = oidc.redirect_uri ?? getRedirectUri(request);

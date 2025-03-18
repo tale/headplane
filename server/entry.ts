@@ -1,11 +1,12 @@
 import { constants, access } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { WebSocketServer } from 'ws';
-import { hp_getConfig, hp_loadConfig } from '~server/context/loader';
+import { hp_getConfig } from '~server/context/global';
+import { hp_loadConfig } from '~server/context/loader';
 import { listener } from '~server/listener';
-import log from '~server/utils/log';
 import { hp_loadAgentCache } from '~server/ws/data';
 import { initWebsocket } from '~server/ws/socket';
+import log from './utils/log';
 
 log.info('SRVX', 'Running Node.js %s', process.versions.node);
 

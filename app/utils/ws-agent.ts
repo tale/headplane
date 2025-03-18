@@ -4,7 +4,7 @@ import { setTimeout as pSetTimeout } from 'node:timers/promises';
 import type { LoaderFunctionArgs } from 'react-router';
 import { WebSocket } from 'ws';
 import type { HostInfo } from '~/types';
-import log from './log';
+import log from '~server/utils/log';
 
 // Essentially a HashMap which invalidates entries after a certain time.
 // It also is capable of syncing as a compressed file to disk.
@@ -99,7 +99,6 @@ export function initAgentSocket(context: LoaderFunctionArgs['context']) {
 // If we aren't connected to an agent, then debug log and return the cache
 export async function queryAgent(nodes: string[]) {
 	return;
-	// biome-ignore lint: bruh
 	if (!cache) {
 		log.error('CACH', 'Cache not initialized');
 		return;

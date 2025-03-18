@@ -15,22 +15,15 @@ import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
 
 import { hs_getConfig } from '~/utils/config/loader';
-import { noContext } from '~/utils/log';
 import type { AppContext } from '~server/context/app';
+import { hp_getConfig } from '~server/context/global';
 import ManageBanner from './components/manage-banner';
 import DeleteUser from './dialogs/delete-user';
 import RenameUser from './dialogs/rename-user';
 import { userAction } from './user-actions';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
+export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
 	const session = await getSession(request.headers.get('Cookie'));
-	if (!context) {
-		throw noContext();
-	}
-
 	const [machines, apiUsers] = await Promise.all([
 		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
 		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
@@ -41,7 +34,7 @@ export async function loader({
 		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
 	}));
 
-	const ctx = context.context;
+	const { oidc } = hp_getConfig();
 	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
 
@@ -52,7 +45,7 @@ export async function loader({
 	}
 
 	return {
-		oidc: ctx.oidc,
+		oidc,
 		magic,
 		users,
 	};

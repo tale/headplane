@@ -1,11 +1,11 @@
 import { Building2, House, Key } from 'lucide-react';
 import Card from '~/components/Card';
 import Link from '~/components/Link';
-import type { AppContext } from '~server/context/app';
+import type { HeadplaneConfig } from '~server/context/parser';
 import CreateUser from '../dialogs/create-user';
 
 interface Props {
-	oidc?: NonNullable<AppContext['context']['oidc']>;
+	oidc?: NonNullable<HeadplaneConfig['oidc']>;
 }
 
 export default function ManageBanner({ oidc }: Props) {

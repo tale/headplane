@@ -10,15 +10,10 @@ import Code from '~/components/Code';
 import Input from '~/components/Input';
 import type { Key } from '~/types';
 import { pull } from '~/utils/headscale';
-import { noContext } from '~/utils/log';
-import { oidcEnabled } from '~/utils/oidc';
 import { commitSession, getSession } from '~/utils/sessions.server';
-import type { AppContext } from '~server/context/app';
+import { hp_getConfig, hp_getSingleton } from '~server/context/global';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	if (session.has('hsApiKey')) {
 		return redirect('/machines', {
@@ -28,37 +23,34 @@ export async function loader({
 		});
 	}
 
-	if (!context) {
-		throw noContext();
-	}
+	const context = hp_getConfig();
+	const disableApiKeyLogin = context.oidc?.disable_api_key_login;
+	let oidc = false;
 
-	// Only set if OIDC is properly enabled anyways
-	const ctx = context.context;
-	if (oidcEnabled() && ctx.oidc?.disable_api_key_login) {
-		return redirect('/oidc/start');
-	}
+	try {
+		// Only set if OIDC is properly enabled anyways
+		hp_getSingleton('oidc_client');
+		oidc = true;
+
+		if (disableApiKeyLogin) {
+			return redirect('/oidc/start');
+		}
+	} catch {}
 
 	return {
-		oidc: oidcEnabled(),
-		apiKey: !ctx.oidc?.disable_api_key_login,
+		oidc,
+		apiKey: !disableApiKeyLogin,
 	};
 }
 
-export async function action({
-	request,
-	context,
-}: ActionFunctionArgs<AppContext>) {
+export async function action({ request }: ActionFunctionArgs) {
 	const formData = await request.formData();
 	const oidcStart = formData.get('oidc-start');
 	const session = await getSession(request.headers.get('Cookie'));
 
 	if (oidcStart) {
-		if (!context) {
-			throw noContext();
-		}
-
-		const ctx = context.context;
-		if (!ctx.oidc) {
+		const context = hp_getConfig();
+		if (!context.oidc) {
 			throw new Error('An invalid OIDC configuration was provided');
 		}
 
