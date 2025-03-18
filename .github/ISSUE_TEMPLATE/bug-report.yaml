@@ -1,0 +1,38 @@
+name: Bug Report
+description: Report an issue with Headplane
+assignees: [tale]
+labels: [bug, triage]
+body:
+    - type: input
+      attributes:
+          label: Title
+          description: A short summary of the issue
+          placeholder: e.g. "Error when uploading a file"
+      validations:
+          required: true
+    - type: textarea
+      attributes:
+          label: Description
+          description: |
+              A detailed description of the issue and steps to reproduce it.
+              If applicable, include any error messages or screenshots.
+
+              If this is not an issue with Headplane, but an issue with your
+              environment, please consider opening a discussion instead.
+          placeholder: e.g. "When I try to upload a file, I get an error message."
+      validations:
+          required: true
+    - type: input
+      attributes:
+          label: Headplane Version
+          description: What version of Headplane are you using?
+          placeholder: e.g. "v0.5.5"
+      validations:
+          required: true
+    - type: input
+      attributes:
+          label: Headscale Version
+          description: What version of Headscale are you using?
+          placeholder: e.g. "v0.25.1"
+      validations:
+          required: true
