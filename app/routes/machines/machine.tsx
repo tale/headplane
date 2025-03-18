@@ -14,7 +14,7 @@ import cn from '~/utils/cn';
 import { hs_getConfig } from '~/utils/config/loader';
 import { pull } from '~/utils/headscale';
 import { getSession } from '~/utils/sessions.server';
-import { hp_getSingleton } from '~server/context/global';
+import { hp_getSingleton, hp_getSingletonUnsafe } from '~server/context/global';
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
@@ -45,7 +45,9 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		routes: routes.routes.filter((route) => route.node.id === params.id),
 		users: users.users,
 		magic,
-		agent: [...hp_getSingleton('ws_agents').keys()].includes(machine.node.id),
+		agent: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()].includes(
+			machine.node.id,
+		),
 	};
 }
 

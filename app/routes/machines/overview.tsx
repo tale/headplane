@@ -13,7 +13,7 @@ import { getSession } from '~/utils/sessions.server';
 import Tooltip from '~/components/Tooltip';
 import { hs_getConfig } from '~/utils/config/loader';
 import useAgent from '~/utils/useAgent';
-import { hp_getConfig, hp_getSingleton } from '~server/context/global';
+import { hp_getConfig, hp_getSingletonUnsafe } from '~server/context/global';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
@@ -43,7 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		magic,
 		server: context.headscale.url,
 		publicServer: context.headscale.public_url,
-		agents: [...hp_getSingleton('ws_agents').keys()],
+		agents: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()],
 	};
 }
 
