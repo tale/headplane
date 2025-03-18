@@ -12,17 +12,13 @@ import { getSession } from '~/utils/sessions.server';
 
 import Tooltip from '~/components/Tooltip';
 import { hs_getConfig } from '~/utils/config/loader';
-import { noContext } from '~/utils/log';
 import useAgent from '~/utils/useAgent';
-import { AppContext } from '~server/context/app';
+import { hp_getConfig, hp_getSingleton } from '~server/context/global';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<AppContext>) {
+export async function loader({ request }: LoaderFunctionArgs) {
 	const session = await getSession(request.headers.get('Cookie'));
 	const [machines, routes, users] = await Promise.all([
 		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
@@ -30,11 +26,7 @@ export async function loader({
 		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
 	]);
 
-	if (!context) {
-		throw noContext();
-	}
-
-	const ctx = context.context;
+	const context = hp_getConfig();
 	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
 
@@ -49,9 +41,9 @@ export async function loader({
 		routes: routes.routes,
 		users: users.users,
 		magic,
-		server: ctx.headscale.url,
-		publicServer: ctx.headscale.public_url,
-		agents: context.agents,
+		server: context.headscale.url,
+		publicServer: context.headscale.public_url,
+		agents: [...hp_getSingleton('ws_agents').keys()],
 	};
 }
 

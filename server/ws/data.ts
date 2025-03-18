@@ -1,10 +1,13 @@
 import { open } from 'node:fs/promises';
 import type { HostInfo } from '~/types';
+import {
+	hp_getSingleton,
+	hp_getSingletonUnsafe,
+	hp_setSingleton,
+} from '~server/context/global';
 import log from '~server/utils/log';
 import { TimedCache } from './cache';
-import { hp_getAgents } from './socket';
 
-let cache: TimedCache<HostInfo> | undefined;
 export async function hp_loadAgentCache(defaultTTL: number, filepath: string) {
 	log.debug('CACH', `Loading agent cache from ${filepath}`);
 
@@ -17,18 +20,16 @@ export async function hp_loadAgentCache(defaultTTL: number, filepath: string) {
 		return;
 	}
 
-	cache = new TimedCache(defaultTTL, filepath);
-}
-
-export function hp_getAgentCache() {
-	return cache;
+	const cache = new TimedCache<HostInfo>(defaultTTL, filepath);
+	hp_setSingleton('ws_agent_data', cache);
 }
 
 export async function hp_agentRequest(nodeList: string[]) {
 	// Request to all connected agents (we can have multiple)
 	// Luckily we can parse all the data at once through message parsing
 	// and then overlapping cache entries will be overwritten by time
-	const agents = hp_getAgents();
+	const agents = hp_getSingleton('ws_agents');
+	const cache = hp_getSingletonUnsafe('ws_agent_data');
 
 	// Deduplicate the list of nodes
 	const NodeIDs = [...new Set(nodeList)];

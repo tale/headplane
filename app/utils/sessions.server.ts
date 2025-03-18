@@ -1,4 +1,5 @@
 import { Session, createCookieSessionStorage } from 'react-router';
+import { hp_getConfig } from '~server/context/global';
 
 export type SessionData = {
 	hsApiKey: string;
@@ -21,6 +22,8 @@ type SessionFlashData = {
 };
 
 // TODO: Domain config in cookies
+// TODO: Move this to the singleton system
+const context = hp_getConfig();
 const sessionStorage = createCookieSessionStorage<
 	SessionData,
 	SessionFlashData
@@ -31,8 +34,8 @@ const sessionStorage = createCookieSessionStorage<
 		maxAge: 60 * 60 * 24, // 24 hours
 		path: '/',
 		sameSite: 'lax',
-		secrets: [__cookie_context.cookie_secret],
-		secure: __cookie_context.cookie_secure,
+		secrets: [context.server.cookie_secret],
+		secure: context.server.cookie_secure,
 	},
 });
 

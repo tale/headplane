@@ -1,8 +1,14 @@
 import WebSocket, { WebSocketServer } from 'ws';
+import { hp_setSingleton } from '~server/context/global';
 import log from '~server/utils/log';
+import { hp_agentRequest } from './data';
 
 export function initWebsocket(server: WebSocketServer, authKey: string) {
 	log.info('SRVX', 'Starting a WebSocket server for agent connections');
+	const agents = new Map<string, WebSocket>();
+	hp_setSingleton('ws_agents', agents);
+	hp_setSingleton('ws_fetch_data', hp_agentRequest);
+
 	server.on('connection', (ws, req) => {
 		const tailnetID = req.headers['x-headplane-tailnet-id'];
 		if (!tailnetID || typeof tailnetID !== 'string') {
@@ -49,9 +55,4 @@ export function initWebsocket(server: WebSocketServer, authKey: string) {
 	});
 
 	return server;
-}
-
-const agents = new Map<string, WebSocket>();
-export function hp_getAgents() {
-	return agents;
 }

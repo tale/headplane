@@ -17,7 +17,15 @@ server:
 headscale:
     # The URL to your Headscale instance
     # (All API requests are routed through this URL)
+    # (THIS IS NOT the gRPC endpoint, but the HTTP endpoint)
+    #
+    # IMPORTANT: If you are using TLS this MUST be set to `https://`
     url: "http://headscale:5000"
+
+    # If you use the TLS configuration in Headscale, and you are not using
+    # Let's Encrypt for your certificate, pass in the path to the certificate.
+    # (This has no effect `url` does not start with `https://`)
+    # tls_cert_path: "/var/lib/headplane/tls.crt"
 
     # Optional, public URL if they differ
     # This affects certain parts of the web UI

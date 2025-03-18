@@ -3,9 +3,7 @@ import { createReadableStreamFromReadable } from '@react-router/node';
 import { isbot } from 'isbot';
 import type { RenderToPipeableStreamOptions } from 'react-dom/server';
 import { renderToPipeableStream } from 'react-dom/server';
-import { EntryContext, ServerRouter } from 'react-router';
-import { hp_loadLogger } from '~/utils/log';
-import type { AppContext } from '~server/context/app';
+import { AppLoadContext, EntryContext, ServerRouter } from 'react-router';
 
 export const streamTimeout = 5_000;
 export default function handleRequest(
@@ -13,14 +11,9 @@ export default function handleRequest(
 	responseStatusCode: number,
 	responseHeaders: Headers,
 	routerContext: EntryContext,
-	loadContext: AppContext,
+	loadContext: AppLoadContext,
 ) {
-	const { context } = loadContext;
 	return new Promise((resolve, reject) => {
-		// This is a promise but we don't need to wait for it to finish
-		// before we start rendering the shell since it only loads once.
-		hp_loadLogger(context.debug);
-
 		let shellRendered = false;
 		const userAgent = request.headers.get('user-agent');
 

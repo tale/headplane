@@ -1,9 +1,10 @@
 import { readFile } from 'node:fs/promises';
 import * as client from 'openid-client';
-import type { AppContext } from '~server/context/app';
+import { hp_getSingleton, hp_setSingleton } from '~server/context/global';
+import { HeadplaneConfig } from '~server/context/parser';
 import log from '~server/utils/log';
 
-type OidcConfig = NonNullable<AppContext['context']['oidc']>;
+type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
 declare global {
 	const __PREFIX__: string;
 }
@@ -103,13 +104,7 @@ function clientAuthMethod(
 }
 
 export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
-	const config = await client.discovery(
-		new URL(oidc.issuer),
-		oidc.client_id,
-		oidc.client_secret,
-		clientAuthMethod(oidc.token_endpoint_auth_method)(__oidc_context.secret),
-	);
-
+	const config = hp_getSingleton('oidc_client');
 	const codeVerifier = client.randomPKCECodeVerifier();
 	const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
@@ -145,16 +140,7 @@ interface FlowOptions {
 }
 
 export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
-	const config = await client.discovery(
-		new URL(oidc.issuer),
-		oidc.client_id,
-		oidc.client_secret,
-		clientAuthMethod(oidc.token_endpoint_auth_method)(__oidc_context.secret),
-	);
-
-	let subject: string;
-	let accessToken: string;
-
+	const config = hp_getSingleton('oidc_client');
 	const tokens = await client.authorizationCodeGrant(
 		config,
 		new URL(options.redirect_uri),
@@ -255,10 +241,6 @@ export function formatError(error: unknown) {
 	};
 }
 
-export function oidcEnabled() {
-	return __oidc_context.valid;
-}
-
 export async function testOidc(oidc: OidcConfig) {
 	await resolveClientSecret(oidc);
 	if (!oidcSecret) {
@@ -312,5 +294,6 @@ export async function testOidc(oidc: OidcConfig) {
 	}
 
 	log.debug('OIDC', 'OIDC configuration is valid');
+	hp_setSingleton('oidc_client', config);
 	return true;
 }

@@ -2,8 +2,8 @@ import { constants, access } from 'node:fs/promises';
 import { setTimeout } from 'node:timers/promises';
 import { Client } from 'undici';
 import { HeadscaleError, healthcheck, pull } from '~/utils/headscale';
-import log from '~/utils/log';
 import { HeadplaneConfig } from '~server/context/parser';
+import log from '~server/utils/log';
 import { Integration } from './abstract';
 
 type T = NonNullable<HeadplaneConfig['integration']>['docker'];

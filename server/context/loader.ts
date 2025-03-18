@@ -2,31 +2,13 @@ import { constants, access, readFile } from 'node:fs/promises';
 import { env } from 'node:process';
 import { type } from 'arktype';
 import dotenv from 'dotenv';
+import { Agent } from 'undici';
 import { parseDocument } from 'yaml';
-import { getOidcSecret, testOidc } from '~/utils/oidc';
-import log, { hpServer_loadLogger } from '~server/utils/log';
+import { testOidc } from '~/utils/oidc';
+import log, { hp_loadLogger } from '~server/utils/log';
 import mutex from '~server/utils/mutex';
+import { hp_setConfig, hp_setSingleton } from './global';
 import { HeadplaneConfig, coalesceConfig, validateConfig } from './parser';
-
-declare namespace globalThis {
-	let __cookie_context: {
-		cookie_secret: string;
-		cookie_secure: boolean;
-	};
-
-	let __hs_context: {
-		url: string;
-		config_path?: string;
-		config_strict?: boolean;
-	};
-
-	let __oidc_context: {
-		valid: boolean;
-		secret: string;
-	};
-
-	let __integration_context: HeadplaneConfig['integration'];
-}
 
 const envBool = type('string | undefined').pipe((v) => {
 	return ['1', 'true', 'yes', 'on'].includes(v?.toLowerCase() ?? '');
@@ -39,30 +21,12 @@ const rootEnvs = type({
 }).onDeepUndeclaredKey('reject');
 
 const HEADPLANE_DEFAULT_CONFIG_PATH = '/etc/headplane/config.yaml';
-let runtimeConfig: HeadplaneConfig | undefined = undefined;
 const runtimeLock = mutex();
-
-// We need to acquire here to ensure that the configuration is loaded
-// properly. We can't request a configuration if its in the process
-// of being updated.
-export function hp_getConfig() {
-	runtimeLock.acquire();
-	if (!runtimeConfig) {
-		runtimeLock.release();
-		// This shouldn't be possible, we NEED to have a configuration
-		throw new Error('Configuration not loaded');
-	}
-
-	const config = runtimeConfig;
-	runtimeLock.release();
-	return config;
-}
 
 // hp_loadConfig should ONLY be called when we explicitly need to reload
 // the configuration. This should be done when the configuration file
 // changes and we ignore environment variable changes.
 //
-// To read the config hp_getConfig should be used.
 // TODO: File watching for hp_loadConfig()
 export async function hp_loadConfig() {
 	runtimeLock.acquire();
@@ -84,7 +48,7 @@ export async function hp_loadConfig() {
 	}
 
 	// Load our debug based logger before ANYTHING
-	hpServer_loadLogger(envs.HEADPLANE_DEBUG_LOG);
+	await hp_loadLogger(envs.HEADPLANE_DEBUG_LOG);
 	if (envs.HEADPLANE_CONFIG_PATH) {
 		path = envs.HEADPLANE_CONFIG_PATH;
 	}
@@ -133,28 +97,31 @@ export async function hp_loadConfig() {
 			if (!result) {
 				log.error('CFGX', 'OIDC configuration failed validation, disabling');
 			}
-
-			globalThis.__oidc_context = {
-				valid: result,
-				secret: getOidcSecret() ?? '',
-			};
 		}
 	}
 
-	globalThis.__cookie_context = {
-		cookie_secret: config.server.cookie_secret,
-		cookie_secure: config.server.cookie_secure,
-	};
+	if (config.headscale.tls_cert_path) {
+		log.debug('CFGX', 'Attempting to load supplied Headscale TLS cert');
+		try {
+			const data = await readFile(config.headscale.tls_cert_path, 'utf8');
+			log.info('CFGX', 'Headscale TLS cert loaded successfully');
+			hp_setSingleton(
+				'api_agent',
+				new Agent({
+					connect: {
+						ca: data.trim(),
+					},
+				}),
+			);
+		} catch (error) {
+			log.error('CFGX', 'Failed to load Headscale TLS cert');
+			log.debug('CFGX', 'Error Details: %o', error);
+		}
+	} else {
+		hp_setSingleton('api_agent', new Agent());
+	}
 
-	globalThis.__hs_context = {
-		url: config.headscale.url,
-		config_path: config.headscale.config_path,
-		config_strict: config.headscale.config_strict,
-	};
-
-	globalThis.__integration_context = config.integration;
-
-	runtimeConfig = config;
+	hp_setConfig(config);
 	runtimeLock.release();
 }
 

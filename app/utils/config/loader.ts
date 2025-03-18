@@ -1,8 +1,9 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
 import { Document, parseDocument } from 'yaml';
 import { hp_getIntegration } from '~/utils/integration/loader';
-import log from '~/utils/log';
 import mutex from '~/utils/mutex';
+import { hp_getConfig } from '~server/context/global';
+import log from '~server/utils/log';
 import { HeadscaleConfig, validateConfig } from './parser';
 
 let runtimeYaml: Document | undefined = undefined;
@@ -181,8 +182,9 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 	}
 
 	// Revalidate the configuration
+	const context = hp_getConfig();
 	const newRawConfig = runtimeYaml.toJSON() as unknown;
-	runtimeConfig = __hs_context.config_strict
+	runtimeConfig = context.headscale.config_strict
 		? validateConfig(newRawConfig, true)
 		: (newRawConfig as HeadscaleConfig);
 
@@ -196,5 +198,7 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 }
 
 // IMPORTANT THIS IS A SIDE EFFECT ON INIT
-hs_loadConfig(__hs_context.config_path, __hs_context.config_strict);
+// TODO: Replace this into the new singleton system
+const context = hp_getConfig();
+hs_loadConfig(context.headscale.config_path, context.headscale.config_strict);
 hp_getIntegration();

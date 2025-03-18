@@ -5,8 +5,8 @@ import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node';
 import { HeadscaleError, healthcheck } from '~/utils/headscale';
-import log from '~/utils/log';
 import { HeadplaneConfig } from '~server/context/parser';
+import log from '~server/utils/log';
 import { Integration } from './abstract';
 
 // TODO: Upgrade to the new CoreV1Api from @kubernetes/client-node
