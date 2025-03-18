@@ -1,3 +1,17 @@
+### 0.5.4 (March 18, 2025)
+- Fixed a typo in the Kubernetes documentation
+- Handle split and global DNS records not being set in the Headscale config (via [#129](https://github.com/tale/headplane/pull/129))
+- Stop checking for the `mkey:` prefix on machine registration (via [#131](https://github.com/tale/headplane/pull/131))
+- OIDC auth was not using information from the `user_info` endpoint.
+- Support the picture of the user who is logged in via OIDC if available.
+- Rewrote the Agent implementation to better utilize disk space and perform better (coming soon).
+- Loosened checking for the Headscale configuration as it was too strict and required certain optional fields.
+- Deleting a node will now correctly redirect back to the nodes page (fixes [#137](https://github.com/tale/headplane/issues/137))
+- Supports connecting to Headscale via TLS and can accept a certificate file (partially fixes [#82](https://github.com/tale/headplane/issues/82))
+- Add support for running Headplane through Nix, though currently unsupported (via [#132](https://github.com/tale/headplane/pull/132))
+- You can now pass in an OIDC client secret through `oidc.client_secret_path` in the config (fixes [#126](https://github.com/tale/headplane/issues/126))
+- Correctly handle differently localized number inputs (fixes [#125](https://github.com/tale/headplane/issues/125))
+
 ### 0.5.3 (March 1, 2025)
 - Fixed an issue where Headplane expected the incorrect config value for OIDC scope (fixes [#111](https://github.com/tale/headplane/issues/111))
 - Added an ARIA indicator for when an input is required and fixed the confirm buttons (fixed [#116](https://github.com/tale/headplane/issues/116))

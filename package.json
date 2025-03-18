@@ -2,7 +2,7 @@
 	"name": "headplane",
 	"private": true,
 	"sideEffects": false,
-	"version": "0.5.3",
+	"version": "0.5.4",
 	"type": "module",
 	"scripts": {
 		"build": "react-router build && vite build -c server/vite.config.ts",
