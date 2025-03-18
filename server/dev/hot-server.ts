@@ -12,9 +12,6 @@ export async function loadDevtools() {
 		server: {
 			middlewareMode: true,
 		},
-		optimizeDeps: {
-			disabled: true,
-		},
 	});
 
 	// We can't just do ssrLoadModule for virtual:react-router/server-build
