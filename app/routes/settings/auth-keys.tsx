@@ -26,10 +26,17 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			const qp = new URLSearchParams();
 			qp.set('user', user.name);
 
-			return pull<{ preAuthKeys: PreAuthKey[] }>(
+			var result =  pull<{ preAuthKeys: PreAuthKey[] }>(
 				`v1/preauthkey?${qp.toString()}`,
 				session.get('hsApiKey')!,
 			);
+			
+			// Change the email returned by Headscale API to username
+		        result.forEach((preauthkey_item, index) => {
+			    preauthkey_item.user = user;
+			});
+			
+			return result;
 		}),
 	);
 
