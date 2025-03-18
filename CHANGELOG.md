@@ -1,3 +1,6 @@
+### 0.5.5 (March 18, 2025)
+- Hotfix an issue that caused Headplane to crash if no agents are available
+
 ### 0.5.4 (March 18, 2025)
 - Fixed a typo in the Kubernetes documentation
 - Handle split and global DNS records not being set in the Headscale config (via [#129](https://github.com/tale/headplane/pull/129))
