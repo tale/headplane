@@ -3,13 +3,6 @@ description: Request a new feature or enhancement for Headplane
 assignees: [tale]
 labels: [enhancement, triage]
 body:
-    - type: input
-      attributes:
-          label: Title
-          description: A short summary of the enhancement you are requesting.
-          placeholder: e.g. "Add support for custom themes"
-      validations:
-          required: true
     - type: textarea
       attributes:
           label: Description
