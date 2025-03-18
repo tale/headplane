@@ -9,7 +9,6 @@ if (prefix.endsWith('/')) {
 }
 
 const require = createRequire(import.meta.url);
-
 export default defineConfig({
 	define: {
 		__hp_prefix: JSON.stringify(prefix),
@@ -36,12 +35,13 @@ export default defineConfig({
 	plugins: [tsconfigPaths()],
 	build: {
 		minify: false,
-		target: 'esnext',
-		lib: {
-			entry: 'server/entry.ts',
-			formats: ['es'],
-		},
+		target: 'node18',
+		// lib: {
+		// 	entry: 'server/entry.ts',
+		// 	formats: ['es'],
+		// },
 		rollupOptions: {
+			input: 'server/entry.ts',
 			treeshake: {
 				moduleSideEffects: false,
 			},
@@ -58,12 +58,17 @@ export default defineConfig({
 					return true;
 				}
 
+				if (id === 'ws') {
+					return true;
+				}
+
 				const match = id.match(/node_modules\/([^/]+)/);
 				if (match) {
-					const dep = match[1];
-					if ((devDependencies as Record<string, string>)[dep]) {
-						return true;
-					}
+					return true;
+					// const dep = match[1];
+					// if ((devDependencies as Record<string, string>)[dep]) {
+					// 	return true;
+					// }
 				}
 			},
 		},
