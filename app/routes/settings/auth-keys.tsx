@@ -33,7 +33,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			
 			// Change the email returned by Headscale API to username
 		        result.forEach((preauthkey_item, index) => {
-			    preauthkey_item.user = user;
+			    preauthkey_item.user = user.name;
 			});
 			
 			return result;
