@@ -1,20 +1,20 @@
 name: Update flake.lock
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * 0'
- 
+    workflow_dispatch:
+    schedule:
+        - cron: "0 0 * * 0"
+
 jobs:
-  update-flake-inputs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - uses: DeterminateSystems/update-flake-lock@main
-        with:
-          pr-title: "chore: update flake.lock"
-          pr-labels: |
-            dependencies
-            automated
-      - uses: DeterminateSystems/flake-checker-action@main
-      - run: nix flake check --all-systems
+    update-flake-inputs:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: DeterminateSystems/nix-installer-action@main
+            - uses: DeterminateSystems/update-flake-lock@main
+              with:
+                  pr-title: "chore: update flake.lock"
+                  pr-labels: |
+                      dependencies
+                      automated
+            - uses: DeterminateSystems/flake-checker-action@main
+            - run: nix flake check --all-systems
