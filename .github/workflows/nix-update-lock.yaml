@@ -1,3 +1,4 @@
+name: Update flake.lock
 on:
   workflow_dispatch:
   schedule:
@@ -11,7 +12,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/update-flake-lock@main
         with:
-          pr-title: "Update flake.lock"
+          pr-title: "chore: update flake.lock"
           pr-labels: |
             dependencies
             automated
