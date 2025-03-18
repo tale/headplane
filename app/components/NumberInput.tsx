@@ -57,12 +57,12 @@ export default function NumberInput(props: InputProps) {
 			>
 				<input
 					{...inputProps}
-					id={id}
 					required={props.isRequired}
-					name={name}
 					ref={ref}
+					id={id}
 					className="w-full pl-3 py-2 rounded-l-xl bg-transparent focus:outline-none"
 				/>
+				<input type="hidden" name={name} value={state.numberValue} />
 				<IconButton
 					{...decrementButtonProps}
 					label="Decrement"
