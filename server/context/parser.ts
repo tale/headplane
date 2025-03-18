@@ -9,7 +9,7 @@ const serverConfig = type({
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
 	agent: type({
-		authkey: 'string',
+		authkey: 'string = ""',
 		ttl: 'number.integer = 180000', // Default to 3 minutes
 		cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
 	})
