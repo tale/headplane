@@ -1,9 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { reactRouter } from '@react-router/dev/vite';
 import autoprefixer from 'autoprefixer';
+import { reactRouterHonoServer } from 'react-router-hono-server/dev';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
-import babel from 'vite-plugin-babel';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 const prefix = process.env.__INTERNAL_PREFIX || '/admin';
@@ -20,7 +20,7 @@ if (!version) {
 
 export default defineConfig({
 	base: `${prefix}/`,
-	plugins: [reactRouter(), tsconfigPaths()],
+	plugins: [reactRouterHonoServer(), reactRouter(), tsconfigPaths()],
 	css: {
 		postcss: {
 			plugins: [tailwindcss, autoprefixer],
