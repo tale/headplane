@@ -1,17 +1,8 @@
-import { constants, access, readFile } from 'node:fs/promises';
+import { constants, access, readFile, writeFile } from 'node:fs/promises';
 import { type } from 'arktype';
-import { parseDocument } from 'yaml';
+import { Document, parseDocument } from 'yaml';
 import log from '~/utils/log';
 import { headscaleConfig } from './config-schema';
-
-interface ConfigModeAvailable {
-	access: 'rw' | 'ro';
-	// TODO: More attributes
-}
-
-interface ConfigModeUnavailable {
-	access: 'no';
-}
 
 interface PatchConfig {
 	path: string;
@@ -23,14 +14,20 @@ interface PatchConfig {
 // patch it and to query it for its mode
 class HeadscaleConfig {
 	private config?: typeof headscaleConfig.infer;
+	private document?: Document;
 	private access: 'rw' | 'ro' | 'no';
+	private path?: string;
 
 	constructor(
 		access: 'rw' | 'ro' | 'no',
 		config?: typeof headscaleConfig.infer,
+		document?: Document,
+		path?: string,
 	) {
 		this.access = access;
 		this.config = config;
+		this.document = document;
+		this.path = path;
 	}
 
 	readable() {
@@ -45,8 +42,66 @@ class HeadscaleConfig {
 		return this.config;
 	}
 
-	// TODO: Implement patching
 	async patch(patches: PatchConfig[]) {
+		if (!this.path || !this.document || !this.readable() || !this.writable()) {
+			return;
+		}
+
+		log.debug('config', 'Patching Headscale configuration');
+		for (const patch of patches) {
+			const { path, value } = patch;
+			log.debug('config', 'Patching %s with %o', path, value);
+
+			// If the key is something like `test.bar."foo.bar"`, then we treat
+			// the foo.bar as a single key, and not as two keys, so that needs
+			// to be split correctly.
+
+			// Iterate through each character, and if we find a dot, we check if
+			// the next character is a quote, and if it is, we skip until the next
+			// quote, and then we skip the next character, which should be a dot.
+			// If it's not a quote, we split it.
+			const key = [];
+			let current = '';
+			let quote = false;
+
+			for (const char of path) {
+				if (char === '"') {
+					quote = !quote;
+				}
+
+				if (char === '.' && !quote) {
+					key.push(current);
+					current = '';
+					continue;
+				}
+
+				current += char;
+			}
+
+			key.push(current.replaceAll('"', ''));
+			if (value === null) {
+				this.document.deleteIn(key);
+				continue;
+			}
+
+			this.document.setIn(key, value);
+		}
+
+		// Revalidate our configuration and update the config
+		// object with the new configuration
+		log.info('config', 'Revalidating Headscale configuration');
+		const config = validateConfig(this.document.toJSON());
+		if (!config) {
+			return;
+		}
+
+		log.debug(
+			'config',
+			'Writing updated Headscale configuration to %s',
+			this.path,
+		);
+		await writeFile(this.path, this.document.toString(), 'utf8');
+		this.config = config;
 		return;
 	}
 }
@@ -63,21 +118,26 @@ export async function loadHeadscaleConfig(path?: string, strict = true) {
 		return new HeadscaleConfig('no');
 	}
 
-	const data = await loadConfigFile(path);
-	if (!data) {
+	const document = await loadConfigFile(path);
+	if (!document) {
 		return new HeadscaleConfig('no');
 	}
 
 	if (!strict) {
-		return new HeadscaleConfig(w ? 'rw' : 'ro', augmentUnstrictConfig(data));
+		return new HeadscaleConfig(
+			w ? 'rw' : 'ro',
+			augmentUnstrictConfig(document.toJSON()),
+			document,
+			path,
+		);
 	}
 
-	const config = validateConfig(data);
+	const config = validateConfig(document.toJSON());
 	if (!config) {
 		return new HeadscaleConfig('no');
 	}
 
-	return new HeadscaleConfig(w ? 'rw' : 'ro', config);
+	return new HeadscaleConfig(w ? 'rw' : 'ro', config, document, path);
 }
 
 async function validateConfigPath(path: string) {
@@ -111,7 +171,7 @@ async function validateConfigPath(path: string) {
 	}
 }
 
-async function loadConfigFile(path: string): Promise<unknown> {
+async function loadConfigFile(path: string) {
 	log.debug('config', 'Reading Headscale configuration file at %s', path);
 	try {
 		const data = await readFile(path, 'utf8');
@@ -129,7 +189,7 @@ async function loadConfigFile(path: string): Promise<unknown> {
 			return false;
 		}
 
-		return configYaml.toJSON() as unknown;
+		return configYaml;
 	} catch (e) {
 		log.error(
 			'config',
