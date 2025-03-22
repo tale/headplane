@@ -1,12 +1,12 @@
 import { ActionFunctionArgs, data } from 'react-router';
-import { del, post } from '~/utils/headscale';
-import { auth } from '~/utils/sessions.server';
+import type { LoadContext } from '~/server';
 
-export async function userAction({ request }: ActionFunctionArgs) {
-	const session = await auth(request);
-	if (!session) {
-		return data({ success: false }, 401);
-	}
+export async function userAction({
+	request,
+	context,
+}: ActionFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
+	const apiKey = session.get('api_key')!;
 
 	const formData = await request.formData();
 	const action = formData.get('action_id')?.toString();
@@ -14,26 +14,25 @@ export async function userAction({ request }: ActionFunctionArgs) {
 		return data({ success: false }, 400);
 	}
 
-	const apiKey = session.get('hsApiKey');
-	if (!apiKey) {
-		return data({ success: false }, 401);
-	}
-
 	switch (action) {
 		case 'create_user':
-			return createUser(formData, apiKey);
+			return createUser(formData, apiKey, context);
 		case 'delete_user':
-			return deleteUser(formData, apiKey);
+			return deleteUser(formData, apiKey, context);
 		case 'rename_user':
-			return renameUser(formData, apiKey);
+			return renameUser(formData, apiKey, context);
 		case 'change_owner':
-			return changeOwner(formData, apiKey);
+			return changeOwner(formData, apiKey, context);
 		default:
 			return data({ success: false }, 400);
 	}
 }
 
-async function createUser(formData: FormData, apiKey: string) {
+async function createUser(
+	formData: FormData,
+	apiKey: string,
+	context: LoadContext,
+) {
 	const name = formData.get('username')?.toString();
 	const displayName = formData.get('display_name')?.toString();
 	const email = formData.get('email')?.toString();
@@ -42,40 +41,52 @@ async function createUser(formData: FormData, apiKey: string) {
 		return data({ success: false }, 400);
 	}
 
-	await post('v1/user', apiKey, {
+	await context.client.post('v1/user', apiKey, {
 		name,
 		displayName,
 		email,
 	});
 }
 
-async function deleteUser(formData: FormData, apiKey: string) {
+async function deleteUser(
+	formData: FormData,
+	apiKey: string,
+	context: LoadContext,
+) {
 	const userId = formData.get('user_id')?.toString();
 	if (!userId) {
 		return data({ success: false }, 400);
 	}
 
-	await del(`v1/user/${userId}`, apiKey);
+	await context.client.delete(`v1/user/${userId}`, apiKey);
 }
 
-async function renameUser(formData: FormData, apiKey: string) {
+async function renameUser(
+	formData: FormData,
+	apiKey: string,
+	context: LoadContext,
+) {
 	const userId = formData.get('user_id')?.toString();
 	const newName = formData.get('new_name')?.toString();
 	if (!userId || !newName) {
 		return data({ success: false }, 400);
 	}
 
-	await post(`v1/user/${userId}/rename/${newName}`, apiKey);
+	await context.client.post(`v1/user/${userId}/rename/${newName}`, apiKey);
 }
 
-async function changeOwner(formData: FormData, apiKey: string) {
+async function changeOwner(
+	formData: FormData,
+	apiKey: string,
+	context: LoadContext,
+) {
 	const userId = formData.get('user_id')?.toString();
 	const nodeId = formData.get('node_id')?.toString();
 	if (!userId || !nodeId) {
 		return data({ success: false }, 400);
 	}
 
-	await post(`v1/node/${nodeId}/user`, apiKey, {
+	await context.client.post(`v1/node/${nodeId}/user`, apiKey, {
 		user: userId,
 	});
 }

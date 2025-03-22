@@ -1,13 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import * as client from 'openid-client';
+import { Configuration } from 'openid-client';
 import { hp_getSingleton, hp_setSingleton } from '~server/context/global';
 import { HeadplaneConfig } from '~server/context/parser';
 import log from '~server/utils/log';
 
 type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
-declare global {
-	const __PREFIX__: string;
-}
 
 // We try our best to infer the callback URI of our Headplane instance
 // By default it is always /<base_path>/oidc/callback
@@ -103,8 +101,11 @@ function clientAuthMethod(
 	}
 }
 
-export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
-	const config = hp_getSingleton('oidc_client');
+export async function beginAuthFlow(
+	config: Configuration,
+	redirect_uri: string,
+	token_endpoint_auth_method: string,
+) {
 	const codeVerifier = client.randomPKCECodeVerifier();
 	const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
@@ -113,7 +114,7 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 		scope: 'openid profile email',
 		code_challenge: codeChallenge,
 		code_challenge_method: 'S256',
-		token_endpoint_auth_method: oidc.token_endpoint_auth_method,
+		token_endpoint_auth_method,
 		state: client.randomState(),
 	};
 
@@ -134,18 +135,20 @@ export async function beginAuthFlow(oidc: OidcConfig, redirect_uri: string) {
 
 interface FlowOptions {
 	redirect_uri: string;
-	codeVerifier: string;
+	code_verifier: string;
 	state: string;
 	nonce?: string;
 }
 
-export async function finishAuthFlow(oidc: OidcConfig, options: FlowOptions) {
-	const config = hp_getSingleton('oidc_client');
+export async function finishAuthFlow(
+	config: Configuration,
+	options: FlowOptions,
+) {
 	const tokens = await client.authorizationCodeGrant(
 		config,
 		new URL(options.redirect_uri),
 		{
-			pkceCodeVerifier: options.codeVerifier,
+			pkceCodeVerifier: options.code_verifier,
 			expectedNonce: options.nonce,
 			expectedState: options.state,
 			idTokenExpected: true,

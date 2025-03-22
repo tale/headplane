@@ -6,29 +6,36 @@ import {
 } from 'react-router';
 import Footer from '~/components/Footer';
 import Header from '~/components/Header';
-import { hs_getConfig } from '~/utils/config/loader';
-import { getSession } from '~/utils/sessions.server';
-import type { AppContext } from '~server/context/app';
-import { hp_getConfig } from '~server/context/global';
+import type { LoadContext } from '~/server';
 
 // This loads the bare minimum for the application to function
 // So we know that if context fails to load then well, oops?
-export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
-	if (!session.has('hsApiKey')) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
+	try {
+		const session = await context.sessions.auth(request);
+		if (!session.has('api_key')) {
+			// There is a session, but it's not valid
+			return redirect('/login', {
+				headers: {
+					'Set-Cookie': await context.sessions.destroy(session),
+				},
+			});
+		}
+
+		return {
+			config: context.hs.c,
+			url: context.config.headscale.public_url ?? context.config.headscale.url,
+			configAvailable: context.hs.readable(),
+			debug: context.config.debug,
+			user: session.get('user'),
+		};
+	} catch {
+		// No session, so we can just return
 		return redirect('/login');
 	}
-
-	const context = hp_getConfig();
-	const { mode, config } = hs_getConfig();
-
-	return {
-		config,
-		url: context.headscale.public_url ?? context.headscale.url,
-		configAvailable: mode !== 'no',
-		debug: context.debug,
-		user: session.get('user'),
-	};
 }
 
 export default function Shell() {

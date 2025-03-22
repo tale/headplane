@@ -4,29 +4,29 @@ import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useSubmit } from 'react-router';
 import { ClientOnly } from 'remix-utils/client-only';
-
 import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
 import { ErrorPopup } from '~/components/Error';
 import StatusCircle from '~/components/StatusCircle';
+import type { LoadContext } from '~/server';
 import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
-import { pull } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions.server';
-
-import { hs_getConfig } from '~/utils/config/loader';
-import type { AppContext } from '~server/context/app';
-import { hp_getConfig } from '~server/context/global';
 import ManageBanner from './components/manage-banner';
 import DeleteUser from './dialogs/delete-user';
 import RenameUser from './dialogs/rename-user';
 import { userAction } from './user-actions';
 
-export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
-	const session = await getSession(request.headers.get('Cookie'));
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 	const [machines, apiUsers] = await Promise.all([
-		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
-		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
+		context.client.get<{ nodes: Machine[] }>(
+			'v1/node',
+			session.get('api_key')!,
+		),
+		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
 	const users = apiUsers.users.map((user) => ({
@@ -34,18 +34,15 @@ export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
 		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
 	}));
 
-	const { oidc } = hp_getConfig();
-	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
-
-	if (mode !== 'no') {
-		if (config.dns.magic_dns) {
-			magic = config.dns.base_domain;
+	if (context.hs.readable()) {
+		if (context.hs.c?.dns.magic_dns) {
+			magic = context.hs.c.dns.base_domain;
 		}
 	}
 
 	return {
-		oidc,
+		oidc: context.config.oidc,
 		magic,
 		users,
 	};

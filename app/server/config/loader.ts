@@ -1,7 +1,7 @@
 import { constants, access, readFile } from 'node:fs/promises';
 import { env, exit } from 'node:process';
 import { type } from 'arktype';
-import dotenv, { configDotenv } from 'dotenv';
+import { configDotenv } from 'dotenv';
 import { parseDocument } from 'yaml';
 import log from '~/utils/log';
 import { EnvOverrides, envVariables } from './env';
@@ -17,7 +17,7 @@ import {
 // TODO: Potential for file watching on the configuration
 // But this may not be necessary as a use-case anyways
 export async function loadConfig({ loadEnv, path }: EnvOverrides) {
-	log.debug('config', 'Loading configuration file: %', path);
+	log.debug('config', 'Loading configuration file: %s', path);
 	const valid = await validateConfigPath(path);
 	if (!valid) {
 		exit(1);
@@ -117,7 +117,7 @@ export function validateConfig(config: unknown) {
 	log.debug('config', 'Validating Headplane configuration');
 	const result = headplaneConfig(config);
 	if (result instanceof type.errors) {
-		log.error('config', 'Error parsing Headplane configuration:');
+		log.error('config', 'Error validating Headplane configuration:');
 		for (const [number, error] of result.entries()) {
 			log.error('config', ` - (${number}): ${error.toString()}`);
 		}

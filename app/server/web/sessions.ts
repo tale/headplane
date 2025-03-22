@@ -1,4 +1,5 @@
 import {
+	CookieSerializeOptions,
 	Session,
 	SessionStorage,
 	createCookieSessionStorage,
@@ -16,7 +17,7 @@ export interface AuthSession {
 	};
 }
 
-interface OidcFlowSession {
+export interface OidcFlowSession {
 	state: 'flow';
 	oidc: {
 		state: string;
@@ -52,27 +53,36 @@ class Sessionizer {
 		});
 	}
 
+	// This throws on the assumption that auth is already checked correctly
+	// on something that wraps the route calling auth. The top-level routes
+	// that call this are wrapped with try/catch to handle the error.
 	async auth(request: Request) {
 		const cookie = request.headers.get('cookie');
 		const session = await this.storage.getSession(cookie);
 		const type = session.get('state');
 		if (!type) {
-			return false;
+			throw new Error('Session state not found');
 		}
 
 		if (type !== 'auth') {
-			return false;
+			throw new Error('Session is not authenticated');
 		}
 
-		return session as Session<AuthSession>;
+		return session as Session<AuthSession, Error>;
+	}
+
+	getOrCreate<T extends JoinedSession = AuthSession>(request: Request) {
+		return this.storage.getSession(request.headers.get('cookie')) as Promise<
+			Session<T, Error>
+		>;
 	}
 
 	destroy(session: Session) {
 		return this.storage.destroySession(session);
 	}
 
-	commit(session: Session) {
-		return this.storage.commitSession(session);
+	commit(session: Session, options?: CookieSerializeOptions) {
+		return this.storage.commitSession(session, options);
 	}
 }
 

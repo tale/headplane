@@ -1,20 +1,14 @@
 import type { ActionFunctionArgs } from 'react-router';
-import { del, post } from '~/utils/headscale';
+import type { LoadContext } from '~/server';
 import { send } from '~/utils/res';
-import { getSession } from '~/utils/sessions.server';
 import log from '~server/utils/log';
 
-export async function menuAction(request: ActionFunctionArgs['request']) {
-	const session = await getSession(request.headers.get('Cookie'));
-	if (!session.has('hsApiKey')) {
-		return send(
-			{ message: 'Unauthorized' },
-			{
-				status: 401,
-			},
-		);
-	}
-
+// TODO: Turn this into the same thing as dns-actions like machine-actions!!!
+export async function menuAction({
+	request,
+	context,
+}: ActionFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 	const data = await request.formData();
 	if (!data.has('_method') || !data.has('id')) {
 		return send(
@@ -30,12 +24,18 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 
 	switch (method) {
 		case 'delete': {
-			await del(`v1/node/${id}`, session.get('hsApiKey')!);
+			await context.client.delete(
+				`/api/v1/node/${id}`,
+				session.get('api_key')!,
+			);
 			return { message: 'Machine removed' };
 		}
 
 		case 'expire': {
-			await post(`v1/node/${id}/expire`, session.get('hsApiKey')!);
+			await context.client.post(
+				`/api/v1/node/${id}/expire`,
+				session.get('api_key')!,
+			);
 			return { message: 'Machine expired' };
 		}
 
@@ -50,8 +50,10 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			}
 
 			const name = String(data.get('name'));
-
-			await post(`v1/node/${id}/rename/${name}`, session.get('hsApiKey')!);
+			await context.client.post(
+				`/api/v1/node/${id}/rename/${name}`,
+				session.get('api_key')!,
+			);
 			return { message: 'Machine renamed' };
 		}
 
@@ -69,7 +71,10 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const enabled = data.get('enabled') === 'true';
 			const postfix = enabled ? 'enable' : 'disable';
 
-			await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!);
+			await context.client.post(
+				`/api/v1/routes/${route}/${postfix}`,
+				session.get('api_key')!,
+			);
 			return { message: 'Route updated' };
 		}
 
@@ -89,7 +94,10 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 
 			await Promise.all(
 				routes.map(async (route) => {
-					await post(`v1/routes/${route}/${postfix}`, session.get('hsApiKey')!);
+					await context.client.post(
+						`/api/v1/routes/${route}/${postfix}`,
+						session.get('api_key')!,
+					);
 				}),
 			);
 
@@ -109,9 +117,13 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 			const to = String(data.get('to'));
 
 			try {
-				await post(`v1/node/${id}/user`, session.get('hsApiKey')!, {
-					user: to,
-				});
+				await context.client.post(
+					`v1/node/${id}/user`,
+					session.get('api_key')!,
+					{
+						user: to,
+					},
+				);
 
 				return { message: `Moved node ${id} to ${to}` };
 			} catch (error) {
@@ -134,9 +146,13 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 					.filter((tag) => tag.trim() !== '') ?? [];
 
 			try {
-				await post(`v1/node/${id}/tags`, session.get('hsApiKey')!, {
-					tags,
-				});
+				await context.client.post(
+					`v1/node/${id}/tags`,
+					session.get('api_key')!,
+					{
+						tags,
+					},
+				);
 
 				return { message: 'Tags updated' };
 			} catch (error) {
@@ -178,7 +194,7 @@ export async function menuAction(request: ActionFunctionArgs['request']) {
 				qp.append('key', key);
 
 				const url = `v1/node/register?${qp.toString()}`;
-				await post(url, session.get('hsApiKey')!, {
+				await context.client.post(url, session.get('api_key')!, {
 					user,
 					key,
 				});

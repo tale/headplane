@@ -1,38 +1,39 @@
 import { InfoIcon } from '@primer/octicons-react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
-
 import Code from '~/components/Code';
 import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
+import Tooltip from '~/components/Tooltip';
+import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { pull } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions.server';
-
-import Tooltip from '~/components/Tooltip';
-import { hs_getConfig } from '~/utils/config/loader';
 import useAgent from '~/utils/useAgent';
-import { hp_getConfig, hp_getSingletonUnsafe } from '~server/context/global';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 	const [machines, routes, users] = await Promise.all([
-		pull<{ nodes: Machine[] }>('v1/node', session.get('hsApiKey')!),
-		pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!),
-		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
+		context.client.get<{ nodes: Machine[] }>(
+			'v1/node',
+			session.get('api_key')!,
+		),
+		context.client.get<{ routes: Route[] }>(
+			'v1/routes',
+			session.get('api_key')!,
+		),
+		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
-	const context = hp_getConfig();
-	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
-
-	if (mode !== 'no') {
-		if (config.dns.magic_dns) {
-			magic = config.dns.base_domain;
+	if (context.hs.readable()) {
+		if (context.hs.c?.dns.magic_dns) {
+			magic = context.hs.c.dns.base_domain;
 		}
 	}
 
@@ -41,13 +42,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		routes: routes.routes,
 		users: users.users,
 		magic,
-		server: context.headscale.url,
-		publicServer: context.headscale.public_url,
-		agents: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()],
+		server: context.config.headscale.url,
+		publicServer: context.config.headscale.public_url,
+		// TODO: Fix this LOL
+		agents: ['test'],
+		// agents: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()],
 	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action(request: ActionFunctionArgs) {
 	return menuAction(request);
 }
 

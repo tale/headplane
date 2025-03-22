@@ -55,7 +55,6 @@ class ApiClient {
 
 		return await request(new URL(url, this.base), {
 			dispatcher: this.agent,
-			throwOnError: false,
 			headers: {
 				...options?.headers,
 				Accept: 'application/json',
