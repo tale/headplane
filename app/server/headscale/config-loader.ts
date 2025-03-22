@@ -30,6 +30,7 @@ class HeadscaleConfig {
 		config?: typeof headscaleConfig.infer,
 	) {
 		this.access = access;
+		this.config = config;
 	}
 
 	readable() {
