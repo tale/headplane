@@ -12,6 +12,7 @@ import { ErrorPopup } from '~/components/Error';
 import ProgressBar from '~/components/ProgressBar';
 import ToastProvider from '~/components/ToastProvider';
 import stylesheet from '~/tailwind.css?url';
+import { LiveDataProvider } from '~/utils/live-data';
 import { useToastQueue } from '~/utils/toast';
 
 export const meta: MetaFunction = () => [
@@ -29,21 +30,26 @@ export const links: LinksFunction = () => [
 export function Layout({ children }: { readonly children: React.ReactNode }) {
 	const toastQueue = useToastQueue();
 
+	// LiveDataProvider is wrapped at the top level since dialogs and things
+	// that control its state are usually open in portal containers which
+	// are not a part of the normal React tree.
 	return (
-		<html lang="en">
-			<head>
-				<meta charSet="utf-8" />
-				<meta name="viewport" content="width=device-width, initial-scale=1" />
-				<Meta />
-				<Links />
-			</head>
-			<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
-				{children}
-				<ToastProvider queue={toastQueue} />
-				<ScrollRestoration />
-				<Scripts />
-			</body>
-		</html>
+		<LiveDataProvider>
+			<html lang="en">
+				<head>
+					<meta charSet="utf-8" />
+					<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<Meta />
+					<Links />
+				</head>
+				<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
+					{children}
+					<ToastProvider queue={toastQueue} />
+					<ScrollRestoration />
+					<Scripts />
+				</body>
+			</html>
+		</LiveDataProvider>
 	);
 }
 
