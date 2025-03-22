@@ -13,7 +13,8 @@ server
 │   ├── schema.ts: Defines the schema for the Headplane configuration.
 ├── headscale/
 │   ├── api-client.ts: Creates the HTTP client that talks to the Headscale API.
-│   ├── config.ts: Loads the Headscale configuration (if available).
+│   ├── config-loader.ts: Loads the Headscale configuration (if available).
+│   ├── config-schema.ts: Defines the schema for the Headscale configuration.
 ├── web/
 │   ├── oidc.ts: Loads and validates an OIDC configuration (if available).
 │   ├── sessions.ts: Initializes the session store and methods to manage it.

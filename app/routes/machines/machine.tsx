@@ -9,35 +9,40 @@ import Chip from '~/components/Chip';
 import Link from '~/components/Link';
 import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
+import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { hs_getConfig } from '~/utils/config/loader';
-import { pull } from '~/utils/headscale';
-import { getSession } from '~/utils/sessions.server';
-import { hp_getSingleton, hp_getSingletonUnsafe } from '~server/context/global';
 import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
+export async function loader({
+	request,
+	params,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 	if (!params.id) {
 		throw new Error('No machine ID provided');
 	}
 
-	const { mode, config } = hs_getConfig();
 	let magic: string | undefined;
-
-	if (mode !== 'no') {
-		if (config.dns.magic_dns) {
-			magic = config.dns.base_domain;
+	if (context.hs.readable()) {
+		if (context.hs.c?.dns.magic_dns) {
+			magic = context.hs.c.dns.base_domain;
 		}
 	}
 
 	const [machine, routes, users] = await Promise.all([
-		pull<{ node: Machine }>(`v1/node/${params.id}`, session.get('hsApiKey')!),
-		pull<{ routes: Route[] }>('v1/routes', session.get('hsApiKey')!),
-		pull<{ users: User[] }>('v1/user', session.get('hsApiKey')!),
+		context.client.get<{ node: Machine }>(
+			`v1/node/${params.id}`,
+			session.get('api_key')!,
+		),
+		context.client.get<{ routes: Route[] }>(
+			'v1/routes',
+			session.get('api_key')!,
+		),
+		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
 	return {
@@ -45,13 +50,15 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 		routes: routes.routes.filter((route) => route.node.id === params.id),
 		users: users.users,
 		magic,
-		agent: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()].includes(
-			machine.node.id,
-		),
+		// TODO: Fix agent
+		agent: false,
+		// agent: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()].includes(
+		// 	machine.node.id,
+		// ),
 	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action(request: ActionFunctionArgs) {
 	return menuAction(request);
 }
 

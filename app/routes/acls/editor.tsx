@@ -1,25 +1,31 @@
 import { Construction, Eye, FlaskConical, Pencil } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useFetcher, useLoaderData, useRevalidator } from 'react-router';
+import {
+	redirect,
+	useFetcher,
+	useLoaderData,
+	useRevalidator,
+} from 'react-router';
 import Button from '~/components/Button';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Spinner from '~/components/Spinner';
 import Tabs from '~/components/Tabs';
-import { hs_getConfig } from '~/utils/config/loader';
-import { HeadscaleError, pull, put } from '~/utils/headscale';
+import type { LoadContext } from '~/server';
+import { ResponseError } from '~/server/headscale/api-client';
+import log from '~/utils/log';
 import { send } from '~/utils/res';
-import { getSession } from '~/utils/sessions.server';
 import toast from '~/utils/toast';
-import type { AppContext } from '~server/context/app';
-import log from '~server/utils/log';
 import { Differ, Editor } from './components/cm.client';
 import { ErrorView } from './components/error';
 import { Unavailable } from './components/unavailable';
 
-export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
-	const session = await getSession(request.headers.get('Cookie'));
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 
 	// The way policy is handled in 0.23 of Headscale and later is verbose.
 	// The 2 ACL policy modes are either the database one or file one
@@ -45,31 +51,30 @@ export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
 	// We can do damage control by checking for write access and if we are not
 	// able to PUT an ACL policy on the v1/policy route, we can already know
 	// that the policy is at the very-least readonly or not available.
-	const { mode, config } = hs_getConfig();
 	let modeGuess = 'database'; // Assume database mode
-	if (mode !== 'no') {
-		modeGuess = config.policy?.mode ?? 'database';
+	if (!context.hs.readable()) {
+		modeGuess = context.hs.c!.policy?.mode ?? 'database';
 	}
 
 	// Attempt to load the policy, for both the frontend and for checking
 	// if we are able to write to the policy for write access
 	try {
-		const { policy } = await pull<{ policy: string }>(
+		const { policy } = await context.client.get<{ policy: string }>(
 			'v1/policy',
-			session.get('hsApiKey')!,
+			session.get('api_key')!,
 		);
 
 		let write = false; // On file mode we already know it's readonly
 		if (modeGuess === 'database' && policy.length > 0) {
 			try {
-				await put('v1/policy', session.get('hsApiKey')!, {
+				await context.client.put('v1/policy', session.get('api_key')!, {
 					policy: policy,
 				});
 
 				write = true;
 			} catch (error) {
 				write = false;
-				log.debug('APIC', 'Failed to write to ACL policy with error %s', error);
+				log.debug('api', 'Failed to write to ACL policy with error %s', error);
 			}
 		}
 
@@ -102,17 +107,17 @@ export async function loader({ request }: LoaderFunctionArgs<AppContext>) {
 	}
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
-	if (!session.has('hsApiKey')) {
-		return send({ success: false, error: null }, 401);
-	}
+export async function action({
+	request,
+	context,
+}: ActionFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
 
 	try {
 		const { acl } = (await request.json()) as { acl: string };
-		const { policy } = await put<{ policy: string }>(
+		const { policy } = await context.client.put<{ policy: string }>(
 			'v1/policy',
-			session.get('hsApiKey')!,
+			session.get('api_key')!,
 			{
 				policy: acl,
 			},
@@ -120,14 +125,14 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		return { success: true, policy, error: null };
 	} catch (error) {
-		log.debug('APIC', 'Failed to update ACL policy with error %s', error);
+		log.debug('api', 'Failed to update ACL policy with error %s', error);
 
 		// @ts-ignore: TODO: Shut UP we know it's a string most of the time
 		const text = JSON.parse(error.message);
 		return send(
 			{ success: false, error: text.message },
 			{
-				status: error instanceof HeadscaleError ? error.status : 500,
+				status: error instanceof ResponseError ? error.status : 500,
 			},
 		);
 	}

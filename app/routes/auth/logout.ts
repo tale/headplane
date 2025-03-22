@@ -1,15 +1,22 @@
 import { type ActionFunctionArgs, redirect } from 'react-router';
-import { destroySession, getSession } from '~/utils/sessions.server';
+import type { LoadContext } from '~/server';
 
 export async function loader() {
 	return redirect('/machines');
 }
 
-export async function action({ request }: ActionFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
+export async function action({
+	request,
+	context,
+}: ActionFunctionArgs<LoadContext>) {
+	const session = await context.sessions.auth(request);
+	if (!session.has('api_key')) {
+		return redirect('/login');
+	}
+
 	return redirect('/login', {
 		headers: {
-			'Set-Cookie': await destroySession(session),
+			'Set-Cookie': await context.sessions.destroy(session),
 		},
 	});
 }

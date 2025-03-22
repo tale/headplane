@@ -4,8 +4,14 @@ import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadConfig } from './config/loader';
 import { createApiClient } from './headscale/api-client';
-import { exampleMiddleware } from './middleware';
+import { loadHeadscaleConfig } from './headscale/config-loader';
+import { createOidcClient } from './web/oidc';
 import { createSessionStorage } from './web/sessions';
+
+declare global {
+	const __PREFIX__: string;
+	const __VERSION__: string;
+}
 
 // MARK: Side-Effects
 // This module contains a side-effect because everything running here
@@ -25,9 +31,13 @@ const config = await loadConfig(
 export type LoadContext = typeof appLoadContext;
 const appLoadContext = {
 	config,
+	hs: await loadHeadscaleConfig(
+		config.headscale.config_path,
+		config.headscale.config_strict,
+	),
 
 	// TODO: Better cookie options in config
-	sessionizer: createSessionStorage({
+	sessions: createSessionStorage({
 		name: '_hp_session',
 		maxAge: 60 * 60 * 24, // 24 hours
 		secure: config.server.cookie_secure,
@@ -38,6 +48,8 @@ const appLoadContext = {
 		config.headscale.url,
 		config.headscale.tls_cert_path,
 	),
+
+	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 };
 
 declare module 'react-router' {
@@ -46,16 +58,14 @@ declare module 'react-router' {
 
 export default await createHonoServer({
 	useWebSocket: true,
-	overrideGlobalObjects: true,
+	// overrideGlobalObjects: true,
 
 	getLoadContext(c, { build, mode }) {
 		// This is the place where we can handle reverse proxy translation
 		return appLoadContext;
 	},
 
-	configure(server) {
-		server.use('*', exampleMiddleware());
-	},
+	configure(server) {},
 	listeningListener(info) {
 		console.log(`Server is listening on http://localhost:${info.port}`);
 	},

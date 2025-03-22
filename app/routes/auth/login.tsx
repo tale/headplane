@@ -8,50 +8,42 @@ import Button from '~/components/Button';
 import Card from '~/components/Card';
 import Code from '~/components/Code';
 import Input from '~/components/Input';
+import type { LoadContext } from '~/server';
 import type { Key } from '~/types';
-import { pull } from '~/utils/headscale';
-import { commitSession, getSession } from '~/utils/sessions.server';
-import { hp_getConfig, hp_getSingleton } from '~server/context/global';
 
-export async function loader({ request }: LoaderFunctionArgs) {
-	const session = await getSession(request.headers.get('Cookie'));
-	if (session.has('hsApiKey')) {
-		return redirect('/machines', {
-			headers: {
-				'Set-Cookie': await commitSession(session),
-			},
-		});
-	}
-
-	const context = hp_getConfig();
-	const disableApiKeyLogin = context.oidc?.disable_api_key_login;
-	let oidc = false;
-
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
 	try {
-		// Only set if OIDC is properly enabled anyways
-		hp_getSingleton('oidc_client');
-		oidc = true;
-
-		if (disableApiKeyLogin) {
-			return redirect('/oidc/start');
+		const session = await context.sessions.auth(request);
+		if (session.has('api_key')) {
+			return redirect('/machines');
 		}
 	} catch {}
 
+	const disableApiKeyLogin = context.config.oidc?.disable_api_key_login;
+	if (context.oidc && disableApiKeyLogin) {
+		return redirect('/oidc/start');
+	}
+
 	return {
-		oidc,
-		apiKey: !disableApiKeyLogin,
+		oidc: context.oidc,
+		disableApiKeyLogin,
 	};
 }
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function action({
+	request,
+	context,
+}: ActionFunctionArgs<LoadContext>) {
 	const formData = await request.formData();
 	const oidcStart = formData.get('oidc-start');
-	const session = await getSession(request.headers.get('Cookie'));
+	const session = await context.sessions.getOrCreate(request);
 
 	if (oidcStart) {
-		const context = hp_getConfig();
 		if (!context.oidc) {
-			throw new Error('An invalid OIDC configuration was provided');
+			throw new Error('OIDC is not enabled');
 		}
 
 		return redirect('/oidc/start');
@@ -61,17 +53,24 @@ export async function action({ request }: ActionFunctionArgs) {
 
 	// Test the API key
 	try {
-		const apiKeys = await pull<{ apiKeys: Key[] }>('v1/apikey', apiKey);
+		const apiKeys = await context.client.get<{ apiKeys: Key[] }>(
+			'v1/apikey',
+			apiKey,
+		);
+
 		const key = apiKeys.apiKeys.find((k) => apiKey.startsWith(k.prefix));
 		if (!key) {
-			throw new Error('Invalid API key');
+			return {
+				error: 'Invalid API key',
+			};
 		}
 
 		const expiry = new Date(key.expiration);
 		const expiresIn = expiry.getTime() - Date.now();
 		const expiresDays = Math.round(expiresIn / 1000 / 60 / 60 / 24);
 
-		session.set('hsApiKey', apiKey);
+		session.set('state', 'auth');
+		session.set('api_key', apiKey);
 		session.set('user', {
 			subject: 'unknown-non-oauth',
 			name: key.prefix,
@@ -80,7 +79,7 @@ export async function action({ request }: ActionFunctionArgs) {
 
 		return redirect('/machines', {
 			headers: {
-				'Set-Cookie': await commitSession(session, {
+				'Set-Cookie': await context.sessions.commit(session, {
 					maxAge: expiresIn,
 				}),
 			},
@@ -100,7 +99,7 @@ export default function Page() {
 		<div className="flex min-h-screen items-center justify-center">
 			<Card className="max-w-sm m-4 sm:m-0" variant="raised">
 				<Card.Title>Welcome to Headplane</Card.Title>
-				{data.apiKey ? (
+				{!data.disableApiKeyLogin ? (
 					<Form method="post">
 						<Card.Text>
 							Enter an API key to authenticate with Headplane. You can generate
@@ -125,9 +124,9 @@ export default function Page() {
 						</Button>
 					</Form>
 				) : undefined}
-				{data.oidc === true ? (
+				{data.oidc ? (
 					<Form method="POST">
-						{!data.apiKey ? (
+						{data.disableApiKeyLogin ? (
 							<Card.Text className="mb-6">
 								Sign in with your authentication provider to continue. Your
 								administrator has disabled API key login.
@@ -137,7 +136,7 @@ export default function Page() {
 						<input type="hidden" name="oidc-start" value="true" />
 						<Button
 							className="w-full mt-2"
-							variant={data.apiKey ? 'light' : 'heavy'}
+							variant={data.disableApiKeyLogin ? 'heavy' : 'light'}
 							type="submit"
 						>
 							Single Sign-On

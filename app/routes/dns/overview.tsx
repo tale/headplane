@@ -1,8 +1,8 @@
-import type { ActionFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Notice from '~/components/Notice';
-import { hs_getConfig } from '~/utils/config/loader';
+import type { LoadContext } from '~/server';
 import ManageDomains from './components/manage-domains';
 import ManageNS from './components/manage-ns';
 import ManageRecords from './components/manage-records';
@@ -11,12 +11,12 @@ import ToggleMagic from './components/toggle-magic';
 import { dnsAction } from './dns-actions';
 
 // We do not want to expose every config value
-export async function loader() {
-	const { config, mode } = hs_getConfig();
-	if (mode === 'no') {
+export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
+	if (!context.hs.readable()) {
 		throw new Error('No configuration is available');
 	}
 
+	const config = context.hs.c!;
 	const dns = {
 		prefixes: config.prefixes,
 		magicDns: config.dns.magic_dns,
@@ -29,7 +29,7 @@ export async function loader() {
 
 	return {
 		...dns,
-		mode,
+		writable: context.hs.writable(),
 	};
 }
 
@@ -46,11 +46,11 @@ export default function Page() {
 	}
 
 	allNs.global = data.nameservers;
-	const isDisabled = data.mode !== 'rw';
+	const isDisabled = data.writable === false;
 
 	return (
 		<div className="flex flex-col gap-16 max-w-screen-lg">
-			{data.mode === 'rw' ? undefined : (
+			{data.writable ? undefined : (
 				<Notice>
 					The Headscale configuration is read-only. You cannot make changes to
 					the configuration

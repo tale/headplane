@@ -22,24 +22,29 @@ export type ConfigModes =
 			config: undefined;
 	  };
 
-export function hs_getConfig(): ConfigModes {
-	if (runtimeMode === 'no') {
-		return {
-			mode: 'no',
-			config: undefined,
-		};
-	}
+// export function hs_getConfig(): ConfigModes {
+// 	return {
+// 		mode: 'no',
+// 		config: undefined,
+// 	};
 
-	runtimeLock.acquire();
-	// We can assert if mode is not 'no'
-	const config = runtimeConfig!;
-	runtimeLock.release();
+// if (runtimeMode === 'no') {
+// 	return {
+// 		mode: 'no',
+// 		config: undefined,
+// 	};
+// }
 
-	return {
-		mode: runtimeMode,
-		config: config,
-	};
-}
+// runtimeLock.acquire();
+// // We can assert if mode is not 'no'
+// const config = runtimeConfig!;
+// runtimeLock.release();
+
+// return {
+// 	mode: runtimeMode,
+// 	config: config,
+// };
+// }
 
 export async function hs_loadConfig(path?: string, strict?: boolean) {
 	if (runtimeConfig !== undefined) {
@@ -199,6 +204,6 @@ export async function hs_patchConfig(patches: PatchConfig[]) {
 
 // IMPORTANT THIS IS A SIDE EFFECT ON INIT
 // TODO: Replace this into the new singleton system
-const context = hp_getConfig();
-hs_loadConfig(context.headscale.config_path, context.headscale.config_strict);
-hp_getIntegration();
+// const context = hp_getConfig();
+// hs_loadConfig(context.headscale.config_path, context.headscale.config_strict);
+// hp_getIntegration();

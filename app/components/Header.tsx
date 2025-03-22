@@ -10,12 +10,12 @@ import {
 import type { ReactNode } from 'react';
 import { NavLink, useSubmit } from 'react-router';
 import Menu from '~/components/Menu';
+import { AuthSession } from '~/server/web/sessions';
 import cn from '~/utils/cn';
-import type { SessionData } from '~/utils/sessions.server';
 
 interface Props {
 	configAvailable: boolean;
-	user?: SessionData['user'];
+	user?: AuthSession['user'];
 }
 
 interface LinkProps {

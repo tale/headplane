@@ -1,10 +1,6 @@
 import Link from '~/components/Link';
 import cn from '~/utils/cn';
 
-declare global {
-	const __VERSION__: string;
-}
-
 interface FooterProps {
 	url: string;
 	debug: boolean;
