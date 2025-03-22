@@ -5,7 +5,6 @@ import type { LoadContext } from '~/server';
 import { ResponseError } from '~/server/headscale/api-client';
 import cn from '~/utils/cn';
 import log from '~/utils/log';
-import { useLiveData } from '~/utils/useLiveData';
 
 export async function loader({
 	request,
@@ -36,7 +35,6 @@ export async function loader({
 }
 
 export default function Layout() {
-	useLiveData({ interval: 3000 });
 	const { healthy } = useLoaderData<typeof loader>();
 
 	return (
