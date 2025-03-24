@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs } from 'react-router';
 import type { LoadContext } from '~/server';
+import log from '~/utils/log';
 import { send } from '~/utils/res';
-import log from '~server/utils/log';
 
 // TODO: Turn this into the same thing as dns-actions like machine-actions!!!
 export async function menuAction({
@@ -24,16 +24,13 @@ export async function menuAction({
 
 	switch (method) {
 		case 'delete': {
-			await context.client.delete(
-				`/api/v1/node/${id}`,
-				session.get('api_key')!,
-			);
+			await context.client.delete(`v1/node/${id}`, session.get('api_key')!);
 			return { message: 'Machine removed' };
 		}
 
 		case 'expire': {
 			await context.client.post(
-				`/api/v1/node/${id}/expire`,
+				`v1/node/${id}/expire`,
 				session.get('api_key')!,
 			);
 			return { message: 'Machine expired' };
@@ -51,7 +48,7 @@ export async function menuAction({
 
 			const name = String(data.get('name'));
 			await context.client.post(
-				`/api/v1/node/${id}/rename/${name}`,
+				`v1/node/${id}/rename/${name}`,
 				session.get('api_key')!,
 			);
 			return { message: 'Machine renamed' };
@@ -72,7 +69,7 @@ export async function menuAction({
 			const postfix = enabled ? 'enable' : 'disable';
 
 			await context.client.post(
-				`/api/v1/routes/${route}/${postfix}`,
+				`v1/routes/${route}/${postfix}`,
 				session.get('api_key')!,
 			);
 			return { message: 'Route updated' };
@@ -95,7 +92,7 @@ export async function menuAction({
 			await Promise.all(
 				routes.map(async (route) => {
 					await context.client.post(
-						`/api/v1/routes/${route}/${postfix}`,
+						`v1/routes/${route}/${postfix}`,
 						session.get('api_key')!,
 					);
 				}),
@@ -156,7 +153,7 @@ export async function menuAction({
 
 				return { message: 'Tags updated' };
 			} catch (error) {
-				log.debug('APIC', 'Failed to update tags: %s', error);
+				log.debug('api', 'Failed to update tags: %s', error);
 				return send(
 					{ message: 'Failed to update tags' },
 					{

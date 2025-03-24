@@ -1,6 +1,6 @@
+import log from '~/utils/log';
 import { hp_getConfig } from '~server/context/global';
-import { HeadplaneConfig } from '~server/context/parser';
-import log from '~server/utils/log';
+import type { HeadplaneConfig } from '~server/context/parser';
 import { Integration } from './abstract';
 // import dockerIntegration from './docker';
 // import kubernetesIntegration from './kubernetes';
