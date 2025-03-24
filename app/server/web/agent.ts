@@ -49,10 +49,20 @@ class AgentManager {
 		return Array.from(this.agents.keys());
 	}
 
+	lookup(nodeIds: string[]) {
+		const entries = this.cache.toJSON();
+		const missing = nodeIds.filter((nodeId) => !entries[nodeId]);
+		if (missing.length > 0) {
+			this.requestData(missing);
+		}
+
+		return entries;
+	}
+
 	// Request data from all connected agents
 	// This does not return anything, but caches the data which then needs to be
 	// queried by the caller separately.
-	requestData(nodeList: string[]) {
+	private requestData(nodeList: string[]) {
 		const NodeIDs = [...new Set(nodeList)];
 		NodeIDs.map((node) => {
 			log.debug('agent', 'Requesting agent data for %s', node);

@@ -74,11 +74,17 @@ export default await createHonoServer({
 		return appLoadContext;
 	},
 
-	configure(server, { upgradeWebSocket }) {
-		if (appLoadContext.agents !== undefined) {
-			// We need this since we cannot pass the WSEvents context
-			(upgradeWebSocket as UpgradeWebSocket<WebSocket>)(
-				appLoadContext.agents.configureSocket,
+	configure(app, { upgradeWebSocket }) {
+		const agentManager = appLoadContext.agents;
+		if (agentManager) {
+			app.get(
+				`${__PREFIX__}/_dial`,
+				// We need this since we cannot pass the WSEvents context
+				// Also important to not pass the callback directly
+				// since we need to retain `this` context
+				(upgradeWebSocket as UpgradeWebSocket<WebSocket>)((c) =>
+					agentManager.configureSocket(c),
+				),
 			);
 		}
 	},

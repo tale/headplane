@@ -53,5 +53,11 @@ func httpToWs(controlURL string) (string, error) {
 		return "", fmt.Errorf("unsupported scheme: %s", u.Scheme)
 	}
 
+	// We also need to append /_dial to the path
+	if u.Path[len(u.Path)-1] != '/' {
+		u.Path += "/"
+	}
+
+	u.Path += "_dial"
 	return u.String(), nil
 }
