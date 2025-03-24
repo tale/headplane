@@ -1,5 +1,4 @@
-import { constants, access } from 'node:fs/promises';
-import { env, exit, versions } from 'node:process';
+import { env, versions } from 'node:process';
 import type { UpgradeWebSocket } from 'hono/ws';
 import { createHonoServer } from 'react-router-hono-server/node';
 import type { WebSocket } from 'ws';
@@ -20,13 +19,6 @@ declare global {
 // MARK: Side-Effects
 // This module contains a side-effect because everything running here
 // exists for the lifetime of the process, making it appropriate.
-try {
-	await access('./node_modules/react-router', constants.F_OK | constants.R_OK);
-} catch {
-	log.error('server', 'Cannot locate `node_modules`, please install them');
-	exit(1);
-}
-
 log.info('server', 'Running Node.js %s', versions.node);
 configureLogger(env[envVariables.debugLog]);
 const config = await loadConfig(
@@ -73,14 +65,18 @@ declare module 'react-router' {
 	interface AppLoadContext extends LoadContext {}
 }
 
-export default await createHonoServer({
+export default createHonoServer({
 	useWebSocket: true,
 	overrideGlobalObjects: true,
 	port: config.server.port,
 	hostname: config.server.host,
 
-	getLoadContext(c, { build, mode }) {
-		// This is the place where we can handle reverse proxy translation
+	// Only log in development mode
+	defaultLogger: import.meta.env.DEV,
+	getLoadContext() {
+		// TODO: This is the place where we can handle reverse proxy translation
+		// This is better than doing it in the OIDC client, since we can do it
+		// for all requests, not just OIDC ones.
 		return appLoadContext;
 	},
 

@@ -26,6 +26,10 @@ export default defineConfig({
 			plugins: [tailwindcss, autoprefixer],
 		},
 	},
+	ssr: {
+		target: 'node',
+		noExternal: true,
+	},
 	define: {
 		__VERSION__: JSON.stringify(version),
 		__PREFIX__: JSON.stringify(prefix),

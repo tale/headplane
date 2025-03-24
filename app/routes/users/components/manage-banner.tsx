@@ -1,7 +1,7 @@
 import { Building2, House, Key } from 'lucide-react';
 import Card from '~/components/Card';
 import Link from '~/components/Link';
-import type { HeadplaneConfig } from '~server/context/parser';
+import type { HeadplaneConfig } from '~/server/config/schema';
 import CreateUser from '../dialogs/create-user';
 
 interface Props {

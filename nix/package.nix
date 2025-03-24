@@ -29,20 +29,17 @@ stdenv.mkDerivation (finalAttrs: {
   buildPhase = ''
     runHook preBuild
     pnpm build
-    pnpm prune --prod
     runHook postBuild
   '';
 
   installPhase = ''
     runHook preInstall
     mkdir -p $out/{bin,share/headplane}
-    cp -r {build,node_modules} $out/share/headplane/
-    sed -i "s;$PWD;../..;" $out/share/headplane/build/headplane/server.js
+    cp -r build $out/share/headplane/
+    sed -i "s;$PWD;../..;" $out/share/headplane/build/server/index.js
     makeWrapper ${lib.getExe nodejs_22} $out/bin/headplane \
         --chdir $out/share/headplane \
-        --set BUILD_PATH $out/share/headplane/build \
-        --set NODE_ENV production \
-        --add-flags $out/share/headplane/build/headplane/server.js
+        --add-flags $out/share/headplane/build/server/index.js
     runHook postInstall
   '';
 })
