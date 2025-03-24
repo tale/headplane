@@ -16,7 +16,7 @@ export async function loader({
 	// We shouldn't session invalidate if Headscale is down
 	if (healthy) {
 		try {
-			await context.client.get('/api/v1/apikey', session.get('api_key')!);
+			await context.client.get('v1/apikey', session.get('api_key')!);
 		} catch (error) {
 			if (error instanceof ResponseError) {
 				log.debug('api', 'API Key validation failed %o', error);

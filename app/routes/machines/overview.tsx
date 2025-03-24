@@ -8,7 +8,7 @@ import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import useAgent from '~/utils/useAgent';
+import useAgent from '~/utils/use-agent';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
@@ -44,9 +44,7 @@ export async function loader({
 		magic,
 		server: context.config.headscale.url,
 		publicServer: context.config.headscale.public_url,
-		// TODO: Fix this LOL
-		agents: ['test'],
-		// agents: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()],
+		agents: context.agents?.tailnetIDs(),
 	};
 }
 
@@ -100,7 +98,10 @@ export default function Page() {
 								) : undefined}
 							</div>
 						</th>
-						<th className="uppercase text-xs font-bold pb-2">Version</th>
+						{/* We only want to show the version column if there are agents */}
+						{data.agents !== undefined ? (
+							<th className="uppercase text-xs font-bold pb-2">Version</th>
+						) : undefined}
 						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
 					</tr>
 				</thead>
@@ -120,7 +121,9 @@ export default function Page() {
 							users={data.users}
 							magic={data.magic}
 							stats={stats?.[machine.nodeKey]}
-							isAgent={data.agents.includes(machine.id)}
+							// If we pass undefined, the column will not be rendered
+							// This is useful for when there are no agents configured
+							isAgent={data.agents?.includes(machine.id)}
 						/>
 					))}
 				</tbody>

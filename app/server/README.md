@@ -16,5 +16,6 @@ server
 │   ├── config-loader.ts: Loads the Headscale configuration (if available).
 │   ├── config-schema.ts: Defines the schema for the Headscale configuration.
 ├── web/
+│   ├── agent.ts: Handles setting up the agent WebSocket if needed.
 │   ├── oidc.ts: Loads and validates an OIDC configuration (if available).
 │   ├── sessions.ts: Initializes the session store and methods to manage it.

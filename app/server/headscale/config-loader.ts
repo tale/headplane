@@ -1,4 +1,5 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
+import { setTimeout } from 'node:timers/promises';
 import { type } from 'arktype';
 import { Document, parseDocument } from 'yaml';
 import log from '~/utils/log';
@@ -17,6 +18,7 @@ class HeadscaleConfig {
 	private document?: Document;
 	private access: 'rw' | 'ro' | 'no';
 	private path?: string;
+	private writeLock = false;
 
 	constructor(
 		access: 'rw' | 'ro' | 'no',
@@ -100,8 +102,17 @@ class HeadscaleConfig {
 			'Writing updated Headscale configuration to %s',
 			this.path,
 		);
+
+		// We need to lock the writeLock so that we don't try to write
+		// to the file while we're already writing to it
+		while (this.writeLock) {
+			await setTimeout(100);
+		}
+
+		this.writeLock = true;
 		await writeFile(this.path, this.document.toString(), 'utf8');
 		this.config = config;
+		this.writeLock = false;
 		return;
 	}
 }

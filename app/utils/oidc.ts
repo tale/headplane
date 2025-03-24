@@ -1,11 +1,6 @@
-import { readFile } from 'node:fs/promises';
 import * as client from 'openid-client';
 import { Configuration } from 'openid-client';
-import { hp_getSingleton, hp_setSingleton } from '~server/context/global';
-import { HeadplaneConfig } from '~server/context/parser';
-import log from '~server/utils/log';
-
-type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
+import log from '~/utils/log';
 
 // We try our best to infer the callback URI of our Headplane instance
 // By default it is always /<base_path>/oidc/callback
@@ -33,72 +28,6 @@ export function getRedirectUri(req: Request) {
 	url.protocol = proto ?? 'http:';
 	url.host = host;
 	return url.href;
-}
-
-let oidcSecret: string | undefined = undefined;
-export function getOidcSecret() {
-	return oidcSecret;
-}
-
-async function resolveClientSecret(oidc: OidcConfig) {
-	if (!oidc.client_secret && !oidc.client_secret_path) {
-		return;
-	}
-
-	if (oidc.client_secret_path) {
-		// We need to interpolate environment variables into the path
-		// Path formatting can be like ${ENV_NAME}/path/to/secret
-		let path = oidc.client_secret_path;
-		const matches = path.match(/\${(.*?)}/g);
-
-		if (matches) {
-			for (const match of matches) {
-				const env = match.slice(2, -1);
-				const value = process.env[env];
-				if (!value) {
-					log.error('CFGX', 'Environment variable %s is not set', env);
-					return;
-				}
-
-				log.debug('CFGX', 'Interpolating %s with %s', match, value);
-				path = path.replace(match, value);
-			}
-		}
-
-		try {
-			log.debug('CFGX', 'Reading client secret from %s', path);
-			const secret = await readFile(path, 'utf-8');
-			if (secret.trim().length === 0) {
-				log.error('CFGX', 'Empty OIDC client secret');
-				return;
-			}
-
-			oidcSecret = secret;
-		} catch (error) {
-			log.error('CFGX', 'Failed to read client secret from %s', path);
-			log.error('CFGX', 'Error: %s', error);
-			log.debug('CFGX', 'Error details: %o', error);
-		}
-	}
-
-	if (oidc.client_secret) {
-		oidcSecret = oidc.client_secret;
-	}
-}
-
-function clientAuthMethod(
-	method: string,
-): (secret: string) => client.ClientAuth {
-	switch (method) {
-		case 'client_secret_post':
-			return client.ClientSecretPost;
-		case 'client_secret_basic':
-			return client.ClientSecretBasic;
-		case 'client_secret_jwt':
-			return client.ClientSecretJwt;
-		default:
-			throw new Error('Invalid client authentication method');
-	}
 }
 
 export async function beginAuthFlow(
@@ -242,61 +171,4 @@ export function formatError(error: unknown) {
 			description: 'An unknown error occurred',
 		},
 	};
-}
-
-export async function testOidc(oidc: OidcConfig) {
-	await resolveClientSecret(oidc);
-	if (!oidcSecret) {
-		log.debug(
-			'OIDC',
-			'Cannot validate OIDC configuration without a client secret',
-		);
-		return false;
-	}
-
-	log.debug('OIDC', 'Discovering OIDC configuration from %s', oidc.issuer);
-	const secret = await resolveClientSecret(oidc);
-	const config = await client.discovery(
-		new URL(oidc.issuer),
-		oidc.client_id,
-		oidc.client_secret,
-		clientAuthMethod(oidc.token_endpoint_auth_method)(oidcSecret),
-	);
-
-	const meta = config.serverMetadata();
-	if (meta.authorization_endpoint === undefined) {
-		return false;
-	}
-
-	log.debug('OIDC', 'Authorization endpoint: %s', meta.authorization_endpoint);
-	log.debug('OIDC', 'Token endpoint: %s', meta.token_endpoint);
-
-	if (meta.response_types_supported) {
-		if (meta.response_types_supported.includes('code') === false) {
-			log.error('OIDC', 'OIDC server does not support code flow');
-			return false;
-		}
-	} else {
-		log.warn('OIDC', 'OIDC server does not advertise response_types_supported');
-	}
-
-	if (meta.token_endpoint_auth_methods_supported) {
-		if (
-			meta.token_endpoint_auth_methods_supported.includes(
-				oidc.token_endpoint_auth_method,
-			) === false
-		) {
-			log.error(
-				'OIDC',
-				'OIDC server does not support %s',
-				oidc.token_endpoint_auth_method,
-			);
-
-			return false;
-		}
-	}
-
-	log.debug('OIDC', 'OIDC configuration is valid');
-	hp_setSingleton('oidc_client', config);
-	return true;
 }

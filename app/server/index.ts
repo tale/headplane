@@ -1,10 +1,13 @@
 import { versions } from 'node:process';
+import type { UpgradeWebSocket } from 'hono/ws';
 import { createHonoServer } from 'react-router-hono-server/node';
+import type { WebSocket } from 'ws';
 import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadConfig } from './config/loader';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
+import { loadAgentSocket } from './web/agent';
 import { createOidcClient } from './web/oidc';
 import { createSessionStorage } from './web/sessions';
 
@@ -49,6 +52,12 @@ const appLoadContext = {
 		config.headscale.tls_cert_path,
 	),
 
+	agents: await loadAgentSocket(
+		config.server.agent.authkey,
+		config.server.agent.cache_path,
+		config.server.agent.ttl,
+	),
+
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 };
 
@@ -65,7 +74,14 @@ export default await createHonoServer({
 		return appLoadContext;
 	},
 
-	configure(server) {},
+	configure(server, { upgradeWebSocket }) {
+		if (appLoadContext.agents !== undefined) {
+			// We need this since we cannot pass the WSEvents context
+			(upgradeWebSocket as UpgradeWebSocket<WebSocket>)(
+				appLoadContext.agents.configureSocket,
+			);
+		}
+	},
 	listeningListener(info) {
 		console.log(`Server is listening on http://localhost:${info.port}`);
 	},
