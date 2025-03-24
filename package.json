@@ -6,7 +6,7 @@
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",
-		"dev": "HEADPLANE_LOAD_ENV_OVERRIDES=true HEADPLANE_CONFIG_PATH=./config.example.yaml p react-router dev",
+		"dev": "HEADPLANE_LOAD_ENV_OVERRIDES=true HEADPLANE_CONFIG_PATH=./config.example.yaml react-router dev",
 		"start": "node build/server/index.js",
 		"typecheck": "tsc"
 	},
@@ -78,7 +78,8 @@
 	},
 	"pnpm": {
 		"patchedDependencies": {
-			"@shopify/lang-jsonc@1.0.0": "patches/@shopify__lang-jsonc@1.0.0.patch"
+			"@shopify/lang-jsonc@1.0.0": "patches/@shopify__lang-jsonc@1.0.0.patch",
+			"react-router-hono-server": "patches/react-router-hono-server.patch"
 		}
 	}
 }

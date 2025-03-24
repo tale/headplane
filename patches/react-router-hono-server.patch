@@ -1,0 +1,27 @@
+diff --git a/dist/adapters/node.d.ts b/dist/adapters/node.d.ts
+index 68742808892c1282ccff1e3321167862196d1229..f9a9249e1d1e573018d7ff3d3b967c4a1667d6ca 100644
+--- a/dist/adapters/node.d.ts
++++ b/dist/adapters/node.d.ts
+@@ -50,6 +50,10 @@ interface HonoNodeServerOptions<E extends Env = BlankEnv> extends HonoServerOpti
+     /**
+      * Callback executed just after `serve` from `@hono/node-server`
+      */
++    /**
++     * Customize the hostname of the node server
++     */
++    hostname?: string;
+     onServe?: (server: ServerType) => void;
+     /**
+      * The Node.js Adapter rewrites the global Request/Response and uses a lightweight Request/Response to improve performance.
+diff --git a/dist/adapters/node.js b/dist/adapters/node.js
+index 481dec801537f6ccf7f7a8a8e2294f4b0f20bb7d..0fbc43c3a345b341a08e8179ea0eabfaca62e3b3 100644
+--- a/dist/adapters/node.js
++++ b/dist/adapters/node.js
+@@ -86,6 +86,7 @@ async function createHonoServer(options) {
+         ...app,
+         ...mergedOptions.customNodeServer,
+         port: mergedOptions.port,
++        hostname: mergedOptions.hostname,
+         overrideGlobalObjects: mergedOptions.overrideGlobalObjects
+       },
+       mergedOptions.listeningListener

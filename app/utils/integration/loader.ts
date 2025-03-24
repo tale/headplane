@@ -1,6 +1,5 @@
+import { HeadplaneConfig } from '~/server/config/schema';
 import log from '~/utils/log';
-import { hp_getConfig } from '~server/context/global';
-import type { HeadplaneConfig } from '~server/context/parser';
 import { Integration } from './abstract';
 // import dockerIntegration from './docker';
 // import kubernetesIntegration from './kubernetes';
@@ -66,5 +65,5 @@ function getIntegration(integration: HeadplaneConfig['integration']) {
 
 // IMPORTANT THIS IS A SIDE EFFECT ON INIT
 // TODO: Switch this to the new singleton system
-const context = hp_getConfig();
+// const context = hp_getConfig();
 // hp_loadIntegration(context.integration);

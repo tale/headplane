@@ -43,9 +43,10 @@ export interface EnvOverrides {
 	path: string;
 }
 
-export function configureConfig(
-	overrides: Partial<EnvOverrides>,
-): EnvOverrides {
+export function configureConfig(overrides: {
+	loadEnv: string | undefined;
+	path: string | undefined;
+}): EnvOverrides {
 	const loadResult = booleanEnv(overrides.loadEnv);
 	if (loadResult instanceof type.errors) {
 		log.error(
