@@ -28,6 +28,9 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.1.1
         version: 5.1.1
+      '@hono/node-server':
+        specifier: ^1.14.0
+        version: 1.14.0(hono@4.7.5)
       '@kubernetes/client-node':
         specifier: ^0.22.3
         version: 0.22.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -39,7 +42,7 @@ importers:
         version: 3.0.0-beta.18(react@19.0.0)
       '@react-router/node':
         specifier: ^7.4.0
-        version: 7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.7.2)
+        version: 7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)
       '@react-stately/toast':
         specifier: 3.0.0-beta.7
         version: 3.0.0-beta.7(react@19.0.0)
@@ -102,7 +105,7 @@ importers:
         version: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-router-hono-server:
         specifier: ^2.11.0
-        version: 2.11.0(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
+        version: 2.11.0(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
       react-stately:
         specifier: ^3.35.0
         version: 3.35.0(react@19.0.0)
@@ -136,7 +139,7 @@ importers:
         version: 1.9.4
       '@react-router/dev':
         specifier: ^7.4.0
-        version: 7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)
+        version: 7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)
       '@types/websocket':
         specifier: ^1.0.10
         version: 1.0.10
@@ -144,8 +147,8 @@ importers:
         specifier: ^8.5.13
         version: 8.5.13
       autoprefixer:
-        specifier: ^10.4.20
-        version: 10.4.20(postcss@8.4.49)
+        specifier: ^10.4.21
+        version: 10.4.21(postcss@8.5.3)
       babel-plugin-react-compiler:
         specifier: 19.0.0-beta-55955c9-20241229
         version: 19.0.0-beta-55955c9-20241229
@@ -153,8 +156,8 @@ importers:
         specifier: ^1.10.9
         version: 1.10.9
       postcss:
-        specifier: ^8.4.49
-        version: 8.4.49
+        specifier: ^8.5.3
+        version: 8.5.3
       react-router-dom:
         specifier: ^7.4.0
         version: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -171,8 +174,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0(tailwindcss@3.4.17)
       typescript:
-        specifier: ^5.7.2
-        version: 5.7.2
+        specifier: ^5.8.2
+        version: 5.8.2
       vite:
         specifier: ^6.2.2
         version: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
@@ -184,7 +187,7 @@ importers:
         version: 1.3.0(@babel/core@7.26.0)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
       vite-tsconfig-paths:
         specifier: ^5.1.4
-        version: 5.1.4(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
+        version: 5.1.4(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
 
 packages:
 
@@ -965,8 +968,8 @@ packages:
   '@formatjs/intl-localematcher@0.5.8':
     resolution: {integrity: sha512-I+WDNWWJFZie+jkfkiK5Mp4hEDyRSEvmyfYadflOno/mmKJKcB17fEpEH0oJu/OWhhCJ8kJBDz2YMd/6cDl7Mg==}
 
-  '@hono/node-server@1.13.8':
-    resolution: {integrity: sha512-fsn8ucecsAXUoVxrUil0m13kOEq4mkX4/4QozCqmY+HpGfKl74OYSn8JcMA8GnG0ClfdRI4/ZSeG7zhFaVg+wg==}
+  '@hono/node-server@1.14.0':
+    resolution: {integrity: sha512-YUCxJwgHRKSqjrdTk9e4VMGKN27MK5r4+MGPyZTgKH+IYbK+KtYbHeOcPGJ91KGGD6RIQiz2dAHxvjauNhOS8g==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -1934,8 +1937,8 @@ packages:
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
 
-  autoprefixer@10.4.20:
-    resolution: {integrity: sha512-XY25y5xSv/wEoqzDyXXME4AFfkZI0P23z6Fs3YgymDnKJkCGOnkL0iTxCa85UTqaSgfcqyf3UA6+c7wUvx/16g==}
+  autoprefixer@10.4.21:
+    resolution: {integrity: sha512-O+A6LWV5LDHSJD3LjHYoNi4VLsj/Whi7k6zG12xTYaU4cQ8oxQGckXNX8cRHK5yOZ/ppVHe0ZBXGzSV9jXdVbQ==}
     engines: {node: ^10 || ^12 || >=14}
     hasBin: true
     peerDependencies:
@@ -2261,8 +2264,8 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
-  hono@4.7.4:
-    resolution: {integrity: sha512-Pst8FuGqz3L7tFF+u9Pu70eI0xa5S3LPUmrNd5Jm8nTHze9FxLTK9Kaj5g/k4UcwuJSXTP65SyHOPLrffpcAJg==}
+  hono@4.7.5:
+    resolution: {integrity: sha512-fDOK5W2C1vZACsgLONigdZTRZxuBqFtcKh7bUQ5cVSbwI2RWjloJDcgFOVzbQrlI6pCmhlTsVYZ7zpLj4m4qMQ==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@6.1.3:
@@ -2517,11 +2520,6 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@3.3.8:
-    resolution: {integrity: sha512-WNLf5Sd8oZxOm+TzppcYk8gVOgP+l58xNy58D0nbUnOxOWRWvlcCV4kUF7ltmI6PsrLl/BgKEyS4mqsGChFN0w==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
   node-gyp-build@4.8.4:
     resolution: {integrity: sha512-LA4ZjwlnUblHVgq0oBF3Jl/6h/Nvs5fzBLwdEF4nuxnFdsfajde4WfxtJr3CaiH+F6ewcIB/q4jQ4UzPyid+CQ==}
     hasBin: true
@@ -2665,10 +2663,6 @@ packages:
 
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
-
-  postcss@8.4.49:
-    resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
-    engines: {node: ^10 || ^12 || >=14}
 
   postcss@8.5.3:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
@@ -3064,8 +3058,8 @@ packages:
     resolution: {integrity: sha512-yCxltHW07Nkhv/1F6wWBr8kz+5BGMfP+RbRSYFnegVb0qV/UMT0G0ElBloPVerqn4M2ZV80Ir1FtCcYv1cT6vQ==}
     engines: {node: '>=16'}
 
-  typescript@5.7.2:
-    resolution: {integrity: sha512-i5t66RHxDvVN40HfDd1PsEThGNnlMCMT3jMUuoh9/0TaqWevNontacunWyN02LA9/fIbEWlcHZcgTKb9QoaLfg==}
+  typescript@5.8.2:
+    resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -4010,23 +4004,23 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@hono/node-server@1.13.8(hono@4.7.4)':
+  '@hono/node-server@1.14.0(hono@4.7.5)':
     dependencies:
-      hono: 4.7.4
+      hono: 4.7.5
 
-  '@hono/node-ws@1.1.0(@hono/node-server@1.13.8(hono@4.7.4))(bufferutil@4.0.9)(hono@4.7.4)(utf-8-validate@5.0.10)':
+  '@hono/node-ws@1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(bufferutil@4.0.9)(hono@4.7.5)(utf-8-validate@5.0.10)':
     dependencies:
-      '@hono/node-server': 1.13.8(hono@4.7.4)
-      hono: 4.7.4
+      '@hono/node-server': 1.14.0(hono@4.7.5)
+      hono: 4.7.5
       ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@hono/vite-dev-server@0.17.0(hono@4.7.4)':
+  '@hono/vite-dev-server@0.17.0(hono@4.7.5)':
     dependencies:
-      '@hono/node-server': 1.13.8(hono@4.7.4)
-      hono: 4.7.4
+      '@hono/node-server': 1.14.0(hono@4.7.5)
+      hono: 4.7.5
       minimatch: 9.0.5
 
   '@internationalized/date@3.6.0':
@@ -4798,7 +4792,7 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  '@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)':
+  '@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/generator': 7.26.10
@@ -4809,7 +4803,7 @@ snapshots:
       '@babel/traverse': 7.26.10
       '@babel/types': 7.26.10
       '@npmcli/package-json': 4.0.1
-      '@react-router/node': 7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.7.2)
+      '@react-router/node': 7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)
       arg: 5.0.2
       babel-dead-code-elimination: 1.0.9
       chokidar: 4.0.3
@@ -4826,11 +4820,11 @@ snapshots:
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       semver: 7.7.1
       set-cookie-parser: 2.7.1
-      valibot: 0.41.0(typescript@5.7.2)
+      valibot: 0.41.0(typescript@5.8.2)
       vite: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
       vite-node: 3.0.0-beta.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.8.2
     transitivePeerDependencies:
       - '@types/node'
       - babel-plugin-macros
@@ -4847,7 +4841,7 @@ snapshots:
       - tsx
       - yaml
 
-  '@react-router/node@7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.7.2)':
+  '@react-router/node@7.4.0(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(typescript@5.8.2)':
     dependencies:
       '@mjackson/node-fetch-server': 0.2.0
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -4855,7 +4849,7 @@ snapshots:
       stream-slice: 0.1.2
       undici: 6.21.2
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.8.2
 
   '@react-stately/calendar@3.7.0(react@19.0.0)':
     dependencies:
@@ -5446,14 +5440,14 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  autoprefixer@10.4.20(postcss@8.4.49):
+  autoprefixer@10.4.21(postcss@8.5.3):
     dependencies:
-      browserslist: 4.24.2
-      caniuse-lite: 1.0.30001677
+      browserslist: 4.24.4
+      caniuse-lite: 1.0.30001706
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.1.1
-      postcss: 8.4.49
+      postcss: 8.5.3
       postcss-value-parser: 4.2.0
 
   aws-sign2@0.7.0: {}
@@ -5816,7 +5810,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.7.4: {}
+  hono@4.7.5: {}
 
   hosted-git-info@6.1.3:
     dependencies:
@@ -6021,8 +6015,6 @@ snapshots:
 
   nanoid@3.3.11: {}
 
-  nanoid@3.3.8: {}
-
   node-gyp-build@4.8.4:
     optional: true
 
@@ -6109,28 +6101,28 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.2
 
-  postcss-import@15.1.0(postcss@8.4.49):
+  postcss-import@15.1.0(postcss@8.5.3):
     dependencies:
-      postcss: 8.4.49
+      postcss: 8.5.3
       postcss-value-parser: 4.2.0
       read-cache: 1.0.0
       resolve: 1.22.10
 
-  postcss-js@4.0.1(postcss@8.4.49):
+  postcss-js@4.0.1(postcss@8.5.3):
     dependencies:
       camelcase-css: 2.0.1
-      postcss: 8.4.49
+      postcss: 8.5.3
 
-  postcss-load-config@4.0.2(postcss@8.4.49):
+  postcss-load-config@4.0.2(postcss@8.5.3):
     dependencies:
       lilconfig: 3.1.3
       yaml: 2.7.0
     optionalDependencies:
-      postcss: 8.4.49
+      postcss: 8.5.3
 
-  postcss-nested@6.2.0(postcss@8.4.49):
+  postcss-nested@6.2.0(postcss@8.5.3):
     dependencies:
-      postcss: 8.4.49
+      postcss: 8.5.3
       postcss-selector-parser: 6.1.2
 
   postcss-selector-parser@6.1.2:
@@ -6139,12 +6131,6 @@ snapshots:
       util-deprecate: 1.0.2
 
   postcss-value-parser@4.2.0: {}
-
-  postcss@8.4.49:
-    dependencies:
-      nanoid: 3.3.8
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
 
   postcss@8.5.3:
     dependencies:
@@ -6254,15 +6240,15 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  react-router-hono-server@2.11.0(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
+  react-router-hono-server@2.11.0(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
-      '@hono/node-server': 1.13.8(hono@4.7.4)
-      '@hono/node-ws': 1.1.0(@hono/node-server@1.13.8(hono@4.7.4))(bufferutil@4.0.9)(hono@4.7.4)(utf-8-validate@5.0.10)
-      '@hono/vite-dev-server': 0.17.0(hono@4.7.4)
-      '@react-router/dev': 7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)
+      '@hono/node-server': 1.14.0(hono@4.7.5)
+      '@hono/node-ws': 1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(bufferutil@4.0.9)(hono@4.7.5)(utf-8-validate@5.0.10)
+      '@hono/vite-dev-server': 0.17.0(hono@4.7.5)
+      '@react-router/dev': 7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)
       '@types/react': 19.0.2
-      hono: 4.7.4
+      hono: 4.7.5
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       vite: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
     transitivePeerDependencies:
@@ -6549,11 +6535,11 @@ snapshots:
       normalize-path: 3.0.0
       object-hash: 3.0.0
       picocolors: 1.1.1
-      postcss: 8.4.49
-      postcss-import: 15.1.0(postcss@8.4.49)
-      postcss-js: 4.0.1(postcss@8.4.49)
-      postcss-load-config: 4.0.2(postcss@8.4.49)
-      postcss-nested: 6.2.0(postcss@8.4.49)
+      postcss: 8.5.3
+      postcss-import: 15.1.0(postcss@8.5.3)
+      postcss-js: 4.0.1(postcss@8.5.3)
+      postcss-load-config: 4.0.2(postcss@8.5.3)
+      postcss-nested: 6.2.0(postcss@8.5.3)
       postcss-selector-parser: 6.1.2
       resolve: 1.22.10
       sucrase: 3.35.0
@@ -6596,9 +6582,9 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  tsconfck@3.1.4(typescript@5.7.2):
+  tsconfck@3.1.4(typescript@5.8.2):
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.8.2
 
   tslib@2.6.2: {}
 
@@ -6621,7 +6607,7 @@ snapshots:
 
   type-fest@4.31.0: {}
 
-  typescript@5.7.2: {}
+  typescript@5.8.2: {}
 
   undici-types@6.19.8: {}
 
@@ -6673,9 +6659,9 @@ snapshots:
 
   uuid@3.4.0: {}
 
-  valibot@0.41.0(typescript@5.7.2):
+  valibot@0.41.0(typescript@5.8.2):
     optionalDependencies:
-      typescript: 5.7.2
+      typescript: 5.8.2
 
   validate-npm-package-license@3.0.4:
     dependencies:
@@ -6737,11 +6723,11 @@ snapshots:
       '@babel/core': 7.26.0
       vite: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
 
-  vite-tsconfig-paths@5.1.4(typescript@5.7.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
+  vite-tsconfig-paths@5.1.4(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
     dependencies:
       debug: 4.4.0
       globrex: 0.1.2
-      tsconfck: 3.1.4(typescript@5.7.2)
+      tsconfck: 3.1.4(typescript@5.8.2)
     optionalDependencies:
       vite: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
     transitivePeerDependencies:

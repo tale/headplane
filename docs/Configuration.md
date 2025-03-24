@@ -22,6 +22,9 @@ Here are a few more examples:
 **This functionality is NOT enabled by default!**
 To enable it, set the environment variable **`HEADPLANE_LOAD_ENV_OVERRIDES=true`**.
 Setting this also tells Headplane to load the relative `.env` file into the environment.
+> Also note that this is **only** for configuration overrides, not for general
+> environment variables meaning you cannot specify variables such as
+> `HEADPLANE_DEBUG_LOG=true` or `HEADPLANE_CONFIG_PATH=/etc/headplane/config.yaml`.
 
 ## Debugging
 To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment variable.

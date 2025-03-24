@@ -38,27 +38,38 @@ export function configureLogger(env: string | undefined) {
 	log.debug('config', 'It is recommended this be disabled in production');
 }
 
-interface Overrides {
-	loadEnv: string | undefined;
-	path: string | undefined;
+export interface EnvOverrides {
+	loadEnv: boolean;
+	path: string;
 }
 
-export type EnvOverrides = typeof schema.infer;
-const schema = type({
-	loadEnv: booleanEnv.default('false'),
-	path: 'string = "/etc/headplane/config.yaml"',
-});
-
-export function configureConfig(overrides: Overrides) {
-	const result = schema(overrides);
-	if (result instanceof type.errors) {
+export function configureConfig(
+	overrides: Partial<EnvOverrides>,
+): EnvOverrides {
+	const loadResult = booleanEnv(overrides.loadEnv);
+	if (loadResult instanceof type.errors) {
 		log.error(
 			'config',
-			'HEADPLANE_LOAD_ENV_OVERRIDES or HEADPLANE_CONFIG_PATH value is invalid: %s',
-			result.summary,
+			'HEADPLANE_LOAD_ENV_OVERRIDES value is invalid: %s',
+			loadResult.summary,
 		);
+
 		exit(1);
 	}
 
-	return result;
+	const pathResult = type('string | undefined')(overrides.path);
+	if (pathResult instanceof type.errors) {
+		log.error(
+			'config',
+			'HEADPLANE_CONFIG_PATH value is invalid: %s',
+			pathResult.summary,
+		);
+
+		exit(1);
+	}
+
+	return {
+		loadEnv: loadResult,
+		path: pathResult ?? '/etc/headplane/config.yaml',
+	};
 }
