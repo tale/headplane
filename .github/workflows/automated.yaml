@@ -1,0 +1,33 @@
+name: Automated
+on:
+  schedule:
+    - cron: "0 8 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: automation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write # Allow canceling in-progress runs
+  contents: read # Read access to the repository
+  pull-requests: write # Allow creating pull requests
+
+jobs:
+  flake-inputs:
+    name: flake-inputs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+
+      - uses: DeterminateSystems/update-flake-lock@main
+        with:
+          pr-title: "chore: update flake.lock"
+          pr-labels: |
+            automated

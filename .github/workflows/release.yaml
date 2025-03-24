@@ -1,11 +1,11 @@
-name: Nightly
+name: Release
 on:
-  schedule:
-    - cron: "0 8 * * *"
-  workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 concurrency:
-  group: publish-nightly-${{ github.ref }}
+  group: publish-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -40,7 +40,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=edge,branch=main
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=false
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
