@@ -8,7 +8,6 @@ import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import useAgent from '~/utils/use-agent';
 import { menuAction } from './action';
 import MachineRow from './components/machine';
 import NewMachine from './dialogs/new';
@@ -45,6 +44,7 @@ export async function loader({
 		server: context.config.headscale.url,
 		publicServer: context.config.headscale.public_url,
 		agents: context.agents?.tailnetIDs(),
+		stats: context.agents?.lookup(machines.nodes.map((node) => node.nodeKey)),
 	};
 }
 
@@ -54,7 +54,6 @@ export async function action(request: ActionFunctionArgs) {
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>();
-	const { data: stats } = useAgent(data.nodes.map((node) => node.nodeKey));
 
 	return (
 		<>
@@ -120,10 +119,10 @@ export default function Page() {
 							)}
 							users={data.users}
 							magic={data.magic}
-							stats={stats?.[machine.nodeKey]}
 							// If we pass undefined, the column will not be rendered
 							// This is useful for when there are no agents configured
 							isAgent={data.agents?.includes(machine.id)}
+							stats={data.stats?.[machine.nodeKey]}
 						/>
 					))}
 				</tbody>

@@ -11,9 +11,6 @@ export default [
 	route('/oidc/callback', 'routes/auth/oidc-callback.ts'),
 	route('/oidc/start', 'routes/auth/oidc-start.ts'),
 
-	// API
-	route('/api/agent', 'routes/api/agent.ts'),
-
 	// All the main logged-in dashboard routes
 	// Double nested to separate error propagations
 	layout('layouts/shell.tsx', [
