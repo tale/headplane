@@ -18,7 +18,7 @@ if (!version) {
 	throw new Error('Unable to read version from package.json');
 }
 
-export default defineConfig({
+export default defineConfig(({ isSsrBuild }) => ({
 	// base: `${prefix}/`,
 	plugins: [reactRouterHonoServer(), reactRouter(), tsconfigPaths()],
 	css: {
@@ -28,10 +28,10 @@ export default defineConfig({
 	},
 	ssr: {
 		target: 'node',
-		noExternal: true,
+		noExternal: isSsrBuild ? true : undefined,
 	},
 	define: {
 		__VERSION__: JSON.stringify(version),
 		__PREFIX__: JSON.stringify(prefix),
 	},
-});
+}));
