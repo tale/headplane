@@ -9,6 +9,7 @@ import ManageRecords from './components/manage-records';
 import RenameTailnet from './components/rename-tailnet';
 import ToggleMagic from './components/toggle-magic';
 import { dnsAction } from './dns-actions';
+import ToggleOverrideLocalDns from './components/toggle-override-local-dns';
 
 // We do not want to expose every config value
 export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
@@ -25,6 +26,7 @@ export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
 		splitDns: config.dns.nameservers.split,
 		searchDomains: config.dns.search_domains,
 		extraRecords: config.dns.extra_records,
+		overrideLocalDns: config.dns.override_local_dns,
 	};
 
 	return {
@@ -59,6 +61,17 @@ export default function Page() {
 			<RenameTailnet name={data.baseDomain} isDisabled={isDisabled} />
 			<ManageNS nameservers={allNs} isDisabled={isDisabled} />
 			<ManageRecords records={data.extraRecords} isDisabled={isDisabled} />
+			<div className="flex flex-col w-2/3">
+			<h1 className="text-2xl font-medium mb-4">Local DNS Override</h1>
+			<p className="mb-4">
+				When enabled, Headscale will override the local DNS configuration 
+				of connected clients, forcing them to use the configured DNS servers.
+			</p>
+			<ToggleOverrideLocalDns
+				isEnabled={data.overrideLocalDns || false}
+				isDisabled={isDisabled}
+			/>
+			</div>
 			<ManageDomains
 				searchDomains={data.searchDomains}
 				isDisabled={isDisabled}

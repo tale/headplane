@@ -33,6 +33,8 @@ export async function dnsAction({
 			return removeRecord(formData, context);
 		case 'add_record':
 			return addRecord(formData, context);
+		case 'toggle_override_local_dns':
+			return toggleOverrideLocalDns(formData, context);
 		default:
 			return data({ success: false }, 400);
 	}
@@ -220,4 +222,20 @@ async function addRecord(formData: FormData, context: LoadContext) {
 	]);
 
 	await hp_getIntegration()?.onConfigChange();
+}
+
+async function toggleOverrideLocalDns(formData: FormData, context: LoadContext) {
+    const newState = formData.get('new_state')?.toString();
+    if (!newState) {
+        return data({ success: false }, 400);
+    }
+
+    await context.hs.patch([
+        {
+            path: 'dns.override_local_dns',
+            value: newState === 'enabled',
+        },
+    ]);
+
+    await hp_getIntegration()?.onConfigChange();
 }
