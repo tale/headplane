@@ -55,8 +55,8 @@ export const headscaleConfig = type({
 		private_key_path: 'string',
 	},
 	prefixes: {
-		v4: 'string',
-		v6: 'string',
+		v4: 'string?',
+		v6: 'string?',
 		allocation: '"sequential" | "random" = "sequential"',
 	},
 	derp: {
@@ -146,82 +146,3 @@ export const headscaleConfig = type({
 
 	randomize_client_port: goBool.default(false),
 });
-
-// export function validateConfig(config: unknown, strict: boolean) {
-// 	log.debug('CFGX', 'Validating Headscale configuration...');
-// 	const out = strict
-// 		? headscaleConfig(config)
-// 		: headscaleConfig(augmentUnstrictConfig(config as HeadscaleConfig));
-
-// 	if (out instanceof type.errors) {
-// 		log.error('CFGX', 'Error parsing Headscale configuration:');
-// 		for (const [number, error] of out.entries()) {
-// 			log.error('CFGX', ` (${number}): ${error.toString()}`);
-// 		}
-
-// 		log.error('CFGX', '');
-// 		log.error('CFGX', 'Resolve these issues and try again.');
-// 		log.error('CFGX', 'Headplane will operate without the config');
-// 		log.error('CFGX', '');
-// 		return;
-// 	}
-
-// 	log.debug('CFGX', 'Headscale configuration is valid.');
-// 	return out;
-// }
-
-// // If config_strict is false, we set the defaults and disable
-// // the schema checking for the values that are not present
-// function augmentUnstrictConfig(
-// 	loaded: Partial<HeadscaleConfig>,
-// ): HeadscaleConfig {
-// 	log.debug('CFGX', 'Loaded Headscale configuration in non-strict mode');
-// 	const config = {
-// 		...loaded,
-// 		tls_letsencrypt_cache_dir:
-// 			loaded.tls_letsencrypt_cache_dir ?? '/var/www/cache',
-// 		tls_letsencrypt_challenge_type:
-// 			loaded.tls_letsencrypt_challenge_type ?? 'HTTP-01',
-// 		grpc_listen_addr: loaded.grpc_listen_addr ?? ':50443',
-// 		grpc_allow_insecure: loaded.grpc_allow_insecure ?? false,
-// 		randomize_client_port: loaded.randomize_client_port ?? false,
-// 		unix_socket: loaded.unix_socket ?? '/var/run/headscale/headscale.sock',
-// 		unix_socket_permission: loaded.unix_socket_permission ?? '0770',
-
-// 		log: loaded.log ?? {
-// 			level: 'info',
-// 			format: 'text',
-// 		},
-
-// 		logtail: loaded.logtail ?? {
-// 			enabled: false,
-// 		},
-
-// 		prefixes: loaded.prefixes ?? {
-// 			allocation: 'sequential',
-// 			v4: '',
-// 			v6: '',
-// 		},
-
-// 		dns: loaded.dns ?? {
-// 			nameservers: {
-// 				global: [],
-// 				split: {},
-// 			},
-// 			search_domains: [],
-// 			extra_records: [],
-// 			magic_dns: false,
-// 			base_domain: 'headscale.net',
-// 		},
-// 	};
-
-// 	log.warn('CFGX', 'Loaded Headscale configuration in non-strict mode');
-// 	log.warn('CFGX', 'By using this mode you forfeit GitHub issue support');
-// 	log.warn('CFGX', 'This is very dangerous and comes with a few caveats:');
-// 	log.warn('CFGX', '  Headplane could very easily crash');
-// 	log.warn('CFGX', '  Headplane could break your Headscale installation');
-// 	log.warn('CFGX', '  The UI could throw random errors/show incorrect data');
-// 	log.warn('CFGX', '');
-
-// 	return config as HeadscaleConfig;
-// }
