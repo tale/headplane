@@ -4,7 +4,7 @@
 // disable debug logging if the `HEADPLANE_DEBUG_LOG` specifies as such.
 
 const levels = ['info', 'warn', 'error', 'debug'] as const;
-type Category = 'server' | 'config' | 'agent' | 'api';
+type Category = 'server' | 'config' | 'agent' | 'api' | 'auth';
 
 export interface Logger
 	extends Record<

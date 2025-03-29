@@ -12,6 +12,7 @@ import type { LoadContext } from '~/server';
 import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import ManageBanner from './components/manage-banner';
+import UserRow from './components/user-row';
 import DeleteUser from './dialogs/delete-user';
 import RenameUser from './dialogs/rename-user';
 import { userAction } from './user-actions';
@@ -34,6 +35,28 @@ export async function loader({
 		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
 	}));
 
+	const roles = users
+		.sort((a, b) => a.name.localeCompare(b.name))
+		.map((user) => {
+			if (user.provider !== 'oidc') {
+				return 'no-oidc';
+			}
+
+			if (user.provider === 'oidc' && user.providerId) {
+				// For some reason, headscale makes providerID a url where the
+				// last component is the subject, so we need to strip that out
+				const subject = user.providerId.split('/').pop();
+				if (!subject) {
+					return 'invalid-oidc';
+				}
+
+				const role = context.sessions.roleForSubject(subject);
+				return role ?? 'no-role';
+			}
+
+			return 'no-role';
+		});
+
 	let magic: string | undefined;
 	if (context.hs.readable()) {
 		if (context.hs.c?.dns.magic_dns) {
@@ -43,6 +66,7 @@ export async function loader({
 
 	return {
 		oidc: context.config.oidc,
+		roles,
 		magic,
 		users,
 	};
@@ -72,7 +96,35 @@ export default function Page() {
 				drag machines between users to change ownership.
 			</p>
 			<ManageBanner oidc={data.oidc} />
-			<ClientOnly fallback={<Users users={users} />}>
+			<table className="table-auto w-full rounded-lg">
+				<thead className="text-headplane-600 dark:text-headplane-300">
+					<tr className="text-left px-0.5">
+						<th className="uppercase text-xs font-bold pb-2">User</th>
+						<th className="uppercase text-xs font-bold pb-2">Role</th>
+						<th className="uppercase text-xs font-bold pb-2">Created At</th>
+						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
+					</tr>
+				</thead>
+				<tbody
+					className={cn(
+						'divide-y divide-headplane-100 dark:divide-headplane-800 align-top',
+						'border-t border-headplane-100 dark:border-headplane-800',
+					)}
+				>
+					{users
+						.sort((a, b) => a.name.localeCompare(b.name))
+						.map((user) => (
+							<UserRow
+								key={user.id}
+								user={user}
+								role={data.roles[users.indexOf(user)]}
+							/>
+						))}
+				</tbody>
+			</table>
+
+			{/* <Users users={users} /> */}
+			{/* <ClientOnly fallback={<Users users={users} />}>
 				{() => (
 					<InteractiveUsers
 						users={users}
@@ -80,7 +132,7 @@ export default function Page() {
 						magic={data.magic}
 					/>
 				)}
-			</ClientOnly>
+			</ClientOnly> */}
 		</>
 	);
 }

@@ -15,6 +15,7 @@ import cn from '~/utils/cn';
 
 interface Props {
 	configAvailable: boolean;
+	uiAccess: boolean;
 	user?: AuthSession['user'];
 }
 
@@ -135,29 +136,31 @@ export default function Header(data: Props) {
 					) : undefined}
 				</div>
 			</div>
-			<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
-				<TabLink
-					to="/machines"
-					name="Machines"
-					icon={<Server className="w-5" />}
-				/>
-				<TabLink to="/users" name="Users" icon={<Users className="w-5" />} />
-				<TabLink
-					to="/acls"
-					name="Access Control"
-					icon={<Lock className="w-5" />}
-				/>
-				{data.configAvailable ? (
-					<>
-						<TabLink to="/dns" name="DNS" icon={<Globe2 className="w-5" />} />
-						<TabLink
-							to="/settings"
-							name="Settings"
-							icon={<Settings className="w-5" />}
-						/>
-					</>
-				) : undefined}
-			</nav>
+			{data.uiAccess ? (
+				<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
+					<TabLink
+						to="/machines"
+						name="Machines"
+						icon={<Server className="w-5" />}
+					/>
+					<TabLink to="/users" name="Users" icon={<Users className="w-5" />} />
+					<TabLink
+						to="/acls"
+						name="Access Control"
+						icon={<Lock className="w-5" />}
+					/>
+					{data.configAvailable ? (
+						<>
+							<TabLink to="/dns" name="DNS" icon={<Globe2 className="w-5" />} />
+							<TabLink
+								to="/settings"
+								name="Settings"
+								icon={<Settings className="w-5" />}
+							/>
+						</>
+					) : undefined}
+				</nav>
+			) : undefined}
 		</header>
 	);
 }

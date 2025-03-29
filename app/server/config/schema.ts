@@ -27,6 +27,7 @@ const oidcConfig = type({
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
 	redirect_uri: 'string.url?',
+	user_storage_file: 'string = "/var/lib/headplane/users.json"',
 	disable_api_key_login: stringToBool,
 	headscale_api_key: 'string',
 	strict_validation: stringToBool.default(true),

@@ -18,4 +18,5 @@ server
 ├── web/
 │   ├── agent.ts: Handles setting up the agent WebSocket if needed.
 │   ├── oidc.ts: Loads and validates an OIDC configuration (if available).
+│   ├── roles.ts: Contains information about authentication permissions.
 │   ├── sessions.ts: Initializes the session store and methods to manage it.
