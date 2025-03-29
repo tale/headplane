@@ -1,4 +1,4 @@
-import React, { cloneElement, useRef } from 'react';
+import React, { cloneElement, useEffect, useRef } from 'react';
 import {
 	type AriaDialogProps,
 	type AriaModalOverlayProps,
@@ -19,6 +19,7 @@ import IconButton, { IconButtonProps } from '~/components/IconButton';
 import Text from '~/components/Text';
 import Title from '~/components/Title';
 import cn from '~/utils/cn';
+import { useLiveData } from '~/utils/live-data';
 
 export interface DialogProps extends OverlayTriggerProps {
 	children:
@@ -30,6 +31,7 @@ export interface DialogProps extends OverlayTriggerProps {
 }
 
 function Dialog(props: DialogProps) {
+	const { pause, resume } = useLiveData();
 	const state = useOverlayTriggerState(props);
 	const { triggerProps, overlayProps } = useOverlayTrigger(
 		{
@@ -37,6 +39,14 @@ function Dialog(props: DialogProps) {
 		},
 		state,
 	);
+
+	useEffect(() => {
+		if (state.isOpen) {
+			pause();
+		} else {
+			resume();
+		}
+	}, [state.isOpen]);
 
 	if (Array.isArray(props.children)) {
 		const [button, panel] = props.children;
