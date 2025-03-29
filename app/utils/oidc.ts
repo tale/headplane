@@ -1,5 +1,5 @@
 import * as client from 'openid-client';
-import { Configuration } from 'openid-client';
+import { Configuration, IDToken, UserInfoResponse } from 'openid-client';
 import log from '~/utils/log';
 
 // We try our best to infer the callback URI of our Headplane instance
@@ -99,9 +99,32 @@ export async function finishAuthFlow(
 		subject: user.sub,
 		name: getName(user, claims),
 		email: user.email ?? claims.email?.toString(),
-		username: user.preferred_username ?? claims.preferred_username?.toString(),
+		username: calculateUsername(claims, user),
 		picture: user.picture,
 	};
+}
+
+function calculateUsername(claims: IDToken, user: UserInfoResponse) {
+	if (user.preferred_username) {
+		return user.preferred_username;
+	}
+
+	if (
+		claims.preferred_username &&
+		typeof claims.preferred_username === 'string'
+	) {
+		return claims.preferred_username;
+	}
+
+	if (user.email) {
+		return user.email.split('@')[0];
+	}
+
+	if (claims.email && typeof claims.email === 'string') {
+		return claims.email.split('@')[0];
+	}
+
+	return;
 }
 
 function getName(user: client.UserInfoResponse, claims: client.IDToken) {
