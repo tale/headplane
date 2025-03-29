@@ -3,7 +3,6 @@ import { PersonIcon } from '@primer/octicons-react';
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useSubmit } from 'react-router';
-import { ClientOnly } from 'remix-utils/client-only';
 import Attribute from '~/components/Attribute';
 import Card from '~/components/Card';
 import { ErrorPopup } from '~/components/Error';
@@ -54,6 +53,9 @@ export async function loader({
 				return role ?? 'no-role';
 			}
 
+			// No role means the user is not registered in Headplane, but they
+			// are in Headscale. We also need to handle what happens if someone
+			// logs into the UI and they don't have a Headscale setup.
 			return 'no-role';
 		});
 

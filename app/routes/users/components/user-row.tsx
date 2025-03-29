@@ -64,7 +64,7 @@ function mapRoleToName(role: string) {
 		case 'invalid-oidc':
 			return <p className="opacity-50">Invalid</p>;
 		case 'no-role':
-			return <p className="opacity-50">No Role</p>;
+			return <p className="opacity-50">Unregistered</p>;
 		case 'owner':
 			return 'Owner';
 		case 'admin':
