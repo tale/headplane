@@ -2,6 +2,7 @@ import { CircleUser } from 'lucide-react';
 import StatusCircle from '~/components/StatusCircle';
 import { Machine, User } from '~/types';
 import cn from '~/utils/cn';
+import MenuOptions from './menu';
 
 interface UserRowProps {
 	role: string;
@@ -16,7 +17,10 @@ export default function UserRow({ user, role }: UserRowProps) {
 	);
 
 	return (
-		<tr key={user.id}>
+		<tr
+			key={user.id}
+			className="group hover:bg-headplane-50 dark:hover:bg-headplane-950"
+		>
 			<td className="pl-0.5 py-2">
 				<div className="flex items-center">
 					{user.profilePicUrl ? (
@@ -52,6 +56,9 @@ export default function UserRow({ user, role }: UserRowProps) {
 					<StatusCircle isOnline={isOnline} className="w-4 h-4" />
 					<p>{isOnline ? 'Connected' : new Date(lastSeen).toLocaleString()}</p>
 				</span>
+			</td>
+			<td className="py-2 pr-0.5">
+				<MenuOptions user={user} />
 			</td>
 		</tr>
 	);

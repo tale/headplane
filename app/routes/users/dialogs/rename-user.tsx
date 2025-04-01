@@ -1,19 +1,17 @@
-import { Pencil } from 'lucide-react';
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 import { User } from '~/types';
 
-interface Props {
+interface RenameProps {
 	user: User;
+	isOpen: boolean;
+	setIsOpen: (isOpen: boolean) => void;
 }
 
 // TODO: Server side validation before submitting
-export default function RenameUser({ user }: Props) {
+export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
 	return (
-		<Dialog>
-			<Dialog.IconButton label={`Rename ${user.name}`}>
-				<Pencil className="p-1" />
-			</Dialog.IconButton>
+		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Panel>
 				<Dialog.Title>Rename {user.name}?</Dialog.Title>
 				<Dialog.Text className="mb-6">

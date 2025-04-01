@@ -1,27 +1,38 @@
-import { X } from 'lucide-react';
 import Dialog from '~/components/Dialog';
-import { User } from '~/types';
+import { Machine, User } from '~/types';
 
-interface Props {
-	user: User;
+interface DeleteProps {
+	user: User & { machines: Machine[] };
+	isOpen: boolean;
+	setIsOpen: (isOpen: boolean) => void;
 }
 
-// TODO: Warn that OIDC users will be recreated on next login
-export default function DeleteUser({ user }: Props) {
+export default function DeleteUser({ user, isOpen, setIsOpen }: DeleteProps) {
 	const name =
 		(user.displayName?.length ?? 0) > 0 ? user.displayName : user.name;
 
 	return (
-		<Dialog>
-			<Dialog.IconButton label={`Delete ${name}`}>
-				<X className="p-0.5" />
-			</Dialog.IconButton>
-			<Dialog.Panel>
+		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
+			<Dialog.Panel
+				variant={user.machines.length > 0 ? 'unactionable' : 'normal'}
+			>
 				<Dialog.Title>Delete {name}?</Dialog.Title>
-				<Dialog.Text className="mb-6">
-					Are you sure you want to delete {name}? A deleted user cannot be
-					recovered.
-				</Dialog.Text>
+				{user.machines.length > 0 ? (
+					<Dialog.Text className="mb-6">
+						Users cannot be deleted if they have machines. Please delete or
+						re-assign their machines to other users before proceeding.
+					</Dialog.Text>
+				) : (
+					<Dialog.Text className="mb-6">
+						Deleted users cannot be recovered.
+						{user.provider === 'oidc' && (
+							<p className="mt-4 text-sm text-headplane-600 dark:text-headplane-300">
+								Since this user is authenticated via an external provider, they
+								will be recreated if they sign in again.
+							</p>
+						)}
+					</Dialog.Text>
+				)}
 				<input type="hidden" name="action_id" value="delete_user" />
 				<input type="hidden" name="user_id" value={user.id} />
 			</Dialog.Panel>
