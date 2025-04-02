@@ -16,6 +16,7 @@ import cn from '~/utils/cn';
 interface Props {
 	configAvailable: boolean;
 	uiAccess: boolean;
+	onboarding: boolean;
 	user?: AuthSession['user'];
 }
 
@@ -136,7 +137,7 @@ export default function Header(data: Props) {
 					) : undefined}
 				</div>
 			</div>
-			{data.uiAccess ? (
+			{data.uiAccess && !data.onboarding ? (
 				<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
 					<TabLink
 						to="/machines"

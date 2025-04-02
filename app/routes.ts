@@ -14,6 +14,7 @@ export default [
 	// All the main logged-in dashboard routes
 	// Double nested to separate error propagations
 	layout('layouts/shell.tsx', [
+		route('/onboarding', 'routes/users/onboarding.tsx'),
 		layout('layouts/dashboard.tsx', [
 			...prefix('/machines', [
 				index('routes/machines/overview.tsx'),

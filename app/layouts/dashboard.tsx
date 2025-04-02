@@ -14,6 +14,7 @@ export async function loader({
 	const session = await context.sessions.auth(request);
 
 	// We shouldn't session invalidate if Headscale is down
+	// TODO: Notify in the logs or the UI that OIDC auth key is wrong if enabled
 	if (healthy) {
 		try {
 			await context.client.get('v1/apikey', session.get('api_key')!);

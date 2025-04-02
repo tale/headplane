@@ -1,4 +1,5 @@
 import { open, readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { exit } from 'node:process';
 import {
 	CookieSerializeOptions,
@@ -198,22 +199,26 @@ export async function createSessionStorage(
 }
 
 async function loadUserFile(path: string) {
+	const realPath = resolve(path);
+
 	try {
-		const handle = await open(path, 'w');
-		log.info('config', 'Using user database file at %s', path);
+		const handle = await open(realPath, 'r+');
+		log.info('config', 'Using user database file at %s', realPath);
 		await handle.close();
 	} catch (error) {
-		log.info('config', 'User database file not accessible at %s', path);
+		log.info('config', 'User database file not accessible at %s', realPath);
 		log.debug('config', 'Error details: %s', error);
 		exit(1);
 	}
 
 	try {
-		const data = await readFile(path, 'utf8');
-		const users = JSON.parse(data) as { u?: string; c?: number }[];
+		const data = await readFile(realPath, 'utf8');
+		const users = JSON.parse(data.trim()) as { u?: string; c?: number }[];
 
 		// Never trust user input
-		return users.filter((user) => user.u && user.c) as {
+		return users.filter(
+			(user) => user.u !== undefined && user.c !== undefined,
+		) as {
 			u: string;
 			c: number;
 		}[];
