@@ -105,7 +105,3 @@ oidc:
   # This should point to your publicly accessibly URL
   # for your Headplane instance with /admin/oidc/callback
   redirect_uri: "http://localhost:3000/admin/oidc/callback"
-
-  # Stores the users and their permissions for Headplane
-  # This is a path to a JSON file, default is specified below.
-  user_storage_file: "/var/lib/headplane/users.json"

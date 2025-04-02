@@ -75,7 +75,7 @@ export const headplaneConfig = type({
 	'oidc?': oidcConfig,
 	'integration?': integrationConfig,
 	headscale: headscaleConfig,
-}).onDeepUndeclaredKey('reject');
+}).onDeepUndeclaredKey('delete');
 
 export const partialHeadplaneConfig = type({
 	debug: stringToBool,
