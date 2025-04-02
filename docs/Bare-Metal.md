@@ -16,6 +16,16 @@ Requirements:
 - [PNPM](https://pnpm.io/installation) 10.x
 - A finished configuration file (config.yaml)
 
+Before installing Headplane, ensure that `/var/lib/headplane` exists and is
+writable by the user that will run the Headplane service. You can create this
+directory with the following command:
+
+```sh
+sudo mkdir -p /var/lib/headplane
+# Replace headplane:headplane with the appropriate user and group if not root.
+sudo chown -R headplane:headplane /var/lib/headplane
+```
+
 Clone the Headplane repository, install dependencies, and build the project:
 ```sh
 git clone https://github.com/tale/headplane

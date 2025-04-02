@@ -34,7 +34,7 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.1
+    image: ghcr.io/tale/headplane:0.5.7
     container_name: headplane
     restart: unless-stopped
     ports:
@@ -44,10 +44,13 @@ services:
       # This should match headscale.config_path in your config.yaml
       - './headscale-config/config.yaml:/etc/headscale/config.yaml'
 
+      # Headplane stores its data in this directory
+      - './headplane-data:/var/lib/headplane'
+
       # If you are using the Docker integration, mount the Docker socket
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
   headscale:
-    image: headscale/headscale:0.25.0
+    image: headscale/headscale:0.25.1
     container_name: headscale
     restart: unless-stopped
     command: serve
@@ -148,7 +151,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: headplane
-        image: ghcr.io/tale/headplane:0.5.1
+        image: ghcr.io/tale/headplane:0.5.7
         env:
         # Set these if the pod name for Headscale is not static
         # We will use the downward API to get the pod name instead
@@ -161,9 +164,11 @@ spec:
         volumeMounts:
         - name: headscale-config
           mountPath: /etc/headscale
+        - name: headplane-data
+          mountPath: /var/lib/headplane
 
       - name: headscale
-        image: headscale/headscale:0.25.0
+        image: headscale/headscale:0.25.1
         command: ['serve']
         volumeMounts:
         - name: headscale-data
@@ -175,6 +180,9 @@ spec:
         - name: headscale-data
           persistentVolumeClaim:
             claimName: headscale-data
+        - name: headplane-data
+          persistentVolumeClaim:
+            claimName: headplane-data
         - name: headscale-config
           persistentVolumeClaim:
             claimName: headscale-config

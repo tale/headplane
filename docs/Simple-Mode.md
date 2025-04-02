@@ -19,13 +19,14 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.1
+    image: ghcr.io/tale/headplane:0.5.7
     container_name: headplane
     restart: unless-stopped
     ports:
       - '3000:3000'
     volumes:
       - './config.yaml:/etc/headplane/config.yaml'
+      - './headplane-data:/var/lib/headplane'
 ```
 
 This will result in the Headplane UI being available at the `/admin` path of the
