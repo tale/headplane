@@ -1,3 +1,23 @@
+### 0.5.6 (April 2, 2025)
+
+### IMPORTANT
+> **PLEASE** update to this ASAP if you were using Google OIDC. This is because previously *ANY* accounts have admin access to your Tailnet if they discover the URL that Headplane is being hosted on. This new change enforces that new logins by default are not given any permissions. You will need to re-login to Headplane to generate an owner account and prevent unauthorized access.
+
+Implemented *proper* authentication methods for OIDC.
+This is a large update and copies the permission system from Tailscale.
+Permissions are not automatically derived from OIDC, but they can be configured via the UI.
+Additionally, certain roles give certain capabilities, limiting access to parts of the dashboard.
+By default, new users will have a `member` role which forbids access to the UI.
+If there are no users, the first user will be given an `owner` role which cannot be removed.
+
+**Changes**:
+- Switched the internal server to use `hono` for better performance.
+- Fixed an issue that caused dialogs to randomly refocus every 3 seconds.
+- Headplane will not send API requests when the tab is not focused.
+- Continue loosening the configuration requirements for Headscale (part of an ongoing effort).
+- Unknown values in the Headplane config no longer cause a crash.
+- Fixed an issue that caused copied commands to have a random space (fixes [#161](https://github.com/tale/headplane/issues/161))
+
 ### 0.5.5 (March 18, 2025)
 - Hotfix an issue that caused Headplane to crash if no agents are available
 
