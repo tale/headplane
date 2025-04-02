@@ -1,3 +1,6 @@
+### 0.5.7 (April 2, 2025)
+- Hotfix an issue where assets aren't served under `/admin` or the prefix.
+
 ### 0.5.6 (April 2, 2025)
 
 ### IMPORTANT

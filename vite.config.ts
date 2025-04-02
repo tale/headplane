@@ -19,7 +19,7 @@ if (!version) {
 }
 
 export default defineConfig(({ isSsrBuild }) => ({
-	// base: `${prefix}/`,
+	base: `${prefix}/`,
 	plugins: [reactRouterHonoServer(), reactRouter(), tsconfigPaths()],
 	css: {
 		postcss: {

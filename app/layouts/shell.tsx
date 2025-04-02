@@ -34,7 +34,7 @@ export async function loader({
 
 		// Onboarding is only a feature of the OIDC flow
 		if (context.oidc && !request.url.endsWith('/onboarding')) {
-			let onboarded = true;
+			let onboarded = false;
 
 			try {
 				const { users } = await context.client.get<{ users: User[] }>(
