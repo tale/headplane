@@ -14,10 +14,37 @@ index 68742808892c1282ccff1e3321167862196d1229..f9a9249e1d1e573018d7ff3d3b967c4a
      /**
       * The Node.js Adapter rewrites the global Request/Response and uses a lightweight Request/Response to improve performance.
 diff --git a/dist/adapters/node.js b/dist/adapters/node.js
-index 481dec801537f6ccf7f7a8a8e2294f4b0f20bb7d..0fbc43c3a345b341a08e8179ea0eabfaca62e3b3 100644
+index 481dec801537f6ccf7f7a8a8e2294f4b0f20bb7d..980fecf219dd0c501ed415e36985ec56d997f14f 100644
 --- a/dist/adapters/node.js
 +++ b/dist/adapters/node.js
-@@ -86,6 +86,7 @@ async function createHonoServer(options) {
+@@ -46,16 +46,22 @@ async function createHonoServer(options) {
+   }
+   await mergedOptions.beforeAll?.(app);
+   app.use(
+-    `/${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
++    `${__PREFIX__}/${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
+     cache(60 * 60 * 24 * 365),
+     // 1 year
+-    serveStatic({ root: clientBuildPath })
++    serveStatic({
++		root: clientBuildPath,
++		rewriteRequestPath: path => path.replace(__PREFIX__, "/")
++	})
+   );
+   app.use(
+-    "*",
++    `${__PREFIX__}/assets/*`,
+     cache(60 * 60),
+     // 1 hour
+-    serveStatic({ root: PRODUCTION ? clientBuildPath : "./public" })
++    serveStatic({
++		root: PRODUCTION ? clientBuildPath : "./public",
++		rewriteRequestPath: path => path.replace(__PREFIX__, "/")
++	})
+   );
+   if (mergedOptions.defaultLogger) {
+     app.use("*", logger());
+@@ -86,6 +92,7 @@ async function createHonoServer(options) {
          ...app,
          ...mergedOptions.customNodeServer,
          port: mergedOptions.port,
