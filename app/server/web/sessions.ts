@@ -202,7 +202,7 @@ async function loadUserFile(path: string) {
 	const realPath = resolve(path);
 
 	try {
-		const handle = await open(realPath, 'r+');
+		const handle = await open(realPath, 'a+');
 		log.info('config', 'Using user database file at %s', realPath);
 		await handle.close();
 	} catch (error) {
