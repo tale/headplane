@@ -24,9 +24,7 @@ export default function Code({ isCopyable, children, className }: CodeProps) {
 					type="button"
 					className="bottom-0 right-0 absolute"
 					onClick={async (event) => {
-						const text = Array.isArray(children)
-							? children.join(' ')
-							: children;
+						const text = Array.isArray(children) ? children.join('') : children;
 
 						const svgs = event.currentTarget.querySelectorAll('svg');
 						for (const svg of svgs) {
