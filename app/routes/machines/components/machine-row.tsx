@@ -18,6 +18,7 @@ interface Props {
 	isAgent?: boolean;
 	magic?: string;
 	stats?: HostInfo;
+	isDisabled?: boolean;
 }
 
 export default function MachineRow({
@@ -27,6 +28,7 @@ export default function MachineRow({
 	isAgent,
 	magic,
 	stats,
+	isDisabled,
 }: Props) {
 	const expired =
 		machine.expiry === '0001-01-01 00:00:00' ||
@@ -191,6 +193,7 @@ export default function MachineRow({
 					routes={routes}
 					users={users}
 					magic={magic}
+					isDisabled={isDisabled}
 				/>
 			</td>
 		</tr>

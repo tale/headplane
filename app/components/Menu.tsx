@@ -16,6 +16,7 @@ import cn from '~/utils/cn';
 
 interface MenuProps extends MenuTriggerProps {
 	placement?: Placement;
+	isDisabled?: boolean;
 	children: [
 		React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
 		React.ReactElement<MenuPanelProps>,
@@ -23,8 +24,9 @@ interface MenuProps extends MenuTriggerProps {
 }
 
 // TODO: onAction is called twice for some reason?
+// TODO: isDisabled per-prop
 function Menu(props: MenuProps) {
-	const { placement = 'bottom' } = props;
+	const { placement = 'bottom', isDisabled } = props;
 	const state = useMenuTriggerState(props);
 	const ref = useRef<HTMLButtonElement | null>(null);
 	const { menuTriggerProps, menuProps } = useMenuTrigger<object>(
@@ -40,6 +42,7 @@ function Menu(props: MenuProps) {
 		<div>
 			{cloneElement(button, {
 				...menuTriggerProps,
+				isDisabled: isDisabled,
 				ref,
 			})}
 			{state.isOpen && (

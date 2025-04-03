@@ -6,17 +6,40 @@ import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
+import { Capabilities } from '~/server/web/roles';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { menuAction } from './action';
-import MachineRow from './components/machine';
+import MachineRow from './components/machine-row';
 import NewMachine from './dialogs/new';
+import { machineAction } from './machine-actions';
 
 export async function loader({
 	request,
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
+	const user = session.get('user');
+	if (!user) {
+		throw new Error('Missing user session. Please log in again.');
+	}
+
+	const check = await context.sessions.check(
+		request,
+		Capabilities.read_machines,
+	);
+
+	if (!check) {
+		// Not authorized to view this page
+		throw new Error(
+			'You do not have permission to view this page. Please contact your administrator.',
+		);
+	}
+
+	const writablePermission = await context.sessions.check(
+		request,
+		Capabilities.write_machines,
+	);
+
 	const [machines, routes, users] = await Promise.all([
 		context.client.get<{ nodes: Machine[] }>(
 			'v1/node',
@@ -45,11 +68,13 @@ export async function loader({
 		publicServer: context.config.headscale.public_url,
 		agents: context.agents?.tailnetIDs(),
 		stats: context.agents?.lookup(machines.nodes.map((node) => node.nodeKey)),
+		writable: writablePermission,
+		subject: user.subject,
 	};
 }
 
 export async function action(request: ActionFunctionArgs) {
-	return menuAction(request);
+	return machineAction(request);
 }
 
 export default function Page() {
@@ -73,6 +98,7 @@ export default function Page() {
 				<NewMachine
 					server={data.publicServer ?? data.server}
 					users={data.users}
+					isDisabled={!data.writable}
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
@@ -123,6 +149,11 @@ export default function Page() {
 							// This is useful for when there are no agents configured
 							isAgent={data.agents?.includes(machine.id)}
 							stats={data.stats?.[machine.nodeKey]}
+							isDisabled={
+								data.writable
+									? false // If the user has write permissions, they can edit all machines
+									: machine.user.providerId?.split('/').pop() !== data.subject
+							}
 						/>
 					))}
 				</tbody>

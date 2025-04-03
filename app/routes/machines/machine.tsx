@@ -12,9 +12,9 @@ import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
-import { menuAction } from './action';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
+import { machineAction } from './machine-actions';
 
 export async function loader({
 	request,
@@ -59,7 +59,7 @@ export async function loader({
 }
 
 export async function action(request: ActionFunctionArgs) {
-	return menuAction(request);
+	return machineAction(request);
 }
 
 export default function Page() {
