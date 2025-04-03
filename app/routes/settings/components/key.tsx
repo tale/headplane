@@ -22,15 +22,19 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 			<Attribute name="Reusable" value={authKey.reusable ? 'Yes' : 'No'} />
 			<Attribute name="Ephemeral" value={authKey.ephemeral ? 'Yes' : 'No'} />
 			<Attribute name="Used" value={authKey.used ? 'Yes' : 'No'} />
-			<Attribute name="Created" value={createdAt} />
-			<Attribute name="Expiration" value={expiration} />
+			<Attribute suppressHydrationWarning name="Created" value={createdAt} />
+			<Attribute
+				suppressHydrationWarning
+				name="Expiration"
+				value={expiration}
+			/>
 			<p className="mb-1 mt-4">
 				To use this key, run the following command on your device:
 			</p>
 			<Code className="text-sm">
 				tailscale up --login-server {server} --authkey {authKey.key}
 			</Code>
-			<div className="flex gap-4 items-center">
+			<div suppressHydrationWarning className="flex gap-4 items-center">
 				{(authKey.used && !authKey.reusable) ||
 				new Date(authKey.expiration) < new Date() ? undefined : (
 					<ExpireKey authKey={authKey} />

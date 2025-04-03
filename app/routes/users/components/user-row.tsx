@@ -42,7 +42,10 @@ export default function UserRow({ user, role }: UserRowProps) {
 				<p>{mapRoleToName(role)}</p>
 			</td>
 			<td className="pl-0.5 py-2">
-				<p className="text-sm text-headplane-600 dark:text-headplane-300">
+				<p
+					suppressHydrationWarning
+					className="text-sm text-headplane-600 dark:text-headplane-300"
+				>
 					{new Date(user.createdAt).toLocaleDateString()}
 				</p>
 			</td>
@@ -54,7 +57,9 @@ export default function UserRow({ user, role }: UserRowProps) {
 					)}
 				>
 					<StatusCircle isOnline={isOnline} className="w-4 h-4" />
-					<p>{isOnline ? 'Connected' : new Date(lastSeen).toLocaleString()}</p>
+					<p suppressHydrationWarning>
+						{isOnline ? 'Connected' : new Date(lastSeen).toLocaleString()}
+					</p>
 				</span>
 			</td>
 			<td className="py-2 pr-0.5">

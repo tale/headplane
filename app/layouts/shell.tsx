@@ -7,13 +7,13 @@ import {
 } from 'react-router';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
-import Code from '~/components/Code';
 import Footer from '~/components/Footer';
 import Header from '~/components/Header';
 import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
 import { User } from '~/types';
 import log from '~/utils/log';
+import toast from '~/utils/toast';
 
 // This loads the bare minimum for the application to function
 // So we know that if context fails to load then well, oops?
@@ -122,7 +122,7 @@ export default function Shell() {
 		<>
 			<Header {...data} />
 			{/* Always show the outlet if we are onboarding */}
-			{(data.onboarding ? true : data.uiAccess) ? (
+			{(data.onboarding ? true : !data.uiAccess) ? (
 				<Outlet />
 			) : (
 				<Card className="mx-auto w-fit mt-24">
@@ -134,11 +134,21 @@ export default function Shell() {
 						Connect to Tailscale with your devices to access this Tailnet. Use
 						this command to help you get started:
 					</Card.Text>
-					<Button className="pointer-events-none text-md hover:bg-initial focus:ring-0">
-						<Code className="pointer-events-auto bg-transparent" isCopyable>
-							tailscale up --login-server={data.url}
-						</Code>
+					<Button
+						className="flex text-md font-mono"
+						onPress={async () => {
+							await navigator.clipboard.writeText(
+								`tailscale up --login-server=${data.url}`,
+							);
+
+							toast('Copied to clipboard');
+						}}
+					>
+						tailscale up --login-server={data.url}
 					</Button>
+					<p className="text-xs mt-1 opacity-50 text-center">
+						Click this button to copy the command.
+					</p>
 					<p className="mt-4 text-sm opacity-50">
 						Your account does not have access to the UI. Please contact your
 						administrator if you believe this is a mistake.

@@ -7,6 +7,7 @@ export interface AttributeProps {
 	value: string;
 	isCopyable?: boolean;
 	link?: string;
+	suppressHydrationWarning?: boolean;
 }
 
 export default function Attribute({
@@ -14,6 +15,7 @@ export default function Attribute({
 	value,
 	link,
 	isCopyable,
+	suppressHydrationWarning,
 }: AttributeProps) {
 	return (
 		<dl className="flex items-center w-full gap-x-1">
@@ -27,6 +29,7 @@ export default function Attribute({
 				)}
 			</dt>
 			<dd
+				suppressHydrationWarning={suppressHydrationWarning}
 				className={cn(
 					'rounded-lg truncate w-full px-2.5 py-1 text-sm',
 					'flex items-center gap-x-1',
@@ -54,7 +57,12 @@ export default function Attribute({
 							}, 1000);
 						}}
 					>
-						<p className="truncate">{value}</p>
+						<p
+							suppressHydrationWarning={suppressHydrationWarning}
+							className="truncate"
+						>
+							{value}
+						</p>
 						<Check className="h-4.5 w-4.5 p-1 hidden data-[copied]:block" />
 						<Copy className="h-4.5 w-4.5 p-1 block data-[copied]:hidden" />
 					</button>

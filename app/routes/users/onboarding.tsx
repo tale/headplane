@@ -12,7 +12,6 @@ import {
 } from 'react-router';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
-import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Options from '~/components/Options';
 import StatusCircle from '~/components/StatusCircle';
@@ -21,6 +20,7 @@ import { Machine } from '~/types';
 import cn from '~/utils/cn';
 import { useLiveData } from '~/utils/live-data';
 import log from '~/utils/log';
+import toast from '~/utils/toast';
 
 export async function loader({
 	request,
@@ -152,20 +152,19 @@ export default function Page() {
 							}
 						>
 							<Button
-								variant="heavy"
-								className={cn(
-									'my-4 px-0 w-full pointer-events-none',
-									'hover:bg-initial focus:ring-0',
-								)}
+								className="flex text-md font-mono"
+								onPress={async () => {
+									await navigator.clipboard.writeText(
+										'curl -fsSL https://tailscale.com/install.sh | sh',
+									);
+
+									toast('Copied to clipboard');
+								}}
 							>
-								<Code
-									isCopyable
-									className="bg-transparent pointer-events-auto mx-0"
-								>
-									curl -fsSL https://tailscale.com/install.sh | sh
-								</Code>
+								curl -fsSL https://tailscale.com/install.sh | sh
 							</Button>
-							<p className="text-end text-sm">
+							<p className="text-xs mt-1 text-headplane-600 dark:text-headplane-300 text-center">
+								Click this button to copy the command.{' '}
 								<Link
 									name="Linux installation script"
 									to="https://github.com/tailscale/tailscale/blob/main/scripts/installer.sh"

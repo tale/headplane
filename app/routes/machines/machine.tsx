@@ -310,14 +310,17 @@ export default function Page() {
 				<Attribute name="Hostname" value={machine.name} />
 				<Attribute isCopyable name="Node Key" value={machine.nodeKey} />
 				<Attribute
+					suppressHydrationWarning
 					name="Created"
 					value={new Date(machine.createdAt).toLocaleString()}
 				/>
 				<Attribute
+					suppressHydrationWarning
 					name="Last Seen"
 					value={new Date(machine.lastSeen).toLocaleString()}
 				/>
 				<Attribute
+					suppressHydrationWarning
 					name="Expiry"
 					value={expired ? new Date(machine.expiry).toLocaleString() : 'Never'}
 				/>

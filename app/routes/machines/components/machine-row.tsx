@@ -180,7 +180,7 @@ export default function MachineRow({
 						isOnline={machine.online && !expired}
 						className="w-4 h-4"
 					/>
-					<p>
+					<p suppressHydrationWarning>
 						{machine.online && !expired
 							? 'Connected'
 							: new Date(machine.lastSeen).toLocaleString()}
