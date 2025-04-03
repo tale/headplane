@@ -19,6 +19,7 @@ server
 │   ├── schema.ts: Defines the schema for the Headplane configuration.
 ├── headscale/
 │   ├── api-client.ts: Creates the HTTP client that talks to the Headscale API.
+│   ├── api-error.ts: Contains the ResponseError definition.
 │   ├── config-loader.ts: Loads the Headscale configuration (if available).
 │   ├── config-schema.ts: Defines the schema for the Headscale configuration.
 ├── web/
