@@ -30,7 +30,18 @@ export default function Footer({ url, debug }: FooterProps) {
 			<p className="container text-xs opacity-75">
 				Version: {__VERSION__}
 				{' — '}
-				Connecting to <strong className="blur-xs hover:blur-none">{url}</strong>
+				Connecting to{' '}
+				<button
+					type="button"
+					tabIndex={0} // Allows keyboard focus
+					className={cn(
+						'blur-sm hover:blur-none focus:blur-none transition',
+						'focus:outline-none focus:ring-2 rounded-sm',
+					)}
+				>
+					{url}
+				</button>
+				{/* Connecting to <strong className="blur-xs hover:blur-none">{url}</strong> */}
 				{debug && ' (Debug mode enabled)'}
 			</p>
 		</footer>
