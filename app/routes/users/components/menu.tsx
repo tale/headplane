@@ -4,15 +4,17 @@ import Menu from '~/components/Menu';
 import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import Delete from '../dialogs/delete-user';
+import Reassign from '../dialogs/reassign-user';
 import Rename from '../dialogs/rename-user';
 
 interface MenuProps {
 	user: User & {
+		headplaneRole: string;
 		machines: Machine[];
 	};
 }
 
-type Modal = 'rename' | 'delete' | null;
+type Modal = 'rename' | 'delete' | 'reassign' | null;
 
 export default function UserMenu({ user }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
@@ -36,6 +38,15 @@ export default function UserMenu({ user }: MenuProps) {
 					}}
 				/>
 			)}
+			{modal === 'reassign' && (
+				<Reassign
+					user={user}
+					isOpen={modal === 'reassign'}
+					setIsOpen={(isOpen) => {
+						if (!isOpen) setModal(null);
+					}}
+				/>
+			)}
 
 			<Menu>
 				<Menu.IconButton
@@ -51,6 +62,7 @@ export default function UserMenu({ user }: MenuProps) {
 				<Menu.Panel onAction={(key) => setModal(key as Modal)}>
 					<Menu.Section>
 						<Menu.Item key="rename">Rename user</Menu.Item>
+						<Menu.Item key="reassign">Change role</Menu.Item>
 						<Menu.Item key="delete" textValue="Delete">
 							<p className="text-red-500 dark:text-red-400">Delete</p>
 						</Menu.Item>

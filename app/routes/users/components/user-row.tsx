@@ -58,7 +58,7 @@ export default function UserRow({ user, role }: UserRowProps) {
 				</span>
 			</td>
 			<td className="py-2 pr-0.5">
-				<MenuOptions user={user} />
+				<MenuOptions user={{ ...user, headplaneRole: role }} />
 			</td>
 		</tr>
 	);
