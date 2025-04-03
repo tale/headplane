@@ -16,6 +16,7 @@ interface MenuProps {
 	users: User[];
 	magic?: string;
 	isFullButton?: boolean;
+	isDisabled?: boolean;
 }
 
 type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
@@ -26,6 +27,7 @@ export default function MachineMenu({
 	magic,
 	users,
 	isFullButton,
+	isDisabled,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
 
@@ -96,7 +98,7 @@ export default function MachineMenu({
 				/>
 			)}
 
-			<Menu>
+			<Menu isDisabled={isDisabled}>
 				{isFullButton ? (
 					<Menu.Button className="flex items-center gap-x-2">
 						<Cog className="h-5" />

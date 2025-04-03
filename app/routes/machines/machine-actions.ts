@@ -1,43 +1,65 @@
 import type { ActionFunctionArgs } from 'react-router';
 import type { LoadContext } from '~/server';
+import { Capabilities } from '~/server/web/roles';
+import { Machine } from '~/types';
 import log from '~/utils/log';
-import { send } from '~/utils/res';
+import { data400, data403, data404, send } from '~/utils/res';
 
-// TODO: Turn this into the same thing as dns-actions like machine-actions!!!
-export async function menuAction({
+// TODO: Clean this up like dns-actions and user-actions
+export async function machineAction({
 	request,
 	context,
 }: ActionFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
-	const data = await request.formData();
-	if (!data.has('_method') || !data.has('id')) {
-		return send(
-			{ message: 'No method or ID provided' },
-			{
-				status: 400,
-			},
-		);
+	const check = await context.sessions.check(
+		request,
+		Capabilities.write_machines,
+	);
+
+	const apiKey = session.get('api_key')!;
+	const formData = await request.formData();
+
+	// TODO: Rename this to 'action_id' and 'node_id'
+	const action = formData.get('_method')?.toString();
+	const nodeId = formData.get('id')?.toString();
+	if (!action || !nodeId) {
+		return data400('Missing required parameters: _method and id');
 	}
 
-	const id = String(data.get('id'));
-	const method = String(data.get('_method'));
+	const { nodes } = await context.client.get<{ nodes: Machine[] }>(
+		'v1/node',
+		apiKey,
+	);
 
-	switch (method) {
+	const node = nodes.find((node) => node.id === nodeId);
+	if (!node) {
+		return data404(`Node with ID ${nodeId} not found`);
+	}
+
+	const subject = session.get('user')!.subject;
+	if (node.user.providerId?.split('/').pop() !== subject) {
+		if (!check) {
+			return data403('You do not have permission to act on this machine');
+		}
+	}
+
+	// TODO: Split up into methods
+	switch (action) {
 		case 'delete': {
-			await context.client.delete(`v1/node/${id}`, session.get('api_key')!);
+			await context.client.delete(`v1/node/${nodeId}`, session.get('api_key')!);
 			return { message: 'Machine removed' };
 		}
 
 		case 'expire': {
 			await context.client.post(
-				`v1/node/${id}/expire`,
+				`v1/node/${nodeId}/expire`,
 				session.get('api_key')!,
 			);
 			return { message: 'Machine expired' };
 		}
 
 		case 'rename': {
-			if (!data.has('name')) {
+			if (!formData.has('name')) {
 				return send(
 					{ message: 'No name provided' },
 					{
@@ -46,16 +68,16 @@ export async function menuAction({
 				);
 			}
 
-			const name = String(data.get('name'));
+			const name = String(formData.get('name'));
 			await context.client.post(
-				`v1/node/${id}/rename/${name}`,
+				`v1/node/${nodeId}/rename/${name}`,
 				session.get('api_key')!,
 			);
 			return { message: 'Machine renamed' };
 		}
 
 		case 'routes': {
-			if (!data.has('route') || !data.has('enabled')) {
+			if (!formData.has('route') || !formData.has('enabled')) {
 				return send(
 					{ message: 'No route or enabled provided' },
 					{
@@ -64,8 +86,8 @@ export async function menuAction({
 				);
 			}
 
-			const route = String(data.get('route'));
-			const enabled = data.get('enabled') === 'true';
+			const route = String(formData.get('route'));
+			const enabled = formData.get('enabled') === 'true';
 			const postfix = enabled ? 'enable' : 'disable';
 
 			await context.client.post(
@@ -76,7 +98,7 @@ export async function menuAction({
 		}
 
 		case 'exit-node': {
-			if (!data.has('routes') || !data.has('enabled')) {
+			if (!formData.has('routes') || !formData.has('enabled')) {
 				return send(
 					{ message: 'No route or enabled provided' },
 					{
@@ -85,8 +107,8 @@ export async function menuAction({
 				);
 			}
 
-			const routes = data.get('routes')?.toString().split(',') ?? [];
-			const enabled = data.get('enabled') === 'true';
+			const routes = formData.get('routes')?.toString().split(',') ?? [];
+			const enabled = formData.get('enabled') === 'true';
 			const postfix = enabled ? 'enable' : 'disable';
 
 			await Promise.all(
@@ -102,7 +124,7 @@ export async function menuAction({
 		}
 
 		case 'move': {
-			if (!data.has('to')) {
+			if (!formData.has('to')) {
 				return send(
 					{ message: 'No destination provided' },
 					{
@@ -111,22 +133,22 @@ export async function menuAction({
 				);
 			}
 
-			const to = String(data.get('to'));
+			const to = String(formData.get('to'));
 
 			try {
 				await context.client.post(
-					`v1/node/${id}/user`,
+					`v1/node/${nodeId}/user`,
 					session.get('api_key')!,
 					{
 						user: to,
 					},
 				);
 
-				return { message: `Moved node ${id} to ${to}` };
+				return { message: `Moved node ${nodeId} to ${to}` };
 			} catch (error) {
 				console.error(error);
 				return send(
-					{ message: `Failed to move node ${id} to ${to}` },
+					{ message: `Failed to move node ${nodeId} to ${to}` },
 					{
 						status: 500,
 					},
@@ -136,7 +158,7 @@ export async function menuAction({
 
 		case 'tags': {
 			const tags =
-				data
+				formData
 					.get('tags')
 					?.toString()
 					.split(',')
@@ -144,7 +166,7 @@ export async function menuAction({
 
 			try {
 				await context.client.post(
-					`v1/node/${id}/tags`,
+					`v1/node/${nodeId}/tags`,
 					session.get('api_key')!,
 					{
 						tags,
@@ -164,8 +186,8 @@ export async function menuAction({
 		}
 
 		case 'register': {
-			const key = data.get('mkey')?.toString();
-			const user = data.get('user')?.toString();
+			const key = formData.get('mkey')?.toString();
+			const user = formData.get('user')?.toString();
 
 			if (!key) {
 				return send(

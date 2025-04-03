@@ -8,12 +8,13 @@ import Menu from '~/components/Menu';
 import Select from '~/components/Select';
 import type { User } from '~/types';
 
-export interface NewProps {
+export interface NewMachineProps {
 	server: string;
 	users: User[];
+	isDisabled?: boolean;
 }
 
-export default function New(data: NewProps) {
+export default function NewMachine(data: NewMachineProps) {
 	const [pushDialog, setPushDialog] = useState(false);
 	const [mkey, setMkey] = useState('');
 	const navigate = useNavigate();
@@ -25,11 +26,8 @@ export default function New(data: NewProps) {
 					<Dialog.Title>Register Machine Key</Dialog.Title>
 					<Dialog.Text className="mb-4">
 						The machine key is given when you run{' '}
-						<Code isCopyable>
-							tailscale up --login-server=
-							{data.server}
-						</Code>{' '}
-						on your device.
+						<Code isCopyable>tailscale up --login-server={data.server}</Code> on
+						your device.
 					</Dialog.Text>
 					<input type="hidden" name="_method" value="register" />
 					<input type="hidden" name="id" value="_" />
@@ -53,7 +51,7 @@ export default function New(data: NewProps) {
 					</Select>
 				</Dialog.Panel>
 			</Dialog>
-			<Menu>
+			<Menu isDisabled={data.isDisabled}>
 				<Menu.Button variant="heavy">Add Device</Menu.Button>
 				<Menu.Panel
 					onAction={(key) => {
