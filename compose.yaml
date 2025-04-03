@@ -3,21 +3,21 @@
 # I ONLY USE IT FOR DEVELOPING HEADPLANE
 
 networks:
-    headplane-dev:
-        name: "headplane-dev"
-        driver: "bridge"
+  headplane-dev:
+    name: "headplane-dev"
+    driver: "bridge"
 services:
-    headscale:
-        image: "headscale/headscale:0.25.0"
-        container_name: "headscale"
-        restart: "unless-stopped"
-        command: "serve"
-        networks:
-            - "headplane-dev"
-        volumes:
-            - "./.cache/headscale:/var/lib/headscale"
-            - "./test:/etc/headscale"
-        ports:
-            - "8080:8080"
-        environment:
-            TZ: "America/New_York"
+  headscale:
+    image: "headscale/headscale:0.25.1"
+    container_name: "headscale"
+    restart: "unless-stopped"
+    command: "serve"
+    networks:
+      - "headplane-dev"
+    volumes:
+      - "./.cache/headscale:/var/lib/headscale"
+      - "./test:/etc/headscale"
+    ports:
+      - "8080:8080"
+    environment:
+      TZ: "America/New_York"
