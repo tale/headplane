@@ -1,5 +1,8 @@
-import { ActionFunctionArgs, data } from 'react-router';
+import { ActionFunctionArgs, Session, data } from 'react-router';
 import type { LoadContext } from '~/server';
+import { Capabilities, Roles } from '~/server/web/roles';
+import { AuthSession } from '~/server/web/sessions';
+import { User } from '~/types';
 
 export async function userAction({
 	request,
@@ -21,8 +24,8 @@ export async function userAction({
 			return deleteUser(formData, apiKey, context);
 		case 'rename_user':
 			return renameUser(formData, apiKey, context);
-		case 'change_owner':
-			return changeOwner(formData, apiKey, context);
+		case 'reassign_user':
+			return reassignUser(formData, apiKey, context, session);
 		default:
 			return data({ success: false }, 400);
 	}
@@ -75,18 +78,57 @@ async function renameUser(
 	await context.client.post(`v1/user/${userId}/rename/${newName}`, apiKey);
 }
 
-async function changeOwner(
+async function reassignUser(
 	formData: FormData,
 	apiKey: string,
 	context: LoadContext,
+	session: Session<AuthSession, unknown>,
 ) {
-	const userId = formData.get('user_id')?.toString();
-	const nodeId = formData.get('node_id')?.toString();
-	if (!userId || !nodeId) {
+	const executor = session.get('user');
+	if (!executor?.subject) {
 		return data({ success: false }, 400);
 	}
 
-	await context.client.post(`v1/node/${nodeId}/user`, apiKey, {
-		user: userId,
-	});
+	const check = await context.sessions.checkSubject(
+		executor.subject,
+		Capabilities.write_users,
+	);
+
+	if (!check) {
+		return data({ success: false }, 403);
+	}
+
+	const userId = formData.get('user_id')?.toString();
+	const newRole = formData.get('new_role')?.toString();
+	if (!userId || !newRole) {
+		return data({ success: false }, 400);
+	}
+
+	const { users } = await context.client.get<{ users: User[] }>(
+		'v1/user',
+		apiKey,
+	);
+
+	const user = users.find((user) => user.id === userId);
+	if (!user?.providerId) {
+		return data({ success: false }, 400);
+	}
+
+	// For some reason, headscale makes providerID a url where the
+	// last component is the subject, so we need to strip that out
+	const subject = user.providerId?.split('/').pop();
+	if (!subject) {
+		return data({ success: false }, 400);
+	}
+
+	const result = await context.sessions.reassignSubject(
+		subject,
+		newRole as keyof typeof Roles,
+	);
+
+	if (!result) {
+		return data({ success: false }, 403);
+	}
+
+	return data({ success: true });
 }

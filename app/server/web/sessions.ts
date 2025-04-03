@@ -85,12 +85,12 @@ class Sessionizer {
 		return session as Session<AuthSession, Error>;
 	}
 
-	roleForSubject(subject: string) {
+	roleForSubject(subject: string): keyof typeof Roles | undefined {
 		const role = this.caps[subject];
 		// We need this in string form based on Object.keys of the roles
 		for (const [key, value] of Object.entries(Roles)) {
 			if (value === role) {
-				return key;
+				return key as keyof typeof Roles;
 			}
 		}
 	}
@@ -104,6 +104,29 @@ class Sessionizer {
 			return false;
 		}
 
+		// This is the subject we set on API key based sessions. API keys
+		// inherently imply admin access so we return true for all checks.
+		if (subject === 'unknown-non-oauth') {
+			return true;
+		}
+
+		// If the role does not exist, then this is a new subject that we have
+		// not seen before. Since this is new, we set access to the lowest
+		// level by default which is the member role.
+		//
+		// This also allows us to avoid configuring preventing sign ups with
+		// OIDC, since the default sign up logic gives member which does not
+		// have access to the UI whatsoever.
+		const role = this.caps[subject];
+		if (!role) {
+			const memberRole = await this.registerSubject(subject);
+			return (capabilities & memberRole) === capabilities;
+		}
+
+		return (capabilities & role) === capabilities;
+	}
+
+	async checkSubject(subject: string, capabilities: Capabilities) {
 		// This is the subject we set on API key based sessions. API keys
 		// inherently imply admin access so we return true for all checks.
 		if (subject === 'unknown-non-oauth') {
@@ -161,6 +184,18 @@ class Sessionizer {
 		} catch (error) {
 			log.error('config', 'Error writing user database file: %s', error);
 		}
+	}
+
+	// Updates the capabilities and roles of a subject
+	async reassignSubject(subject: string, role: keyof typeof Roles) {
+		// Check if we are owner
+		if (this.roleForSubject(subject) === 'owner') {
+			return false;
+		}
+
+		this.caps[subject] = Roles[role];
+		await this.flushUserDatabase();
+		return true;
 	}
 
 	getOrCreate<T extends JoinedSession = AuthSession>(request: Request) {
