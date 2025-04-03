@@ -18,7 +18,9 @@ export default function ReassignUser({
 }: ReassignProps) {
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Panel>
+			<Dialog.Panel
+				variant={user.headplaneRole === 'owner' ? 'unactionable' : 'normal'}
+			>
 				<Dialog.Title>Change role for {user.name}?</Dialog.Title>
 				<Dialog.Text className="mb-6">
 					Most roles are carried straight from Tailscale. However, keep in mind
