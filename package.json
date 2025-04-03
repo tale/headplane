@@ -2,7 +2,7 @@
 	"name": "headplane",
 	"private": true,
 	"sideEffects": false,
-	"version": "0.5.7",
+	"version": "0.5.8",
 	"type": "module",
 	"scripts": {
 		"build": "react-router build",

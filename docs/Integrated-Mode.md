@@ -34,7 +34,7 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.7
+    image: ghcr.io/tale/headplane:0.5.8
     container_name: headplane
     restart: unless-stopped
     ports:
@@ -151,7 +151,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: headplane
-        image: ghcr.io/tale/headplane:0.5.7
+        image: ghcr.io/tale/headplane:0.5.8
         env:
         # Set these if the pod name for Headscale is not static
         # We will use the downward API to get the pod name instead

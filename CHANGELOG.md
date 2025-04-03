@@ -1,3 +1,11 @@
+### 0.5.8 (April 3, 2025)
+- You can now skip the onboarding page if desired.
+- Added the UI to change user roles in the dashboard.
+- Fixed an issue where integrations would throw instead of loading properly.
+- Loading the ACL page no longer spams blank updates to the Headscale database (fixes [#151](https://github.com/tale/headplane/issues/151))
+- Automatically create `/var/lib/headplane` in the Docker container (fixes [#166](https://github.com/tale/headplane/issues/166))
+- OIDC logout with `disable_api_key_login` set to true will not automatically login again (fixes [#149](https://github.com/tale/headplane/issues/149))
+
 ### 0.5.7 (April 2, 2025)
 - Hotfix an issue where assets aren't served under `/admin` or the prefix.
 

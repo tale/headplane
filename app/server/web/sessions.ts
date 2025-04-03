@@ -86,7 +86,11 @@ class Sessionizer {
 	}
 
 	roleForSubject(subject: string): keyof typeof Roles | undefined {
-		const role = this.caps[subject].c;
+		const role = this.caps[subject]?.c;
+		if (!role) {
+			return;
+		}
+
 		// We need this in string form based on Object.keys of the roles
 		for (const [key, value] of Object.entries(Roles)) {
 			if (value === role) {
@@ -96,7 +100,7 @@ class Sessionizer {
 	}
 
 	onboardForSubject(subject: string) {
-		return this.caps[subject].oo ?? false;
+		return this.caps[subject]?.oo ?? false;
 	}
 
 	// Given an OR of capabilities, check if the session has the required
@@ -201,14 +205,21 @@ class Sessionizer {
 			return false;
 		}
 
-		this.caps[subject].c = Roles[role];
+		this.caps[subject] = {
+			...this.caps[subject], // Preserve the existing capabilities if any
+			c: Roles[role],
+		};
+
 		await this.flushUserDatabase();
 		return true;
 	}
 
 	// Overrides the onboarding status for a subject
 	async overrideOnboarding(subject: string, onboarding: boolean) {
-		this.caps[subject].oo = onboarding;
+		this.caps[subject] = {
+			...this.caps[subject], // Preserve the existing capabilities if any
+			oo: onboarding,
+		};
 		await this.flushUserDatabase();
 	}
 
