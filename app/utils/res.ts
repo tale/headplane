@@ -19,10 +19,13 @@ export function data400(message: string) {
 }
 
 export function data403(message: string) {
-	return data({
-		success: false,
-		message,
-	});
+	return data(
+		{
+			success: false,
+			message,
+		},
+		{ status: 403 },
+	);
 }
 
 export function data404(message: string) {

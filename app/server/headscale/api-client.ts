@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { Agent, Dispatcher, request } from 'undici';
 import log from '~/utils/log';
+import ResponseError from './api-error';
 
 export async function createApiClient(base: string, certPath?: string) {
 	if (!certPath) {
@@ -17,20 +18,6 @@ export async function createApiClient(base: string, certPath?: string) {
 		log.error('config', 'Failed to load Headscale TLS cert: %s', error);
 		log.debug('config', 'Error Details: %o', error);
 		return new ApiClient(new Agent(), base);
-	}
-}
-
-// Represents an error that occurred during a response
-// Thrown when status codes are >= 400
-export class ResponseError extends Error {
-	status: number;
-	response: string;
-
-	constructor(status: number, response: string) {
-		super(`Response Error (${status}): ${response}`);
-		this.name = 'ResponseError';
-		this.status = status;
-		this.response = response;
 	}
 }
 

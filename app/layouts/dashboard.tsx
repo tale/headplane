@@ -3,7 +3,7 @@ import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { Outlet, useLoaderData } from 'react-router';
 import { ErrorPopup } from '~/components/Error';
 import type { LoadContext } from '~/server';
-import { ResponseError } from '~/server/headscale/api-client';
+import ResponseError from '~/server/headscale/api-error';
 import cn from '~/utils/cn';
 import log from '~/utils/log';
 

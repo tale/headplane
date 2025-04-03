@@ -3,10 +3,10 @@ export const Capabilities = {
 	// Can access the admin console
 	ui_access: 1 << 0,
 
-	// Read tailnet policy file
+	// Read tailnet policy file (unimplemented)
 	read_policy: 1 << 1,
 
-	// Write tailnet policy file
+	// Write tailnet policy file (unimplemented)
 	write_policy: 1 << 2,
 
 	// Read network configurations
@@ -16,13 +16,13 @@ export const Capabilities = {
 	// make subnet, or allow a node to be an exit node, enable HTTPS
 	write_network: 1 << 4,
 
-	// Read feature configuration
+	// Read feature configuration (unimplemented)
 	read_feature: 1 << 5,
 
-	// Write feature configuration, for example, enable Taildrop
+	// Write feature configuration, for example, enable Taildrop (unimplemented)
 	write_feature: 1 << 6,
 
-	// Configure user & group provisioning
+	// Configure user & group provisioning (unimplemented)
 	configure_iam: 1 << 7,
 
 	// Read machines, for example, see machine names and status
@@ -38,13 +38,13 @@ export const Capabilities = {
 	// approve users, make Admin
 	write_users: 1 << 11,
 
-	// Can generate authkeys
+	// Can generate authkeys (unimplemented)
 	generate_authkeys: 1 << 12,
 
-	// Can use any tag (without being tag owner)
+	// Can use any tag (without being tag owner) (unimplemented)
 	use_tags: 1 << 13,
 
-	// Write tailnet name
+	// Write tailnet name (unimplemented)
 	write_tailnet: 1 << 14,
 
 	// Owner flag
