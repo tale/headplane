@@ -15,9 +15,16 @@ import cn from '~/utils/cn';
 
 interface Props {
 	configAvailable: boolean;
-	uiAccess: boolean;
 	onboarding: boolean;
 	user?: AuthSession['user'];
+	access: {
+		ui: boolean;
+		machines: boolean;
+		dns: boolean;
+		users: boolean;
+		policy: boolean;
+		settings: boolean;
+	};
 }
 
 interface LinkProps {
@@ -137,27 +144,45 @@ export default function Header(data: Props) {
 					) : undefined}
 				</div>
 			</div>
-			{data.uiAccess && !data.onboarding ? (
+			{data.access.ui && !data.onboarding ? (
 				<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
-					<TabLink
-						to="/machines"
-						name="Machines"
-						icon={<Server className="w-5" />}
-					/>
-					<TabLink to="/users" name="Users" icon={<Users className="w-5" />} />
-					<TabLink
-						to="/acls"
-						name="Access Control"
-						icon={<Lock className="w-5" />}
-					/>
+					{data.access.machines ? (
+						<TabLink
+							to="/machines"
+							name="Machines"
+							icon={<Server className="w-5" />}
+						/>
+					) : undefined}
+					{data.access.users ? (
+						<TabLink
+							to="/users"
+							name="Users"
+							icon={<Users className="w-5" />}
+						/>
+					) : undefined}
+					{data.access.policy ? (
+						<TabLink
+							to="/acls"
+							name="Access Control"
+							icon={<Lock className="w-5" />}
+						/>
+					) : undefined}
 					{data.configAvailable ? (
 						<>
-							<TabLink to="/dns" name="DNS" icon={<Globe2 className="w-5" />} />
-							<TabLink
-								to="/settings"
-								name="Settings"
-								icon={<Settings className="w-5" />}
-							/>
+							{data.access.dns ? (
+								<TabLink
+									to="/dns"
+									name="DNS"
+									icon={<Globe2 className="w-5" />}
+								/>
+							) : undefined}
+							{data.access.settings ? (
+								<TabLink
+									to="/settings"
+									name="Settings"
+									icon={<Settings className="w-5" />}
+								/>
+							) : undefined}
 						</>
 					) : undefined}
 				</nav>

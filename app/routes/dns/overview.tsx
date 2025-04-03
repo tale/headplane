@@ -3,6 +3,7 @@ import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Notice from '~/components/Notice';
 import type { LoadContext } from '~/server';
+import { Capabilities } from '~/server/web/roles';
 import ManageDomains from './components/manage-domains';
 import ManageNS from './components/manage-ns';
 import ManageRecords from './components/manage-records';
@@ -11,10 +12,29 @@ import ToggleMagic from './components/toggle-magic';
 import { dnsAction } from './dns-actions';
 
 // We do not want to expose every config value
-export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
+export async function loader({
+	request,
+	context,
+}: LoaderFunctionArgs<LoadContext>) {
 	if (!context.hs.readable()) {
 		throw new Error('No configuration is available');
 	}
+
+	const check = await context.sessions.check(
+		request,
+		Capabilities.read_network,
+	);
+	if (!check) {
+		// Not authorized to view this page
+		throw new Error(
+			'You do not have permission to view this page. Please contact your administrator.',
+		);
+	}
+
+	const writablePermission = await context.sessions.check(
+		request,
+		Capabilities.write_network,
+	);
 
 	const config = context.hs.c!;
 	const dns = {
@@ -29,6 +49,7 @@ export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
 
 	return {
 		...dns,
+		access: writablePermission,
 		writable: context.hs.writable(),
 	};
 }
@@ -46,7 +67,7 @@ export default function Page() {
 	}
 
 	allNs.global = data.nameservers;
-	const isDisabled = data.writable === false;
+	const isDisabled = data.access === false || data.writable === false;
 
 	return (
 		<div className="flex flex-col gap-16 max-w-screen-lg">
@@ -54,6 +75,12 @@ export default function Page() {
 				<Notice>
 					The Headscale configuration is read-only. You cannot make changes to
 					the configuration
+				</Notice>
+			)}
+			{data.access ? undefined : (
+				<Notice>
+					Your permissions do not allow you to modify the DNS settings for this
+					tailnet.
 				</Notice>
 			)}
 			<RenameTailnet name={data.baseDomain} isDisabled={isDisabled} />
