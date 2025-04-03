@@ -1,6 +1,5 @@
 import { ActionFunctionArgs, data } from 'react-router';
 import { LoadContext } from '~/server';
-import { hp_getIntegration } from '~/utils/integration/loader';
 
 export async function dnsAction({
 	request,
@@ -51,7 +50,7 @@ async function renameTailnet(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function toggleMagic(formData: FormData, context: LoadContext) {
@@ -67,7 +66,7 @@ async function toggleMagic(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function removeNs(formData: FormData, context: LoadContext) {
@@ -100,7 +99,7 @@ async function removeNs(formData: FormData, context: LoadContext) {
 		]);
 	}
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function addNs(formData: FormData, context: LoadContext) {
@@ -135,7 +134,7 @@ async function addNs(formData: FormData, context: LoadContext) {
 		]);
 	}
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function removeDomain(formData: FormData, context: LoadContext) {
@@ -153,7 +152,7 @@ async function removeDomain(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function addDomain(formData: FormData, context: LoadContext) {
@@ -173,7 +172,7 @@ async function addDomain(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function removeRecord(formData: FormData, context: LoadContext) {
@@ -196,7 +195,7 @@ async function removeRecord(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }
 
 async function addRecord(formData: FormData, context: LoadContext) {
@@ -219,5 +218,5 @@ async function addRecord(formData: FormData, context: LoadContext) {
 		},
 	]);
 
-	await hp_getIntegration()?.onConfigChange();
+	await context.integration?.onConfigChange(context.client);
 }

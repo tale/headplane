@@ -4,6 +4,7 @@ import { createHonoServer } from 'react-router-hono-server/node';
 import type { WebSocket } from 'ws';
 import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
+import { loadIntegration } from './config/integration';
 import { loadConfig } from './config/loader';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
@@ -61,6 +62,7 @@ const appLoadContext = {
 		config.server.agent.ttl,
 	),
 
+	integration: await loadIntegration(config.integration),
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 };
 

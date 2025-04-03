@@ -1,9 +1,9 @@
 import { constants, access } from 'node:fs/promises';
 import { setTimeout } from 'node:timers/promises';
 import { Client } from 'undici';
-import { HeadscaleError, healthcheck, pull } from '~/utils/headscale';
-import { HeadplaneConfig } from '~server/context/parser';
-import log from '~server/utils/log';
+import { ApiClient } from '~/server/headscale/api-client';
+import log from '~/utils/log';
+import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
 type T = NonNullable<HeadplaneConfig['integration']>['docker'];
@@ -17,21 +17,25 @@ export default class DockerIntegration extends Integration<T> {
 
 	async isAvailable() {
 		if (this.context.container_name.length === 0) {
-			log.error('INTG', 'Docker container name is empty');
+			log.error('config', 'Docker container name is empty');
 			return false;
 		}
 
-		log.info('INTG', 'Using container: %s', this.context.container_name);
+		log.info('config', 'Using container: %s', this.context.container_name);
 		let url: URL | undefined;
 		try {
 			url = new URL(this.context.socket);
 		} catch {
-			log.error('INTG', 'Invalid Docker socket path: %s', this.context.socket);
+			log.error(
+				'config',
+				'Invalid Docker socket path: %s',
+				this.context.socket,
+			);
 			return false;
 		}
 
 		if (url.protocol !== 'tcp:' && url.protocol !== 'unix:') {
-			log.error('INTG', 'Invalid Docker socket protocol: %s', url.protocol);
+			log.error('config', 'Invalid Docker socket protocol: %s', url.protocol);
 			return false;
 		}
 
@@ -42,11 +46,11 @@ export default class DockerIntegration extends Integration<T> {
 			const fetchU = url.href.replace(url.protocol, 'http:');
 
 			try {
-				log.info('INTG', 'Checking API: %s', fetchU);
+				log.info('config', 'Checking API: %s', fetchU);
 				await fetch(new URL('/v1.30/version', fetchU).href);
 			} catch (error) {
-				log.error('INTG', 'Failed to connect to Docker API: %s', error);
-				log.debug('INTG', 'Connection error: %o', error);
+				log.error('config', 'Failed to connect to Docker API: %s', error);
+				log.debug('config', 'Connection error: %o', error);
 				return false;
 			}
 
@@ -56,11 +60,11 @@ export default class DockerIntegration extends Integration<T> {
 		// Check if the socket is accessible
 		if (url.protocol === 'unix:') {
 			try {
-				log.info('INTG', 'Checking socket: %s', url.pathname);
+				log.info('config', 'Checking socket: %s', url.pathname);
 				await access(url.pathname, constants.R_OK);
 			} catch (error) {
-				log.error('INTG', 'Failed to access Docker socket: %s', url.pathname);
-				log.debug('INTG', 'Access error: %o', error);
+				log.error('config', 'Failed to access Docker socket: %s', url.pathname);
+				log.debug('config', 'Access error: %o', error);
 				return false;
 			}
 
@@ -72,17 +76,17 @@ export default class DockerIntegration extends Integration<T> {
 		return this.client !== undefined;
 	}
 
-	async onConfigChange() {
+	async onConfigChange(client: ApiClient) {
 		if (!this.client) {
 			return;
 		}
 
-		log.info('INTG', 'Restarting Headscale via Docker');
+		log.info('config', 'Restarting Headscale via Docker');
 
 		let attempts = 0;
 		while (attempts <= this.maxAttempts) {
 			log.debug(
-				'INTG',
+				'config',
 				'Restarting container: %s (attempt %d)',
 				this.context.container_name,
 				attempts,
@@ -111,19 +115,15 @@ export default class DockerIntegration extends Integration<T> {
 		attempts = 0;
 		while (attempts <= this.maxAttempts) {
 			try {
-				log.debug('INTG', 'Checking Headscale status (attempt %d)', attempts);
-				await healthcheck();
-				log.info('INTG', 'Headscale is up and running');
+				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
+				const status = await client.healthcheck();
+				if (status === false) {
+					throw new Error('Headscale is not running');
+				}
+
+				log.info('config', 'Headscale is up and running');
 				return;
 			} catch (error) {
-				if (error instanceof HeadscaleError && error.status === 401) {
-					break;
-				}
-
-				if (error instanceof HeadscaleError && error.status === 404) {
-					break;
-				}
-
 				if (attempts < this.maxAttempts) {
 					attempts++;
 					await setTimeout(1000);
@@ -131,7 +131,7 @@ export default class DockerIntegration extends Integration<T> {
 				}
 
 				log.error(
-					'INTG',
+					'config',
 					'Missed restart deadline for %s',
 					this.context.container_name,
 				);
