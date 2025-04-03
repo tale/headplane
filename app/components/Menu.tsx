@@ -17,6 +17,7 @@ import cn from '~/utils/cn';
 interface MenuProps extends MenuTriggerProps {
 	placement?: Placement;
 	isDisabled?: boolean;
+	disabledKeys?: Key[];
 	children: [
 		React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
 		React.ReactElement<MenuPanelProps>,
@@ -26,7 +27,7 @@ interface MenuProps extends MenuTriggerProps {
 // TODO: onAction is called twice for some reason?
 // TODO: isDisabled per-prop
 function Menu(props: MenuProps) {
-	const { placement = 'bottom', isDisabled } = props;
+	const { placement = 'bottom', isDisabled, disabledKeys = [] } = props;
 	const state = useMenuTriggerState(props);
 	const ref = useRef<HTMLButtonElement | null>(null);
 	const { menuTriggerProps, menuProps } = useMenuTrigger<object>(
@@ -51,6 +52,7 @@ function Menu(props: MenuProps) {
 						...menuProps,
 						autoFocus: state.focusStrategy ?? true,
 						onClose: () => state.close(),
+						disabledKeys,
 					})}
 				</Popover>
 			)}
@@ -60,6 +62,7 @@ function Menu(props: MenuProps) {
 
 interface MenuPanelProps extends AriaMenuProps<object> {
 	onClose?: () => void;
+	disabledKeys?: Key[];
 }
 
 function Panel(props: MenuPanelProps) {
@@ -74,7 +77,12 @@ function Panel(props: MenuPanelProps) {
 			className="pt-1 pb-1 shadow-xs rounded-md min-w-[200px] focus:outline-none"
 		>
 			{[...state.collection].map((item) => (
-				<MenuSection key={item.key} section={item} state={state} />
+				<MenuSection
+					key={item.key}
+					section={item}
+					state={state}
+					disabledKeys={props.disabledKeys}
+				/>
 			))}
 		</ul>
 	);
@@ -83,9 +91,10 @@ function Panel(props: MenuPanelProps) {
 interface MenuSectionProps<T> {
 	section: Node<T>;
 	state: TreeState<T>;
+	disabledKeys?: Key[];
 }
 
-function MenuSection<T>({ section, state }: MenuSectionProps<T>) {
+function MenuSection<T>({ section, state, disabledKeys }: MenuSectionProps<T>) {
 	const { itemProps, groupProps } = useMenuSection({
 		heading: section.rendered,
 		'aria-label': section['aria-label'],
@@ -109,7 +118,12 @@ function MenuSection<T>({ section, state }: MenuSectionProps<T>) {
 			<li {...itemProps}>
 				<ul {...groupProps}>
 					{[...section.childNodes].map((item) => (
-						<MenuItem key={item.key} item={item} state={state} />
+						<MenuItem
+							key={item.key}
+							item={item}
+							state={state}
+							isDisabled={disabledKeys?.includes(item.key)}
+						/>
 					))}
 				</ul>
 			</li>
@@ -120,14 +134,14 @@ function MenuSection<T>({ section, state }: MenuSectionProps<T>) {
 interface MenuItemProps<T> {
 	item: Node<T>;
 	state: TreeState<T>;
+	isDisabled?: boolean;
 }
 
-function MenuItem<T>({ item, state }: MenuItemProps<T>) {
+function MenuItem<T>({ item, state, isDisabled }: MenuItemProps<T>) {
 	const ref = useRef<HTMLLIElement | null>(null);
 	const { menuItemProps } = useMenuItem({ key: item.key }, state, ref);
 
 	const isFocused = state.selectionManager.focusedKey === item.key;
-	const isDisabled = state.selectionManager.isDisabled(item.key);
 
 	return (
 		<li

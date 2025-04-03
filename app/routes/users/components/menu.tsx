@@ -48,7 +48,7 @@ export default function UserMenu({ user }: MenuProps) {
 				/>
 			)}
 
-			<Menu>
+			<Menu disabledKeys={user.provider === 'oidc' ? ['rename'] : []}>
 				<Menu.IconButton
 					label="Machine Options"
 					className={cn(

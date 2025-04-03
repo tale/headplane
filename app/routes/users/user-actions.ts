@@ -3,6 +3,7 @@ import type { LoadContext } from '~/server';
 import { Capabilities, Roles } from '~/server/web/roles';
 import { AuthSession } from '~/server/web/sessions';
 import { User } from '~/types';
+import { data400, data403 } from '~/utils/res';
 
 export async function userAction({
 	request,
@@ -11,14 +12,14 @@ export async function userAction({
 	const session = await context.sessions.auth(request);
 	const check = await context.sessions.check(request, Capabilities.write_users);
 	if (!check) {
-		return data({ success: false }, 403);
+		throw data403('You do not have permission to update users');
 	}
 
 	const apiKey = session.get('api_key')!;
 	const formData = await request.formData();
 	const action = formData.get('action_id')?.toString();
 	if (!action) {
-		return data({ success: false }, 400);
+		throw data400('Missing `action_id` in the form data.');
 	}
 
 	switch (action) {
@@ -31,7 +32,7 @@ export async function userAction({
 		case 'reassign_user':
 			return reassignUser(formData, apiKey, context, session);
 		default:
-			return data({ success: false }, 400);
+			throw data400('Invalid `action_id` provided.');
 	}
 }
 
@@ -45,7 +46,7 @@ async function createUser(
 	const email = formData.get('email')?.toString();
 
 	if (!name) {
-		return data({ success: false }, 400);
+		throw data400('Missing `username` in the form data.');
 	}
 
 	await context.client.post('v1/user', apiKey, {
@@ -62,7 +63,7 @@ async function deleteUser(
 ) {
 	const userId = formData.get('user_id')?.toString();
 	if (!userId) {
-		return data({ success: false }, 400);
+		throw data400('Missing `user_id` in the form data.');
 	}
 
 	await context.client.delete(`v1/user/${userId}`, apiKey);
@@ -79,6 +80,21 @@ async function renameUser(
 		return data({ success: false }, 400);
 	}
 
+	const { users } = await context.client.get<{ users: User[] }>(
+		'v1/user',
+		apiKey,
+	);
+
+	const user = users.find((user) => user.id === userId);
+	if (!user) {
+		throw data400(`No user found with id: ${userId}`);
+	}
+
+	if (user.provider === 'oidc') {
+		// OIDC users cannot be renamed via this endpoint, return an error
+		throw data403('Users managed by OIDC cannot be renamed');
+	}
+
 	await context.client.post(`v1/user/${userId}/rename/${newName}`, apiKey);
 }
 
@@ -86,12 +102,11 @@ async function reassignUser(
 	formData: FormData,
 	apiKey: string,
 	context: LoadContext,
-	session: Session<AuthSession, unknown>,
 ) {
 	const userId = formData.get('user_id')?.toString();
 	const newRole = formData.get('new_role')?.toString();
 	if (!userId || !newRole) {
-		return data({ success: false }, 400);
+		throw data400('Missing `user_id` or `new_role` in the form data.');
 	}
 
 	const { users } = await context.client.get<{ users: User[] }>(
@@ -101,14 +116,16 @@ async function reassignUser(
 
 	const user = users.find((user) => user.id === userId);
 	if (!user?.providerId) {
-		return data({ success: false }, 400);
+		throw data400('Specified user is not an OIDC user');
 	}
 
 	// For some reason, headscale makes providerID a url where the
 	// last component is the subject, so we need to strip that out
 	const subject = user.providerId?.split('/').pop();
 	if (!subject) {
-		return data({ success: false }, 400);
+		throw data400(
+			'Malformed `providerId` for the specified user. Cannot find subject.',
+		);
 	}
 
 	const result = await context.sessions.reassignSubject(
