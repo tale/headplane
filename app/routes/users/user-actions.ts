@@ -9,8 +9,12 @@ export async function userAction({
 	context,
 }: ActionFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
-	const apiKey = session.get('api_key')!;
+	const check = await context.sessions.check(request, Capabilities.write_users);
+	if (!check) {
+		return data({ success: false }, 403);
+	}
 
+	const apiKey = session.get('api_key')!;
 	const formData = await request.formData();
 	const action = formData.get('action_id')?.toString();
 	if (!action) {
@@ -84,20 +88,6 @@ async function reassignUser(
 	context: LoadContext,
 	session: Session<AuthSession, unknown>,
 ) {
-	const executor = session.get('user');
-	if (!executor?.subject) {
-		return data({ success: false }, 400);
-	}
-
-	const check = await context.sessions.checkSubject(
-		executor.subject,
-		Capabilities.write_users,
-	);
-
-	if (!check) {
-		return data({ success: false }, 403);
-	}
-
 	const userId = formData.get('user_id')?.toString();
 	const newRole = formData.get('new_role')?.toString();
 	if (!userId || !newRole) {
