@@ -93,6 +93,20 @@ export async function loader({
 			debug: context.config.debug,
 			user: session.get('user'),
 			uiAccess: check,
+			access: {
+				ui: await context.sessions.check(request, Capabilities.ui_access),
+				dns: await context.sessions.check(request, Capabilities.read_network),
+				users: await context.sessions.check(request, Capabilities.read_users),
+				policy: await context.sessions.check(request, Capabilities.read_policy),
+				machines: await context.sessions.check(
+					request,
+					Capabilities.read_machines,
+				),
+				settings: await context.sessions.check(
+					request,
+					Capabilities.read_feature,
+				),
+			},
 			onboarding: request.url.endsWith('/onboarding'),
 		};
 	} catch {

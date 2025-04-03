@@ -1,6 +1,7 @@
 import { XCircleFillIcon } from '@primer/octicons-react';
 import { type LoaderFunctionArgs, redirect } from 'react-router';
 import { Outlet, useLoaderData } from 'react-router';
+import { ErrorPopup } from '~/components/Error';
 import type { LoadContext } from '~/server';
 import { ResponseError } from '~/server/headscale/api-client';
 import cn from '~/utils/cn';
@@ -64,4 +65,8 @@ export default function Layout() {
 			</main>
 		</>
 	);
+}
+
+export function ErrorBoundary() {
+	return <ErrorPopup type="embedded" />;
 }

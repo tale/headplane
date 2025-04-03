@@ -1,10 +1,20 @@
 import { ActionFunctionArgs, data } from 'react-router';
 import { LoadContext } from '~/server';
+import { Capabilities } from '~/server/web/roles';
 
 export async function dnsAction({
 	request,
 	context,
 }: ActionFunctionArgs<LoadContext>) {
+	const check = await context.sessions.check(
+		request,
+		Capabilities.write_network,
+	);
+
+	if (!check) {
+		return data({ success: false }, 403);
+	}
+
 	if (!context.hs.writable()) {
 		return data({ success: false }, 403);
 	}
