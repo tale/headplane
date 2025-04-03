@@ -14,15 +14,15 @@ export function getRedirectUri(req: Request) {
 	}
 
 	if (!host) {
-		log.error('OIDC', 'Unable to find a host header');
-		log.error('OIDC', 'Ensure either Host or X-Forwarded-Host is set');
+		log.error('auth', 'Unable to find a host header');
+		log.error('auth', 'Ensure either Host or X-Forwarded-Host is set');
 		throw new Error('Could not determine reverse proxy host');
 	}
 
 	const proto = req.headers.get('X-Forwarded-Proto');
 	if (!proto) {
-		log.warn('OIDC', 'No X-Forwarded-Proto header found');
-		log.warn('OIDC', 'Assuming your Headplane instance runs behind HTTP');
+		log.warn('auth', 'No X-Forwarded-Proto header found');
+		log.warn('auth', 'Assuming your Headplane instance runs behind HTTP');
 	}
 
 	url.protocol = proto ?? 'http:';
@@ -186,7 +186,7 @@ export function formatError(error: unknown) {
 		};
 	}
 
-	log.error('OIDC', 'Unknown error: %s', error);
+	log.error('auth', 'Unknown error: %s', error);
 	return {
 		code: 500,
 		error: {
