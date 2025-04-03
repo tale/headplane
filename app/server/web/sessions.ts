@@ -47,12 +47,12 @@ interface CookieOptions {
 
 class Sessionizer {
 	private storage: SessionStorage<JoinedSession, Error>;
-	private caps: Record<string, Capabilities>;
+	private caps: Record<string, { c: Capabilities; oo?: boolean }>;
 	private capsPath?: string;
 
 	constructor(
 		options: CookieOptions,
-		caps: Record<string, Capabilities>,
+		caps: Record<string, { c: Capabilities; oo?: boolean }>,
 		capsPath?: string,
 	) {
 		this.caps = caps;
@@ -86,13 +86,17 @@ class Sessionizer {
 	}
 
 	roleForSubject(subject: string): keyof typeof Roles | undefined {
-		const role = this.caps[subject];
+		const role = this.caps[subject].c;
 		// We need this in string form based on Object.keys of the roles
 		for (const [key, value] of Object.entries(Roles)) {
 			if (value === role) {
 				return key as keyof typeof Roles;
 			}
 		}
+	}
+
+	onboardForSubject(subject: string) {
+		return this.caps[subject].oo ?? false;
 	}
 
 	// Given an OR of capabilities, check if the session has the required
@@ -120,10 +124,10 @@ class Sessionizer {
 		const role = this.caps[subject];
 		if (!role) {
 			const memberRole = await this.registerSubject(subject);
-			return (capabilities & memberRole) === capabilities;
+			return (capabilities & memberRole.c) === capabilities;
 		}
 
-		return (capabilities & role) === capabilities;
+		return (capabilities & role.c) === capabilities;
 	}
 
 	async checkSubject(subject: string, capabilities: Capabilities) {
@@ -143,10 +147,10 @@ class Sessionizer {
 		const role = this.caps[subject];
 		if (!role) {
 			const memberRole = await this.registerSubject(subject);
-			return (capabilities & memberRole) === capabilities;
+			return (capabilities & memberRole.c) === capabilities;
 		}
 
-		return (capabilities & role) === capabilities;
+		return (capabilities & role.c) === capabilities;
 	}
 
 	// This code is very simple, if the user does not exist in the database
@@ -160,13 +164,13 @@ class Sessionizer {
 
 		if (Object.keys(this.caps).length === 0) {
 			log.debug('auth', 'First user registered as owner: %s', subject);
-			this.caps[subject] = Roles.owner;
+			this.caps[subject] = { c: Roles.owner };
 			await this.flushUserDatabase();
 			return this.caps[subject];
 		}
 
 		log.debug('auth', 'New user registered as member: %s', subject);
-		this.caps[subject] = Roles.member;
+		this.caps[subject] = { c: Roles.member };
 		await this.flushUserDatabase();
 		return this.caps[subject];
 	}
@@ -176,7 +180,11 @@ class Sessionizer {
 			return;
 		}
 
-		const data = Object.entries(this.caps).map(([u, c]) => ({ u, c }));
+		const data = Object.entries(this.caps).map(([u, { c, oo }]) => ({
+			u,
+			c,
+			oo,
+		}));
 		try {
 			const handle = await open(this.capsPath, 'w');
 			await handle.write(JSON.stringify(data));
@@ -193,9 +201,15 @@ class Sessionizer {
 			return false;
 		}
 
-		this.caps[subject] = Roles[role];
+		this.caps[subject].c = Roles[role];
 		await this.flushUserDatabase();
 		return true;
+	}
+
+	// Overrides the onboarding status for a subject
+	async overrideOnboarding(subject: string, onboarding: boolean) {
+		this.caps[subject].oo = onboarding;
+		await this.flushUserDatabase();
 	}
 
 	getOrCreate<T extends JoinedSession = AuthSession>(request: Request) {
@@ -217,7 +231,13 @@ export async function createSessionStorage(
 	options: CookieOptions,
 	usersPath?: string,
 ) {
-	const map: Record<string, Capabilities> = {};
+	const map: Record<
+		string,
+		{
+			c: number;
+			oo?: boolean;
+		}
+	> = {};
 	if (usersPath) {
 		// We need to load our users from the file (default to empty map)
 		// We then translate each user into a capability object using the helper
@@ -226,7 +246,10 @@ export async function createSessionStorage(
 		log.debug('config', 'Loaded %d users from database', data.length);
 
 		for (const user of data) {
-			map[user.u] = user.c;
+			map[user.u] = {
+				c: user.c,
+				oo: user.oo,
+			};
 		}
 	}
 
@@ -248,7 +271,11 @@ async function loadUserFile(path: string) {
 
 	try {
 		const data = await readFile(realPath, 'utf8');
-		const users = JSON.parse(data.trim()) as { u?: string; c?: number }[];
+		const users = JSON.parse(data.trim()) as {
+			u?: string;
+			c?: number;
+			oo?: boolean;
+		}[];
 
 		// Never trust user input
 		return users.filter(
@@ -256,6 +283,7 @@ async function loadUserFile(path: string) {
 		) as {
 			u: string;
 			c: number;
+			oo?: boolean;
 		}[];
 	} catch (error) {
 		log.debug('config', 'Error reading user database file: %s', error);

@@ -1,3 +1,4 @@
+import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
 import { GrApple } from 'react-icons/gr';
 import { ImFinder } from 'react-icons/im';
@@ -335,6 +336,12 @@ export default function Page() {
 						</div>
 					)}
 				</Card>
+				<NavLink to="/onboarding/skip" className="col-span-2 w-max mx-auto">
+					<Button className="flex items-center gap-1">
+						I already know what I'm doing
+						<ArrowRight className="p-1" />
+					</Button>
+				</NavLink>
 			</div>
 		</div>
 	);
