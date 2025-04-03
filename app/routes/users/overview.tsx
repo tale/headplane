@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData, useSubmit } from 'react-router';
 import type { LoadContext } from '~/server';
+import { Capabilities } from '~/server/web/roles';
 import { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import ManageBanner from './components/manage-banner';
@@ -17,6 +18,19 @@ export async function loader({
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
+	const check = await context.sessions.check(request, Capabilities.read_users);
+	if (!check) {
+		// Not authorized to view this page
+		throw new Error(
+			'You do not have permission to view this page. Please contact your administrator.',
+		);
+	}
+
+	const writablePermission = await context.sessions.check(
+		request,
+		Capabilities.write_users,
+	);
+
 	const [machines, apiUsers] = await Promise.all([
 		context.client.get<{ nodes: Machine[] }>(
 			'v1/node',
@@ -63,6 +77,7 @@ export async function loader({
 	}
 
 	return {
+		writable: writablePermission, // whether the user can write to the API
 		oidc: context.config.oidc,
 		roles,
 		magic,
@@ -93,7 +108,7 @@ export default function Page() {
 				Manage the users in your network and their permissions. Tip: You can
 				drag machines between users to change ownership.
 			</p>
-			<ManageBanner oidc={data.oidc} />
+			<ManageBanner oidc={data.oidc} isDisabled={!data.writable} />
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-headplane-600 dark:text-headplane-300">
 					<tr className="text-left px-0.5">

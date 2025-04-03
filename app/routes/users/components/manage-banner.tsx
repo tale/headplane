@@ -4,11 +4,12 @@ import Link from '~/components/Link';
 import type { HeadplaneConfig } from '~/server/config/schema';
 import CreateUser from '../dialogs/create-user';
 
-interface Props {
+interface ManageBannerProps {
 	oidc?: NonNullable<HeadplaneConfig['oidc']>;
+	isDisabled?: boolean;
 }
 
-export default function ManageBanner({ oidc }: Props) {
+export default function ManageBanner({ oidc, isDisabled }: ManageBannerProps) {
 	return (
 		<Card variant="flat" className="mb-8 w-full max-w-full p-0">
 			<div className="flex flex-col md:flex-row">
@@ -60,7 +61,7 @@ export default function ManageBanner({ oidc }: Props) {
 							: 'You can add, remove, and rename users here.'}
 					</p>
 					<div className="flex items-center gap-2 mt-4">
-						<CreateUser />
+						<CreateUser isDisabled={isDisabled} />
 					</div>
 				</div>
 			</div>

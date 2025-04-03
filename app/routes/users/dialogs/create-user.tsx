@@ -1,11 +1,15 @@
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
 
+interface CreateUserProps {
+	isDisabled?: boolean;
+}
+
 // TODO: Support image upload for user avatars
-export default function CreateUser() {
+export default function CreateUser({ isDisabled }: CreateUserProps) {
 	return (
 		<Dialog>
-			<Dialog.Button>Add a new user</Dialog.Button>
+			<Dialog.Button isDisabled={isDisabled}>Add a new user</Dialog.Button>
 			<Dialog.Panel>
 				<Dialog.Title>Add a new user</Dialog.Title>
 				<Dialog.Text className="mb-6">
