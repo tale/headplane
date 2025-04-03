@@ -51,7 +51,7 @@ export default function ReassignUser({
 								.map((role) => {
 									const { name, desc } = mapRoleToName(role);
 									return (
-										<RadioGroup.Radio key={role} value={role}>
+										<RadioGroup.Radio key={role} value={role} label={name}>
 											<div className="block">
 												<p className="font-bold">{name}</p>
 												<p className="opacity-70">{desc}</p>

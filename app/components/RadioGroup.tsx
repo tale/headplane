@@ -13,6 +13,7 @@ import { useRadioGroupState } from 'react-stately';
 
 interface RadioGroupProps extends AriaRadioGroupProps {
 	children: React.ReactElement<RadioProps>[];
+	label: string;
 	className?: string;
 }
 
@@ -20,7 +21,13 @@ const RadioContext = createContext<RadioGroupState | null>(null);
 
 function RadioGroup({ children, label, className, ...props }: RadioGroupProps) {
 	const state = useRadioGroupState(props);
-	const { radioGroupProps, labelProps } = useRadioGroup(props, state);
+	const { radioGroupProps, labelProps } = useRadioGroup(
+		{
+			...props,
+			'aria-label': label,
+		},
+		state,
+	);
 
 	return (
 		<div {...radioGroupProps} className={cn('flex flex-col gap-2', className)}>
@@ -33,13 +40,21 @@ function RadioGroup({ children, label, className, ...props }: RadioGroupProps) {
 }
 
 interface RadioProps extends AriaRadioProps {
+	label: string;
 	className?: string;
 }
 
-function Radio({ children, className, ...props }: RadioProps) {
+function Radio({ children, label, className, ...props }: RadioProps) {
 	const state = useContext(RadioContext);
 	const ref = useRef(null);
-	const { inputProps, isSelected, isDisabled } = useRadio(props, state!, ref);
+	const { inputProps, isSelected, isDisabled } = useRadio(
+		{
+			...props,
+			'aria-label': label,
+		},
+		state!,
+		ref,
+	);
 	const { isFocusVisible, focusProps } = useFocusRing();
 
 	return (
@@ -48,6 +63,7 @@ function Radio({ children, className, ...props }: RadioProps) {
 				<input {...inputProps} {...focusProps} ref={ref} className="peer" />
 			</VisuallyHidden>
 			<div
+				aria-hidden="true"
 				className={cn(
 					'w-5 h-5 aspect-square rounded-full p-1 border-2',
 					'border border-headplane-600 dark:border-headplane-300',
