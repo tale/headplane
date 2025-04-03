@@ -34,10 +34,7 @@ export class ResponseError extends Error {
 	}
 }
 
-// Represents an error that occurred during a request
-// class RequestError extends Error {
-
-class ApiClient {
+export class ApiClient {
 	private agent: Agent;
 	private base: string;
 

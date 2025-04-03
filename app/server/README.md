@@ -8,6 +8,12 @@ many side-effects (in this case, importing a module may run code).
 server
 ├── index.ts: Loads everything and starts the web server.
 ├── config/
+│   ├── integration/
+│   │   ├── abstract.ts: Defines the abstract class for integrations.
+│   │   ├── docker.ts: Contains the Docker integration.
+│   │   ├── index.ts: Determines the correct integration to use (if any).
+│   │   ├── kubernetes.ts: Contains the Kubernetes integration.
+│   │   ├── proc.ts: Contains the Proc integration.
 │   ├── env.ts: Checks the environment variables for custom overrides.
 │   ├── loader.ts: Checks the configuration file and coalesces with ENV.
 │   ├── schema.ts: Defines the schema for the Headplane configuration.

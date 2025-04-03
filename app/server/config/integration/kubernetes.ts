@@ -4,9 +4,9 @@ import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node';
-import { HeadscaleError, healthcheck } from '~/utils/headscale';
-import { HeadplaneConfig } from '~server/context/parser';
-import log from '~server/utils/log';
+import { ApiClient } from '~/server/headscale/api-client';
+import log from '~/utils/log';
+import { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
 // TODO: Upgrade to the new CoreV1Api from @kubernetes/client-node
@@ -21,16 +21,16 @@ export default class KubernetesIntegration extends Integration<T> {
 
 	async isAvailable() {
 		if (platform() !== 'linux') {
-			log.error('INTG', 'Kubernetes is only available on Linux');
+			log.error('config', 'Kubernetes is only available on Linux');
 			return false;
 		}
 
 		const svcRoot = Config.SERVICEACCOUNT_ROOT;
 		try {
-			log.debug('INTG', 'Checking Kubernetes service account at %s', svcRoot);
+			log.debug('config', 'Checking Kubernetes service account at %s', svcRoot);
 			const files = await readdir(svcRoot);
 			if (files.length === 0) {
-				log.error('INTG', 'Kubernetes service account not found');
+				log.error('config', 'Kubernetes service account not found');
 				return false;
 			}
 
@@ -41,17 +41,17 @@ export default class KubernetesIntegration extends Integration<T> {
 				Config.SERVICEACCOUNT_NAMESPACE_PATH,
 			];
 
-			log.debug('INTG', 'Looking for %s', expectedFiles.join(', '));
+			log.debug('config', 'Looking for %s', expectedFiles.join(', '));
 			if (!expectedFiles.every((file) => mappedFiles.has(file))) {
-				log.error('INTG', 'Malformed Kubernetes service account');
+				log.error('config', 'Malformed Kubernetes service account');
 				return false;
 			}
 		} catch (error) {
-			log.error('INTG', 'Failed to access %s: %s', svcRoot, error);
+			log.error('config', 'Failed to access %s: %s', svcRoot, error);
 			return false;
 		}
 
-		log.debug('INTG', 'Reading Kubernetes service account at %s', svcRoot);
+		log.debug('config', 'Reading Kubernetes service account at %s', svcRoot);
 		const namespace = await readFile(
 			Config.SERVICEACCOUNT_NAMESPACE_PATH,
 			'utf8',
@@ -59,39 +59,39 @@ export default class KubernetesIntegration extends Integration<T> {
 
 		// Some very ugly nesting but it's necessary
 		if (this.context.validate_manifest === false) {
-			log.warn('INTG', 'Skipping strict Pod status check');
+			log.warn('config', 'Skipping strict Pod status check');
 		} else {
 			const pod = this.context.pod_name;
 			if (!pod) {
-				log.error('INTG', 'Missing POD_NAME variable');
+				log.error('config', 'Missing POD_NAME variable');
 				return false;
 			}
 
 			if (pod.trim().length === 0) {
-				log.error('INTG', 'Pod name is empty');
+				log.error('config', 'Pod name is empty');
 				return false;
 			}
 
 			log.debug(
-				'INTG',
+				'config',
 				'Checking Kubernetes pod %s in namespace %s',
 				pod,
 				namespace,
 			);
 
 			try {
-				log.debug('INTG', 'Attempgin to get cluster KubeConfig');
+				log.debug('config', 'Attempgin to get cluster KubeConfig');
 				const kc = new KubeConfig();
 				kc.loadFromCluster();
 
 				const cluster = kc.getCurrentCluster();
 				if (!cluster) {
-					log.error('INTG', 'Malformed kubeconfig');
+					log.error('config', 'Malformed kubeconfig');
 					return false;
 				}
 
 				log.info(
-					'INTG',
+					'config',
 					'Service account connected to %s (%s)',
 					cluster.name,
 					cluster.server,
@@ -100,14 +100,14 @@ export default class KubernetesIntegration extends Integration<T> {
 				const kCoreV1Api = kc.makeApiClient(CoreV1Api);
 
 				log.info(
-					'INTG',
+					'config',
 					'Checking pod %s in namespace %s (%s)',
 					pod,
 					namespace,
 					kCoreV1Api.basePath,
 				);
 
-				log.debug('INTG', 'Reading pod info for %s', pod);
+				log.debug('config', 'Reading pod info for %s', pod);
 				const { response, body } = await kCoreV1Api.readNamespacedPod(
 					pod,
 					namespace,
@@ -115,36 +115,39 @@ export default class KubernetesIntegration extends Integration<T> {
 
 				if (response.statusCode !== 200) {
 					log.error(
-						'INTG',
+						'config',
 						'Failed to read pod info: http %d',
 						response.statusCode,
 					);
 					return false;
 				}
 
-				log.debug('INTG', 'Got pod info: %o', body.spec);
+				log.debug('config', 'Got pod info: %o', body.spec);
 				const shared = body.spec?.shareProcessNamespace;
 				if (shared === undefined) {
-					log.error('INTG', 'Pod does not have spec.shareProcessNamespace set');
+					log.error(
+						'config',
+						'Pod does not have spec.shareProcessNamespace set',
+					);
 					return false;
 				}
 
 				if (!shared) {
 					log.error(
-						'INTG',
+						'config',
 						'Pod has set but disabled spec.shareProcessNamespace',
 					);
 					return false;
 				}
 
-				log.info('INTG', 'Pod %s enabled shared processes', pod);
+				log.info('config', 'Pod %s enabled shared processes', pod);
 			} catch (error) {
-				log.error('INTG', 'Failed to read pod info: %s', error);
+				log.error('config', 'Failed to read pod info: %s', error);
 				return false;
 			}
 		}
 
-		log.debug('INTG', 'Looking for namespaced process in /proc');
+		log.debug('config', 'Looking for namespaced process in /proc');
 		const dir = resolve('/proc');
 		try {
 			const subdirs = await readdir(dir);
@@ -157,13 +160,13 @@ export default class KubernetesIntegration extends Integration<T> {
 
 				const path = join('/proc', dir, 'cmdline');
 				try {
-					log.debug('INTG', 'Reading %s', path);
+					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
 					if (data.includes('headscale')) {
 						return pid;
 					}
 				} catch (error) {
-					log.debug('INTG', 'Failed to read %s: %s', path, error);
+					log.debug('config', 'Failed to read %s: %s', path, error);
 				}
 			});
 
@@ -176,10 +179,10 @@ export default class KubernetesIntegration extends Integration<T> {
 				}
 			}
 
-			log.debug('INTG', 'Found Headscale processes: %o', pids);
+			log.debug('config', 'Found Headscale processes: %o', pids);
 			if (pids.length > 1) {
 				log.error(
-					'INTG',
+					'config',
 					'Found %d Headscale processes: %s',
 					pids.length,
 					pids.join(', '),
@@ -188,49 +191,45 @@ export default class KubernetesIntegration extends Integration<T> {
 			}
 
 			if (pids.length === 0) {
-				log.error('INTG', 'Could not find Headscale process');
+				log.error('config', 'Could not find Headscale process');
 				return false;
 			}
 
 			this.pid = pids[0];
-			log.info('INTG', 'Found Headscale process with PID: %d', this.pid);
+			log.info('config', 'Found Headscale process with PID: %d', this.pid);
 			return true;
 		} catch {
-			log.error('INTG', 'Failed to read /proc');
+			log.error('config', 'Failed to read /proc');
 			return false;
 		}
 	}
 
-	async onConfigChange() {
+	async onConfigChange(client: ApiClient) {
 		if (!this.pid) {
 			return;
 		}
 
 		try {
-			log.info('INTG', 'Sending SIGTERM to Headscale');
+			log.info('config', 'Sending SIGTERM to Headscale');
 			kill(this.pid, 'SIGTERM');
 		} catch (error) {
-			log.error('INTG', 'Failed to send SIGTERM to Headscale: %s', error);
-			log.debug('INTG', 'kill(1) error: %o', error);
+			log.error('config', 'Failed to send SIGTERM to Headscale: %s', error);
+			log.debug('config', 'kill(1) error: %o', error);
 		}
 
 		await setTimeout(1000);
 		let attempts = 0;
 		while (attempts <= this.maxAttempts) {
 			try {
-				log.debug('INTG', 'Checking Headscale status (attempt %d)', attempts);
-				await healthcheck();
-				log.info('INTG', 'Headscale is up and running');
+				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
+				const status = await client.healthcheck();
+				if (status === false) {
+					throw new Error('Headscale is not running');
+				}
+
+				log.info('config', 'Headscale is up and running');
 				return;
 			} catch (error) {
-				if (error instanceof HeadscaleError && error.status === 401) {
-					break;
-				}
-
-				if (error instanceof HeadscaleError && error.status === 404) {
-					break;
-				}
-
 				if (attempts < this.maxAttempts) {
 					attempts++;
 					await setTimeout(1000);
@@ -238,7 +237,7 @@ export default class KubernetesIntegration extends Integration<T> {
 				}
 
 				log.error(
-					'INTG',
+					'config',
 					'Missed restart deadline for Headscale (pid %d)',
 					this.pid,
 				);

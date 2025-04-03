@@ -1,3 +1,5 @@
+import type { ApiClient } from '~/server/headscale/api-client';
+
 export abstract class Integration<T> {
 	protected context: NonNullable<T>;
 	constructor(context: T) {
@@ -9,6 +11,6 @@ export abstract class Integration<T> {
 	}
 
 	abstract isAvailable(): Promise<boolean> | boolean;
-	abstract onConfigChange(): Promise<void> | void;
+	abstract onConfigChange(client: ApiClient): Promise<void> | void;
 	abstract get name(): string;
 }
