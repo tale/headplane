@@ -63,6 +63,11 @@ export async function loader({
 						return false;
 					}
 
+					if (context.sessions.onboardForSubject(sessionUser.subject)) {
+						// Assume onboarded
+						return true;
+					}
+
 					return subject === sessionUser.subject;
 				});
 
@@ -102,7 +107,8 @@ export default function Shell() {
 	return (
 		<>
 			<Header {...data} />
-			{data.uiAccess ? (
+			{/* Always show the outlet if we are onboarding */}
+			{(data.onboarding ? true : data.uiAccess) ? (
 				<Outlet />
 			) : (
 				<Card className="mx-auto w-fit mt-24">
