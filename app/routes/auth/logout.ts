@@ -14,7 +14,13 @@ export async function action({
 		return redirect('/login');
 	}
 
-	return redirect('/login', {
+	// When API key is disabled, we need to explicitly redirect
+	// with a logout state to prevent auto login again.
+	const url = context.config.oidc?.disable_api_key_login
+		? '/login?s=logout'
+		: '/login';
+
+	return redirect(url, {
 		headers: {
 			'Set-Cookie': await context.sessions.destroy(session),
 		},

@@ -1,7 +1,9 @@
+import { useEffect } from 'react';
 import {
 	type ActionFunctionArgs,
 	type LoaderFunctionArgs,
 	redirect,
+	useSearchParams,
 } from 'react-router';
 import { Form, useActionData, useLoaderData } from 'react-router';
 import Button from '~/components/Button';
@@ -15,6 +17,9 @@ export async function loader({
 	request,
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
+	const qp = new URL(request.url).searchParams;
+	const state = qp.get('s');
+
 	try {
 		const session = await context.sessions.auth(request);
 		if (session.has('api_key')) {
@@ -24,12 +29,18 @@ export async function loader({
 
 	const disableApiKeyLogin = context.config.oidc?.disable_api_key_login;
 	if (context.oidc && disableApiKeyLogin) {
-		return redirect('/oidc/start');
+		// Prevents automatic redirect loop if OIDC is enabled and API key login is disabled
+		// Since logging out would just log back in based on the redirects
+
+		if (state !== 'logout') {
+			return redirect('/oidc/start');
+		}
 	}
 
 	return {
 		oidc: context.oidc,
 		disableApiKeyLogin,
+		state,
 	};
 }
 
@@ -92,14 +103,47 @@ export async function action({
 }
 
 export default function Page() {
-	const data = useLoaderData<typeof loader>();
+	const { state, disableApiKeyLogin, oidc } = useLoaderData<typeof loader>();
 	const actionData = useActionData<typeof action>();
+	const [params] = useSearchParams();
+
+	useEffect(() => {
+		// State is a one time thing, we need to remove it after it has
+		// been consumed to prevent logic loops.
+		if (state !== null) {
+			const searchParams = new URLSearchParams(params);
+			searchParams.delete('s');
+
+			// Replacing because it's not a navigation, just a cleanup of the URL
+			// We can't use the useSearchParams method since it revalidates
+			// which will trigger a full reload
+			const newUrl = searchParams.toString()
+				? `{${window.location.pathname}?${searchParams.toString()}`
+				: window.location.pathname;
+
+			window.history.replaceState(null, '', newUrl);
+		}
+	}, [state, params]);
+
+	if (state === 'logout') {
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<Card className="max-w-sm m-4 sm:m-0" variant="raised">
+					<Card.Title>You have been logged out</Card.Title>
+					<Card.Text>
+						You can now close this window. If you would like to log in again,
+						please refresh the page.
+					</Card.Text>
+				</Card>
+			</div>
+		);
+	}
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
 			<Card className="max-w-sm m-4 sm:m-0" variant="raised">
 				<Card.Title>Welcome to Headplane</Card.Title>
-				{!data.disableApiKeyLogin ? (
+				{!disableApiKeyLogin ? (
 					<Form method="post">
 						<Card.Text>
 							Enter an API key to authenticate with Headplane. You can generate
@@ -124,19 +168,12 @@ export default function Page() {
 						</Button>
 					</Form>
 				) : undefined}
-				{data.oidc ? (
+				{oidc ? (
 					<Form method="POST">
-						{data.disableApiKeyLogin ? (
-							<Card.Text className="mb-6">
-								Sign in with your authentication provider to continue. Your
-								administrator has disabled API key login.
-							</Card.Text>
-						) : undefined}
-
 						<input type="hidden" name="oidc-start" value="true" />
 						<Button
 							className="w-full mt-2"
-							variant={data.disableApiKeyLogin ? 'heavy' : 'light'}
+							variant={disableApiKeyLogin ? 'heavy' : 'light'}
 							type="submit"
 						>
 							Single Sign-On
