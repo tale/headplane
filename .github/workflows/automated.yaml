@@ -10,7 +10,7 @@ concurrency:
 
 permissions:
   actions: write # Allow canceling in-progress runs
-  contents: read # Read access to the repository
+  contents: write # Read/write access to the repository
   pull-requests: write # Allow creating pull requests
 
 jobs:
