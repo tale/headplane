@@ -14,6 +14,7 @@ interface EditorProps {
 	onChange: (value: string) => void;
 }
 
+// TODO: Remove ClientOnly
 export function Editor(props: EditorProps) {
 	const [light, setLight] = useState(false);
 	useEffect(() => {
@@ -38,6 +39,8 @@ export function Editor(props: EditorProps) {
 					{() => (
 						<CodeMirror
 							value={props.value}
+							editable={!props.isDisabled} // Allow editing unless disabled
+							readOnly={props.isDisabled} // Use readOnly if disabled
 							height="100%"
 							extensions={[shopify.jsonc()]}
 							style={{ height: '100%' }}

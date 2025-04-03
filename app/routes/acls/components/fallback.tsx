@@ -1,4 +1,3 @@
-import Spinner from '~/components/Spinner';
 import cn from '~/utils/cn';
 
 interface Props {
