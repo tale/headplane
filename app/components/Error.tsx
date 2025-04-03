@@ -1,16 +1,36 @@
 import { AlertIcon } from '@primer/octicons-react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
+import ResponseError from '~/server/headscale/api-error';
 import cn from '~/utils/cn';
 import Card from './Card';
-import Code from './Code';
 
 interface Props {
 	type?: 'full' | 'embedded';
 }
 
-function getMessage(error: Error | unknown) {
+function getMessage(error: Error | unknown): {
+	title: string;
+	message: string;
+} {
+	if (error instanceof ResponseError) {
+		if (error.responseObject?.message) {
+			return {
+				title: 'Headscale Error',
+				message: String(error.responseObject.message),
+			};
+		}
+
+		return {
+			title: 'Headscale Error',
+			message: error.response,
+		};
+	}
+
 	if (!(error instanceof Error)) {
-		return 'An unknown error occurred';
+		return {
+			title: 'Unknown Error',
+			message: String(error),
+		};
 	}
 
 	let rootError = error;
@@ -25,16 +45,22 @@ function getMessage(error: Error | unknown) {
 
 	// If we are aggregate, concat into a single message
 	if (rootError instanceof AggregateError) {
-		return rootError.errors.map((error) => error.message).join('\n');
+		return {
+			title: 'Errors',
+			message: rootError.errors.map((error) => error.message).join('\n'),
+		};
 	}
 
-	return rootError.message;
+	return {
+		title: 'Error',
+		message: rootError.message,
+	};
 }
 
 export function ErrorPopup({ type = 'full' }: Props) {
 	const error = useRouteError();
 	const routing = isRouteErrorResponse(error);
-	const message = getMessage(error);
+	const { title, message } = getMessage(error);
 
 	return (
 		<div
@@ -48,12 +74,14 @@ export function ErrorPopup({ type = 'full' }: Props) {
 			<Card>
 				<div className="flex items-center justify-between">
 					<Card.Title className="text-3xl mb-0">
-						{routing ? error.status : 'Error'}
+						{routing ? error.status : title}
 					</Card.Title>
 					<AlertIcon className="w-12 h-12 text-red-500" />
 				</div>
-				<Card.Text className="mt-4 text-lg">
-					{routing ? error.statusText : <Code>{message}</Code>}
+				<Card.Text
+					className={cn('mt-4 text-lg', routing ? 'font-normal' : 'font-mono')}
+				>
+					{routing ? error.data.message : message}
 				</Card.Text>
 			</Card>
 		</div>

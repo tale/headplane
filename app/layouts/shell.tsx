@@ -1,4 +1,4 @@
-import { BanIcon, CircleCheckIcon } from 'lucide-react';
+import { CircleCheckIcon } from 'lucide-react';
 import {
 	LoaderFunctionArgs,
 	Outlet,
