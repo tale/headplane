@@ -22,15 +22,17 @@ export async function loader({
 	);
 
 	const preAuthKeys = await Promise.all(
-		users.users.map((user) => {
-			const qp = new URLSearchParams();
-			qp.set('user', user.name);
+		users.users
+			.filter((user) => user.name?.length > 0) // Filter out any invalid users
+			.map((user) => {
+				const qp = new URLSearchParams();
+				qp.set('user', user.name);
 
-			return context.client.get<{ preAuthKeys: PreAuthKey[] }>(
-				`v1/preauthkey?${qp.toString()}`,
-				session.get('api_key')!,
-			);
-		}),
+				return context.client.get<{ preAuthKeys: PreAuthKey[] }>(
+					`v1/preauthkey?${qp.toString()}`,
+					session.get('api_key')!,
+				);
+			}),
 	);
 
 	return {
