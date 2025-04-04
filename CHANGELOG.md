@@ -1,3 +1,8 @@
+### 0.5.9 (April 3, 2025)
+- Filter out empty users from the pre-auth keys page which could possibly cause a crash with unmigrated users.
+- OIDC users cannot be renamed, so that functionality has been disabled in the menu options.
+- Suppress hydration errors for any fields with a date in it.
+
 ### 0.5.8 (April 3, 2025)
 - You can now skip the onboarding page if desired.
 - Added the UI to change user roles in the dashboard.

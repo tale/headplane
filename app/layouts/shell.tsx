@@ -122,7 +122,7 @@ export default function Shell() {
 		<>
 			<Header {...data} />
 			{/* Always show the outlet if we are onboarding */}
-			{(data.onboarding ? true : !data.uiAccess) ? (
+			{(data.onboarding ? true : data.uiAccess) ? (
 				<Outlet />
 			) : (
 				<Card className="mx-auto w-fit mt-24">
