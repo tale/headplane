@@ -36,48 +36,56 @@ export async function loader({
 		if (context.oidc && !request.url.endsWith('/onboarding')) {
 			let onboarded = false;
 
-			try {
-				const { users } = await context.client.get<{ users: User[] }>(
-					'v1/user',
-					session.get('api_key')!,
-				);
-
-				if (users.length === 0) {
-					onboarded = false;
-				}
-
-				const user = users.find((u) => {
-					if (u.provider !== 'oidc') {
-						return false;
-					}
-
-					// For some reason, headscale makes providerID a url where the
-					// last component is the subject, so we need to strip that out
-					const subject = u.providerId?.split('/').pop();
-					if (!subject) {
-						return false;
-					}
-
-					const sessionUser = session.get('user');
-					if (!sessionUser) {
-						return false;
-					}
-
-					if (context.sessions.onboardForSubject(sessionUser.subject)) {
-						// Assume onboarded
-						return true;
-					}
-
-					return subject === sessionUser.subject;
-				});
-
-				if (user) {
+			const sessionUser = session.get('user');
+			if (sessionUser) {
+				if (context.sessions.onboardForSubject(sessionUser.subject)) {
+					// Assume onboarded
 					onboarded = true;
+				} else {
+					try {
+						const { users } = await context.client.get<{ users: User[] }>(
+							'v1/user',
+							session.get('api_key')!,
+						);
+
+						if (users.length === 0) {
+							onboarded = false;
+						}
+
+						const user = users.find((u) => {
+							if (u.provider !== 'oidc') {
+								return false;
+							}
+
+							// For some reason, headscale makes providerID a url where the
+							// last component is the subject, so we need to strip that out
+							const subject = u.providerId?.split('/').pop();
+							if (!subject) {
+								return false;
+							}
+
+							const sessionUser = session.get('user');
+							if (!sessionUser) {
+								return false;
+							}
+
+							if (context.sessions.onboardForSubject(sessionUser.subject)) {
+								// Assume onboarded
+								return true;
+							}
+
+							return subject === sessionUser.subject;
+						});
+
+						if (user) {
+							onboarded = true;
+						}
+					} catch (e) {
+						// If we cannot lookup users, just assume our user is onboarded
+						log.debug('api', 'Failed to lookup users %o', e);
+						onboarded = true;
+					}
 				}
-			} catch (e) {
-				// If we cannot lookup users, just assume our user is onboarded
-				log.debug('api', 'Failed to lookup users %o', e);
-				onboarded = true;
 			}
 
 			if (!onboarded) {

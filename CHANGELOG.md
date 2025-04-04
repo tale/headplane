@@ -1,3 +1,6 @@
+### 0.5.10 (April 4, 2025)
+- Fix an issue where other prefernences to skip onboarding affected every user.
+
 ### 0.5.9 (April 3, 2025)
 - Filter out empty users from the pre-auth keys page which could possibly cause a crash with unmigrated users.
 - OIDC users cannot be renamed, so that functionality has been disabled in the menu options.
