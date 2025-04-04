@@ -5,7 +5,7 @@ on:
       - "*"
 
 concurrency:
-  group: publish-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -14,12 +14,20 @@ permissions:
   packages: write # Write access to the container registry
 
 jobs:
-  publish:
-    name: docker-publish
+  docker:
+    name: Docker Release
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -33,16 +41,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker Metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest,enable=false
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

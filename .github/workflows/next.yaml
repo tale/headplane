@@ -1,11 +1,11 @@
-name: Nightly
+name: Pre-release (next)
 on:
-  schedule:
-    - cron: "0 8 * * *"
   workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 concurrency:
-  group: publish-nightly-${{ github.ref }}
+  group: pre-release-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -15,11 +15,21 @@ permissions:
 
 jobs:
   publish:
-    name: docker-publish
+    # Ensure the action only runs if manually dispatched or a PR on the `next` branch in the *main* repository is opened or synchronized.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'next') }}
+    name: Docker Pre-release
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
+
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=next
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -33,14 +43,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker Metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=edge,branch=main
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
