@@ -81,7 +81,7 @@ export function ErrorPopup({ type = 'full' }: Props) {
 				<Card.Text
 					className={cn('mt-4 text-lg', routing ? 'font-normal' : 'font-mono')}
 				>
-					{routing ? error.data.message : message}
+					{routing ? error.data : message}
 				</Card.Text>
 			</Card>
 		</div>
