@@ -30,7 +30,7 @@ Clone the Headplane repository, install dependencies, and build the project:
 ```sh
 git clone https://github.com/tale/headplane
 cd headplane
-git checkout v0.5.5 # Or whatever tag you want to use
+git checkout 0.5.10 # Or whatever tag you want to use
 pnpm install
 pnpm build
 ```
