@@ -22,7 +22,7 @@ export const Capabilities = {
 	// Write feature configuration, for example, enable Taildrop (unimplemented)
 	write_feature: 1 << 6,
 
-	// Configure user & group provisioning (unimplemented)
+	// Configure user & group provisioning
 	configure_iam: 1 << 7,
 
 	// Read machines, for example, see machine names and status
