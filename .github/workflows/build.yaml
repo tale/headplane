@@ -1,6 +1,12 @@
 name: Build
 on:
   push:
+    paths-ignore:
+      - ".zed/**"
+      - "assets/**"
+      - "docs/**"
+      - "CHANGELOG.md"
+      - "README.md"
     branches:
       - "main"
       - "next"
