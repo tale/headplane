@@ -12,7 +12,7 @@ interface RestrictionProps {
 	isDisabled?: boolean;
 }
 
-export default function Restriction({
+export default function RestrictionTable({
 	children,
 	type,
 	values,
