@@ -1,4 +1,4 @@
-import { Computer, KeySquare } from 'lucide-react';
+import { Computer, FileKey2 } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import Code from '~/components/Code';
@@ -12,6 +12,7 @@ export interface NewMachineProps {
 	server: string;
 	users: User[];
 	isDisabled?: boolean;
+	disabledKeys?: string[];
 }
 
 export default function NewMachine(data: NewMachineProps) {
@@ -51,7 +52,7 @@ export default function NewMachine(data: NewMachineProps) {
 					</Select>
 				</Dialog.Panel>
 			</Dialog>
-			<Menu isDisabled={data.isDisabled}>
+			<Menu isDisabled={data.isDisabled} disabledKeys={data.disabledKeys}>
 				<Menu.Button variant="heavy">Add Device</Menu.Button>
 				<Menu.Panel
 					onAction={(key) => {
@@ -74,7 +75,7 @@ export default function NewMachine(data: NewMachineProps) {
 						</Menu.Item>
 						<Menu.Item key="pre-auth" textValue="Generate Pre-auth Key">
 							<div className="flex items-center gap-x-3">
-								<KeySquare className="w-4" />
+								<FileKey2 className="w-4" />
 								Generate Pre-auth Key
 							</div>
 						</Menu.Item>
