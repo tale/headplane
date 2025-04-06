@@ -69,6 +69,10 @@ export async function loader({
 		agents: context.agents?.tailnetIDs(),
 		stats: context.agents?.lookup(machines.nodes.map((node) => node.nodeKey)),
 		writable: writablePermission,
+		preAuth: await context.sessions.check(
+			request,
+			Capabilities.generate_authkeys,
+		),
 		subject: user.subject,
 	};
 }
@@ -99,6 +103,7 @@ export default function Page() {
 					server={data.publicServer ?? data.server}
 					users={data.users}
 					isDisabled={!data.writable}
+					disabledKeys={data.preAuth ? [] : ['pre-auth']}
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
