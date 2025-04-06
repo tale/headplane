@@ -4,6 +4,7 @@
 - OIDC authorization restrictions can now be controlled from the settings UI. (closes [#102](https://github.com/tale/headplane/issues/102))
 	- The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
 	- Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
+- The Pre-Auth keys page has been fully reworked (closes [#179](https://github.com/tale/headplane/issues/179), [#143](https://github.com/tale/headplane/issues/143)).
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
