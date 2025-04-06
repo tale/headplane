@@ -7,12 +7,12 @@ import Select from '~/components/Select';
 import Switch from '~/components/Switch';
 import type { User } from '~/types';
 
-interface Props {
+interface AddAuthKeyProps {
 	users: User[];
 }
 
 // TODO: Tags
-export default function AddPreAuthKey(data: Props) {
+export default function AddAuthKey(data: AddAuthKeyProps) {
 	const [reusable, setReusable] = useState(false);
 	const [ephemeral, setEphemeral] = useState(false);
 

@@ -4,7 +4,7 @@ import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Code from '~/components/Code';
 import toast from '~/utils/toast';
-import ExpireKey from '../dialogs/expire';
+import ExpireAuthKey from './dialogs/expire-auth-key';
 
 interface Props {
 	authKey: PreAuthKey;
@@ -37,7 +37,7 @@ export default function AuthKeyRow({ authKey, server }: Props) {
 			<div suppressHydrationWarning className="flex gap-4 items-center">
 				{(authKey.used && !authKey.reusable) ||
 				new Date(authKey.expiration) < new Date() ? undefined : (
-					<ExpireKey authKey={authKey} />
+					<ExpireAuthKey authKey={authKey} />
 				)}
 				<Button
 					variant="light"

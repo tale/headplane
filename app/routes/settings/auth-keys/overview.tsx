@@ -8,8 +8,8 @@ import TableList from '~/components/TableList';
 import type { LoadContext } from '~/server';
 import type { PreAuthKey, User } from '~/types';
 import { send } from '~/utils/res';
-import AuthKeyRow from './components/key';
-import AddPreAuthKey from './dialogs/new';
+import AuthKeyRow from './auth-key-row';
+import AddAuthKey from './dialogs/add-auth-key';
 
 export async function loader({
 	request,
@@ -168,7 +168,7 @@ export default function Page() {
 					Tailscale documentation
 				</Link>
 			</p>
-			<AddPreAuthKey users={users} />
+			<AddAuthKey users={users} />
 			<div className="flex items-center gap-4 mt-4">
 				<Select
 					label="Filter by User"

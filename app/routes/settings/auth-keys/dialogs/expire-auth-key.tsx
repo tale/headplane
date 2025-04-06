@@ -1,11 +1,11 @@
 import Dialog from '~/components/Dialog';
 import type { PreAuthKey } from '~/types';
 
-interface Props {
+interface ExpireAuthKeyProps {
 	authKey: PreAuthKey;
 }
 
-export default function ExpireKey({ authKey }: Props) {
+export default function ExpireAuthKey({ authKey }: ExpireAuthKeyProps) {
 	return (
 		<Dialog>
 			<Dialog.Button>Expire Key</Dialog.Button>
