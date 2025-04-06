@@ -9,11 +9,11 @@ import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import { restrictionAction } from '../actions/restriction';
-import Restriction from '../components/restriction';
-import AddDomain from '../dialogs/add-domain';
-import AddGroup from '../dialogs/add-group';
-import AddUser from '../dialogs/add-user';
+import { restrictionAction } from './actions';
+import AddDomain from './dialogs/add-domain';
+import AddGroup from './dialogs/add-group';
+import AddUser from './dialogs/add-user';
+import RestrictionTable from './table';
 
 export async function loader({
 	request,
@@ -92,23 +92,27 @@ export default function Page() {
 					</Link>
 				</p>
 			</div>
-			<Restriction
+			<RestrictionTable
 				type="domain"
 				values={settings.domains}
 				isDisabled={isDisabled}
 			>
 				<AddDomain domains={settings.domains} isDisabled={isDisabled} />
-			</Restriction>
-			<Restriction
+			</RestrictionTable>
+			<RestrictionTable
 				type="group"
 				values={settings.groups}
 				isDisabled={isDisabled}
 			>
 				<AddGroup groups={settings.groups} isDisabled={isDisabled} />
-			</Restriction>
-			<Restriction type="user" values={settings.users} isDisabled={isDisabled}>
+			</RestrictionTable>
+			<RestrictionTable
+				type="user"
+				values={settings.users}
+				isDisabled={isDisabled}
+			>
 				<AddUser users={settings.users} isDisabled={isDisabled} />
-			</Restriction>
+			</RestrictionTable>
 		</div>
 	);
 }
