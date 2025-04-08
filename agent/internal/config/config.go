@@ -1,10 +1,6 @@
 package config
 
-import (
-	"os"
-
-	_ "github.com/joho/godotenv/autoload"
-)
+import "os"
 
 // Config represents the configuration for the agent.
 type Config struct {
