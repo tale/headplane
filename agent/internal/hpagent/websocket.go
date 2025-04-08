@@ -2,46 +2,50 @@ package hpagent
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/gorilla/websocket"
-	"github.com/tale/headplane/agent/tsnet"
+	"github.com/tale/headplane/agent/internal/config"
+	"github.com/tale/headplane/agent/internal/tsnet"
+	"github.com/tale/headplane/agent/internal/util"
 )
 
 type Socket struct {
 	*websocket.Conn
-	Debug bool
 	Agent *tsnet.TSAgent
 }
 
 // Creates a new websocket connection to the Headplane server.
-func NewSocket(agent *tsnet.TSAgent, controlURL, authKey string, debug bool) (*Socket, error) {
-	wsURL, err := httpToWs(controlURL)
+func NewSocket(agent *tsnet.TSAgent, cfg *config.Config) (*Socket, error) {
+	log := util.GetLogger()
+
+	wsURL, err := httpToWs(cfg.HPControlURL)
 	if err != nil {
 		return nil, err
 	}
 
 	headers := http.Header{}
 	headers.Add("X-Headplane-Tailnet-ID", agent.ID)
-
-	auth := fmt.Sprintf("Bearer %s", authKey)
+	auth := fmt.Sprintf("Bearer %s", cfg.HPAuthKey)
 	headers.Add("Authorization", auth)
 
-	log.Printf("dialing websocket at %s", wsURL)
+	log.Info("Dialing WebSocket with master: %s", wsURL)
 	ws, _, err := websocket.DefaultDialer.Dial(wsURL, headers)
 	if err != nil {
+		log.Debug("Failed to dial WebSocket: %s", err)
 		return nil, err
 	}
 
-	return &Socket{ws, debug, agent}, nil
+	return &Socket{ws, agent}, nil
 }
 
 // We need to convert the control URL to a websocket URL
 func httpToWs(controlURL string) (string, error) {
+	log := util.GetLogger()
 	u, err := url.Parse(controlURL)
 	if err != nil {
+		log.Debug("Failed to parse control URL: %s", err)
 		return "", err
 	}
 

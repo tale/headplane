@@ -2,38 +2,41 @@ package hpagent
 
 import (
 	"encoding/json"
-	"log"
 	"sync"
+
+	"github.com/tale/headplane/agent/internal/util"
 	"tailscale.com/tailcfg"
 )
 
 // Represents messages from the Headplane master
 type RecvMessage struct {
-	NodeIDs []string `json:omitempty`
+	NodeIDs []string
 }
 
 // Starts listening for messages from the Headplane master
-func (s *Socket) StartListening() {
+func (s *Socket) FollowMaster() {
+	log := util.GetLogger()
+
 	for {
 		_, message, err := s.ReadMessage()
 		if err != nil {
-			log.Printf("error reading message: %v", err)
+			log.Error("Error reading message: %s", err)
 			return
 		}
 
 		var msg RecvMessage
 		err = json.Unmarshal(message, &msg)
 		if err != nil {
-			log.Printf("error unmarshalling message: %v", err)
+			log.Error("Unable to unmarshal message: %s", err)
+			log.Debug("Full Error: %v", err)
 			continue
 		}
 
-		if s.Debug {
-			log.Printf("got message: %s", message)
-		}
+		log.Debug("Recieved message from master: %v", message)
 
 		if len(msg.NodeIDs) == 0 {
-			log.Printf("got a message with no node IDs? %s", message)
+			log.Debug("Message recieved had no node IDs")
+			log.Debug("Full message: %s", message)
 			continue
 		}
 
@@ -48,11 +51,12 @@ func (s *Socket) StartListening() {
 				defer wg.Done()
 				result, err := s.Agent.GetStatusForPeer(nodeID)
 				if err != nil {
-					log.Printf("error getting status: %v", err)
+					log.Error("Unable to get status for node %s: %s", nodeID, err)
 					return
 				}
 
 				if result == nil {
+					log.Debug("No status for node %s", nodeID)
 					return
 				}
 
@@ -65,14 +69,11 @@ func (s *Socket) StartListening() {
 		wg.Wait()
 
 		// Send the results back to the Headplane master
+		log.Debug("Sending status back to master: %v", results)
 		err = s.SendStatus(results)
 		if err != nil {
-			log.Printf("error sending status: %v", err)
+			log.Error("Error sending status: %s", err)
 			return
-		}
-
-		if s.Debug {
-			log.Printf("sent status: %s", results)
 		}
 	}
 }

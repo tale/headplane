@@ -38,8 +38,7 @@ func validateTSReady(config *Config) error {
 		testURL = testURL[:len(testURL)-1]
 	}
 
-	// TODO: Consequences of switching to /health (headscale only)
-	testURL = fmt.Sprintf("%s/key?v=109", testURL)
+	testURL = fmt.Sprintf("%s/health", testURL)
 	resp, err := http.Get(testURL)
 	if err != nil {
 		return fmt.Errorf("Failed to connect to TS control server: %s", err)
