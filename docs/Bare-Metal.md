@@ -68,14 +68,15 @@ Headplane service:
 ```ini
 [Unit]
 Description=Headplane
-After=network.target
+# Decomment the following line if running on bare metal with integrated mode (/proc integration)
+# PartOf=headscale.service
 
 [Service]
 Type=simple
 User=headplane
 Group=headplane
 WorkingDirectory=/path/to/headplane
-ExecStart=/usr/bin/node /path/to/headplane/build/headplane/server.js
+ExecStart=/usr/bin/node /path/to/headplane/build/server/index.js
 Restart=always
 
 [Install]
