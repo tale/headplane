@@ -1,9 +1,12 @@
 package hpagent
 
 import (
+	"bufio"
 	"encoding/json"
+	"os"
 	"sync"
 
+	"github.com/tale/headplane/agent/internal/tsnet"
 	"github.com/tale/headplane/agent/internal/util"
 	"tailscale.com/tailcfg"
 )
@@ -13,30 +16,32 @@ type RecvMessage struct {
 	NodeIDs []string
 }
 
-// Starts listening for messages from the Headplane master
-func (s *Socket) FollowMaster() {
-	log := util.GetLogger()
+type SendMessage struct {
+	Type string
+	Data any
+}
 
-	for {
-		_, message, err := s.ReadMessage()
-		if err != nil {
-			log.Error("Error reading message: %s", err)
-			return
-		}
+// Starts listening for messages from stdin
+func FollowMaster(agent *tsnet.TSAgent) {
+	log := util.GetLogger()
+	scanner := bufio.NewScanner(os.Stdin)
+
+	for scanner.Scan() {
+		line := scanner.Bytes()
 
 		var msg RecvMessage
-		err = json.Unmarshal(message, &msg)
+		err := json.Unmarshal(line, &msg)
 		if err != nil {
 			log.Error("Unable to unmarshal message: %s", err)
 			log.Debug("Full Error: %v", err)
 			continue
 		}
 
-		log.Debug("Recieved message from master: %v", message)
+		log.Debug("Recieved message from master: %v", line)
 
 		if len(msg.NodeIDs) == 0 {
 			log.Debug("Message recieved had no node IDs")
-			log.Debug("Full message: %s", message)
+			log.Debug("Full message: %s", line)
 			continue
 		}
 
@@ -49,7 +54,7 @@ func (s *Socket) FollowMaster() {
 			wg.Add(1)
 			go func(nodeID string) {
 				defer wg.Done()
-				result, err := s.Agent.GetStatusForPeer(nodeID)
+				result, err := agent.GetStatusForPeer(nodeID)
 				if err != nil {
 					log.Error("Unable to get status for node %s: %s", nodeID, err)
 					return
@@ -70,15 +75,13 @@ func (s *Socket) FollowMaster() {
 
 		// Send the results back to the Headplane master
 		log.Debug("Sending status back to master: %v", results)
-		err = s.SendStatus(results)
-		if err != nil {
-			log.Error("Error sending status: %s", err)
-			return
-		}
+		log.Msg(&SendMessage{
+			Type: "status",
+			Data: results,
+		})
 	}
-}
 
-// Stops listening for messages from the Headplane master
-func (s *Socket) StopListening() {
-	s.Close()
+	if err := scanner.Err(); err != nil {
+		log.Fatal("Error reading from stdin: %s", err)
+	}
 }

@@ -8,6 +8,11 @@ import (
 	"github.com/tale/headplane/agent/internal/util"
 )
 
+type Register struct {
+	Type string
+	ID   string
+}
+
 func main() {
 	log := util.GetLogger()
 	cfg, err := config.Load()
@@ -21,11 +26,10 @@ func main() {
 	agent.Connect()
 	defer agent.Shutdown()
 
-	ws, err := hpagent.NewSocket(agent, cfg)
-	if err != nil {
-		log.Fatal("Failed to create websocket: %s", err)
-	}
+	log.Msg(&Register{
+		Type: "register",
+		ID:   agent.ID,
+	})
 
-	defer ws.StopListening()
-	ws.FollowMaster()
+	hpagent.FollowMaster(agent)
 }

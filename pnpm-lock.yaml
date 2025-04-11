@@ -9,7 +9,7 @@ patchedDependencies:
     hash: 915164bae9a5d47bb0e7edf0cbbc4c7f0fedb1a2f9a5f6ef5c53d8fef6856211
     path: patches/@shopify__lang-jsonc@1.0.0.patch
   react-router-hono-server:
-    hash: c547fd5480e282b40f1c4e668ab066a78abdde8fe04871a65bda306896b0a39e
+    hash: 99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3
     path: patches/react-router-hono-server.patch
 
 importers:
@@ -31,9 +31,6 @@ importers:
       '@fontsource-variable/inter':
         specifier: ^5.1.1
         version: 5.1.1
-      '@hono/node-server':
-        specifier: ^1.14.0
-        version: 1.14.0(hono@4.7.5)
       '@kubernetes/client-node':
         specifier: ^0.22.3
         version: 0.22.3(bufferutil@4.0.9)(utf-8-validate@5.0.10)
@@ -110,8 +107,8 @@ importers:
         specifier: ^7.4.0
         version: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-router-hono-server:
-        specifier: ^2.11.0
-        version: 2.11.0(patch_hash=c547fd5480e282b40f1c4e668ab066a78abdde8fe04871a65bda306896b0a39e)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
+        specifier: ^2.13.0
+        version: 2.13.0(patch_hash=99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
       react-stately:
         specifier: ^3.35.0
         version: 3.35.0(react@19.0.0)
@@ -127,9 +124,6 @@ importers:
       usehooks-ts:
         specifier: ^3.1.0
         version: 3.1.0(react@19.0.0)
-      ws:
-        specifier: ^8.18.1
-        version: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       yaml:
         specifier: ^2.7.0
         version: 2.7.0
@@ -149,9 +143,6 @@ importers:
       '@types/websocket':
         specifier: ^1.0.10
         version: 1.0.10
-      '@types/ws':
-        specifier: ^8.5.13
-        version: 8.5.13
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
@@ -457,8 +448,8 @@ packages:
   '@codemirror/commands@6.7.1':
     resolution: {integrity: sha512-llTrboQYw5H4THfhN4U3qCnSZ1SOJ60ohhz+SzU0ADGtwlc533DtklQP0vSFaQuCPDn3BPpOd1GbbnUtwNjsrw==}
 
-  '@codemirror/commands@6.8.0':
-    resolution: {integrity: sha512-q8VPEFaEP4ikSlt6ZxjB3zW72+7osfAYW9i8Zu943uqbKuz6utc1+F170hyLUCUltXORjQXRyYQNfkckzA/bPQ==}
+  '@codemirror/commands@6.8.1':
+    resolution: {integrity: sha512-KlGVYufHMQzxbdQONiLyGQDUW0itrLZwq3CcY7xpv9ZLRHqzkBSoteocBHtMCoY7/Ci4xhzSrToIeLg7FxHuaw==}
 
   '@codemirror/language@6.10.8':
     resolution: {integrity: sha512-wcP8XPPhDH2vTqf181U8MbZnW+tDyPYy0UzVOa+oHORjyT+mhhom9vBd7dApJwoDz9Nb/a8kHjJIsuA/t8vNFw==}
@@ -980,15 +971,15 @@ packages:
     peerDependencies:
       hono: ^4
 
-  '@hono/node-ws@1.1.0':
-    resolution: {integrity: sha512-uHaz1EPguJqsUmA+Jmhdi/DTRAMs2Fvcy7qno9E48rlK3WBtyGQw4u4DKlc+o18Nh1DGz2oA1n9hCzEyhVBeLw==}
+  '@hono/node-ws@1.1.1':
+    resolution: {integrity: sha512-iFJrAw5GuBTstehBzLY2FyW5rRlXmO3Uwpijpm4Liv75owNP/UjZe3KExsLuEK4w+u+xhvHqOoQUyEKWUvyghw==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       '@hono/node-server': ^1.11.1
       hono: ^4.6.0
 
-  '@hono/vite-dev-server@0.17.0':
-    resolution: {integrity: sha512-EvGOIj1MoY9uV94onXXz88yWaTxzUK+Mv8LiIEsR/9eSFoVUnHVR0B7l7iNIsxfHYRN7tbPDMWBSnD2RQun3yw==}
+  '@hono/vite-dev-server@0.19.0':
+    resolution: {integrity: sha512-myMc4Nm0nFQSPaeE6I/a1ODyDR5KpQ4EHodX4Tu/7qlB31GfUemhUH/WsO91HJjDEpRRpsT4Zbg+PleMlpTljw==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: '*'
@@ -1826,9 +1817,6 @@ packages:
   '@types/node@20.17.16':
     resolution: {integrity: sha512-vOTpLduLkZXePLxHiHsBLp98mHGnl8RptV4YAO3HfKO5UHjDvySGbxKtpYfy8Sx5+WKcgc45qNreJJRVM3L6mw==}
 
-  '@types/node@22.10.1':
-    resolution: {integrity: sha512-qKgsUwfHZV2WCWLAnVP1JqnpE6Im6h3Y0+fYgMTasNQ7V++CBX5OT1as0g0f+OyubbFqhf6XVNIsmN4IIhEgGQ==}
-
   '@types/node@22.10.7':
     resolution: {integrity: sha512-V09KvXxFiutGp6B7XkpaDXlNadZxrzajcY50EuoLIpQ6WWYCSvf19lVIazzfIzQvhUN2HjX12spLojTnhuKlGg==}
 
@@ -1842,9 +1830,6 @@ packages:
 
   '@types/websocket@1.0.10':
     resolution: {integrity: sha512-svjGZvPB7EzuYS94cI7a+qhwgGU1y89wUgjT6E2wVUfmAGIvRfT7obBvRtnhXCSsoMdlG4gBFGE7MfkIXZLoww==}
-
-  '@types/ws@8.5.13':
-    resolution: {integrity: sha512-osM/gWBTPKgHV8XkTunnegTRIsvF6owmf5w+JtAfOw472dptdm0dlGv4xCt6GwQRcC2XVOvvRE/0bAoQcL2QkA==}
 
   '@uiw/codemirror-extensions-basic-setup@4.23.7':
     resolution: {integrity: sha512-9/2EUa1Lck4kFKkR2BkxlZPpgD/EWuKHnOlysf1yHKZGraaZmZEaUw+utDK4QcuJc8Iz097vsLz4f4th5EU27g==}
@@ -2270,8 +2255,8 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
-  hono@4.7.5:
-    resolution: {integrity: sha512-fDOK5W2C1vZACsgLONigdZTRZxuBqFtcKh7bUQ5cVSbwI2RWjloJDcgFOVzbQrlI6pCmhlTsVYZ7zpLj4m4qMQ==}
+  hono@4.7.6:
+    resolution: {integrity: sha512-564rVzELU+9BRqqx5k8sT2NFwGD3I3Vifdb6P7CmM6FiarOSY+fDC+6B+k9wcCb86ReoayteZP2ki0cRLN1jbw==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@6.1.3:
@@ -2755,18 +2740,18 @@ packages:
       react: '>=18'
       react-dom: '>=18'
 
-  react-router-hono-server@2.11.0:
-    resolution: {integrity: sha512-zn0kJUUamgxYS7mMDLv0kHCJE1UTX0bYNdfJeBLjw0xr/gnre0ttEZ2LTsFM8re1P2iMQ64mftpnSyeXIPijOA==}
+  react-router-hono-server@2.13.0:
+    resolution: {integrity: sha512-YcxmFpphZL9Jc4CnOgsKw35wcurmiOpTg3vBzjOROIUhEo6rKvUHOg7AM2QJi2Fa8BRJK6MvHaN4haedYo1iiA==}
     engines: {node: '>=22.12.0'}
     hasBin: true
     peerDependencies:
-      '@cloudflare/workers-types': ^4.20241112.0
+      '@cloudflare/workers-types': ^4.20250317.0
       '@react-router/dev': ^7.2.0
       '@types/react': ^18.3.10 || ^19.0.0
       miniflare: ^3.20241205.0
       react-router: ^7.2.0
-      vite: ^5.1.0 || ^6.0.0
-      wrangler: ^3.91.0
+      vite: ^6.0.0
+      wrangler: ^4.2.0
     peerDependenciesMeta:
       '@cloudflare/workers-types':
         optional: true
@@ -3679,7 +3664,7 @@ snapshots:
       '@codemirror/view': 6.36.1
       '@lezer/common': 1.2.3
 
-  '@codemirror/commands@6.8.0':
+  '@codemirror/commands@6.8.1':
     dependencies:
       '@codemirror/language': 6.10.8
       '@codemirror/state': 6.5.0
@@ -4015,23 +4000,23 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@hono/node-server@1.14.0(hono@4.7.5)':
+  '@hono/node-server@1.14.0(hono@4.7.6)':
     dependencies:
-      hono: 4.7.5
+      hono: 4.7.6
 
-  '@hono/node-ws@1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(bufferutil@4.0.9)(hono@4.7.5)(utf-8-validate@5.0.10)':
+  '@hono/node-ws@1.1.1(@hono/node-server@1.14.0(hono@4.7.6))(bufferutil@4.0.9)(hono@4.7.6)(utf-8-validate@5.0.10)':
     dependencies:
-      '@hono/node-server': 1.14.0(hono@4.7.5)
-      hono: 4.7.5
+      '@hono/node-server': 1.14.0(hono@4.7.6)
+      hono: 4.7.6
       ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@hono/vite-dev-server@0.17.0(hono@4.7.5)':
+  '@hono/vite-dev-server@0.19.0(hono@4.7.6)':
     dependencies:
-      '@hono/node-server': 1.14.0(hono@4.7.5)
-      hono: 4.7.5
+      '@hono/node-server': 1.14.0(hono@4.7.6)
+      hono: 4.7.6
       minimatch: 9.0.5
 
   '@internationalized/date@3.6.0':
@@ -5325,10 +5310,6 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/node@22.10.1':
-    dependencies:
-      undici-types: 6.20.0
-
   '@types/node@22.10.7':
     dependencies:
       undici-types: 6.20.0
@@ -5344,10 +5325,6 @@ snapshots:
   '@types/websocket@1.0.10':
     dependencies:
       '@types/node': 22.10.7
-
-  '@types/ws@8.5.13':
-    dependencies:
-      '@types/node': 22.10.1
 
   '@uiw/codemirror-extensions-basic-setup@4.23.7(@codemirror/autocomplete@6.18.2(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)(@lezer/common@1.2.3))(@codemirror/commands@6.7.1)(@codemirror/language@6.10.8)(@codemirror/lint@6.8.2)(@codemirror/search@6.5.7)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)':
     dependencies:
@@ -5552,7 +5529,7 @@ snapshots:
   codemirror@6.0.1(@lezer/common@1.2.3):
     dependencies:
       '@codemirror/autocomplete': 6.18.2(@codemirror/language@6.10.8)(@codemirror/state@6.5.0)(@codemirror/view@6.36.1)(@lezer/common@1.2.3)
-      '@codemirror/commands': 6.8.0
+      '@codemirror/commands': 6.8.1
       '@codemirror/language': 6.10.8
       '@codemirror/lint': 6.8.2
       '@codemirror/search': 6.5.7
@@ -5821,7 +5798,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.7.5: {}
+  hono@4.7.6: {}
 
   hosted-git-info@6.1.3:
     dependencies:
@@ -6255,15 +6232,15 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  react-router-hono-server@2.11.0(patch_hash=c547fd5480e282b40f1c4e668ab066a78abdde8fe04871a65bda306896b0a39e)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
+  react-router-hono-server@2.13.0(patch_hash=99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
-      '@hono/node-server': 1.14.0(hono@4.7.5)
-      '@hono/node-ws': 1.1.0(@hono/node-server@1.14.0(hono@4.7.5))(bufferutil@4.0.9)(hono@4.7.5)(utf-8-validate@5.0.10)
-      '@hono/vite-dev-server': 0.17.0(hono@4.7.5)
+      '@hono/node-server': 1.14.0(hono@4.7.6)
+      '@hono/node-ws': 1.1.1(@hono/node-server@1.14.0(hono@4.7.6))(bufferutil@4.0.9)(hono@4.7.6)(utf-8-validate@5.0.10)
+      '@hono/vite-dev-server': 0.19.0(hono@4.7.6)
       '@react-router/dev': 7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0)
       '@types/react': 19.0.2
-      hono: 4.7.5
+      hono: 4.7.6
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       vite: 6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)
     transitivePeerDependencies:

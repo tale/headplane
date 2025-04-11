@@ -1,66 +1,117 @@
 package util
 
 import (
-	"log"
+	"encoding/json"
+	"fmt"
 	"os"
+	"strings"
 	"sync"
+	"time"
 )
 
-type Logger struct {
-	debug *log.Logger
-	info  *log.Logger
-	error *log.Logger
+type LogLevel string
+
+const (
+	LevelInfo  LogLevel = "info"
+	LevelDebug LogLevel = "debug"
+	LevelError LogLevel = "error"
+	LevelFatal LogLevel = "fatal"
+	LevelMsg   LogLevel = "msg"
+)
+
+type LogMessage struct {
+	Level   LogLevel
+	Time    string
+	Message any
 }
 
-var lock = &sync.Mutex{}
-var logger *Logger
+type Logger struct {
+	debugEnabled bool
+	encoder      *json.Encoder
+	pool         *sync.Pool
+}
+
+var logger = NewLogger()
 
 func GetLogger() *Logger {
-	if logger == nil {
-		lock.Lock()
-		defer lock.Unlock()
-		if logger == nil {
-			logger = NewLogger()
-		}
-	}
-
 	return logger
 }
 
 func NewLogger() *Logger {
-	// Create a new Logger for stdout and stderr
-	// Errors still go to both stdout and stderr
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetEscapeHTML(false)
+
 	return &Logger{
-		debug: nil,
-		info:  log.New(os.Stdout, "[INFO] ", log.LstdFlags),
-		error: log.New(os.Stderr, "[ERROR] ", log.LstdFlags),
+		encoder: enc,
+		pool: &sync.Pool{
+			New: func() any {
+				return &LogMessage{}
+			},
+		},
 	}
 }
 
-func (logger *Logger) SetDebug(debug bool) {
-	if debug {
-		logger.Info("Enabling Debug logging for headplane-agent")
-		logger.Info("Be careful, this will spam a lot of information")
-		logger.debug = log.New(os.Stdout, "[DEBUG] ", log.LstdFlags)
-	} else {
-		logger.debug = nil
+func (l *Logger) SetDebug(enabled bool) {
+	if enabled {
+		l.debugEnabled = true
+		l.Info("Enabling Debug logging for headplane-agent")
+		l.Info("Be careful, this will spam a lot of information")
 	}
 }
 
-func (logger *Logger) Info(fmt string, v ...any) {
-	logger.info.Printf(fmt, v...)
-}
+func (l *Logger) log(level LogLevel, format string, v ...any) {
+	msg := fmt.Sprintf(format, v...)
+	timestamp := time.Now().Format(time.RFC3339)
 
-func (logger *Logger) Debug(fmt string, v ...any) {
-	if logger.debug != nil {
-		logger.debug.Printf(fmt, v...)
+	// Manually construct compact JSON line for performance
+	line := `{"Level":"` + string(level) +
+		`","Time":"` + timestamp +
+		`","Message":"` + escapeString(msg) + `"}` + "\n"
+
+	if level == LevelError || level == LevelFatal {
+		os.Stderr.WriteString(line)
+	}
+
+	// Always write to stdout but also write to stderr for errors
+	os.Stdout.WriteString(line)
+	if level == LevelFatal {
+		os.Exit(1)
 	}
 }
 
-func (logger *Logger) Error(fmt string, v ...any) {
-	logger.error.Printf(fmt, v...)
+func (l *Logger) Debug(format string, v ...any) {
+	if l.debugEnabled {
+		l.log(LevelDebug, format, v...)
+	}
 }
 
-func (logger *Logger) Fatal(fmt string, v ...any) {
-	logger.error.Fatalf(fmt, v...)
+func (l *Logger) Info(format string, v ...any)  { l.log(LevelInfo, format, v...) }
+func (l *Logger) Error(format string, v ...any) { l.log(LevelError, format, v...) }
+func (l *Logger) Fatal(format string, v ...any) { l.log(LevelFatal, format, v...) }
+
+func (l *Logger) Msg(obj any) {
+	entry := l.pool.Get().(*LogMessage)
+	defer l.pool.Put(entry)
+
+	entry.Level = LevelMsg
+	entry.Time = time.Now().Format(time.RFC3339)
+	entry.Message = obj
+
+	// Because the encoder is tied to STDOUT we get a message
+	_ = l.encoder.Encode(entry)
+
+	// Reset the entry for reuse
+	entry.Level = ""
+	entry.Time = ""
+	entry.Message = nil
+}
+
+func escapeString(s string) string {
+	replacer := strings.NewReplacer(
+		`"`, `\"`,
+		`\`, `\\`,
+		"\n", `\n`,
+		"\t", `\t`,
+	)
+	return replacer.Replace(s)
 }

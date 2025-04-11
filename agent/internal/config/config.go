@@ -8,8 +8,7 @@ type Config struct {
 	Hostname     string
 	TSControlURL string
 	TSAuthKey    string
-	HPControlURL string
-	HPAuthKey    string
+	WorkDir      string
 }
 
 const (
@@ -17,8 +16,7 @@ const (
 	HostnameEnv     = "HEADPLANE_AGENT_HOSTNAME"
 	TSControlURLEnv = "HEADPLANE_AGENT_TS_SERVER"
 	TSAuthKeyEnv    = "HEADPLANE_AGENT_TS_AUTHKEY"
-	HPControlURLEnv = "HEADPLANE_AGENT_HP_SERVER"
-	HPAuthKeyEnv    = "HEADPLANE_AGENT_HP_AUTHKEY"
+	WorkDirEnv      = "HEADPLANE_AGENT_WORK_DIR"
 )
 
 // Load reads the agent configuration from environment variables.
@@ -28,8 +26,7 @@ func Load() (*Config, error) {
 		Hostname:     os.Getenv(HostnameEnv),
 		TSControlURL: os.Getenv(TSControlURLEnv),
 		TSAuthKey:    os.Getenv(TSAuthKeyEnv),
-		HPControlURL: os.Getenv(HPControlURLEnv),
-		HPAuthKey:    os.Getenv(HPAuthKeyEnv),
+		WorkDir:      os.Getenv(WorkDirEnv),
 	}
 
 	if os.Getenv(DebugEnv) == "true" {
@@ -41,10 +38,6 @@ func Load() (*Config, error) {
 	}
 
 	if err := validateTSReady(c); err != nil {
-		return nil, err
-	}
-
-	if err := validateHPReady(c); err != nil {
 		return nil, err
 	}
 
