@@ -66,8 +66,10 @@ export async function loader({
 		magic,
 		server: context.config.headscale.url,
 		publicServer: context.config.headscale.public_url,
-		agents: context.agents?.tailnetIDs(),
-		stats: context.agents?.lookup(machines.nodes.map((node) => node.nodeKey)),
+		agent: context.agents?.agentID(),
+		stats: await context.agents?.lookup(
+			machines.nodes.map((node) => node.nodeKey),
+		),
 		writable: writablePermission,
 		preAuth: await context.sessions.check(
 			request,
@@ -129,7 +131,7 @@ export default function Page() {
 							</div>
 						</th>
 						{/* We only want to show the version column if there are agents */}
-						{data.agents !== undefined ? (
+						{data.agent !== undefined ? (
 							<th className="uppercase text-xs font-bold pb-2">Version</th>
 						) : undefined}
 						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
@@ -152,7 +154,7 @@ export default function Page() {
 							magic={data.magic}
 							// If we pass undefined, the column will not be rendered
 							// This is useful for when there are no agents configured
-							isAgent={data.agents?.includes(machine.id)}
+							isAgent={data.agent === machine.nodeKey}
 							stats={data.stats?.[machine.nodeKey]}
 							isDisabled={
 								data.writable

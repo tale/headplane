@@ -16,16 +16,12 @@ func validateRequired(config *Config) error {
 		return fmt.Errorf("%s is required", TSControlURLEnv)
 	}
 
-	if config.HPControlURL == "" {
-		return fmt.Errorf("%s is required", HPControlURLEnv)
-	}
-
 	if config.TSAuthKey == "" {
 		return fmt.Errorf("%s is required", TSAuthKeyEnv)
 	}
 
-	if config.HPAuthKey == "" {
-		return fmt.Errorf("%s is required", HPAuthKeyEnv)
+	if config.WorkDir == "" {
+		return fmt.Errorf("%s is required", WorkDirEnv)
 	}
 
 	return nil
@@ -46,26 +42,6 @@ func validateTSReady(config *Config) error {
 
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Failed to connect to TS control server: %s", resp.Status)
-	}
-
-	return nil
-}
-
-// Pings the Headplane server to make sure it's up and running
-func validateHPReady(config *Config) error {
-	testURL := config.HPControlURL
-	if strings.HasSuffix(testURL, "/") {
-		testURL = testURL[:len(testURL)-1]
-	}
-
-	testURL = fmt.Sprintf("%s/healthz", testURL)
-	resp, err := http.Get(testURL)
-	if err != nil {
-		return fmt.Errorf("Failed to connect to HP control server: %s", err)
-	}
-
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Failed to connect to HP control server: %s", resp.Status)
 	}
 
 	return nil
