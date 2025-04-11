@@ -43,8 +43,34 @@ headscale:
   config_strict: true
 
 # Integration configurations for Headplane to interact with Headscale
-# Only one of these should be enabled at a time or you will get errors
 integration:
+  # The Headplane agent allows retrieving information about nodes
+  # This allows the UI to display version, OS, and connectivity data
+  # You will see the Headplane agent in your Tailnet as a node when
+  # it connects.
+  enabled: false
+  # To connect to your Tailnet, you need to generate a pre-auth key
+  # This can be done via the web UI or through the `headscale` CLI.
+  pre_authkey: "<your-preauth-key>"
+  # Optionally change the name of the agent in the Tailnet.
+  # host_name: "headplane-agent"
+
+  # Configure different caching settings. By default, the agent will store
+  # caches in the path below for a maximum of 1 minute. If you want data
+  # to update faster, reduce the TTL, but this will increase the frequency
+  # of requests to Headscale.
+  # cache_ttl: 60
+  # cache_path: /var/lib/headplane/agent_cache.json
+
+  # Do not change this unless you are running a custom deployment.
+  # The work_dir represents where the agent will store its data to be able
+  # to automatically reauthenticate with your Tailnet. It needs to be
+  # writable by the user running the Headplane process.
+  # work_dir: "/var/lib/headplane/agent"
+
+  # Only one of these should be enabled at a time or you will get errors
+  # This does not include the agent integration (above), which can be enabled
+  # at the same time as any of these and is recommended for the best experience.
   docker:
     enabled: false
     # Preferred method: use container_label to dynamically discover the Headscale container.

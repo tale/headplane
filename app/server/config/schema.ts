@@ -1,22 +1,26 @@
 import { type } from 'arktype';
 
-const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
+const stringToBool = type('string | boolean').pipe((v) => {
+	if (typeof v === 'string') {
+		if (v === '1' || v === 'true' || v === 'yes') {
+			return true;
+		}
+
+		if (v === '0' || v === 'false' || v === 'no') {
+			return false;
+		}
+
+		throw new Error(`Invalid string value for boolean: ${v}`);
+	}
+
+	return Boolean(v);
+});
+
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
-	agent: type({
-		authkey: 'string = ""',
-		ttl: 'number.integer = 180000', // Default to 3 minutes
-		cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
-	})
-		.onDeepUndeclaredKey('reject')
-		.default(() => ({
-			authkey: '',
-			ttl: 180000,
-			cache_path: '/var/lib/headplane/agent_cache.json',
-		})),
 });
 
 const oidcConfig = type({
@@ -46,6 +50,16 @@ const containerLabel = type({
 	value: 'string',
 }).optional();
 
+const agentConfig = type({
+	enabled: stringToBool.default(false),
+	host_name: 'string = "headplane-agent"',
+	pre_authkey: 'string = ""',
+	cache_ttl: 'number.integer = 180000',
+	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
+	executable_path: 'string = "/usr/libexec/headplane/agent"',
+	work_dir: 'string = "/var/lib/headplane/agent"',
+});
+
 const dockerConfig = type({
 	enabled: stringToBool,
 	container_name: 'string',
@@ -67,12 +81,14 @@ const integrationConfig = type({
 	'docker?': dockerConfig,
 	'kubernetes?': kubernetesConfig,
 	'proc?': procConfig,
+	'agent?': agentConfig,
 }).onDeepUndeclaredKey('reject');
 
 const partialIntegrationConfig = type({
 	'docker?': dockerConfig.partial(),
 	'kubernetes?': kubernetesConfig.partial(),
 	'proc?': procConfig.partial(),
+	'agent?': agentConfig.partial(),
 }).partial();
 
 export const headplaneConfig = type({
