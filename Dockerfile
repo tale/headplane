@@ -26,6 +26,7 @@ FROM node:22-alpine
 RUN apk add --no-cache ca-certificates
 RUN mkdir -p /var/lib/headplane
 RUN mkdir -p /usr/libexec/headplane
+RUN mkdir -p /var/lib/headplane/agent
 
 WORKDIR /app
 COPY --from=build /app/build /app/build
