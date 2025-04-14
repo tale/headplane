@@ -6,7 +6,7 @@ export default [
 	route('/healthz', 'routes/util/healthz.ts'),
 
 	// Authentication Routes
-	route('/login', 'routes/auth/login.tsx'),
+	route('/login', 'routes/auth/login/page.tsx'),
 	route('/logout', 'routes/auth/logout.ts'),
 	route('/oidc/callback', 'routes/auth/oidc-callback.ts'),
 	route('/oidc/start', 'routes/auth/oidc-start.ts'),
