@@ -2,7 +2,7 @@
 	"name": "headplane",
 	"private": true,
 	"sideEffects": false,
-	"version": "0.5.10",
+	"version": "0.6.0",
 	"type": "module",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",

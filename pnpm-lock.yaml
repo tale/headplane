@@ -9,7 +9,7 @@ patchedDependencies:
     hash: 915164bae9a5d47bb0e7edf0cbbc4c7f0fedb1a2f9a5f6ef5c53d8fef6856211
     path: patches/@shopify__lang-jsonc@1.0.0.patch
   react-router-hono-server:
-    hash: 99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3
+    hash: 6549978df41006e07f1335bfe4ca86224ea36ed40d3f08dfef33143bad54005c
     path: patches/react-router-hono-server.patch
 
 importers:
@@ -108,7 +108,7 @@ importers:
         version: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-router-hono-server:
         specifier: ^2.13.0
-        version: 2.13.0(patch_hash=99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
+        version: 2.13.0(patch_hash=6549978df41006e07f1335bfe4ca86224ea36ed40d3f08dfef33143bad54005c)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))
       react-stately:
         specifier: ^3.35.0
         version: 3.35.0(react@19.0.0)
@@ -6232,7 +6232,7 @@ snapshots:
       react-dom: 19.0.0(react@19.0.0)
       react-router: 7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  react-router-hono-server@2.13.0(patch_hash=99b0b196753142b8bd30e3d98d42462fbea5d06cebfd17d820b073e7ec51e6c3)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
+  react-router-hono-server@2.13.0(patch_hash=6549978df41006e07f1335bfe4ca86224ea36ed40d3f08dfef33143bad54005c)(@react-router/dev@7.4.0(@types/node@22.10.7)(jiti@1.21.7)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(terser@5.39.0)(tsx@4.19.2)(typescript@5.8.2)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0))(yaml@2.7.0))(@types/react@19.0.2)(bufferutil@4.0.9)(react-router@7.4.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(utf-8-validate@5.0.10)(vite@6.2.2(@types/node@22.10.7)(jiti@1.21.7)(terser@5.39.0)(tsx@4.19.2)(yaml@2.7.0)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
       '@hono/node-server': 1.14.0(hono@4.7.6)

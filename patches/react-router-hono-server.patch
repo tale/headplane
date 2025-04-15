@@ -1,23 +1,8 @@
-diff --git a/dist/adapters/node.d.ts b/dist/adapters/node.d.ts
-index 0108a13ac57e67858f2f91d05f22a4f81fc57508..dcbf308e17d8df6900e8b764d3e4d2e3e99deccc 100644
---- a/dist/adapters/node.d.ts
-+++ b/dist/adapters/node.d.ts
-@@ -51,6 +51,10 @@ interface HonoNodeServerOptions<E extends Env = BlankEnv> extends HonoServerOpti
-     /**
-      * Callback executed just after `serve` from `@hono/node-server`
-      */
-+    /**
-+     * Customize the hostname of the node server
-+     */
-+    hostname?: string;
-     onServe?: (server: ServerType) => void;
-     /**
-      * The Node.js Adapter rewrites the global Request/Response and uses a lightweight Request/Response to improve performance.
 diff --git a/dist/adapters/node.js b/dist/adapters/node.js
-index 966604f94ca8528b684ef95fe7891c2e6352561b..56eb6650d00b047163377b9e9017b9c5f31b1fa9 100644
+index 966604f94ca8528b684ef95fe7891c2e6352561b..8222cf31333668f8c2ebe65986b6ab9a3711b587 100644
 --- a/dist/adapters/node.js
 +++ b/dist/adapters/node.js
-@@ -46,16 +46,24 @@ async function createHonoServer(options) {
+@@ -46,16 +46,25 @@ async function createHonoServer(options) {
    }
    await mergedOptions.beforeAll?.(app);
    app.use(
@@ -32,6 +17,7 @@ index 966604f94ca8528b684ef95fe7891c2e6352561b..56eb6650d00b047163377b9e9017b9c5
 +      rewriteRequestPath: path => path.replace(__PREFIX__, "/")
 +    })
    );
++  app.use(__PREFIX__, (c) => c.redirect(`${__PREFIX__}/`));
    app.use(
 -    "*",
 +    `${__PREFIX__}/*`,
