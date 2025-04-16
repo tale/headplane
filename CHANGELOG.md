@@ -5,6 +5,11 @@
 	- The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
 	- Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
 - The Pre-Auth keys page has been fully reworked (closes [#179](https://github.com/tale/headplane/issues/179), [#143](https://github.com/tale/headplane/issues/143)).
+- The Headplane agent is now available as an integration (closes [#65](https://github.com/tale/headplane/issues/65)).
+	- The agent runs as an embedded process alongside the Headplane server and reports host information and system metrics.
+	- Refer to the `integrations.agent` section of the config file for more information and how to enable it.
+- Requests to `/admin` will now be redirected to `/admin/` to prevent issues with the React Router (works with custom prefixes, closes [#173](https://github.com/tale/headplane/issues/173)).
+- The Login page has been simplified and separately reports errors versus incorrect API keys (closes [#186](https://github.com/tale/headplane/issues/186)).
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
