@@ -30,14 +30,13 @@ export default function NewMachine(data: NewMachineProps) {
 						<Code isCopyable>tailscale up --login-server={data.server}</Code> on
 						your device.
 					</Dialog.Text>
-					<input type="hidden" name="_method" value="register" />
-					<input type="hidden" name="id" value="_" />
+					<input type="hidden" name="action_id" value="register" />
 					<Input
 						isRequired
 						label="Machine Key"
 						placeholder="AbCd..."
 						validationBehavior="native"
-						name="mkey"
+						name="register_key"
 						onChange={setMkey}
 					/>
 					<Select

@@ -33,8 +33,8 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 					</Link>{' '}
 					for more information.
 				</Dialog.Text>
-				<input type="hidden" name="_method" value="tags" />
-				<input type="hidden" name="id" value={machine.id} />
+				<input type="hidden" name="action_id" value="update_tags" />
+				<input type="hidden" name="node_id" value={machine.id} />
 				<input type="hidden" name="tags" value={tags.join(',')} />
 				<TableList className="mt-4">
 					{tags.length === 0 ? (
