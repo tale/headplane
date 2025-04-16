@@ -17,11 +17,11 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
 				<Dialog.Text>
 					The owner of the machine is the user associated with it.
 				</Dialog.Text>
-				<input type="hidden" name="_method" value="move" />
-				<input type="hidden" name="id" value={machine.id} />
+				<input type="hidden" name="action_id" value="reassign" />
+				<input type="hidden" name="node_id" value={machine.id} />
 				<Select
 					label="Owner"
-					name="to"
+					name="user"
 					placeholder="Select a user"
 					defaultSelectedKey={machine.user.id}
 				>
