@@ -78,9 +78,9 @@ export default function Routes({
 								label="Enabled"
 								onChange={(checked) => {
 									const form = new FormData();
-									form.set('id', machine.id);
-									form.set('_method', 'routes');
-									form.set('route', route.id);
+									form.set('action_id', 'update_routes');
+									form.set('node_id', machine.id);
+									form.set('routes', [route.id].join(','));
 
 									form.set('enabled', String(checked));
 									fetcher.submit(form, {
@@ -115,8 +115,8 @@ export default function Routes({
 								label="Enabled"
 								onChange={(checked) => {
 									const form = new FormData();
-									form.set('id', machine.id);
-									form.set('_method', 'exit-node');
+									form.set('action_id', 'update_routes');
+									form.set('node_id', machine.id);
 									form.set('routes', exit.map((route) => route.id).join(','));
 
 									form.set('enabled', String(checked));
