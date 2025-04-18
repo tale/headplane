@@ -10,7 +10,7 @@ export interface Machine {
 
 	user: User;
 	lastSeen: string;
-	expiry: string;
+	expiry: string | null;
 
 	preAuthKey?: unknown; // TODO
 
