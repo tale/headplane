@@ -27,8 +27,8 @@ export default function Rename({
 					This name is shown in the admin panel, in Tailscale clients, and used
 					when generating MagicDNS names.
 				</Dialog.Text>
-				<input type="hidden" name="_method" value="rename" />
-				<input type="hidden" name="id" value={machine.id} />
+				<input type="hidden" name="action_id" value="rename" />
+				<input type="hidden" name="node_id" value={machine.id} />
 				<Input
 					label="Machine name"
 					placeholder="Machine name"

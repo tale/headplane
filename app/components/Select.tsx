@@ -78,7 +78,9 @@ function Select(props: SelectProps) {
 					className={cn(
 						'flex items-center justify-center p-1 rounded-lg m-1',
 						'bg-headplane-100 dark:bg-headplane-700/30 font-medium',
-						'hover:bg-headplane-200/90 dark:hover:bg-headplane-800/30',
+						props.isDisabled
+							? 'opacity-50 cursor-not-allowed'
+							: 'hover:bg-headplane-200/90 dark:hover:bg-headplane-800/30',
 					)}
 				>
 					<ChevronDown className="p-0.5" />
