@@ -63,8 +63,8 @@ export default function MachineRow({
 					>
 						{node.givenName}
 					</p>
-					<p className="text-sm font-mono opacity-50">{node.name}</p>
-					<div className="flex gap-1 mt-1">
+					<p className="text-sm opacity-50">{node.user.name}</p>
+					<div className="flex gap-1 mt-1.5">
 						{mapTagsToComponents(node, uiTags)}
 						{node.validTags.map((tag) => (
 							<Chip key={tag} text={tag} />
