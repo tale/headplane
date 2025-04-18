@@ -2,6 +2,7 @@ import { CheckCircle, CircleSlash, Info, UserCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { Link as RemixLink, useLoaderData } from 'react-router';
+import { mapTag } from 'yaml/util';
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
@@ -12,6 +13,8 @@ import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
+import { mapNodes } from '~/utils/node-info';
+import { mapTagsToComponents, uiTagsForNode } from './components/machine-row';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 import { machineAction } from './machine-actions';
@@ -33,7 +36,7 @@ export async function loader({
 		}
 	}
 
-	const [machine, routes, users] = await Promise.all([
+	const [machine, { routes }, { users }] = await Promise.all([
 		context.client.get<{ node: Machine }>(
 			`v1/node/${params.id}`,
 			session.get('api_key')!,
@@ -45,16 +48,13 @@ export async function loader({
 		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
+	const [node] = mapNodes([machine.node], routes);
+
 	return {
-		machine: machine.node,
-		routes: routes.routes.filter((route) => route.node.id === params.id),
-		users: users.users,
+		node,
+		users,
 		magic,
-		// TODO: Fix agent
-		agent: false,
-		// agent: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()].includes(
-		// 	machine.node.id,
-		// ),
+		agent: context.agents?.agentID(),
 	};
 }
 
@@ -63,62 +63,13 @@ export async function action(request: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { machine, magic, routes, users, agent } =
-		useLoaderData<typeof loader>();
+	const { node, magic, users, agent } = useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
 
-	const expired =
-		machine.expiry === '0001-01-01 00:00:00' ||
-		machine.expiry === '0001-01-01T00:00:00Z' ||
-		machine.expiry === null
-			? false
-			: new Date(machine.expiry).getTime() < Date.now();
-
-	const tags = [...new Set([...machine.forcedTags, ...machine.validTags])];
-
-	if (expired) {
-		tags.unshift('Expired');
-	}
-
-	if (agent) {
-		tags.unshift('Headplane Agent');
-	}
-
-	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet, subnetApproved } = routes.reduce<{
-		exit: Route[];
-		subnet: Route[];
-		subnetApproved: Route[];
-	}>(
-		(acc, route) => {
-			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
-				acc.exit.push(route);
-				return acc;
-			}
-
-			if (route.enabled) {
-				acc.subnetApproved.push(route);
-				return acc;
-			}
-
-			acc.subnet.push(route);
-			return acc;
-		},
-		{ exit: [], subnetApproved: [], subnet: [] },
-	);
-
-	const exitEnabled = useMemo(() => {
-		if (exit.length !== 2) return false;
-		return exit[0].enabled && exit[1].enabled;
-	}, [exit]);
-
-	if (exitEnabled) {
-		tags.unshift('Exit Node');
-	}
-
-	if (subnetApproved.length > 0) {
-		tags.unshift('Subnets');
-	}
+	const uiTags = useMemo(() => {
+		const tags = uiTagsForNode(node, agent === node.nodeKey);
+		return tags;
+	}, [node, agent]);
 
 	return (
 		<div>
@@ -127,7 +78,7 @@ export default function Page() {
 					All Machines
 				</RemixLink>
 				<span className="mx-2">/</span>
-				{machine.givenName}
+				{node.givenName}
 			</p>
 			<div
 				className={cn(
@@ -136,17 +87,10 @@ export default function Page() {
 				)}
 			>
 				<span className="flex items-baseline gap-x-4 text-sm">
-					<h1 className="text-2xl font-medium">{machine.givenName}</h1>
-					<StatusCircle isOnline={machine.online} className="w-4 h-4" />
+					<h1 className="text-2xl font-medium">{node.givenName}</h1>
+					<StatusCircle isOnline={node.online} className="w-4 h-4" />
 				</span>
-
-				<MenuOptions
-					isFullButton
-					machine={machine}
-					routes={routes}
-					users={users}
-					magic={magic}
-				/>
+				<MenuOptions isFullButton node={node} users={users} magic={magic} />
 			</div>
 			<div className="flex gap-1 mb-4">
 				<div className="border-r border-headplane-100 dark:border-headplane-800 p-2 pr-4">
@@ -161,29 +105,23 @@ export default function Page() {
 					</span>
 					<div className="flex items-center gap-x-2.5 mt-1">
 						<UserCircle />
-						{machine.user.name}
+						{node.user.name}
 					</div>
 				</div>
-				{tags.length > 0 ? (
-					<div className="p-2 pl-4">
-						<p className="text-sm text-headplane-600 dark:text-headplane-300">
-							Status
-						</p>
-						<div className="flex gap-1 mt-1 mb-8">
-							{tags.map((tag) => (
-								<Chip key={tag} text={tag} />
-							))}
-						</div>
+				<div className="p-2 pl-4">
+					<p className="text-sm text-headplane-600 dark:text-headplane-300">
+						Status
+					</p>
+					<div className="flex gap-1 mt-1 mb-8">
+						{mapTagsToComponents(node, uiTags)}
+						{node.validTags.map((tag) => (
+							<Chip key={tag} text={tag} />
+						))}
 					</div>
-				) : undefined}
+				</div>
 			</div>
 			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
-			<Routes
-				machine={machine}
-				routes={routes}
-				isOpen={showRouting}
-				setIsOpen={setShowRouting}
-			/>
+			<Routes node={node} isOpen={showRouting} setIsOpen={setShowRouting} />
 			<div className="flex items-center justify-between mb-4">
 				<p>
 					Subnets let you expose physical network routes onto Tailscale.{' '}
@@ -214,11 +152,11 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{subnetApproved.length === 0 ? (
+						{node.customRouting.subnetApprovedRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
 						) : (
 							<ul className="leading-normal">
-								{subnetApproved.map((route) => (
+								{node.customRouting.subnetApprovedRoutes.map((route) => (
 									<li key={route.id}>{route.prefix}</li>
 								))}
 							</ul>
@@ -246,11 +184,11 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{subnet.length === 0 ? (
+						{node.customRouting.subnetWaitingRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
 						) : (
 							<ul className="leading-normal">
-								{subnet.map((route) => (
+								{node.customRouting.subnetWaitingRoutes.map((route) => (
 									<li key={route.id}>{route.prefix}</li>
 								))}
 							</ul>
@@ -277,9 +215,9 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{exit.length === 0 ? (
+						{node.customRouting.exitRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
-						) : exitEnabled ? (
+						) : node.customRouting.exitApproved ? (
 							<span className="flex items-center gap-x-1">
 								<CheckCircle className="w-3.5 h-3.5 text-green-700" />
 								Allowed
@@ -304,31 +242,35 @@ export default function Page() {
 			</Card>
 			<h2 className="text-xl font-medium mb-4">Machine Details</h2>
 			<Card variant="flat" className="w-full max-w-full">
-				<Attribute name="Creator" value={machine.user.name} />
-				<Attribute name="Node ID" value={machine.id} />
-				<Attribute name="Node Name" value={machine.givenName} />
-				<Attribute name="Hostname" value={machine.name} />
-				<Attribute isCopyable name="Node Key" value={machine.nodeKey} />
+				<Attribute name="Creator" value={node.user.name} />
+				<Attribute name="Node ID" value={node.id} />
+				<Attribute name="Node Name" value={node.givenName} />
+				<Attribute name="Hostname" value={node.name} />
+				<Attribute isCopyable name="Node Key" value={node.nodeKey} />
 				<Attribute
 					suppressHydrationWarning
 					name="Created"
-					value={new Date(machine.createdAt).toLocaleString()}
+					value={new Date(node.createdAt).toLocaleString()}
 				/>
 				<Attribute
 					suppressHydrationWarning
 					name="Last Seen"
-					value={new Date(machine.lastSeen).toLocaleString()}
+					value={new Date(node.lastSeen).toLocaleString()}
 				/>
 				<Attribute
 					suppressHydrationWarning
 					name="Expiry"
-					value={expired ? new Date(machine.expiry).toLocaleString() : 'Never'}
+					value={
+						node.expiry !== null
+							? new Date(node.expiry).toLocaleString()
+							: 'Never'
+					}
 				/>
 				{magic ? (
 					<Attribute
 						isCopyable
 						name="Domain"
-						value={`${machine.givenName}.${magic}`}
+						value={`${node.givenName}.${magic}`}
 					/>
 				) : undefined}
 			</Card>

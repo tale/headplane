@@ -11,6 +11,8 @@
 - Requests to `/admin` will now be redirected to `/admin/` to prevent issues with the React Router (works with custom prefixes, closes [#173](https://github.com/tale/headplane/issues/173)).
 - The Login page has been simplified and separately reports errors versus incorrect API keys (closes [#186](https://github.com/tale/headplane/issues/186)).
 - The machine actions backend has been reworked to better handle errors and provide more information to the user (closes [#185](https://github.com/tale/headplane/issues/185)).
+- Machine tags now show states when waiting for subnet or exit node approval and when expiry is disabled.
+- Expiry status on the UI was incorrectly showing as never due to changes in the Headscale API.
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
