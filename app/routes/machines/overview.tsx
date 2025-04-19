@@ -151,7 +151,7 @@ export default function Page() {
 							node={machine}
 							users={data.users}
 							magic={data.magic}
-							isAgent={data.agent === machine.nodeKey}
+							isAgent={data.agent ? data.agent === machine.nodeKey : undefined}
 							isDisabled={
 								data.writable
 									? false // If the user has write permissions, they can edit all machines
