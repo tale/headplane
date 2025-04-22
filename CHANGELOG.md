@@ -13,6 +13,7 @@
 - The machine actions backend has been reworked to better handle errors and provide more information to the user (closes [#185](https://github.com/tale/headplane/issues/185)).
 - Machine tags now show states when waiting for subnet or exit node approval and when expiry is disabled.
 - Expiry status on the UI was incorrectly showing as never due to changes in the Headscale API.
+- Added validation for machine renaming to prevent invalid submissions (closes [#192](https://github.com/tale/headplane/issues/192)).
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
