@@ -17,7 +17,7 @@ export default function Chip({
 	return (
 		<span
 			className={cn(
-				'h-5 text-xs py-0.5 px-1 rounded-md',
+				'h-5 text-xs py-0.5 px-1 rounded-md text-nowrap',
 				'text-headplane-700 dark:text-headplane-100',
 				'bg-headplane-100 dark:bg-headplane-700',
 				'inline-flex items-center gap-x-1',
