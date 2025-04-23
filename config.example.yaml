@@ -49,6 +49,12 @@ integration:
     enabled: false
     # The name (or ID) of the container running Headscale
     container_name: "headscale"
+    # The label that will be used to identify the container running Headscale.
+    # This can be omitted if the container name is known in advance and is not
+    # subject to changes.
+    container_label:
+      name: "workload.headscale.io/name"
+      value: "headscale"
     # The path to the Docker socket (do not change this if you are unsure)
     # Docker socket paths must start with unix:// or tcp:// and at the moment
     # https connections are not supported.

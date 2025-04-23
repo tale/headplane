@@ -6,6 +6,11 @@ import log from '~/utils/log';
 import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
+interface DockerContainer {
+	Id: string;
+	Names: string[];
+}
+
 type T = NonNullable<HeadplaneConfig['integration']>['docker'];
 export default class DockerIntegration extends Integration<T> {
 	private maxAttempts = 10;
@@ -15,13 +20,63 @@ export default class DockerIntegration extends Integration<T> {
 		return 'Docker';
 	}
 
+	async getContainerName(label: string, value: string): Promise<string> {
+		if (!this.client) {
+			throw new Error('Docker client is not initialized');
+		}
+
+		const filters = encodeURIComponent(
+			JSON.stringify({
+				label: [`${label}=${value}`],
+			}),
+		);
+		const { body } = await this.client.request({
+			method: 'GET',
+			path: `/containers/json?filters=${filters}`,
+		});
+		const containers: DockerContainer[] =
+			(await body.json()) as DockerContainer[];
+		if (containers.length > 1) {
+			throw new Error(
+				`Found multiple Docker containers matching label ${label}=${value}. Please specify a container name.`,
+			);
+		}
+		if (containers.length === 0) {
+			throw new Error(
+				`No Docker containers found matching label: ${label}=${value}`,
+			);
+		}
+		log.info(
+			'config',
+			'Found Docker container matching label: %s=%s',
+			label,
+			value,
+		);
+		return containers[0].Id;
+	}
+
 	async isAvailable() {
-		if (this.context.container_name.length === 0) {
-			log.error('config', 'Docker container name is empty');
+		// Perform a basic check to see if any of the required properties are set
+		if (
+			this.context.container_name.length === 0 &&
+			!this.context.container_label
+		) {
+			log.error('config', 'Docker container name and label are both empty');
 			return false;
 		}
 
-		log.info('config', 'Using container: %s', this.context.container_name);
+		if (
+			this.context.container_name.length > 0 &&
+			!this.context.container_label
+		) {
+			log.error(
+				'config',
+				'Docker container name and label are mutually exclusive',
+			);
+			return false;
+		}
+
+		// Verify that Docker socket is reachable
 		let url: URL | undefined;
 		try {
 			url = new URL(this.context.socket);
@@ -72,6 +127,38 @@ export default class DockerIntegration extends Integration<T> {
 				socketPath: url.pathname,
 			});
 		}
+		if (this.client === undefined) {
+			log.error('config', 'Failed to create Docker client');
+			return false;
+		}
+
+		if (this.context.container_name.length === 0) {
+			try {
+				if (this.context.container_label === undefined) {
+					log.error('config', 'Docker container label is not defined');
+					return false;
+				}
+				const containerName = await this.getContainerName(
+					this.context.container_label.name,
+					this.context.container_label.value,
+				);
+				if (containerName.length === 0) {
+					log.error(
+						'config',
+						'No Docker containers found matching label: %s=%s',
+						this.context.container_label.name,
+						this.context.container_label.value,
+					);
+					return false;
+				}
+				this.context.container_name = containerName;
+			} catch (error) {
+				log.error('config', 'Failed to get Docker container name: %s', error);
+				return false;
+			}
+		}
+
+		log.info('config', 'Using container: %s', this.context.container_name);
 
 		return this.client !== undefined;
 	}

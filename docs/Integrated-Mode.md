@@ -74,7 +74,10 @@ The Docker integration is the easiest to setup, as it only requires the Docker s
 to be mounted into the container along with some configuration. As long as Headplane
 has access to the Docker socket and the name of the Headscale container, it will
 automatically propagate config and DNS changes to Headscale without any additional
-configuration.
+configuration. Additionally, instead of specifying the name of the Headscale
+container, it is possible to use a label to dynamically deduce the container
+name. This can be useful if the container name changes frequently, or is not
+known in advance.
 
 ## Native Linux (/proc) Integration
 The `proc` integration is used when you are running Headscale and Headplane on
