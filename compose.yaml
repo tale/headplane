@@ -10,6 +10,8 @@ services:
   headscale:
     image: "headscale/headscale:0.25.1"
     container_name: "headscale"
+    labels:
+      - com.headplane.selector=headscale
     restart: "unless-stopped"
     command: "serve"
     networks:

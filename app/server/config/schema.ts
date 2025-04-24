@@ -41,10 +41,16 @@ const headscaleConfig = type({
 	config_strict: stringToBool,
 }).onDeepUndeclaredKey('reject');
 
+const containerLabel = type({
+	name: 'string',
+	value: 'string',
+}).optional();
+
 const dockerConfig = type({
 	enabled: stringToBool,
 	container_name: 'string',
 	socket: 'string = "unix:///var/run/docker.sock"',
+	container_label: containerLabel,
 });
 
 const kubernetesConfig = type({

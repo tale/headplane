@@ -70,11 +70,14 @@ you build the container yourself or run Headplane in Bare-Metal mode.
 > setting up your `config.yaml` file to the appropriate values.
 
 ## Docker Integration
-The Docker integration is the easiest to setup, as it only requires the Docker socket
-to be mounted into the container along with some configuration. As long as Headplane
-has access to the Docker socket and the name of the Headscale container, it will
-automatically propagate config and DNS changes to Headscale without any additional
-configuration.
+The Docker integration is the easiest to set up, as it only requires mounting the
+Docker socket into the container along with some basic configuration. Headplane
+uses Docker labels to discover the Headscale container. As long as Headplane has
+access to the Docker socket and can identify the Headscale container—either by
+label or name—it will automatically propagate configuration and DNS changes to
+Headscale without any additional setup. Alternatively, instead of using a label
+to dynamically determine the container name, it is possible to directly specify
+the container name.
 
 ## Native Linux (/proc) Integration
 The `proc` integration is used when you are running Headscale and Headplane on
