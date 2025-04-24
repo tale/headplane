@@ -252,7 +252,16 @@ class AgentManager {
 			await this.requestData(missing);
 		}
 
-		return entries;
+		return Object.entries(entries).reduce<Record<string, HostInfo>>(
+			(acc, [key, value]) => {
+				if (nodeIds.includes(key)) {
+					acc[key] = value;
+				}
+
+				return acc;
+			},
+			{},
+		);
 	}
 
 	// Request data from the internal agent by sending a message to the process
