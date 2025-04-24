@@ -14,6 +14,7 @@
 - Machine tags now show states when waiting for subnet or exit node approval and when expiry is disabled.
 - Expiry status on the UI was incorrectly showing as never due to changes in the Headscale API.
 - Added validation for machine renaming to prevent invalid submissions (closes [#192](https://github.com/tale/headplane/issues/192)).
+- Unmanaged (non-OIDC) users cannot have a role assigned to them so the menu option was disabled.
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
