@@ -1,23 +1,37 @@
-import { Check, Copy } from 'lucide-react';
+import { Check, Copy, Info } from 'lucide-react';
 import cn from '~/utils/cn';
 import toast from '~/utils/toast';
+import Tooltip from './Tooltip';
 
 export interface AttributeProps {
 	name: string;
 	value: string;
+	tooltip?: string;
 	isCopyable?: boolean;
 }
 
-export default function Attribute({ name, value, isCopyable }: AttributeProps) {
+export default function Attribute({
+	name,
+	value,
+	tooltip,
+	isCopyable,
+}: AttributeProps) {
 	return (
 		<dl className="flex gap-1 items-center text-sm">
 			<dt
 				className={cn(
-					'w-1/3 sm:w-1/4 lg:w-1/3 shrink-0 min-w-0 truncate',
+					'w-1/3 sm:w-1/4 lg:w-1/3 shrink-0 min-w-0',
 					'text-headplane-500 dark:text-headplane-400',
+					tooltip ? 'flex items-center gap-1' : undefined,
 				)}
 			>
 				{name}
+				{tooltip ? (
+					<Tooltip>
+						<Info className="size-4" />
+						<Tooltip.Body>{tooltip}</Tooltip.Body>
+					</Tooltip>
+				) : undefined}
 			</dt>
 			<dd
 				className={cn(
