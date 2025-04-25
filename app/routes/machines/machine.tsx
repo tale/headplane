@@ -13,6 +13,7 @@ import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import type { Machine, Route, User } from '~/types';
 import cn from '~/utils/cn';
+import { getOSInfo, getTSVersion } from '~/utils/host-info';
 import { mapNodes } from '~/utils/node-info';
 import { mapTagsToComponents, uiTagsForNode } from './components/machine-row';
 import MenuOptions from './components/menu';
@@ -49,12 +50,14 @@ export async function loader({
 	]);
 
 	const [node] = mapNodes([machine.node], routes);
+	const lookup = await context.agents?.lookup([node.nodeKey]);
 
 	return {
 		node,
 		users,
 		magic,
 		agent: context.agents?.agentID(),
+		stats: lookup?.[node.nodeKey],
 	};
 }
 
@@ -63,7 +66,7 @@ export async function action(request: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { node, magic, users, agent } = useLoaderData<typeof loader>();
+	const { node, magic, users, agent, stats } = useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
 
 	const uiTags = useMemo(() => {
@@ -120,8 +123,8 @@ export default function Page() {
 					</div>
 				</div>
 			</div>
-			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
 			<Routes node={node} isOpen={showRouting} setIsOpen={setShowRouting} />
+			<h2 className="text-xl font-medium mt-8">Subnets & Routing</h2>
 			<div className="flex items-center justify-between mb-4">
 				<p>
 					Subnets let you expose physical network routes onto Tailscale.{' '}
@@ -240,40 +243,156 @@ export default function Page() {
 					</Button>
 				</div>
 			</Card>
-			<h2 className="text-xl font-medium mb-4">Machine Details</h2>
-			<Card variant="flat" className="w-full max-w-full">
-				<Attribute name="Creator" value={node.user.name} />
-				<Attribute name="Node ID" value={node.id} />
-				<Attribute name="Node Name" value={node.givenName} />
-				<Attribute name="Hostname" value={node.name} />
-				<Attribute isCopyable name="Node Key" value={node.nodeKey} />
-				<Attribute
-					suppressHydrationWarning
-					name="Created"
-					value={new Date(node.createdAt).toLocaleString()}
-				/>
-				<Attribute
-					suppressHydrationWarning
-					name="Last Seen"
-					value={new Date(node.lastSeen).toLocaleString()}
-				/>
-				<Attribute
-					suppressHydrationWarning
-					name="Expiry"
-					value={
-						node.expiry !== null
-							? new Date(node.expiry).toLocaleString()
-							: 'Never'
-					}
-				/>
-				{magic ? (
+			<h2 className="text-xl font-medium">Machine Details</h2>
+			<p className="mb-4">
+				Information about this machine’s network. Used to debug connection
+				issues.
+			</p>
+			<Card
+				variant="flat"
+				className="w-full max-w-full grid grid-cols-1 lg:grid-cols-2 gap-y-2 sm:gap-x-12"
+			>
+				<div className="flex flex-col gap-1">
+					<Attribute name="Creator" value={node.user.name} />
+					<Attribute name="Machine name" value={node.givenName} />
+					<Attribute
+						tooltip="OS hostname is published by the machine’s operating system and is used as the default name for the machine."
+						name="OS hostname"
+						value={node.name}
+					/>
+					{stats ? (
+						<>
+							<Attribute name="OS" value={getOSInfo(stats)} />
+							<Attribute name="Tailscale version" value={getTSVersion(stats)} />
+						</>
+					) : undefined}
+					<Attribute
+						tooltip="ID for this machine. Used in the Headscale API."
+						name="ID"
+						value={node.id}
+					/>
 					<Attribute
 						isCopyable
-						name="Domain"
-						value={`${node.givenName}.${magic}`}
+						tooltip="Public key which uniquely identifies this machine."
+						name="Node key"
+						value={node.nodeKey}
 					/>
-				) : undefined}
+					<Attribute
+						name="Created"
+						value={new Date(node.createdAt).toLocaleString()}
+					/>
+					<Attribute
+						name="Last Seen"
+						value={
+							node.online
+								? 'Connected'
+								: new Date(node.lastSeen).toLocaleString()
+						}
+					/>
+					<Attribute
+						name="Key expiry"
+						value={
+							node.expiry !== null
+								? new Date(node.expiry).toLocaleString()
+								: 'Never'
+						}
+					/>
+					{magic ? (
+						<Attribute
+							isCopyable
+							name="Domain"
+							value={`${node.givenName}.${magic}`}
+						/>
+					) : undefined}
+				</div>
+				<div className="flex flex-col gap-1">
+					<p className="uppercase text-sm font-semibold opacity-75">
+						Addresses
+					</p>
+					<Attribute
+						isCopyable
+						tooltip="This machine’s IPv4 address within your tailnet (your private Tailscale network)."
+						name="Tailscale IPv4"
+						value={getIpv4Address(node.ipAddresses)}
+					/>
+					<Attribute
+						isCopyable
+						tooltip="This machine’s IPv6 address within your tailnet (your private Tailscale network). Connections within your tailnet support IPv6 even if your ISP does not."
+						name="Tailscale IPv6"
+						value={getIpv6Address(node.ipAddresses)}
+					/>
+					<Attribute
+						isCopyable
+						tooltip="Users of your tailnet can use this DNS short name to access this machine."
+						name="Short domain"
+						value={node.givenName}
+					/>
+					{magic ? (
+						<Attribute
+							isCopyable
+							tooltip="Users of your tailnet can use this DNS name to access this machine."
+							name="Full domain"
+							value={`${node.givenName}.${magic}`}
+						/>
+					) : undefined}
+					{stats ? (
+						<>
+							<p className="uppercase text-sm font-semibold opacity-75 mt-4">
+								Client Connectivity
+							</p>
+							<Attribute
+								tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."
+								name="Varies"
+								value={stats.NetInfo?.MappingVariesByDestIP ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								tooltip="Whether the machine needs to traverse NATs with hairpinning."
+								name="Hairpinning"
+								value={stats.NetInfo?.HairPinning ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="IPv6"
+								value={stats.NetInfo?.WorkingIPv6 ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="UDP"
+								value={stats.NetInfo?.WorkingUDP ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="UPnP"
+								value={stats.NetInfo?.UPnP ? 'Yes' : 'No'}
+							/>
+							<Attribute name="PCP" value={stats.NetInfo?.PCP ? 'Yes' : 'No'} />
+							<Attribute
+								name="NAT-PMP"
+								value={stats.NetInfo?.PMP ? 'Yes' : 'No'}
+							/>
+						</>
+					) : undefined}
+				</div>
 			</Card>
 		</div>
 	);
+}
+
+function getIpv4Address(addresses: string[]) {
+	for (const address of addresses) {
+		if (address.startsWith('100.')) {
+			// Return the first CGNAT address
+			return address;
+		}
+	}
+
+	return '—';
+}
+
+function getIpv6Address(addresses: string[]) {
+	for (const address of addresses) {
+		if (address.startsWith('fd')) {
+			// Return the first IPv6 address
+			return address;
+		}
+	}
+
+	return '—';
 }
