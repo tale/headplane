@@ -62,7 +62,7 @@ const agentConfig = type({
 
 const dockerConfig = type({
 	enabled: stringToBool,
-	container_name: 'string',
+	container_name: 'string = ""',
 	socket: 'string = "unix:///var/run/docker.sock"',
 	container_label: containerLabel,
 });
