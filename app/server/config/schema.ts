@@ -43,6 +43,7 @@ const headscaleConfig = type({
 	public_url: 'string.url?',
 	config_path: 'string?',
 	config_strict: stringToBool,
+	dns_records_path: 'string?',
 }).onDeepUndeclaredKey('reject');
 
 const containerLabel = type({
