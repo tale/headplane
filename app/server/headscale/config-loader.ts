@@ -1,4 +1,5 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
+import { exit } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { type } from 'arktype';
 import { Document, parseDocument } from 'yaml';
@@ -269,6 +270,23 @@ export async function loadHeadscaleConfig(
 	}
 
 	const dns = await loadHeadscaleDNS(dnsPath);
+	if (dns && !config.dns.extra_records_path) {
+		log.error(
+			'config',
+			'Using separate DNS config file but dns.extra_records_path is not set in Headscale config',
+		);
+		log.error(
+			'config',
+			'Please set `dns.extra_records_path` in the Headscale config',
+		);
+		log.error(
+			'config',
+			'Or remove `headscale.dns_records_path` from the Headplane config',
+		);
+
+		exit(1);
+	}
+
 	return new HeadscaleConfig(w ? 'rw' : 'ro', dns, config, document, path);
 }
 
