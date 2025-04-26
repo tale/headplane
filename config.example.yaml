@@ -42,6 +42,16 @@ headscale:
   # If you want to disable this validation, set this to false.
   config_strict: true
 
+  # If you are using `dns.extra_records_path` in your Headscale
+  # configuration, you need to set this to the path for Headplane
+  # to be able to read the DNS records.
+  #
+  # Pass it in if using Docker and ensure that the file is both
+  # readable and writable to the Headplane process.
+  # When using this, Headplane will no longer need to automatically
+  # restart Headscale for DNS record changes.
+  # dns_records_path: "/var/lib/headplane/extra_records.json"
+
 # Integration configurations for Headplane to interact with Headscale
 integration:
   agent:
