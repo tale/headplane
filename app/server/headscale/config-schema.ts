@@ -112,9 +112,8 @@ export const headscaleConfig = type({
 			name: 'string',
 			value: 'string',
 			type: 'string | "A"',
-		})
-			.array()
-			.default(() => []),
+		}).array(),
+		extra_records_path: 'string?',
 	},
 
 	unix_socket: 'string?',

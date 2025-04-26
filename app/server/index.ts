@@ -37,6 +37,7 @@ const appLoadContext = {
 	hs: await loadHeadscaleConfig(
 		config.headscale.config_path,
 		config.headscale.config_strict,
+		config.headscale.dns_records_path,
 	),
 
 	// TODO: Better cookie options in config

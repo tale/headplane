@@ -17,6 +17,7 @@
 - Unmanaged (non-OIDC) users cannot have a role assigned to them so the menu option was disabled.
 - Support Docker container discovery through labels (via [#194](https://github.com/tale/headplane/pull/194)).
 - AAAA records are now supported on the DNS page (closes [#189](https://github.com/tale/headplane/issues/189)).
+- Add support for `dns.extra_records_path` in the Headscale config (closes [#144](https://github.com/tale/headplane/issues/144)).
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
