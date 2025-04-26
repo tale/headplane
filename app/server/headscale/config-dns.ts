@@ -77,7 +77,7 @@ export class HeadscaleDNSConfig {
 
 export async function loadHeadscaleDNS(path?: string) {
 	if (!path) {
-		return new HeadscaleDNSConfig('no');
+		return;
 	}
 
 	log.debug('config', 'Loading Headscale DNS configuration file: %s', path);
