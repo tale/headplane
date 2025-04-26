@@ -44,6 +44,10 @@ services:
       # This should match headscale.config_path in your config.yaml
       - './headscale-config/config.yaml:/etc/headscale/config.yaml'
 
+      # If using dns.extra_records in Headscale (recommended), this should
+      # match the headscale.dns_records_path in your config.yaml
+      - './headscale-config/dns_records.json:/etc/headscale/dns_records.json'
+
       # Headplane stores its data in this directory
       - './headplane-data:/var/lib/headplane'
 
