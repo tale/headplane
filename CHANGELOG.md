@@ -16,6 +16,7 @@
 - Added validation for machine renaming to prevent invalid submissions (closes [#192](https://github.com/tale/headplane/issues/192)).
 - Unmanaged (non-OIDC) users cannot have a role assigned to them so the menu option was disabled.
 - Support Docker container discovery through labels (via [#194](https://github.com/tale/headplane/pull/194)).
+- AAAA records are now supported on the DNS page (closes [#189](https://github.com/tale/headplane/issues/189)).
 
 ### 0.5.10 (April 4, 2025)
 - Fix an issue where other preferences to skip onboarding affected every user.
