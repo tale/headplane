@@ -2,9 +2,10 @@ import { useMemo, useState } from 'react';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
+import Select from '~/components/Select';
 
 interface Props {
-	records: { name: string; type: 'A' | string; value: string }[];
+	records: { name: string; type: 'A' | 'AAAA' | string; value: string }[];
 }
 
 export default function AddRecord({ records }: Props) {
@@ -29,7 +30,15 @@ export default function AddRecord({ records }: Props) {
 				</Dialog.Text>
 				<div className="flex flex-col gap-2 mt-4">
 					<input type="hidden" name="action_id" value="add_record" />
-					<input type="hidden" name="record_type" value="A" />
+					<Select
+						isRequired
+						label="Record Type"
+						name="record_type"
+						defaultInputValue="A"
+					>
+						<Select.Item key="A">A</Select.Item>
+						<Select.Item key="AAAA">AAAA</Select.Item>
+					</Select>
 					<Input
 						isRequired
 						label="Domain"

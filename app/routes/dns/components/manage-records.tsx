@@ -38,8 +38,8 @@ export default function ManageRecords({ records, isDisabled }: Props) {
 									<div className="flex gap-4 items-center">
 										<p
 											className={cn(
-												'font-mono text-sm font-bold py-1 px-2 rounded-md',
-												'bg-headplane-100 dark:bg-headplane-700/30',
+												'font-mono text-sm font-bold py-1 px-2 rounded-md text-center',
+												'bg-headplane-100 dark:bg-headplane-700/30 min-w-12',
 											)}
 										>
 											{record.type}
