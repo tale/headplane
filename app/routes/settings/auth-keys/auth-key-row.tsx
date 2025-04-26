@@ -22,12 +22,8 @@ export default function AuthKeyRow({ authKey, user, url }: Props) {
 			<Attribute name="Reusable" value={authKey.reusable ? 'Yes' : 'No'} />
 			<Attribute name="Ephemeral" value={authKey.ephemeral ? 'Yes' : 'No'} />
 			<Attribute name="Used" value={authKey.used ? 'Yes' : 'No'} />
-			<Attribute suppressHydrationWarning name="Created" value={createdAt} />
-			<Attribute
-				suppressHydrationWarning
-				name="Expiration"
-				value={expiration}
-			/>
+			<Attribute name="Created" value={createdAt} />
+			<Attribute name="Expiration" value={expiration} />
 			<p className="mb-1 mt-4">
 				To use this key, run the following command on your device:
 			</p>
