@@ -39,7 +39,7 @@ export default class ProcIntegration extends Integration<T> {
 				try {
 					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
-				  if (isHeadscaleServeCmd(data)) {
+					if (isHeadscaleServeCmd(data)) {
 						return pid;
 					}
 				} catch (error) {
