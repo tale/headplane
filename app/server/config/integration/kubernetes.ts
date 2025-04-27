@@ -8,6 +8,7 @@ import { ApiClient } from '~/server/headscale/api-client';
 import log from '~/utils/log';
 import { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
+import { isHeadscaleServeCmd } from './cmdline.ts';
 
 // TODO: Upgrade to the new CoreV1Api from @kubernetes/client-node
 type T = NonNullable<HeadplaneConfig['integration']>['kubernetes'];
@@ -162,7 +163,7 @@ export default class KubernetesIntegration extends Integration<T> {
 				try {
 					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
-					if (data.includes('headscale')) {
+					if (isHeadscaleServeCmd(data)) {
 						return pid;
 					}
 				} catch (error) {
