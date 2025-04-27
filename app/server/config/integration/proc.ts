@@ -7,6 +7,7 @@ import { ApiClient } from '~/server/headscale/api-client';
 import log from '~/utils/log';
 import { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
+import { isHeadscaleServeCmd } from './cmdline.ts';
 
 type T = NonNullable<HeadplaneConfig['integration']>['proc'];
 export default class ProcIntegration extends Integration<T> {
@@ -38,7 +39,7 @@ export default class ProcIntegration extends Integration<T> {
 				try {
 					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
-					if (data.includes('headscale')) {
+				  if (isHeadscaleServeCmd(data)) {
 						return pid;
 					}
 				} catch (error) {
