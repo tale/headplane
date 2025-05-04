@@ -46,11 +46,6 @@ const headscaleConfig = type({
 	dns_records_path: 'string?',
 }).onDeepUndeclaredKey('reject');
 
-const containerLabel = type({
-	name: 'string',
-	value: 'string',
-}).optional();
-
 const agentConfig = type({
 	enabled: stringToBool.default(false),
 	host_name: 'string = "headplane-agent"',
@@ -64,8 +59,8 @@ const agentConfig = type({
 const dockerConfig = type({
 	enabled: stringToBool,
 	container_name: 'string = ""',
+	container_label: 'string = "me.tale.headplane.target=headscale"',
 	socket: 'string = "unix:///var/run/docker.sock"',
-	container_label: containerLabel,
 });
 
 const kubernetesConfig = type({
