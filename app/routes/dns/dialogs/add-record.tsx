@@ -9,6 +9,7 @@ interface Props {
 }
 
 export default function AddRecord({ records }: Props) {
+	const [type, setType] = useState<'A' | 'AAAA' | string>('A');
 	const [name, setName] = useState('');
 	const [ip, setIp] = useState('');
 
@@ -23,7 +24,12 @@ export default function AddRecord({ records }: Props) {
 	return (
 		<Dialog>
 			<Dialog.Button>Add DNS record</Dialog.Button>
-			<Dialog.Panel>
+			<Dialog.Panel
+				onSubmit={() => {
+					setName('');
+					setIp('');
+				}}
+			>
 				<Dialog.Title>Add DNS record</Dialog.Title>
 				<Dialog.Text>
 					Enter the domain and IP address for the new DNS record.
@@ -34,7 +40,10 @@ export default function AddRecord({ records }: Props) {
 						isRequired
 						label="Record Type"
 						name="record_type"
-						defaultInputValue="A"
+						defaultInputValue={type}
+						onSelectionChange={(v) => {
+							if (v) setType(v.toString() as 'A' | 'AAAA');
+						}}
 					>
 						<Select.Item key="A">A</Select.Item>
 						<Select.Item key="AAAA">AAAA</Select.Item>
@@ -50,7 +59,9 @@ export default function AddRecord({ records }: Props) {
 					<Input
 						isRequired
 						label="IP Address"
-						placeholder="101.101.101.101"
+						placeholder={
+							type === 'AAAA' ? '2001:db8::ff00:42:8329' : '101.101.101.101'
+						}
 						name="record_value"
 						onChange={setIp}
 						isInvalid={isDuplicate}
