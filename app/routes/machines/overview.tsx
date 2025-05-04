@@ -164,7 +164,3 @@ export default function Page() {
 		</>
 	);
 }
-
-export function ErrorBoundary() {
-	return <ErrorPopup type="embedded" />;
-}
