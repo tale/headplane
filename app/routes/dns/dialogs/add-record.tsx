@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react';
 import Code from '~/components/Code';
 import Dialog from '~/components/Dialog';
 import Input from '~/components/Input';
+import Select from '~/components/Select';
 
 interface Props {
-	records: { name: string; type: 'A' | string; value: string }[];
+	records: { name: string; type: 'A' | 'AAAA' | string; value: string }[];
 }
 
 export default function AddRecord({ records }: Props) {
+	const [type, setType] = useState<'A' | 'AAAA' | string>('A');
 	const [name, setName] = useState('');
 	const [ip, setIp] = useState('');
 
@@ -22,14 +24,30 @@ export default function AddRecord({ records }: Props) {
 	return (
 		<Dialog>
 			<Dialog.Button>Add DNS record</Dialog.Button>
-			<Dialog.Panel>
+			<Dialog.Panel
+				onSubmit={() => {
+					setName('');
+					setIp('');
+				}}
+			>
 				<Dialog.Title>Add DNS record</Dialog.Title>
 				<Dialog.Text>
 					Enter the domain and IP address for the new DNS record.
 				</Dialog.Text>
 				<div className="flex flex-col gap-2 mt-4">
 					<input type="hidden" name="action_id" value="add_record" />
-					<input type="hidden" name="record_type" value="A" />
+					<Select
+						isRequired
+						label="Record Type"
+						name="record_type"
+						defaultInputValue={type}
+						onSelectionChange={(v) => {
+							if (v) setType(v.toString() as 'A' | 'AAAA');
+						}}
+					>
+						<Select.Item key="A">A</Select.Item>
+						<Select.Item key="AAAA">AAAA</Select.Item>
+					</Select>
 					<Input
 						isRequired
 						label="Domain"
@@ -41,7 +59,9 @@ export default function AddRecord({ records }: Props) {
 					<Input
 						isRequired
 						label="IP Address"
-						placeholder="101.101.101.101"
+						placeholder={
+							type === 'AAAA' ? '2001:db8::ff00:42:8329' : '101.101.101.101'
+						}
 						name="record_value"
 						onChange={setIp}
 						isInvalid={isDuplicate}

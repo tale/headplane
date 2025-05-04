@@ -11,7 +11,7 @@ services:
     image: "headscale/headscale:0.25.1"
     container_name: "headscale"
     labels:
-      - com.headplane.selector=headscale
+      me.tale.headplane.target: headscale
     restart: "unless-stopped"
     command: "serve"
     networks:

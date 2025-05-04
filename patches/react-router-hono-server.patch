@@ -1,54 +1,34 @@
-diff --git a/dist/adapters/node.d.ts b/dist/adapters/node.d.ts
-index 68742808892c1282ccff1e3321167862196d1229..f9a9249e1d1e573018d7ff3d3b967c4a1667d6ca 100644
---- a/dist/adapters/node.d.ts
-+++ b/dist/adapters/node.d.ts
-@@ -50,6 +50,10 @@ interface HonoNodeServerOptions<E extends Env = BlankEnv> extends HonoServerOpti
-     /**
-      * Callback executed just after `serve` from `@hono/node-server`
-      */
-+    /**
-+     * Customize the hostname of the node server
-+     */
-+    hostname?: string;
-     onServe?: (server: ServerType) => void;
-     /**
-      * The Node.js Adapter rewrites the global Request/Response and uses a lightweight Request/Response to improve performance.
 diff --git a/dist/adapters/node.js b/dist/adapters/node.js
-index 481dec801537f6ccf7f7a8a8e2294f4b0f20bb7d..980fecf219dd0c501ed415e36985ec56d997f14f 100644
+index 966604f94ca8528b684ef95fe7891c2e6352561b..8222cf31333668f8c2ebe65986b6ab9a3711b587 100644
 --- a/dist/adapters/node.js
 +++ b/dist/adapters/node.js
-@@ -46,16 +46,22 @@ async function createHonoServer(options) {
+@@ -46,16 +46,25 @@ async function createHonoServer(options) {
    }
    await mergedOptions.beforeAll?.(app);
    app.use(
 -    `/${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
-+    `${__PREFIX__}/${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
++    `/${__PREFIX__}${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
      cache(60 * 60 * 24 * 365),
      // 1 year
--    serveStatic({ root: clientBuildPath })
+-    serveStatic({ root: clientBuildPath, ...mergedOptions.serveStaticOptions?.clientAssets })
 +    serveStatic({
-+		root: clientBuildPath,
-+		rewriteRequestPath: path => path.replace(__PREFIX__, "/")
-+	})
++   	  root: clientBuildPath,
++      ...mergedOptions.serveStaticOptions?.clientAssets,
++      rewriteRequestPath: path => path.replace(__PREFIX__, "/")
++    })
    );
++  app.use(__PREFIX__, (c) => c.redirect(`${__PREFIX__}/`));
    app.use(
 -    "*",
-+    `${__PREFIX__}/assets/*`,
++    `${__PREFIX__}/*`,
      cache(60 * 60),
      // 1 hour
--    serveStatic({ root: PRODUCTION ? clientBuildPath : "./public" })
+-    serveStatic({ root: PRODUCTION ? clientBuildPath : "./public", ...mergedOptions.serveStaticOptions?.publicAssets })
 +    serveStatic({
-+		root: PRODUCTION ? clientBuildPath : "./public",
-+		rewriteRequestPath: path => path.replace(__PREFIX__, "/")
-+	})
++      root: PRODUCTION ? clientBuildPath : "./public",
++      ...mergedOptions.serveStaticOptions?.publicAssets,
++      rewriteRequestPath: path => path.replace(__PREFIX__, "/")
++    })
    );
    if (mergedOptions.defaultLogger) {
      app.use("*", logger());
-@@ -86,6 +92,7 @@ async function createHonoServer(options) {
-         ...app,
-         ...mergedOptions.customNodeServer,
-         port: mergedOptions.port,
-+        hostname: mergedOptions.hostname,
-         overrideGlobalObjects: mergedOptions.overrideGlobalObjects
-       },
-       mergedOptions.listeningListener

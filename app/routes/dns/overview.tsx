@@ -44,7 +44,7 @@ export async function loader({
 		nameservers: config.dns.nameservers.global,
 		splitDns: config.dns.nameservers.split,
 		searchDomains: config.dns.search_domains,
-		extraRecords: config.dns.extra_records,
+		extraRecords: context.hs.d,
 	};
 
 	return {
