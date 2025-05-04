@@ -84,18 +84,23 @@ integration:
   # at the same time as any of these and is recommended for the best experience.
   docker:
     enabled: false
-    # Preferred method: use container_label to dynamically discover the Headscale container.
-    container_label:
-      name: "com.headplane.selector"
-      value: "headscale"
-    # Optional fallback: directly specify the container name (or ID)
-    # of the container running Headscale
+
+    # By default we check for the presence of a container label (see the docs)
+    # to determine the container to signal when changes are made to DNS settings.
+    container_label: "me.tale.headplane.target=headscale"
+
+    # HOWEVER, you can fallback to a container name if you desire, but this is
+    # not recommended as its brittle and doesn't work with orchestrators that
+    # automatically assign container names.
+    #
+    # If `container_name` is set, it will override any label checks.
     # container_name: "headscale"
 
     # The path to the Docker socket (do not change this if you are unsure)
     # Docker socket paths must start with unix:// or tcp:// and at the moment
     # https connections are not supported.
     socket: "unix:///var/run/docker.sock"
+
   # Please refer to docs/integration/Kubernetes.md for more information
   # on how to configure the Kubernetes integration. There are requirements in
   # order to allow Headscale to be controlled by Headplane in a cluster.

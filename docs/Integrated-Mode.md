@@ -58,6 +58,9 @@ services:
     container_name: headscale
     restart: unless-stopped
     command: serve
+    labels:
+      # This is needed for Headplane to find it and signal it
+      me.tale.headplane.target: headscale
     ports:
       - '8080:8080'
     volumes:
