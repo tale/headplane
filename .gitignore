@@ -4,6 +4,7 @@ node_modules
 /build
 /test
 .env
+/result
 
 # Devenv
 .devenv*
