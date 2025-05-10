@@ -1,5 +1,5 @@
 import { constants, access, readFile } from 'node:fs/promises';
-import { env, exit } from 'node:process';
+import { env } from 'node:process';
 import { type } from 'arktype';
 import { configDotenv } from 'dotenv';
 import { parseDocument } from 'yaml';
@@ -7,9 +7,18 @@ import log from '~/utils/log';
 import { EnvOverrides, envVariables } from './env';
 import {
 	HeadplaneConfig,
+	PartialHeadplaneConfig,
 	headplaneConfig,
 	partialHeadplaneConfig,
 } from './schema';
+
+// Custom Error for configuration issues
+export class ConfigError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'ConfigError';
+	}
+}
 
 // Helper function for environment variable interpolation in file paths
 function interpolateEnvVars(filePath: string): string {
@@ -18,7 +27,7 @@ function interpolateEnvVars(filePath: string): string {
 		(match, varName) => {
 			const value = env[varName];
 			if (value === undefined) {
-				throw new Error(
+				throw new ConfigError(
 					`Environment variable "${varName}" not found for path interpolation in "${filePath}"`,
 				);
 			}
@@ -43,64 +52,55 @@ function interpolateEnvVars(filePath: string): string {
 // But this may not be necessary as a use-case anyways
 export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 	log.debug('config', 'Loading configuration file: %s', path);
-	const validPath = await validateConfigPath(path);
-	if (!validPath) {
-		exit(1);
+
+	await validateConfigPath(path);
+
+	const rawData = await loadConfigFile(path);
+	if (typeof rawData !== 'object' || rawData === null) {
+		throw new ConfigError('Loaded configuration data is not a valid object.');
 	}
 
-	const data = await loadConfigFile(path);
-	if (!data) {
-		exit(1);
-	}
+	// 1. Initial validation
+	const initialValidatedConfig = validateConfig({
+		...(rawData as Record<string, unknown>),
+		debug: log.debugEnabled,
+	});
 
-	let configObject = validateConfig({ ...data, debug: log.debugEnabled });
-	if (!configObject) {
-		exit(1);
-	}
+	// Deep clone before mutation by loadSecretsFromFiles
+	let configObject = JSON.parse(JSON.stringify(initialValidatedConfig));
+
+	// Process *_path fields from the YAML file itself, regardless of env loading
+	await loadSecretsFromFiles(configObject);
 
 	if (!loadEnv) {
 		log.debug('config', 'Environment variable overrides are disabled');
 		log.debug('config', 'This also disables the loading of a .env file');
-		return configObject;
+		return validateConfig(configObject); // Re-validate after potential modifications by loadSecretsFromFiles
 	}
 
 	log.info('config', 'Loading a .env file (if available)');
 	configDotenv({ override: true });
+
 	configObject = coalesceEnv(configObject);
-	if (!configObject) {
-		exit(1);
-	}
 
-	// Load secret values from files if file paths are specified
-	const loadSecretsSuccess = await loadSecretsFromFiles(configObject);
-	if (!loadSecretsSuccess) {
-		log.error(
-			'config',
-			'Halting due to error(s) in loading secrets from file paths.',
-		);
-		exit(1);
-	}
+	await loadSecretsFromFiles(configObject);
 
-	return configObject;
+	return validateConfig(configObject);
 }
 
 export async function hp_loadConfig() {
 	// This will be implemented in the future
 }
 
-async function validateConfigPath(path: string) {
+async function validateConfigPath(path: string): Promise<void> {
 	try {
 		await access(path, constants.F_OK | constants.R_OK);
 		log.info('config', 'Found a valid configuration file at %s', path);
-		return true;
 	} catch (error: unknown) {
+		const message = error instanceof Error ? error.message : String(error);
 		log.error('config', 'Unable to read a configuration file at %s', path);
-		log.error(
-			'config',
-			'%s',
-			error instanceof Error ? error.message : String(error),
-		);
-		return false;
+		log.error('config', '%s', message);
+		throw new ConfigError(`Config file access error for "${path}": ${message}`);
 	}
 }
 
@@ -111,11 +111,14 @@ async function loadConfigFile(path: string): Promise<unknown> {
 		const configYaml = parseDocument(data);
 		if (configYaml.errors.length > 0) {
 			log.error('config', 'Cannot parse configuration file at %s', path);
+			let errorMessages = '';
 			for (const error of configYaml.errors) {
 				log.error('config', ` - ${error.toString()}`);
+				errorMessages += `${error.toString()}\n`;
 			}
-
-			return false;
+			throw new ConfigError(
+				`YAML parsing error in "${path}":\n${errorMessages}`,
+			);
 		}
 
 		if (configYaml.warnings.length > 0) {
@@ -131,48 +134,38 @@ async function loadConfigFile(path: string): Promise<unknown> {
 
 		return configYaml.toJSON() as unknown;
 	} catch (e: unknown) {
+		const message = e instanceof Error ? e.message : String(e);
 		log.error('config', 'Error reading configuration file at %s', path);
-		log.error('config', '%s', e instanceof Error ? e.message : String(e));
-		return false;
+		log.error('config', '%s', message);
+		if (e instanceof ConfigError) throw e;
+		throw new ConfigError(`File read error for "${path}": ${message}`);
 	}
 }
 
-export function validateConfig(config: unknown) {
+export function validateConfig(config: unknown): HeadplaneConfig {
 	log.debug('config', 'Validating Headplane configuration');
 	const result = headplaneConfig(config);
+
 	if (result instanceof type.errors) {
 		log.error('config', 'Error validating Headplane configuration:');
+		let errorSummary = '';
 		for (const [number, error] of result.entries()) {
 			log.error('config', ` - (${number}): ${error.toString()}`);
+			errorSummary += `(${number}): ${error.toString()}\n`;
 		}
-
-		return; // ArkType validation failed, result is Type.Errors
+		throw new ConfigError(`Configuration validation failed:\n${errorSummary}`);
 	}
-
-	// Mutual exclusivity and mandatory checks for value/path pairs are now handled by
-	// the valueOrPath helper directly within the ArkType schema definitions.
-	// No further manual checks needed here for those.
-
-	return result; // ArkType validation passed, result is HeadplaneConfig
+	return result as HeadplaneConfig;
 }
 
-function coalesceEnv(config: HeadplaneConfig) {
+function coalesceEnv(config: HeadplaneConfig): HeadplaneConfig {
 	const envConfig: Record<string, unknown> = {};
 	const rootKeys: string[] = Object.values(envVariables);
 
 	const vars = Object.entries(env).filter(([key, value]) => {
-		if (!value) {
-			return false;
-		}
-
-		if (!key.startsWith('HEADPLANE_')) {
-			return false;
-		}
-
-		if (rootKeys.includes(key)) {
-			return false;
-		}
-
+		if (!value) return false;
+		if (!key.startsWith('HEADPLANE_')) return false;
+		if (rootKeys.includes(key)) return false;
 		return true;
 	}) as [string, string][];
 
@@ -183,42 +176,42 @@ function coalesceEnv(config: HeadplaneConfig) {
 			'config',
 			` - ${key}=${new Array(value.length).fill('*').join('')}`,
 		);
-
 		let current = envConfig;
 		while (configPath.length > 1) {
 			const pathPart = configPath.shift() as string;
-			if (!(pathPart in current)) {
-				current[pathPart] = {};
-			}
-
+			if (!(pathPart in current)) current[pathPart] = {};
 			current = current[pathPart] as Record<string, unknown>;
 		}
-
 		current[configPath[0]] = value;
 	}
 
+	// coalesceConfig will throw ConfigError if validation of env vars fails.
+	// If it succeeds, toMerge will be a valid PartialHeadplaneConfig.
 	const toMerge = coalesceConfig(envConfig);
-	if (!toMerge) {
-		return; // Return undefined if coalescing env vars resulted in an invalid partial config
-	}
 
-	// Assert toMerge as DeepPartial<HeadplaneConfig> if TypeScript has trouble inferring compatibility
+	// If coalesceConfig did not throw, proceed to merge.
 	return deepMerge(config, toMerge as DeepPartial<HeadplaneConfig>);
 }
 
-export function coalesceConfig(config: unknown) {
+export function coalesceConfig(config: unknown): PartialHeadplaneConfig {
 	log.debug('config', 'Revalidating config after coalescing variables');
 	const out = partialHeadplaneConfig(config);
+
 	if (out instanceof type.errors) {
-		log.error('config', 'Error parsing variables:');
+		log.error(
+			'config',
+			'Error parsing environment variables into partial config:',
+		);
+		let errorSummary = '';
 		for (const [number, error] of out.entries()) {
 			log.error('config', ` - (${number}): ${error.toString()}`);
+			errorSummary += `(${number}): ${error.toString()}\n`;
 		}
-
-		return;
+		throw new ConfigError(
+			`Environment variable validation failed:\n${errorSummary}`,
+		);
 	}
-
-	return out;
+	return out as PartialHeadplaneConfig;
 }
 
 // Recursively processes an object to find keys ending in `_path`,
@@ -227,9 +220,8 @@ export function coalesceConfig(config: unknown) {
 async function loadSecretsFromFiles(
 	currentConfigLevel: Record<string, unknown>,
 	currentPathPrefix = '',
-): Promise<boolean> {
+): Promise<void> {
 	for (const key in currentConfigLevel) {
-		// Ensure it's a direct property and not from prototype chain
 		if (Object.prototype.hasOwnProperty.call(currentConfigLevel, key)) {
 			const value = currentConfigLevel[key];
 			const fullKeyPathForLog = currentPathPrefix
@@ -243,14 +235,17 @@ async function loadSecretsFromFiles(
 				try {
 					processedPath = interpolateEnvVars(value);
 				} catch (e: unknown) {
+					if (e instanceof ConfigError) throw e;
+					const message = e instanceof Error ? e.message : String(e);
 					log.error(
 						'config',
-						'Error during environment variable interpolation for config key "%s" (path: "%s"): %s',
+						'Interpolation error for %s: %s',
 						fullKeyPathForLog,
-						value,
-						e instanceof Error ? e.message : String(e),
+						message,
 					);
-					return false; // Indicate failure
+					throw new ConfigError(
+						`Interpolation error for ${fullKeyPathForLog}: ${message}`,
+					);
 				}
 
 				log.debug(
@@ -262,38 +257,33 @@ async function loadSecretsFromFiles(
 				);
 				try {
 					const secretContent = await readFile(processedPath, 'utf8');
-					// Ensure the target key exists or can be set; TypeScript might not know about it if currentConfigLevel is 'any'
-					// However, the schema validation should ensure `valueKey` is a valid peer to `valueKey_path`.
 					currentConfigLevel[valueKey] = secretContent.trim();
+					delete currentConfigLevel[key];
 				} catch (err: unknown) {
+					const message = err instanceof Error ? err.message : String(err);
 					log.error(
 						'config',
-						'Failed to read file "%s" for config key "%s" (defined in %s): %s',
+						'Failed to read file "%s" for %s: %s',
 						processedPath,
-						valueKey,
 						fullKeyPathForLog,
-						err instanceof Error ? err.message : String(err),
+						message,
 					);
-					return false; // Indicate failure
+					throw new ConfigError(
+						`File read error for ${fullKeyPathForLog} (path: ${processedPath}): ${message}`,
+					);
 				}
 			} else if (
 				typeof value === 'object' &&
 				value !== null &&
 				!Array.isArray(value)
 			) {
-				// Recursively process nested objects
-				if (
-					!(await loadSecretsFromFiles(
-						value as Record<string, unknown>,
-						fullKeyPathForLog,
-					))
-				) {
-					return false; // Propagate failure from deeper levels
-				}
+				await loadSecretsFromFiles(
+					value as Record<string, unknown>,
+					fullKeyPathForLog,
+				);
 			}
 		}
 	}
-	return true; // Indicate success for this level
 }
 
 type DeepPartial<T> =

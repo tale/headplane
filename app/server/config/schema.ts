@@ -1,3 +1,4 @@
+// biome-ignore lint/suspicious/noExplicitAny: ArkType narrow context and inferred object typing is complex with current library API
 import { Type, type } from 'arktype';
 
 // Configuration Schema for Headplane
@@ -26,12 +27,10 @@ function valueOrPath<Key extends string>(
 	const pathKey = `${key}_path` as const;
 	const valueTypeString = options?.valueType || 'string';
 
-	const props = {
-		[`${key}?`]: valueTypeString,
-		[`${pathKey}?`]: 'string',
-	} as const;
-
-	return type(props).narrow((obj: unknown, ctx) => {
+	return type({
+		[key]: valueTypeString,
+		[pathKey]: 'string',
+	}).narrow((obj: unknown, ctx) => {
 		if (typeof obj !== 'object' || obj === null) {
 			return ctx.reject('Expected an object');
 		}
@@ -79,38 +78,113 @@ const agentConfig = agentObjectDefinition.default(() => ({
 }));
 
 // --- Main Configurations ---
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
-	...valueOrPath('cookie_secret', {
-		mandatory: true,
-		valueType: '32 <= string <= 32',
-	}),
+	'cookie_secret?': '32 <= string <= 32',
+	'cookie_secret_path?': 'string',
 	cookie_secure: stringToBool,
 	agent: agentConfig,
+}).narrow((obj, ctx: any) => {
+	const key = 'cookie_secret';
+	const pathKey = 'cookie_secret_path';
+	const valProperty = obj[key];
+	const pathProperty = obj[pathKey];
+
+	const hasVal =
+		valProperty !== undefined &&
+		valProperty !== null &&
+		(typeof valProperty === 'string' ? valProperty !== '' : true);
+	const hasPath =
+		pathProperty !== undefined &&
+		pathProperty !== null &&
+		typeof pathProperty === 'string' &&
+		pathProperty !== '';
+
+	if (hasVal && hasPath) {
+		return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+	}
+	if (!hasVal && !hasPath) {
+		return ctx.reject(
+			`Either "${key}" or "${pathKey}" must be provided for ${key}.`,
+		);
+	}
+	return true;
 });
 
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const oidcConfig = type({
 	issuer: 'string.url',
 	client_id: 'string',
-	...valueOrPath('client_secret', { mandatory: true }),
+	'client_secret?': 'string',
+	'client_secret_path?': 'string',
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
-	redirect_uri: 'string.url?',
-	user_storage_file: 'string = "/var/lib/headplane/users.json"',
+	'redirect_uri?': 'string.url',
+	user_storage_file: type('string').default('/var/lib/headplane/users.json'),
 	disable_api_key_login: stringToBool,
 	headscale_api_key: 'string',
 	strict_validation: stringToBool.default(true),
-}).onDeepUndeclaredKey('reject');
+})
+	.narrow((obj, ctx: any) => {
+		const key = 'client_secret';
+		const pathKey = 'client_secret_path';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
+		const hasVal =
+			valProperty !== undefined &&
+			valProperty !== null &&
+			(typeof valProperty === 'string' ? valProperty !== '' : true);
+		const hasPath =
+			pathProperty !== undefined &&
+			pathProperty !== null &&
+			typeof pathProperty === 'string' &&
+			pathProperty !== '';
+		if (hasVal && hasPath) {
+			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		}
+		if (obj.issuer && obj.client_id) {
+			if (!hasVal && !hasPath) {
+				return ctx.reject(
+					`Either "${key}" or "${pathKey}" must be provided for client_secret if OIDC is configured.`,
+				);
+			}
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
 
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const headscaleConfig = type({
 	url: type('string.url').pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v)),
-	...valueOrPath('api_key'),
-	tls_cert_path: 'string?',
-	public_url: 'string.url?',
-	config_path: 'string?',
+	'api_key?': 'string',
+	'api_key_path?': 'string',
+	'tls_cert_path?': 'string',
+	'public_url?': 'string.url',
+	'config_path?': 'string',
 	config_strict: stringToBool,
-}).onDeepUndeclaredKey('reject');
+})
+	.narrow((obj, ctx: any) => {
+		const key = 'api_key';
+		const pathKey = 'api_key_path';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
+		const hasVal =
+			valProperty !== undefined &&
+			valProperty !== null &&
+			(typeof valProperty === 'string' ? valProperty !== '' : true);
+		const hasPath =
+			pathProperty !== undefined &&
+			pathProperty !== null &&
+			typeof pathProperty === 'string' &&
+			pathProperty !== '';
+		if (hasVal && hasPath) {
+			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
 
 const containerLabel = type({
 	name: 'string',
@@ -141,7 +215,7 @@ const integrationConfig = type({
 }).onDeepUndeclaredKey('reject');
 
 export const headplaneConfig = type({
-	debug: stringToBool,
+	debug: stringToBool.default(false),
 	server: serverConfig,
 	'oidc?': oidcConfig,
 	'integration?': integrationConfig,
@@ -150,40 +224,115 @@ export const headplaneConfig = type({
 
 // --- Partial Configurations (Explicitly defined field by field) ---
 
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialServerConfig = type({
 	'host?': 'string.ip',
 	'port?': type('string | number.integer').pipe((v) => Number(v)),
-	...valueOrPath('cookie_secret', {
-		mandatory: true,
-		valueType: '32 <= string <= 32',
-	}),
+	'cookie_secret?': '32 <= string <= 32',
+	'cookie_secret_path?': 'string',
 	'cookie_secure?': stringToBool,
 	'agent?': partialAgentConfig,
+}).narrow((obj, ctx: any) => {
+	const key = 'cookie_secret';
+	const pathKey = 'cookie_secret_path';
+	const valProperty = obj[key];
+	const pathProperty = obj[pathKey];
+	const hasVal =
+		valProperty !== undefined &&
+		valProperty !== null &&
+		(typeof valProperty === 'string' ? valProperty !== '' : true);
+	const hasPath =
+		pathProperty !== undefined &&
+		pathProperty !== null &&
+		typeof pathProperty === 'string' &&
+		pathProperty !== '';
+	if (hasVal && hasPath) {
+		return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+	}
+	if (Object.keys(obj).length > 0 && !obj.agent && !obj.cookie_secure) {
+		if (!hasVal && !hasPath) {
+			return ctx.reject(
+				`Either "${key}" or "${pathKey}" must be provided for cookie_secret if server section is present.`,
+			);
+		}
+	}
+	return true;
 });
 
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialOidcConfig = type({
 	'issuer?': 'string.url',
 	'client_id?': 'string',
-	...valueOrPath('client_secret', { mandatory: true }),
+	'client_secret?': 'string',
+	'client_secret_path?': 'string',
 	'token_endpoint_auth_method?':
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
-	'redirect_uri?': 'string.url?',
-	'user_storage_file?': 'string = "/var/lib/headplane/users.json"',
+	'redirect_uri?': 'string.url',
+	'user_storage_file?': 'string',
 	'disable_api_key_login?': stringToBool,
 	'headscale_api_key?': 'string',
-	'strict_validation?': stringToBool.default(true),
-}).onDeepUndeclaredKey('reject');
+	'strict_validation?': stringToBool,
+})
+	.narrow((obj, ctx: any) => {
+		const key = 'client_secret';
+		const pathKey = 'client_secret_path';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
+		const hasVal =
+			valProperty !== undefined &&
+			valProperty !== null &&
+			(typeof valProperty === 'string' ? valProperty !== '' : true);
+		const hasPath =
+			pathProperty !== undefined &&
+			pathProperty !== null &&
+			typeof pathProperty === 'string' &&
+			pathProperty !== '';
+		if (hasVal && hasPath) {
+			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		}
+		if (obj.issuer && obj.client_id) {
+			if (!hasVal && !hasPath) {
+				return ctx.reject(
+					`Either "${key}" or "${pathKey}" must be provided for client_secret when OIDC issuer and client_id are specified.`,
+				);
+			}
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
 
+// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialHeadscaleConfig = type({
 	'url?': type('string.url').pipe((v) =>
 		v.endsWith('/') ? v.slice(0, -1) : v,
 	),
-	...valueOrPath('api_key'),
-	'tls_cert_path?': 'string?',
-	'public_url?': 'string.url?',
-	'config_path?': 'string?',
+	'api_key?': 'string',
+	'api_key_path?': 'string',
+	'tls_cert_path?': 'string',
+	'public_url?': 'string.url',
+	'config_path?': 'string',
 	'config_strict?': stringToBool,
-}).onDeepUndeclaredKey('reject');
+})
+	.narrow((obj, ctx: any) => {
+		const key = 'api_key';
+		const pathKey = 'api_key_path';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
+		const hasVal =
+			valProperty !== undefined &&
+			valProperty !== null &&
+			(typeof valProperty === 'string' ? valProperty !== '' : true);
+		const hasPath =
+			pathProperty !== undefined &&
+			pathProperty !== null &&
+			typeof pathProperty === 'string' &&
+			pathProperty !== '';
+		if (hasVal && hasPath) {
+			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
 
 const partialDockerConfig = dockerConfig.partial();
 const partialKubernetesConfig = kubernetesConfig.partial();
@@ -199,7 +348,7 @@ export const partialHeadplaneConfig = type({
 	'debug?': stringToBool,
 	'server?': partialServerConfig,
 	'oidc?': partialOidcConfig,
-	'integration?': partialIntegrationConfig,
+	'integration?': integrationConfig.partial(),
 	'headscale?': partialHeadscaleConfig,
 }).partial();
 
