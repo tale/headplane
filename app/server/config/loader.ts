@@ -11,6 +11,31 @@ import {
 	partialHeadplaneConfig,
 } from './schema';
 
+// Helper function for environment variable interpolation in file paths
+function interpolateEnvVars(filePath: string): string {
+	const interpolatedPath = filePath.replace(
+		/\$\{(.*?)\}/g,
+		(match, varName) => {
+			const value = env[varName];
+			if (value === undefined) {
+				throw new Error(
+					`Environment variable "${varName}" not found for path interpolation in "${filePath}"`,
+				);
+			}
+			return value;
+		},
+	);
+	if (interpolatedPath !== filePath) {
+		log.debug(
+			'config',
+			'Interpolated path "%s" to "%s"',
+			filePath,
+			interpolatedPath,
+		);
+	}
+	return interpolatedPath;
+}
+
 // loadConfig is a has a lifetime of the entire application and is
 // used to load the configuration for Headplane. It is called once.
 //
@@ -18,8 +43,8 @@ import {
 // But this may not be necessary as a use-case anyways
 export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 	log.debug('config', 'Loading configuration file: %s', path);
-	const valid = await validateConfigPath(path);
-	if (!valid) {
+	const validPath = await validateConfigPath(path);
+	if (!validPath) {
 		exit(1);
 	}
 
@@ -28,44 +53,39 @@ export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 		exit(1);
 	}
 
-	let config = validateConfig({ ...data, debug: log.debugEnabled });
-	if (!config) {
+	let configObject = validateConfig({ ...data, debug: log.debugEnabled });
+	if (!configObject) {
 		exit(1);
 	}
 
 	if (!loadEnv) {
 		log.debug('config', 'Environment variable overrides are disabled');
 		log.debug('config', 'This also disables the loading of a .env file');
-		return config;
+		return configObject;
 	}
 
 	log.info('config', 'Loading a .env file (if available)');
 	configDotenv({ override: true });
-	config = coalesceEnv(config);
-	if (!config) {
+	configObject = coalesceEnv(configObject);
+	if (!configObject) {
 		exit(1);
 	}
 
-	return config;
+	// Load secret values from files if file paths are specified
+	const loadSecretsSuccess = await loadSecretsFromFiles(configObject);
+	if (!loadSecretsSuccess) {
+		log.error(
+			'config',
+			'Halting due to error(s) in loading secrets from file paths.',
+		);
+		exit(1);
+	}
+
+	return configObject;
 }
 
 export async function hp_loadConfig() {
-	// 	// OIDC Related Checks
-	// 	if (config.oidc) {
-	// 		if (!config.oidc.client_secret && !config.oidc.client_secret_path) {
-	// 			log.error('CFGX', 'OIDC configuration is missing a secret, disabling');
-	// 			log.error(
-	// 				'CFGX',
-	// 				'Please specify either `oidc.client_secret` or `oidc.client_secret_path`',
-	// 			);
-	// 		}
-	// 		if (config.oidc?.strict_validation) {
-	// 			const result = await testOidc(config.oidc);
-	// 			if (!result) {
-	// 				log.error('CFGX', 'OIDC configuration failed validation, disabling');
-	// 			}
-	// 		}
-	// 	}
+	// This will be implemented in the future
 }
 
 async function validateConfigPath(path: string) {
@@ -73,9 +93,13 @@ async function validateConfigPath(path: string) {
 		await access(path, constants.F_OK | constants.R_OK);
 		log.info('config', 'Found a valid configuration file at %s', path);
 		return true;
-	} catch (error) {
+	} catch (error: unknown) {
 		log.error('config', 'Unable to read a configuration file at %s', path);
-		log.error('config', '%s', error);
+		log.error(
+			'config',
+			'%s',
+			error instanceof Error ? error.message : String(error),
+		);
 		return false;
 	}
 }
@@ -106,9 +130,9 @@ async function loadConfigFile(path: string): Promise<unknown> {
 		}
 
 		return configYaml.toJSON() as unknown;
-	} catch (e) {
+	} catch (e: unknown) {
 		log.error('config', 'Error reading configuration file at %s', path);
-		log.error('config', '%s', e);
+		log.error('config', '%s', e instanceof Error ? e.message : String(e));
 		return false;
 	}
 }
@@ -122,17 +146,20 @@ export function validateConfig(config: unknown) {
 			log.error('config', ` - (${number}): ${error.toString()}`);
 		}
 
-		return;
+		return; // ArkType validation failed, result is Type.Errors
 	}
 
-	return result;
+	// Mutual exclusivity and mandatory checks for value/path pairs are now handled by
+	// the valueOrPath helper directly within the ArkType schema definitions.
+	// No further manual checks needed here for those.
+
+	return result; // ArkType validation passed, result is HeadplaneConfig
 }
 
 function coalesceEnv(config: HeadplaneConfig) {
 	const envConfig: Record<string, unknown> = {};
 	const rootKeys: string[] = Object.values(envVariables);
 
-	// Typescript is still insanely stupid at nullish filtering
 	const vars = Object.entries(env).filter(([key, value]) => {
 		if (!value) {
 			return false;
@@ -142,7 +169,6 @@ function coalesceEnv(config: HeadplaneConfig) {
 			return false;
 		}
 
-		// Filter out the rootEnv configurations
 		if (rootKeys.includes(key)) {
 			return false;
 		}
@@ -160,12 +186,12 @@ function coalesceEnv(config: HeadplaneConfig) {
 
 		let current = envConfig;
 		while (configPath.length > 1) {
-			const path = configPath.shift() as string;
-			if (!(path in current)) {
-				current[path] = {};
+			const pathPart = configPath.shift() as string;
+			if (!(pathPart in current)) {
+				current[pathPart] = {};
 			}
 
-			current = current[path] as Record<string, unknown>;
+			current = current[pathPart] as Record<string, unknown>;
 		}
 
 		current[configPath[0]] = value;
@@ -173,12 +199,11 @@ function coalesceEnv(config: HeadplaneConfig) {
 
 	const toMerge = coalesceConfig(envConfig);
 	if (!toMerge) {
-		return;
+		return; // Return undefined if coalescing env vars resulted in an invalid partial config
 	}
 
-	// Deep merge the environment variables into the configuration
-	// This will overwrite any existing values in the configuration
-	return deepMerge(config, toMerge);
+	// Assert toMerge as DeepPartial<HeadplaneConfig> if TypeScript has trouble inferring compatibility
+	return deepMerge(config, toMerge as DeepPartial<HeadplaneConfig>);
 }
 
 export function coalesceConfig(config: unknown) {
@@ -194,6 +219,81 @@ export function coalesceConfig(config: unknown) {
 	}
 
 	return out;
+}
+
+// Recursively processes an object to find keys ending in `_path`,
+// interpolates environment variables in their string values,
+// reads the file content, and assigns it to the corresponding key without `_path`.
+async function loadSecretsFromFiles(
+	currentConfigLevel: Record<string, unknown>,
+	currentPathPrefix = '',
+): Promise<boolean> {
+	for (const key in currentConfigLevel) {
+		// Ensure it's a direct property and not from prototype chain
+		if (Object.prototype.hasOwnProperty.call(currentConfigLevel, key)) {
+			const value = currentConfigLevel[key];
+			const fullKeyPathForLog = currentPathPrefix
+				? `${currentPathPrefix}.${key}`
+				: key;
+
+			if (key.endsWith('_path') && typeof value === 'string') {
+				const valueKey = key.substring(0, key.length - '_path'.length);
+				let processedPath: string;
+
+				try {
+					processedPath = interpolateEnvVars(value);
+				} catch (e: unknown) {
+					log.error(
+						'config',
+						'Error during environment variable interpolation for config key "%s" (path: "%s"): %s',
+						fullKeyPathForLog,
+						value,
+						e instanceof Error ? e.message : String(e),
+					);
+					return false; // Indicate failure
+				}
+
+				log.debug(
+					'config',
+					'Loading value for "%s" from file (via %s): %s',
+					valueKey,
+					fullKeyPathForLog,
+					processedPath,
+				);
+				try {
+					const secretContent = await readFile(processedPath, 'utf8');
+					// Ensure the target key exists or can be set; TypeScript might not know about it if currentConfigLevel is 'any'
+					// However, the schema validation should ensure `valueKey` is a valid peer to `valueKey_path`.
+					currentConfigLevel[valueKey] = secretContent.trim();
+				} catch (err: unknown) {
+					log.error(
+						'config',
+						'Failed to read file "%s" for config key "%s" (defined in %s): %s',
+						processedPath,
+						valueKey,
+						fullKeyPathForLog,
+						err instanceof Error ? err.message : String(err),
+					);
+					return false; // Indicate failure
+				}
+			} else if (
+				typeof value === 'object' &&
+				value !== null &&
+				!Array.isArray(value)
+			) {
+				// Recursively process nested objects
+				if (
+					!(await loadSecretsFromFiles(
+						value as Record<string, unknown>,
+						fullKeyPathForLog,
+					))
+				) {
+					return false; // Propagate failure from deeper levels
+				}
+			}
+		}
+	}
+	return true; // Indicate success for this level
 }
 
 type DeepPartial<T> =
