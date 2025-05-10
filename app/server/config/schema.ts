@@ -1,4 +1,3 @@
-// biome-ignore lint/suspicious/noExplicitAny: ArkType narrow context and inferred object typing is complex with current library API
 import { Type, type } from 'arktype';
 
 // Configuration Schema for Headplane
@@ -78,7 +77,6 @@ const agentConfig = agentObjectDefinition.default(() => ({
 }));
 
 // --- Main Configurations ---
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
@@ -113,7 +111,6 @@ const serverConfig = type({
 	return true;
 });
 
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const oidcConfig = type({
 	issuer: 'string.url',
 	client_id: 'string',
@@ -155,7 +152,6 @@ const oidcConfig = type({
 	})
 	.onDeepUndeclaredKey('reject');
 
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const headscaleConfig = type({
 	url: type('string.url').pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v)),
 	'api_key?': 'string',
@@ -224,7 +220,6 @@ export const headplaneConfig = type({
 
 // --- Partial Configurations (Explicitly defined field by field) ---
 
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialServerConfig = type({
 	'host?': 'string.ip',
 	'port?': type('string | number.integer').pipe((v) => Number(v)),
@@ -259,7 +254,6 @@ const partialServerConfig = type({
 	return true;
 });
 
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialOidcConfig = type({
 	'issuer?': 'string.url',
 	'client_id?': 'string',
@@ -301,7 +295,6 @@ const partialOidcConfig = type({
 	})
 	.onDeepUndeclaredKey('reject');
 
-// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
 const partialHeadscaleConfig = type({
 	'url?': type('string.url').pipe((v) =>
 		v.endsWith('/') ? v.slice(0, -1) : v,
