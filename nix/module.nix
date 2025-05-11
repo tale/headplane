@@ -392,6 +392,7 @@ in {
       serviceConfig = {
         User = config.services.headscale.user;
         Group = config.services.headscale.group;
+        StateDirectory = "headplane";
 
         ExecStart = "${pkgs.headplane}/bin/headplane";
         Restart = "always";

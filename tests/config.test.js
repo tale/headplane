@@ -460,6 +460,51 @@ describe('Configuration Loading', () => {
 
 			expect(config.server.agent.cache_path).toBe(expectedInterpolatedPath);
 		});
+
+		it('should load server.agent.authkey from authkey_path when authkey is null in YAML', async () => {
+			const secretValue = 'agent-authkey-from-file';
+			const secretFilePath = writeTempFile('agent_authkey.txt', secretValue);
+			const tempConfigPath = writeTempYamlConfig({
+				server: {
+					agent: {
+						authkey: null, // Explicitly null
+						authkey_path: secretFilePath,
+						// ttl and cache_path will come from defaultConfig
+					},
+				},
+			});
+			const config = await loadConfig({ loadEnv: false, path: tempConfigPath });
+			expect(config.server.agent.authkey).toBe(secretValue);
+			expect(config.server.agent.authkey_path).toBeUndefined();
+		});
+
+		it('should reject if both server.agent.authkey and authkey_path are provided', async () => {
+			const secretFilePath = writeTempFile(
+				'agent_authkey_conflict.txt',
+				'some-content',
+			);
+			const tempConfigPath = writeTempYamlConfig({
+				server: {
+					agent: {
+						authkey: 'direct-agent-authkey',
+						authkey_path: secretFilePath,
+					},
+				},
+			});
+			let thrownError = null;
+			try {
+				await loadConfig({ loadEnv: false, path: tempConfigPath });
+			} catch (e) {
+				thrownError = e;
+			}
+			expect(thrownError).not.toBeNull();
+			if (thrownError) {
+				expect(thrownError.name).toBe('ConfigError');
+				expect(thrownError.message).toMatch(
+					/Only one of agent "authkey" or "authkey_path" may be set/,
+				);
+			}
+		});
 	});
 
 	describe('Headscale Configuration', () => {

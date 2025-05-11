@@ -64,11 +64,69 @@ const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
 // --- Agent Config (defined separately for clarity in partial) ---
 const agentObjectDefinition = type({
 	'authkey?': '(string | null)',
+	'authkey_path?': 'string',
 	ttl: 'number.integer = 180000',
 	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
-}).onDeepUndeclaredKey('reject');
+})
+	// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
+	.narrow((obj, ctx: any) => {
+		const key = 'authkey';
+		const pathKey = 'authkey_path';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
 
-const partialAgentConfig = agentObjectDefinition.partial();
+		const hasVal =
+			valProperty !== undefined &&
+			valProperty !== null &&
+			(typeof valProperty === 'string' ? valProperty !== '' : true);
+		const hasPath =
+			pathProperty !== undefined &&
+			pathProperty !== null &&
+			typeof pathProperty === 'string' &&
+			pathProperty !== '';
+
+		console.log(
+			`Agent Narrow Check: authkey="${valProperty}", authkey_path="${pathProperty}", hasVal=${hasVal}, hasPath=${hasPath}`,
+		);
+
+		if (hasVal && hasPath) {
+			return ctx.reject(
+				`Only one of agent "${key}" or "${pathKey}" may be set.`,
+			);
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
+
+const partialAgentConfig = type({
+	'authkey??': '(string | null)',
+	'authkey_path??': 'string',
+	'ttl??': 'number.integer',
+	'cache_path??': 'string',
+})
+	// biome-ignore lint/suspicious/noExplicitAny: ArkType context object
+	.narrow((obj, ctx: any) => {
+		const key = 'authkey?';
+		const pathKey = 'authkey_path?';
+		const valProperty = obj[key];
+		const pathProperty = obj[pathKey];
+		if (valProperty !== undefined && pathProperty !== undefined) {
+			const hasVal =
+				valProperty !== null &&
+				(typeof valProperty === 'string' ? valProperty !== '' : true);
+			const hasPath =
+				pathProperty !== null &&
+				typeof pathProperty === 'string' &&
+				pathProperty !== '';
+			if (hasVal && hasPath) {
+				return ctx.reject(
+					`Only one of agent "${key}" or "${pathKey}" may be set in partial config.`,
+				);
+			}
+		}
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
 
 const agentConfig = agentObjectDefinition.default(() => ({
 	authkey: null,
