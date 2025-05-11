@@ -63,7 +63,7 @@ const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
 
 // --- Agent Config (defined separately for clarity in partial) ---
 const agentObjectDefinition = type({
-	authkey: 'string = ""',
+	'authkey?': '(string | null)',
 	ttl: 'number.integer = 180000',
 	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
 }).onDeepUndeclaredKey('reject');
@@ -71,7 +71,7 @@ const agentObjectDefinition = type({
 const partialAgentConfig = agentObjectDefinition.partial();
 
 const agentConfig = agentObjectDefinition.default(() => ({
-	authkey: '',
+	authkey: null,
 	ttl: 180000,
 	cache_path: '/var/lib/headplane/agent_cache.json',
 }));
@@ -80,7 +80,7 @@ const agentConfig = agentObjectDefinition.default(() => ({
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
-	'cookie_secret?': '32 <= string <= 32',
+	'cookie_secret?': '((32 <= string <= 32) | null)',
 	'cookie_secret_path?': 'string',
 	cookie_secure: stringToBool,
 	agent: agentConfig,
@@ -114,37 +114,68 @@ const serverConfig = type({
 const oidcConfig = type({
 	issuer: 'string.url',
 	client_id: 'string',
-	'client_secret?': 'string',
+	'client_secret?': '(string | null)',
 	'client_secret_path?': 'string',
+	'headscale_api_key?': '(string | null)',
+	'headscale_api_key_path?': 'string',
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
 	'redirect_uri?': 'string.url',
 	user_storage_file: type('string').default('/var/lib/headplane/users.json'),
 	disable_api_key_login: stringToBool,
-	headscale_api_key: 'string',
 	strict_validation: stringToBool.default(true),
 })
 	.narrow((obj, ctx: any) => {
-		const key = 'client_secret';
-		const pathKey = 'client_secret_path';
-		const valProperty = obj[key];
-		const pathProperty = obj[pathKey];
-		const hasVal =
-			valProperty !== undefined &&
-			valProperty !== null &&
-			(typeof valProperty === 'string' ? valProperty !== '' : true);
-		const hasPath =
-			pathProperty !== undefined &&
-			pathProperty !== null &&
-			typeof pathProperty === 'string' &&
-			pathProperty !== '';
-		if (hasVal && hasPath) {
-			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		const clientSecretKey = 'client_secret';
+		const clientSecretPathKey = 'client_secret_path';
+		const clientSecretVal = obj[clientSecretKey];
+		const clientSecretPathVal = obj[clientSecretPathKey];
+		const hasClientSecretVal =
+			clientSecretVal !== undefined &&
+			clientSecretVal !== null &&
+			(typeof clientSecretVal === 'string' ? clientSecretVal !== '' : true);
+		const hasClientSecretPath =
+			clientSecretPathVal !== undefined &&
+			clientSecretPathVal !== null &&
+			typeof clientSecretPathVal === 'string' &&
+			clientSecretPathVal !== '';
+
+		if (hasClientSecretVal && hasClientSecretPath) {
+			return ctx.reject(
+				`Only one of "${clientSecretKey}" or "${clientSecretPathKey}" may be set.`,
+			);
 		}
 		if (obj.issuer && obj.client_id) {
-			if (!hasVal && !hasPath) {
+			if (!hasClientSecretVal && !hasClientSecretPath) {
 				return ctx.reject(
-					`Either "${key}" or "${pathKey}" must be provided for client_secret if OIDC is configured.`,
+					`Either "${clientSecretKey}" or "${clientSecretPathKey}" must be provided for client_secret if OIDC is configured.`,
+				);
+			}
+		}
+
+		const hsApiKey = 'headscale_api_key';
+		const hsApiKeyPath = 'headscale_api_key_path';
+		const hsApiVal = obj[hsApiKey];
+		const hsApiPathVal = obj[hsApiKeyPath];
+		const hasHsApiVal =
+			hsApiVal !== undefined &&
+			hsApiVal !== null &&
+			(typeof hsApiVal === 'string' ? hsApiVal !== '' : true);
+		const hasHsApiPath =
+			hsApiPathVal !== undefined &&
+			hsApiPathVal !== null &&
+			typeof hsApiPathVal === 'string' &&
+			hsApiPathVal !== '';
+
+		if (hasHsApiVal && hasHsApiPath) {
+			return ctx.reject(
+				`Only one of "${hsApiKey}" or "${hsApiKeyPath}" may be set.`,
+			);
+		}
+		if (obj.issuer && obj.client_id) {
+			if (!hasHsApiVal && !hasHsApiPath) {
+				return ctx.reject(
+					`Either "${hsApiKey}" or "${hsApiKeyPath}" must be provided for oidc.headscale_api_key if OIDC is configured.`,
 				);
 			}
 		}
@@ -156,7 +187,7 @@ const headscaleConfig = type({
 	url: type('string.url').pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v)),
 	'api_key?': 'string',
 	'api_key_path?': 'string',
-	'tls_cert_path?': 'string',
+	'tls_cert_path?': '(string | null)',
 	'public_url?': 'string.url',
 	'config_path?': 'string',
 	config_strict: stringToBool,
@@ -223,7 +254,7 @@ export const headplaneConfig = type({
 const partialServerConfig = type({
 	'host?': 'string.ip',
 	'port?': type('string | number.integer').pipe((v) => Number(v)),
-	'cookie_secret?': '32 <= string <= 32',
+	'cookie_secret?': '((32 <= string <= 32) | null)',
 	'cookie_secret_path?': 'string',
 	'cookie_secure?': stringToBool,
 	'agent?': partialAgentConfig,
@@ -257,39 +288,69 @@ const partialServerConfig = type({
 const partialOidcConfig = type({
 	'issuer?': 'string.url',
 	'client_id?': 'string',
-	'client_secret?': 'string',
+	'client_secret?': '(string | null)',
 	'client_secret_path?': 'string',
 	'token_endpoint_auth_method?':
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"',
 	'redirect_uri?': 'string.url',
 	'user_storage_file?': 'string',
 	'disable_api_key_login?': stringToBool,
-	'headscale_api_key?': 'string',
+	'headscale_api_key?': '(string | null)',
+	'headscale_api_key_path?': 'string',
 	'strict_validation?': stringToBool,
 })
 	.narrow((obj, ctx: any) => {
-		const key = 'client_secret';
-		const pathKey = 'client_secret_path';
-		const valProperty = obj[key];
-		const pathProperty = obj[pathKey];
-		const hasVal =
-			valProperty !== undefined &&
-			valProperty !== null &&
-			(typeof valProperty === 'string' ? valProperty !== '' : true);
-		const hasPath =
-			pathProperty !== undefined &&
-			pathProperty !== null &&
-			typeof pathProperty === 'string' &&
-			pathProperty !== '';
-		if (hasVal && hasPath) {
-			return ctx.reject(`Only one of "${key}" or "${pathKey}" may be set.`);
+		const clientSecretKey = 'client_secret';
+		const clientSecretPathKey = 'client_secret_path';
+		const clientSecretVal = obj[clientSecretKey];
+		const clientSecretPathVal = obj[clientSecretPathKey];
+		const hasClientSecretVal =
+			clientSecretVal !== undefined &&
+			clientSecretVal !== null &&
+			(typeof clientSecretVal === 'string' ? clientSecretVal !== '' : true);
+		const hasClientSecretPath =
+			clientSecretPathVal !== undefined &&
+			clientSecretPathVal !== null &&
+			typeof clientSecretPathVal === 'string' &&
+			clientSecretPathVal !== '';
+		if (hasClientSecretVal && hasClientSecretPath) {
+			return ctx.reject(
+				`Only one of "${clientSecretKey}" or "${clientSecretPathKey}" may be set.`,
+			);
 		}
-		if (obj.issuer && obj.client_id) {
-			if (!hasVal && !hasPath) {
-				return ctx.reject(
-					`Either "${key}" or "${pathKey}" must be provided for client_secret when OIDC issuer and client_id are specified.`,
-				);
-			}
+		if (
+			obj.issuer &&
+			obj.client_id &&
+			!hasClientSecretVal &&
+			!hasClientSecretPath
+		) {
+			return ctx.reject(
+				`Either "${clientSecretKey}" or "${clientSecretPathKey}" must be provided if issuer and client_id are set in partial OIDC config.`,
+			);
+		}
+
+		const hsApiKey = 'headscale_api_key';
+		const hsApiKeyPath = 'headscale_api_key_path';
+		const hsApiVal = obj[hsApiKey];
+		const hsApiPathVal = obj[hsApiKeyPath];
+		const hasHsApiVal =
+			hsApiVal !== undefined &&
+			hsApiVal !== null &&
+			(typeof hsApiVal === 'string' ? hsApiVal !== '' : true);
+		const hasHsApiPath =
+			hsApiPathVal !== undefined &&
+			hsApiPathVal !== null &&
+			typeof hsApiPathVal === 'string' &&
+			hsApiPathVal !== '';
+		if (hasHsApiVal && hasHsApiPath) {
+			return ctx.reject(
+				`Only one of "${hsApiKey}" or "${hsApiKeyPath}" may be set.`,
+			);
+		}
+		if (obj.issuer && obj.client_id && !hasHsApiVal && !hasHsApiPath) {
+			return ctx.reject(
+				`Either "${hsApiKey}" or "${hsApiKeyPath}" must be provided for headscale_api_key if issuer and client_id are set in partial OIDC config.`,
+			);
 		}
 		return true;
 	})
@@ -301,7 +362,7 @@ const partialHeadscaleConfig = type({
 	),
 	'api_key?': 'string',
 	'api_key_path?': 'string',
-	'tls_cert_path?': 'string',
+	'tls_cert_path?': '(string | null)',
 	'public_url?': 'string.url',
 	'config_path?': 'string',
 	'config_strict?': stringToBool,

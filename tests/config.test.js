@@ -309,6 +309,27 @@ describe('Configuration Loading', () => {
 				'Environment variable "MISSING_TEST_SECRET_DIR" not found',
 			);
 		});
+
+		it('should load from client_secret_path when client_secret is null in YAML', async () => {
+			const secretValue = 'oidc-secret-from-file-when-null';
+			const secretFilePath = writeTempFile(
+				'oidc_secret_via_path_null.txt',
+				secretValue,
+			);
+			const tempConfigPath = writeTempYamlConfig({
+				oidc: {
+					issuer: 'https://example.com/oidc',
+					client_id: 'test-client-null-case',
+					client_secret: null, // Explicitly null
+					client_secret_path: secretFilePath,
+					...minimalOidcRequiredFields, // This will provide other required OIDC fields
+				},
+			});
+			const config = await loadConfig({ loadEnv: false, path: tempConfigPath });
+			expect(config.oidc.client_secret).toBe(secretValue);
+			// The loader should delete the path key after processing
+			expect(config.oidc.client_secret_path).toBeUndefined();
+		});
 	});
 
 	describe('Server Configuration', () => {
@@ -389,6 +410,20 @@ describe('Configuration Loading', () => {
 			).rejects.toThrow(
 				'Either "cookie_secret" or "cookie_secret_path" must be provided for cookie_secret',
 			);
+		});
+
+		it('should allow server.agent.authkey to be null if no path is provided', async () => {
+			const tempConfigPath = writeTempYamlConfig({
+				server: {
+					agent: {
+						authkey: null, // Explicitly null, no authkey_path
+						// Other agent fields will come from defaultConfig via deepMerge
+					},
+				},
+				// Other top-level required fields (headscale, debug) will come from defaultConfig
+			});
+			const config = await loadConfig({ loadEnv: false, path: tempConfigPath });
+			expect(config.server.agent.authkey).toBeNull();
 		});
 	});
 
