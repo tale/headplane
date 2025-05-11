@@ -425,6 +425,41 @@ describe('Configuration Loading', () => {
 			const config = await loadConfig({ loadEnv: false, path: tempConfigPath });
 			expect(config.server.agent.authkey).toBeNull();
 		});
+
+		it('should keep path string for server.agent.cache_path and interpolate env vars', async () => {
+			process.env.MY_AGENT_CACHE_SUBDIR = 'test-subdir';
+			const cachePathValue =
+				'/tmp/my-agent-cache-${MY_AGENT_CACHE_SUBDIR}/cache.json';
+			const expectedInterpolatedPath =
+				'/tmp/my-agent-cache-test-subdir/cache.json';
+
+			const tempConfigPath = writeTempYamlConfig({
+				server: {
+					agent: {
+						cache_path: cachePathValue,
+					},
+				},
+			});
+
+			// Ensure the path does NOT exist, so if loader tries to read it, it would fail
+			// For safety, only attempt to delete if it's in /tmp/
+			if (
+				expectedInterpolatedPath.startsWith('/tmp/') &&
+				fs.existsSync(expectedInterpolatedPath)
+			) {
+				fs.unlinkSync(expectedInterpolatedPath);
+			}
+			if (
+				expectedInterpolatedPath.startsWith('/tmp/') &&
+				fs.existsSync(path.dirname(expectedInterpolatedPath))
+			) {
+				// fs.rmdirSync(path.dirname(expectedInterpolatedPath), { recursive: true }); // Be careful with rmdir
+			}
+
+			const config = await loadConfig({ loadEnv: true, path: tempConfigPath });
+
+			expect(config.server.agent.cache_path).toBe(expectedInterpolatedPath);
+		});
 	});
 
 	describe('Headscale Configuration', () => {
@@ -483,6 +518,24 @@ describe('Configuration Loading', () => {
 					/Only one of "api_key" or "api_key_path" may be set/,
 				);
 			}
+		});
+
+		it('should keep path string for headscale.config_path and interpolate env vars', async () => {
+			process.env.MY_HS_CONFIG_SUBDIR = 'hs-test-subdir';
+			const configPathValue =
+				'/etc/headscale-${MY_HS_CONFIG_SUBDIR}/config.yaml';
+			const expectedInterpolatedPath =
+				'/etc/headscale-hs-test-subdir/config.yaml';
+
+			const tempConfigPath = writeTempYamlConfig({
+				headscale: {
+					config_path: configPathValue,
+				},
+			});
+
+			const config = await loadConfig({ loadEnv: true, path: tempConfigPath });
+
+			expect(config.headscale.config_path).toBe(expectedInterpolatedPath);
 		});
 	});
 });

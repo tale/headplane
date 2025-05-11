@@ -228,6 +228,35 @@ async function loadSecretsFromFiles(
 				? `${currentPathPrefix}.${key}`
 				: key;
 
+			// Skip trying to read contents for specific known path fields that are not secrets
+			if (
+				(fullKeyPathForLog === 'server.agent.cache_path' ||
+					fullKeyPathForLog === 'headscale.config_path') &&
+				typeof value === 'string'
+			) {
+				log.debug(
+					'config',
+					'Interpolating known path string (not loading content): %s',
+					fullKeyPathForLog,
+				);
+				try {
+					currentConfigLevel[key] = interpolateEnvVars(value);
+				} catch (e: unknown) {
+					if (e instanceof ConfigError) throw e;
+					const message = e instanceof Error ? e.message : String(e);
+					log.error(
+						'config',
+						'Interpolation error for %s: %s',
+						fullKeyPathForLog,
+						message,
+					);
+					throw new ConfigError(
+						`Interpolation error for ${fullKeyPathForLog}: ${message}`,
+					);
+				}
+				continue; // Continue to next key in the loop
+			}
+
 			if (key.endsWith('_path') && typeof value === 'string') {
 				const valueKey = key.substring(0, key.length - '_path'.length);
 				let processedPath: string;
