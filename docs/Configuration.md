@@ -11,6 +11,26 @@ Headplane also stores stuff in the `/var/lib/headplane` directory by default.
 This can be configured on a per-section basis in the configuration file, but
 it is very important this directory is persistent and writable by Headplane.
 
+## Sensitive Values
+Headplane supports a dual-mode pattern for sensitive values like secrets, keys, and certificates. For each sensitive value, you can either:
+
+1. Set the value directly in the configuration file (e.g. `cookie_secret: "my-secret"`)
+2. Set a path to a file containing the value (e.g. `cookie_secret_path: "/path/to/secret"`)
+
+The path can include environment variable interpolation, making it easy to integrate with systemd's `LoadCredential`:
+
+```yaml
+cookie_secret_path: "${CREDENTIALS_DIRECTORY}/cookie_secret"
+```
+You cannot set both the direct value and the path for the same field - they are mutually exclusive.
+For example following values support this dual-mode pattern:
+- `server.cookie_secret` / `server.cookie_secret_path`
+- `server.agent.authkey` / `server.agent.authkey_path`
+- `headscale.tls_cert` / `headscale.tls_cert_path`
+- `headscale.tls_key` / `headscale.tls_key_path`
+- `oidc.client_secret` / `oidc.client_secret_path`
+- `oidc.headscale_api_key` / `oidc.headscale_api_key_path`
+
 ## Environment Variables
 It is also possible to override the configuration file using environment variables.
 These changes get merged *after* the configuration file is loaded, so they will take precedence.
