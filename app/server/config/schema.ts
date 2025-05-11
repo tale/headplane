@@ -64,7 +64,7 @@ const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
 // --- Agent Config (defined separately for clarity in partial) ---
 const agentObjectDefinition = type({
 	'authkey?': '(string | null)',
-	'authkey_path?': 'string',
+	'authkey_path?': '(string | null)',
 	ttl: 'number.integer = 180000',
 	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
 })
@@ -100,7 +100,7 @@ const agentObjectDefinition = type({
 
 const partialAgentConfig = type({
 	'authkey??': '(string | null)',
-	'authkey_path??': 'string',
+	'authkey_path??': '(string | null)',
 	'ttl??': 'number.integer',
 	'cache_path??': 'string',
 })
