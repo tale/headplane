@@ -1,52 +1,46 @@
 import { HostInfo, Machine, Route } from '~/types';
 
 export interface PopulatedNode extends Machine {
-	routes: Route[];
+	routes: string[];
 	hostInfo?: HostInfo;
 	expired: boolean;
 	customRouting: {
-		exitRoutes: Route[];
+		exitRoutes: string[];
 		exitApproved: boolean;
-		subnetApprovedRoutes: Route[];
-		subnetWaitingRoutes: Route[];
+		subnetApprovedRoutes: string[];
+		subnetWaitingRoutes: string[];
 	};
 }
 
 export function mapNodes(
 	nodes: Machine[],
-	routes: Route[],
 	stats?: Record<string, HostInfo> | undefined,
 ): PopulatedNode[] {
 	return nodes.map((node) => {
-		const nodeRoutes = routes.filter((route) => route.node.id === node.id);
-		const customRouting = nodeRoutes.reduce<PopulatedNode['customRouting']>(
-			(acc, route) => {
-				if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
-					acc.exitRoutes.push(route);
-					if (route.enabled) {
-						acc.exitApproved = true;
-					}
-				} else {
-					if (route.enabled) {
-						acc.subnetApprovedRoutes.push(route);
-					} else {
-						acc.subnetWaitingRoutes.push(route);
-					}
-				}
-
-				return acc;
-			},
-			{
-				exitRoutes: [],
-				exitApproved: false,
-				subnetApprovedRoutes: [],
-				subnetWaitingRoutes: [],
-			},
-		);
+		const customRouting = {
+			exitRoutes: node.availableRoutes.filter(
+				(route) => route === '::/0' || route === '0.0.0.0/0',
+			),
+			exitApproved: node.approvedRoutes.some(
+				(route) => route === '::/0' || route === '0.0.0.0/0',
+			),
+			subnetApprovedRoutes: node.approvedRoutes.filter(
+				(route) =>
+					route !== '::/0' &&
+					route !== '0.0.0.0/0' &&
+					node.availableRoutes.includes(route),
+			),
+			subnetWaitingRoutes: node.availableRoutes.filter(
+				(route) =>
+					route !== '::/0' &&
+					route !== '0.0.0.0/0' &&
+					!node.approvedRoutes.includes(route),
+			),
+		} satisfies PopulatedNode['customRouting'];
 
 		return {
 			...node,
-			routes: nodeRoutes,
+			routes: Array.from(new Set(node.availableRoutes)),
 			hostInfo: stats?.[node.nodeKey],
 			customRouting,
 			expired:

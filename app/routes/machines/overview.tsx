@@ -2,12 +2,11 @@ import { InfoIcon } from '@primer/octicons-react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
-import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import type { Machine, Route, User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import { mapNodes } from '~/utils/node-info';
 import MachineRow from './components/machine-row';
@@ -41,13 +40,9 @@ export async function loader({
 		Capabilities.write_machines,
 	);
 
-	const [{ nodes }, { routes }, { users }] = await Promise.all([
+	const [{ nodes }, { users }] = await Promise.all([
 		context.client.get<{ nodes: Machine[] }>(
 			'v1/node',
-			session.get('api_key')!,
-		),
-		context.client.get<{ routes: Route[] }>(
-			'v1/routes',
 			session.get('api_key')!,
 		),
 		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
@@ -61,12 +56,11 @@ export async function loader({
 	}
 
 	const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
-	const populatedNodes = mapNodes(nodes, routes, stats);
+	const populatedNodes = mapNodes(nodes, stats);
 
 	return {
 		populatedNodes,
 		nodes,
-		routes,
 		users,
 		magic,
 		server: context.config.headscale.url,

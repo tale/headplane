@@ -188,6 +188,12 @@ async function updateRoutes(
 	nodeId: string,
 	context: LoadContext,
 ) {
+	const { node } = await context.client.get<{ node: Machine }>(
+		`v1/node/${nodeId}`,
+		apiKey,
+	);
+
+	const newApproved = node.approvedRoutes;
 	const routes = formData.get('routes')?.toString();
 	if (!routes) {
 		throw data('Missing `routes` in the form data.', {
@@ -209,12 +215,32 @@ async function updateRoutes(
 		});
 	}
 
-	const postfix = enabled === 'true' ? 'enable' : 'disable';
-	await Promise.all(
-		allRoutes.map(async (route) => {
-			await context.client.post(`v1/routes/${route}/${postfix}`, apiKey);
-		}),
-	);
+	if (enabled === 'true') {
+		for (const route of allRoutes) {
+			// If already approved, skip, otherwise add to approved
+			if (newApproved.includes(route)) {
+				continue;
+			}
+
+			newApproved.push(route);
+		}
+	} else {
+		for (const route of allRoutes) {
+			// If not approved, skip, otherwise remove from approved
+			if (!newApproved.includes(route)) {
+				continue;
+			}
+
+			const index = newApproved.indexOf(route);
+			if (index > -1) {
+				newApproved.splice(index, 1);
+			}
+		}
+	}
+
+	await context.client.post(`v1/node/${nodeId}/approve_routes`, apiKey, {
+		routes: newApproved,
+	});
 
 	return { message: 'Routes updated' };
 }
