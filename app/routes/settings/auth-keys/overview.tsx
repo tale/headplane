@@ -31,7 +31,7 @@ export async function loader({
 			.filter((user) => user.name?.length > 0) // Filter out any invalid users
 			.map(async (user) => {
 				const qp = new URLSearchParams();
-				qp.set('user', user.name);
+				qp.set('user', user.id);
 
 				try {
 					const { preAuthKeys } = await context.client.get<{
@@ -237,7 +237,7 @@ export default function Page() {
 					filteredKeys.map((key) => {
 						// TODO: Why is Headscale using email as the user ID here?
 						// https://github.com/juanfont/headscale/issues/2520
-						const user = users.find((user) => user.email === key.user);
+						const user = users.find((user) => user.id === key.user.id);
 						if (!user) {
 							return null;
 						}
