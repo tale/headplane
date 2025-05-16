@@ -46,16 +46,16 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 						</TableList.Item>
 					) : undefined}
 					{subnets.map((route) => (
-						<TableList.Item key={route.id}>
-							<p>{route.prefix}</p>
+						<TableList.Item key={route}>
+							<p>{route}</p>
 							<Switch
-								defaultSelected={route.enabled}
+								defaultSelected={node.approvedRoutes.includes(route)}
 								label="Enabled"
 								onChange={(checked) => {
 									const form = new FormData();
 									form.set('action_id', 'update_routes');
 									form.set('node_id', node.id);
-									form.set('routes', [route.id].join(','));
+									form.set('routes', [route].join(','));
 
 									form.set('enabled', String(checked));
 									fetcher.submit(form, {
@@ -95,7 +95,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 									form.set(
 										'routes',
 										node.customRouting.exitRoutes
-											.map((route) => route.id)
+											.map((route) => route)
 											.join(','),
 									);
 

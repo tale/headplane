@@ -11,7 +11,7 @@ import Link from '~/components/Link';
 import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
-import type { Machine, Route, User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import { getOSInfo, getTSVersion } from '~/utils/host-info';
 import { mapNodes } from '~/utils/node-info';
@@ -37,20 +37,16 @@ export async function loader({
 		}
 	}
 
-	const [machine, { routes }, { users }] = await Promise.all([
+	const [machine, { users }] = await Promise.all([
 		context.client.get<{ node: Machine }>(
 			`v1/node/${params.id}`,
-			session.get('api_key')!,
-		),
-		context.client.get<{ routes: Route[] }>(
-			'v1/routes',
 			session.get('api_key')!,
 		),
 		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
-	const [node] = mapNodes([machine.node], routes);
-	const lookup = await context.agents?.lookup([node.nodeKey]);
+	const lookup = await context.agents?.lookup([machine.node.nodeKey]);
+	const [node] = mapNodes([machine.node], lookup);
 
 	return {
 		node,
@@ -160,7 +156,7 @@ export default function Page() {
 						) : (
 							<ul className="leading-normal">
 								{node.customRouting.subnetApprovedRoutes.map((route) => (
-									<li key={route.id}>{route.prefix}</li>
+									<li key={route}>{route}</li>
 								))}
 							</ul>
 						)}
@@ -192,7 +188,7 @@ export default function Page() {
 						) : (
 							<ul className="leading-normal">
 								{node.customRouting.subnetWaitingRoutes.map((route) => (
-									<li key={route.id}>{route.prefix}</li>
+									<li key={route}>{route}</li>
 								))}
 							</ul>
 						)}
