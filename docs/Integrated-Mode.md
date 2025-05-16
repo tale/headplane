@@ -26,7 +26,7 @@ experience.
 
 Requirements:
 - Docker and Docker Compose
-- Headscale 0.25 or newer
+- Headscale 0.26 or newer
 - A finished configuration file (config.yaml)
 
 Here is what a sample Docker Compose deployment would look like:
@@ -54,7 +54,7 @@ services:
       # If you are using the Docker integration, mount the Docker socket
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
   headscale:
-    image: headscale/headscale:0.25.1
+    image: headscale/headscale:0.26.0
     container_name: headscale
     restart: unless-stopped
     command: serve
@@ -178,7 +178,7 @@ spec:
           mountPath: /var/lib/headplane
 
       - name: headscale
-        image: headscale/headscale:0.25.1
+        image: headscale/headscale:0.26.0
         command: ['serve']
         volumeMounts:
         - name: headscale-data

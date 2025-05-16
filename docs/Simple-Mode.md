@@ -11,7 +11,7 @@ out [**Integrated Mode**](/docs/Integrated-Mode.md).
 
 Requirements:
 - Docker and Docker Compose
-- Headscale 0.25 or newer (already deployed)
+- Headscale 0.26 or newer (already deployed)
 - A finished configuration file (config.yaml)
 
 Here is what a sample Docker Compose deployment would look like:

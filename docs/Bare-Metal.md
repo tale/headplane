@@ -11,7 +11,7 @@ different needs.
 ## Deployment
 
 Requirements:
-- Headscale 0.25 or newer (already deployed)
+- Headscale 0.26 or newer (already deployed)
 - Node.js 22 LTS or newer
 - [PNPM](https://pnpm.io/installation) 10.x
 - A finished configuration file (config.yaml)
