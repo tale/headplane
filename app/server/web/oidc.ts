@@ -31,7 +31,7 @@ async function loadClientSecret(path: string) {
 			return;
 		}
 
-		return secret;
+		return secret.trim();
 	} catch (error) {
 		log.error('config', 'Failed to read client secret from %s', path);
 		log.error('config', 'Error: %s', error);
