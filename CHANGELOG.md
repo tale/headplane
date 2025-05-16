@@ -1,6 +1,10 @@
 ### Next
 > Changes here are not considered stable and are only in pre-releases.
 
+- Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
+    - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
+    - Older versions of Headscale will not work with Headplane.
+
 - OIDC authorization restrictions can now be controlled from the settings UI. (closes [#102](https://github.com/tale/headplane/issues/102))
 	- The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
 	- Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
