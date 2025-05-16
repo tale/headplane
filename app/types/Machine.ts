@@ -10,7 +10,7 @@ export interface Machine {
 
 	user: User;
 	lastSeen: string;
-	expiry: string;
+	expiry: string | null;
 
 	preAuthKey?: unknown; // TODO
 
@@ -26,4 +26,9 @@ export interface Machine {
 	validTags: string[];
 	givenName: string;
 	online: boolean;
+
+	// Added in Headscale 0.26+
+	approvedRoutes: string[];
+	availableRoutes: string[];
+	subnetRoutes: string[];
 }

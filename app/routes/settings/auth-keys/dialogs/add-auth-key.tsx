@@ -7,12 +7,12 @@ import Select from '~/components/Select';
 import Switch from '~/components/Switch';
 import type { User } from '~/types';
 
-interface Props {
+interface AddAuthKeyProps {
 	users: User[];
 }
 
 // TODO: Tags
-export default function AddPreAuthKey(data: Props) {
+export default function AddAuthKey(data: AddAuthKeyProps) {
 	const [reusable, setReusable] = useState(false);
 	const [ephemeral, setEphemeral] = useState(false);
 
@@ -21,13 +21,14 @@ export default function AddPreAuthKey(data: Props) {
 			<Dialog.Button className="my-4">Create pre-auth key</Dialog.Button>
 			<Dialog.Panel>
 				<Dialog.Title>Generate auth key</Dialog.Title>
-				<Dialog.Text className="font-semibold">User</Dialog.Text>
-				<Dialog.Text className="text-sm">Attach this key to a user</Dialog.Text>
+				<input type="hidden" name="action_id" value="add_preauthkey" />
 				<Select
 					isRequired
-					label="Owner"
+					label="User"
 					name="user"
 					placeholder="Select a user"
+					description="This is the user machines will belong to when they authenticate."
+					className="mb-2"
 				>
 					{data.users.map((user) => (
 						<Select.Item key={user.name}>{user.name}</Select.Item>
@@ -47,7 +48,7 @@ export default function AddPreAuthKey(data: Props) {
 						unitDisplay: 'short',
 					}}
 				/>
-				<div className="flex justify-between items-center mt-6">
+				<div className="flex justify-between items-center gap-2 mt-6">
 					<div>
 						<Dialog.Text className="font-semibold">Reusable</Dialog.Text>
 						<Dialog.Text className="text-sm">
@@ -64,7 +65,7 @@ export default function AddPreAuthKey(data: Props) {
 					/>
 				</div>
 				<input type="hidden" name="reusable" value={reusable.toString()} />
-				<div className="flex justify-between items-center mt-6">
+				<div className="flex justify-between items-center gap-2 mt-6">
 					<div>
 						<Dialog.Text className="font-semibold">Ephemeral</Dialog.Text>
 						<Dialog.Text className="text-sm">

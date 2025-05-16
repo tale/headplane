@@ -8,7 +8,7 @@ interface Props {
 	type?: 'full' | 'embedded';
 }
 
-function getMessage(error: Error | unknown): {
+export function getErrorMessage(error: Error | unknown): {
 	title: string;
 	message: string;
 } {
@@ -45,10 +45,7 @@ function getMessage(error: Error | unknown): {
 
 	// If we are aggregate, concat into a single message
 	if (rootError instanceof AggregateError) {
-		return {
-			title: 'Errors',
-			message: rootError.errors.map((error) => error.message).join('\n'),
-		};
+		throw new Error('Unhandled AggregateError');
 	}
 
 	return {
@@ -60,7 +57,7 @@ function getMessage(error: Error | unknown): {
 export function ErrorPopup({ type = 'full' }: Props) {
 	const error = useRouteError();
 	const routing = isRouteErrorResponse(error);
-	const { title, message } = getMessage(error);
+	const { title, message } = getErrorMessage(error);
 
 	return (
 		<div
@@ -81,7 +78,7 @@ export function ErrorPopup({ type = 'full' }: Props) {
 				<Card.Text
 					className={cn('mt-4 text-lg', routing ? 'font-normal' : 'font-mono')}
 				>
-					{routing ? error.data.message : message}
+					{routing ? error.data : message}
 				</Card.Text>
 			</Card>
 		</div>

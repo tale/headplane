@@ -27,14 +27,45 @@ export default function Rename({
 					This name is shown in the admin panel, in Tailscale clients, and used
 					when generating MagicDNS names.
 				</Dialog.Text>
-				<input type="hidden" name="_method" value="rename" />
-				<input type="hidden" name="id" value={machine.id} />
+				<input type="hidden" name="action_id" value="rename" />
+				<input type="hidden" name="node_id" value={machine.id} />
 				<Input
+					isRequired
 					label="Machine name"
 					placeholder="Machine name"
+					validationBehavior="native"
 					name="name"
 					defaultValue={machine.givenName}
 					onChange={setName}
+					validate={(value) => {
+						if (value.length === 0) {
+							return 'Cannot be empty';
+						}
+
+						// DNS hostname validation
+						if (value.toLowerCase() !== value) {
+							return 'Cannot contain uppercase letters';
+						}
+
+						if (value.length > 63) {
+							return 'DNS hostnames cannot be 64+ characters';
+						}
+
+						// Test for invalid characters
+						if (!/^[a-z0-9-]+$/.test(value)) {
+							return 'Cannot contain special characters';
+						}
+
+						// Test for leading/trailing hyphens
+						if (value.startsWith('-') || value.endsWith('-')) {
+							return 'Cannot start or end with a hyphen';
+						}
+
+						// Test for consecutive hyphens
+						if (value.includes('--')) {
+							return 'Cannot contain consecutive hyphens';
+						}
+					}}
 				/>
 				{magic ? (
 					name.length > 0 && name !== machine.givenName ? (

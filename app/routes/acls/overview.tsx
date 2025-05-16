@@ -17,7 +17,6 @@ import toast from '~/utils/toast';
 import { aclAction } from './acl-action';
 import { aclLoader } from './acl-loader';
 import { Differ, Editor } from './components/cm.client';
-import { ErrorView, NoticeView } from './components/error';
 
 export async function loader(request: LoaderFunctionArgs<LoadContext>) {
 	return aclLoader(request);
@@ -57,19 +56,19 @@ export default function Page() {
 	return (
 		<div>
 			{!access ? (
-				<NoticeView title="ACL Policy restricted">
+				<Notice title="ACL Policy restricted" variant="warning">
 					You do not have the necessary permissions to edit the Access Control
 					List policy. Please contact your administrator to request access or to
 					make changes to the ACL policy.
-				</NoticeView>
+				</Notice>
 			) : !writable ? (
-				<NoticeView title="Read-only ACL Policy">
+				<Notice title="Read-only ACL Policy" variant="error">
 					The ACL policy mode is most likely set to <Code>file</Code> in your
 					Headscale configuration. This means that the ACL file cannot be edited
 					through the web interface. In order to resolve this, you'll need to
 					set <Code>acl.mode</Code> to <Code>database</Code> in your Headscale
 					configuration.
-				</NoticeView>
+				</Notice>
 			) : undefined}
 			<h1 className="text-2xl font-medium mb-4">Access Control List (ACL)</h1>
 			<p className="mb-4 max-w-prose">
@@ -91,7 +90,13 @@ export default function Page() {
 				.
 			</p>
 			{fetcher.data?.error !== undefined ? (
-				<ErrorView>{fetcher.data.error}</ErrorView>
+				<Notice
+					variant="error"
+					title={fetcher.data.error.split(':')[0] ?? 'Error'}
+				>
+					{fetcher.data.error.split(':').slice(1).join(': ') ??
+						'An unknown error occurred while trying to update the ACL policy.'}
+				</Notice>
 			) : undefined}
 			<Tabs label="ACL Editor" className="mb-4">
 				<Tabs.Item
@@ -150,7 +155,6 @@ export default function Page() {
 				}
 				onPress={() => {
 					const formData = new FormData();
-					console.log(codePolicy);
 					formData.append('policy', codePolicy);
 					fetcher.submit(formData, { method: 'PATCH' });
 				}}

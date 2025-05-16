@@ -194,16 +194,16 @@ async function removeRecord(formData: FormData, context: LoadContext) {
 		return data({ success: false }, 400);
 	}
 
-	const records = config.dns.extra_records.filter(
-		(i) => i.name !== recordName || i.type !== recordType,
-	);
+	// Value is not needed for removal
+	const restart = await context.hs.removeDNS({
+		name: recordName,
+		type: recordType,
+		value: '',
+	});
 
-	await context.hs.patch([
-		{
-			path: 'dns.extra_records',
-			value: records,
-		},
-	]);
+	if (!restart) {
+		return;
+	}
 
 	await context.integration?.onConfigChange(context.client);
 }
@@ -218,15 +218,15 @@ async function addRecord(formData: FormData, context: LoadContext) {
 		return data({ success: false }, 400);
 	}
 
-	const records = config.dns.extra_records;
-	records.push({ name: recordName, type: recordType, value: recordValue });
+	const restart = await context.hs.addDNS({
+		name: recordName,
+		type: recordType,
+		value: recordValue,
+	});
 
-	await context.hs.patch([
-		{
-			path: 'dns.extra_records',
-			value: records,
-		},
-	]);
+	if (!restart) {
+		return;
+	}
 
 	await context.integration?.onConfigChange(context.client);
 }

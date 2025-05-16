@@ -30,7 +30,7 @@ export async function userAction({
 		case 'rename_user':
 			return renameUser(formData, apiKey, context);
 		case 'reassign_user':
-			return reassignUser(formData, apiKey, context, session);
+			return reassignUser(formData, apiKey, context);
 		default:
 			throw data400('Invalid `action_id` provided.');
 	}
