@@ -4,3 +4,14 @@ node_modules
 /build
 /test
 .env
+/result
+
+# Devenv
+.devenv*
+devenv.local.nix
+
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
