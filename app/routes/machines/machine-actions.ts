@@ -251,9 +251,9 @@ async function reassignMachine(
 	nodeId: string,
 	context: LoadContext,
 ) {
-	const user = formData.get('user')?.toString();
+	const user = formData.get('user_id')?.toString();
 	if (!user) {
-		throw data('Missing `user` in the form data.', {
+		throw data('Missing `user_id` in the form data.', {
 			status: 400,
 		});
 	}
