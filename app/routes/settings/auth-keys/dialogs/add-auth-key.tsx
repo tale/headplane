@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Key, useState } from 'react';
 import { useFetcher } from 'react-router';
 import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
@@ -15,6 +15,7 @@ interface AddAuthKeyProps {
 export default function AddAuthKey(data: AddAuthKeyProps) {
 	const [reusable, setReusable] = useState(false);
 	const [ephemeral, setEphemeral] = useState(false);
+	const [userId, setUserId] = useState<Key | null>(data.users[0]?.id);
 
 	return (
 		<Dialog>
@@ -22,6 +23,7 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 			<Dialog.Panel>
 				<Dialog.Title>Generate auth key</Dialog.Title>
 				<input type="hidden" name="action_id" value="add_preauthkey" />
+				<input type="hidden" name="user_id" value={userId?.toString()} />
 				<Select
 					isRequired
 					label="User"
@@ -29,9 +31,12 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 					placeholder="Select a user"
 					description="This is the user machines will belong to when they authenticate."
 					className="mb-2"
+					onSelectionChange={(value) => {
+						setUserId(value);
+					}}
 				>
 					{data.users.map((user) => (
-						<Select.Item key={user.name}>{user.name}</Select.Item>
+						<Select.Item key={user.id}>{user.name}</Select.Item>
 					))}
 				</Select>
 				<NumberInput

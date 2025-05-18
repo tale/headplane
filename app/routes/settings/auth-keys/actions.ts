@@ -45,9 +45,9 @@ async function addPreAuthKey(
 	apiKey: string,
 	context: LoadContext,
 ) {
-	const user = formData.get('user')?.toString();
+	const user = formData.get('user_id')?.toString();
 	if (!user) {
-		return data('Missing `user` in the form data.', {
+		return data('Missing `user_id` in the form data.', {
 			status: 400,
 		});
 	}
@@ -83,7 +83,7 @@ async function addPreAuthKey(
 		'v1/preauthkey',
 		apiKey,
 		{
-			user: user,
+			user,
 			ephemeral: ephemeral === 'on',
 			reusable: reusable === 'on',
 			expiration: date.toISOString(),
@@ -106,9 +106,9 @@ async function expirePreAuthKey(
 		});
 	}
 
-	const user = formData.get('user')?.toString();
+	const user = formData.get('user_id')?.toString();
 	if (!user) {
-		return data('Missing `user` in the form data.', {
+		return data('Missing `user_id` in the form data.', {
 			status: 400,
 		});
 	}
