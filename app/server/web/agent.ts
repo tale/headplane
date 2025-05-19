@@ -10,12 +10,16 @@ import { HostInfo } from '~/types';
 import log from '~/utils/log';
 
 export async function loadAgentSocket(
-	authkey: string,
+	authkey: string | null,
 	path: string,
 	ttl: number,
 ) {
-	if (authkey.length === 0) {
-		return;
+	if (authkey === null || authkey.length === 0) {
+		log.warn(
+			'agent',
+			'Agent authkey is not configured or is empty, agent support will be disabled.',
+		);
+		return undefined;
 	}
 
 	try {
