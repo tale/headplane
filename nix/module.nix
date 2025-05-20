@@ -61,17 +61,6 @@ in {
                   description = "The port to listen on.";
                 };
 
-                cookie_secret = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = ''
-                    The secret used to encode and decode web sessions.
-                    Ensure that this is exactly 32 characters long.
-                    Can be either a direct string or a path to a file containing the secret.
-                  '';
-                  example = "config.sops.secrets.headplane.path";
-                };
-
                 cookie_secret_path = lib.mkOption {
                   type = lib.types.nullOr lib.types.path;
                   default = null;
@@ -96,16 +85,6 @@ in {
                 agent = lib.mkOption {
                   type = lib.types.submodule {
                     options = {
-                      authkey = lib.mkOption {
-                        type = lib.types.nullOr lib.types.str;
-                        default = null;
-                        description = ''
-                          The auth key used to authenticate the agent with Headplane.
-                          Can be either a direct string or a path to a file containing the key.
-                        '';
-                        example = "config.sops.secrets.agent_authkey.path";
-                      };
-
                       authkey_path = lib.mkOption {
                         type = lib.types.nullOr lib.types.path;
                         default = null;
@@ -153,16 +132,6 @@ in {
                   example = "https://headscale.example.com";
                 };
 
-                tls_cert = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = ''
-                    TLS certificate for HTTPS connections.
-                    Can be either a direct string or a path to a file containing the certificate.
-                  '';
-                  example = "config.sops.secrets.tls_cert.path";
-                };
-
                 tls_cert_path = lib.mkOption {
                   type = lib.types.nullOr lib.types.path;
                   default = null;
@@ -171,16 +140,6 @@ in {
                     Can be used instead of tls_cert.
                   '';
                   example = "config.sops.secrets.tls_cert.path";
-                };
-
-                tls_key = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = ''
-                    TLS private key for HTTPS connections.
-                    Can be either a direct string or a path to a file containing the key.
-                  '';
-                  example = "config.sops.secrets.tls_key.path";
                 };
 
                 tls_key_path = lib.mkOption {
@@ -228,7 +187,7 @@ in {
                     options = {
                       enabled = lib.mkOption {
                         type = lib.types.bool;
-                        default = false;
+                        default = true;
                         description = ''
                           Enable "Native" integration that works when Headscale and
                           Headplane are running outside of a container. There is no additional
@@ -264,15 +223,6 @@ in {
                   example = "your-client-id";
                 };
 
-                client_secret = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = ''
-                    The client secret for the OIDC client.
-                  '';
-                  example = "config.sops.secrets.oidc_secret.path";
-                };
-
                 client_secret_path = lib.mkOption {
                   type = lib.types.nullOr lib.types.path;
                   default = null;
@@ -296,17 +246,6 @@ in {
                   ];
                   default = "client_secret_post";
                   description = "The token endpoint authentication method.";
-                };
-
-                headscale_api_key = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = ''
-                    If you are using OIDC, you need to generate an API key
-                    that can be used to authenticate other sessions when signing in.
-                    This can be done with `headscale apikeys create --expiration 999d`.
-                  '';
-                  example = "config.sops.secrets.headscale_api_key.path";
                 };
 
                 headscale_api_key_path = lib.mkOption {
