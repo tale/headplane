@@ -187,7 +187,7 @@ in {
                     options = {
                       enabled = lib.mkOption {
                         type = lib.types.bool;
-                        default = false;
+                        default = true;
                         description = ''
                           Enable "Native" integration that works when Headscale and
                           Headplane are running outside of a container. There is no additional
