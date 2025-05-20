@@ -1,6 +1,13 @@
 import { ChildProcess, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { constants, access, open, readFile, writeFile } from 'node:fs/promises';
+import {
+	constants,
+	access,
+	mkdir,
+	open,
+	readFile,
+	writeFile,
+} from 'node:fs/promises';
 import { exit } from 'node:process';
 import { createInterface } from 'node:readline';
 import { setTimeout } from 'node:timers/promises';
@@ -49,9 +56,32 @@ export async function loadAgentSocket(
 		await access(config.work_dir, constants.R_OK | constants.W_OK);
 		log.debug('config', 'Using agent work dir at %s', config.work_dir);
 	} catch (error) {
-		log.info('config', 'Agent work dir not accessible at %s', config.work_dir);
-		log.debug('config', 'Error details: %s', error);
-		return;
+		// Try to create the directory just in case
+		try {
+			await mkdir(config.work_dir, { recursive: true });
+			log.debug('config', 'Created agent work dir at %s', config.work_dir);
+			log.info(
+				'config',
+				'Created missing agent work dir at %s',
+				config.work_dir,
+			);
+
+			return;
+		} catch (innerError) {
+			log.error(
+				'config',
+				'Failed to create agent work dir at %s',
+				config.work_dir,
+			);
+			log.info(
+				'config',
+				'Agent work dir not accessible at %s',
+				config.work_dir,
+			);
+			log.debug('config', 'Error details: %s', error);
+			log.debug('config', 'Create error details: %s', innerError);
+			return;
+		}
 	}
 
 	try {
