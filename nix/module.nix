@@ -50,9 +50,9 @@ in {
               options = {
                 host = lib.mkOption {
                   type = lib.types.str;
-                  default = "0.0.0.0";
+                  default = "127.0.0.1";
                   description = "The host address to bind to.";
-                  example = "127.0.0.1";
+                  example = "0.0.0.0";
                 };
 
                 port = lib.mkOption {
@@ -67,7 +67,6 @@ in {
                   description = ''
                     Path to a file containing the cookie secret.
                     The secret must be exactly 32 characters long.
-                    Can be used instead of cookie_secret.
                   '';
                   example = "config.sops.secrets.headplane_cookie.path";
                 };
@@ -90,7 +89,6 @@ in {
                         default = null;
                         description = ''
                           Path to a file containing the agent auth key.
-                          Can be used instead of authkey.
                         '';
                         example = "config.sops.secrets.agent_authkey.path";
                       };
@@ -137,7 +135,6 @@ in {
                   default = null;
                   description = ''
                     Path to a file containing the TLS certificate.
-                    Can be used instead of tls_cert.
                   '';
                   example = "config.sops.secrets.tls_cert.path";
                 };
@@ -147,7 +144,6 @@ in {
                   default = null;
                   description = ''
                     Path to a file containing the TLS private key.
-                    Can be used instead of tls_key.
                   '';
                   example = "config.sops.secrets.tls_key.path";
                 };
@@ -213,7 +209,7 @@ in {
                   type = lib.types.str;
                   default = "";
                   description = "URL to OpenID issuer.";
-                  example = "https://authentik.parawell.cloud/application/o/test-headscale/";
+                  example = "https://provider.example.com/issuer-url";
                 };
 
                 client_id = lib.mkOption {
@@ -228,7 +224,6 @@ in {
                   default = null;
                   description = ''
                     Path to a file containing the OIDC client secret.
-                    Can be used instead of client_secret.
                   '';
                   example = "config.sops.secrets.oidc_client_secret.path";
                 };
@@ -253,13 +248,13 @@ in {
                   default = null;
                   description = ''
                     Path to a file containing the Headscale API key.
-                    Can be used instead of headscale_api_key.
                   '';
                   example = "config.sops.secrets.headscale_api_key.path";
                 };
 
                 redirect_uri = lib.mkOption {
                   type = lib.types.str;
+                  default = "";
                   description = ''
                     This should point to your publicly accessible URL
                     for your Headplane instance with /admin/oidc/callback.
