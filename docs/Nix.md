@@ -165,43 +165,39 @@ The Headplane NixOS module provides the following options under `services.headpl
                # Configure the Headplane server application
                settings = {
                  server = {
-                   # host = "0.0.0.0";  # Default: bind to all interfaces
-                   # port = 3000;      # Default port
+                   # host = "127.0.0.1";
+                   # port = 3000;
                    cookie_secret_path = config.sops.secrets.headplane_cookie_secret.path;
-                   # cookie_secret = "your-32-character-secret";  # Alternative to cookie_secret_path
                    cookie_secure = true;
 
                    agent = {
                     enabled = false;
-                     # authkey = "your-agent-authkey";  # Alternative to authkey_path
                      # authkey_path = config.sops.secrets.headplane_server_agent_authkey.path;
-                     # ttl = 180000;  # Default: 3 minutes in milliseconds
-                     # cache_path = "/var/lib/headplane/agent_cache.json";  # Default cache location
+                     # ttl = 180000; # milliseconds
+                     # cache_path = "/var/lib/headplane/agent_cache.json";
                    };
                  };
 
                  headscale = {
-                   # url = "http://127.0.0.1:8080";  # Default Headscale URL
+                   # url = "http://127.0.0.1:8080";
                    config_path = headscaleConfig;  # Use the generated config file
-                   # config_strict = true;  # Default: strict config validation
+                   # config_strict = true;
                    # tls_cert = "your-tls-cert";  # Alternative to tls_cert_path
                    # tls_cert_path = config.sops.secrets.headplane_tls_cert.path;
                    # tls_key = "your-tls-key";  # Alternative to tls_key_path
                    # tls_key_path = config.sops.secrets.headplane_tls_key.path;
                  };
 
-                 integration.proc.enabled = true;
-
                  oidc = {
-                   # issuer = "";  # Default: empty
-                   # client_id = "";  # Default: empty
-                   client_secret_path = config.sops.secrets.headplane_oidc_client_secret.path;
+                   # issuer = "";
+                   # client_id = ""; 
+                   # client_secret_path = config.sops.secrets.headplane_oidc_client_secret.path;
                    # client_secret = "your_oidc_client_secret";  # Alternative to client_secret_path
-                   # disable_api_key_login = false;  # Default: allow API key login
-                   # token_endpoint_auth_method = "client_secret_post";  # Default auth method
-                   headscale_api_key_path = config.sops.secrets.headplane_headscale_api_key.path;
+                   # disable_api_key_login = false;
+                   # token_endpoint_auth_method = "client_secret_post";
+                   # headscale_api_key_path = config.sops.secrets.headplane_headscale_api_key.path;
                    # headscale_api_key = "your_headscale_api_key";  # Alternative to headscale_api_key_path
-                   redirect_uri = "https://headscale.example.com/admin/oidc/callback";
+                   # redirect_uri = "";
                  };
                };
              };
