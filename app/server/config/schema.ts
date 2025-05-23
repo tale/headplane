@@ -56,12 +56,29 @@ const agentConfig = type({
 	work_dir: 'string = "/var/lib/headplane/agent"',
 });
 
+const partialAgentConfig = type({
+	enabled: stringToBool,
+	host_name: 'string | undefined',
+	pre_authkey: 'string | undefined',
+	cache_ttl: 'number.integer | undefined',
+	cache_path: 'string | undefined',
+	executable_path: 'string | undefined',
+	work_dir: 'string | undefined',
+}).partial();
+
 const dockerConfig = type({
 	enabled: stringToBool,
 	container_name: 'string = ""',
 	container_label: 'string = "me.tale.headplane.target=headscale"',
 	socket: 'string = "unix:///var/run/docker.sock"',
 });
+
+const partialDockerConfig = type({
+	enabled: stringToBool,
+	container_name: 'string | undefined',
+	container_label: 'string | undefined',
+	socket: 'string | undefined',
+}).partial();
 
 const kubernetesConfig = type({
 	enabled: stringToBool,
@@ -78,13 +95,13 @@ const integrationConfig = type({
 	'kubernetes?': kubernetesConfig,
 	'proc?': procConfig,
 	'agent?': agentConfig,
-}).onDeepUndeclaredKey('reject');
+});
 
 const partialIntegrationConfig = type({
-	'docker?': dockerConfig.partial(),
+	'docker?': partialDockerConfig,
 	'kubernetes?': kubernetesConfig.partial(),
 	'proc?': procConfig.partial(),
-	'agent?': agentConfig.partial(),
+	'agent?': partialAgentConfig,
 }).partial();
 
 export const headplaneConfig = type({
