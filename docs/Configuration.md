@@ -22,33 +22,29 @@ When using a `_path` option, the content of the specified file will be read and 
 **Important Rules for Dual-Mode Fields:**
 - You **cannot** set both the direct value (e.g., `cookie_secret`) and its corresponding `_path` (e.g., `cookie_secret_path`) simultaneously. Doing so will result in a configuration error.
 - If a `_path` is provided, the corresponding direct value field (if also present and not null) will usually be ignored or may cause validation errors depending on the specific field and loader logic. It's best to provide only one.
-- The same dual-mode pattern works with environment variables. You can set `HEADPLANE_OIDC__CLIENT_SECRET` for a direct value or `HEADPLANE_OIDC__CLIENT_SECRET_PATH` to specify a path to a file containing the secret.
 
-**Note on Path Processing:**
-Headplane uses a whitelist approach to determine which `_path` fields should have their content loaded as secrets. Only the explicitly whitelisted paths below will have their file content read and used as configuration values. All other paths with a `_path` suffix will have environment variables interpolated but will not have their content loaded.
-
-The following configuration options in Headplane are treated as secret paths:
+The following configuration options in Headplane currently support this dual value/path mode:
 
 - **Server Settings (`server.*`):**
-  - `cookie_secret_path` (for web session encoding)
-  - `agent.authkey_path` (for the server's internal agent functionality)
-    - *Note:* These are optional. If neither `authkey` nor `authkey_path` are provided for the server's internal agent, or if they resolve to null/empty, Headplane will log a message indicating that its internal agent support features are disabled and will proceed without error.
+  - `cookie_secret` / `cookie_secret_path` (for web session encoding)
+  - `agent.authkey` / `agent.authkey_path` (for the server's internal agent functionality)
+    - *Note:* These are optional. If neither `authkey` nor `authkey_path` are provided for the server's internal agent, or if they resolve to null/empty, Headplane will log a message indicating that its internal agent support features are disabled and will proceed without error. This is the default behavior if the `server.agent` block is empty or not explicitly configured.
 
 - **Headscale Connection Settings (`headscale.*`):**
-  - `tls_cert_path` (custom TLS certificate for connecting to Headscale)
-  - `tls_key_path` (custom TLS private key for connecting to Headscale)
-  - `api_key_path` (Headscale API key for Headplane to connect to Headscale)
+  - `tls_cert` / `tls_cert_path` (custom TLS certificate for connecting to Headscale)
+  - `tls_key` / `tls_key_path` (custom TLS private key for connecting to Headscale)
+  - `api_key` / `api_key_path` (Headscale API key for Headplane to connect to Headscale - *Note: Please verify if this specific Headscale API key is managed by Headplane's config or directly by Headscale's own config and how it's used by Headplane.*)
 
 - **OIDC Settings (`oidc.*`):**
-  - `client_secret_path` (OIDC client secret)
-  - `headscale_api_key_path` (Headscale API key used by Headplane during the OIDC authentication flow)
+  - `client_secret` / `client_secret_path` (OIDC client secret)
+  - `headscale_api_key` / `headscale_api_key_path` (Headscale API key used by Headplane during the OIDC authentication flow)
 
 **Distinction for Non-Secret Paths:**
-Other configuration fields that end with `_path` are treated as regular paths and will not have their content loaded. For example:
-- `server.agent.cache_path` (default: `/var/lib/headplane/agent_cache.json`): This is a direct file path where Headplane will *store* its agent cache data.
-- `headscale.config_path`: This is an optional path to Headscale's `config.yaml` file, which Headplane might read or use for validation.
+It's important to distinguish the `_path` fields above (which point to files whose *content* is the secret value) from other configuration fields that are also paths but serve different purposes. For example:
+- `server.agent.cache_path` (default: `/var/lib/headplane/agent_cache.json`): This is a direct file path where Headplane will *store* its agent cache data. It is not a path to a file containing a secret.
+- `headscale.config_path`: This is an optional path to Headscale's `config.yaml` file, which Headplane might read (if `config_strict: false`) or use for validation.
 
-All path fields (both secret and non-secret) support environment variable interpolation using the `${VAR_NAME}` syntax.
+These types of paths are also subject to environment variable interpolation if applicable.
 
 ## Environment Variables
 It is also possible to override the configuration file using environment variables.
@@ -56,10 +52,6 @@ These changes get merged *after* the configuration file is loaded, so they will 
 Environment variables follow this pattern: **`HEADPLANE_<SECTION>__<KEY_NAME>`**.
 For example, to override `oidc.client_secret`, you would set `HEADPLANE_OIDC__CLIENT_SECRET`
 to the value that you want.
-
-The path-based secret loading mechanism also works with environment variables. For instance:
-- `HEADPLANE_OIDC__CLIENT_SECRET_PATH=/path/to/secret/file` will load the OIDC client secret from the specified file
-- `HEADPLANE_SERVER__COOKIE_SECRET_PATH=${CREDENTIALS_DIRECTORY}/cookie_secret` will use environment variable interpolation in the path
 
 Here are a few more examples:
 
