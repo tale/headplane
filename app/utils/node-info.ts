@@ -1,4 +1,4 @@
-import { HostInfo, Machine, Route } from '~/types';
+import { HostInfo, Machine } from '~/types';
 
 export interface PopulatedNode extends Machine {
 	routes: string[];
@@ -44,6 +44,8 @@ export function mapNodes(
 			hostInfo: stats?.[node.nodeKey],
 			customRouting,
 			expired:
+				node.expiry === '0001-01-01 00:00:00' ||
+				node.expiry === '0001-01-01T00:00:00Z' ||
 				node.expiry === null
 					? false
 					: new Date(node.expiry).getTime() < Date.now(),
