@@ -209,7 +209,7 @@ function deepMerge<T>(target: T, source: DeepPartial<T>): T {
 
 	for (const key in source) {
 		const val = source[key];
-		if (val === undefined) {
+		if (val === undefined || val === null) {
 			continue;
 		}
 

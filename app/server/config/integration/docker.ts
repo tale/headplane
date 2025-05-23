@@ -133,6 +133,11 @@ export default class DockerIntegration extends Integration<T> {
 			),
 		});
 
+		log.debug(
+			'config',
+			'Requesting Docker containers with filters: %s',
+			qp.toString(),
+		);
 		const res = await this.client.request({
 			method: 'GET',
 			path: `/v1.30/containers/json?${qp.toString()}`,
