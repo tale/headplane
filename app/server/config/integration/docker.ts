@@ -128,7 +128,7 @@ export default class DockerIntegration extends Integration<T> {
 		const qp = new URLSearchParams({
 			filters: JSON.stringify(
 				container_name.length > 0
-					? { name: container_name }
+					? { name: [container_name] }
 					: { label: [container_label] },
 			),
 		});
