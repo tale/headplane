@@ -15,6 +15,7 @@ type T = NonNullable<HeadplaneConfig['integration']>['docker'];
 export default class DockerIntegration extends Integration<T> {
 	private maxAttempts = 10;
 	private client: Client | undefined;
+	private containerId: string | undefined;
 
 	get name() {
 		return 'Docker';
@@ -56,22 +57,13 @@ export default class DockerIntegration extends Integration<T> {
 	}
 
 	async isAvailable() {
-		// Perform a basic check to see if any of the required properties are set
-		if (
-			this.context.container_name.length === 0 &&
-			!this.context.container_label
-		) {
-			log.error('config', 'Docker container name and label are both empty');
-			return false;
-		}
-
-		if (
-			this.context.container_name.length > 0 &&
-			!this.context.container_label
-		) {
+		// Basic configuration check, the name overrides the container_label
+		// selector because of legacy support.
+		const { container_name, container_label } = this.context;
+		if (container_name.length === 0 && container_label.length === 0) {
 			log.error(
 				'config',
-				'Docker container name and label are mutually exclusive',
+				'Missing a Docker `container_name` or `container_label`',
 			);
 			return false;
 		}
@@ -127,40 +119,78 @@ export default class DockerIntegration extends Integration<T> {
 				socketPath: url.pathname,
 			});
 		}
+
 		if (this.client === undefined) {
 			log.error('config', 'Failed to create Docker client');
 			return false;
 		}
 
-		if (this.context.container_name.length === 0) {
-			try {
-				if (this.context.container_label === undefined) {
-					log.error('config', 'Docker container label is not defined');
-					return false;
-				}
-				const containerName = await this.getContainerName(
-					this.context.container_label.name,
-					this.context.container_label.value,
-				);
-				if (containerName.length === 0) {
-					log.error(
-						'config',
-						'No Docker containers found matching label: %s=%s',
-						this.context.container_label.name,
-						this.context.container_label.value,
-					);
-					return false;
-				}
-				this.context.container_name = containerName;
-			} catch (error) {
-				log.error('config', 'Failed to get Docker container name: %s', error);
-				return false;
-			}
+		const qp = new URLSearchParams({
+			filters: JSON.stringify(
+				container_name.length > 0
+					? { name: [container_name] }
+					: { label: [container_label] },
+			),
+		});
+
+		log.debug(
+			'config',
+			'Requesting Docker containers with filters: %s',
+			qp.toString(),
+		);
+		const res = await this.client.request({
+			method: 'GET',
+			path: `/v1.30/containers/json?${qp.toString()}`,
+		});
+
+		if (res.statusCode !== 200) {
+			log.error('config', 'Could not request available Docker containers');
+			log.debug('config', 'Error Details: %o', await res.body.json());
+			return false;
 		}
 
-		log.info('config', 'Using container: %s', this.context.container_name);
+		const data = (await res.body.json()) as DockerContainer[];
+		if (data.length > 1) {
+			if (container_name.length > 0) {
+				log.error(
+					'config',
+					`Found multiple containers with name ${container_name}`,
+				);
+			} else {
+				log.error(
+					'config',
+					`Found multiple containers with label ${container_label}`,
+				);
+			}
 
-		return this.client !== undefined;
+			return false;
+		}
+
+		if (data.length === 0) {
+			if (container_name.length > 0) {
+				log.error(
+					'config',
+					`No container found with the name ${container_name}`,
+				);
+			} else {
+				log.error(
+					'config',
+					`No container found with the label ${container_label}`,
+				);
+			}
+
+			return false;
+		}
+
+		this.containerId = data[0].Id;
+		log.info(
+			'config',
+			'Using container: %s (ID: %s)',
+			data[0].Names[0],
+			this.containerId,
+		);
+
+		return this.client !== undefined && this.containerId !== undefined;
 	}
 
 	async onConfigChange(client: ApiClient) {
@@ -175,13 +205,13 @@ export default class DockerIntegration extends Integration<T> {
 			log.debug(
 				'config',
 				'Restarting container: %s (attempt %d)',
-				this.context.container_name,
+				this.containerId,
 				attempts,
 			);
 
 			const response = await this.client.request({
 				method: 'POST',
-				path: `/v1.30/containers/${this.context.container_name}/restart`,
+				path: `/v1.30/containers/${this.containerId}/restart`,
 			});
 
 			if (response.statusCode !== 204) {
@@ -217,11 +247,7 @@ export default class DockerIntegration extends Integration<T> {
 					continue;
 				}
 
-				log.error(
-					'config',
-					'Missed restart deadline for %s',
-					this.context.container_name,
-				);
+				log.error('config', 'Missed restart deadline for %s', this.containerId);
 				return;
 			}
 		}

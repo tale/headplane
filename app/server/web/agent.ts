@@ -1,159 +1,317 @@
+import { ChildProcess, spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { open, readFile, writeFile } from 'node:fs/promises';
+import {
+	constants,
+	access,
+	mkdir,
+	open,
+	readFile,
+	writeFile,
+} from 'node:fs/promises';
+import { exit } from 'node:process';
+import { createInterface } from 'node:readline';
 import { setTimeout } from 'node:timers/promises';
-import { getConnInfo } from '@hono/node-server/conninfo';
 import { type } from 'arktype';
-import type { Context } from 'hono';
-import type { WSContext, WSEvents } from 'hono/ws';
-import { WebSocket } from 'ws';
 import { HostInfo } from '~/types';
 import log from '~/utils/log';
+import type { HeadplaneConfig } from '../config/schema';
+
+interface LogResponse {
+	Level: 'info' | 'debug' | 'error' | 'fatal';
+	Message: string;
+}
+
+interface RegisterMessage {
+	Type: 'register';
+	ID: string;
+}
+
+interface StatusMessage {
+	Type: 'status';
+	Data: Record<string, HostInfo>;
+}
+
+interface MessageResponse {
+	Level: 'msg';
+	Message: RegisterMessage | StatusMessage;
+}
+
+type AgentResponse = LogResponse | MessageResponse;
 
 export async function loadAgentSocket(
-	authkey: string,
-	path: string,
-	ttl: number,
+	config: NonNullable<HeadplaneConfig['integration']>['agent'] | undefined,
+	headscaleUrl: string,
 ) {
-	if (authkey.length === 0) {
+	if (!config?.enabled) {
+		return;
+	}
+
+	if (config.pre_authkey.trim().length === 0) {
+		log.error('agent', 'Agent `pre_authkey` is not set');
+		log.warn('agent', 'The agent will not run until resolved');
 		return;
 	}
 
 	try {
-		const handle = await open(path, 'w');
-		log.info('agent', 'Using agent cache file at %s', path);
+		await access(config.work_dir, constants.R_OK | constants.W_OK);
+		log.debug('config', 'Using agent work dir at %s', config.work_dir);
+	} catch (error) {
+		// Try to create the directory just in case
+		try {
+			await mkdir(config.work_dir, { recursive: true });
+			log.debug('config', 'Created agent work dir at %s', config.work_dir);
+			log.info(
+				'config',
+				'Created missing agent work dir at %s',
+				config.work_dir,
+			);
+
+			return;
+		} catch (innerError) {
+			log.error(
+				'config',
+				'Failed to create agent work dir at %s',
+				config.work_dir,
+			);
+			log.info(
+				'config',
+				'Agent work dir not accessible at %s',
+				config.work_dir,
+			);
+			log.debug('config', 'Error details: %s', error);
+			log.debug('config', 'Create error details: %s', innerError);
+			return;
+		}
+	}
+
+	try {
+		const handle = await open(config.cache_path, 'a+');
+		log.info('agent', 'Using agent cache file at %s', config.cache_path);
 		await handle.close();
 	} catch (error) {
-		log.info('agent', 'Agent cache file not accessible at %s', path);
+		log.info(
+			'agent',
+			'Agent cache file not accessible at %s',
+			config.cache_path,
+		);
 		log.debug('agent', 'Error details: %s', error);
 		return;
 	}
 
-	const cache = new TimedCache<HostInfo>(ttl, path);
-	return new AgentManager(cache, authkey);
+	const cache = new TimedCache<HostInfo>(config.cache_ttl, config.cache_path);
+	return new AgentManager(cache, config, headscaleUrl);
 }
 
 class AgentManager {
+	private static readonly MAX_RESTARTS = 5;
+	private restartCounter = 0;
+
 	private cache: TimedCache<HostInfo>;
-	private agents: Map<string, WSContext>;
-	private timers: Map<string, NodeJS.Timeout>;
-	private authkey: string;
+	private headscaleUrl: string;
+	private config: NonNullable<
+		NonNullable<HeadplaneConfig['integration']>['agent']
+	>;
 
-	constructor(cache: TimedCache<HostInfo>, authkey: string) {
+	private spawnProcess: ChildProcess | null;
+	private agentId: string | null;
+
+	constructor(
+		cache: TimedCache<HostInfo>,
+		config: NonNullable<NonNullable<HeadplaneConfig['integration']>['agent']>,
+		headscaleUrl: string,
+	) {
 		this.cache = cache;
-		this.authkey = authkey;
-		this.agents = new Map();
-		this.timers = new Map();
+		this.config = config;
+		this.headscaleUrl = headscaleUrl;
+		this.spawnProcess = null;
+		this.agentId = null;
+		this.startAgent();
+
+		process.on('SIGINT', () => {
+			this.spawnProcess?.kill();
+			exit(0);
+		});
+
+		process.on('SIGTERM', () => {
+			this.spawnProcess?.kill();
+			exit(0);
+		});
 	}
 
-	tailnetIDs() {
-		return Array.from(this.agents.keys());
+	/**
+	 * Used by the UI to indicate why the agent is not running.
+	 * Exhaustion requires a manual restart of the agent.
+	 * (Which can be invoked via the UI)
+	 * @returns true if the agent is exhausted
+	 */
+	exhausted() {
+		return this.restartCounter >= AgentManager.MAX_RESTARTS;
 	}
 
-	lookup(nodeIds: string[]) {
+	/*
+	 * Called by the UI to manually force a restart of the agent.
+	 */
+	deExhaust() {
+		this.restartCounter = 0;
+		this.startAgent();
+	}
+
+	/*
+	 * Stored agent ID for the current process. This is caught by the agent
+	 * when parsing the stdout on agent startup.
+	 */
+	agentID() {
+		return this.agentId;
+	}
+
+	private startAgent() {
+		if (this.spawnProcess) {
+			log.debug('agent', 'Agent already running');
+			return;
+		}
+
+		if (this.exhausted()) {
+			log.error('agent', 'Agent is exhausted, cannot start');
+			return;
+		}
+
+		// Cannot be detached since we want to follow our process lifecycle
+		// We also need to be able to send data to the process by using stdin
+		log.info(
+			'agent',
+			'Starting agent process (attempt %d)',
+			this.restartCounter,
+		);
+		this.spawnProcess = spawn(this.config.executable_path, [], {
+			detached: false,
+			stdio: ['pipe', 'pipe', 'pipe'],
+			env: {
+				HOME: process.env.HOME,
+				HEADPLANE_EMBEDDED: 'true',
+				HEADPLANE_AGENT_WORK_DIR: this.config.work_dir,
+				HEADPLANE_AGENT_DEBUG: log.debugEnabled ? 'true' : 'false',
+				HEADPLANE_AGENT_HOSTNAME: this.config.host_name,
+				HEADPLANE_AGENT_TS_SERVER: this.headscaleUrl,
+				HEADPLANE_AGENT_TS_AUTHKEY: this.config.pre_authkey,
+			},
+		});
+
+		if (!this.spawnProcess?.pid) {
+			log.error('agent', 'Failed to start agent process');
+			this.restartCounter++;
+			global.setTimeout(() => this.startAgent(), 1000);
+			return;
+		}
+
+		if (this.spawnProcess.stdin === null || this.spawnProcess.stdout === null) {
+			log.error('agent', 'Failed to connect to agent process');
+			this.restartCounter++;
+			global.setTimeout(() => this.startAgent(), 1000);
+			return;
+		}
+
+		const rlStdout = createInterface({
+			input: this.spawnProcess.stdout,
+			crlfDelay: Number.POSITIVE_INFINITY,
+		});
+
+		rlStdout.on('line', (line) => {
+			try {
+				const parsed = JSON.parse(line) as AgentResponse;
+				if (parsed.Level === 'msg') {
+					switch (parsed.Message.Type) {
+						case 'register':
+							this.agentId = parsed.Message.ID;
+							break;
+						case 'status':
+							for (const [key, value] of Object.entries(parsed.Message.Data)) {
+								// Mark the agent as the one that is running
+								// We store it in the cache so that it shows
+								// itself later
+								if (key === this.agentId) {
+									value.HeadplaneAgent = true;
+								}
+
+								this.cache.set(key, value);
+							}
+
+							break;
+					}
+
+					return;
+				}
+
+				switch (parsed.Level) {
+					case 'info':
+					case 'debug':
+					case 'error':
+						log[parsed.Level]('agent', parsed.Message);
+						break;
+					case 'fatal':
+						log.error('agent', parsed.Message);
+						break;
+					default:
+						log.debug('agent', 'Unknown agent response: %s', line);
+						break;
+				}
+			} catch (error) {
+				log.debug('agent', 'Failed to parse agent response: %s', error);
+				log.debug('agent', 'Raw data: %s', line);
+			}
+		});
+
+		this.spawnProcess.on('error', (error) => {
+			log.error('agent', 'Failed to start agent process: %s', error);
+			this.restartCounter++;
+			this.spawnProcess = null;
+			global.setTimeout(() => this.startAgent(), 1000);
+		});
+
+		this.spawnProcess.on('exit', (code) => {
+			log.error('agent', 'Agent process exited with code %d', code ?? -1);
+			this.restartCounter++;
+			this.spawnProcess = null;
+			global.setTimeout(() => this.startAgent(), 1000);
+		});
+	}
+
+	async lookup(nodeIds: string[]) {
 		const entries = this.cache.toJSON();
 		const missing = nodeIds.filter((nodeId) => !entries[nodeId]);
 		if (missing.length > 0) {
-			this.requestData(missing);
+			await this.requestData(missing);
 		}
 
-		return entries;
+		return Object.entries(entries).reduce<Record<string, HostInfo>>(
+			(acc, [key, value]) => {
+				if (nodeIds.includes(key)) {
+					acc[key] = value;
+				}
+
+				return acc;
+			},
+			{},
+		);
 	}
 
-	// Request data from all connected agents
-	// This does not return anything, but caches the data which then needs to be
-	// queried by the caller separately.
-	private requestData(nodeList: string[]) {
-		const NodeIDs = [...new Set(nodeList)];
-		NodeIDs.map((node) => {
-			log.debug('agent', 'Requesting agent data for %s', node);
-		});
-
-		for (const agent of this.agents.values()) {
-			agent.send(JSON.stringify({ NodeIDs }));
+	// Request data from the internal agent by sending a message to the process
+	// via stdin. This is a blocking call, so it will wait for the agent to
+	// respond before returning.
+	private async requestData(nodeList: string[]) {
+		if (this.exhausted()) {
+			return;
 		}
-	}
 
-	// Since we are using Node, Hono is built on 'ws' WebSocket types.
-	configureSocket(c: Context): WSEvents<WebSocket> {
-		return {
-			onOpen: (_, ws) => {
-				const id = c.req.header('x-headplane-tailnet-id');
-				if (!id) {
-					log.warn(
-						'agent',
-						'Rejecting an agent WebSocket connection without a tailnet ID',
-					);
-					ws.close(1008, 'ERR_INVALID_TAILNET_ID');
-					return;
-				}
+		// Wait for the process to be spawned, busy waiting is gross
+		while (this.spawnProcess === null) {
+			await setTimeout(100);
+		}
 
-				const auth = c.req.header('authorization');
-				if (auth !== `Bearer ${this.authkey}`) {
-					log.warn('agent', 'Rejecting an unauthorized WebSocket connection');
-
-					const info = getConnInfo(c);
-					if (info.remote.address) {
-						log.warn('agent', 'Agent source IP: %s', info.remote.address);
-					}
-
-					ws.close(1008, 'ERR_UNAUTHORIZED');
-					return;
-				}
-
-				const pinger = setInterval(() => {
-					if (ws.readyState !== 1) {
-						clearInterval(pinger);
-						return;
-					}
-
-					ws.raw?.ping();
-				}, 30000);
-
-				this.agents.set(id, ws);
-				this.timers.set(id, pinger);
-			},
-
-			onClose: () => {
-				const id = c.req.header('x-headplane-tailnet-id');
-				if (!id) {
-					return;
-				}
-
-				clearInterval(this.timers.get(id));
-				this.agents.delete(id);
-			},
-
-			onError: (event, ws) => {
-				const id = c.req.header('x-headplane-tailnet-id');
-				if (!id) {
-					return;
-				}
-
-				clearInterval(this.timers.get(id));
-				if (event instanceof ErrorEvent) {
-					log.error('agent', 'WebSocket error: %s', event.message);
-				}
-
-				log.debug('agent', 'Closing agent WebSocket connection');
-				ws.close(1011, 'ERR_INTERNAL_ERROR');
-			},
-
-			// This is where we receive the data from the agent
-			// Requests are made in the AgentManager.requestData function
-			onMessage: (event, ws) => {
-				const id = c.req.header('x-headplane-tailnet-id');
-				if (!id) {
-					return;
-				}
-
-				const data = JSON.parse(event.data.toString());
-				log.debug('agent', 'Received agent data from %s', id);
-				for (const [node, info] of Object.entries<HostInfo>(data)) {
-					this.cache.set(node, info);
-					log.debug('agent', 'Cached HostInfo for %s', node);
-				}
-			},
-		};
+		// Send the request to the agent, without waiting for a response.
+		// The live data invalidator will re-request the data if it is not
+		// available in the cache anyways.
+		const data = JSON.stringify({ NodeIDs: nodeList });
+		this.spawnProcess.stdin?.write(`${data}\n`);
 	}
 }
 

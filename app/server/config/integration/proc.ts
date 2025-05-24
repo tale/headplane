@@ -38,9 +38,11 @@ export default class ProcIntegration extends Integration<T> {
 				try {
 					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
-					if (data.includes('headscale')) {
-						return pid;
+					if (!data.includes('headscale') && !data.includes('serve')) {
+						throw new Error('Found PID without Headscale serve command');
 					}
+
+					return pid;
 				} catch (error) {
 					log.error('config', 'Failed to read %s: %s', path, error);
 				}

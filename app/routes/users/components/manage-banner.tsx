@@ -61,7 +61,7 @@ export default function ManageBanner({ oidc, isDisabled }: ManageBannerProps) {
 							: 'You can add, remove, and rename users here.'}
 					</p>
 					<div className="flex items-center gap-2 mt-4">
-						<CreateUser isDisabled={isDisabled} />
+						<CreateUser isOidc={oidc !== undefined} isDisabled={isDisabled} />
 					</div>
 				</div>
 			</div>

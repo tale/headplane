@@ -116,6 +116,7 @@ export async function loader({
 				),
 			},
 			onboarding: request.url.endsWith('/onboarding'),
+			healthy: await context.client.healthcheck(),
 		};
 	} catch {
 		// No session, so we can just return

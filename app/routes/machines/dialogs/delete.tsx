@@ -22,8 +22,8 @@ export default function Delete({ machine, isOpen, setIsOpen }: DeleteProps) {
 					This machine will be permanently removed from your network. To re-add
 					it, you will need to reauthenticate to your tailnet from the device.
 				</Dialog.Text>
-				<input type="hidden" name="_method" value="delete" />
-				<input type="hidden" name="id" value={machine.id} />
+				<input type="hidden" name="action_id" value="delete" />
+				<input type="hidden" name="node_id" value={machine.id} />
 			</Dialog.Panel>
 		</Dialog>
 	);

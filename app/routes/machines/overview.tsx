@@ -2,13 +2,13 @@ import { InfoIcon } from '@primer/octicons-react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
-import { ErrorPopup } from '~/components/Error';
 import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import type { Machine, Route, User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
+import { mapNodes } from '~/utils/node-info';
 import MachineRow from './components/machine-row';
 import NewMachine from './dialogs/new';
 import { machineAction } from './machine-actions';
@@ -40,13 +40,9 @@ export async function loader({
 		Capabilities.write_machines,
 	);
 
-	const [machines, routes, users] = await Promise.all([
+	const [{ nodes }, { users }] = await Promise.all([
 		context.client.get<{ nodes: Machine[] }>(
 			'v1/node',
-			session.get('api_key')!,
-		),
-		context.client.get<{ routes: Route[] }>(
-			'v1/routes',
 			session.get('api_key')!,
 		),
 		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
@@ -59,16 +55,22 @@ export async function loader({
 		}
 	}
 
+	const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
+	const populatedNodes = mapNodes(nodes, stats);
+
 	return {
-		nodes: machines.nodes,
-		routes: routes.routes,
-		users: users.users,
+		populatedNodes,
+		nodes,
+		users,
 		magic,
 		server: context.config.headscale.url,
 		publicServer: context.config.headscale.public_url,
-		agents: context.agents?.tailnetIDs(),
-		stats: context.agents?.lookup(machines.nodes.map((node) => node.nodeKey)),
+		agent: context.agents?.agentID(),
 		writable: writablePermission,
+		preAuth: await context.sessions.check(
+			request,
+			Capabilities.generate_authkeys,
+		),
 		subject: user.subject,
 	};
 }
@@ -99,6 +101,7 @@ export default function Page() {
 					server={data.publicServer ?? data.server}
 					users={data.users}
 					isDisabled={!data.writable}
+					disabledKeys={data.preAuth ? [] : ['pre-auth']}
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
@@ -124,7 +127,7 @@ export default function Page() {
 							</div>
 						</th>
 						{/* We only want to show the version column if there are agents */}
-						{data.agents !== undefined ? (
+						{data.agent !== undefined ? (
 							<th className="uppercase text-xs font-bold pb-2">Version</th>
 						) : undefined}
 						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
@@ -136,19 +139,13 @@ export default function Page() {
 						'border-t border-headplane-100 dark:border-headplane-800',
 					)}
 				>
-					{data.nodes.map((machine) => (
+					{data.populatedNodes.map((machine) => (
 						<MachineRow
 							key={machine.id}
-							machine={machine}
-							routes={data.routes.filter(
-								(route) => route.node.id === machine.id,
-							)}
+							node={machine}
 							users={data.users}
 							magic={data.magic}
-							// If we pass undefined, the column will not be rendered
-							// This is useful for when there are no agents configured
-							isAgent={data.agents?.includes(machine.id)}
-							stats={data.stats?.[machine.nodeKey]}
+							isAgent={data.agent ? data.agent === machine.nodeKey : undefined}
 							isDisabled={
 								data.writable
 									? false // If the user has write permissions, they can edit all machines
@@ -160,8 +157,4 @@ export default function Page() {
 			</table>
 		</>
 	);
-}
-
-export function ErrorBoundary() {
-	return <ErrorPopup type="embedded" />;
 }

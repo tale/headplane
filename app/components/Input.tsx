@@ -71,14 +71,14 @@ export default function Input(props: InputProps) {
 					{props.description}
 				</div>
 			)}
-			{isInvalid && (
+			{isInvalid ? (
 				<div
 					{...errorMessageProps}
 					className={cn('text-xs px-3 mt-1', 'text-red-500 dark:text-red-400')}
 				>
 					{validationErrors.join(' ')}
 				</div>
-			)}
+			) : null}
 		</div>
 	);
 }
