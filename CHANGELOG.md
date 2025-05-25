@@ -1,6 +1,4 @@
-### Next
-> Changes here are not considered stable and are only in pre-releases.
-
+### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
     - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
     - Older versions of Headscale will not work with Headplane.
