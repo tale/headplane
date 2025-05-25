@@ -47,9 +47,13 @@ export async function loader({
 
 	const lookup = await context.agents?.lookup([machine.node.nodeKey]);
 	const [node] = mapNodes([machine.node], lookup);
+	const tags = Array.from(
+		new Set([...node.validTags, ...node.forcedTags]),
+	).sort();
 
 	return {
 		node,
+		tags,
 		users,
 		magic,
 		agent: context.agents?.agentID(),
@@ -62,7 +66,8 @@ export async function action(request: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { node, magic, users, agent, stats } = useLoaderData<typeof loader>();
+	const { node, tags, magic, users, agent, stats } =
+		useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
 
 	const uiTags = useMemo(() => {
@@ -113,7 +118,7 @@ export default function Page() {
 					</p>
 					<div className="flex gap-1 mt-1 mb-8">
 						{mapTagsToComponents(node, uiTags)}
-						{node.validTags.map((tag) => (
+						{tags.map((tag) => (
 							<Chip key={tag} text={tag} />
 						))}
 					</div>
