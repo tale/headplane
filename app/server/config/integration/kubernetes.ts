@@ -3,13 +3,18 @@ import { platform } from 'node:os';
 import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
-import { Config, CoreV1Api, KubeConfig } from '@kubernetes/client-node';
+import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
 import { ApiClient } from '~/server/headscale/api-client';
 import log from '~/utils/log';
 import { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
-// TODO: Upgrade to the new CoreV1Api from @kubernetes/client-node
+// https://github.com/kubernetes-client/javascript/blob/055b83c6504dfd1b2a2d081efd974163c6cbb808/src/config.ts#L40
+const svcRoot = '/var/run/secrets/kubernetes.io/serviceaccount';
+const svcCaPath = `${svcRoot}/ca.crt`;
+const svcTokenPath = `${svcRoot}/token`;
+const svcNamespacePath = `${svcRoot}/namespace`;
+
 type T = NonNullable<HeadplaneConfig['integration']>['kubernetes'];
 export default class KubernetesIntegration extends Integration<T> {
 	private pid: number | undefined;
@@ -25,7 +30,6 @@ export default class KubernetesIntegration extends Integration<T> {
 			return false;
 		}
 
-		const svcRoot = Config.SERVICEACCOUNT_ROOT;
 		try {
 			log.debug('config', 'Checking Kubernetes service account at %s', svcRoot);
 			const files = await readdir(svcRoot);
@@ -35,11 +39,7 @@ export default class KubernetesIntegration extends Integration<T> {
 			}
 
 			const mappedFiles = new Set(files.map((file) => join(svcRoot, file)));
-			const expectedFiles = [
-				Config.SERVICEACCOUNT_CA_PATH,
-				Config.SERVICEACCOUNT_TOKEN_PATH,
-				Config.SERVICEACCOUNT_NAMESPACE_PATH,
-			];
+			const expectedFiles = [svcCaPath, svcTokenPath, svcNamespacePath];
 
 			log.debug('config', 'Looking for %s', expectedFiles.join(', '));
 			if (!expectedFiles.every((file) => mappedFiles.has(file))) {
@@ -52,10 +52,7 @@ export default class KubernetesIntegration extends Integration<T> {
 		}
 
 		log.debug('config', 'Reading Kubernetes service account at %s', svcRoot);
-		const namespace = await readFile(
-			Config.SERVICEACCOUNT_NAMESPACE_PATH,
-			'utf8',
-		);
+		const namespace = await readFile(svcNamespacePath, 'utf8');
 
 		// Some very ugly nesting but it's necessary
 		if (this.context.validate_manifest === false) {
@@ -99,36 +96,32 @@ export default class KubernetesIntegration extends Integration<T> {
 
 				const kCoreV1Api = kc.makeApiClient(CoreV1Api);
 
-				log.info(
-					'config',
-					'Checking pod %s in namespace %s (%s)',
-					pod,
-					namespace,
-					kCoreV1Api.basePath,
-				);
-
+				log.info('config', 'Checking pod %s in namespace %s', pod, namespace);
 				log.debug('config', 'Reading pod info for %s', pod);
-				const { response, body } = await kCoreV1Api.readNamespacedPod(
-					pod,
+				const body = await kCoreV1Api.readNamespacedPod({
+					name: pod,
 					namespace,
-				);
+				});
 
-				if (response.statusCode !== 200) {
+				if (!body.spec) {
 					log.error(
 						'config',
-						'Failed to read pod info: http %d',
-						response.statusCode,
+						'Missing spec in pod info for %s/%s',
+						pod,
+						namespace,
 					);
+
 					return false;
 				}
 
 				log.debug('config', 'Got pod info: %o', body.spec);
-				const shared = body.spec?.shareProcessNamespace;
+				const shared = body.spec.shareProcessNamespace;
 				if (shared === undefined) {
 					log.error(
 						'config',
 						'Pod does not have spec.shareProcessNamespace set',
 					);
+
 					return false;
 				}
 
@@ -137,6 +130,7 @@ export default class KubernetesIntegration extends Integration<T> {
 						'config',
 						'Pod has set but disabled spec.shareProcessNamespace',
 					);
+
 					return false;
 				}
 
