@@ -50,7 +50,7 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 						'after:absolute after:bottom-0 after:left-3 after:right-3',
 						'after:h-0.5 after:bg-headplane-900 dark:after:bg-headplane-200',
 						'hover:bg-headplane-200 dark:hover:bg-headplane-900',
-						'focus:outline-none focus:ring',
+						'focus:outline-hidden focus:ring-3',
 						isActive ? 'after:visible' : 'after:invisible',
 					)
 				}
@@ -69,7 +69,7 @@ function Link({ href, text }: LinkProps) {
 			rel="noreferrer"
 			className={cn(
 				'hidden sm:block hover:underline text-sm',
-				'focus:outline-none focus:ring rounded-md',
+				'focus:outline-hidden focus:ring-3 rounded-md',
 			)}
 		>
 			{text}

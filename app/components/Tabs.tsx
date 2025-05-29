@@ -56,7 +56,7 @@ function Tab({ item, state }: TabsTabProps) {
 			className={cn(
 				'pl-2 pr-3 py-2.5',
 				'aria-selected:bg-headplane-100 dark:aria-selected:bg-headplane-950',
-				'focus:outline-none focus:ring z-10',
+				'focus:outline-hidden focus:ring-3 z-10',
 				'border-r border-headplane-100 dark:border-headplane-800',
 				'first:rounded-tl-xl last:rounded-tr-xl last:border-r-0',
 			)}

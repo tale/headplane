@@ -52,7 +52,7 @@ export default function Page() {
 	const isDisabled = writable ? !access : true;
 
 	return (
-		<div className="flex flex-col gap-4 max-w-screen-lg">
+		<div className="flex flex-col gap-4 max-w-(--breakpoint-lg)">
 			<div className="flex flex-col w-2/3">
 				<p className="mb-4 text-md">
 					<RemixLink to="/settings" className="font-medium">

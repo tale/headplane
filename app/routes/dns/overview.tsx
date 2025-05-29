@@ -70,7 +70,7 @@ export default function Page() {
 	const isDisabled = data.access === false || data.writable === false;
 
 	return (
-		<div className="flex flex-col gap-16 max-w-screen-lg">
+		<div className="flex flex-col gap-16 max-w-(--breakpoint-lg)">
 			{data.writable ? undefined : (
 				<Notice>
 					The Headscale configuration is read-only. You cannot make changes to

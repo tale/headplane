@@ -29,7 +29,7 @@ export default function Page() {
 	}, [data.configured, data.onboarding]);
 
 	return (
-		<div className="flex flex-col gap-8 max-w-screen-lg">
+		<div className="flex flex-col gap-8 max-w-(--breakpoint-lg)">
 			{management ? (
 				<AgentManagement reachable={true} hostInfo={data.stats} />
 			) : (

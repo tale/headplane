@@ -38,7 +38,7 @@ export default function Attribute({
 					'min-w-0 px-1.5 py-1 rounded-lg border border-transparent',
 					...(isCopyable
 						? [
-								'cursor-pointer hover:shadow-sm',
+								'cursor-pointer hover:shadow-xs',
 								'hover:bg-headplane-50 dark:hover:bg-headplane-800',
 								'hover:border-headplane-100 dark:hover:border-headplane-700',
 							]
@@ -70,8 +70,8 @@ export default function Attribute({
 						</div>
 						{isCopyable ? (
 							<div>
-								<Check className="size-4 hidden data-[copied]:block" />
-								<Copy className="size-4 block data-[copied]:hidden" />
+								<Check className="size-4 hidden data-copied:block" />
+								<Copy className="size-4 block data-copied:hidden" />
 							</div>
 						) : undefined}
 					</button>

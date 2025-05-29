@@ -22,7 +22,7 @@
 		"@react-aria/toast": "3.0.3",
 		"@react-router/node": "^7.6.1",
 		"@react-stately/toast": "3.1.0",
-		"@shopify/lang-jsonc": "^1.0.0",
+		"@shopify/lang-jsonc": "^1.0.1",
 		"@types/react": "^19.1.6",
 		"@types/react-dom": "^19.1.5",
 		"@uiw/codemirror-theme-github": "^4.23.12",
@@ -45,25 +45,25 @@
 		"react-router-hono-server": "^2.13.0",
 		"react-stately": "^3.38.0",
 		"remix-utils": "^8.7.0",
-		"tailwind-merge": "^2.6.0",
+		"tailwind-merge": "^3.3.0",
 		"undici": "^7.10.0",
-		"usehooks-ts": "^3.1.0",
+		"usehooks-ts": "^3.1.1",
 		"yaml": "^2.8.0"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
 		"@react-router/dev": "^7.6.1",
+		"@tailwindcss/vite": "^4.1.8",
 		"@types/websocket": "^1.0.10",
-		"autoprefixer": "^10.4.21",
 		"lefthook": "^1.11.13",
 		"postcss": "^8.5.4",
 		"react-router-dom": "^7.6.1",
 		"react-scan": "^0.3.4",
-		"tailwindcss": "^3.4.17",
+		"tailwindcss": "^4.1.8",
 		"tailwindcss-animate": "^1.0.7",
 		"tailwindcss-react-aria-components": "^2.0.0",
 		"typescript": "^5.8.3",
-		"vite": "npm:rolldown-vite@latest",
+		"vite": "^6.3.5",
 		"vite-tsconfig-paths": "^5.1.4"
 	},
 	"packageManager": "pnpm@10.4.0",
@@ -73,7 +73,6 @@
 	},
 	"pnpm": {
 		"patchedDependencies": {
-			"@shopify/lang-jsonc@1.0.0": "patches/@shopify__lang-jsonc@1.0.0.patch",
 			"react-router-hono-server": "patches/react-router-hono-server.patch"
 		},
 		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "lefthook"]

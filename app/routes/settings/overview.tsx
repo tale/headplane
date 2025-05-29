@@ -18,7 +18,7 @@ export default function Page() {
 	const { config, oidc } = useLoaderData<typeof loader>();
 
 	return (
-		<div className="flex flex-col gap-8 max-w-screen-lg">
+		<div className="flex flex-col gap-8 max-w-(--breakpoint-lg)">
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Settings</h1>
 				<p>
