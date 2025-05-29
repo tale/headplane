@@ -34,12 +34,14 @@ export default class ProcIntegration extends Integration<T> {
 					return;
 				}
 
-				const path = join('/proc', dir, 'cmdline');
+				const path = join('/proc', dir, 'comm');
 				try {
 					log.debug('config', 'Reading %s', path);
 					const data = await readFile(path, 'utf8');
-					if (!data.includes('headscale') && !data.includes('serve')) {
-						throw new Error('Found PID without Headscale serve command');
+					if (data.trim() !== 'headscale') {
+						throw new Error(
+							`Found PID with unexpected command: ${data.trim()}`,
+						);
 					}
 
 					return pid;
