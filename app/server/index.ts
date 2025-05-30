@@ -28,6 +28,11 @@ const config = await loadConfig(
 	}),
 );
 
+const agentManager = await loadAgentSocket(
+	config.integration?.agent,
+	config.headscale.url,
+);
+
 // We also use this file to load anything needed by the react router code.
 // These are usually per-request things that we need access to, like the
 // helper that can issue and revoke cookies.
@@ -56,10 +61,7 @@ const appLoadContext = {
 		config.headscale.tls_cert_path,
 	),
 
-	agents: await loadAgentSocket(
-		config.integration?.agent,
-		config.headscale.url,
-	),
+	agents: agentManager,
 	integration: await loadIntegration(config.integration),
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 };
@@ -84,5 +86,19 @@ export default createHonoServer({
 
 	listeningListener(info) {
 		log.info('server', 'Running on %s:%s', info.address, info.port);
+	},
+
+	useWebSocket: true,
+	configure: (app, { upgradeWebSocket }) => {
+		if (agentManager === undefined) {
+			return;
+		}
+
+		app.get(
+			'/_ssh_plexer',
+			upgradeWebSocket((c) => {
+				return agentManager.multiplexer!.websocketHandler(c);
+			}),
+		);
 	},
 });

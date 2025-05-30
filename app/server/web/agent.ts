@@ -10,10 +10,12 @@ import {
 } from 'node:fs/promises';
 import { exit } from 'node:process';
 import { createInterface } from 'node:readline';
+import { Readable, Writable } from 'node:stream';
 import { setTimeout } from 'node:timers/promises';
 import { type } from 'arktype';
 import { HostInfo } from '~/types';
 import log from '~/utils/log';
+import { SSHMultiplexer, createSSHMultiplexer } from '../agent/ssh';
 import type { HeadplaneConfig } from '../config/schema';
 
 interface LogResponse {
@@ -113,6 +115,7 @@ class AgentManager {
 	>;
 
 	private spawnProcess: ChildProcess | null;
+	multiplexer: SSHMultiplexer | null;
 	private agentId: string | null;
 
 	constructor(
@@ -124,6 +127,7 @@ class AgentManager {
 		this.config = config;
 		this.headscaleUrl = headscaleUrl;
 		this.spawnProcess = null;
+		this.multiplexer = null;
 		this.agentId = null;
 		this.startAgent();
 
@@ -184,7 +188,7 @@ class AgentManager {
 		);
 		this.spawnProcess = spawn(this.config.executable_path, [], {
 			detached: false,
-			stdio: ['pipe', 'pipe', 'pipe'],
+			stdio: ['pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
 			env: {
 				HOME: process.env.HOME,
 				HEADPLANE_EMBEDDED: 'true',
@@ -208,6 +212,14 @@ class AgentManager {
 			this.restartCounter++;
 			global.setTimeout(() => this.startAgent(), 1000);
 			return;
+		}
+
+		const sshInput = this.spawnProcess.stdio[3];
+		const sshOutput = this.spawnProcess.stdio[4];
+
+		if (sshInput && sshOutput) {
+			log.info('agent', 'Using SSH multiplexer manager');
+			this.multiplexer = createSSHMultiplexer(this.spawnProcess);
 		}
 
 		const rlStdout = createInterface({

@@ -64,6 +64,9 @@ importers:
       arktype:
         specifier: ^2.1.20
         version: 2.1.20
+      cbor2:
+        specifier: ^2.0.1
+        version: 2.0.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -137,6 +140,9 @@ importers:
       '@types/websocket':
         specifier: ^1.0.10
         version: 1.0.10
+      hono:
+        specifier: ^4.7.10
+        version: 4.7.10
       lefthook:
         specifier: ^1.11.13
         version: 1.11.13
@@ -405,6 +411,10 @@ packages:
 
   '@codemirror/view@6.36.8':
     resolution: {integrity: sha512-yoRo4f+FdnD01fFt4XpfpMCcCAo9QvZOtbrXExn4SqzH32YC6LgzqxfLZw/r6Ge65xyY03mK/UfUqrVw1gFiFg==}
+
+  '@cto.af/wtf8@0.0.2':
+    resolution: {integrity: sha512-ATm4UQiKrdm5GnU6BvIwUDN+LDEtt23zuzKFpnfDT59ULAd0aMYm/nSFzbSO02garLcXumRC13PzNfa7BsfvSg==}
+    engines: {node: '>=20'}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -1692,6 +1702,10 @@ packages:
   caniuse-lite@1.0.30001718:
     resolution: {integrity: sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==}
 
+  cbor2@2.0.1:
+    resolution: {integrity: sha512-9bE8+tueGxONyxpttNKkAKKcGVtAPeoSJ64AjVTTjEuBOuRaeeP76EN9BbmQqkz1ZeTP0QPvksNBKwvEutIUzQ==}
+    engines: {node: '>=20'}
+
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
     engines: {node: '>= 14.16.0'}
@@ -1924,8 +1938,8 @@ packages:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
 
-  hono@4.7.6:
-    resolution: {integrity: sha512-564rVzELU+9BRqqx5k8sT2NFwGD3I3Vifdb6P7CmM6FiarOSY+fDC+6B+k9wcCb86ReoayteZP2ki0cRLN1jbw==}
+  hono@4.7.10:
+    resolution: {integrity: sha512-QkACju9MiN59CKSY5JsGZCYmPZkA6sIW6OFCUp7qDjZu6S6KHtJHhAc9Uy9mV9F8PJ1/HQ3ybZF2yjCa/73fvQ==}
     engines: {node: '>=16.9.0'}
 
   hosted-git-info@6.1.3:
@@ -3138,6 +3152,8 @@ snapshots:
       style-mod: 4.1.2
       w3c-keyname: 2.2.8
 
+  '@cto.af/wtf8@0.0.2': {}
+
   '@dnd-kit/accessibility@3.1.1(react@19.1.0)':
     dependencies:
       react: 19.1.0
@@ -3275,23 +3291,23 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@hono/node-server@1.14.0(hono@4.7.6)':
+  '@hono/node-server@1.14.0(hono@4.7.10)':
     dependencies:
-      hono: 4.7.6
+      hono: 4.7.10
 
-  '@hono/node-ws@1.1.1(@hono/node-server@1.14.0(hono@4.7.6))(bufferutil@4.0.9)(hono@4.7.6)(utf-8-validate@5.0.10)':
+  '@hono/node-ws@1.1.1(@hono/node-server@1.14.0(hono@4.7.10))(bufferutil@4.0.9)(hono@4.7.10)(utf-8-validate@5.0.10)':
     dependencies:
-      '@hono/node-server': 1.14.0(hono@4.7.6)
-      hono: 4.7.6
+      '@hono/node-server': 1.14.0(hono@4.7.10)
+      hono: 4.7.10
       ws: 8.18.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@hono/vite-dev-server@0.19.0(hono@4.7.6)':
+  '@hono/vite-dev-server@0.19.0(hono@4.7.10)':
     dependencies:
-      '@hono/node-server': 1.14.0(hono@4.7.6)
-      hono: 4.7.6
+      '@hono/node-server': 1.14.0(hono@4.7.10)
+      hono: 4.7.10
       minimatch: 9.0.5
 
   '@internationalized/date@3.8.1':
@@ -4801,6 +4817,10 @@ snapshots:
 
   caniuse-lite@1.0.30001718: {}
 
+  cbor2@2.0.1:
+    dependencies:
+      '@cto.af/wtf8': 0.0.2
+
   chokidar@4.0.3:
     dependencies:
       readdirp: 4.1.2
@@ -5029,7 +5049,7 @@ snapshots:
     dependencies:
       function-bind: 1.1.2
 
-  hono@4.7.6: {}
+  hono@4.7.10: {}
 
   hosted-git-info@6.1.3:
     dependencies:
@@ -5423,12 +5443,12 @@ snapshots:
   react-router-hono-server@2.13.0(patch_hash=6549978df41006e07f1335bfe4ca86224ea36ed40d3f08dfef33143bad54005c)(@react-router/dev@7.6.1(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.39.0)(tsx@4.19.4)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.4)(yaml@2.8.0))(yaml@2.8.0))(@types/react@19.1.6)(bufferutil@4.0.9)(react-router@7.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(utf-8-validate@5.0.10)(vite@6.3.5(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.4)(yaml@2.8.0)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
-      '@hono/node-server': 1.14.0(hono@4.7.6)
-      '@hono/node-ws': 1.1.1(@hono/node-server@1.14.0(hono@4.7.6))(bufferutil@4.0.9)(hono@4.7.6)(utf-8-validate@5.0.10)
-      '@hono/vite-dev-server': 0.19.0(hono@4.7.6)
+      '@hono/node-server': 1.14.0(hono@4.7.10)
+      '@hono/node-ws': 1.1.1(@hono/node-server@1.14.0(hono@4.7.10))(bufferutil@4.0.9)(hono@4.7.10)(utf-8-validate@5.0.10)
+      '@hono/vite-dev-server': 0.19.0(hono@4.7.10)
       '@react-router/dev': 7.6.1(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(react-router@7.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(terser@5.39.0)(tsx@4.19.4)(typescript@5.8.3)(vite@6.3.5(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.4)(yaml@2.8.0))(yaml@2.8.0)
       '@types/react': 19.1.6
-      hono: 4.7.6
+      hono: 4.7.10
       react-router: 7.6.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       vite: 6.3.5(@types/node@22.15.24)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.39.0)(tsx@4.19.4)(yaml@2.8.0)
     transitivePeerDependencies:

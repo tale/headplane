@@ -7,6 +7,10 @@ many side-effects (in this case, importing a module may run code).
 ```
 server
 ├── index.ts: Loads everything and starts the web server.
+├── agent/
+│   ├── dispatcher.ts: Serializes commands for the agent control fd (stdin).
+│   ├── ssh.ts: Manages & multiplexes the active web SSH connections
+│   ├── env.ts: Checks the environment variables for custom overrides.
 ├── config/
 │   ├── integration/
 │   │   ├── abstract.ts: Defines the abstract class for integrations.
