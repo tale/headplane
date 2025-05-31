@@ -5,8 +5,10 @@ go 1.23.1
 toolchain go1.23.4
 
 require (
+	github.com/fxamacker/cbor/v2 v2.8.0
 	github.com/joho/godotenv v1.5.1
 	go4.org/mem v0.0.0-20220726221520-4f986261bf13
+	golang.org/x/crypto v0.38.0
 	tailscale.com v1.78.3
 )
 
@@ -33,7 +35,6 @@ require (
 	github.com/coreos/go-iptables v0.7.1-0.20240112124308-65c67c9f46e6 // indirect
 	github.com/dblohm7/wingoes v0.0.0-20240119213807-a09d6be7affa // indirect
 	github.com/digitalocean/go-smbios v0.0.0-20180907143718-390a4f403a8e // indirect
-	github.com/fxamacker/cbor/v2 v2.8.0 // indirect
 	github.com/gaissmai/bart v0.11.1 // indirect
 	github.com/go-json-experiment/json v0.0.0-20231102232822-2e55bd4e08b0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
@@ -76,7 +77,6 @@ require (
 	github.com/vishvananda/netns v0.0.4 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba // indirect
-	golang.org/x/crypto v0.38.0 // indirect
 	golang.org/x/exp v0.0.0-20240119083558-1b970713d09a // indirect
 	golang.org/x/mod v0.19.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
