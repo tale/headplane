@@ -37,7 +37,6 @@ func FollowMaster(agent *tsnet.TSAgent) {
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
-		log.Info("Got bytes delimited by newline")
 
 		var msg CborMessage
 		decoder := cbor.NewDecoder(bytes.NewReader(line))
@@ -49,14 +48,29 @@ func FollowMaster(agent *tsnet.TSAgent) {
 		}
 
 		log.Debug("Received message from master: %s", msg)
-		var sshPayload sshutil.SSHConnectPayload
-		err = cbor.Unmarshal(msg.Payload, &sshPayload)
-		if err != nil {
-			log.Error("Unable to unmarshal SSH connect payload: %s", err)
-			continue
-		}
+		switch msg.Op {
+			case "ssh_conn":
+				var sshPayload sshutil.SSHConnectPayload
+				err = cbor.Unmarshal(msg.Payload, &sshPayload)
+				if err != nil {
+					log.Error("Unable to unmarshal SSH connect payload: %s", err)
+					continue
+				}
 
-		sshutil.StartWebSSH(agent, sshPayload)
+				sshutil.StartWebSSH(agent, sshPayload)
+				continue
+
+			case "ssh_term":
+				var sshPayload sshutil.SSHClosePayload
+				err = cbor.Unmarshal(msg.Payload, &sshPayload)
+				if err != nil {
+					log.Error("Unable to unmarshal SSH close payload: %s", err)
+					continue
+				}
+
+				sshutil.CloseWebSSH(agent, sshPayload)
+				continue
+		}
 	}
 
 	// 	var msg RecvMessage

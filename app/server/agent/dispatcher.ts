@@ -3,7 +3,7 @@ import { encode } from 'cborg';
 import { WSContext } from 'hono/ws';
 import { ChannelType } from './encoder';
 
-interface Command {
+export interface Command {
 	op: string;
 	payload: unknown;
 }
@@ -18,7 +18,14 @@ interface SSHConnectCommand extends Command {
 	};
 }
 
-type AgentCommand = SSHConnectCommand;
+interface SSHCloseCommand extends Command {
+	op: 'ssh_term';
+	payload: {
+		sessionId: string;
+	};
+}
+
+type AgentCommand = SSHConnectCommand | SSHCloseCommand;
 
 export async function dispatchCommand(
 	dispatcher: Writable,
@@ -36,21 +43,21 @@ export async function dispatchCommand(
 	});
 }
 
-interface SSHConnectData extends Command {
+export interface SSHConnectData extends Command {
 	op: 'ssh_conn_successful';
 	payload: {
 		sessionId: string;
 	};
 }
 
-interface SSHConnectFailedData extends Command {
+export interface SSHConnectFailedData extends Command {
 	op: 'ssh_conn_failed';
 	payload: {
 		reason: string;
 	};
 }
 
-interface SSHFrameData extends Command {
+export interface SSHFrameData extends Command {
 	op: 'ssh_frame';
 	payload: {
 		channel: ChannelType;

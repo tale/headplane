@@ -143,22 +143,36 @@ export class SSHMultiplexer {
 				this.sshInput.write(encodedFrame);
 			},
 
-			onClose: (_, ws) => {
+			onClose: async (_, ws) => {
 				const sessionId = ws.raw;
 				if (sessionId && this.connections.has(sessionId)) {
 					const session = this.connections.get(sessionId);
 					if (session) {
+						await dispatchCommand(this.control, {
+							op: 'ssh_term',
+							payload: {
+								sessionId,
+							},
+						});
+
 						session.connected = false;
 						this.connections.delete(sessionId);
 					}
 				}
 			},
 
-			onError: (event, ws) => {
+			onError: async (event, ws) => {
 				const sessionId = ws.raw;
 				if (sessionId && this.connections.has(sessionId)) {
 					const session = this.connections.get(sessionId);
 					if (session) {
+						await dispatchCommand(this.control, {
+							op: 'ssh_term',
+							payload: {
+								sessionId,
+							},
+						});
+
 						session.connected = false;
 						this.connections.delete(sessionId);
 					}
@@ -191,7 +205,7 @@ export class SSHMultiplexer {
 				op: 'ssh_frame',
 				payload: {
 					channel: frame.channel,
-					data: frame.payload,
+					frame: frame.payload,
 				},
 			});
 		});

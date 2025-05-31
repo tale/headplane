@@ -25,6 +25,7 @@ export default [
 			route('/users', 'routes/users/overview.tsx'),
 			route('/acls', 'routes/acls/overview.tsx'),
 			route('/dns', 'routes/dns/overview.tsx'),
+			route('/ssh', 'routes/ssh/overview.tsx'),
 
 			...prefix('/settings', [
 				index('routes/settings/overview.tsx'),
