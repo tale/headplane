@@ -120,9 +120,6 @@ func StartWebSSH(agent *tsnet.TSAgent, params SSHConnectPayload) {
 			}
 		}()
 
-		// This spawns 2 goroutins for stdout and stderr
-		dispatchSSHStdout(params.SessionId, ctx.Stdout, ctx.Stderr)
-
 		// Spin up a shell and wait for the pty to terminate
 		err = sess.Shell()
 		if err != nil {
@@ -130,6 +127,9 @@ func StartWebSSH(agent *tsnet.TSAgent, params SSHConnectPayload) {
 			client.Close()
 			return
 		}
+
+		// This spawns 2 goroutins for stdout and stderr
+		dispatchSSHStdout(params.SessionId, ctx.Stdout, ctx.Stderr)
 
 		log.Info("Opened an SSH PTY for %s", params.SessionId)
 		sess.Wait()
