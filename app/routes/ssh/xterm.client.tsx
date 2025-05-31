@@ -1,8 +1,18 @@
+import { ClipboardAddon } from '@xterm/addon-clipboard';
+import { FitAddon } from '@xterm/addon-fit';
+import { Unicode11Addon } from '@xterm/addon-unicode11';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import { WebglAddon } from '@xterm/addon-webgl';
 import * as xterm from '@xterm/xterm';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import '@xterm/xterm/css/xterm.css';
-import { decode } from 'cborg';
-import type { SSHFrameData } from '~/server/agent/dispatcher';
+import { decode, encode } from 'cborg';
+import type {
+	SSHDataCommand,
+	SSHFrameData,
+	SSHResizeCommand,
+} from '~/server/agent/dispatcher';
+import cn from '~/utils/cn';
 import { useLiveData } from '~/utils/live-data';
 
 interface XTermProps {
@@ -19,17 +29,38 @@ export default function XTerm({ ws, sessionId, queue }: XTermProps) {
 
 	const container = useRef<HTMLDivElement>(null);
 	const term = useRef<xterm.Terminal>(null);
+	const [isResizing, setIsResizing] = useState(false);
 
 	useEffect(() => {
 		pause();
 
 		const terminal = new xterm.Terminal({
+			allowProposedApi: true,
+			cursorBlink: true,
 			convertEol: true,
 			fontSize: 14,
+			cols: 80,
+			rows: 24,
 			theme: {
 				background: '#1e1e1e',
 				foreground: '#ffffff',
 			},
+		});
+
+		terminal.loadAddon(new Unicode11Addon());
+		terminal.loadAddon(new ClipboardAddon());
+		terminal.loadAddon(new WebLinksAddon());
+		terminal.unicode.activeVersion = '11';
+
+		const gl = new WebglAddon();
+		terminal.loadAddon(gl);
+
+		const fit = new FitAddon();
+		terminal.loadAddon(fit);
+
+		gl.onContextLoss(() => {
+			console.warn('WebGL context lost, falling back to canvas rendering');
+			gl.dispose();
 		});
 
 		terminal.open(container.current!);
@@ -63,7 +94,15 @@ export default function XTerm({ ws, sessionId, queue }: XTermProps) {
 
 		terminal.onData((input) => {
 			if (ws.readyState === WebSocket.OPEN) {
-				ws.send(input);
+				ws.send(
+					encode({
+						op: 'ssh_data',
+						payload: {
+							sessionId,
+							data: new TextEncoder().encode(input),
+						},
+					} satisfies SSHDataCommand),
+				);
 			} else {
 				console.warn('WebSocket is not open, cannot send data');
 			}
@@ -80,12 +119,57 @@ export default function XTerm({ ws, sessionId, queue }: XTermProps) {
 		};
 
 		ws.addEventListener('message', onMessage);
+		const ro = new ResizeObserver(() => {
+			const before = {
+				cols: terminal.cols,
+				rows: terminal.rows,
+			};
 
+			fit.fit();
+			if (before.cols !== terminal.cols || before.rows !== terminal.rows) {
+				console.log(
+					`Resized terminal to ${terminal.cols} cols and ${terminal.rows} rows`,
+				);
+				ws.send(
+					encode({
+						op: 'ssh_resize',
+						payload: {
+							sessionId,
+							width: terminal.cols,
+							height: terminal.rows,
+						},
+					} satisfies SSHResizeCommand),
+				);
+
+				setIsResizing(true);
+				setTimeout(() => {
+					setIsResizing(false);
+				}, 1000);
+			}
+		});
+
+		ro.observe(container.current!);
 		return () => {
 			ws.removeEventListener('message', onMessage);
 			term.current?.dispose();
+			ro.disconnect();
 		};
 	}, [ws, queue]);
 
-	return <div ref={container} style={{ height: '100%', width: '100%' }} />;
+	return (
+		<div className="relative w-full h-full group">
+			<div ref={container} className="w-full h-full" />
+
+			{term.current && isResizing ? (
+				<div
+					className={cn(
+						'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+						'px-4 py-2 bg-headplane-800 text-white rounded-full shadow z-50',
+					)}
+				>
+					{term.current.cols}x{term.current.rows}
+				</div>
+			) : undefined}
+		</div>
+	);
 }
