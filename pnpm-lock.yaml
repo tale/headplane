@@ -64,9 +64,9 @@ importers:
       arktype:
         specifier: ^2.1.20
         version: 2.1.20
-      cbor2:
-        specifier: ^2.0.1
-        version: 2.0.1
+      cborg:
+        specifier: ^4.2.11
+        version: 4.2.11
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
@@ -411,10 +411,6 @@ packages:
 
   '@codemirror/view@6.36.8':
     resolution: {integrity: sha512-yoRo4f+FdnD01fFt4XpfpMCcCAo9QvZOtbrXExn4SqzH32YC6LgzqxfLZw/r6Ge65xyY03mK/UfUqrVw1gFiFg==}
-
-  '@cto.af/wtf8@0.0.2':
-    resolution: {integrity: sha512-ATm4UQiKrdm5GnU6BvIwUDN+LDEtt23zuzKFpnfDT59ULAd0aMYm/nSFzbSO02garLcXumRC13PzNfa7BsfvSg==}
-    engines: {node: '>=20'}
 
   '@dnd-kit/accessibility@3.1.1':
     resolution: {integrity: sha512-2P+YgaXF+gRsIihwwY1gCsQSYnu9Zyj2py8kY5fFvUM1qm2WA2u639R6YNVfU4GWr+ZM5mqEsfHZZLoRONbemw==}
@@ -1702,9 +1698,9 @@ packages:
   caniuse-lite@1.0.30001718:
     resolution: {integrity: sha512-AflseV1ahcSunK53NfEs9gFWgOEmzr0f+kaMFA4xiLZlr9Hzt7HxcSpIFcnNCUkz6R6dWKa54rUz3HUmI3nVcw==}
 
-  cbor2@2.0.1:
-    resolution: {integrity: sha512-9bE8+tueGxONyxpttNKkAKKcGVtAPeoSJ64AjVTTjEuBOuRaeeP76EN9BbmQqkz1ZeTP0QPvksNBKwvEutIUzQ==}
-    engines: {node: '>=20'}
+  cborg@4.2.11:
+    resolution: {integrity: sha512-7gs3iaqtsD9OHowgqzc6ixQGwSBONqosVR2co0Bg0pARgrLap+LCcEIXJuuIz2jHy0WWQeDMFPEsU2r17I2XPQ==}
+    hasBin: true
 
   chokidar@4.0.3:
     resolution: {integrity: sha512-Qgzu8kfBvo+cA4962jnP1KkS6Dop5NS6g7R5LFYJr4b8Ub94PPQXUksCw9PvXoeXPRRddRNC5C1JQUR2SMGtnA==}
@@ -3151,8 +3147,6 @@ snapshots:
       '@codemirror/state': 6.5.2
       style-mod: 4.1.2
       w3c-keyname: 2.2.8
-
-  '@cto.af/wtf8@0.0.2': {}
 
   '@dnd-kit/accessibility@3.1.1(react@19.1.0)':
     dependencies:
@@ -4817,9 +4811,7 @@ snapshots:
 
   caniuse-lite@1.0.30001718: {}
 
-  cbor2@2.0.1:
-    dependencies:
-      '@cto.af/wtf8': 0.0.2
+  cborg@4.2.11: {}
 
   chokidar@4.0.3:
     dependencies:

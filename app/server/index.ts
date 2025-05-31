@@ -1,6 +1,6 @@
 import { env, versions } from 'node:process';
+import type { WSEvents } from 'hono/ws';
 import { createHonoServer } from 'react-router-hono-server/node';
-
 import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
@@ -97,7 +97,25 @@ export default createHonoServer({
 		app.get(
 			'/_ssh_plexer',
 			upgradeWebSocket((c) => {
-				return agentManager.multiplexer!.websocketHandler(c);
+				// MARK: This is a limitation of the hono NPM module we use
+				const wsHandler = agentManager.multiplexer?.websocketHandler(
+					c,
+				) as WSEvents<unknown>;
+
+				return {
+					onOpen: wsHandler
+						? wsHandler.onOpen
+						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
+					onClose: wsHandler
+						? wsHandler.onClose
+						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
+					onMessage: wsHandler
+						? wsHandler.onMessage
+						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
+					onError: wsHandler
+						? wsHandler.onError
+						: (_, ws) => ws.close(1000, 'Multiplexer error'),
+				};
 			}),
 		);
 	},

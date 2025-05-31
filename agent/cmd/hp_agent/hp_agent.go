@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/tale/headplane/agent/internal/config"
 	"github.com/tale/headplane/agent/internal/hpagent"
@@ -34,6 +32,6 @@ func main() {
 		ID:   agent.ID,
 	})
 
-	sshutil.StartInputReader(os.NewFile(3, "sshin"))
+	sshutil.DispatchSSHStdin()
 	hpagent.FollowMaster(agent)
 }
