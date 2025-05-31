@@ -1,10 +1,17 @@
 import { ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import type { Readable, Writable } from 'node:stream';
+import { decode } from 'cborg';
 import { Context } from 'hono';
 import { WSContext, WSEvents } from 'hono/ws';
 import log from '~/utils/log';
-import { dispatchCommand, dispatchWeb } from './dispatcher';
+import {
+	Command,
+	SSHDataCommand,
+	SSHResizeCommand,
+	dispatchCommand,
+	dispatchWeb,
+} from './dispatcher';
 import { decodeSSHFrame, encodeSSHFrame } from './encoder';
 
 interface SSHConnection {
@@ -134,13 +141,48 @@ export class SSHMultiplexer {
 					return;
 				}
 
-				const encodedFrame = await encodeSSHFrame({
-					sessionId,
-					channel: 0, // stdin
-					payload: event.data,
-				});
+				const wsData = Buffer.isBuffer(event.data)
+					? event.data
+					: typeof event.data === 'string'
+						? Buffer.from(event.data, 'utf8')
+						: event.data instanceof Blob
+							? Buffer.from(await event.data.arrayBuffer())
+							: Buffer.from(event.data);
 
-				this.sshInput.write(encodedFrame);
+				const obj = decode(wsData) as Command;
+				if (obj.op === 'ssh_data') {
+					const data = obj as SSHDataCommand;
+					if (data.payload.sessionId !== sessionId) {
+						log.warn(
+							'agent',
+							'Received data for mismatched SSH session %s',
+							data.payload.sessionId,
+						);
+						return;
+					}
+
+					const encodedFrame = await encodeSSHFrame({
+						sessionId,
+						channel: 0, // stdin
+						payload: Buffer.from(data.payload.data),
+					});
+
+					this.sshInput.write(encodedFrame);
+				}
+
+				if (obj.op === 'ssh_resize') {
+					const resize = obj as SSHResizeCommand;
+					if (resize.payload.sessionId !== sessionId) {
+						log.warn(
+							'agent',
+							'Received resize for mismatched SSH session %s',
+							resize.payload.sessionId,
+						);
+						return;
+					}
+
+					await dispatchCommand(this.control, resize);
+				}
 			},
 
 			onClose: async (_, ws) => {

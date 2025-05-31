@@ -13,7 +13,7 @@ export type ChannelType = 0 | 1 | 2;
 interface SSHFrame {
 	sessionId: string;
 	channel: ChannelType;
-	payload: Blob | ArrayBufferLike | string;
+	payload: Buffer;
 }
 
 export async function encodeSSHFrame(frame: SSHFrame) {
@@ -23,17 +23,9 @@ export async function encodeSSHFrame(frame: SSHFrame) {
 		return;
 	}
 
-	const payload = Buffer.isBuffer(frame.payload)
-		? frame.payload
-		: typeof frame.payload === 'string'
-			? Buffer.from(frame.payload, 'utf8')
-			: frame.payload instanceof Blob
-				? Buffer.from(await frame.payload.arrayBuffer())
-				: Buffer.from(frame.payload);
-
 	// Size can only hold 4 bytes
-	if (payload.length > 0xffffffff) {
-		log.error('agent', 'SSH payload too large: %d bytes', payload.length);
+	if (frame.payload.length > 0xffffffff) {
+		log.error('agent', 'SSH payload too large: %d bytes', frame.payload.length);
 		return;
 	}
 
@@ -42,7 +34,7 @@ export async function encodeSSHFrame(frame: SSHFrame) {
 		1 + // Version
 		1 + // Channel Type
 		(1 + sid.length) + // Session ID length + SID
-		(4 + payload.length); // Payload length + Payload
+		(4 + frame.payload.length); // Payload length + Payload
 
 	const buf = Buffer.alloc(frameSize);
 	buf.write(MAGIC, 0, 'utf8');
@@ -53,8 +45,8 @@ export async function encodeSSHFrame(frame: SSHFrame) {
 	const offset = 7 + sid.length;
 	sid.copy(buf, 7);
 
-	buf.writeUInt32BE(payload.length, offset);
-	payload.copy(buf, offset + 4);
+	buf.writeUInt32BE(frame.payload.length, offset);
+	frame.payload.copy(buf, offset + 4);
 	return buf;
 }
 

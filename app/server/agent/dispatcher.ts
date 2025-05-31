@@ -8,7 +8,7 @@ export interface Command {
 	payload: unknown;
 }
 
-interface SSHConnectCommand extends Command {
+export interface SSHConnectCommand extends Command {
 	op: 'ssh_conn';
 	payload: {
 		sessionId: string;
@@ -18,14 +18,31 @@ interface SSHConnectCommand extends Command {
 	};
 }
 
-interface SSHCloseCommand extends Command {
+export interface SSHCloseCommand extends Command {
 	op: 'ssh_term';
 	payload: {
 		sessionId: string;
 	};
 }
 
-type AgentCommand = SSHConnectCommand | SSHCloseCommand;
+export interface SSHResizeCommand extends Command {
+	op: 'ssh_resize';
+	payload: {
+		sessionId: string;
+		width: number;
+		height: number;
+	};
+}
+
+export interface SSHDataCommand extends Command {
+	op: 'ssh_data';
+	payload: {
+		sessionId: string;
+		data: Uint8Array;
+	};
+}
+
+type AgentCommand = SSHConnectCommand | SSHCloseCommand | SSHResizeCommand;
 
 export async function dispatchCommand(
 	dispatcher: Writable,

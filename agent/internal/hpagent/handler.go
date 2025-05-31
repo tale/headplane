@@ -70,6 +70,17 @@ func FollowMaster(agent *tsnet.TSAgent) {
 
 				sshutil.CloseWebSSH(agent, sshPayload)
 				continue
+
+			case "ssh_resize":
+				var sshPayload sshutil.SSHResizePayload
+				err = cbor.Unmarshal(msg.Payload, &sshPayload)
+				if err != nil {
+					log.Error("Unable to unmarshal SSH resize payload: %s", err)
+					continue
+				}
+
+				sshutil.ResizeWebSSH(agent, sshPayload)
+				continue
 		}
 	}
 

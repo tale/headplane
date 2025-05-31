@@ -22,6 +22,12 @@ type SSHClosePayload struct {
 	SessionId string `cbor:"sessionId"`
 }
 
+type SSHResizePayload struct {
+	SessionId string `cbor:"sessionId"`
+	Width     int    `cbor:"width"`
+	Height    int    `cbor:"height"`
+}
+
 func connectToTailscaleSSH(agent *tsnet.TSAgent, params SSHConnectPayload) (*ssh.Client, error) {
 	log := util.GetLogger()
 	addr := strings.Join([]string{params.Hostname, ":", strconv.Itoa(params.Port)}, "")
@@ -96,7 +102,7 @@ func StartWebSSH(agent *tsnet.TSAgent, params SSHConnectPayload) {
 		}
 
 		// Resize event is possible via the control channel later
-		err = sess.RequestPty("xterm-256color", 80, 40, modes)
+		err = sess.RequestPty("xterm-256color", 24, 80, modes)
 		if err != nil {
 			log.Error("Failed to request PTY for (%s): %s", params.SessionId, err)
 			return
@@ -163,4 +169,33 @@ func CloseWebSSH(agent *tsnet.TSAgent, params SSHClosePayload) {
 
 	RemoveSession(ctx.ID)
 	log.Info("SSH session for %s closed", params.SessionId)
+}
+
+func ResizeWebSSH(agent *tsnet.TSAgent, params SSHResizePayload) {
+	log := util.GetLogger()
+
+	if agent == nil {
+		log.Error("tsnet.TSAgent is not initialized correctly")
+		return
+	}
+
+	if params.SessionId == "" || params.Width <= 0 || params.Height <= 0 {
+		log.Error("Invalid SSH resize parameters: %v", params)
+		return
+	}
+
+	log.Debug("Resizing SSH session for session ID: %s to %dx%d", params.SessionId, params.Width, params.Height)
+	ctx, ok := lookupSession(params.SessionId)
+	if !ok {
+		log.Info("No active SSH session found for session ID: %s", params.SessionId)
+		return
+	}
+
+	err := ctx.Session.WindowChange(params.Height, params.Width)
+	if err != nil {
+		log.Error("Failed to resize SSH session for (%s): %s", params.SessionId, err)
+		return
+	}
+
+	log.Info("Resized SSH session for %s to %dx%d", params.SessionId, params.Width, params.Height)
 }
