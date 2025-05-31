@@ -20,22 +20,8 @@ type RecvMessage struct {
 }
 
 type CborMessage struct {
-	Op string `cbor:"op"`
+	Op      string          `cbor:"op"`
 	Payload cbor.RawMessage `cbor:"payload"`
-}
-
-type SSHConnect struct {
-	SessionId string `cbor:"sessionId"`
-	Username string `cbor:"username"`
-	Hostname string `cbor:"hostname"`
-	Port int `cbor:"port"`
-}
-
-type SSHMessage struct {
-	op string
-	username string
-	hostname string
-	Id string
 }
 
 type SendMessage struct {
@@ -51,7 +37,7 @@ func FollowMaster(agent *tsnet.TSAgent) {
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
-		log.Info("Got bytes delimited by newline");
+		log.Info("Got bytes delimited by newline")
 
 		var msg CborMessage
 		decoder := cbor.NewDecoder(bytes.NewReader(line))
@@ -59,27 +45,19 @@ func FollowMaster(agent *tsnet.TSAgent) {
 
 		if err != nil {
 			log.Error("Unable to decode message from master: %s", err)
-			continue;
+			continue
 		}
 
 		log.Debug("Received message from master: %s", msg)
-		var sshPayload SSHConnect
+		var sshPayload sshutil.SSHConnectPayload
 		err = cbor.Unmarshal(msg.Payload, &sshPayload)
 		if err != nil {
 			log.Error("Unable to unmarshal SSH connect payload: %s", err)
-			continue;
+			continue
 		}
 
-		log.Info("Opening SSH PTY for session %s to %s@%s:%d", sshPayload.SessionId, sshPayload.Username, sshPayload.Hostname, sshPayload.Port)
-		sshutil.OpenSshPty(agent, sshutil.SshConnectParams{
-			Hostname: sshPayload.Hostname,
-			Port: sshPayload.Port,
-			Username: sshPayload.Username,
-			Id: sshPayload.SessionId,
-		})
+		sshutil.StartWebSSH(agent, sshPayload)
 	}
-
-
 
 	// 	var msg RecvMessage
 	// 	err := json.Unmarshal(line, &msg)

@@ -3,8 +3,6 @@ package sshutil
 import (
 	"context"
 	"errors"
-	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -13,149 +11,128 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-type SshConnectParams struct {
-	Hostname string
-	Port     int
-	Username string
-	Id 	 string
+type SSHConnectPayload struct {
+	SessionId string `cbor:"sessionId"`
+	Username  string `cbor:"username"`
+	Hostname  string `cbor:"hostname"`
+	Port      int    `cbor:"port"`
 }
 
-func dialAndValidateTailscaleSSH(agent *tsnet.TSAgent, params SshConnectParams) (*ssh.Client, error) {
+func connectToTailscaleSSH(agent *tsnet.TSAgent, params SSHConnectPayload) (*ssh.Client, error) {
 	log := util.GetLogger()
-
 	addr := strings.Join([]string{params.Hostname, ":", strconv.Itoa(params.Port)}, "")
 
-	log.Debug("Attempting to dial %s via Tailscale SSH", addr)
-	conn, err := agent.Dial(context.Background(), "tcp", addr)
+	log.Debug("Initiating Tailscale SSH connection to %s@%s", params.Username, addr)
+	tailnetConn, err := agent.Dial(context.Background(), "tcp", addr)
 	if err != nil {
-		log.Error("Failed to connect to Tailscale SSH: %s", err)
 		return nil, err
 	}
 
-	log.Debug("Connected to Tailscale SSH at %s", addr)
+	log.Debug("Routed connection via tsnet to %s", addr)
 	config := &ssh.ClientConfig{
 		User: params.Username,
+		// This isn't a concern because we are only dialing within the Tailnet
+		// and every device is trusted and *should* be ACL accessible.
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	clientConn, chans, reqs, err := ssh.NewClientConn(conn, addr, config)
+	conn, chans, reqs, err := ssh.NewClientConn(tailnetConn, addr, config)
 	if err != nil {
-		log.Error("Failed to create SSH client connection: %s", err)
 		conn.Close()
 		return nil, err
 	}
 
-	client := ssh.NewClient(clientConn, chans, reqs)
-	sVer := string(client.ServerVersion())
+	// At this point we have successfully connected to the node
+	sshClient := ssh.NewClient(conn, chans, reqs)
+	version := string(sshClient.ServerVersion())
 
-	if !strings.Contains(sVer, "Tailscale") {
-		log.Error("Connected to non-Tailscale SSH server: %s", sVer)
+	if !strings.Contains(version, "Tailscale") {
 		conn.Close()
-		return nil, errors.New("not a Tailscale SSH server")
+		return nil, errors.New("server is not running Tailscale SSH")
 	}
 
-	log.Info("Connected to SSH server running %s at %s", client.ServerVersion(), addr)
-	return client, nil
+	log.Info("Connected to %s@%s:%d via Tailscale SSH (%s)", params.Username, params.Hostname, params.Port, version)
+	return sshClient, nil
 }
 
-func bindStdinToFd(sess *ssh.Session, fd int) error {
-	log := util.GetLogger()
-
-	sshIn := os.NewFile(uintptr(fd), "sshInput")
-	if sshIn == nil {
-		log.Error("Failed to create file from stdin fd %d", fd)
-		return errors.New("failed to create file from stdin fd")
-	}
-
-	stdin, err := sess.StdinPipe()
-	if err != nil {
-		log.Error("Failed to get stdin pipe: %s", err)
-		return err
-	}
-
-	go io.Copy(stdin, sshIn) // From Node → SSH session
-	return nil
-}
-
-func bindStdoutToFd(sess *ssh.Session, fd int) error {
-	log := util.GetLogger()
-
-	sshOut := os.NewFile(uintptr(fd), "sshOutput")
-	if sshOut == nil {
-		log.Error("Failed to create file from stdout fd %d", fd)
-		return errors.New("failed to create file from stdout fd")
-	}
-
-	stdout, err := sess.StdoutPipe()
-	if err != nil {
-		log.Error("Failed to get stdout pipe: %s", err)
-		return err
-	}
-
-	go io.Copy(sshOut, stdout) // From SSH → Node
-	return nil
-}
-
-func OpenSshPty(agent *tsnet.TSAgent, params SshConnectParams) (*ssh.Client, error) {
+func StartWebSSH(agent *tsnet.TSAgent, params SSHConnectPayload) {
 	log := util.GetLogger()
 
 	if agent == nil {
-		log.Error("Tailscale agent is nil")
-		return nil, errors.New("tailscale agent is nil")
+		log.Error("tsnet.TSAgent is not initialized correctly")
+		return
 	}
 
-	if params.Hostname == "" || params.Port <= 0 || params.Username == "" {
-		log.Error("Invalid SSH connection parameters: %+v", params)
-		return nil, errors.New("invalid SSH connection parameters")
+	if params.Hostname == "" || params.Port <= 0 || params.Username == "" || params.SessionId == "" {
+		log.Error("Invalid SSH connection parameters: %v", params)
+		return
 	}
 
-	client, err := dialAndValidateTailscaleSSH(agent, params)
+	client, err := connectToTailscaleSSH(agent, params)
 	if err != nil {
-		log.Error("Failed to open SSH pty: %s", err)
-		return nil, err
+		log.Error("Failed to connect to Tailscale SSH for (%s): %s", params.SessionId, err)
+		return
 	}
 
+	// Everything in the func is related to the SSH session.
+	// Each session runs in its own goroutine, allowing concurrency.
 	go func() {
-	sess, err := client.NewSession()
-	if err != nil {
-		log.Error("Failed to create new SSH session: %s", err)
-		client.Close()
-	}
-
-	modes := ssh.TerminalModes{
-		ssh.ECHO:          1, // enable echoing
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
-	}
-
-	if err := sess.RequestPty("xterm-256color", 80, 40, modes); err != nil {
-		log.Error("Failed to request PTY: %s", err)
-		client.Close()
-	}
-
-	ctx := addSession(params.Id, sess)
-	go func() {
-		for data := range ctx.InputCh {
-			if _, err := ctx.Stdin.Write(data); err != nil {
-				log.Error("Failed to write to SSH stdin: %s", err)
-				return
-			}
+		log.Debug("Creating SSH session for session ID: %s", params.SessionId)
+		sess, err := client.NewSession()
+		if err != nil {
+			log.Error("Failed to create new SSH session: %s", err)
+			client.Close()
+			return
 		}
-	}();
 
-	if err := sess.Shell(); err != nil {
-		log.Error("Failed to start shell: %s", err)
+		modes := ssh.TerminalModes{
+			ssh.ECHO:          1,
+			ssh.TTY_OP_ISPEED: 14400,
+			ssh.TTY_OP_OSPEED: 14400,
+		}
+
+		// Resize event is possible via the control channel later
+		err = sess.RequestPty("xterm-256color", 80, 40, modes)
+		if err != nil {
+			log.Error("Failed to request PTY for (%s): %s", params.SessionId, err)
+			return
+		}
+
+		ctx, err := registerSessionChans(params.SessionId, sess)
+		if err != nil {
+			log.Error("Failed to register session channels for (%s): %s", params.SessionId, err)
+			client.Close()
+			return
+		}
+
+		// Input buffer handler
+		go func() {
+			for data := range ctx.InputCh {
+				_, err := ctx.Stdin.Write(data)
+				if err != nil {
+					log.Error("Failed to write to SSH stdin: %s", err)
+					return
+				}
+			}
+		}()
+
+		// This spawns 2 goroutins for stdout and stderr
+		dispatchSSHStdout(params.SessionId, ctx.Stdout, ctx.Stderr)
+
+		// Spin up a shell and wait for the pty to terminate
+		err = sess.Shell()
+		if err != nil {
+			log.Error("Failed to start shell for (%s): %s", params.SessionId, err)
+			client.Close()
+			return
+		}
+
+		log.Info("Opened an SSH PTY for %s", params.SessionId)
+		sess.Wait()
+		sess.Close()
 		client.Close()
-	}
 
-
-	log.Info("Successfully opened SSH pty for %s@%s:%d", params.Username, params.Hostname, params.Port)
-	go streamSSHOutput(params.Id, ctx.Stdout, os.NewFile(4, "sshOutput"))
-		sess.Wait();
-		sess.Close();
-		log.Info("SSH session %s closed (goSide)", params.Id)
-		RemoveSession(params.Id)
+		log.Info("SSH session for %s closed", params.SessionId)
+		RemoveSession(params.SessionId)
 	}()
-
-	return client, nil
 }

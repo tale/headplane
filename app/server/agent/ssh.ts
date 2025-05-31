@@ -4,7 +4,8 @@ import type { Readable, Writable } from 'node:stream';
 import { Context } from 'hono';
 import { WSContext, WSEvents } from 'hono/ws';
 import log from '~/utils/log';
-import { dispatchCommand } from './dispatcher';
+import { dispatchCommand, dispatchWeb } from './dispatcher';
+import { decodeSSHFrame, encodeSSHFrame } from './encoder';
 
 interface SSHConnection {
 	username: string;
@@ -19,19 +20,44 @@ interface SSHSession {
 	ws: WSContext;
 }
 
+interface FrameDecodeSuccess {
+	id: string;
+	data: Buffer;
+}
+
+interface FrameDecodeFailure {
+	id: undefined;
+	data: undefined;
+}
+
 export function createSSHMultiplexer(proc: ChildProcess): SSHMultiplexer {
-	return new SSHMultiplexer(proc);
+	const control = proc.stdin;
+	const sshInput = proc.stdio[3];
+	const sshOutput = proc.stdio[4];
+
+	if (!control || !sshInput || !sshOutput) {
+		throw new Error('Invalid SSH multiplexer process: missing stdio streams');
+	}
+
+	return new SSHMultiplexer(
+		control,
+		sshInput as Writable,
+		sshOutput as Readable,
+	);
 }
 
 export class SSHMultiplexer {
 	private connections: Map<string, SSHSession>;
-	private child: ChildProcess;
+	private control: Writable;
+	private sshInput: Writable;
+	private sshOutput: Readable;
 
-	constructor(proc: ChildProcess) {
+	constructor(control: Writable, sshInput: Writable, sshOutput: Readable) {
 		this.connections = new Map();
-		this.child = proc;
-
-		this.handleStdout();
+		this.control = control;
+		this.sshInput = sshInput;
+		this.sshOutput = sshOutput;
+		this.configureStdout();
 	}
 
 	// TODO: Determine if we want to allow multiple connections for the same
@@ -45,8 +71,8 @@ export class SSHMultiplexer {
 			ws,
 		};
 
-		log.info('agent', 'Dispatching SSH connection for %s', sessionId);
-		await dispatchCommand(this.child.stdin, {
+		log.debug('agent', 'Dispatching SSH connection for %s', sessionId);
+		await dispatchCommand(this.control, {
 			op: 'ssh_conn',
 			payload: {
 				sessionId,
@@ -76,9 +102,22 @@ export class SSHMultiplexer {
 				try {
 					const sessionId = await this.connect(conn, ws);
 					ws.raw = sessionId;
-					ws.send(JSON.stringify({ status: 'connected', sessionId }));
+					dispatchWeb(ws, {
+						op: 'ssh_conn_successful',
+						payload: { sessionId },
+					});
 				} catch (error) {
-					ws.close(1011, `Connection failed: ${error.message}`);
+					const errorMessage =
+						error instanceof Error ? error.message : 'Unknown error';
+
+					dispatchWeb(ws, {
+						op: 'ssh_conn_failed',
+						payload: {
+							reason: errorMessage,
+						},
+					});
+
+					ws.close(1011, 'Connection failed');
 				}
 			},
 
@@ -95,8 +134,13 @@ export class SSHMultiplexer {
 					return;
 				}
 
-				const encodedFrame = this.encodeFrame(sessionId, event.data);
-				this.child.stdio[3]?.write(encodedFrame);
+				const encodedFrame = await encodeSSHFrame({
+					sessionId,
+					channel: 0, // stdin
+					payload: event.data,
+				});
+
+				this.sshInput.write(encodedFrame);
 			},
 
 			onClose: (_, ws) => {
@@ -121,65 +165,35 @@ export class SSHMultiplexer {
 				}
 
 				log.error('agent', 'SSH WebSocket Error with %s', sessionId);
-				console.log(event);
+				log.debug('agent', 'Error details: %o', event);
 			},
 		};
 	}
 
-	private encodeFrame(id: string, data: string | Buffer): Buffer {
-		const sid = Buffer.from(id, 'utf8');
-		const payload = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
-
-		// FIX: include +4 for the payload length
-		const frame = Buffer.alloc(1 + sid.length + 4 + payload.length);
-		frame.writeUint8(sid.length, 0); // 1 byte for sid length
-		sid.copy(frame, 1); // SID
-		frame.writeUint32BE(payload.length, 1 + sid.length); // 4 bytes for payload length
-		payload.copy(frame, 1 + sid.length + 4); // Payload
-
-		return frame;
-	}
-
-	private decodeFrame(frame: Buffer): { id: string; data: Buffer } | undefined {
-		if (frame.length < 5) return;
-
-		const sidLength = frame.readUint8(0);
-		if (frame.length < 1 + sidLength + 4) return;
-
-		const id = frame.slice(1, 1 + sidLength).toString('utf8');
-		const payloadLength = frame.readUint32BE(1 + sidLength);
-		if (frame.length < 1 + sidLength + 4 + payloadLength) return;
-
-		const data = frame.slice(
-			1 + sidLength + 4,
-			1 + sidLength + 4 + payloadLength,
-		);
-
-		return { id, data };
-	}
-
-	private handleStdout() {
-		const stdout = this.child.stdio[4];
-		if (!stdout) {
-			return;
-		}
-
-		stdout.on('data', (bytes) => {
-			console.log(Buffer.from(bytes).toString('utf8'));
-			const decoded = this.decodeFrame(bytes);
-			if (!decoded) {
+	private configureStdout() {
+		this.sshOutput.on('data', (bytes) => {
+			const frame = decodeSSHFrame(bytes);
+			if (!frame) {
 				return;
 			}
 
-			const { id, data } = decoded;
-			console.log(id, data);
-			const session = this.connections.get(id);
+			const session = this.connections.get(frame.sessionId);
 			if (!session || !session.connected) {
-				log.warn('agent', 'Received data for disconnected session %s', id);
+				log.warn(
+					'agent',
+					'Received data for invalid SSH session %s',
+					frame.sessionId,
+				);
 				return;
 			}
 
-			session.ws.send(data);
+			dispatchWeb(session.ws, {
+				op: 'ssh_frame',
+				payload: {
+					channel: frame.channel,
+					data: frame.payload,
+				},
+			});
 		});
 	}
 }
