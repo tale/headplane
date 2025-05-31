@@ -18,6 +18,10 @@ type SSHConnectPayload struct {
 	Port      int    `cbor:"port"`
 }
 
+type SSHClosePayload struct {
+	SessionId string `cbor:"sessionId"`
+}
+
 func connectToTailscaleSSH(agent *tsnet.TSAgent, params SSHConnectPayload) (*ssh.Client, error) {
 	log := util.GetLogger()
 	addr := strings.Join([]string{params.Hostname, ":", strconv.Itoa(params.Port)}, "")
@@ -135,4 +139,28 @@ func StartWebSSH(agent *tsnet.TSAgent, params SSHConnectPayload) {
 		log.Info("SSH session for %s closed", params.SessionId)
 		RemoveSession(params.SessionId)
 	}()
+}
+
+func CloseWebSSH(agent *tsnet.TSAgent, params SSHClosePayload) {
+	log := util.GetLogger()
+
+	if agent == nil {
+		log.Error("tsnet.TSAgent is not initialized correctly")
+		return
+	}
+
+	if params.SessionId == "" {
+		log.Error("Invalid SSH close parameters: %v", params)
+		return
+	}
+
+	log.Debug("Closing SSH session for session ID: %s", params.SessionId)
+	ctx, ok := lookupSession(params.SessionId)
+	if !ok {
+		log.Info("No active SSH session found for session ID: %s", params.SessionId)
+		return
+	}
+
+	RemoveSession(ctx.ID)
+	log.Info("SSH session for %s closed", params.SessionId)
 }

@@ -28,6 +28,7 @@
 		"@uiw/codemirror-theme-github": "^4.23.12",
 		"@uiw/codemirror-theme-xcode": "^4.23.12",
 		"@uiw/react-codemirror": "^4.23.12",
+		"@xterm/xterm": "^5.5.0",
 		"arktype": "^2.1.20",
 		"cborg": "^4.2.11",
 		"clsx": "^2.1.1",
