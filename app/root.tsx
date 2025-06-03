@@ -41,6 +41,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 					<meta name="viewport" content="width=device-width, initial-scale=1" />
 					<Meta />
 					<Links />
+					<link rel="icon" href="favicon.ico" />
 				</head>
 				<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
 					{children}
