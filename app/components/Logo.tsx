@@ -1,5 +1,5 @@
 import cn from '~/utils/cn';
-import LogoSvg from '../../assets/headplane-logo-light.svg';
+import LogoSvg from '../../public/logo-light.svg';
 
 export interface LogoProps {
 	className?: string;
