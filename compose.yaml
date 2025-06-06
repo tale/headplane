@@ -7,6 +7,22 @@ networks:
     name: "headplane-dev"
     driver: "bridge"
 services:
+  caddy:
+    image: "caddy:2"
+    container_name: "headplane-caddy"
+    restart: "unless-stopped"
+    depends_on:
+      - "headscale"
+    networks:
+      - "headplane-dev"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./Caddyfile:/etc/caddy/Caddyfile"
+      - "./test/caddy/data:/data"
+      - "./test/caddy/config:/config"
+      - "./test/caddy/certs:/certs"
   headscale:
     image: "headscale/headscale:0.26.0-debug"
     container_name: "headscale"
