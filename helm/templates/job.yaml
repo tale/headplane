@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: headscale-generate-token
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: headscale-token
+      containers:
+        - name: headscale-generate-token
+          image: bitnami/kubectl:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              echo "Waiting for headscale container to be Ready..."
+              while [ -z "$CONTAINER_STATUS" ]; do
+              CONTAINER_STATUS=$(kubectl get pod headplane-0 -n {{ .Release.Namespace }} -o=jsonpath="{.status.containerStatuses[?(@.name==\"headscale\")].state.running}")
+                sleep 1
+              done
+
+              echo "Checking if Secret 'headscale-api-token' exists..."
+              if kubectl get secret headscale-api-token -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+                echo "Secret already exists. Skipping token generation."
+                exit 0
+              fi
+
+              echo "Secret not found. Generating Headscale API token..."
+              TOKEN=$(kubectl -n {{ .Release.Namespace }} exec -i headplane-0 -c headscale -- headscale apikeys create -e 100y)
+
+              if [ -z "$TOKEN" ]; then
+                echo "Failed to retrieve API token"
+                exit 1
+              fi
+
+              echo "Creating Kubernetes Secret..."
+              kubectl create secret generic headscale-api-token --from-literal=HEADPLANE_OIDC__HEADSCALE_API_KEY="$TOKEN" -n {{ .Release.Namespace }}

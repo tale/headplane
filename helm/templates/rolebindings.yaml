@@ -1,0 +1,37 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: headplane-agent
+roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: headplane-agent
+subjects:
+- kind: ServiceAccount
+  name: headplane
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tailscale-relay
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tailscale-relay
+subjects:
+- kind: ServiceAccount
+  name: tailscale-relay
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: headscale-token
+  namespace: headplane
+subjects:
+  - kind: ServiceAccount
+    name: headscale-token
+roleRef:
+  kind: Role
+  name: headscale-token
+  apiGroup: rbac.authorization.k8s.io

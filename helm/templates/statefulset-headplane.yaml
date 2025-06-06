@@ -1,0 +1,79 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: headplane
+  labels:
+    app: headplane
+spec:
+  selector:
+    matchLabels:
+      app: headplane
+  template:
+    metadata:
+      labels:
+        app: headplane
+    spec:
+      shareProcessNamespace: true
+      serviceAccountName: headplane
+      initContainers:
+      - name: copy-headscale-config
+        image: busybox:latest
+        command:
+          - sh
+          - -c
+          - |
+            cp /headscale-default-config/config.yaml /headscale-config/config.yaml
+            cp /headscale-acl/acl.hujson /headscale-config/acl.hujson
+        volumeMounts:
+          - name: headscale-config
+            mountPath: /headscale-config
+          - name: headscale-default-config
+            mountPath: /headscale-default-config
+          - name: headscale-acl
+            mountPath: /headscale-acl
+      containers:
+      - name: headplane
+        image: {{ .Values.headplane.image }}
+        envFrom:
+          - secretRef:
+              name: {{ .Values.headplane.secret.name }}
+          - secretRef:
+              name: headscale-api-token
+        env:
+        - name: HEADPLANE_LOAD_ENV_OVERRIDES
+          value: 'true'
+        - name: 'HEADPLANE_INTEGRATION__KUBERNETES__POD_NAME'
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: headplane-config
+          mountPath: /etc/headplane
+        - name: headscale-config
+          mountPath: /etc/headscale
+      - name: headscale
+        image: {{ .Values.headscale.image }}
+        args:
+          - serve
+        volumeMounts:
+        - name: headscale-config
+          mountPath: /etc/headscale
+        - name: headplane-config
+          mountPath: /etc/headplane
+        envFrom:
+          - secretRef:
+              name: {{ .Values.headscale.secret.name }}
+      volumes:
+        - name: headscale-default-config
+          configMap:
+            name: headscale-default-config
+        - name: headscale-config
+          persistentVolumeClaim:
+            claimName: headscale-config
+        - name: headplane-config
+          configMap:
+            name: headplane-config
+        - name: headscale-acl
+          configMap:
+            name: headscale-acl

@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: headscale-default-config
+data:
+  config.yaml: |
+{{- toYaml .Values.headscale.config | nindent 4 }}

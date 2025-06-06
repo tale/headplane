@@ -1,0 +1,125 @@
+headplane:
+  image: ghcr.io/tale/headplane:0.6.0
+  config:
+    server:
+        host: "0.0.0.0"
+        port: 3000
+        cookie_secure: true
+    headscale:
+        url: "https://vpn.example.com"
+        config_path: "/etc/headscale/config.yaml"
+        config_strict: "true"
+    integration:
+        kubernetes:
+            enabled: true
+            validate_manifest: true
+            pod_name: "headplane-0"
+    # oidc:
+    #   issuer: "https://your-oidc-issuer-url.com"
+    #   disable_api_key_login: "true"
+    #   token_endpoint_auth_method: "client_secret_post"
+    #   redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
+    #   client_id: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"
+  secret:
+    name: headplane-secret
+    create: true
+    # server:
+      # cookie_secret: "yjbqijkvfrgrtwwkoanqquykeyuyffywd" #if not set, it will be generated
+    # oidc:
+    #   client_secret: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_SECRET_FOR_HEADPLANE"
+    #   headscale_api_key: "REPLACE_IT_WITH_YOUR_HEADSCALE_API_KEY"
+headscale:
+  image: headscale/headscale:0.25.1
+
+  # ACL configuration
+  # only applicable if headscale.config.policy.mode is 'file'
+  acl: |
+    {
+      "acls": []
+    }
+    
+  config:
+    server_url: https://vpn.example.com
+    listen_addr: 0.0.0.0:8080
+    metrics_listen_addr: 0.0.0.0:9090
+    grpc_listen_addr: 0.0.0.0:50443
+    grpc_allow_insecure: false
+    policy:
+      mode: database # 'file' or 'database'
+      path: "/etc/headscale/acl.hujson"
+    prefixes:
+      v4: 100.64.0.0/10
+      v6: fd7a:115c:a1e0::/48
+      allocation: sequential
+    database:
+      type: sqlite
+      debug: false
+      sqlite:
+        path: /etc/headscale/db.sqlite
+    noise:
+      private_key_path: /etc/headscale/noise_private.key
+    derp:
+      server:
+        enabled: false
+        region_id: 999
+        region_code: "headscale"
+        region_name: "Headscale Embedded DERP"
+        stun_listen_addr: "0.0.0.0:3478"
+        private_key_path: /var/lib/headscale/derp_server_private.key
+        automatically_add_embedded_derp_region: true
+        ipv4: 1.2.3.4
+        ipv6: 2001:db8::1
+      urls:
+        - https://controlplane.tailscale.com/derpmap/default
+      paths: []
+    dns:
+      magic_dns: true
+      base_domain: headscale.vpn
+      nameservers:
+        global:
+          - 1.1.1.1
+          - 8.8.8.8
+    # oidc:
+    #   issuer: "https://your-oidc-issuer.com"
+    #   client_id: "YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"
+#      allowed_groups:
+#        - vpn_access
+#     allowed_domains:
+#       - example.com
+#     allowed_users:
+#      - alice@example.com
+
+  secret:
+    name: headscale-secret
+    create: true
+    # oidc:
+    #   client_secret: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_SECRET"
+
+# NOT WORKING YET
+# relay:
+#   enabled: true
+#   image: ghcr.io/tailscale/tailscale:v1.80.3
+#   config:
+#     hostname: "example.com"
+#     exit_node: "example.com"
+#     login_server: "https://vpn.example.com"
+#     advertise_exit_node: "true"
+#     firewall_debug: "false"
+#     routes: "10.0.0.0/8"
+pvc:
+  enabled: true
+  name: headscale-config
+  accessModes:
+    - ReadWriteOnce
+  storage: 1Gi
+#  storageClassName: default
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "cloudflare"
+  labels: []
+  headplaneDomain: "headplane.example.com"
+  headscaleDomain: "vpn.example.com"
+  tlsSecretName: "headplane-tls"
