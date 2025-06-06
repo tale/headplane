@@ -66,7 +66,7 @@ export default function Page() {
 					The ACL policy mode is most likely set to <Code>file</Code> in your
 					Headscale configuration. This means that the ACL file cannot be edited
 					through the web interface. In order to resolve this, you'll need to
-					set <Code>acl.mode</Code> to <Code>database</Code> in your Headscale
+					set <Code>policy.mode</Code> to <Code>database</Code> in your Headscale
 					configuration.
 				</Notice>
 			) : undefined}
