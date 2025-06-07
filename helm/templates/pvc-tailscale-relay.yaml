@@ -1,0 +1,19 @@
+{{- if and .Values.relay.enabled .Values.relay.pvc.enabled }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.relay.pvc.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    {{- range .Values.relay.pvc.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.relay.pvc.storage | quote }}
+  {{- if .Values.relay.pvc.storageClassName }}
+  storageClassName: {{ .Values.relay.pvc.storageClassName | quote }}
+  {{- end }}
+{{- end }} 
