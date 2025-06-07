@@ -39,6 +39,8 @@ helm install headplane oci://harbor.lag0.com.br/library/headplane -n your-namesp
 helm upgrade headplane oci://harbor.lag0.com.br/library/headplane
 ```
 
+* Some config changes may require manual pod restart to take place
+
 ### Uninstall the Chart
 ```sh
 helm uninstall headplane
@@ -54,18 +56,18 @@ helm uninstall headplane
 | headplane.config.integration.kubernetes.enabled | bool | `true` |  |
 | headplane.config.integration.kubernetes.pod_name | string | `"headplane-0"` |  |
 | headplane.config.integration.kubernetes.validate_manifest | bool | `true` |  |
-| headplane.config.oidc.client_id | string | `"REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"` |  |
-| headplane.config.oidc.disable_api_key_login | bool | `true` |  |
-| headplane.config.oidc.enabled | bool | `false` |  |
-| headplane.config.oidc.issuer | string | `"https://your-oidc-issuer-url.com"` |  |
-| headplane.config.oidc.redirect_uri | string | `"https://your-headplane-admin-domain.com/admin/oidc/callback"` |  |
-| headplane.config.oidc.secret_name | string | `"oidc-secrets"` |  |
-| headplane.config.oidc.token_endpoint_auth_method | string | `"client_secret_post"` |  |
 | headplane.config.server.cookie_secure | bool | `true` |  |
 | headplane.config.server.host | string | `"0.0.0.0"` |  |
 | headplane.config.server.port | int | `3000` |  |
 | headplane.envFrom | list | `[]` |  |
 | headplane.image | string | `"ghcr.io/tale/headplane:0.6.0"` |  |
+| headplane.oidc.client_id | string | `"REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"` |  |
+| headplane.oidc.disable_api_key_login | bool | `true` |  |
+| headplane.oidc.enabled | bool | `false` |  |
+| headplane.oidc.issuer | string | `"https://your-oidc-issuer-url.com"` |  |
+| headplane.oidc.redirect_uri | string | `"https://your-headplane-admin-domain.com/admin/oidc/callback"` |  |
+| headplane.oidc.secret_name | string | `"oidc-secrets"` |  |
+| headplane.oidc.token_endpoint_auth_method | string | `"client_secret_post"` |  |
 | headscale.acl | string | `"{\n  \"acls\": []\n}\n"` |  |
 | headscale.config.database.debug | bool | `false` |  |
 | headscale.config.database.sqlite.path | string | `"/etc/headscale/db.sqlite"` |  |
@@ -90,10 +92,6 @@ helm uninstall headplane
 | headscale.config.listen_addr | string | `"0.0.0.0:8080"` |  |
 | headscale.config.metrics_listen_addr | string | `"0.0.0.0:9090"` |  |
 | headscale.config.noise.private_key_path | string | `"/etc/headscale/noise_private.key"` |  |
-| headscale.config.oidc.client_id | string | `"YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"` |  |
-| headscale.config.oidc.enabled | bool | `false` |  |
-| headscale.config.oidc.issuer | string | `"https://your-oidc-issuer.com"` |  |
-| headscale.config.oidc.secret_name | string | `"oidc-secrets"` |  |
 | headscale.config.policy.mode | string | `"database"` |  |
 | headscale.config.policy.path | string | `"/etc/headscale/acl.hujson"` |  |
 | headscale.config.prefixes.allocation | string | `"sequential"` |  |
@@ -102,6 +100,10 @@ helm uninstall headplane
 | headscale.config.server_url | string | `"https://vpn.example.com"` |  |
 | headscale.envFrom | list | `[]` |  |
 | headscale.image | string | `"headscale/headscale:0.25.1"` |  |
+| headscale.oidc.client_id | string | `"YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"` |  |
+| headscale.oidc.enabled | bool | `false` |  |
+| headscale.oidc.issuer | string | `"https://your-oidc-issuer.com"` |  |
+| headscale.oidc.secret_name | string | `"oidc-secrets"` |  |
 | ingress.className | string | `"nginx"` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.headplaneDomain | string | `"headplane.example.com"` |  |

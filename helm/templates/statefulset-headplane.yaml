@@ -23,22 +23,22 @@ spec:
           - sh
           - -c
           - |
-            cp /headscale-default-config/config.yaml /headscale-config/config.yaml
-            cp /headscale-acl/acl.hujson /headscale-config/acl.hujson
+            cp /headscale-config/config.yaml /headscale-data/config.yaml
+            cp /headscale-acl/acl.hujson /headscale-data/acl.hujson
         volumeMounts:
+          - name: headscale-data
+            mountPath: /headscale-data
           - name: headscale-config
             mountPath: /headscale-config
-          - name: headscale-default-config
-            mountPath: /headscale-default-config
           - name: headscale-acl
             mountPath: /headscale-acl
       containers:
       - name: headplane
         image: {{ .Values.headplane.image }}
         envFrom:
-          {{- if .Values.headplane.config.oidc.enabled }}
+          {{- if .Values.headplane.oidc.enabled }}
           - secretRef:
-              name: {{ .Values.headplane.config.oidc.secret_name }}
+              name: {{ .Values.headplane.oidc.secret_name }}
           {{- end }}
           {{- with .Values.headplane.envFrom }}
           {{- toYaml . | nindent 10 }}
@@ -53,35 +53,35 @@ spec:
         volumeMounts:
         - name: headplane-config
           mountPath: /etc/headplane
-        - name: headscale-config
+        - name: headscale-data
           mountPath: /etc/headscale
       - name: headscale
         image: {{ .Values.headscale.image }}
         args:
           - serve
         volumeMounts:
-        - name: headscale-config
+        - name: headscale-data
           mountPath: /etc/headscale
         - name: headplane-config
           mountPath: /etc/headplane
         envFrom:
-          {{- if .Values.headscale.config.oidc.enabled }}
+          {{- if .Values.headscale.oidc.enabled }}
           - secretRef:
-              name: {{ .Values.headscale.config.oidc.secret_name }}
+              name: {{ .Values.headscale.oidc.secret_name }}
           {{- end }}
           {{- with .Values.headscale.envFrom }}
           {{- toYaml . | nindent 10 }}
           {{- end }}
       volumes:
-        - name: headscale-default-config
-          configMap:
-            name: headscale-default-config
         - name: headscale-config
+          secret:
+            secretName: headscale-config
+        - name: headscale-data
           persistentVolumeClaim:
             claimName: headscale-config
         - name: headplane-config
-          configMap:
-            name: headplane-config
+          secret:
+            secretName: headplane-config
         - name: headscale-acl
           configMap:
             name: headscale-acl

@@ -39,6 +39,8 @@ helm install headplane oci://harbor.lag0.com.br/library/headplane -n your-namesp
 helm upgrade headplane oci://harbor.lag0.com.br/library/headplane
 ```
 
+* Some config changes may require manual pod restart to take place
+
 ### Uninstall the Chart
 ```sh
 helm uninstall headplane

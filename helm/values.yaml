@@ -2,6 +2,21 @@
 headplane:
   # The container image for Headplane
   image: ghcr.io/tale/headplane:0.6.0
+  oidc:
+    # Enable OIDC integration for Headplane
+    enabled: false
+    # OIDC issuer URL
+    issuer: "https://your-oidc-issuer-url.com"
+    # Disable API key login
+    disable_api_key_login: true
+    # OIDC token endpoint auth method
+    token_endpoint_auth_method: "client_secret_post"
+    # OIDC redirect URI
+    redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
+    # OIDC client ID
+    client_id: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"
+    # Name of the secret containing OIDC credentials
+    secret_name: "oidc-secrets"
   config:
     server:
       # The host address for the Headplane server
@@ -25,21 +40,6 @@ headplane:
         validate_manifest: true
         # The pod name for Headplane
         pod_name: "headplane-0"
-    oidc:
-      # Enable OIDC integration for Headplane
-      enabled: false
-      # OIDC issuer URL
-      issuer: "https://your-oidc-issuer-url.com"
-      # Disable API key login
-      disable_api_key_login: true
-      # OIDC token endpoint auth method
-      token_endpoint_auth_method: "client_secret_post"
-      # OIDC redirect URI
-      redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
-      # OIDC client ID
-      client_id: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"
-      # Name of the secret containing OIDC credentials
-      secret_name: "oidc-secrets"
   # Additional secrets to mount as environment variables
   envFrom: []
     # - secretRef:
@@ -57,6 +57,15 @@ headscale:
       "acls": []
     }
 
+  oidc:
+    # Enable OIDC integration for Headscale
+    enabled: false
+    # OIDC issuer URL
+    issuer: "https://your-oidc-issuer.com"
+    # OIDC client ID
+    client_id: "YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"
+    # Name of the secret containing OIDC credentials
+    secret_name: "oidc-secrets"
   config:
     # The public URL for the Headscale server
     server_url: https://vpn.example.com
@@ -125,15 +134,6 @@ headscale:
         global:
           - 1.1.1.1
           - 8.8.8.8
-    oidc:
-      # Enable OIDC integration for Headscale
-      enabled: false
-      # OIDC issuer URL
-      issuer: "https://your-oidc-issuer.com"
-      # OIDC client ID
-      client_id: "YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"
-      # Name of the secret containing OIDC credentials
-      secret_name: "oidc-secrets"
       # allowed_groups:
       #   - vpn_access
       # allowed_domains:
