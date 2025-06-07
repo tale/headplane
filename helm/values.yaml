@@ -117,8 +117,8 @@ pvc:
 ingress:
   enabled: false
   className: nginx
-  annotations:
-    cert-manager.io/cluster-issuer: "cloudflare"
+  # annotations:
+  #   cert-manager.io/cluster-issuer: "cloudflare"
   labels: []
   headplaneDomain: "headplane.example.com"
   headscaleDomain: "vpn.example.com"
