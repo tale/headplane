@@ -36,10 +36,13 @@ spec:
       - name: headplane
         image: {{ .Values.headplane.image }}
         envFrom:
+          {{- if .Values.headplane.config.oidc.enabled }}
           - secretRef:
-              name: {{ .Values.headplane.secret.name }}
-          - secretRef:
-              name: headscale-api-token
+              name: {{ .Values.headplane.config.oidc.secret_name }}
+          {{- end }}
+          {{- with .Values.headplane.envFrom }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
         env:
         - name: HEADPLANE_LOAD_ENV_OVERRIDES
           value: 'true'
@@ -62,8 +65,13 @@ spec:
         - name: headplane-config
           mountPath: /etc/headplane
         envFrom:
+          {{- if .Values.headscale.config.oidc.enabled }}
           - secretRef:
-              name: {{ .Values.headscale.secret.name }}
+              name: {{ .Values.headscale.config.oidc.secret_name }}
+          {{- end }}
+          {{- with .Values.headscale.envFrom }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
       volumes:
         - name: headscale-default-config
           configMap:

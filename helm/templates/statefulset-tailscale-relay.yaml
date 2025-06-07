@@ -49,19 +49,21 @@ spec:
         - name: TS_DEBUG_FIREWALL_MODE
           value: "{{ .Values.relay.config.firewall_debug }}"
         {{- end }}
-# Store the state in a k8s secret
         - name: TS_KUBE_SECRET
           value: "tailscale-auth"
         - name: TS_USERSPACE
           value: "true"
+        {{- if .Values.relay.config.authKey }}
+        - name: TS_AUTHKEY
+          value: "{{ .Values.relay.config.authKey }}"
+        {{- else }}
         - name: TS_AUTHKEY
           valueFrom:
             secretKeyRef:
               name: tailscale-auth
               key: TS_AUTHKEY
               optional: true
-              optional: true
-
+        {{- end }}
         - name: POD_NAME
           valueFrom:
             fieldRef:
@@ -70,8 +72,19 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.uid
+        {{- if and .Values.relay.enabled .Values.relay.pvc.enabled }}
+        volumeMounts:
+        - name: tailscale-data
+          mountPath: /var/lib/tailscale
+        {{- end }}
         securityContext:
           capabilities:
             add:
               - NET_ADMIN
+      {{- if and .Values.relay.enabled .Values.relay.pvc.enabled }}
+      volumes:
+      - name: tailscale-data
+        persistentVolumeClaim:
+          claimName: {{ .Values.relay.pvc.name }}
+      {{- end }}
 {{- end }}

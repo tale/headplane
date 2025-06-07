@@ -3,6 +3,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: headplane-agent
+  namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups: ['']
   resources: ['pods']
@@ -15,6 +16,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: tailscale-relay
+  namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups:
   - ""
@@ -45,6 +47,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: headscale-token
+  namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups: [""]
     resources: ["pods"]

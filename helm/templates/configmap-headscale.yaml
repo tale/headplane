@@ -6,3 +6,20 @@ metadata:
 data:
   config.yaml: |
 {{- toYaml .Values.headscale.config | nindent 4 }}
+{{- if .Values.headscale.config.oidc.enabled }}
+    oidc:
+      issuer: {{ .Values.headscale.config.oidc.issuer | quote }}
+      client_id: {{ .Values.headscale.config.oidc.client_id | quote }}
+      {{- if .Values.headscale.config.oidc.allowed_groups }}
+      allowed_groups:
+        {{- toYaml .Values.headscale.config.oidc.allowed_groups | nindent 8 }}
+      {{- end }}
+      {{- if .Values.headscale.config.oidc.allowed_domains }}
+      allowed_domains:
+        {{- toYaml .Values.headscale.config.oidc.allowed_domains | nindent 8 }}
+      {{- end }}
+      {{- if .Values.headscale.config.oidc.allowed_users }}
+      allowed_users:
+        {{- toYaml .Values.headscale.config.oidc.allowed_users | nindent 8 }}
+      {{- end }}
+{{- end }}

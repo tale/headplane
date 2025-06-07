@@ -13,9 +13,11 @@ data:
     integration:
 {{- toYaml .Values.headplane.config.integration | nindent 6 }}
 # only add oidc if .Values.headplane.config.oidc is set
-{{- if .Values.headplane.config.oidc }}
+{{- if .Values.headplane.config.oidc.enabled }}
     oidc:
-{{- toYaml .Values.headplane.config.oidc | nindent 6 }}
-      client_secret: "secret"
-      headscale_api_key: "secret"
+      issuer: {{ .Values.headplane.config.oidc.issuer | quote }}
+      disable_api_key_login: {{ .Values.headplane.config.oidc.disable_api_key_login | quote }}
+      token_endpoint_auth_method: {{ .Values.headplane.config.oidc.token_endpoint_auth_method | quote }}
+      redirect_uri: {{ .Values.headplane.config.oidc.redirect_uri | quote }}
+      client_id: {{ .Values.headplane.config.oidc.client_id | quote }}
 {{- end }}

@@ -5,7 +5,7 @@ metadata:
   labels:
     app: headplane
   name: headplane
-  namespace: headplane
+  namespace: {{ .Release.Namespace }}
 spec:
   ports:
   - name: headscale
