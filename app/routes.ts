@@ -10,6 +10,7 @@ export default [
 	route('/logout', 'routes/auth/logout.ts'),
 	route('/oidc/callback', 'routes/auth/oidc-callback.ts'),
 	route('/oidc/start', 'routes/auth/oidc-start.ts'),
+	route('/ssh', 'routes/ssh/console.tsx'),
 
 	// All the main logged-in dashboard routes
 	// Double nested to separate error propagations
@@ -25,7 +26,6 @@ export default [
 			route('/users', 'routes/users/overview.tsx'),
 			route('/acls', 'routes/acls/overview.tsx'),
 			route('/dns', 'routes/dns/overview.tsx'),
-			route('/ssh', 'routes/ssh/overview.tsx'),
 
 			...prefix('/settings', [
 				index('routes/settings/overview.tsx'),

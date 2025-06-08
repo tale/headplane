@@ -49,38 +49,38 @@ func FollowMaster(agent *tsnet.TSAgent) {
 
 		log.Debug("Received message from master: %s", msg)
 		switch msg.Op {
-			case "ssh_conn":
-				var sshPayload sshutil.SSHConnectPayload
-				err = cbor.Unmarshal(msg.Payload, &sshPayload)
-				if err != nil {
-					log.Error("Unable to unmarshal SSH connect payload: %s", err)
-					continue
-				}
-
-				sshutil.StartWebSSH(agent, sshPayload)
+		case "ssh_conn":
+			var sshPayload sshutil.SSHConnectPayload
+			err = cbor.Unmarshal(msg.Payload, &sshPayload)
+			if err != nil {
+				log.Error("Unable to unmarshal SSH connect payload: %s", err)
 				continue
+			}
 
-			case "ssh_term":
-				var sshPayload sshutil.SSHClosePayload
-				err = cbor.Unmarshal(msg.Payload, &sshPayload)
-				if err != nil {
-					log.Error("Unable to unmarshal SSH close payload: %s", err)
-					continue
-				}
+			sshutil.StartWebSSH(agent, sshPayload)
+			continue
 
-				sshutil.CloseWebSSH(agent, sshPayload)
+		case "ssh_term":
+			var sshPayload sshutil.SSHClosePayload
+			err = cbor.Unmarshal(msg.Payload, &sshPayload)
+			if err != nil {
+				log.Error("Unable to unmarshal SSH close payload: %s", err)
 				continue
+			}
 
-			case "ssh_resize":
-				var sshPayload sshutil.SSHResizePayload
-				err = cbor.Unmarshal(msg.Payload, &sshPayload)
-				if err != nil {
-					log.Error("Unable to unmarshal SSH resize payload: %s", err)
-					continue
-				}
+			sshutil.CloseWebSSH(agent, sshPayload)
+			continue
 
-				sshutil.ResizeWebSSH(agent, sshPayload)
+		case "ssh_resize":
+			var sshPayload sshutil.SSHResizePayload
+			err = cbor.Unmarshal(msg.Payload, &sshPayload)
+			if err != nil {
+				log.Error("Unable to unmarshal SSH resize payload: %s", err)
 				continue
+			}
+
+			sshutil.ResizeWebSSH(agent, sshPayload)
+			continue
 		}
 	}
 
