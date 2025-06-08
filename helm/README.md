@@ -130,7 +130,7 @@ helm uninstall headplane
 
 ### OIDC Configuration
 
-To use OIDC, you must provide the OIDC client secrets via a single Kubernetes secret:
+To use OIDC, you must provide the OIDC client secrets via Kubernetes secret:
 
 ```sh
 kubectl create secret generic oidc-secrets \
@@ -144,19 +144,17 @@ kubectl create secret generic oidc-secrets \
 Then enable OIDC in your `values.yaml`:
 ```yaml
 headplane:
-  config:
-    oidc:
-      enabled: true
-      issuer: "https://your-oidc-issuer-url.com"
-      redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
-      secret_name: "oidc-secrets"  # Name of your OIDC secret
+  oidc:
+    enabled: true
+    issuer: "https://your-oidc-issuer-url.com"
+    redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
+    secret_name: "oidc-secrets"  # Name of your OIDC secret
 
 headscale:
-  config:
-    oidc:
-      enabled: true
-      issuer: "https://your-oidc-issuer.com"
-      secret_name: "oidc-secrets"  # Same secret as Headplane
+  oidc:
+    enabled: true
+    issuer: "https://your-oidc-issuer.com"
+    secret_name: "oidc-secrets"  # Same secret as Headplane
 ```
 
 You can add any additional environment variables by creating more secrets or config-maps and adding them to the `envFrom` section. For example, to add custom configuration:
