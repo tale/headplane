@@ -3,6 +3,7 @@ package sshutil
 import (
 	"io"
 	"os"
+	"time"
 
 	"github.com/tale/headplane/agent/internal/util"
 )
@@ -92,17 +93,19 @@ func dispatchSSHStdout(id string, stdout io.Reader, stderr io.Reader) {
 		return
 	}
 
+	batcher := NewFrameBatcher(fd, 10*time.Millisecond) // Roughly 60fps
+
 	go readerStreamRoutine(StreamRoutine{
 		SessionID:   id,
 		Reader:      stdout,
-		Writer:      fd,
+		Writer:      batcher,
 		ChannelType: ChannelTypeStdout,
 	})
 
 	go readerStreamRoutine(StreamRoutine{
 		SessionID:   id,
 		Reader:      stderr,
-		Writer:      fd,
+		Writer:      batcher,
 		ChannelType: ChannelTypeStderr,
 	})
 }
@@ -110,13 +113,13 @@ func dispatchSSHStdout(id string, stdout io.Reader, stderr io.Reader) {
 type StreamRoutine struct {
 	SessionID   string
 	Reader      io.Reader
-	Writer      io.Writer
+	Writer      *FrameBatcher
 	ChannelType ChannelType
 }
 
 func readerStreamRoutine(routine StreamRoutine) {
 	hpls1 := HPLSFrame1{}
-	buf := make([]byte, 1024)
+	buf := make([]byte, 16384) // 16 KiB buffer
 	for {
 		byteCount, err := routine.Reader.Read(buf)
 		if err != nil {
@@ -138,9 +141,12 @@ func readerStreamRoutine(routine StreamRoutine) {
 			continue
 		}
 
-		if _, err := routine.Writer.Write(frame); err != nil {
-			util.GetLogger().Error("Failed to write frame to writer: %v", err)
-			break
-		}
+		// if _, err := routine.Writer.Write(frame); err != nil {
+		// 	util.GetLogger().Error("Failed to write frame to writer: %v", err)
+		// 	break
+		// }
+		//
+
+		routine.Writer.QueueMsg(frame)
 	}
 }

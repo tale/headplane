@@ -114,6 +114,9 @@ export default function XTerm({ ws, sessionId, queue }: XTermProps) {
 				return;
 			}
 
+			const size = event.data.byteLength;
+			console.log(`[WS] Received ${size} bytes at ${Date.now()}`);
+
 			const data = new Uint8Array(event.data);
 			handleFrame(data);
 		};

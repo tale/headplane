@@ -4,5 +4,5 @@ node_modules
 /build
 /test
 .env
-public/hp_ssh.wasm
-public/wasm_exec.js
+app/hp_ssh.wasm
+app/wasm_exec.js

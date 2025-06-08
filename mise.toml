@@ -6,8 +6,8 @@
 alias = ["gojs"]
 description = "Copies Go's wasm_exec.js to the public directory"
 run = [
-	"echo $(go version) > public/wasm_exec.js",
-	"cat $(go env GOROOT)/lib/wasm/wasm_exec.js >> public/wasm_exec.js",
+	"echo // $(go version) > app/wasm_exec.js",
+	"cat $(go env GOROOT)/lib/wasm/wasm_exec.js >> app/wasm_exec.js",
 ]
 
 [tasks.build-go-wasm]
@@ -15,7 +15,7 @@ alias = ["wasm"]
 depends = ["copy-wasm-shim"]
 description = "Builds the Go WebAssembly module for Tailscale SSH"
 env = { GOOS = "js", GOARCH = "wasm" }
-run = "go build -o public/hp_ssh.wasm ./cmd/hp_ssh"
+run = "go build -o app/hp_ssh.wasm ./cmd/hp_ssh"
 
 [tasks.generate-caddy-certs]
 alias = ["mkcert"]

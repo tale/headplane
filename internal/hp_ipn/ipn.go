@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"math/rand/v2"
 	"net"
 	"net/http"
 	"net/netip"
@@ -31,10 +30,10 @@ import (
 	"tailscale.com/safesocket"
 	"tailscale.com/tailcfg"
 	"tailscale.com/tsd"
+	"tailscale.com/types/logid"
 	"tailscale.com/types/views"
 	"tailscale.com/wgengine"
 	"tailscale.com/wgengine/netstack"
-	"tailscale.com/words"
 )
 
 // ControlURL defines the URL to be used for connection to Control.
@@ -59,7 +58,7 @@ func NewIPN(jsConfig js.Value) map[string]any {
 	if jsHostname := jsConfig.Get("hostname"); jsHostname.Type() == js.TypeString {
 		hostname = jsHostname.String()
 	} else {
-		hostname = generateHostname()
+		hostname = "blah"
 	}
 
 	lpc := getOrCreateLogPolicyConfig(store)
@@ -126,7 +125,8 @@ func NewIPN(jsConfig js.Value) map[string]any {
 	sys.NetstackRouter.Set(true)
 	sys.Tun.Get().Start()
 
-	logid := lpc.PublicID
+	logid := logid.PublicID{}
+
 	srv := ipnserver.New(logf, logid, sys.NetMon.Get())
 	lb, err := ipnlocal.NewLocalBackend(logf, logid, sys, controlclient.LoginDefault)
 	if err != nil {
@@ -593,34 +593,6 @@ func mapSliceView[T any, M any](a views.Slice[T], f func(T) M) []M {
 		n[i] = f(v)
 	}
 	return n
-}
-
-func filterSlice[T any](a []T, f func(T) bool) []T {
-	n := make([]T, 0, len(a))
-	for _, e := range a {
-		if f(e) {
-			n = append(n, e)
-		}
-	}
-	return n
-}
-
-func generateHostname() string {
-	tails := words.Tails()
-	scales := words.Scales()
-	if rand.IntN(2) == 0 {
-		// JavaScript
-		tails = filterSlice(tails, func(s string) bool { return strings.HasPrefix(s, "j") })
-		scales = filterSlice(scales, func(s string) bool { return strings.HasPrefix(s, "s") })
-	} else {
-		// WebAssembly
-		tails = filterSlice(tails, func(s string) bool { return strings.HasPrefix(s, "w") })
-		scales = filterSlice(scales, func(s string) bool { return strings.HasPrefix(s, "a") })
-	}
-
-	tail := tails[rand.IntN(len(tails))]
-	scale := scales[rand.IntN(len(scales))]
-	return fmt.Sprintf("%s-%s", tail, scale)
 }
 
 const logPolicyStateKey = "log-policy"
