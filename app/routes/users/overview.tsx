@@ -105,8 +105,7 @@ export default function Page() {
 		<>
 			<h1 className="text-2xl font-medium mb-1.5">Users</h1>
 			<p className="mb-8 text-md">
-				Manage the users in your network and their permissions. Tip: You can
-				drag machines between users to change ownership.
+				Manage the users in your network and their permissions.
 			</p>
 			<ManageBanner oidc={data.oidc} isDisabled={!data.writable} />
 			<table className="table-auto w-full rounded-lg">

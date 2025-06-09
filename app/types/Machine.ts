@@ -1,3 +1,4 @@
+import type { PreAuthKey } from './PreAuthKey';
 import type { User } from './User';
 
 export interface Machine {
@@ -12,7 +13,7 @@ export interface Machine {
 	lastSeen: string;
 	expiry: string | null;
 
-	preAuthKey?: unknown; // TODO
+	preAuthKey?: PreAuthKey;
 
 	createdAt: string;
 	registerMethod:
