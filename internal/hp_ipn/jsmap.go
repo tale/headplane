@@ -4,6 +4,7 @@ package hp_ipn
 
 import (
 	"errors"
+	"log"
 	"syscall/js"
 )
 
@@ -40,6 +41,128 @@ func ParseTsWasmNetOptions(obj js.Value) (*TsWasmNetOptions, error) {
 	}, nil
 }
 
+// Options passed from the JS side to pass data to xterm.js.
+type SSHXtermConfig struct {
+	// Number of rows in the PTY.
+	Rows int
+
+	// Number of columns in the PTY.
+	Cols int
+
+	// Fires when the PTY has output.
+	OnStdout func(data string)
+
+	// Fires when the PTY has an error.
+	OnStderr func(error string)
+
+	// Passes a function to the JS side to provide input.
+	OnStdin js.Value
+
+	// Fires when the PTY is opened.
+	OnConnect func()
+
+	// Fires when the PTY is closed.
+	OnDisconnect func()
+}
+
+// Parses the provided JS object to validate and extract SSHXtermConfig.
+func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
+	if obj.IsUndefined() || obj.IsNull() {
+		return nil, errors.New("SSHXtermConfig cannot be undefined or null")
+	}
+
+	rows := safeInt("Rows", obj)
+	cols := safeInt("Cols", obj)
+
+	if rows <= 0 || cols <= 0 {
+		return nil, errors.New("Rows and Cols must be positive integers")
+	}
+
+	config := &SSHXtermConfig{
+		Rows: rows,
+		Cols: cols,
+	}
+
+	onStdout := obj.Get("OnStdout")
+	if onStdout.IsUndefined() || onStdout.IsNull() {
+		return nil, errors.New("OnStdout must be a function")
+	}
+
+	if onStdout.Type() != js.TypeFunction {
+		return nil, errors.New("OnStdout must be a function")
+	}
+
+	config.OnStdout = func(data string) {
+		onStdout.Invoke(data)
+	}
+
+	onStderr := obj.Get("OnStderr")
+	if onStderr.IsUndefined() || onStderr.IsNull() {
+		return nil, errors.New("OnStderr must be a function")
+	}
+
+	if onStderr.Type() != js.TypeFunction {
+		return nil, errors.New("OnStderr must be a function")
+	}
+
+	config.OnStderr = func(error string) {
+		onStderr.Invoke(error)
+	}
+
+	onStdin := obj.Get("OnStdin")
+	if onStdin.IsUndefined() || onStdin.IsNull() {
+		return nil, errors.New("OnStdin must be a function")
+	}
+
+	if onStdin.Type() != js.TypeFunction {
+		return nil, errors.New("OnStdin must be a function")
+	}
+
+	config.OnStdin = onStdin
+
+	onConnect := obj.Get("OnConnect")
+	if onConnect.IsUndefined() || onConnect.IsNull() {
+		return nil, errors.New("OnConnect must be a function")
+	}
+
+	if onConnect.Type() != js.TypeFunction {
+		return nil, errors.New("OnConnect must be a function")
+	}
+
+	config.OnConnect = func() {
+		onConnect.Invoke()
+	}
+
+	onDisconnect := obj.Get("OnDisconnect")
+	if onDisconnect.IsUndefined() || onDisconnect.IsNull() {
+		return nil, errors.New("OnDisconnect must be a function")
+	}
+
+	if onDisconnect.Type() != js.TypeFunction {
+		return nil, errors.New("OnDisconnect must be a function")
+	}
+
+	config.OnDisconnect = func() {
+		onDisconnect.Invoke()
+	}
+
+	return config, nil
+}
+
+func (t *SSHXtermConfig) PassStdinHandler(fn func(string)) {
+	handler := js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 || args[0].Type() != js.TypeString {
+			return nil
+		}
+
+		fn(args[0].String())
+		return nil
+	})
+
+	log.Printf("Passing stdin handler to JS: %v", handler)
+	t.OnStdin.Invoke(handler)
+}
+
 // Retrieves a string value from a JS object safely.
 func safeString(key string, obj js.Value) string {
 	if obj.IsUndefined() || obj.IsNull() {
@@ -52,4 +175,18 @@ func safeString(key string, obj js.Value) string {
 	}
 
 	return val.String()
+}
+
+// Retrieves an integer value from a JS object safely.
+func safeInt(key string, obj js.Value) int {
+	if obj.IsUndefined() || obj.IsNull() {
+		return 0
+	}
+
+	val := obj.Get(key)
+	if val.IsUndefined() || val.IsNull() {
+		return 0
+	}
+
+	return val.Int()
 }
