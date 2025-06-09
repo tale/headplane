@@ -2,13 +2,13 @@ import {
 	CircleUser,
 	Globe2,
 	Lock,
-	PlaneTakeoff,
 	Server,
 	Settings,
 	Users,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { NavLink, useSubmit } from 'react-router';
+import Logo from '~/components/Logo';
 import Menu from '~/components/Menu';
 import { AuthSession } from '~/server/web/sessions';
 import cn from '~/utils/cn';
@@ -91,7 +91,7 @@ export default function Header(data: Props) {
 		>
 			<div className="container flex items-center justify-between py-4">
 				<div className="flex items-center gap-x-2">
-					<PlaneTakeoff />
+					<Logo />
 					<h1 className="text-2xl font-semibold">headplane</h1>
 				</div>
 				<div className="flex items-center gap-x-4">
