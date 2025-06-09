@@ -90,7 +90,6 @@ func NewTsWasmIpn(options *TsWasmNetOptions, callbacks *TsWasmNetCallbacks) (*Ts
 	// Configure the local Netstack and Dialer
 	wgstack.ProcessLocalIPs = true
 	wgstack.ProcessSubnets = true
-	sys.NetstackRouter.Set(true)
 
 	dialer.UseNetstackForIP = func(ip netip.Addr) bool {
 		return true
@@ -106,7 +105,8 @@ func NewTsWasmIpn(options *TsWasmNetOptions, callbacks *TsWasmNetCallbacks) (*Ts
 
 	// Dummy logid for the Tailscale backend
 	logid := logid.PublicID{}
-	tun.Start()
+	sys.NetstackRouter.Set(true)
+	sys.Tun.Get().Start()
 
 	server := ipnserver.New(logf, logid, sys.NetMon.Get())
 	flags := controlclient.LoginDefault | controlclient.LoginEphemeral | controlclient.LocalBackendStartKeyOSNeutral

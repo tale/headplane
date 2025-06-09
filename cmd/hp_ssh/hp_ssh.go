@@ -41,6 +41,65 @@ func main() {
 				ipn.Start(context.Background())
 				return nil
 			}),
+			"OpenSSH": js.FuncOf(func(this js.Value, args []js.Value) any {
+				if len(args) != 3 {
+					log.Fatal("Usage: OpenSSH(host, user, options)")
+					return nil
+				}
+
+				hostname := args[0]
+				if hostname.IsNull() || hostname.IsUndefined() {
+					log.Fatal("Hostname must be a non-null, non-undefined string")
+					return nil
+				}
+
+				if hostname.Type() != js.TypeString {
+					log.Fatal("Hostname must be a string")
+					return nil
+				}
+
+				username := args[1]
+				if username.IsNull() || username.IsUndefined() {
+					log.Fatal("Username must be a non-null, non-undefined string")
+					return nil
+				}
+
+				if username.Type() != js.TypeString {
+					log.Fatal("Username must be a string")
+					return nil
+				}
+
+				sshOptions, err := hp_ipn.ParseSSHXtermConfig(args[2])
+				if err != nil {
+					log.Fatal("Error parsing SSH options:", err)
+					return nil
+				}
+
+				session := ipn.NewSSHSession(hostname.String(), username.String(), sshOptions)
+				go session.ConnectAndRun()
+
+				return map[string]any{
+					"Close": js.FuncOf(func(this js.Value, args []js.Value) any {
+						return session.Close() != nil
+					}),
+
+					"Resize": js.FuncOf(func(this js.Value, args []js.Value) any {
+						if len(args) != 2 {
+							log.Fatal("Usage: Resize(cols, rows)")
+							return nil
+						}
+
+						rows := args[0].Int()
+						cols := args[1].Int()
+						if cols <= 0 || rows <= 0 {
+							log.Fatal("Columns and rows must be positive integers")
+							return nil
+						}
+
+						return session.Resize(cols, rows) == nil
+					}),
+				}
+			}),
 		}
 	}))
 

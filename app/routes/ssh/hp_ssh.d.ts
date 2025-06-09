@@ -1,4 +1,3 @@
-declare function newIPN(config: NewIPNConfig): IPNHandle;
 declare function TsWasmNet(
 	options: TsWasmNetOptions,
 	callbacks: TsWasmNetCallbacks,
@@ -19,6 +18,11 @@ interface TsWasmNetCallbacks {
 
 interface TsWasmNet {
 	Start: () => void;
+	OpenSSH: (
+		hostname: string,
+		username: string,
+		options: XtermConfig,
+	) => SSHSession;
 }
 
 type IPNState =
@@ -30,19 +34,31 @@ type IPNState =
 	| 'Starting'
 	| 'Running';
 
-interface SSHTerminalConfig {
-	writeFn: (data: string) => void;
-	writeErrorFn: (error: string) => void;
-	setReadFn: (cb: (input: string) => void) => void;
-	rows: number;
-	cols: number;
-	timeoutSeconds?: number;
-	onConnectionProgress: (message: string) => void;
-	onConnected: () => void;
-	onDone: () => void;
+interface XtermConfig {
+	Rows: number;
+	Cols: number;
+
+	OnStdout: (data: string) => void;
+	OnStderr: (data: string) => void;
+	OnStdin: (func: (input: string) => void) => void;
+
+	OnConnect: () => void;
+	OnDisconnect: () => void;
 }
 
+// interface SSHTerminalConfig {
+// 	writeFn: (data: string) => void;
+// 	writeErrorFn: (error: string) => void;
+// 	setReadFn: (cb: (input: string) => void) => void;
+// 	rows: number;
+// 	cols: number;
+// 	timeoutSeconds?: number;
+// 	onConnectionProgress: (message: string) => void;
+// 	onConnected: () => void;
+// 	onDone: () => void;
+// }
+
 interface SSHSession {
-	close(): boolean;
-	resize(rows: number, cols: number): boolean;
+	Close(): boolean;
+	Resize(rows: number, cols: number): boolean;
 }
