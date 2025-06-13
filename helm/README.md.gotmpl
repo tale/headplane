@@ -8,8 +8,7 @@ This helm chart deploys [Headplane](https://github.com/tale/headplane) + [Headsc
 
 ### Prerequisites
 - Kubernetes cluster
-- Helm installed (`helm version`)
-- (Optional) OCI registry access for pulling images
+- Helm installed
 
 ### Install the Chart
 ```sh
@@ -87,7 +86,8 @@ headplane:
         name: headplane-custom-config
 ```
 
-Note: Make sure to keep your secrets secure and never commit them to version control. Consider using a secrets management solution in production.
+Note: Make sure to keep your secrets secure and never commit them to version control. 
+Consider using a secrets management solution in production like external-secrets.
 
 ## License
 Copyright © 2025 antoniolago
