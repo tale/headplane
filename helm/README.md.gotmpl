@@ -11,12 +11,6 @@ This helm chart deploys [Headplane](https://github.com/tale/headplane) + [Headsc
 - Helm installed (`helm version`)
 - (Optional) OCI registry access for pulling images
 
-### Add the Helm repository
-```sh
-helm repo add headplane https://harbor.lag0.com.br/library
-helm repo update
-```
-
 ### Install the Chart
 ```sh
 # Install with default values
@@ -25,13 +19,6 @@ helm install headplane oci://harbor.lag0.com.br/library/headplane
 # Install with custom values
 helm install headplane oci://harbor.lag0.com.br/library/headplane -f values.yaml
 
-# Install with specific values
-helm install headplane oci://harbor.lag0.com.br/library/headplane \
-  --set headplane.config.server.port=3000 \
-  --set ingress.enabled=true
-
-# Install in a specific namespace
-helm install headplane oci://harbor.lag0.com.br/library/headplane -n your-namespace
 ```
 
 ### Upgrade the Chart

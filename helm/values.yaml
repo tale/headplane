@@ -52,10 +52,11 @@ headscale:
 
   # Access Control List configuration (JSON format)
   # Only applicable if headscale.config.policy.mode is 'file'
-  acl: |
-    {
-      "acls": []
-    }
+  acl: ""
+  # acl: |
+  #   {
+  #     "acls": []
+  #   }
 
   oidc:
     # Enable OIDC integration for Headscale
@@ -188,6 +189,10 @@ pvc:
     - ReadWriteOnce
   # Storage size for the PVC
   storage: 1Gi
+  # Annotations for the PVC
+  annotations: {}
+  # Labels for the PVC
+  labels: []
 #  storageClassName: default
 
 # Ingress configuration
@@ -197,7 +202,7 @@ ingress:
   # Ingress class name
   className: nginx
   # Additional ingress annotations
-  # annotations:
+  annotations: []
   #   cert-manager.io/cluster-issuer: "cloudflare"
   # Additional ingress labels
   labels: []

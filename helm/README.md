@@ -11,12 +11,6 @@ This helm chart deploys [Headplane](https://github.com/tale/headplane) + [Headsc
 - Helm installed (`helm version`)
 - (Optional) OCI registry access for pulling images
 
-### Add the Helm repository
-```sh
-helm repo add headplane https://harbor.lag0.com.br/library
-helm repo update
-```
-
 ### Install the Chart
 ```sh
 # Install with default values
@@ -25,13 +19,6 @@ helm install headplane oci://harbor.lag0.com.br/library/headplane
 # Install with custom values
 helm install headplane oci://harbor.lag0.com.br/library/headplane -f values.yaml
 
-# Install with specific values
-helm install headplane oci://harbor.lag0.com.br/library/headplane \
-  --set headplane.config.server.port=3000 \
-  --set ingress.enabled=true
-
-# Install in a specific namespace
-helm install headplane oci://harbor.lag0.com.br/library/headplane -n your-namespace
 ```
 
 ### Upgrade the Chart
@@ -68,7 +55,7 @@ helm uninstall headplane
 | headplane.oidc.redirect_uri | string | `"https://your-headplane-admin-domain.com/admin/oidc/callback"` |  |
 | headplane.oidc.secret_name | string | `"oidc-secrets"` |  |
 | headplane.oidc.token_endpoint_auth_method | string | `"client_secret_post"` |  |
-| headscale.acl | string | `"{\n  \"acls\": []\n}\n"` |  |
+| headscale.acl | string | `""` |  |
 | headscale.config.database.debug | bool | `false` |  |
 | headscale.config.database.sqlite.path | string | `"/etc/headscale/db.sqlite"` |  |
 | headscale.config.database.type | string | `"sqlite"` |  |
@@ -104,6 +91,7 @@ helm uninstall headplane
 | headscale.oidc.enabled | bool | `false` |  |
 | headscale.oidc.issuer | string | `"https://your-oidc-issuer.com"` |  |
 | headscale.oidc.secret_name | string | `"oidc-secrets"` |  |
+| ingress.annotations | list | `[]` |  |
 | ingress.className | string | `"nginx"` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.headplaneDomain | string | `"headplane.example.com"` |  |
@@ -111,7 +99,9 @@ helm uninstall headplane
 | ingress.labels | list | `[]` |  |
 | ingress.tlsSecretName | string | `"headplane-tls"` |  |
 | pvc.accessModes[0] | string | `"ReadWriteOnce"` |  |
+| pvc.annotations | object | `{}` |  |
 | pvc.enabled | bool | `true` |  |
+| pvc.labels | list | `[]` |  |
 | pvc.name | string | `"headscale-config"` |  |
 | pvc.storage | string | `"1Gi"` |  |
 | relay.config.advertise_exit_node | string | `"true"` |  |
