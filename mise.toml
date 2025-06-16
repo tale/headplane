@@ -17,6 +17,11 @@ description = "Builds the Go WebAssembly module for Tailscale SSH"
 env = { GOOS = "js", GOARCH = "wasm" }
 run = "go build -o app/hp_ssh.wasm ./cmd/hp_ssh"
 
+[tasks.build-go-agent]
+alias = ["agent"]
+description = "Builds the Go agent for HostInfo"
+run = "go build -o build/hp_agent ./cmd/hp_agent"
+
 [tasks.generate-caddy-certs]
 alias = ["mkcert"]
 dir = "{{cwd}}/test/caddy/certs"
@@ -29,6 +34,7 @@ run = [
 [tasks.ci]
 description = "Runs the CI pipeline"
 depends = ["build-go-wasm"]
+depends_post = ["build-go-agent"]
 run = [
 	"pnpm install",
 	"pnpm run build"

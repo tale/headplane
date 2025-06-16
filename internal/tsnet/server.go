@@ -5,16 +5,16 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/tale/headplane/agent/internal/config"
-	"github.com/tale/headplane/agent/internal/util"
-	"tailscale.com/client/tailscale"
+	"github.com/tale/headplane/internal/config"
+	"github.com/tale/headplane/internal/util"
+	"tailscale.com/client/local"
 	"tailscale.com/tsnet"
 )
 
 // Wrapper type so we can add methods to the server.
 type TSAgent struct {
 	*tsnet.Server
-	Lc *tailscale.LocalClient
+	Lc *local.Client
 	ID string
 }
 
