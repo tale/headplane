@@ -156,7 +156,7 @@ export default function Page() {
 		<div className="w-screen h-screen bg-headplane-900">
 			{ipn === null ? (
 				<div className="mx-auto h-screen flex items-center justify-center">
-					<Loader2 className="animate-spin size-10" />
+					<Loader2 className="animate-spin size-10 text-headplane-50" />
 				</div>
 			) : (
 				<div className="flex flex-col h-screen">

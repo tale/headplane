@@ -50,8 +50,7 @@ func (i *TsWasmIpn) NewSSHSession(hostname, username string, termConfig *SSHXter
 func (s *SSHSession) ConnectAndRun() {
 	defer s.TermConfig.OnDisconnect()
 
-	// Default to a 5 second timeout for the connection AFTER dial.
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.TermConfig.Timeout)*time.Second)
 	defer cancel()
 
 	// TODO: Log here

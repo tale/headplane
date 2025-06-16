@@ -43,26 +43,14 @@ func ParseTsWasmNetOptions(obj js.Value) (*TsWasmNetOptions, error) {
 
 // Options passed from the JS side to pass data to xterm.js.
 type SSHXtermConfig struct {
-	// Number of rows in the PTY.
-	Rows int
-
-	// Number of columns in the PTY.
-	Cols int
-
-	// Fires when the PTY has output.
-	OnStdout func(data string)
-
-	// Fires when the PTY has an error.
-	OnStderr func(error string)
-
-	// Passes a function to the JS side to provide input.
-	OnStdin js.Value
-
-	// Fires when the PTY is opened.
-	OnConnect func()
-
-	// Fires when the PTY is closed.
-	OnDisconnect func()
+	Timeout      int                // Timeout in seconds for the PTY connection.
+	Rows         int                // Number of rows in the PTY.
+	Cols         int                // Number of columns in the PTY.
+	OnStdout     func(data string)  // Fires when the PTY has output.
+	OnStderr     func(error string) // Fires when the PTY has an error.
+	OnStdin      js.Value           // Passes a function to the JS side to provide input.
+	OnConnect    func()             // Fires when the PTY is opened.
+	OnDisconnect func()             // Fires when the PTY is closed.
 }
 
 // Parses the provided JS object to validate and extract SSHXtermConfig.
@@ -71,6 +59,7 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		return nil, errors.New("SSHXtermConfig cannot be undefined or null")
 	}
 
+	timeout := safeInt("Timeout", obj)
 	rows := safeInt("Rows", obj)
 	cols := safeInt("Cols", obj)
 
@@ -78,9 +67,14 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		return nil, errors.New("Rows and Cols must be positive integers")
 	}
 
+	if timeout <= 0 {
+		timeout = 30 // Default timeout to 30 seconds if not specified
+	}
+
 	config := &SSHXtermConfig{
-		Rows: rows,
-		Cols: cols,
+		Timeout: timeout,
+		Rows:    rows,
+		Cols:    cols,
 	}
 
 	onStdout := obj.Get("OnStdout")
