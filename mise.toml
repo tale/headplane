@@ -25,3 +25,11 @@ run = [
 	"mkcert -install",
 	"mkcert localhost"
 ]
+
+[tasks.ci]
+description = "Runs the CI pipeline"
+depends = ["build-go-wasm"]
+run = [
+	"pnpm install",
+	"pnpm run build"
+]

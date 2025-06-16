@@ -28,15 +28,8 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - name: Install node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
+      - name: Setup Mise
+        uses: jdx/mise-action@v2
 
       - name: Get pnpm store directory
         shell: bash
@@ -51,11 +44,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
 
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build
-        run: pnpm build
+      - name: CI pipeline
+        run: mise run ci
 
   nix:
     name: nix
