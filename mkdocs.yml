@@ -17,7 +17,7 @@ site_name: Headplane Docs
 site_description: A feature-complete Web UI for Headscale
 site_author: Headplane Authors
 site_url: https://docs.haops.dev/
-edit_uri: edit/main/docs/
+edit_uri: blob/main/docs/
 docs_dir: docs
 repo_name: Tale/headplane
 repo_url: https://github.com/tale/headplane
