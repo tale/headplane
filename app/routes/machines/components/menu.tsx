@@ -1,4 +1,4 @@
-import { Cog, Ellipsis } from 'lucide-react';
+import { Cog, Ellipsis, SquareTerminal } from 'lucide-react';
 import { useState } from 'react';
 import Menu from '~/components/Menu';
 import type { User } from '~/types';
@@ -10,7 +10,6 @@ import Move from '../dialogs/move';
 import Rename from '../dialogs/rename';
 import Routes from '../dialogs/routes';
 import Tags from '../dialogs/tags';
-
 interface MenuProps {
 	node: PopulatedNode;
 	users: User[];
@@ -29,6 +28,9 @@ export default function MachineMenu({
 	isDisabled,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
+	const supportsTailscaleSSH =
+		node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
+
 	return (
 		<>
 			{modal === 'remove' && (
@@ -90,21 +92,69 @@ export default function MachineMenu({
 
 			<Menu isDisabled={isDisabled}>
 				{isFullButton ? (
-					<Menu.Button className="flex items-center gap-x-2">
-						<Cog className="h-5" />
-						<p>Machine Settings</p>
-					</Menu.Button>
+					<div className="flex items-center justify-end gap-1.5 pr-4">
+						{supportsTailscaleSSH ? (
+							<Menu.Button
+								className="flex items-center gap-x-2"
+								variant="heavy"
+								onPress={() => {
+									// We need to use JS to open the SSH URL
+									// in a new WINDOW since href can only
+									// do a new TAB.
+									window.open(
+										// TODO: Use the actual real username lol
+										`${__PREFIX__}/ssh?hostname=${node.name}&username=tale`,
+										'_blank',
+										'noopener,noreferrer,width=800,height=600',
+									);
+								}}
+							>
+								<SquareTerminal className="h-5" />
+								<p>SSH</p>
+							</Menu.Button>
+						) : undefined}
+						<Menu.Button className="flex items-center gap-x-2">
+							<Cog className="h-5" />
+							<p>Machine Settings</p>
+						</Menu.Button>
+					</div>
 				) : (
-					<Menu.IconButton
-						label="Machine Options"
-						className={cn(
-							'py-0.5 w-10 bg-transparent border-transparent',
-							'border group-hover:border-headplane-200',
-							'dark:group-hover:border-headplane-700',
-						)}
-					>
-						<Ellipsis className="h-5" />
-					</Menu.IconButton>
+					<div className="flex items-center justify-end gap-1.5 pr-4">
+						{supportsTailscaleSSH ? (
+							<Menu.Button
+								onPress={() => {
+									// We need to use JS to open the SSH URL
+									// in a new WINDOW since href can only
+									// do a new TAB.
+									window.open(
+										// TODO: Use the actual real username lol
+										`${__PREFIX__}/ssh?hostname=${node.name}&username=tale`,
+										'_blank',
+										'noopener,noreferrer,width=800,height=600',
+									);
+								}}
+								className={cn(
+									'py-0.5 w-fit bg-transparent border-transparent',
+									'border group-hover:border-headplane-200',
+									'dark:group-hover:border-headplane-700',
+									'opacity-0 pointer-events-none group-hover:opacity-100',
+									'group-hover:pointer-events-auto',
+								)}
+							>
+								SSH
+							</Menu.Button>
+						) : undefined}
+						<Menu.IconButton
+							label="Machine Options"
+							className={cn(
+								'py-0.5 w-10 bg-transparent border-transparent',
+								'border group-hover:border-headplane-200',
+								'dark:group-hover:border-headplane-700',
+							)}
+						>
+							<Ellipsis className="h-5" />
+						</Menu.IconButton>
+					</div>
 				)}
 				<Menu.Panel
 					onAction={(key) => setModal(key as Modal)}

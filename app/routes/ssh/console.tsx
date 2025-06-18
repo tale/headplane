@@ -71,11 +71,8 @@ export async function loader({
 	const qp = new URL(request.url).searchParams;
 	const username = qp.get('username') || undefined;
 	const hostname = qp.get('hostname') || undefined;
-	const port = qp.get('port')
-		? Number.parseInt(qp.get('port')!, 10)
-		: undefined;
-	if (!username || !hostname || !port) {
-		throw data('Missing required parameters: username, hostname, port', 400);
+	if (!username || !hostname) {
+		throw data('Missing required parameters: username, hostname', 400);
 	}
 	// TODO: Verify the Host headers to ensure CORS friendly
 	// TODO: Check if the URL actually resolves correctly
