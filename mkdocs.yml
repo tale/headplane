@@ -1,0 +1,119 @@
+---
+# Navigation setup
+nav:
+  - Home: index.md
+  - Installation:
+    - Bare Metal: Bare-Metal.md
+    - Integrated Mode: Integrated-Mode.md
+
+
+# Metadata
+site_name: Headplane Docs
+site_description: A feature-complete Web UI for Headscale
+site_author: Headplane Authors
+site_url: https://docs.haops.dev/
+edit_uri: edit/main/docs/
+docs_dir: docs
+repo_name: Tale/headplane
+repo_url: https://github.com/tale/headplane
+
+# Theme setup
+theme:
+  name: material
+  language: en
+  # custom_dir: overrides
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    - header.autohide
+    - navigation.expand
+    - navigation.tabs
+    - navigation.top
+    # - navigation.tabs.sticky
+    - content.tabs.link
+    - search.share
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: light blue
+      accent: light blue
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+  font:
+    # text: "Noto Sans"
+    # code: "Encode Sans Expanded"
+    text: "Noto Sans"
+    code: "Roboto Mono"
+
+# Plugins and Md extensions
+plugins:
+  - search
+#  - pdf-export #TODO: enable this plugin on push to github
+  # - tags:
+  #     tags_file: extras/tags.md
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+          remove_comments: true
+
+markdown_extensions:
+  - admonition
+  - meta
+  - attr_list
+  - tables
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.highlight:
+      anchor_linenums: true
+      auto_title: true
+      linenums: true
+      linenums_style: table
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - toc:
+      title: On this page
+      permalink: ⚓︎
+      # permalink: 
+      permalink_title: Anchor link to this section for reference
+
+# # Sortable tables
+# extra_javascript:
+#   - https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js
+#   - javascripts/tablesort.js
+
+# # For custom admonition
+# extra_css:
+#   - stylesheets/extra.css
+
+# Footer section
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/tale/headplane
+
+copyright: Copyright &copy; 2025 Headplane Authors

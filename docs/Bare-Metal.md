@@ -42,7 +42,7 @@ The structure of this folder is very important and should not be tampered with.
 
 ### Integrated Mode
 Since you are running Headplane in Bare-Metal, you most likely also are running
-Headscale in Bare-Metal. Refer to the [**Integrated Mode**](/docs/Integrated-Mode.md)
+Headscale in Bare-Metal. Refer to the [**Integrated Mode**](Integrated-Mode.md)
 guide for instructions on setting up the integrated mode in Native Linux (/proc).
 
 ### Changing the Admin Path
