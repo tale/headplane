@@ -30,6 +30,17 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 
 	useEffect(() => {
 		pause();
+		if (!container.current) {
+			console.error('Container ref is not set');
+			return;
+		}
+
+		// Don't create a new terminal if one already exists
+		if (term.current) {
+			console.warn('Terminal already exists, skipping initialization');
+			return;
+		}
+
 		const terminal = new xterm.Terminal({
 			allowProposedApi: true,
 			cursorBlink: true,
@@ -52,24 +63,23 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 		);
 
 		terminal.unicode.activeVersion = '11';
-		const gl = new WebglAddon();
-		terminal.loadAddon(gl);
-
 		const fit = new FitAddon();
 		terminal.loadAddon(fit);
+
+		const gl = new WebglAddon();
+		terminal.loadAddon(gl);
 
 		gl.onContextLoss(() => {
 			console.warn('WebGL context lost, falling back to canvas rendering');
 			gl.dispose();
 		});
 
+		fit.fit();
+		term.current = terminal;
 		terminal.open(container.current!);
 		terminal.focus();
-		term.current = terminal;
 
-		let ro: ResizeObserver | null = null;
 		let onUnload: ((e: Event) => void) | null = null;
-
 		const session = ipn.OpenSSH(hostname, username, {
 			Rows: terminal.rows,
 			Cols: terminal.cols,
@@ -103,8 +113,7 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 			},
 		});
 
-		const parent = container.current?.ownerDocument.defaultView ?? window;
-		ro = new parent.ResizeObserver(() => {
+		const ro = new ResizeObserver(() => {
 			if (term.current) {
 				setIsResizing(true);
 				fit.fit();
@@ -112,12 +121,10 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 			}
 		});
 
-		if (container.current) {
-			ro.observe(container.current);
-		}
-
+		ro.observe(container.current);
 		terminal.onResize(({ cols, rows }) => {
-			session.Resize(rows, cols);
+			console.log(`Terminal resized to ${cols}x${rows}`);
+			session.Resize(cols, rows);
 		});
 
 		terminal.onData((data) => {
@@ -126,12 +133,25 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 
 		onUnload = (_) => session.Close();
 		parent.addEventListener('unload', onUnload);
+
+		return () => {
+			if (onUnload) {
+				parent.removeEventListener('unload', onUnload);
+			}
+
+			session.Close();
+			ro?.disconnect();
+			terminal.dispose();
+			term.current = null;
+			inputRef.current = null;
+			console.log('SSH session closed and terminal disposed');
+		};
 	}, []);
 
 	return (
-		<div className="relative w-full h-full group">
+		<>
 			{isLoading ? (
-				<div className="mx-auto h-screen flex items-center justify-center">
+				<div className="absolute w-screen z-50 mx-auto h-screen flex items-center justify-center">
 					<Loader2 className="animate-spin size-10 text-headplane-50" />
 				</div>
 			) : undefined}
@@ -159,6 +179,6 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 					Failed to connect to SSH session
 				</div>
 			) : undefined}
-		</div>
+		</>
 	);
 }

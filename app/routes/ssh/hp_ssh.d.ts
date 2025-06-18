@@ -46,18 +46,6 @@ interface XtermConfig {
 	OnDisconnect: () => void;
 }
 
-// interface SSHTerminalConfig {
-// 	writeFn: (data: string) => void;
-// 	writeErrorFn: (error: string) => void;
-// 	setReadFn: (cb: (input: string) => void) => void;
-// 	rows: number;
-// 	cols: number;
-// 	timeoutSeconds?: number;
-// 	onConnectionProgress: (message: string) => void;
-// 	onConnected: () => void;
-// 	onDone: () => void;
-// }
-
 interface SSHSession {
 	Close(): boolean;
 	Resize(rows: number, cols: number): boolean;

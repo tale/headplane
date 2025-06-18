@@ -23,6 +23,13 @@ export async function loader({
 	request,
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
+	if (!context.agents?.agentID()) {
+		throw data(
+			'WebSSH is only available with the Headplane agent integration',
+			400,
+		);
+	}
+
 	const session = await context.sessions.auth(request);
 	const user = session.get('user');
 	if (!user) {
@@ -35,6 +42,7 @@ export async function loader({
 		'v1/user',
 		session.get('api_key')!,
 	);
+
 	// MARK: This assumes that a user has authenticated with Headscale first
 	// Since the only way to enforce permissions via ACLs is to generate a
 	// pre-authkey which REQUIRES a user ID, meaning the user has to have

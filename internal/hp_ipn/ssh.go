@@ -150,7 +150,7 @@ func (s *SSHSession) Resize(rows, cols int) error {
 		return nil
 	}
 
-	return s.Pty.WindowChange(rows, cols)
+	return s.Pty.WindowChange(cols, rows)
 }
 
 // Closes the SSH session.
