@@ -16,7 +16,7 @@ nav:
 site_name: Headplane Docs
 site_description: A feature-complete Web UI for Headscale
 site_author: Headplane Authors
-site_url: https://docs.haops.dev/
+site_url: https://tale.github.io/
 edit_uri: blob/main/docs/
 docs_dir: docs
 repo_name: Tale/headplane
@@ -36,6 +36,7 @@ theme:
     - navigation.tabs
     - navigation.top
     - navigation.tabs.sticky
+    - navigation.footer
     - content.tabs.link
     - search.share
     - content.code.annotate
