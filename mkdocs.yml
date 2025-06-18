@@ -26,9 +26,8 @@ repo_url: https://github.com/tale/headplane
 theme:
   name: material
   language: en
-  # custom_dir: overrides
   logo: assets/logo.svg
-  favicon: assets/logo.svg
+  favicon: assets/logo.png
   icon:
     repo: fontawesome/brands/github
   features:
@@ -36,37 +35,35 @@ theme:
     - navigation.expand
     - navigation.tabs
     - navigation.top
-    # - navigation.tabs.sticky
+    - navigation.tabs.sticky
     - content.tabs.link
     - search.share
     - content.code.annotate
+    - content.code.copy
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: light blue
+      primary: black
       accent: light blue
       toggle:
         icon: material/toggle-switch
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
-      primary: indigo
+      primary: black
       accent: indigo
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to light mode
   font:
-    # text: "Noto Sans"
-    # code: "Encode Sans Expanded"
     text: "Noto Sans"
     code: "Roboto Mono"
 
 # Plugins and Md extensions
 plugins:
   - search
-#  - pdf-export #TODO: enable this plugin on push to github
   # - tags:
-  #     tags_file: extras/tags.md
+  #     tags_file: docs/tags.md
   - minify:
       minify_html: true
       minify_js: true
@@ -74,18 +71,18 @@ plugins:
       htmlmin_opts:
           remove_comments: true
 
+## Documentation: https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown-extensions/
 markdown_extensions:
   - admonition
-  - meta
   - attr_list
-  - tables
-  - pymdownx.critic
-  - pymdownx.caret
-  - pymdownx.keys
-  - pymdownx.mark
-  - pymdownx.tilde
+  # - tables
+  # - pymdownx.critic
+  # - pymdownx.caret
+  # - pymdownx.keys
+  # - pymdownx.mark
+  # - pymdownx.tilde
   - pymdownx.details
-  - pymdownx.superfences
+  # - pymdownx.superfences
   - pymdownx.inlinehilite
   - pymdownx.highlight:
       anchor_linenums: true
@@ -93,11 +90,11 @@ markdown_extensions:
       linenums: true
       linenums_style: table
   - pymdownx.snippets
-  - pymdownx.tabbed:
-      alternate_style: true
+  # - pymdownx.tabbed:
+  #     alternate_style: true
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - pymdownx.tasklist:
       custom_checkbox: true
   - toc:

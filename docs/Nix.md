@@ -1,6 +1,6 @@
 # Nix
 
-[flake.nix](https://github.com/tale/headplane/blob/main/flake.nix) provided:
+[flake.nix](https://github.com/tale/headplane/blob/main/flake.nix){:target="_blank"} provided:
 ```
 $ nix flake show . --all-systems
 git+file:///home/igor/personal/headplane?ref=refs/heads/nix&rev=2d78a95a0648a3778e114fb246ea436e96475d62
