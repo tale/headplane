@@ -58,7 +58,7 @@ Just keep in mind that the admin path is not configurable at runtime, so you
 will need to rebuild the project if you want to change it. Also, anything aside
 from `/admin` is not officially supported and could break in future versions.
 
-> Refer to the [**Configuration**](/docs/Configuration.md) guide for help with
+> Refer to the [**Configuration**](Configuration.md) guide for help with
 > setting up your `config.yaml` file to the appropriate values.
 
 ### Systemd Unit

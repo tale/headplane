@@ -4,15 +4,15 @@
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/preview-dark.png"
+        srcset="./docs/assets/preview-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/preview-light.png"
+        srcset="./docs/assets/preview-light.png"
     >
     <img
         alt="Preview"
-        src="./assets/preview-dark.png"
+        src="docs/assets/preview-dark.png"
     >
 </picture>
 
@@ -59,30 +59,30 @@ refer to the [contributor guidelines](./docs/CONTRIBUTING.md) for more info.
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/acls-dark.png"
+        srcset="./docs/assets/acls-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/acls-light.png"
+        srcset="./docs/assets/acls-light.png"
     >
     <img
         alt="ACLs"
-        src="./assets/acls-dark.png"
+        src="./docs/assets/acls-dark.png"
     >
 </picture>
 
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/machine-dark.png"
+        srcset="./docs/assets/machine-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/machine-light.png"
+        srcset="./docs/assets/machine-light.png"
     >
     <img
         alt="Machine Management"
-        src="./assets/machine-dark.png"
+        src="./docs/assets/machine-dark.png"
     >
 </picture>
 

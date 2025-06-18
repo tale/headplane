@@ -5,6 +5,11 @@ nav:
   - Installation:
     - Bare Metal: Bare-Metal.md
     - Integrated Mode: Integrated-Mode.md
+    - Nix: Nix.md
+  - Configuration: Configuration.md
+  - Community:
+    - Contribution: CONTRIBUTING.md
+    - Security: SECURITY.md
 
 
 # Metadata
