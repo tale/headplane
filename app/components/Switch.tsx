@@ -51,8 +51,8 @@ export default function Switch(props: SwitchProps) {
 					className={cn(
 						'h-[18px] w-[18px] transform rounded-full',
 						'bg-white transition duration-50 ease-in-out',
-						'translate-x-0 group-selected:translate-x-[100%]',
-						state.isSelected && 'translate-x-[100%]',
+						'translate-x-0 group-selected:translate-x-full',
+						state.isSelected && 'translate-x-full',
 					)}
 				/>
 			</div>

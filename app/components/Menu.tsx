@@ -74,7 +74,7 @@ function Panel(props: MenuPanelProps) {
 		<ul
 			{...menuProps}
 			ref={ref}
-			className="pt-1 pb-1 shadow-xs rounded-md min-w-[200px] focus:outline-none"
+			className="pt-1 pb-1 shadow-2xs rounded-md min-w-[200px] focus:outline-hidden"
 		>
 			{[...state.collection].map((item) => (
 				<MenuSection
@@ -149,7 +149,7 @@ function MenuItem<T>({ item, state, isDisabled }: MenuItemProps<T>) {
 			ref={ref}
 			className={cn(
 				'py-2 px-3 mx-1 rounded-lg',
-				'focus:outline-none select-none',
+				'focus:outline-hidden select-none',
 				isFocused && 'bg-headplane-100/50 dark:bg-headplane-800',
 				isDisabled
 					? 'text-headplane-400 dark:text-headplane-600'

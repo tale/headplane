@@ -26,7 +26,7 @@ experience.
 
 Requirements:
 - Docker and Docker Compose
-- Headscale 0.25 or newer
+- Headscale 0.26 or newer
 - A finished configuration file (config.yaml)
 
 Here is what a sample Docker Compose deployment would look like:
@@ -34,7 +34,7 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.10
+    image: ghcr.io/tale/headplane:0.6.0
     container_name: headplane
     restart: unless-stopped
     ports:
@@ -44,16 +44,23 @@ services:
       # This should match headscale.config_path in your config.yaml
       - './headscale-config/config.yaml:/etc/headscale/config.yaml'
 
+      # If using dns.extra_records in Headscale (recommended), this should
+      # match the headscale.dns_records_path in your config.yaml
+      - './headscale-config/dns_records.json:/etc/headscale/dns_records.json'
+
       # Headplane stores its data in this directory
       - './headplane-data:/var/lib/headplane'
 
       # If you are using the Docker integration, mount the Docker socket
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
   headscale:
-    image: headscale/headscale:0.25.1
+    image: headscale/headscale:0.26.0
     container_name: headscale
     restart: unless-stopped
     command: serve
+    labels:
+      # This is needed for Headplane to find it and signal it
+      me.tale.headplane.target: headscale
     ports:
       - '8080:8080'
     volumes:
@@ -154,7 +161,7 @@ spec:
       serviceAccountName: default
       containers:
       - name: headplane
-        image: ghcr.io/tale/headplane:0.5.10
+        image: ghcr.io/tale/headplane:0.6.0
         env:
         # Set these if the pod name for Headscale is not static
         # We will use the downward API to get the pod name instead
@@ -171,7 +178,7 @@ spec:
           mountPath: /var/lib/headplane
 
       - name: headscale
-        image: headscale/headscale:0.25.1
+        image: headscale/headscale:0.26.0
         command: ['serve']
         volumeMounts:
         - name: headscale-data

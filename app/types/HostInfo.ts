@@ -3,6 +3,11 @@
 // https://github.com/tailscale/tailscale/blob/main/tailcfg/tailcfg.go#L816
 
 export interface HostInfo {
+	/**
+	 * Custom identifier we use to determine if its an agent or not
+	 */
+	HeadplaneAgent?: boolean;
+
 	/** Version of this code (in version.Long format) */
 	IPNVersion?: string;
 

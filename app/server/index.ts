@@ -1,7 +1,6 @@
 import { env, versions } from 'node:process';
-import type { UpgradeWebSocket } from 'hono/ws';
 import { createHonoServer } from 'react-router-hono-server/node';
-import type { WebSocket } from 'ws';
+
 import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
@@ -38,6 +37,7 @@ const appLoadContext = {
 	hs: await loadHeadscaleConfig(
 		config.headscale.config_path,
 		config.headscale.config_strict,
+		config.headscale.dns_records_path,
 	),
 
 	// TODO: Better cookie options in config
@@ -57,11 +57,9 @@ const appLoadContext = {
 	),
 
 	agents: await loadAgentSocket(
-		config.server.agent.authkey,
-		config.server.agent.cache_path,
-		config.server.agent.ttl,
+		config.integration?.agent,
+		config.headscale.url,
 	),
-
 	integration: await loadIntegration(config.integration),
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 };
@@ -71,7 +69,6 @@ declare module 'react-router' {
 }
 
 export default createHonoServer({
-	useWebSocket: true,
 	overrideGlobalObjects: true,
 	port: config.server.port,
 	hostname: config.server.host,
@@ -85,20 +82,6 @@ export default createHonoServer({
 		return appLoadContext;
 	},
 
-	configure(app, { upgradeWebSocket }) {
-		const agentManager = appLoadContext.agents;
-		if (agentManager) {
-			app.get(
-				`${__PREFIX__}/_dial`,
-				// We need this since we cannot pass the WSEvents context
-				// Also important to not pass the callback directly
-				// since we need to retain `this` context
-				(upgradeWebSocket as UpgradeWebSocket<WebSocket>)((c) =>
-					agentManager.configureSocket(c),
-				),
-			);
-		}
-	},
 	listeningListener(info) {
 		log.info('server', 'Running on %s:%s', info.address, info.port);
 	},

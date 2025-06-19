@@ -8,10 +8,10 @@ networks:
     driver: "bridge"
 services:
   headscale:
-    image: "headscale/headscale:0.25.1"
+    image: "headscale/headscale:0.26.0-debug"
     container_name: "headscale"
     labels:
-      - com.headplane.selector=headscale
+      me.tale.headplane.target: headscale
     restart: "unless-stopped"
     command: "serve"
     networks:
@@ -21,5 +21,6 @@ services:
       - "./test:/etc/headscale"
     ports:
       - "8080:8080"
+      - "9090:9090"
     environment:
       TZ: "America/New_York"

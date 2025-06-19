@@ -38,7 +38,7 @@ function Tooltip(props: TooltipProps) {
 				{...triggerProps}
 				className={cn(
 					'flex items-center justify-center',
-					'focus:outline-none focus:ring rounded-xl',
+					'focus:outline-hidden focus:ring-3 rounded-xl',
 				)}
 			>
 				{component}
@@ -65,7 +65,7 @@ function Body({ state, className, ...props }: TooltipBodyProps) {
 			{...mergeProps(props, tooltipProps)}
 			className={cn(
 				'absolute z-50 p-3 top-full mt-1',
-				'outline-none rounded-3xl text-sm w-48',
+				'outline-hidden rounded-3xl text-sm w-48',
 				'bg-white dark:bg-headplane-950',
 				'text-black dark:text-white',
 				'shadow-lg dark:shadow-md rounded-xl',

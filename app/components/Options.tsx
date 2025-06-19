@@ -52,7 +52,7 @@ function Option({ item, state }: OptionsOptionProps) {
 			className={cn(
 				'pl-0.5 pr-2 py-0.5 rounded-lg cursor-pointer',
 				'aria-selected:bg-headplane-100 dark:aria-selected:bg-headplane-950',
-				'focus:outline-none focus:ring z-10',
+				'focus:outline-hidden focus:ring-3 z-10',
 				'border border-headplane-100 dark:border-headplane-800',
 			)}
 		>

@@ -1,5 +1,30 @@
+### 0.6.0 (May 25, 2025)
+- Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
+    - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
+    - Older versions of Headscale will not work with Headplane.
+
+- OIDC authorization restrictions can now be controlled from the settings UI. (closes [#102](https://github.com/tale/headplane/issues/102))
+	- The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
+	- Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
+- The Pre-Auth keys page has been fully reworked (closes [#179](https://github.com/tale/headplane/issues/179), [#143](https://github.com/tale/headplane/issues/143)).
+- The Headplane agent is now available as an integration (closes [#65](https://github.com/tale/headplane/issues/65)).
+	- The agent runs as an embedded process alongside the Headplane server and reports host information and system metrics.
+	- Refer to the `integrations.agent` section of the config file for more information and how to enable it.
+- Requests to `/admin` will now be redirected to `/admin/` to prevent issues with the React Router (works with custom prefixes, closes [#173](https://github.com/tale/headplane/issues/173)).
+- The Login page has been simplified and separately reports errors versus incorrect API keys (closes [#186](https://github.com/tale/headplane/issues/186)).
+- The machine actions backend has been reworked to better handle errors and provide more information to the user (closes [#185](https://github.com/tale/headplane/issues/185)).
+- Machine tags now show states when waiting for subnet or exit node approval and when expiry is disabled.
+- Expiry status on the UI was incorrectly showing as never due to changes in the Headscale API.
+- Added validation for machine renaming to prevent invalid submissions (closes [#192](https://github.com/tale/headplane/issues/192)).
+- Unmanaged (non-OIDC) users cannot have a role assigned to them so the menu option was disabled.
+- Support Docker container discovery through labels (via [#194](https://github.com/tale/headplane/pull/194)).
+- AAAA records are now supported on the DNS page (closes [#189](https://github.com/tale/headplane/issues/189)).
+- Add support for `dns.extra_records_path` in the Headscale config (closes [#144](https://github.com/tale/headplane/issues/144)).
+- Tighten `proc` integration logic by checking for the `headscale serve` command (via #[195](https://github.com/tale/headplane/pull/195)).
+- Strip newlines in the OIDC `client_secret_path` file if provided (closes [#199](https://github.com/tale/headplane/issues/199)).
+
 ### 0.5.10 (April 4, 2025)
-- Fix an issue where other prefernences to skip onboarding affected every user.
+- Fix an issue where other preferences to skip onboarding affected every user.
 
 ### 0.5.9 (April 3, 2025)
 - Filter out empty users from the pre-auth keys page which could possibly cause a crash with unmigrated users.

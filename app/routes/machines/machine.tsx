@@ -2,6 +2,7 @@ import { CheckCircle, CircleSlash, Info, UserCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { Link as RemixLink, useLoaderData } from 'react-router';
+import { mapTag } from 'yaml/util';
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
@@ -10,8 +11,11 @@ import Link from '~/components/Link';
 import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
-import type { Machine, Route, User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
+import { getOSInfo, getTSVersion } from '~/utils/host-info';
+import { mapNodes } from '~/utils/node-info';
+import { mapTagsToComponents, uiTagsForNode } from './components/machine-row';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 import { machineAction } from './machine-actions';
@@ -33,28 +37,27 @@ export async function loader({
 		}
 	}
 
-	const [machine, routes, users] = await Promise.all([
+	const [machine, { users }] = await Promise.all([
 		context.client.get<{ node: Machine }>(
 			`v1/node/${params.id}`,
-			session.get('api_key')!,
-		),
-		context.client.get<{ routes: Route[] }>(
-			'v1/routes',
 			session.get('api_key')!,
 		),
 		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
 	]);
 
+	const lookup = await context.agents?.lookup([machine.node.nodeKey]);
+	const [node] = mapNodes([machine.node], lookup);
+	const tags = Array.from(
+		new Set([...node.validTags, ...node.forcedTags]),
+	).sort();
+
 	return {
-		machine: machine.node,
-		routes: routes.routes.filter((route) => route.node.id === params.id),
-		users: users.users,
+		node,
+		tags,
+		users,
 		magic,
-		// TODO: Fix agent
-		agent: false,
-		// agent: [...(hp_getSingletonUnsafe('ws_agents') ?? []).keys()].includes(
-		// 	machine.node.id,
-		// ),
+		agent: context.agents?.agentID(),
+		stats: lookup?.[node.nodeKey],
 	};
 }
 
@@ -63,62 +66,14 @@ export async function action(request: ActionFunctionArgs) {
 }
 
 export default function Page() {
-	const { machine, magic, routes, users, agent } =
+	const { node, tags, magic, users, agent, stats } =
 		useLoaderData<typeof loader>();
 	const [showRouting, setShowRouting] = useState(false);
 
-	const expired =
-		machine.expiry === '0001-01-01 00:00:00' ||
-		machine.expiry === '0001-01-01T00:00:00Z' ||
-		machine.expiry === null
-			? false
-			: new Date(machine.expiry).getTime() < Date.now();
-
-	const tags = [...new Set([...machine.forcedTags, ...machine.validTags])];
-
-	if (expired) {
-		tags.unshift('Expired');
-	}
-
-	if (agent) {
-		tags.unshift('Headplane Agent');
-	}
-
-	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet, subnetApproved } = routes.reduce<{
-		exit: Route[];
-		subnet: Route[];
-		subnetApproved: Route[];
-	}>(
-		(acc, route) => {
-			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
-				acc.exit.push(route);
-				return acc;
-			}
-
-			if (route.enabled) {
-				acc.subnetApproved.push(route);
-				return acc;
-			}
-
-			acc.subnet.push(route);
-			return acc;
-		},
-		{ exit: [], subnetApproved: [], subnet: [] },
-	);
-
-	const exitEnabled = useMemo(() => {
-		if (exit.length !== 2) return false;
-		return exit[0].enabled && exit[1].enabled;
-	}, [exit]);
-
-	if (exitEnabled) {
-		tags.unshift('Exit Node');
-	}
-
-	if (subnetApproved.length > 0) {
-		tags.unshift('Subnets');
-	}
+	const uiTags = useMemo(() => {
+		const tags = uiTagsForNode(node, agent === node.nodeKey);
+		return tags;
+	}, [node, agent]);
 
 	return (
 		<div>
@@ -127,7 +82,7 @@ export default function Page() {
 					All Machines
 				</RemixLink>
 				<span className="mx-2">/</span>
-				{machine.givenName}
+				{node.givenName}
 			</p>
 			<div
 				className={cn(
@@ -136,17 +91,10 @@ export default function Page() {
 				)}
 			>
 				<span className="flex items-baseline gap-x-4 text-sm">
-					<h1 className="text-2xl font-medium">{machine.givenName}</h1>
-					<StatusCircle isOnline={machine.online} className="w-4 h-4" />
+					<h1 className="text-2xl font-medium">{node.givenName}</h1>
+					<StatusCircle isOnline={node.online} className="w-4 h-4" />
 				</span>
-
-				<MenuOptions
-					isFullButton
-					machine={machine}
-					routes={routes}
-					users={users}
-					magic={magic}
-				/>
+				<MenuOptions isFullButton node={node} users={users} magic={magic} />
 			</div>
 			<div className="flex gap-1 mb-4">
 				<div className="border-r border-headplane-100 dark:border-headplane-800 p-2 pr-4">
@@ -161,29 +109,23 @@ export default function Page() {
 					</span>
 					<div className="flex items-center gap-x-2.5 mt-1">
 						<UserCircle />
-						{machine.user.name}
+						{node.user.name ?? node.user.email}
 					</div>
 				</div>
-				{tags.length > 0 ? (
-					<div className="p-2 pl-4">
-						<p className="text-sm text-headplane-600 dark:text-headplane-300">
-							Status
-						</p>
-						<div className="flex gap-1 mt-1 mb-8">
-							{tags.map((tag) => (
-								<Chip key={tag} text={tag} />
-							))}
-						</div>
+				<div className="p-2 pl-4">
+					<p className="text-sm text-headplane-600 dark:text-headplane-300">
+						Status
+					</p>
+					<div className="flex gap-1 mt-1 mb-8">
+						{mapTagsToComponents(node, uiTags)}
+						{tags.map((tag) => (
+							<Chip key={tag} text={tag} />
+						))}
 					</div>
-				) : undefined}
+				</div>
 			</div>
-			<h2 className="text-xl font-medium mb-4 mt-8">Subnets & Routing</h2>
-			<Routes
-				machine={machine}
-				routes={routes}
-				isOpen={showRouting}
-				setIsOpen={setShowRouting}
-			/>
+			<Routes node={node} isOpen={showRouting} setIsOpen={setShowRouting} />
+			<h2 className="text-xl font-medium mt-8">Subnets & Routing</h2>
 			<div className="flex items-center justify-between mb-4">
 				<p>
 					Subnets let you expose physical network routes onto Tailscale.{' '}
@@ -214,12 +156,12 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{subnetApproved.length === 0 ? (
+						{node.customRouting.subnetApprovedRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
 						) : (
 							<ul className="leading-normal">
-								{subnetApproved.map((route) => (
-									<li key={route.id}>{route.prefix}</li>
+								{node.customRouting.subnetApprovedRoutes.map((route) => (
+									<li key={route}>{route}</li>
 								))}
 							</ul>
 						)}
@@ -246,12 +188,12 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{subnet.length === 0 ? (
+						{node.customRouting.subnetWaitingRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
 						) : (
 							<ul className="leading-normal">
-								{subnet.map((route) => (
-									<li key={route.id}>{route.prefix}</li>
+								{node.customRouting.subnetWaitingRoutes.map((route) => (
+									<li key={route}>{route}</li>
 								))}
 							</ul>
 						)}
@@ -277,9 +219,9 @@ export default function Page() {
 						</Tooltip>
 					</span>
 					<div className="mt-1">
-						{exit.length === 0 ? (
+						{node.customRouting.exitRoutes.length === 0 ? (
 							<span className="opacity-50">—</span>
-						) : exitEnabled ? (
+						) : node.customRouting.exitApproved ? (
 							<span className="flex items-center gap-x-1">
 								<CheckCircle className="w-3.5 h-3.5 text-green-700" />
 								Allowed
@@ -302,36 +244,156 @@ export default function Page() {
 					</Button>
 				</div>
 			</Card>
-			<h2 className="text-xl font-medium mb-4">Machine Details</h2>
-			<Card variant="flat" className="w-full max-w-full">
-				<Attribute name="Creator" value={machine.user.name} />
-				<Attribute name="Node ID" value={machine.id} />
-				<Attribute name="Node Name" value={machine.givenName} />
-				<Attribute name="Hostname" value={machine.name} />
-				<Attribute isCopyable name="Node Key" value={machine.nodeKey} />
-				<Attribute
-					suppressHydrationWarning
-					name="Created"
-					value={new Date(machine.createdAt).toLocaleString()}
-				/>
-				<Attribute
-					suppressHydrationWarning
-					name="Last Seen"
-					value={new Date(machine.lastSeen).toLocaleString()}
-				/>
-				<Attribute
-					suppressHydrationWarning
-					name="Expiry"
-					value={expired ? new Date(machine.expiry).toLocaleString() : 'Never'}
-				/>
-				{magic ? (
+			<h2 className="text-xl font-medium">Machine Details</h2>
+			<p className="mb-4">
+				Information about this machine’s network. Used to debug connection
+				issues.
+			</p>
+			<Card
+				variant="flat"
+				className="w-full max-w-full grid grid-cols-1 lg:grid-cols-2 gap-y-2 sm:gap-x-12"
+			>
+				<div className="flex flex-col gap-1">
+					<Attribute name="Creator" value={node.user.name ?? node.user.email} />
+					<Attribute name="Machine name" value={node.givenName} />
+					<Attribute
+						tooltip="OS hostname is published by the machine’s operating system and is used as the default name for the machine."
+						name="OS hostname"
+						value={node.name}
+					/>
+					{stats ? (
+						<>
+							<Attribute name="OS" value={getOSInfo(stats)} />
+							<Attribute name="Tailscale version" value={getTSVersion(stats)} />
+						</>
+					) : undefined}
+					<Attribute
+						tooltip="ID for this machine. Used in the Headscale API."
+						name="ID"
+						value={node.id}
+					/>
 					<Attribute
 						isCopyable
-						name="Domain"
-						value={`${machine.givenName}.${magic}`}
+						tooltip="Public key which uniquely identifies this machine."
+						name="Node key"
+						value={node.nodeKey}
 					/>
-				) : undefined}
+					<Attribute
+						name="Created"
+						value={new Date(node.createdAt).toLocaleString()}
+					/>
+					<Attribute
+						name="Last Seen"
+						value={
+							node.online
+								? 'Connected'
+								: new Date(node.lastSeen).toLocaleString()
+						}
+					/>
+					<Attribute
+						name="Key expiry"
+						value={
+							node.expiry !== null
+								? new Date(node.expiry).toLocaleString()
+								: 'Never'
+						}
+					/>
+					{magic ? (
+						<Attribute
+							isCopyable
+							name="Domain"
+							value={`${node.givenName}.${magic}`}
+						/>
+					) : undefined}
+				</div>
+				<div className="flex flex-col gap-1">
+					<p className="uppercase text-sm font-semibold opacity-75">
+						Addresses
+					</p>
+					<Attribute
+						isCopyable
+						tooltip="This machine’s IPv4 address within your tailnet (your private Tailscale network)."
+						name="Tailscale IPv4"
+						value={getIpv4Address(node.ipAddresses)}
+					/>
+					<Attribute
+						isCopyable
+						tooltip="This machine’s IPv6 address within your tailnet (your private Tailscale network). Connections within your tailnet support IPv6 even if your ISP does not."
+						name="Tailscale IPv6"
+						value={getIpv6Address(node.ipAddresses)}
+					/>
+					<Attribute
+						isCopyable
+						tooltip="Users of your tailnet can use this DNS short name to access this machine."
+						name="Short domain"
+						value={node.givenName}
+					/>
+					{magic ? (
+						<Attribute
+							isCopyable
+							tooltip="Users of your tailnet can use this DNS name to access this machine."
+							name="Full domain"
+							value={`${node.givenName}.${magic}`}
+						/>
+					) : undefined}
+					{stats ? (
+						<>
+							<p className="uppercase text-sm font-semibold opacity-75 mt-4">
+								Client Connectivity
+							</p>
+							<Attribute
+								tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."
+								name="Varies"
+								value={stats.NetInfo?.MappingVariesByDestIP ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								tooltip="Whether the machine needs to traverse NATs with hairpinning."
+								name="Hairpinning"
+								value={stats.NetInfo?.HairPinning ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="IPv6"
+								value={stats.NetInfo?.WorkingIPv6 ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="UDP"
+								value={stats.NetInfo?.WorkingUDP ? 'Yes' : 'No'}
+							/>
+							<Attribute
+								name="UPnP"
+								value={stats.NetInfo?.UPnP ? 'Yes' : 'No'}
+							/>
+							<Attribute name="PCP" value={stats.NetInfo?.PCP ? 'Yes' : 'No'} />
+							<Attribute
+								name="NAT-PMP"
+								value={stats.NetInfo?.PMP ? 'Yes' : 'No'}
+							/>
+						</>
+					) : undefined}
+				</div>
 			</Card>
 		</div>
 	);
+}
+
+function getIpv4Address(addresses: string[]) {
+	for (const address of addresses) {
+		if (address.startsWith('100.')) {
+			// Return the first CGNAT address
+			return address;
+		}
+	}
+
+	return '—';
+}
+
+function getIpv6Address(addresses: string[]) {
+	for (const address of addresses) {
+		if (address.startsWith('fd')) {
+			// Return the first IPv6 address
+			return address;
+		}
+	}
+
+	return '—';
 }

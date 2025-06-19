@@ -1,8 +1,10 @@
 import { constants, access, readFile, writeFile } from 'node:fs/promises';
+import { exit } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { type } from 'arktype';
 import { Document, parseDocument } from 'yaml';
 import log from '~/utils/log';
+import { DNSRecord, HeadscaleDNSConfig, loadHeadscaleDNS } from './config-dns';
 import { headscaleConfig } from './config-schema';
 
 interface PatchConfig {
@@ -19,9 +21,11 @@ class HeadscaleConfig {
 	private access: 'rw' | 'ro' | 'no';
 	private path?: string;
 	private writeLock = false;
+	private dns?: HeadscaleDNSConfig;
 
 	constructor(
 		access: 'rw' | 'ro' | 'no',
+		dns?: HeadscaleDNSConfig,
 		config?: typeof headscaleConfig.infer,
 		document?: Document,
 		path?: string,
@@ -30,6 +34,7 @@ class HeadscaleConfig {
 		this.config = config;
 		this.document = document;
 		this.path = path;
+		this.dns = dns;
 	}
 
 	readable() {
@@ -42,6 +47,14 @@ class HeadscaleConfig {
 
 	get c() {
 		return this.config;
+	}
+
+	get d() {
+		if (this.dns) {
+			return this.dns.r;
+		}
+
+		return this.config?.dns.extra_records ?? [];
 	}
 
 	async patch(patches: PatchConfig[]) {
@@ -115,9 +128,106 @@ class HeadscaleConfig {
 		this.writeLock = false;
 		return;
 	}
+
+	/**
+	 * Adds a DNS record to the Headscale configuration.
+	 * Differentiates between the file mode and config mode automatically.
+	 * @param record The DNS record to add.
+	 * @returns True if we need to restart the integration.
+	 */
+	async addDNS(record: DNSRecord) {
+		if (this.dns) {
+			if (!this.dns.readable() || !this.dns.writable()) {
+				log.debug('config', 'DNS config is not writable');
+				return;
+			}
+
+			const records = this.dns.r;
+			if (
+				records.some((i) => i.name === record.name && i.type === record.type)
+			) {
+				log.debug('config', 'DNS record already exists');
+				return;
+			}
+
+			return this.dns.patch([...records, record]);
+		}
+
+		// If we get here, we need to add to the main config instead of
+		// a separate file (which requires an integration restart)
+		const existing = this.config?.dns.extra_records ?? [];
+		if (
+			existing.some((i) => i.name === record.name && i.type === record.type)
+		) {
+			log.debug('config', 'DNS record already exists');
+			return;
+		}
+
+		await this.patch([
+			{
+				path: 'dns.extra_records',
+				value: Array.from(new Set([...existing, record])),
+			},
+		]);
+
+		return true;
+	}
+
+	/**
+	 * Removes a DNS record from the Headscale configuration.
+	 * Differentiates between the file mode and config mode automatically.
+	 * @param records The DNS record to remove.
+	 * @returns True if we need to restart the integration.
+	 */
+	async removeDNS(record: DNSRecord) {
+		// In this case we need to check both the main config and the DNS config
+		// to see if the record exists, and if it does, we need to remove it
+		// from both places.
+
+		if (this.dns) {
+			if (!this.dns.readable() || !this.dns.writable()) {
+				log.debug('config', 'DNS config is not writable');
+				return;
+			}
+
+			const records = this.dns.r.filter(
+				(i) => i.name !== record.name || i.type !== record.type,
+			);
+
+			return this.dns.patch(records);
+		}
+
+		// If we get here, we need to remove from the main config instead of
+		// a separate file (which requires an integration restart)
+		const existing = this.config?.dns.extra_records ?? [];
+		const filtered = existing.filter(
+			(i) => i.name !== record.name || i.type !== record.type,
+		);
+
+		// If the length of the existing records is the same as the filtered
+		// records, then we don't need to do anything
+		if (existing.length === filtered.length) {
+			return;
+		}
+
+		await this.patch([
+			{
+				path: 'dns.extra_records',
+				value: existing.filter(
+					(i) => i.name !== record.name || i.type !== record.type,
+				),
+			},
+		]);
+
+		return true;
+	}
 }
 
-export async function loadHeadscaleConfig(path?: string, strict = true) {
+export async function loadHeadscaleConfig(
+	path?: string,
+	strict = true,
+	dnsPath?: string,
+) {
 	if (!path) {
 		log.debug('config', 'No Headscale configuration file was provided');
 		return new HeadscaleConfig('no');
@@ -137,6 +247,7 @@ export async function loadHeadscaleConfig(path?: string, strict = true) {
 	if (!strict) {
 		return new HeadscaleConfig(
 			w ? 'rw' : 'ro',
+			new HeadscaleDNSConfig('no'),
 			augmentUnstrictConfig(document.toJSON()),
 			document,
 			path,
@@ -148,7 +259,35 @@ export async function loadHeadscaleConfig(path?: string, strict = true) {
 		return new HeadscaleConfig('no');
 	}
 
-	return new HeadscaleConfig(w ? 'rw' : 'ro', config, document, path);
+	if (config.dns.extra_records && config.dns.extra_records_path) {
+		log.warn(
+			'config',
+			'Both extra_records and extra_records_path are set, Headscale will crash',
+		);
+
+		log.warn('config', 'Please remove one of them from the configuration file');
+		return new HeadscaleConfig('no');
+	}
+
+	const dns = await loadHeadscaleDNS(dnsPath);
+	if (dns && !config.dns.extra_records_path) {
+		log.error(
+			'config',
+			'Using separate DNS config file but dns.extra_records_path is not set in Headscale config',
+		);
+		log.error(
+			'config',
+			'Please set `dns.extra_records_path` in the Headscale config',
+		);
+		log.error(
+			'config',
+			'Or remove `headscale.dns_records_path` from the Headplane config',
+		);
+
+		exit(1);
+	}
+
+	return new HeadscaleConfig(w ? 'rw' : 'ro', dns, config, document, path);
 }
 
 async function validateConfigPath(path: string) {

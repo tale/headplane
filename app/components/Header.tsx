@@ -2,13 +2,13 @@ import {
 	CircleUser,
 	Globe2,
 	Lock,
-	PlaneTakeoff,
 	Server,
 	Settings,
 	Users,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { NavLink, useSubmit } from 'react-router';
+import Logo from '~/components/Logo';
 import Menu from '~/components/Menu';
 import { AuthSession } from '~/server/web/sessions';
 import cn from '~/utils/cn';
@@ -50,7 +50,7 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 						'after:absolute after:bottom-0 after:left-3 after:right-3',
 						'after:h-0.5 after:bg-headplane-900 dark:after:bg-headplane-200',
 						'hover:bg-headplane-200 dark:hover:bg-headplane-900',
-						'focus:outline-none focus:ring',
+						'focus:outline-hidden focus:ring-3',
 						isActive ? 'after:visible' : 'after:invisible',
 					)
 				}
@@ -69,7 +69,7 @@ function Link({ href, text }: LinkProps) {
 			rel="noreferrer"
 			className={cn(
 				'hidden sm:block hover:underline text-sm',
-				'focus:outline-none focus:ring rounded-md',
+				'focus:outline-hidden focus:ring-3 rounded-md',
 			)}
 		>
 			{text}
@@ -91,7 +91,7 @@ export default function Header(data: Props) {
 		>
 			<div className="container flex items-center justify-between py-4">
 				<div className="flex items-center gap-x-2">
-					<PlaneTakeoff />
+					<Logo />
 					<h1 className="text-2xl font-semibold">headplane</h1>
 				</div>
 				<div className="flex items-center gap-x-4">

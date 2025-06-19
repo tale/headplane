@@ -117,7 +117,7 @@ function Panel(props: DialogPanelProps) {
 			method={method ?? 'POST'}
 			ref={ref}
 			className={cn(
-				'outline-none rounded-3xl w-full max-w-lg',
+				'outline-hidden rounded-3xl w-full max-w-lg',
 				'bg-white dark:bg-headplane-900',
 			)}
 		>

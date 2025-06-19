@@ -17,7 +17,7 @@ export default function ManageRecords({ records, isDisabled }: Props) {
 			<h1 className="text-2xl font-medium mb-4">DNS Records</h1>
 			<p>
 				Headscale supports adding custom DNS records to your Tailnet. As of now,
-				only <Code>A</Code> records are supported.{' '}
+				only <Code>A</Code> and <Code>AAAA</Code> records are supported.{' '}
 				<Link
 					to="https://headscale.net/stable/ref/dns"
 					name="Headscale DNS Records documentation"
@@ -34,19 +34,19 @@ export default function ManageRecords({ records, isDisabled }: Props) {
 					) : (
 						records.map((record, index) => (
 							<TableList.Item key={`${record.name}-${record.value}`}>
-								<div className="flex gap-24 items-center">
-									<div className="flex gap-4 items-center">
-										<p
-											className={cn(
-												'font-mono text-sm font-bold py-1 px-2 rounded-md',
-												'bg-headplane-100 dark:bg-headplane-700/30',
-											)}
-										>
-											{record.type}
-										</p>
+								<div className="flex gap-2 items-center w-full">
+									<p
+										className={cn(
+											'font-mono text-sm font-bold py-1 px-2 rounded-md text-center',
+											'bg-headplane-100 dark:bg-headplane-700/30 min-w-12',
+										)}
+									>
+										{record.type}
+									</p>
+									<div className="grid grid-cols-2 gap-2 w-full">
 										<p className="font-mono text-sm">{record.name}</p>
+										<p className="font-mono text-sm">{record.value}</p>
 									</div>
-									<p className="font-mono text-sm">{record.value}</p>
 								</div>
 								<Form method="POST">
 									<input type="hidden" name="action_id" value="remove_record" />

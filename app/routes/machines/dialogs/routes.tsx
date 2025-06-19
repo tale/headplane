@@ -1,55 +1,30 @@
 import { GlobeLock, RouteOff } from 'lucide-react';
-import { useMemo } from 'react';
 import { useFetcher } from 'react-router';
 import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
 import Switch from '~/components/Switch';
 import TableList from '~/components/TableList';
-import type { Machine, Route } from '~/types';
-import cn from '~/utils/cn';
+import { PopulatedNode } from '~/utils/node-info';
 
 interface RoutesProps {
-	machine: Machine;
-	routes: Route[];
+	node: PopulatedNode;
 	isOpen: boolean;
 	setIsOpen: (isOpen: boolean) => void;
 }
 
 // TODO: Support deleting routes
-export default function Routes({
-	machine,
-	routes,
-	isOpen,
-	setIsOpen,
-}: RoutesProps) {
+export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 	const fetcher = useFetcher();
 
-	// This is much easier with Object.groupBy but it's too new for us
-	const { exit, subnet } = routes.reduce<{
-		exit: Route[];
-		subnet: Route[];
-	}>(
-		(acc, route) => {
-			if (route.prefix === '::/0' || route.prefix === '0.0.0.0/0') {
-				acc.exit.push(route);
-				return acc;
-			}
-
-			acc.subnet.push(route);
-			return acc;
-		},
-		{ exit: [], subnet: [] },
-	);
-
-	const exitEnabled = useMemo(() => {
-		if (exit.length !== 2) return false;
-		return exit[0].enabled && exit[1].enabled;
-	}, [exit]);
+	const subnets = [
+		...node.customRouting.subnetApprovedRoutes,
+		...node.customRouting.subnetWaitingRoutes,
+	];
 
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Panel variant="unactionable">
-				<Dialog.Title>Edit route settings of {machine.givenName}</Dialog.Title>
+				<Dialog.Title>Edit route settings of {node.givenName}</Dialog.Title>
 				<Dialog.Text className="font-bold">Subnet routes</Dialog.Text>
 				<Dialog.Text>
 					Connect to devices you can&apos;t install Tailscale on by advertising
@@ -62,7 +37,7 @@ export default function Routes({
 					</Link>
 				</Dialog.Text>
 				<TableList className="mt-4">
-					{subnet.length === 0 ? (
+					{subnets.length === 0 ? (
 						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
 							<RouteOff />
 							<p className="font-semibold">
@@ -70,17 +45,17 @@ export default function Routes({
 							</p>
 						</TableList.Item>
 					) : undefined}
-					{subnet.map((route) => (
-						<TableList.Item key={route.id}>
-							<p>{route.prefix}</p>
+					{subnets.map((route) => (
+						<TableList.Item key={route}>
+							<p>{route}</p>
 							<Switch
-								defaultSelected={route.enabled}
+								defaultSelected={node.approvedRoutes.includes(route)}
 								label="Enabled"
 								onChange={(checked) => {
 									const form = new FormData();
-									form.set('id', machine.id);
-									form.set('_method', 'routes');
-									form.set('route', route.id);
+									form.set('action_id', 'update_routes');
+									form.set('node_id', node.id);
+									form.set('routes', [route].join(','));
 
 									form.set('enabled', String(checked));
 									fetcher.submit(form, {
@@ -102,7 +77,7 @@ export default function Routes({
 					</Link>
 				</Dialog.Text>
 				<TableList className="mt-4">
-					{exit.length === 0 ? (
+					{node.customRouting.exitRoutes.length === 0 ? (
 						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
 							<GlobeLock />
 							<p className="font-semibold">This machine is not an exit node</p>
@@ -111,13 +86,18 @@ export default function Routes({
 						<TableList.Item>
 							<p>Use as exit node</p>
 							<Switch
-								defaultSelected={exitEnabled}
+								defaultSelected={node.customRouting.exitApproved}
 								label="Enabled"
 								onChange={(checked) => {
 									const form = new FormData();
-									form.set('id', machine.id);
-									form.set('_method', 'exit-node');
-									form.set('routes', exit.map((route) => route.id).join(','));
+									form.set('action_id', 'update_routes');
+									form.set('node_id', node.id);
+									form.set(
+										'routes',
+										node.customRouting.exitRoutes
+											.map((route) => route)
+											.join(','),
+									);
 
 									form.set('enabled', String(checked));
 									fetcher.submit(form, {

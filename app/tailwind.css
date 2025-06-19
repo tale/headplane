@@ -1,6 +1,91 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+@plugin "tailwindcss-react-aria-components";
+
+@theme {
+	--blur-xs: 2px;
+
+	--height-editor: calc(100vh - 20rem);
+
+	--font-sans: Inter, -apple-system, BlinkMacSystemFont, Helvetica, Arial,
+		sans-serif;
+
+	--transition-duration-25: 25ms;
+	--transition-duration-50: 50ms;
+
+	--color-main-50: #f8fafc;
+	--color-main-100: #f1f5f9;
+	--color-main-200: #e2e8f0;
+	--color-main-300: #cbd5e1;
+	--color-main-400: #94a3b8;
+	--color-main-500: #64748b;
+	--color-main-600: #475569;
+	--color-main-700: #334155;
+	--color-main-800: #1e293b;
+	--color-main-900: #0f172a;
+	--color-main-950: #020617;
+
+	--color-ui-50: #fafafa;
+	--color-ui-100: #f5f5f5;
+	--color-ui-200: #e5e5e5;
+	--color-ui-300: #d4d4d4;
+	--color-ui-400: #a3a3a3;
+	--color-ui-500: #737373;
+	--color-ui-600: #525252;
+	--color-ui-700: #404040;
+	--color-ui-800: #262626;
+	--color-ui-900: #171717;
+	--color-ui-950: #0a0a0a;
+
+	--color-headplane-50: #f2f2f2;
+	--color-headplane-100: #e6e6e6;
+	--color-headplane-200: #cccccc;
+	--color-headplane-300: #b3b3b3;
+	--color-headplane-400: #999999;
+	--color-headplane-500: #808080;
+	--color-headplane-600: #666666;
+	--color-headplane-700: #4d4d4d;
+	--color-headplane-800: #343434;
+	--color-headplane-900: #1a1a1a;
+	--color-headplane-950: #0d0d0d;
+
+	--animate-loading: loader 0.8s infinite ease-in-out;
+
+	@keyframes loader {
+		from {
+			transform: translateX(-100%);
+		}
+		to {
+			transform: translateX(100%);
+		}
+	}
+}
+
+@utility container {
+	margin-inline: auto;
+	padding-inline: 1rem;
+
+	/* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS */
+	@media (width >= theme(--breakpoint-sm)) {
+		padding-inline: 2rem;
+	}
+
+	/* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS */
+	@media (width >= theme(--breakpoint-lg)) {
+		padding-inline: 4rem;
+	}
+
+	/* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS */
+	@media (width >= theme(--breakpoint-xl)) {
+		padding-inline: 5rem;
+	}
+
+	/* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS */
+	@media (width >= theme(--breakpoint-2xl)) {
+		padding-inline: 6rem;
+	}
+}
 
 @supports (scrollbar-gutter: stable) {
 	html {

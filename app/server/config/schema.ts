@@ -1,22 +1,26 @@
 import { type } from 'arktype';
 
-const stringToBool = type('string | boolean').pipe((v) => Boolean(v));
+const stringToBool = type('string | boolean').pipe((v) => {
+	if (typeof v === 'string') {
+		if (v === '1' || v === 'true' || v === 'yes') {
+			return true;
+		}
+
+		if (v === '0' || v === 'false' || v === 'no') {
+			return false;
+		}
+
+		throw new Error(`Invalid string value for boolean: ${v}`);
+	}
+
+	return Boolean(v);
+});
+
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
-	agent: type({
-		authkey: 'string = ""',
-		ttl: 'number.integer = 180000', // Default to 3 minutes
-		cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
-	})
-		.onDeepUndeclaredKey('reject')
-		.default(() => ({
-			authkey: '',
-			ttl: 180000,
-			cache_path: '/var/lib/headplane/agent_cache.json',
-		})),
 });
 
 const oidcConfig = type({
@@ -39,19 +43,42 @@ const headscaleConfig = type({
 	public_url: 'string.url?',
 	config_path: 'string?',
 	config_strict: stringToBool,
+	dns_records_path: 'string?',
 }).onDeepUndeclaredKey('reject');
 
-const containerLabel = type({
-	name: 'string',
-	value: 'string',
-}).optional();
+const agentConfig = type({
+	enabled: stringToBool.default(false),
+	host_name: 'string = "headplane-agent"',
+	pre_authkey: 'string = ""',
+	cache_ttl: 'number.integer = 180000',
+	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
+	executable_path: 'string = "/usr/libexec/headplane/agent"',
+	work_dir: 'string = "/var/lib/headplane/agent"',
+});
+
+const partialAgentConfig = type({
+	enabled: stringToBool,
+	host_name: 'string | undefined',
+	pre_authkey: 'string | undefined',
+	cache_ttl: 'number.integer | undefined',
+	cache_path: 'string | undefined',
+	executable_path: 'string | undefined',
+	work_dir: 'string | undefined',
+}).partial();
 
 const dockerConfig = type({
 	enabled: stringToBool,
-	container_name: 'string',
+	container_name: 'string = ""',
+	container_label: 'string = "me.tale.headplane.target=headscale"',
 	socket: 'string = "unix:///var/run/docker.sock"',
-	container_label: containerLabel,
 });
+
+const partialDockerConfig = type({
+	enabled: stringToBool,
+	container_name: 'string | undefined',
+	container_label: 'string | undefined',
+	socket: 'string | undefined',
+}).partial();
 
 const kubernetesConfig = type({
 	enabled: stringToBool,
@@ -67,12 +94,14 @@ const integrationConfig = type({
 	'docker?': dockerConfig,
 	'kubernetes?': kubernetesConfig,
 	'proc?': procConfig,
-}).onDeepUndeclaredKey('reject');
+	'agent?': agentConfig,
+});
 
 const partialIntegrationConfig = type({
-	'docker?': dockerConfig.partial(),
+	'docker?': partialDockerConfig,
 	'kubernetes?': kubernetesConfig.partial(),
 	'proc?': procConfig.partial(),
+	'agent?': partialAgentConfig,
 }).partial();
 
 export const headplaneConfig = type({
