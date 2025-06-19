@@ -52,11 +52,10 @@ headscale:
 
   # Access Control List configuration (JSON format)
   # Only applicable if headscale.config.policy.mode is 'file'
-  acl: ""
-  # acl: |
-  #   {
-  #     "acls": []
-  #   }
+  acl: |
+    {
+      "acls": []
+    }
 
   oidc:
     # Enable OIDC integration for Headscale
