@@ -1,23 +1,25 @@
 import { mkdir } from 'node:fs/promises';
-import { dirname } from 'node:path';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
+import { dirname, resolve } from 'node:path';
+import { drizzle } from 'drizzle-orm/libsql';
+import { migrate } from 'drizzle-orm/libsql/migrator';
 import log from '~/utils/log';
 
 export async function createDbClient(path: string) {
+	const realPath = resolve(path);
 	try {
-		await mkdir(dirname(path), { recursive: true });
+		await mkdir(dirname(realPath), { recursive: true });
 	} catch (error) {
 		log.error(
 			'server',
 			'Failed to create directory for database at %s: %s',
-			path,
+			realPath,
 			error instanceof Error ? error.message : String(error),
 		);
-		throw new Error(`Could not create directory for database at ${path}`);
+		throw new Error(`Could not create directory for database at ${realPath}`);
 	}
 
-	const db = drizzle(path);
+	// Turn the path into a URL with the file protocol
+	const db = drizzle(`file://${realPath}`);
 	migrate(db, {
 		migrationsFolder: './drizzle',
 	});
