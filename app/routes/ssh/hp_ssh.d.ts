@@ -11,9 +11,13 @@ interface TsWasmNetOptions {
 
 interface TsWasmNetCallbacks {
 	NotifyState: (state: IPNState) => void;
-	NotifyNetMap: (netMapJson: string) => void;
+	NotifyNetMap: (netmap: TsWasmNetMap) => void;
 	NotifyBrowseToURL: (url: string) => void;
 	NotifyPanicRecover: (err: string) => void;
+}
+
+interface TsWasmNetMap {
+	NodeKey: string;
 }
 
 interface TsWasmNet {

@@ -36,9 +36,10 @@
 		"@xterm/addon-webgl": "^0.18.0",
 		"@xterm/xterm": "^5.5.0",
 		"arktype": "^2.1.20",
-		"cborg": "^4.2.11",
+		"better-sqlite3": "^11.10.0",
 		"clsx": "^2.1.1",
 		"dotenv": "^16.5.0",
+		"drizzle-orm": "^0.44.2",
 		"isbot": "^5.1.28",
 		"lucide-react": "^0.511.0",
 		"mime": "^4.0.7",
@@ -62,8 +63,9 @@
 		"@biomejs/biome": "^1.9.4",
 		"@react-router/dev": "^7.6.1",
 		"@tailwindcss/vite": "^4.1.8",
+		"@types/better-sqlite3": "^7.6.13",
 		"@types/websocket": "^1.0.10",
-		"hono": "^4.7.10",
+		"drizzle-kit": "^0.31.1",
 		"lefthook": "^1.11.13",
 		"postcss": "^8.5.4",
 		"react-router-dom": "^7.6.1",
@@ -84,6 +86,11 @@
 		"patchedDependencies": {
 			"react-router-hono-server": "patches/react-router-hono-server.patch"
 		},
-		"onlyBuiltDependencies": ["@biomejs/biome", "esbuild", "lefthook"]
+		"onlyBuiltDependencies": [
+			"@biomejs/biome",
+			"better-sqlite3",
+			"esbuild",
+			"lefthook"
+		]
 	}
 }

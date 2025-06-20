@@ -37,6 +37,10 @@ func registerNotifyCallback(callbacks *TsWasmNetCallbacks, lb *ipnlocal.LocalBac
 			callbacks.NotifyBrowseToURL(*n.BrowseToURL)
 		}
 
+		if n.NetMap != nil {
+			callbacks.NotifyNetMap(n.NetMap)
+		}
+
 		log.Printf("NOTIFY: %+v", n)
 
 		// if nm := n.NetMap; nm != nil {

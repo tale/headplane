@@ -1,10 +1,11 @@
+import { join } from 'node:path';
 import { env, versions } from 'node:process';
-import type { WSEvents } from 'hono/ws';
 import { createHonoServer } from 'react-router-hono-server/node';
 import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
 import { loadConfig } from './config/loader';
+import { createDbClient } from './db/client';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { loadAgentSocket } from './web/agent';
@@ -32,6 +33,8 @@ const agentManager = await loadAgentSocket(
 	config.integration?.agent,
 	config.headscale.url,
 );
+
+const db = await createDbClient(join(config.server.data_path, 'hp_persist.db'));
 
 // We also use this file to load anything needed by the react router code.
 // These are usually per-request things that we need access to, like the
@@ -64,6 +67,7 @@ const appLoadContext = {
 	agents: agentManager,
 	integration: await loadIntegration(config.integration),
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
+	db,
 };
 
 declare module 'react-router' {
@@ -86,37 +90,5 @@ export default createHonoServer({
 
 	listeningListener(info) {
 		log.info('server', 'Running on %s:%s', info.address, info.port);
-	},
-
-	useWebSocket: true,
-	configure: (app, { upgradeWebSocket }) => {
-		if (agentManager === undefined) {
-			return;
-		}
-
-		app.get(
-			'/_ssh_plexer',
-			upgradeWebSocket((c) => {
-				// MARK: This is a limitation of the hono NPM module we use
-				const wsHandler = agentManager.multiplexer?.websocketHandler(
-					c,
-				) as WSEvents<unknown>;
-
-				return {
-					onOpen: wsHandler
-						? wsHandler.onOpen
-						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
-					onClose: wsHandler
-						? wsHandler.onClose
-						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
-					onMessage: wsHandler
-						? wsHandler.onMessage
-						: (_, ws) => ws.close(1000, 'Multiplexer not available'),
-					onError: wsHandler
-						? wsHandler.onError
-						: (_, ws) => ws.close(1000, 'Multiplexer error'),
-				};
-			}),
-		);
 	},
 });

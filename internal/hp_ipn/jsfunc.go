@@ -72,7 +72,13 @@ func ParseTsWasmNetCallbacks(obj js.Value) (*TsWasmNetCallbacks, error) {
 		},
 
 		NotifyNetMap: func(nm *netmap.NetworkMap) {
-			// TODO: This is complicated
+			// We need to build a JSON representation of the NetworkMap
+			// For now we just pass the NodeKey since that's what we need.
+			jsObj := js.ValueOf(map[string]any{
+				"NodeKey": nm.NodeKey.String(),
+			})
+
+			obj.Get("NotifyNetMap").Invoke(jsObj)
 		},
 
 		NotifyBrowseToURL: func(url string) {

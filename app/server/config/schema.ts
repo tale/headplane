@@ -19,6 +19,7 @@ const stringToBool = type('string | boolean').pipe((v) => {
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
+	data_path: 'string = "/var/lib/headplane/"',
 	cookie_secret: '32 <= string <= 32',
 	cookie_secure: stringToBool,
 });

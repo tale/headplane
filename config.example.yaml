@@ -12,6 +12,13 @@ server:
   # (I recommend this is true in production)
   cookie_secure: true
 
+  # The path to persist Headplane specific data. All data going forward
+  # is stored in this directory, including the internal database and
+  # any cache related files.
+  #
+  # Data formats prior to 0.6.1 will automatically be migrated.
+  data_path: "/var/lib/headplane"
+
 # Headscale specific settings to allow Headplane to talk
 # to Headscale and access deep integration features
 headscale:

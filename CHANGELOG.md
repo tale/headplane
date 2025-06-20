@@ -1,3 +1,8 @@
+### 0.6.1 (Next)
+- **Headplane now supports connecting to machines via SSH in the web browser.**
+	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
+	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
+
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
     - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
