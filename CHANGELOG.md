@@ -6,6 +6,7 @@
 	- The database is created automatically if it does not exist.
 	- It currently stores SSH connection details and will migrate older data.
 - The docker container now runs in a non-root, distroless image (closes [#255](https://github.com/tale/headplane/issues/255))
+	- You may need to run `chown -R 65532:65532 <host_path>` on your data directory to ensure the container can write to it.
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
