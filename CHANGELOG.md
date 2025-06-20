@@ -2,6 +2,9 @@
 - **Headplane now supports connecting to machines via SSH in the web browser.**
 	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
 	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
+- Begin using a new SQLite database file in `/var/lib/headplane/hp_persist.db`.
+	- The database is created automatically if it does not exist.
+	- It currently stores SSH connection details and will migrate older data.
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
