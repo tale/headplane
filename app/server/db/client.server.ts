@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
-import { drizzle } from 'drizzle-orm/libsql';
 import { migrate } from 'drizzle-orm/libsql/migrator';
+import { drizzle } from 'drizzle-orm/libsql/sqlite3';
 import log from '~/utils/log';
 
 export async function createDbClient(path: string) {

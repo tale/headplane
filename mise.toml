@@ -1,6 +1,7 @@
 [tools]
 "go" = "1.24.4"
 "node" = "22"
+"pnpm" = "10"
 
 [tasks.copy-wasm-shim]
 alias = ["gojs"]

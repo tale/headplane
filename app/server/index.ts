@@ -5,7 +5,7 @@ import log from '~/utils/log';
 import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
 import { loadConfig } from './config/loader';
-import { createDbClient } from './db/client';
+import { createDbClient } from './db/client.server';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { loadAgentSocket } from './web/agent';

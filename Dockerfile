@@ -1,35 +1,35 @@
-FROM golang:1.24 AS agent-build
-WORKDIR /app
+FROM jdxcode/mise:latest AS mise-context
+COPY mise.toml .
+RUN mise install
+
+FROM mise-context AS go-build
+WORKDIR /build/
 
 COPY go.mod go.sum ./
-RUN go mod download
+COPY cmd/ ./cmd/
+COPY internal/ ./internal/
+RUN mkdir -p /build/app/ && mise run wasm ::: agent
+RUN chmod +x /build/build/hp_agent
 
-COPY agent/ ./agent
-RUN CGO_ENABLED=0 GOOS=linux go build \
-	-trimpath \
-	-ldflags "-s -w" \
-	-o /app/hp_agent ./agent/cmd/hp_agent
-
-FROM node:22-alpine AS build
-WORKDIR /app
-
-RUN npm install -g pnpm@10
-RUN apk add --no-cache git
-COPY package.json pnpm-lock.yaml ./
+FROM mise-context AS js-build
+WORKDIR /build
 COPY patches ./patches
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+RUN mise trust
+COPY --from=go-build /build/app/hp_ssh.wasm /build/app/hp_ssh.wasm
+COPY --from=go-build /build/app/wasm_exec.js /build/app/wasm_exec.js
 RUN pnpm run build
-
-FROM node:22-alpine
-RUN apk add --no-cache ca-certificates
-RUN mkdir -p /var/lib/headplane
-RUN mkdir -p /usr/libexec/headplane
 RUN mkdir -p /var/lib/headplane/agent
 
+FROM gcr.io/distroless/nodejs22-debian12:nonroot
+COPY --from=js-build --chown=nonroot:nonroot /build/build/ /app/build/
+COPY --from=js-build --chown=nonroot:nonroot /build/drizzle /app/drizzle/
+COPY --from=js-build --chown=nonroot:nonroot /var/lib/headplane /var/lib/headplane
+COPY --from=js-build --chown=nonroot:nonroot /build/node_modules/ /app/node_modules/
+COPY --from=go-build --chown=nonroot:nonroot /build/build/hp_agent /usr/libexec/headplane/agent
+
 WORKDIR /app
-COPY --from=build /app/build /app/build
-COPY --from=agent-build /app/hp_agent /usr/libexec/headplane/agent
-RUN chmod +x /usr/libexec/headplane/agent
-CMD [ "node", "./build/server/index.js" ]
+CMD [ "/app/build/server/index.js" ]
