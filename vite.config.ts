@@ -36,7 +36,10 @@ export default defineConfig(({ isSsrBuild }) => ({
 	},
 	ssr: {
 		target: 'node',
-		noExternal: isSsrBuild ? true : undefined,
+		noExternal: isSsrBuild ? ['@libsql/client'] : undefined,
+	},
+	optimizeDeps: {
+		include: ['@libsql/client'],
 	},
 	define: {
 		__VERSION__: JSON.stringify(version),
