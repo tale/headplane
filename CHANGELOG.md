@@ -5,8 +5,9 @@
 - Begin using a new SQLite database file in `/var/lib/headplane/hp_persist.db`.
 	- The database is created automatically if it does not exist.
 	- It currently stores SSH connection details and will migrate older data.
-- The docker container now runs in a non-root, distroless image (closes [#255](https://github.com/tale/headplane/issues/255))
+- The docker container now runs in a non-root, distroless image (closes [#255](https://github.com/tale/headplane/issues/255)).
 	- You may need to run `chown -R 65532:65532 <host_path>` on your data directory to ensure the container can write to it.
+- Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.

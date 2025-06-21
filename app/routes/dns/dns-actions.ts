@@ -104,7 +104,7 @@ async function removeNs(formData: FormData, context: LoadContext) {
 		await context.hs.patch([
 			{
 				path: `dns.nameservers.split."${splitName}"`,
-				value: servers,
+				value: servers.length > 0 ? servers : null,
 			},
 		]);
 	}
