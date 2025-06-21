@@ -9,7 +9,6 @@ import {
 	useLoaderData,
 	useSubmit,
 } from 'react-router';
-import { useEventSource } from 'remix-utils/sse/react';
 import { LoadContext } from '~/server';
 import { Machine, PreAuthKey, User } from '~/types';
 import { useLiveData } from '~/utils/live-data';
@@ -19,6 +18,7 @@ import { eq } from 'drizzle-orm';
 import wasm from '~/hp_ssh.wasm?url';
 import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
 import '~/wasm_exec';
+import UserPrompt from './user-prompt';
 
 export const shouldRevalidate: ShouldRevalidateFunction = () => {
 	return false;
@@ -88,8 +88,18 @@ export async function loader({
 	const qp = new URL(request.url).searchParams;
 	const username = qp.get('username') || undefined;
 	const hostname = qp.get('hostname') || undefined;
-	if (!username || !hostname) {
-		throw data('Missing required parameters: username, hostname', 400);
+	if (!hostname) {
+		throw data('Missing required parameter:  hostname', 400);
+	}
+
+	if (!username) {
+		return {
+			ipnDetails: undefined,
+			sshDetails: {
+				username,
+				hostname,
+			},
+		};
 	}
 
 	// We're making a request to <url>/key?v=116 to check the CORS headers
@@ -202,9 +212,12 @@ export default function Page() {
 	const [ipn, setIpn] = useState<TsWasmNet | null>(null);
 	const [nodeKey, setNodeKey] = useState<string | null>(null);
 	const { ipnDetails, sshDetails } = useLoaderData<typeof loader>();
-	const ping = useEventSource('/ssh/ping', { event: 'ping' });
 
 	useEffect(() => {
+		if (!ipnDetails) {
+			return;
+		}
+
 		pause();
 		const go = new Go(); // Go is defined by wasm_exec.js
 		WebAssembly.instantiateStreaming(fetch(wasm), go.importObject).then(
@@ -248,6 +261,10 @@ export default function Page() {
 			},
 		);
 	}, []);
+
+	if (!sshDetails.username) {
+		return <UserPrompt hostname={sshDetails.hostname} />;
+	}
 
 	return (
 		<div className="w-screen h-screen bg-headplane-900">

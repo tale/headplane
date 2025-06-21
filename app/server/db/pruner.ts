@@ -41,7 +41,7 @@ export async function pruneEphemeralNodes({
 	// Delete from the Headscale nodes list and then from the database
 	const promises = toPrune.map((node) => {
 		return async () => {
-			log.info('api', `Pruning node ${node.name}`);
+			log.debug('api', `Pruning node ${node.name}`);
 			await context.client.delete(
 				`v1/node/${node.id}`,
 				session.get('api_key')!,
@@ -50,7 +50,7 @@ export async function pruneEphemeralNodes({
 			await context.db
 				.delete(ephemeralNodes)
 				.where(eq(ephemeralNodes.node_key, node.nodeKey));
-			log.info('api', `Node ${node.name} pruned successfully`);
+			log.debug('api', `Node ${node.name} pruned successfully`);
 		};
 	});
 
