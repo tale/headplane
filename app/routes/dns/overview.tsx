@@ -44,6 +44,7 @@ export async function loader({
 		nameservers: config.dns.nameservers.global,
 		splitDns: config.dns.nameservers.split,
 		searchDomains: config.dns.search_domains,
+		overrideDns: config.dns.override_local_dns,
 		extraRecords: context.hs.d,
 	};
 
@@ -84,7 +85,11 @@ export default function Page() {
 				</Notice>
 			)}
 			<RenameTailnet name={data.baseDomain} isDisabled={isDisabled} />
-			<ManageNS nameservers={allNs} isDisabled={isDisabled} />
+			<ManageNS
+				nameservers={allNs}
+				isDisabled={isDisabled}
+				overrideLocalDns={data.overrideDns}
+			/>
 			<ManageRecords records={data.extraRecords} isDisabled={isDisabled} />
 			<ManageDomains
 				searchDomains={data.searchDomains}

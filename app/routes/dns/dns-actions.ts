@@ -42,6 +42,8 @@ export async function dnsAction({
 			return removeRecord(formData, context);
 		case 'add_record':
 			return addRecord(formData, context);
+		case 'override_dns':
+			return overrideDns(formData, context);
 		default:
 			return data({ success: false }, 400);
 	}
@@ -227,6 +229,23 @@ async function addRecord(formData: FormData, context: LoadContext) {
 	if (!restart) {
 		return;
 	}
+
+	await context.integration?.onConfigChange(context.client);
+}
+
+async function overrideDns(formData: FormData, context: LoadContext) {
+	const override = formData.get('override_dns')?.toString();
+	if (!override) {
+		return data({ success: false }, 400);
+	}
+
+	const overrideValue = override === 'true';
+	await context.hs.patch([
+		{
+			path: 'dns.override_local_dns',
+			value: overrideValue,
+		},
+	]);
 
 	await context.integration?.onConfigChange(context.client);
 }

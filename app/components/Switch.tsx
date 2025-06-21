@@ -11,6 +11,7 @@ import cn from '~/utils/cn';
 export interface SwitchProps extends AriaSwitchProps {
 	label: string;
 	className?: string;
+	switchClassName?: string;
 }
 
 export default function Switch(props: SwitchProps) {
@@ -45,6 +46,7 @@ export default function Switch(props: SwitchProps) {
 					state.isSelected && 'bg-headplane-900 dark:bg-headplane-950',
 					isFocusVisible && 'ring-2',
 					props.isDisabled && 'opacity-50',
+					props.className,
 				)}
 			>
 				<span
@@ -53,6 +55,7 @@ export default function Switch(props: SwitchProps) {
 						'bg-white transition duration-50 ease-in-out',
 						'translate-x-0 group-selected:translate-x-full',
 						state.isSelected && 'translate-x-full',
+						props.switchClassName,
 					)}
 				/>
 			</div>
