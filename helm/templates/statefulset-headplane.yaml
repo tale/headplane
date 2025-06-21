@@ -76,12 +76,37 @@ spec:
         - name: headscale-config
           secret:
             secretName: headscale-config
-        - name: headscale-data
-          persistentVolumeClaim:
-            claimName: headscale-config
         - name: headplane-config
           secret:
             secretName: headplane-config
         - name: headscale-acl
           configMap:
             name: headscale-acl
+  {{- if .Values.pvc.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: headscale-data
+      {{- if .Values.pvc.annotations }}
+      annotations:
+        {{- range $key, $value := .Values.pvc.annotations }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.pvc.labels }}
+      labels:
+        {{- range $key, $value := .Values.pvc.labels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+    spec:
+      accessModes:
+        {{- range .Values.pvc.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.pvc.storage | quote }}
+      {{- if .Values.pvc.storageClassName }}
+      storageClassName: {{ .Values.pvc.storageClassName | quote }}
+      {{- end }}
+  {{- end }}

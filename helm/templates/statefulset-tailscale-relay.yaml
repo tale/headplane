@@ -72,7 +72,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.uid
-        {{- if and .Values.relay.enabled .Values.relay.pvc.enabled }}
+        {{- if .Values.relay.pvc.enabled }}
         volumeMounts:
         - name: tailscale-data
           mountPath: /var/lib/tailscale
@@ -81,10 +81,20 @@ spec:
           capabilities:
             add:
               - NET_ADMIN
-      {{- if and .Values.relay.enabled .Values.relay.pvc.enabled }}
-      volumes:
-      - name: tailscale-data
-        persistentVolumeClaim:
-          claimName: {{ .Values.relay.pvc.name }}
+  {{- if .Values.relay.pvc.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: tailscale-data
+    spec:
+      accessModes:
+        {{- range .Values.relay.pvc.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.relay.pvc.storage | quote }}
+      {{- if .Values.relay.pvc.storageClassName }}
+      storageClassName: {{ .Values.relay.pvc.storageClassName | quote }}
       {{- end }}
+  {{- end }}
 {{- end }}

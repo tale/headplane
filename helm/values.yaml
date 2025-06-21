@@ -48,7 +48,7 @@ headplane:
 # Headscale server configuration
 headscale:
   # The container image for Headscale
-  image: headscale/headscale:0.25.1
+  image: headscale/headscale:0.26.1
 
   # Access Control List configuration (JSON format)
   # Only applicable if headscale.config.policy.mode is 'file'
