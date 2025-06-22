@@ -13,6 +13,7 @@ permissions:
   contents: read # Read access to the repository
   packages: write # Write access to the container registry
   id-token: write # For the attest action to push
+  attestations: write # For the attest action to push
 
 jobs:
   docker:
