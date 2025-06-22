@@ -6,6 +6,8 @@ FROM --platform=$BUILDPLATFORM mise-context AS go-build
 WORKDIR /build/
 
 COPY go.mod go.sum ./
+RUN go mod download
+
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
 
