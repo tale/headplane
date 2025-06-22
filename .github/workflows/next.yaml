@@ -12,6 +12,7 @@ permissions:
   actions: write # Allow canceling in-progress runs
   contents: read # Read access to the repository
   packages: write # Write access to the container registry
+  id-token: write # For the attest action to push
 
 jobs:
   publish:
@@ -56,7 +57,7 @@ jobs:
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Attest
+      - name: Attestation Provenance
         uses: actions/attest-build-provenance@v2
         id: attest
         with:
