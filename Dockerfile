@@ -1,17 +1,23 @@
-FROM jdxcode/mise:latest AS mise-context
+FROM --platform=$BUILDPLATFORM jdxcode/mise:latest AS mise-context
 COPY mise.toml .
 RUN mise install
 
-FROM mise-context AS go-build
+FROM --platform=$BUILDPLATFORM mise-context AS go-build
 WORKDIR /build/
 
 COPY go.mod go.sum ./
 COPY cmd/ ./cmd/
 COPY internal/ ./internal/
-RUN mkdir -p /build/app/ && mise run wasm ::: agent
+
+ARG TARGETOS
+ARG TARGETARCH
+RUN mkdir -p /build/app/ && \
+	GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=0 \
+	mise run wasm ::: agent
+
 RUN chmod +x /build/build/hp_agent
 
-FROM mise-context AS js-build
+FROM --platform=$BUILDPLATFORM mise-context AS js-build
 WORKDIR /build
 COPY patches ./patches
 COPY package.json pnpm-lock.yaml ./

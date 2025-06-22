@@ -85,6 +85,10 @@
 		"patchedDependencies": {
 			"react-router-hono-server": "patches/react-router-hono-server.patch"
 		},
+		"supportedArchitectures": {
+			"os": ["current", "linux"],
+			"cpu": ["x64", "arm64"]
+		},
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",
 			"better-sqlite3",
