@@ -6,4 +6,4 @@ information as possible, what the implications are, and a deterministic way
 to reproduce the issue. This will help me to quickly assess and address the
 vulnerability.
 
-> [Open a New Vulnerability Report](https://github.com/tale/headplane/security/advisories/new)
+> [Open a New Vulnerability Report](https://github.com/tale/headplane/security/advisories/new){:target="_blank"}

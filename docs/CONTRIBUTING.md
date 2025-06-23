@@ -7,10 +7,10 @@ for me to review and merge your contributions.
 
 ## Contribution Types
 - **Bug Reports/Feature Requests**: If you find a bug, please open an
-[issue](https://github.com/tale/headplane/issues) using one of the predefined
+[issue](https://github.com/tale/headplane/issues){:target="_blank"} using one of the predefined
 templates. Issues are only for bug reports and feature requests, not problems
 that you encounter from misconfiguration or usage. Those belong in the
-[discussions](https://github.com/tale/headplane/discussions) section.
+[discussions](https://github.com/tale/headplane/discussions){:target="_blank"} section.
 
 - **Documentation/Examples**: If you find any issues in the documentation or
 would like to contribute examples for setting up Headplane, please open a PR
@@ -37,7 +37,7 @@ to do so. If you want to make a breaking change, please open an issue first
 and discuss it with me.
 
 ### Code Style
-This is very easy and self-explanatory. [Biome](https://biomejs.dev) is used as
+This is very easy and self-explanatory. [Biome](https://biomejs.dev){:target="_blank"} is used as
 a linter and formatter for the TypeScript, while Go's default formatting and
 lint tooling are used within `agent/` code. I've setup a git hook to run
 before commit to make these changes automatically.
