@@ -10,6 +10,9 @@
 - Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
 - Reintroduce the toggle for overriding local DNS settings in the Headscale config (closes [#236](https://github.com/tale/headplane/issues/236)).
 - Prefer cross-compiling in the Dockerfile to speed up builds while still supporting multiple architectures.
+- Add a build attestation to validate SLSA provenance for the Docker image.
+- Implement more accurate guessing on the PID with the `/proc` integration (via [#219](https://github.com/tale/headplane/pull/219)).
+- Usernames will now correctly fall back to emails if not provided (via [#257](https://github.com/tale/headplane/pull/257)).
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
