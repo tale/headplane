@@ -184,7 +184,7 @@ class AgentManager {
 		);
 		this.spawnProcess = spawn(this.config.executable_path, [], {
 			detached: false,
-			stdio: ['pipe', 'pipe', 'pipe'],
+			stdio: ['pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
 			env: {
 				HOME: process.env.HOME,
 				HEADPLANE_EMBEDDED: 'true',

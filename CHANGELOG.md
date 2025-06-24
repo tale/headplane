@@ -1,3 +1,19 @@
+### 0.6.1 (Next)
+- **Headplane now supports connecting to machines via SSH in the web browser.**
+	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
+	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
+- Begin using a new SQLite database file in `/var/lib/headplane/hp_persist.db`.
+	- The database is created automatically if it does not exist.
+	- It currently stores SSH connection details and will migrate older data.
+- The docker container now runs in a distroless image (closes [#255](https://github.com/tale/headplane/issues/255)).
+	- A debug version of the container that runs as root and has a shell is available as `ghcr.io/tale/headplane:<version>-shell`.
+- Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
+- Reintroduce the toggle for overriding local DNS settings in the Headscale config (closes [#236](https://github.com/tale/headplane/issues/236)).
+- Prefer cross-compiling in the Dockerfile to speed up builds while still supporting multiple architectures.
+- Add a build attestation to validate SLSA provenance for the Docker image.
+- Implement more accurate guessing on the PID with the `/proc` integration (via [#219](https://github.com/tale/headplane/pull/219)).
+- Usernames will now correctly fall back to emails if not provided (via [#257](https://github.com/tale/headplane/pull/257)).
+
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
     - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).

@@ -107,11 +107,34 @@ func (l *Logger) Msg(obj any) {
 }
 
 func escapeString(s string) string {
-	replacer := strings.NewReplacer(
-		`"`, `\"`,
-		`\`, `\\`,
-		"\n", `\n`,
-		"\t", `\t`,
-	)
-	return replacer.Replace(s)
+	var b strings.Builder
+	b.Grow(len(s) + 16) // pre-grow to reduce reallocs
+
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch c {
+		case '"':
+			b.WriteString(`\"`)
+		case '\\':
+			b.WriteString(`\\`)
+		case '\b':
+			b.WriteString(`\b`)
+		case '\f':
+			b.WriteString(`\f`)
+		case '\n':
+			b.WriteString(`\n`)
+		case '\r':
+			b.WriteString(`\r`)
+		case '\t':
+			b.WriteString(`\t`)
+		default:
+			if c < 0x20 {
+				// Control characters like 0x01, 0x07 (bell), etc.
+				fmt.Fprintf(&b, `\u%04x`, c)
+			} else {
+				b.WriteByte(c)
+			}
+		}
+	}
+	return b.String()
 }

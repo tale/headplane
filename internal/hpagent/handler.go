@@ -2,12 +2,13 @@ package hpagent
 
 import (
 	"bufio"
+
 	"encoding/json"
 	"os"
 	"sync"
 
-	"github.com/tale/headplane/agent/internal/tsnet"
-	"github.com/tale/headplane/agent/internal/util"
+	"github.com/tale/headplane/internal/tsnet"
+	"github.com/tale/headplane/internal/util"
 	"tailscale.com/tailcfg"
 )
 
@@ -25,15 +26,14 @@ type SendMessage struct {
 func FollowMaster(agent *tsnet.TSAgent) {
 	log := util.GetLogger()
 	scanner := bufio.NewScanner(os.Stdin)
+	log.Info("Listening for messages from Headplane master on stdin")
 
 	for scanner.Scan() {
 		line := scanner.Bytes()
-
 		var msg RecvMessage
 		err := json.Unmarshal(line, &msg)
 		if err != nil {
-			log.Error("Unable to unmarshal message: %s", err)
-			log.Debug("Full Error: %v", err)
+			log.Error("Unable to decode message from master: %s", err)
 			continue
 		}
 
