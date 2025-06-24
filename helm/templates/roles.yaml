@@ -11,6 +11,9 @@ rules:
 - apiGroups: ['apps']
   resources: ['deployments']
   verbs: ['get', 'list']
+- apiGroups: ['batch']
+  resources: ['jobs']
+  verbs: ['get', 'list', 'watch']
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -57,4 +60,4 @@ rules:
     verbs: ["create"]
   - apiGroups: [""]
     resources: ["secrets"]
-    verbs: ["create", "get"]
+    verbs: ["create", "get", "update", "patch"]

@@ -3,6 +3,9 @@ kind: Job
 metadata:
   name: headscale-generate-token
   namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
     spec:
@@ -23,13 +26,24 @@ spec:
                 sleep 1
               done
 
-              echo "Checking if Secret 'headscale-api-token' exists..."
+              echo "Checking if API token needs to be generated..."
               if kubectl get secret headscale-api-token -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-                echo "Secret already exists. Skipping token generation."
-                exit 0
+                CURRENT_TOKEN=$(kubectl get secret headscale-api-token -n {{ .Release.Namespace }} -o jsonpath='{.data.HEADPLANE_OIDC__HEADSCALE_API_KEY}' | base64 -d)
+                echo "Current token value: '$CURRENT_TOKEN'"
+                echo "Current token length: ${#CURRENT_TOKEN}"
+                echo "Expected placeholder: 'placeholder-token-will-be-replaced-by-job'"
+                echo "Expected length: 42"
+                if [[ "$CURRENT_TOKEN" != "placeholder-token-will-be-replaced-by-job" ]]; then
+                  echo "Real API token already exists. Skipping token generation."
+                  exit 0
+                else
+                  echo "Placeholder token found. Generating real API token..."
+                fi
+              else
+                echo "Secret not found. Generating API token..."
               fi
 
-              echo "Secret not found. Generating Headscale API token..."
+              echo "Generating Headscale API token..."
               TOKEN=$(kubectl -n {{ .Release.Namespace }} exec -i headplane-0 -c headscale -- headscale apikeys create -e 100y)
 
               if [ -z "$TOKEN" ]; then
@@ -37,5 +51,7 @@ spec:
                 exit 1
               fi
 
-              echo "Creating Kubernetes Secret..."
-              kubectl create secret generic headscale-api-token --from-literal=HEADPLANE_OIDC__HEADSCALE_API_KEY="$TOKEN" -n {{ .Release.Namespace }}
+              echo "Updating headscale-api-token secret with generated API token..."
+              kubectl patch secret headscale-api-token -n {{ .Release.Namespace }} -p="{\"data\":{\"HEADPLANE_OIDC__HEADSCALE_API_KEY\":\"$(echo -n "$TOKEN" | base64)\"}}"
+              
+              echo "Successfully updated headscale-api-token secret with real API token"
