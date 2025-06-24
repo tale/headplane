@@ -1,3 +1,9 @@
+[tools]
+# REMEMBER TO UPDATE .tool-versions TOO
+go = "1.24.4"
+pnpm = "10.4.0"
+node = "22.16"
+
 [tasks.copy-wasm-shim]
 alias = ["gojs"]
 description = "Copies Go's wasm_exec.js to the public directory"
@@ -17,6 +23,14 @@ run = "go build -o app/hp_ssh.wasm ./cmd/hp_ssh"
 alias = ["agent"]
 description = "Builds the Go agent for HostInfo"
 run = "go build -o build/hp_agent ./cmd/hp_agent"
+
+[tasks.build-fake-shell]
+alias = ["fake-shell"]
+description = "Builds the fake shell for Distroless docker images"
+run = [
+	'test -n "$IMAGE_TAG" || (echo "IMAGE_TAG is not set" && exit 1)',
+	'go build -ldflags="-s -w -X main.imageTag=$IMAGE_TAG" -o build/sh ./cmd/fake_sh'
+]
 
 [tasks.generate-caddy-certs]
 alias = ["mkcert"]

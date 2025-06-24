@@ -21,6 +21,14 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event.pull_request && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'next') }}
     name: Docker Pre-release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: final
+            tag: 'next'
+          - target: debug-shell
+            tag: 'next-shell'
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -31,7 +39,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=next
+            type=raw,value=${{ matrix.tag }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -46,22 +54,26 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and publish ghcr.io/${{ github.repository }}:${{ matrix.tag }}
         uses: docker/build-push-action@v6
         id: push
         with:
           context: .
           file: ./Dockerfile
+          target: ${{ matrix.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Attestation Provenance
+          build-args: |
+            IMAGE_TAG=ghcr.io/${{ github.repository }}:${{ matrix.tag }}
+
+      - name: Attestation Provenance for ghcr.io/${{ github.repository }}:${{ matrix.tag }}
         uses: actions/attest-build-provenance@v2
         id: attest
         with:
-          subject-name: ghcr.io/${{ github.repository }}
+          subject-name: ghcr.io/${{ github.repository }}:${{ matrix.tag }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
