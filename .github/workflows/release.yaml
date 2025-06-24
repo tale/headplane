@@ -19,6 +19,14 @@ jobs:
   docker:
     name: Docker Release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - target: final
+            tag_suffix: ''
+          - target: debug-shell
+            tag_suffix: '-shell'
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -30,6 +38,9 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
+          flavor: |
+            latest=auto
+            suffix=${{ matrix.tag_suffix }},onlatest=true
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -44,19 +55,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         uses: docker/build-push-action@v6
         id: push
         with:
           context: .
           file: ./Dockerfile
+          target: ${{ matrix.target }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/amd64, linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Attestation Provenance
+          build-args: |
+            IMAGE_TAG=ghcr.io/${{ github.repository }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
+      - name: Attestation Provenance for ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
         uses: actions/attest-build-provenance@v2
         id: attest
         with:

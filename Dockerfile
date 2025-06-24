@@ -1,9 +1,6 @@
 FROM --platform=$BUILDPLATFORM jdxcode/mise:latest AS mise-context
 COPY mise.toml .tool-versions ./
-
-ARG MISE_GITHUB_TOKEN
-ENV MISE_GITHUB_TOKEN=${MISE_GITHUB_TOKEN:-}
-RUN mise install
+RUN --mount=type=secret,id=gh_token,env=MISE_GITHUB_TOKEN mise install
 
 FROM --platform=$BUILDPLATFORM mise-context AS go-build
 WORKDIR /build/
