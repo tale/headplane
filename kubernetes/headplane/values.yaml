@@ -1,0 +1,100 @@
+headplane:
+  image:
+    repository: ghcr.io/tale/headplane
+    pullPolicy: IfNotPresent
+    tag: ""
+  config:
+    url: https://headplane.example.com
+    debug: false
+    generateCredentials: false
+    cookieSecret:
+      value: ""
+      secretName: ~
+      secretKey: "cookie-secret"
+    oidc:
+      enabled: false
+      issuerUrl: ""
+      disableApiKeyLogin: false
+      tokenEndpointAuthMethod: client_secret_post
+      redirectUri: ""
+      clientId: ""
+      clientSecret:
+        value: ""
+        secretName: ~
+        secretKey: "client-secret"
+      headscaleApiKey:
+        value: ""
+        secretName: ~
+        secretKey: "api-key"
+  persistence:
+    enabled: false
+    pvc:
+      enabled: false
+      name: headplane-data
+      accessModes:
+        - ReadWriteOnce
+      storage: 1Gi
+      annotations: {}
+      labels: []
+      storageClassName: ~
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+  ingress:
+    enabled: false
+    className: ""
+    annotations: []
+    labels: []
+  gateway:
+    enabled: false
+headscale:
+  image:
+    repository: headscale/headscale
+    pullPolicy: IfNotPresent
+    tag: "0.25.1"
+  config:
+    url: https://headscale.example.com
+    dns:
+      magicDns: true
+      baseDomain: example.com
+      nameservers:
+        global:
+          - 9.9.9.9
+          - 149.112.112.112
+          - 2620:fe::fe
+          - 2620:fe::9
+    oidc:
+      enabled: true
+      issuerUrl: ""
+      startupCheck: false
+      pkceEnabled: true
+      clientId: ""
+      clientSecret:
+        value: ""
+        secretName: ~
+        secretKey: "client-secret"
+  persistence:
+    enabled: false
+    pvc:
+      enabled: false
+      name: headscale-data
+      accessModes:
+        - ReadWriteOnce
+      storage: 1Gi
+      annotations: {}
+      labels: []
+      storageClassName: ~
+  securityContext:
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 1000
+podSecurityContext:
+  fsGroup: 2000
+extraObjects: []
