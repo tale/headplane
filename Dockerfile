@@ -34,7 +34,9 @@ COPY . .
 RUN mise trust
 COPY --from=go-build /build/app/hp_ssh.wasm /build/app/hp_ssh.wasm
 COPY --from=go-build /build/app/wasm_exec.js /build/app/wasm_exec.js
-RUN pnpm run build
+
+ARG IMAGE_TAG
+RUN IMAGE_TAG=$IMAGE_TAG pnpm run build
 RUN mkdir -p /var/lib/headplane/agent
 
 FROM gcr.io/distroless/nodejs22-debian12:nonroot AS final

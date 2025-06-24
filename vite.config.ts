@@ -13,6 +13,7 @@ if (prefix.endsWith('/')) {
 
 // Load the version via package.json
 const pkg = await readFile('package.json', 'utf-8');
+const isNext = process.env.IMAGE_TAG?.includes('next');
 const { version } = JSON.parse(pkg);
 if (!version) {
 	throw new Error('Unable to read version from package.json');
@@ -42,7 +43,7 @@ export default defineConfig(({ isSsrBuild }) => ({
 		include: ['@libsql/client'],
 	},
 	define: {
-		__VERSION__: JSON.stringify(version),
+		__VERSION__: JSON.stringify(isNext ? `${version}-next` : version),
 		__PREFIX__: JSON.stringify(prefix),
 	},
 }));
