@@ -12,7 +12,7 @@ different needs.
 
 Requirements:
 - Headscale 0.26 or newer (already deployed)
-- Node.js 22 LTS or newer
+- Node.js **22.16** LTS or newer
 - [PNPM](https://pnpm.io/installation) 10.x
 - A finished configuration file (config.yaml)
 
