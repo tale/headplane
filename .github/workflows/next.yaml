@@ -69,6 +69,7 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             IMAGE_TAG=ghcr.io/${{ github.repository }}:${{ matrix.tag }}
+          secrets: |
             MISE_GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Attestation Provenance for ghcr.io/${{ github.repository }}:${{ matrix.tag }}

@@ -7,6 +7,7 @@
 	- It currently stores SSH connection details and will migrate older data.
 - The docker container now runs in a non-root, distroless image (closes [#255](https://github.com/tale/headplane/issues/255)).
 	- You may need to run `chown -R 65532:65532 <host_path>` on your data directory to ensure the container can write to it.
+	- A debug version of the container that runs as root and has a shell is available as `ghcr.io/tale/headplane:<version>-shell`.
 - Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
 - Reintroduce the toggle for overriding local DNS settings in the Headscale config (closes [#236](https://github.com/tale/headplane/issues/236)).
 - Prefer cross-compiling in the Dockerfile to speed up builds while still supporting multiple architectures.
