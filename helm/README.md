@@ -54,7 +54,7 @@ helm uninstall headplane
 | headplane.oidc.redirect_uri | string | `"https://your-headplane-admin-domain.com/admin/oidc/callback"` |  |
 | headplane.oidc.secret_name | string | `"oidc-secrets"` |  |
 | headplane.oidc.token_endpoint_auth_method | string | `"client_secret_post"` |  |
-| headscale.acl | string | `""` |  |
+| headscale.acl | string | `"{\n  \"acls\": []\n}\n"` |  |
 | headscale.config.database.debug | bool | `false` |  |
 | headscale.config.database.sqlite.path | string | `"/etc/headscale/db.sqlite"` |  |
 | headscale.config.database.type | string | `"sqlite"` |  |
@@ -85,10 +85,12 @@ helm uninstall headplane
 | headscale.config.prefixes.v6 | string | `"fd7a:115c:a1e0::/48"` |  |
 | headscale.config.server_url | string | `"https://vpn.example.com"` |  |
 | headscale.envFrom | list | `[]` |  |
-| headscale.image | string | `"headscale/headscale:0.25.1"` |  |
+| headscale.image | string | `"headscale/headscale:0.26.1"` |  |
 | headscale.oidc.client_id | string | `"YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"` |  |
 | headscale.oidc.enabled | bool | `false` |  |
 | headscale.oidc.issuer | string | `"https://your-oidc-issuer.com"` |  |
+| headscale.oidc.pkce.enabled | bool | `false` |  |
+| headscale.oidc.pkce.method | string | `"S256"` |  |
 | headscale.oidc.secret_name | string | `"oidc-secrets"` |  |
 | ingress.annotations | list | `[]` |  |
 | ingress.className | string | `"nginx"` |  |

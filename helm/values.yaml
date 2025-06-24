@@ -66,6 +66,9 @@ headscale:
     client_id: "YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"
     # Name of the secret containing OIDC credentials
     secret_name: "oidc-secrets"
+    pkce:
+      enabled: false
+      method: S256
   config:
     # The public URL for the Headscale server
     server_url: https://vpn.example.com
