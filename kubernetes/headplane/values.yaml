@@ -71,7 +71,7 @@ headscale:
     oidc:
       enabled: true
       issuerUrl: ""
-      startupCheck: false
+      startupCheck: true
       pkceEnabled: true
       clientId: ""
       clientSecret:
