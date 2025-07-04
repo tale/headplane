@@ -98,3 +98,4 @@ headscale:
 podSecurityContext:
   fsGroup: 2000
 extraObjects: []
+hostAliases: []

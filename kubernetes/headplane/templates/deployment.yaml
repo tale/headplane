@@ -19,6 +19,7 @@ spec:
         checksum/secret-headplane: {{ include (print $.Template.BasePath "/headplane/secrets.yaml") . | sha256sum }}
         checksum/secret-headscale: {{ include (print $.Template.BasePath "/headscale/secret.yaml") . | sha256sum }}
     spec:
+      hostAliases: {{- toYaml .Values.hostAliases | nindent 8 }}
       shareProcessNamespace: true
       serviceAccountName: headplane-integrated
       securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
