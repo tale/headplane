@@ -145,8 +145,8 @@ spec:
             defaultMode: 0777
         {{- end }}
         - name: headscale-config
-          secret:
-            secretName: headscale
+          configMap:
+            name: headscale
         {{- if .Values.headscale.config.oidc.enabled }}
         - name: headscale-oidc-client-secret
           secret:
