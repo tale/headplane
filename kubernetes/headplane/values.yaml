@@ -67,6 +67,7 @@ headscale:
           - 149.112.112.112
           - 2620:fe::fe
           - 2620:fe::9
+        split: {}
     oidc:
       enabled: true
       issuerUrl: ""
