@@ -11,7 +11,7 @@ data:
       cookie_secure: true
     headscale:
       url: http://127.0.0.1:8080
-      {{- if .Values.headscale.url }}
+      {{- if .Values.headscale.config.url }}
       public_url: {{ .Values.headscale.config.url }}
       {{- end }}
       config_path: /etc/headscale/config.yaml
