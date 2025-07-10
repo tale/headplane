@@ -139,7 +139,6 @@ export async function loader({
 			auth_key: preAuthKey.key,
 		} satisfies EphemeralNodeInsert)
 		.returning();
-	console.log('Created ephemeral node:', ephemeralNode);
 
 	return {
 		ipnDetails: {
