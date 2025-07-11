@@ -132,10 +132,6 @@ function getName(user: client.UserInfoResponse, claims: client.IDToken) {
 		return user.name;
 	}
 
-	if (user.displayName) {
-		return user.displayName;
-	}
-
 	if (claims.name && typeof claims.name === 'string') {
 		return claims.name;
 	}

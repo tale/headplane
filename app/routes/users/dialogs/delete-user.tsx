@@ -8,7 +8,7 @@ interface DeleteProps {
 }
 
 export default function DeleteUser({ user, isOpen, setIsOpen }: DeleteProps) {
-	const name = user.name;
+	const name = user.name || user.displayName;
 
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>

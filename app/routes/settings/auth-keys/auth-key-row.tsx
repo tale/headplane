@@ -18,7 +18,7 @@ export default function AuthKeyRow({ authKey, user, url }: Props) {
 	return (
 		<div className="w-full">
 			<Attribute name="Key" value={authKey.key} isCopyable />
-			<Attribute name="User" value={user.name} isCopyable />
+			<Attribute name="User" value={user.name || user.displayName} isCopyable />
 			<Attribute name="Reusable" value={authKey.reusable ? 'Yes' : 'No'} />
 			<Attribute name="Ephemeral" value={authKey.ephemeral ? 'Yes' : 'No'} />
 			<Attribute name="Used" value={authKey.used ? 'Yes' : 'No'} />
