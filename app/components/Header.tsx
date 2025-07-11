@@ -107,7 +107,7 @@ export default function Header(data: Props) {
 								{data.user.picture ? (
 									<img
 										src={data.user.picture}
-										alt={data.user.name}
+										alt={data.user.name || data.user.displayName}
 										className="w-8 h-8 rounded-full"
 									/>
 								) : (
@@ -131,7 +131,7 @@ export default function Header(data: Props) {
 								<Menu.Section>
 									<Menu.Item key="profile" textValue="Profile">
 										<div className="text-black dark:text-headplane-50">
-											<p className="font-bold">{data.user.name}</p>
+											<p className="font-bold">{data.user.name || data.user.displayName}</p>
 											<p>{data.user.email}</p>
 										</div>
 									</Menu.Item>

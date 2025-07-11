@@ -21,7 +21,7 @@ export default function ReassignUser({
 			<Dialog.Panel
 				variant={user.headplaneRole === 'owner' ? 'unactionable' : 'normal'}
 			>
-				<Dialog.Title>Change role for {user.name}?</Dialog.Title>
+				<Dialog.Title>Change role for {user.name || user.displayName}?</Dialog.Title>
 				<Dialog.Text className="mb-6">
 					Most roles are carried straight from Tailscale. However, keep in mind
 					that I have not fully implemented permissions yet and some things may
