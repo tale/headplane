@@ -109,7 +109,7 @@ export default function Page() {
 					</span>
 					<div className="flex items-center gap-x-2.5 mt-1">
 						<UserCircle />
-						{node.user.name || node.user.email}
+						{node.user.name || node.user.email || node.user.id}
 					</div>
 				</div>
 				<div className="p-2 pl-4">

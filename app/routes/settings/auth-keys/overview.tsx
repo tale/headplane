@@ -197,7 +197,7 @@ export default function Page() {
 					{[
 						<Select.Item key="__headplane_all">All</Select.Item>,
 						...keys.map(({ user }) => (
-							<Select.Item key={user.id}>{user.name}</Select.Item>
+							<Select.Item key={user.id}>{user.name || user.email || user.id}</Select.Item>
 						)),
 					]}
 				</Select>
