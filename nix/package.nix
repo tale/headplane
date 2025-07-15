@@ -46,6 +46,7 @@ stdenv.mkDerivation (finalAttrs: {
     mkdir -p $out/{bin,share/headplane}
     cp -r build $out/share/headplane/
     cp -r node_modules $out/share/headplane/
+    cp -r drizzle $out/share/headplane/
     sed -i "s;$PWD;../..;" $out/share/headplane/build/server/index.js
     makeWrapper ${lib.getExe nodejs_22} $out/bin/headplane \
       --chdir $out/share/headplane \
