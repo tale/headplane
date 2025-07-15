@@ -5,8 +5,17 @@
   nodejs_22,
   pnpm_10,
   stdenv,
+  go,
   ...
 }:
+let
+  wasmExecJs =
+    if builtins.pathExists "${go}/share/go/lib/wasm/wasm_exec.js"
+    then "${go}/share/go/lib/wasm/wasm_exec.js"
+    else if builtins.pathExists "${go}/lib/wasm/wasm_exec.js"
+    then "${go}/lib/wasm/wasm_exec.js"
+    else "${go}/share/go/misc/wasm/wasm_exec.js";
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "headplane";
   version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
@@ -17,6 +26,7 @@ stdenv.mkDerivation (finalAttrs: {
     nodejs_22
     pnpm_10.configHook
     git
+    go
   ];
 
   dontCheckForBrokenSymlinks = true;
@@ -28,6 +38,15 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildPhase = ''
     runHook preBuild
+
+    # Build the Go WASM binary
+    export GOOS=js
+    export GOARCH=wasm
+    go build -o app/hp_ssh.wasm ./cmd/hp_ssh
+
+    # Copy wasm_exec.js to the app directory (from Nix store)
+    cp ${wasmExecJs} app/wasm_exec.js
+
     pnpm build
     runHook postBuild
   '';
