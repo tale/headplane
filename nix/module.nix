@@ -36,6 +36,12 @@ in {
     enable = mkEnableOption "headplane";
     package = mkPackageOption pkgs "headplane" {};
 
+    debug = mkOption {
+      type = types.bool;
+      default = false;
+      description = "Enable debug logging";
+    };
+
     settings = mkOption {
       description = ''
         Headplane configuration options. Generates a YAML config file.
@@ -345,6 +351,8 @@ in {
       wantedBy = ["multi-user.target"];
       after = ["headscale.service"];
       requires = ["headscale.service"];
+
+      environment = {HEADPLANE_DEBUG_LOG = builtins.toString cfg.debug;};
 
       serviceConfig = {
         User = config.services.headscale.user;
