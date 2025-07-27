@@ -10,8 +10,10 @@
     filterAttrsRecursive
     mkEnableOption
     mkIf
+    mkOption
     mkPackageOption
     recursiveUpdate
+    types
     updateManyAttrsByPath
     ;
   cfg = config.services.headplane;
@@ -34,31 +36,31 @@ in {
     enable = mkEnableOption "headplane";
     package = mkPackageOption pkgs "headplane" {};
 
-    settings = lib.mkOption {
+    settings = mkOption {
       description = ''
         Headplane configuration options. Generates a YAML config file.
         See: https://github.com/tale/headplane/blob/main/config.example.yaml
       '';
-      type = lib.types.submodule {
+      type = types.submodule {
         options = {
-          server = lib.mkOption {
-            type = lib.types.submodule {
+          server = mkOption {
+            type = types.submodule {
               options = {
-                host = lib.mkOption {
-                  type = lib.types.str;
+                host = mkOption {
+                  type = types.str;
                   default = "127.0.0.1";
                   description = "The host address to bind to.";
                   example = "0.0.0.0";
                 };
 
-                port = lib.mkOption {
-                  type = lib.types.port;
+                port = mkOption {
+                  type = types.port;
                   default = 3000;
                   description = "The port to listen on.";
                 };
 
-                cookie_secret_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                cookie_secret_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     Path to a file containing the cookie secret.
@@ -67,8 +69,8 @@ in {
                   example = "config.sops.secrets.headplane_cookie.path";
                 };
 
-                cookie_secure = lib.mkOption {
-                  type = lib.types.bool;
+                cookie_secure = mkOption {
+                  type = types.bool;
                   default = true;
                   description = ''
                     Should the cookies only work over HTTPS?
@@ -77,8 +79,8 @@ in {
                   '';
                 };
 
-                data_path = lib.mkOption {
-                  type = lib.types.path;
+                data_path = mkOption {
+                  type = types.path;
                   default = "/var/lib/headplane";
                   description = ''
                     The path to persist Headplane specific data.
@@ -93,11 +95,11 @@ in {
             description = "Server configuration for Headplane web application.";
           };
 
-          headscale = lib.mkOption {
-            type = lib.types.submodule {
+          headscale = mkOption {
+            type = types.submodule {
               options = {
-                url = lib.mkOption {
-                  type = lib.types.str;
+                url = mkOption {
+                  type = types.str;
                   default = "http://127.0.0.1:8080";
                   description = ''
                     The URL to your Headscale instance.
@@ -108,8 +110,8 @@ in {
                   example = "https://headscale.example.com";
                 };
 
-                tls_cert_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                tls_cert_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     Path to a file containing the TLS certificate.
@@ -117,15 +119,15 @@ in {
                   example = "config.sops.secrets.tls_cert.path";
                 };
 
-                public_url = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
+                public_url = mkOption {
+                  type = types.nullOr types.str;
                   default = null;
                   description = "Public URL if differrent. This affects certain parts of the web UI.";
                   example = "https://headscale.example.com";
                 };
 
-                config_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                config_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     Path to the Headscale configuration file.
@@ -136,8 +138,8 @@ in {
                   example = "/etc/headscale/config.yaml";
                 };
 
-                config_strict = lib.mkOption {
-                  type = lib.types.bool;
+                config_strict = mkOption {
+                  type = types.bool;
                   default = true;
                   description = ''
                     Headplane internally validates the Headscale configuration
@@ -146,8 +148,8 @@ in {
                   '';
                 };
 
-                dns_records_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                dns_records_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     If you are using `dns.extra_records_path` in your Headscale configuration, you need to set this to the path for Headplane to be able to read the DNS records.
@@ -162,14 +164,14 @@ in {
             description = "Headscale specific settings for Headplane integration.";
           };
 
-          integration = lib.mkOption {
-            type = lib.types.submodule {
+          integration = mkOption {
+            type = types.submodule {
               options = {
-                agent = lib.mkOption {
-                  type = lib.types.submodule {
+                agent = mkOption {
+                  type = types.submodule {
                     options = {
-                      enabled = lib.mkOption {
-                        type = lib.types.bool;
+                      enabled = mkOption {
+                        type = types.bool;
                         default = false;
                         description = ''
                           The Headplane agent allows retrieving information about nodes.
@@ -178,8 +180,8 @@ in {
                         '';
                       };
 
-                      pre_authkey_path = lib.mkOption {
-                        type = lib.types.nullOr lib.types.path;
+                      pre_authkey_path = mkOption {
+                        type = types.nullOr types.path;
                         default = null;
                         description = ''
                           Path to a file containing the agent preauth key.
@@ -189,14 +191,14 @@ in {
                         example = "config.sops.secrets.agent_pre_authkey.path";
                       };
 
-                      host_name = lib.mkOption {
-                        type = lib.types.str;
+                      host_name = mkOption {
+                        type = types.str;
                         default = "headplane-agent";
                         description = "Optionally change the name of the agent in the Tailnet";
                       };
 
-                      cache_ttl = lib.mkOption {
-                        type = lib.types.int;
+                      cache_ttl = mkOption {
+                        type = types.int;
                         default = 180000;
                         description = ''
                           How long to cache agent information (in milliseconds).
@@ -204,14 +206,14 @@ in {
                         '';
                       };
 
-                      cache_path = lib.mkOption {
-                        type = lib.types.path;
+                      cache_path = mkOption {
+                        type = types.path;
                         default = "/var/lib/headplane/agent_cache.json";
                         description = "Where to store the agent cache.";
                       };
 
-                      work_dir = lib.mkOption {
-                        type = lib.types.path;
+                      work_dir = mkOption {
+                        type = types.path;
                         default = "/var/lib/headplane/agent";
                         description = ''
                           Do not change this unless you are running a custom deployment.
@@ -227,11 +229,11 @@ in {
                   description = "Agent configuration for the Headplane agent.";
                 };
 
-                proc = lib.mkOption {
-                  type = lib.types.submodule {
+                proc = mkOption {
+                  type = types.submodule {
                     options = {
-                      enabled = lib.mkOption {
-                        type = lib.types.bool;
+                      enabled = mkOption {
+                        type = types.bool;
                         default = true;
                         description = ''
                           Enable "Native" integration that works when Headscale and
@@ -251,25 +253,25 @@ in {
             description = "Integration configurations for Headplane to interact with Headscale.";
           };
 
-          oidc = lib.mkOption {
-            type = lib.types.submodule {
+          oidc = mkOption {
+            type = types.submodule {
               options = {
-                issuer = lib.mkOption {
-                  type = lib.types.str;
+                issuer = mkOption {
+                  type = types.str;
                   default = "";
                   description = "URL to OpenID issuer.";
                   example = "https://provider.example.com/issuer-url";
                 };
 
-                client_id = lib.mkOption {
-                  type = lib.types.str;
+                client_id = mkOption {
+                  type = types.str;
                   default = "";
                   description = "The client ID for the OIDC client.";
                   example = "your-client-id";
                 };
 
-                client_secret_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                client_secret_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     Path to a file containing the OIDC client secret.
@@ -277,14 +279,14 @@ in {
                   example = "config.sops.secrets.oidc_client_secret.path";
                 };
 
-                disable_api_key_login = lib.mkOption {
-                  type = lib.types.bool;
+                disable_api_key_login = mkOption {
+                  type = types.bool;
                   default = false;
                   description = "Whether to disable API key login.";
                 };
 
-                token_endpoint_auth_method = lib.mkOption {
-                  type = lib.types.enum [
+                token_endpoint_auth_method = mkOption {
+                  type = types.enum [
                     "client_secret_post"
                     "client_secret_basic"
                     "client_secret_jwt"
@@ -293,8 +295,8 @@ in {
                   description = "The token endpoint authentication method.";
                 };
 
-                headscale_api_key_path = lib.mkOption {
-                  type = lib.types.nullOr lib.types.path;
+                headscale_api_key_path = mkOption {
+                  type = types.nullOr types.path;
                   default = null;
                   description = ''
                     Path to a file containing the Headscale API key.
@@ -302,8 +304,8 @@ in {
                   example = "config.sops.secrets.headscale_api_key.path";
                 };
 
-                redirect_uri = lib.mkOption {
-                  type = lib.types.str;
+                redirect_uri = mkOption {
+                  type = types.str;
                   default = "";
                   description = ''
                     This should point to your publicly accessible URL
@@ -312,8 +314,8 @@ in {
                   example = "https://headscale.example.com/admin/oidc/callback";
                 };
 
-                user_storage_file = lib.mkOption {
-                  type = lib.types.path;
+                user_storage_file = mkOption {
+                  type = types.path;
                   default = "/var/lib/headplane/users.json";
                   description = ''
                     Path to a file containing the users and their permissions for Headplane.
