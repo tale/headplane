@@ -1,12 +1,7 @@
 {
   buildGoModule,
   go,
-  lib,
-  ...
 }: let
-  pkg = builtins.fromJSON (builtins.readFile ../package.json);
-  pname = "hp_ssh-wasm";
-  version = pkg.version;
   wasmExecJs =
     if builtins.pathExists "${go}/share/go/lib/wasm/wasm_exec.js"
     then "${go}/share/go/lib/wasm/wasm_exec.js"
@@ -14,8 +9,9 @@
     then "${go}/lib/wasm/wasm_exec.js"
     else "${go}/share/go/misc/wasm/wasm_exec.js";
 in
-  buildGoModule rec {
-    inherit pname version;
+  buildGoModule {
+    pname = "headplane-ssh-wasm";
+    version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
     src = ../.;
     subPackages = ["cmd/hp_ssh"];
     vendorHash = "sha256-3hZzDORAH+D4FW6SkOv3Enddd+q36ZALryvCPD9E5Ac=";

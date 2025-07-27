@@ -1,12 +1,11 @@
 {
   git,
+  headplane-ssh-wasm,
   lib,
   makeWrapper,
   nodejs_22,
   pnpm_10,
   stdenv,
-  hp_ssh_wasm,
-  ...
 }: let
   pkg = builtins.fromJSON (builtins.readFile ../package.json);
   pname = pkg.name;
@@ -34,8 +33,8 @@ in
 
     buildPhase = ''
       runHook preBuild
-      cp ${hp_ssh_wasm}/hp_ssh.wasm app/hp_ssh.wasm
-      cp ${hp_ssh_wasm}/wasm_exec.js app/wasm_exec.js
+      cp ${headplane-ssh-wasm}/hp_ssh.wasm app/hp_ssh.wasm
+      cp ${headplane-ssh-wasm}/wasm_exec.js app/wasm_exec.js
       pnpm build
       runHook postBuild
     '';
