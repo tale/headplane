@@ -2,10 +2,10 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/tale/headplane/agent/internal/config"
-	"github.com/tale/headplane/agent/internal/hpagent"
-	"github.com/tale/headplane/agent/internal/tsnet"
-	"github.com/tale/headplane/agent/internal/util"
+	"github.com/tale/headplane/internal/config"
+	"github.com/tale/headplane/internal/hpagent"
+	"github.com/tale/headplane/internal/tsnet"
+	"github.com/tale/headplane/internal/util"
 )
 
 type Register struct {

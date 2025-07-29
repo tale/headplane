@@ -12,6 +12,7 @@ import { ExitNodeTag } from '~/components/tags/ExitNode';
 import { ExpiryTag } from '~/components/tags/Expiry';
 import { HeadplaneAgentTag } from '~/components/tags/HeadplaneAgent';
 import { SubnetTag } from '~/components/tags/Subnet';
+import { TailscaleSSHTag } from '~/components/tags/TailscaleSSH';
 import { PopulatedNode } from '~/utils/node-info';
 import toast from '~/utils/toast';
 import MenuOptions from './menu';
@@ -177,6 +178,10 @@ export function uiTagsForNode(node: PopulatedNode, isAgent?: boolean) {
 		uiTags.push('subnet-approved');
 	}
 
+	if (node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0) {
+		uiTags.push('tailscale-ssh');
+	}
+
 	if (isAgent === true) {
 		uiTags.push('headplane-agent');
 	}
@@ -204,6 +209,9 @@ export function mapTagsToComponents(node: PopulatedNode, uiTags: string[]) {
 						expiry={node.expiry ?? undefined}
 					/>
 				);
+
+			case 'tailscale-ssh':
+				return <TailscaleSSHTag />;
 
 			case 'headplane-agent':
 				return <HeadplaneAgentTag />;
