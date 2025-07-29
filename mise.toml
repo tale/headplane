@@ -32,6 +32,15 @@ run = [
 	'go build -ldflags="-s -w -X main.imageTag=$IMAGE_TAG" -o build/sh ./cmd/fake_sh'
 ]
 
+[tasks.build-nixos-docs]
+alias = ["nixos-docs"]
+description = "Builds NixOS module documentation"
+run = [
+	'nix build .#headplane-nixos-docs',
+	'cp --dereference --force ./result ./docs/NixOS-options.md',
+	'sed -i "s;\[/nix.*;\[nix/options.nix\](https://github.com/tale/headplane/blob/main/nix/options.nix);" ./docs/NixOS-options.md'
+]
+
 [tasks.generate-caddy-certs]
 alias = ["mkcert"]
 dir = "{{cwd}}/test/caddy/certs"
