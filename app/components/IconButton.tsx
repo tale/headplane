@@ -25,7 +25,7 @@ export default function IconButton({
 			aria-label={props.label}
 			className={cn(
 				'rounded-full flex items-center justify-center p-1',
-				'focus:outline-none focus:ring',
+				'focus:outline-hidden focus:ring-3',
 				props.isDisabled && 'opacity-60 cursor-not-allowed',
 				...(variant === 'heavy'
 					? [

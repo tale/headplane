@@ -42,23 +42,65 @@ headscale:
   # If you want to disable this validation, set this to false.
   config_strict: true
 
+  # If you are using `dns.extra_records_path` in your Headscale
+  # configuration, you need to set this to the path for Headplane
+  # to be able to read the DNS records.
+  #
+  # Pass it in if using Docker and ensure that the file is both
+  # readable and writable to the Headplane process.
+  # When using this, Headplane will no longer need to automatically
+  # restart Headscale for DNS record changes.
+  # dns_records_path: "/var/lib/headplane/extra_records.json"
+
 # Integration configurations for Headplane to interact with Headscale
-# Only one of these should be enabled at a time or you will get errors
 integration:
+  agent:
+    # The Headplane agent allows retrieving information about nodes
+    # This allows the UI to display version, OS, and connectivity data
+    # You will see the Headplane agent in your Tailnet as a node when
+    # it connects.
+    enabled: false
+    # To connect to your Tailnet, you need to generate a pre-auth key
+    # This can be done via the web UI or through the `headscale` CLI.
+    pre_authkey: "<your-preauth-key>"
+    # Optionally change the name of the agent in the Tailnet.
+    # host_name: "headplane-agent"
+
+    # Configure different caching settings. By default, the agent will store
+    # caches in the path below for a maximum of 1 minute. If you want data
+    # to update faster, reduce the TTL, but this will increase the frequency
+    # of requests to Headscale.
+    # cache_ttl: 60
+    # cache_path: /var/lib/headplane/agent_cache.json
+
+    # Do not change this unless you are running a custom deployment.
+    # The work_dir represents where the agent will store its data to be able
+    # to automatically reauthenticate with your Tailnet. It needs to be
+    # writable by the user running the Headplane process.
+    # work_dir: "/var/lib/headplane/agent"
+
+  # Only one of these should be enabled at a time or you will get errors
+  # This does not include the agent integration (above), which can be enabled
+  # at the same time as any of these and is recommended for the best experience.
   docker:
     enabled: false
-    # Preferred method: use container_label to dynamically discover the Headscale container.
-    container_label:
-      name: "com.headplane.selector"
-      value: "headscale"
-    # Optional fallback: directly specify the container name (or ID)
-    # of the container running Headscale
+
+    # By default we check for the presence of a container label (see the docs)
+    # to determine the container to signal when changes are made to DNS settings.
+    container_label: "me.tale.headplane.target=headscale"
+
+    # HOWEVER, you can fallback to a container name if you desire, but this is
+    # not recommended as its brittle and doesn't work with orchestrators that
+    # automatically assign container names.
+    #
+    # If `container_name` is set, it will override any label checks.
     # container_name: "headscale"
 
     # The path to the Docker socket (do not change this if you are unsure)
     # Docker socket paths must start with unix:// or tcp:// and at the moment
     # https connections are not supported.
     socket: "unix:///var/run/docker.sock"
+
   # Please refer to docs/integration/Kubernetes.md for more information
   # on how to configure the Kubernetes integration. There are requirements in
   # order to allow Headscale to be controlled by Headplane in a cluster.

@@ -1,17 +1,19 @@
 import Dialog from '~/components/Dialog';
-import type { PreAuthKey } from '~/types';
+import type { PreAuthKey, User } from '~/types';
 
-interface Props {
+interface ExpireAuthKeyProps {
 	authKey: PreAuthKey;
+	user: User;
 }
 
-export default function ExpireKey({ authKey }: Props) {
+export default function ExpireAuthKey({ authKey, user }: ExpireAuthKeyProps) {
 	return (
 		<Dialog>
-			<Dialog.Button>Expire Key</Dialog.Button>
-			<Dialog.Panel method="DELETE" variant="destructive">
+			<Dialog.Button variant="heavy">Expire Key</Dialog.Button>
+			<Dialog.Panel variant="destructive">
 				<Dialog.Title>Expire auth key?</Dialog.Title>
-				<input type="hidden" name="user" value={authKey.user} />
+				<input type="hidden" name="action_id" value="expire_preauthkey" />
+				<input type="hidden" name="user_id" value={user.id} />
 				<input type="hidden" name="key" value={authKey.key} />
 				<Dialog.Text>
 					Expiring this authentication key will immediately prevent it from

@@ -13,9 +13,9 @@ export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
 			<Dialog.Panel>
-				<Dialog.Title>Rename {user.name}?</Dialog.Title>
+				<Dialog.Title>Rename {user.name || user.displayName}?</Dialog.Title>
 				<Dialog.Text className="mb-6">
-					Enter a new username for {user.name}. Changing a username will not
+					Enter a new username for {user.name || user.displayName}. Changing a username will not
 					update any ACL policies that may refer to this user by their old
 					username.
 				</Dialog.Text>

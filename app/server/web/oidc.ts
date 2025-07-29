@@ -31,7 +31,7 @@ async function loadClientSecret(path: string) {
 			return;
 		}
 
-		return secret;
+		return secret.trim();
 	} catch (error) {
 		log.error('config', 'Failed to read client secret from %s', path);
 		log.error('config', 'Error: %s', error);
@@ -75,76 +75,88 @@ export async function createOidcClient(
 	}
 
 	log.debug('config', 'Running OIDC discovery for %s', config.issuer);
-	const oidc = await client.discovery(
-		new URL(config.issuer),
-		config.client_id,
-		secret,
-		clientAuthMethod(config.token_endpoint_auth_method)(secret),
-	);
-
-	const metadata = oidc.serverMetadata();
-	if (!metadata.authorization_endpoint) {
-		log.error(
-			'config',
-			'Issuer discovery did not return `authorization_endpoint`',
+	try {
+		const oidc = await client.discovery(
+			new URL(config.issuer),
+			config.client_id,
+			secret,
+			clientAuthMethod(config.token_endpoint_auth_method)(secret),
 		);
-		log.error('config', 'OIDC server does not support authorization code flow');
-		return;
-	}
 
-	if (!metadata.token_endpoint) {
-		log.error('config', 'Issuer discovery did not return `token_endpoint`');
-		log.error('config', 'OIDC server does not support token exchange');
-		return;
-	}
-
-	// If this field is missing, assume the server supports all response types
-	// and that we can continue safely.
-	if (metadata.response_types_supported) {
-		if (!metadata.response_types_supported.includes('code')) {
+		const metadata = oidc.serverMetadata();
+		if (!metadata.authorization_endpoint) {
 			log.error(
 				'config',
-				'Issuer discovery `response_types_supported` does not include `code`',
-			);
-			log.error('config', 'OIDC server does not support code flow');
-			return;
-		}
-	}
-
-	if (metadata.token_endpoint_auth_methods_supported) {
-		if (
-			!metadata.token_endpoint_auth_methods_supported.includes(
-				config.token_endpoint_auth_method,
-			)
-		) {
-			log.error(
-				'config',
-				'Issuer discovery `token_endpoint_auth_methods_supported` does not include `%s`',
-				config.token_endpoint_auth_method,
+				'Issuer discovery did not return `authorization_endpoint`',
 			);
 			log.error(
 				'config',
-				'OIDC server does not support %s',
-				config.token_endpoint_auth_method,
+				'OIDC server does not support authorization code flow',
 			);
 			return;
 		}
-	}
 
-	if (!metadata.userinfo_endpoint) {
-		log.error('config', 'Issuer discovery did not return `userinfo_endpoint`');
-		log.error('config', 'OIDC server does not support userinfo endpoint');
-		return;
-	}
+		if (!metadata.token_endpoint) {
+			log.error('config', 'Issuer discovery did not return `token_endpoint`');
+			log.error('config', 'OIDC server does not support token exchange');
+			return;
+		}
 
-	log.debug('config', 'OIDC client created successfully');
-	log.info('config', 'Using %s as the OIDC issuer', config.issuer);
-	log.debug(
-		'config',
-		'Authorization endpoint: %s',
-		metadata.authorization_endpoint,
-	);
-	log.debug('config', 'Token endpoint: %s', metadata.token_endpoint);
-	log.debug('config', 'Userinfo endpoint: %s', metadata.userinfo_endpoint);
-	return oidc;
+		// If this field is missing, assume the server supports all response types
+		// and that we can continue safely.
+		if (metadata.response_types_supported) {
+			if (!metadata.response_types_supported.includes('code')) {
+				log.error(
+					'config',
+					'Issuer discovery `response_types_supported` does not include `code`',
+				);
+				log.error('config', 'OIDC server does not support code flow');
+				return;
+			}
+		}
+
+		if (metadata.token_endpoint_auth_methods_supported) {
+			if (
+				!metadata.token_endpoint_auth_methods_supported.includes(
+					config.token_endpoint_auth_method,
+				)
+			) {
+				log.error(
+					'config',
+					'Issuer discovery `token_endpoint_auth_methods_supported` does not include `%s`',
+					config.token_endpoint_auth_method,
+				);
+				log.error(
+					'config',
+					'OIDC server does not support %s',
+					config.token_endpoint_auth_method,
+				);
+				return;
+			}
+		}
+
+		if (!metadata.userinfo_endpoint) {
+			log.error(
+				'config',
+				'Issuer discovery did not return `userinfo_endpoint`',
+			);
+			log.error('config', 'OIDC server does not support userinfo endpoint');
+			return;
+		}
+
+		log.debug('config', 'OIDC client created successfully');
+		log.info('config', 'Using %s as the OIDC issuer', config.issuer);
+		log.debug(
+			'config',
+			'Authorization endpoint: %s',
+			metadata.authorization_endpoint,
+		);
+		log.debug('config', 'Token endpoint: %s', metadata.token_endpoint);
+		log.debug('config', 'Userinfo endpoint: %s', metadata.userinfo_endpoint);
+		return oidc;
+	} catch (error) {
+		log.error('config', 'Failed to discover OIDC issuer');
+		log.error('config', 'Error: %s', error);
+		log.debug('config', 'Error details: %o', error);
+	}
 }

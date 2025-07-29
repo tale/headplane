@@ -1,8 +1,9 @@
 import { Cog, Ellipsis } from 'lucide-react';
 import { useState } from 'react';
 import Menu from '~/components/Menu';
-import type { Machine, Route, User } from '~/types';
+import type { User } from '~/types';
 import cn from '~/utils/cn';
+import { PopulatedNode } from '~/utils/node-info';
 import Delete from '../dialogs/delete';
 import Expire from '../dialogs/expire';
 import Move from '../dialogs/move';
@@ -11,8 +12,7 @@ import Routes from '../dialogs/routes';
 import Tags from '../dialogs/tags';
 
 interface MenuProps {
-	machine: Machine;
-	routes: Route[];
+	node: PopulatedNode;
 	users: User[];
 	magic?: string;
 	isFullButton?: boolean;
@@ -22,27 +22,18 @@ interface MenuProps {
 type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
 
 export default function MachineMenu({
-	machine,
-	routes,
+	node,
 	magic,
 	users,
 	isFullButton,
 	isDisabled,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
-
-	const expired =
-		machine.expiry === '0001-01-01 00:00:00' ||
-		machine.expiry === '0001-01-01T00:00:00Z' ||
-		machine.expiry === null
-			? false
-			: new Date(machine.expiry).getTime() < Date.now();
-
 	return (
 		<>
 			{modal === 'remove' && (
 				<Delete
-					machine={machine}
+					machine={node}
 					isOpen={modal === 'remove'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
@@ -51,7 +42,7 @@ export default function MachineMenu({
 			)}
 			{modal === 'move' && (
 				<Move
-					machine={machine}
+					machine={node}
 					users={users}
 					isOpen={modal === 'move'}
 					setIsOpen={(isOpen) => {
@@ -61,7 +52,7 @@ export default function MachineMenu({
 			)}
 			{modal === 'rename' && (
 				<Rename
-					machine={machine}
+					machine={node}
 					magic={magic}
 					isOpen={modal === 'rename'}
 					setIsOpen={(isOpen) => {
@@ -71,8 +62,7 @@ export default function MachineMenu({
 			)}
 			{modal === 'routes' && (
 				<Routes
-					machine={machine}
-					routes={routes}
+					node={node}
 					isOpen={modal === 'routes'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
@@ -81,16 +71,16 @@ export default function MachineMenu({
 			)}
 			{modal === 'tags' && (
 				<Tags
-					machine={machine}
+					machine={node}
 					isOpen={modal === 'tags'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
 				/>
 			)}
-			{expired && modal === 'expire' ? undefined : (
+			{node.expired && modal === 'expire' ? undefined : (
 				<Expire
-					machine={machine}
+					machine={node}
 					isOpen={modal === 'expire'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
@@ -116,7 +106,10 @@ export default function MachineMenu({
 						<Ellipsis className="h-5" />
 					</Menu.IconButton>
 				)}
-				<Menu.Panel onAction={(key) => setModal(key as Modal)}>
+				<Menu.Panel
+					onAction={(key) => setModal(key as Modal)}
+					disabledKeys={node.expired ? ['expire'] : []}
+				>
 					<Menu.Section>
 						<Menu.Item key="rename">Edit machine name</Menu.Item>
 						<Menu.Item key="routes">Edit route settings</Menu.Item>
@@ -124,13 +117,9 @@ export default function MachineMenu({
 						<Menu.Item key="move">Change owner</Menu.Item>
 					</Menu.Section>
 					<Menu.Section>
-						{expired ? (
-							<></>
-						) : (
-							<Menu.Item key="expire" textValue="Expire">
-								<p className="text-red-500 dark:text-red-400">Expire</p>
-							</Menu.Item>
-						)}
+						<Menu.Item key="expire" textValue="Expire">
+							<p className="text-red-500 dark:text-red-400">Expire</p>
+						</Menu.Item>
 						<Menu.Item key="remove" textValue="Remove">
 							<p className="text-red-500 dark:text-red-400">Remove</p>
 						</Menu.Item>

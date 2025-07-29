@@ -2,39 +2,34 @@ package main
 
 import (
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/tale/headplane/agent/config"
-	"github.com/tale/headplane/agent/tsnet"
-	"github.com/tale/headplane/agent/hpagent"
-	"log"
+	"github.com/tale/headplane/agent/internal/config"
+	"github.com/tale/headplane/agent/internal/hpagent"
+	"github.com/tale/headplane/agent/internal/tsnet"
+	"github.com/tale/headplane/agent/internal/util"
 )
 
+type Register struct {
+	Type string
+	ID   string
+}
+
 func main() {
+	log := util.GetLogger()
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load configuration: %s", err)
+		log.Fatal("Failed to load config: %s", err)
 	}
 
-	agent := tsnet.NewAgent(
-		cfg.Hostname,
-		cfg.TSControlURL,
-		cfg.TSAuthKey,
-		cfg.Debug,
-	)
+	log.SetDebug(cfg.Debug)
+	agent := tsnet.NewAgent(cfg)
 
-	agent.StartAndFetchID()
+	agent.Connect()
 	defer agent.Shutdown()
 
-	ws, err := hpagent.NewSocket(
-		agent,
-		cfg.HPControlURL,
-		cfg.HPAuthKey,
-		cfg.Debug,
-	)
+	log.Msg(&Register{
+		Type: "register",
+		ID:   agent.ID,
+	})
 
-	if err != nil {
-		log.Fatalf("Failed to create websocket: %s", err)
-	}
-
-	defer ws.StopListening()
-	ws.StartListening()
+	hpagent.FollowMaster(agent)
 }

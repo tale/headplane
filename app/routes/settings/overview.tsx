@@ -1,14 +1,24 @@
 import { ArrowRightIcon } from '@primer/octicons-react';
-import { Link as RemixLink } from 'react-router';
-import Button from '~/components/Button';
+import {
+	LoaderFunctionArgs,
+	Link as RemixLink,
+	useLoaderData,
+} from 'react-router';
 import Link from '~/components/Link';
-import cn from '~/utils/cn';
+import { LoadContext } from '~/server';
 
-import AgentSection from './components/agent';
+export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
+	return {
+		config: context.hs.writable(),
+		oidc: context.oidc,
+	};
+}
 
 export default function Page() {
+	const { config, oidc } = useLoaderData<typeof loader>();
+
 	return (
-		<div className="flex flex-col gap-8 max-w-screen-lg">
+		<div className="flex flex-col gap-8 max-w-(--breakpoint-lg)">
 			<div className="flex flex-col w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Settings</h1>
 				<p>
@@ -37,7 +47,34 @@ export default function Page() {
 					<ArrowRightIcon className="w-5 h-5 ml-2" />
 				</div>
 			</RemixLink>
-			{/**<AgentSection />**/}
+			{config && oidc ? (
+				<>
+					<div className="flex flex-col w-2/3">
+						<h1 className="text-2xl font-medium mb-4">
+							Authentication Restrictions
+						</h1>
+						<p>
+							Headscale supports restricting OIDC authentication to only allow
+							certain email domains, groups, or users to authenticate. This can
+							be used to limit access to your Tailnet to only certain users or
+							groups and Headplane will also respect these settings when
+							authenticating.{' '}
+							<Link
+								to="https://headscale.net/stable/ref/oidc/#basic-configuration"
+								name="Headscale OIDC documentation"
+							>
+								Learn More
+							</Link>
+						</p>
+					</div>
+					<RemixLink to="/settings/restrictions">
+						<div className="text-lg font-medium flex items-center">
+							Manage Restrictions
+							<ArrowRightIcon className="w-5 h-5 ml-2" />
+						</div>
+					</RemixLink>
+				</>
+			) : undefined}
 		</div>
 	);
 }

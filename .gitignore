@@ -4,7 +4,3 @@ node_modules
 /build
 /test
 .env
-
-# Nix stuff
-/result
-.direnv

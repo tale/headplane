@@ -167,7 +167,7 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 			ref={setNodeRef}
 			className={cn(
 				isSortableDragging ? 'opacity-50' : '',
-				isDragging ? 'ring bg-white dark:bg-headplane-900' : '',
+				isDragging ? 'ring-3 bg-white dark:bg-headplane-900' : '',
 			)}
 			style={{
 				transform: CSS.Transform.toString(transform),
@@ -179,7 +179,7 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 					<GripVertical
 						{...attributes}
 						{...listeners}
-						className="p-0.5 focus:ring outline-none rounded-md"
+						className="p-0.5 focus:ring-3 outline-hidden rounded-md"
 					/>
 				)}
 				{domain}

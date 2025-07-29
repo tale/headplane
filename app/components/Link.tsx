@@ -24,7 +24,7 @@ export default function Link({
 				'inline-flex items-center gap-x-0.5',
 				'text-blue-500 hover:text-blue-700',
 				'dark:text-blue-400 dark:hover:text-blue-300',
-				'focus:outline-none focus:ring rounded-md',
+				'focus:outline-hidden focus:ring-3 rounded-md',
 				className,
 			)}
 		>

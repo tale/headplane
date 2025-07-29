@@ -11,7 +11,7 @@ out [**Integrated Mode**](/docs/Integrated-Mode.md).
 
 Requirements:
 - Docker and Docker Compose
-- Headscale 0.25 or newer (already deployed)
+- Headscale 0.26 or newer (already deployed)
 - A finished configuration file (config.yaml)
 
 Here is what a sample Docker Compose deployment would look like:
@@ -19,7 +19,7 @@ Here is what a sample Docker Compose deployment would look like:
 services:
   headplane:
     # I recommend you pin the version to a specific release
-    image: ghcr.io/tale/headplane:0.5.10
+    image: ghcr.io/tale/headplane:0.6.0
     container_name: headplane
     restart: unless-stopped
     ports:

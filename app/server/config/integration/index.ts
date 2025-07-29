@@ -13,7 +13,7 @@ export async function loadIntegration(context: HeadplaneConfig['integration']) {
 	try {
 		const res = await integration.isAvailable();
 		if (!res) {
-			log.error('config', 'Integration %s is not available', integration);
+			log.error('config', 'Integration %s is not available', integration.name);
 			return;
 		}
 	} catch (error) {

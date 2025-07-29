@@ -15,7 +15,7 @@ function Card({ variant = 'raised', ...props }: Props) {
 				'w-full max-w-md rounded-3xl p-5',
 				variant === 'flat'
 					? 'bg-transparent shadow-none'
-					: 'bg-headplane-50/50 dark:bg-headplane-950/50 shadow-sm',
+					: 'bg-headplane-50/50 dark:bg-headplane-950/50 shadow-xs',
 				'border border-headplane-100 dark:border-headplane-800',
 				props.className,
 			)}

@@ -50,7 +50,7 @@ export default function NumberInput(props: InputProps) {
 				{...groupProps}
 				className={cn(
 					'flex items-center gap-1 rounded-xl pr-1',
-					'focus-within:outline-none focus-within:ring',
+					'focus-within:outline-hidden focus-within:ring-3',
 					'bg-white dark:bg-headplane-900',
 					'border border-headplane-100 dark:border-headplane-800',
 				)}
@@ -60,7 +60,7 @@ export default function NumberInput(props: InputProps) {
 					required={props.isRequired}
 					ref={ref}
 					id={id}
-					className="w-full pl-3 py-2 rounded-l-xl bg-transparent focus:outline-none"
+					className="w-full pl-3 py-2 rounded-l-xl bg-transparent focus:outline-hidden"
 				/>
 				<input type="hidden" name={name} value={state.numberValue} />
 				<IconButton
