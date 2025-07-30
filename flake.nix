@@ -29,8 +29,7 @@ rec {
     in rec {
       formatter = pkgs.alejandra;
       packages = {
-        hp_ssh_wasm = pkgs.callPackage ./nix/wasm.nix {};
-        headplane = pkgs.callPackage ./nix/package.nix { hp_ssh_wasm = packages.hp_ssh_wasm; };
+        headplane = pkgs.callPackage ./nix/package.nix {};
         headplane-agent = pkgs.callPackage ./nix/agent.nix {};
       };
       checks.default = pkgs.symlinkJoin {
@@ -62,8 +61,7 @@ rec {
     })
     // {
       overlays.default = final: prev: {
-        hp_ssh_wasm = final.callPackage ./nix/wasm.nix {};
-        headplane = final.callPackage ./nix/package.nix { hp_ssh_wasm = final.hp_ssh_wasm; };
+        headplane = final.callPackage ./nix/package.nix {};
         headplane-agent = final.callPackage ./nix/agent.nix {};
       };
       nixosModules.headplane = import ./nix/module.nix;
