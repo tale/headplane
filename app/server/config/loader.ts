@@ -1,5 +1,5 @@
 import { constants, access, readFile } from 'node:fs/promises';
-import { env, exit } from 'node:process';
+import { env } from 'node:process';
 import { type } from 'arktype';
 import { configDotenv } from 'dotenv';
 import { parseDocument } from 'yaml';
@@ -11,6 +11,28 @@ import {
 	partialHeadplaneConfig,
 } from './schema';
 
+// Custom error for config issues
+export class ConfigError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = 'ConfigError';
+	}
+}
+
+/**
+ * Interpolate environment variables in a string
+ * Replaces ${VAR_NAME} patterns with the actual environment variable values
+ */
+function interpolateEnvVars(str: string): string {
+	return str.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+		const value = env[varName];
+		if (value === undefined) {
+			throw new ConfigError(`Environment variable "${varName}" not found`);
+		}
+		return value;
+	});
+}
+
 // loadConfig is a has a lifetime of the entire application and is
 // used to load the configuration for Headplane. It is called once.
 //
@@ -18,35 +40,81 @@ import {
 // But this may not be necessary as a use-case anyways
 export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 	log.debug('config', 'Loading configuration file: %s', path);
-	const valid = await validateConfigPath(path);
-	if (!valid) {
-		exit(1);
-	}
+	await validateConfigPath(path);
 
 	const data = await loadConfigFile(path);
 	if (!data) {
-		exit(1);
+		throw new ConfigError('Failed to load configuration file');
 	}
 
 	let config = validateConfig({ ...data, debug: log.debugEnabled });
-	if (!config) {
-		exit(1);
-	}
 
 	if (!loadEnv) {
 		log.debug('config', 'Environment variable overrides are disabled');
 		log.debug('config', 'This also disables the loading of a .env file');
+		config = await loadSecretsFromFiles(config);
+		log.debug('config', 'Loaded file-based secrets');
 		return config;
 	}
 
 	log.info('config', 'Loading a .env file (if available)');
 	configDotenv({ override: true });
-	config = coalesceEnv(config);
-	if (!config) {
-		exit(1);
+	const merged = coalesceEnv(config);
+	if (merged) config = merged;
+	if (config.headscale && typeof config.headscale.config_path === 'string') {
+		config.headscale.config_path = interpolateEnvVars(
+			config.headscale.config_path,
+		);
 	}
 
+	config = await loadSecretsFromFiles(config);
+	log.debug('config', 'Loaded file-based secrets');
+
 	return config;
+}
+
+/**
+ * Recursively walks the config object; for any key in the whitelist of secret path keys,
+ * reads that file and assigns its contents to the corresponding key
+ * without the suffix, then removes the "_path" property.
+ */
+const SECRET_PATH_KEYS = new Set([
+	'pre_authkey_path',
+	'client_secret_path',
+	'headscale_api_key_path',
+	'cookie_secret_path',
+]);
+async function loadSecretsFromFiles<T extends object>(obj: T): Promise<T> {
+	// Work with a Record so we can mutate/delete properties
+	const record = obj as Record<string, unknown>;
+
+	for (const key of Object.keys(record)) {
+		const val = record[key];
+
+		if (val && typeof val === 'object') {
+			// recurse into nested objects
+			record[key] = await loadSecretsFromFiles(val);
+			continue;
+		}
+
+		if (SECRET_PATH_KEYS.has(key) && typeof val === 'string') {
+			try {
+				const path = interpolateEnvVars(val);
+				const content = await readFile(path, 'utf8');
+				const secretKey = key.slice(0, -5); // drop '_path'
+				record[secretKey] = content.trim();
+				delete record[key];
+				log.debug('config', 'Loaded secret from %s → %s', val, secretKey);
+			} catch (err) {
+				if (err instanceof ConfigError) throw err;
+				log.error('config', 'Failed to read secret file %s: %s', val, err);
+				throw new ConfigError(`Failed to read secret file ${val}: ${err}`);
+			}
+		}
+	}
+
+	// Cast back to the original T so callers keep their precise type
+	return record as T;
 }
 
 export async function hp_loadConfig() {
@@ -76,7 +144,9 @@ async function validateConfigPath(path: string) {
 	} catch (error) {
 		log.error('config', 'Unable to read a configuration file at %s', path);
 		log.error('config', '%s', error);
-		return false;
+		throw new ConfigError(
+			`Unable to read configuration file at ${path}: ${error}`,
+		);
 	}
 }
 
@@ -91,7 +161,7 @@ async function loadConfigFile(path: string): Promise<unknown> {
 				log.error('config', ` - ${error.toString()}`);
 			}
 
-			return false;
+			throw new ConfigError(`Cannot parse configuration file at ${path}`);
 		}
 
 		if (configYaml.warnings.length > 0) {
@@ -109,7 +179,7 @@ async function loadConfigFile(path: string): Promise<unknown> {
 	} catch (e) {
 		log.error('config', 'Error reading configuration file at %s', path);
 		log.error('config', '%s', e);
-		return false;
+		throw new ConfigError(`Error reading configuration file at ${path}: ${e}`);
 	}
 }
 
@@ -117,14 +187,14 @@ export function validateConfig(config: unknown) {
 	log.debug('config', 'Validating Headplane configuration');
 	const result = headplaneConfig(config);
 	if (result instanceof type.errors) {
-		log.error('config', 'Error validating Headplane configuration:');
+		const errorMessages = [];
 		for (const [number, error] of result.entries()) {
-			log.error('config', ` - (${number}): ${error.toString()}`);
+			const errorMsg = error.toString();
+			log.error('config', ` - (${number}): ${errorMsg}`);
+			errorMessages.push(errorMsg);
 		}
-
-		return;
+		throw new ConfigError(errorMessages.join('\n'));
 	}
-
 	return result;
 }
 

@@ -8,7 +8,7 @@ import {
 	readFile,
 	writeFile,
 } from 'node:fs/promises';
-import { exit } from 'node:process';
+import { exit, geteuid, getegid } from 'node:process';
 import { createInterface } from 'node:readline';
 import { setTimeout } from 'node:timers/promises';
 import { type } from 'arktype';
@@ -114,6 +114,8 @@ class AgentManager {
 
 	private spawnProcess: ChildProcess | null;
 	private agentId: string | null;
+	private uid: number | null;
+	private gid: number | null;
 
 	constructor(
 		cache: TimedCache<HostInfo>,
@@ -126,6 +128,8 @@ class AgentManager {
 		this.spawnProcess = null;
 		this.agentId = null;
 		this.startAgent();
+		this.uid = geteuid ? geteuid() : null;
+		this.gid = getegid ? getegid() : null;
 
 		process.on('SIGINT', () => {
 			this.spawnProcess?.kill();
@@ -183,6 +187,8 @@ class AgentManager {
 			this.restartCounter,
 		);
 		this.spawnProcess = spawn(this.config.executable_path, [], {
+			...(this.uid ? { uid: this.uid } : {}),
+			...(this.gid ? { gid: this.gid } : {}),
 			detached: false,
 			stdio: ['pipe', 'pipe', 'pipe', 'pipe', 'pipe'],
 			env: {

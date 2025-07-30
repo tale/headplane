@@ -2,39 +2,55 @@
 
 [flake.nix](../flake.nix) provided:
 ```
-$ nix flake show . --all-systems
-git+file:///home/igor/personal/headplane?ref=refs/heads/nix&rev=2d78a95a0648a3778e114fb246ea436e96475d62
-├───devShell
-│   ├───aarch64-darwin: development environment 'headplane'
-│   ├───x86_64-darwin: development environment 'headplane'
-│   └───x86_64-linux: development environment 'headplane'
+$ nix flake show github:tale/headplane --all-systems
+github:tale/headplane/ec6d455461955242393b60d9ce60c5123fa9784f?narHash=sha256-CM/vXzUiOed7i1Pp15KyV4FuIvumRlXnpF33dSWZZH4%3D
+├───checks
+│   ├───aarch64-darwin
+│   │   └───default: derivation 'headplane-with-agent'
+│   ├───x86_64-darwin
+│   │   └───default: derivation 'headplane-with-agent'
+│   └───x86_64-linux
+│       └───default: derivation 'headplane-with-agent'
+├───devShells
+│   ├───aarch64-darwin
+│   │   └───default: development environment 'headplane'
+│   ├───x86_64-darwin
+│   │   └───default: development environment 'headplane'
+│   └───x86_64-linux
+│       └───default: development environment 'headplane'
 ├───formatter
-│   ├───aarch64-darwin: package 'alejandra-3.1.0'
-│   ├───x86_64-darwin: package 'alejandra-3.1.0'
-│   └───x86_64-linux: package 'alejandra-3.1.0'
+│   ├───aarch64-darwin: package 'alejandra-4.0.0'
+│   ├───x86_64-darwin: package 'alejandra-4.0.0'
+│   └───x86_64-linux: package 'alejandra-4.0.0'
 ├───nixosModules
 │   └───headplane: NixOS module
 ├───overlays
 │   └───default: Nixpkgs overlay
 └───packages
     ├───aarch64-darwin
-    │   ├───headplane: package 'headplane-0.5.3-SNAPSHOT'
-    │   └───headplane-agent: package 'hp_agent-0.5.3-SNAPSHOT'
+    │   ├───headplane: package 'headplane-0.6.1'
+    │   ├───headplane-agent: package 'hp_agent-0.6.1'
+    │   ├───headplane-nixos-docs: package 'headplane-nixos-docs.md'
+    │   └───headplane-ssh-wasm: package 'headplane-ssh-wasm-0.6.1'
     ├───x86_64-darwin
-    │   ├───headplane: package 'headplane-0.5.3-SNAPSHOT'
-    │   └───headplane-agent: package 'hp_agent-0.5.3-SNAPSHOT'
+    │   ├───headplane: package 'headplane-0.6.1'
+    │   ├───headplane-agent: package 'hp_agent-0.6.1'
+    │   ├───headplane-nixos-docs: package 'headplane-nixos-docs.md'
+    │   └───headplane-ssh-wasm: package 'headplane-ssh-wasm-0.6.1'
     └───x86_64-linux
-        ├───headplane: package 'headplane-0.5.3-SNAPSHOT'
-        └───headplane-agent: package 'hp_agent-0.5.3-SNAPSHOT'
+        ├───headplane: package 'headplane-0.6.1'
+        ├───headplane-agent: package 'hp_agent-0.6.1'
+        ├───headplane-nixos-docs: package 'headplane-nixos-docs.md'
+        └───headplane-ssh-wasm: package 'headplane-ssh-wasm-0.6.1'
 ```
 
 ## NixOS module options
-Defined as `services.headplane.*`, check the `./nix/` directory for details.
+Defined as `services.headplane.*`, check the `./nix/` directory for details.\
+The full list of `services.headplane.settings.*` options: [./NixOS-options.md](./NixOS-options.md)
 
 ## Usage
-
 1. Add the `github:tale/headplane` flake input.
-2. Import a default overlay to add `pkgs.headplane` and `pkgs.headplane-agent`.
+2. Import a default overlay to add `pkgs.headplane`.
 3. Import NixOS module for `services.headplane.*`.
 
 ```nix
@@ -43,7 +59,7 @@ Defined as `services.headplane.*`, check the `./nix/` directory for details.
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     headplane = {
-      url = "github:igor-ramazanov/headplane/nix";
+      url = "github:tale/headplane";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -59,7 +75,7 @@ Defined as `services.headplane.*`, check the `./nix/` directory for details.
         # provides `services.headplane.*` NixOS options.
         headplane.nixosModules.headplane
         {
-          # provides `pkgs.headplane` and `pkgs.headplane-agent`.
+          # provides `pkgs.headplane`
           nixpkgs.overlays = [ headplane.overlays.default ];
         }
         {
@@ -69,51 +85,41 @@ Defined as `services.headplane.*`, check the `./nix/` directory for details.
 
             # A workaround generate a valid Headscale config accepted by Headplane when `config_strict == true`.
             settings = lib.recursiveUpdate config.services.headscale.settings {
-              acme_email = "/dev/null";
               tls_cert_path = "/dev/null";
               tls_key_path = "/dev/null";
               policy.path = "/dev/null";
-              oidc.client_secret_path = "/dev/null";
             };
 
             headscaleConfig = format.generate "headscale.yml" settings;
           in {
             services.headplane = {
               enable = true;
-              agent = {
-                # As an example only.
-                # Headplane Agent hasn't yet been ready at the moment of writing the doc.
-                enable = true;
-                settings = {
-                  HEADPLANE_AGENT_DEBUG = true;
-                  HEADPLANE_AGENT_HOSTNAME = "localhost";
-                  HEADPLANE_AGENT_TS_SERVER = "https://example.com";
-                  HEADPLANE_AGENT_TS_AUTHKEY = "xxxxxxxxxxxxxx";
-                  HEADPLANE_AGENT_HP_SERVER = "https://example.com/admin/dns";
-                  HEADPLANE_AGENT_HP_AUTHKEY = "xxxxxxxxxxxxxx";
-                };
-              };
               settings = {
                 server = {
                   host = "127.0.0.1";
                   port = 3000;
-                  cookie_secret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-                  cookie_secure = true;
+                  # Using `sops-nix` as an example, can be a path to any file with a secret.
+                  cookie_secret_path = config.sops.secrets."headplane/serverCookieSecret".path;
                 };
                 headscale = {
                   url = "https://example.com";
                   config_path = "${headscaleConfig}";
-                  config_strict = true;
                 };
-                integration.proc.enabled = true;
+                integration.agent = {
+                  enabled = true;
+                  # Using `sops-nix` as an example, can be a path to any file with a secret.
+                  pre_authkey_path = config.sops.secrets."headplane/integrationAgentPreAuthkeyPath".path;
+                };
                 oidc = {
                   issuer = "https://oidc.example.com";
                   client_id = "headplane";
-                  client_secret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                  # Using `sops-nix` as an example, can be a path to any file with a secret.
+                  client_secret_path = config.sops.secrets."headplane/oidcClientSecret".path;
                   disable_api_key_login = true;
                   # Might needed when integrating with Authelia.
                   token_endpoint_auth_method = "client_secret_basic";
-                  headscale_api_key = "xxxxxxxxxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                  # Using `sops-nix` as an example, can be a path to any file with a secret.
+                  headscale_api_key_path = config.sops.secrets."headplane/oidcHeadscaleApiKey".path;
                   redirect_uri = "https://oidc.example.com/admin/oidc/callback";
                 };
               };
@@ -125,3 +131,4 @@ Defined as `services.headplane.*`, check the `./nix/` directory for details.
   };
 }
 ```
+

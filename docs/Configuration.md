@@ -30,6 +30,53 @@ Setting this also tells Headplane to load the relative `.env` file into the envi
 > environment variables meaning you cannot specify variables such as
 > `HEADPLANE_DEBUG_LOG=true` or `HEADPLANE_CONFIG_PATH=/etc/headplane/config.yaml`.
 
+## Sensitive Values
+Headplane supports a dual-mode pattern for providing certain sensitive configuration values, such as secrets, keys, and private certificates. For each such field, you can either:
+
+1. Set the value directly in the configuration file (e.g., `cookie_secret: "your-32-character-long-secret"`)
+2. Provide a path to a file containing the value using the `_path` suffixed key (e.g., `cookie_secret_path: "/path/to/your/cookie_secret_file"`)
+
+When using a `_path` option, the content of the specified file will be read and used as the value for the setting. These paths can include environment variable interpolation (e.g., `${CREDENTIALS_DIRECTORY}/my_secret_file`), which is useful for integration with tools like systemd's `LoadCredential`.
+
+**Important Rules for Dual-Mode Fields:**
+- You **cannot** set both the direct value (e.g., `cookie_secret`) and its corresponding `_path` (e.g., `cookie_secret_path`) simultaneously. Doing so will result in a configuration error.
+- If a `_path` is provided, the corresponding direct value field (if also present and not null) will usually be ignored or may cause validation errors depending on the specific field and loader logic. It's best to provide only one.
+- The same dual-mode pattern works with environment variables. You can set `HEADPLANE_OIDC__CLIENT_SECRET` for a direct value or `HEADPLANE_OIDC__CLIENT_SECRET_PATH` to specify a path to a file containing the secret.
+
+**Note on Path Processing:**
+Headplane uses a whitelist approach to determine which `_path` fields should have their content loaded as secrets. Only the explicitly whitelisted paths below will have their file content read and used as configuration values. All other paths with a `_path` suffix will have environment variables interpolated but will not have their content loaded.
+
+The following configuration options in Headplane are treated as secret paths:
+
+- **Server Settings (`server.*`):**
+  - `cookie_secret_path` (for web session encoding)
+    - *Note:* Either `cookie_secret` or `cookie_secret_path` must be provided for web session security.
+
+- **Headscale Connection Settings (`headscale.*`):**
+  - `tls_cert_path` (custom TLS certificate for connecting to Headscale)
+    - *Note:* This is treated as a regular path, not a secret path, so it will not have its content loaded.
+
+- **Integration Agent Settings (`integration.agent.*`):**
+  - `pre_authkey_path` (pre-auth key for the Headplane agent to connect to the Tailnet)
+    - *Note:* Either `pre_authkey` or `pre_authkey_path` must be provided when the agent is enabled.
+
+- **OIDC Settings (`oidc.*`):**
+  - `client_secret_path` (OIDC client secret)
+    - *Note:* Either `client_secret` or `client_secret_path` must be provided for OIDC authentication.
+  - `headscale_api_key_path` (Headscale API key used by Headplane during the OIDC authentication flow)
+    - *Note:* Either `headscale_api_key` or `headscale_api_key_path` must be provided for OIDC integration.
+
+**Distinction for Non-Secret Paths:**
+Other configuration fields that end with `_path` are treated as regular paths and will not have their content loaded. For example:
+- `server.agent.cache_path` (default: `/var/lib/headplane/agent_cache.json`): This is a direct file path where Headplane will *store* its agent cache data.
+- `headscale.config_path`: This is an optional path to Headscale's `config.yaml` file, which Headplane might read or use for validation.
+
+All path fields (both secret and non-secret) support environment variable interpolation using the `${VAR_NAME}` syntax.
+
+The path-based secret loading mechanism also works with environment variables. For instance:
+- `HEADPLANE_OIDC__CLIENT_SECRET_PATH=/path/to/secret/file` will load the OIDC client secret from the specified file
+- `HEADPLANE_SERVER__COOKIE_SECRET_PATH=${CREDENTIALS_DIRECTORY}/cookie_secret` will use environment variable interpolation in the path
+
 ## Debugging
 To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment variable.
 This will enable all debug logs for Headplane, which could fill up log space very quickly.
