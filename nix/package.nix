@@ -5,19 +5,12 @@
   nodejs_22,
   pnpm_10,
   stdenv,
-  hp_ssh_wasm,
   ...
 }:
-let
-  pkg = builtins.fromJSON (builtins.readFile ../package.json);
-  pname = pkg.name;
-  version = pkg.version;
-  src = ../.;
-in
 stdenv.mkDerivation (finalAttrs: {
-  pname = pname;
-  version = version;
-  src = src;
+  pname = "headplane";
+  version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
+  src = ../.;
 
   nativeBuildInputs = [
     makeWrapper
@@ -29,14 +22,12 @@ stdenv.mkDerivation (finalAttrs: {
   dontCheckForBrokenSymlinks = true;
 
   pnpmDeps = pnpm_10.fetchDeps {
-    inherit pname version src;
-    hash = "sha256-GNSpFqPobX6MDPUXxz2XwdZ2Wt7boN8aok52pGgpGoM=";
+    inherit (finalAttrs) pname version src;
+    hash = "sha256-hu3028V/EWimYB1TGn7g06kJRIpZA6cuOIjPMEc8ddw=";
   };
 
   buildPhase = ''
     runHook preBuild
-    cp ${hp_ssh_wasm}/hp_ssh.wasm app/hp_ssh.wasm
-    cp ${hp_ssh_wasm}/wasm_exec.js app/wasm_exec.js
     pnpm build
     runHook postBuild
   '';
@@ -45,12 +36,10 @@ stdenv.mkDerivation (finalAttrs: {
     runHook preInstall
     mkdir -p $out/{bin,share/headplane}
     cp -r build $out/share/headplane/
-    cp -r node_modules $out/share/headplane/
-    cp -r drizzle $out/share/headplane/
     sed -i "s;$PWD;../..;" $out/share/headplane/build/server/index.js
     makeWrapper ${lib.getExe nodejs_22} $out/bin/headplane \
-      --chdir $out/share/headplane \
-      --add-flags $out/share/headplane/build/server/index.js
+        --chdir $out/share/headplane \
+        --add-flags $out/share/headplane/build/server/index.js
     runHook postInstall
   '';
 })
