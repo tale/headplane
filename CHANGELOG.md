@@ -13,6 +13,11 @@
 - Add a build attestation to validate SLSA provenance for the Docker image.
 - Implement more accurate guessing on the PID with the `/proc` integration (via [#219](https://github.com/tale/headplane/pull/219)).
 - Usernames will now correctly fall back to emails if not provided (via [#257](https://github.com/tale/headplane/pull/257)).
+- Configuration loading via paths is now supported for sensitive values (via [#283](https://github.com/tale/headplane/pulls/283))
+    - Options like `server.cookie_secret_path` can override `server.cookie_secret`
+    - Environment variables are interpolatable into these paths
+    - See the full reference in the [docs](https://github.com/tale/headplane/blob/main/docs/Configuration.md#sensitive-values)
+- The nix overlay build is fixed for the SSH module (via [#282](https://github.com/tale/headplane/pull/282))
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
