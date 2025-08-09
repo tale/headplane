@@ -2,6 +2,7 @@
   lib,
   nixosOptionsDoc,
   runCommand,
+  nodejs,
   ...
 }: let
   eval = lib.evalModules {
@@ -21,4 +22,6 @@
     inherit transformOptions;
   };
 in
-  runCommand "headplane-nixos-docs.md" {} "cat ${optionsDoc.optionsCommonMark} > $out"
+  runCommand "headplane-nixos-docs.json" {} ''
+    ${nodejs}/bin/node ${./docs.js} ${optionsDoc.optionsJSON}/share/doc/nixos/options.json > $out
+  ''
