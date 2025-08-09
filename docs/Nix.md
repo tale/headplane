@@ -1,7 +1,7 @@
 # Nix
 
-[flake.nix](../flake.nix) provided:
-```
+[flake.nix](https://github.com/tale/headplane/blob/main/flake.nix) provided:
+```sh
 $ nix flake show github:tale/headplane --all-systems
 github:tale/headplane/ec6d455461955242393b60d9ce60c5123fa9784f?narHash=sha256-CM/vXzUiOed7i1Pp15KyV4FuIvumRlXnpF33dSWZZH4%3D
 ├───checks

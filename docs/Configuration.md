@@ -3,7 +3,7 @@
 > Since 0.5, you will need to manually migrate your configuration to the new format.
 
 Headplane uses a configuration file to manage its settings
-([**config.example.yaml**](../config.example.yaml)). By default, Headplane looks
+([**config.example.yaml**](https://github.com/tale/headplane/blob/main/config.example.yaml)). By default, Headplane looks
 for a the file at `/etc/headplane/config.yaml`. This can be changed using the
 **`HEADPLANE_CONFIG_PATH`** environment variable to point to a different location.
 
