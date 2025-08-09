@@ -20,7 +20,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -41,7 +41,7 @@ package
 ` pkgs.headplane `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -60,7 +60,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -82,7 +82,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -103,7 +103,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -132,7 +132,7 @@ null or absolute path
 ` "/etc/headscale/config.yaml" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -155,7 +155,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -183,7 +183,7 @@ null or absolute path
 ` "/var/lib/headplane/extra_records.json" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -209,7 +209,7 @@ null or string
 ` "https://headscale.example.com" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -235,7 +235,7 @@ null or absolute path
 ` "config.sops.secrets.tls_cert.path" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -264,7 +264,7 @@ string
 ` "https://headscale.example.com" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -285,7 +285,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -306,7 +306,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -329,7 +329,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -350,7 +350,7 @@ package
 ` pkgs.headplane-agent `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -371,7 +371,7 @@ absolute path
 ` "/var/lib/headplane/agent_cache.json" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -393,7 +393,7 @@ signed integer
 ` 180000 `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -414,7 +414,7 @@ string
 ` "headplane-agent" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -442,7 +442,7 @@ null or absolute path
 ` "config.sops.secrets.agent_pre_authkey.path" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -465,7 +465,7 @@ absolute path
 ` "/var/lib/headplane/agent" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -486,7 +486,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -510,7 +510,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -531,7 +531,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -557,7 +557,7 @@ string
 ` "your-client-id" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -583,7 +583,7 @@ null or absolute path
 ` "config.sops.secrets.oidc_client_secret.path" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -604,7 +604,7 @@ boolean
 ` false `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -630,7 +630,7 @@ null or absolute path
 ` "config.sops.secrets.headscale_api_key.path" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -656,7 +656,7 @@ string
 ` "https://provider.example.com/issuer-url" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -683,7 +683,7 @@ string
 ` "https://headscale.example.com/admin/oidc/callback" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -704,7 +704,7 @@ one of “client_secret_post”, “client_secret_basic”, “client_secret_jwt
 ` "client_secret_post" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -730,7 +730,7 @@ absolute path
 ` "/var/lib/headplane/users.json" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -751,7 +751,7 @@ submodule
 ` { } `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -778,7 +778,7 @@ null or absolute path
 ` "config.sops.secrets.headplane_cookie.path" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -801,7 +801,7 @@ boolean
 ` true `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -829,7 +829,7 @@ absolute path
 ` "/var/lib/headplane" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -855,7 +855,7 @@ string
 ` "0.0.0.0" `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
 
@@ -876,6 +876,6 @@ The port to listen on\.
 ` 3000 `
 
 *Declared by:*
- - [/nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options\.nix](file:///nix/store/k8cbmm2xy0s8gk2kggksxy6zffzry4jg-source/nix/options.nix)
+ - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
 
