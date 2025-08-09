@@ -1,881 +1,378 @@
-## services\.headplane\.enable
+# NixOS module options
 
+All options must be under `services.headplane`.
 
+For example: `settings.headscale.config_path` becomes `services.headplane.settings.headscale.config_path`.
 
-Whether to enable headplane\.
+## debug
+*Description:* Enable debug logging
 
+*Type:* boolean
 
+*Default:* `false`
 
-*Type:*
-boolean
 
+## enable
+*Description:* Whether to enable headplane.
 
+*Type:* boolean
 
-*Default:*
-` false `
+*Default:* `false`
 
+*Example:* `true`
 
 
-*Example:*
-` true `
+## package
+*Description:* The headplane package to use.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
+*Type:* package
 
+*Default:* `pkgs.headplane`
 
 
-## services\.headplane\.package
+## settings
+*Description:* Headplane configuration options. Generates a YAML config file.
+See: https://github.com/tale/headplane/blob/main/config.example.yaml
 
 
+*Type:* submodule
 
-The headplane package to use\.
+*Default:* `{ }`
 
 
+## settings.headscale
+*Description:* Headscale specific settings for Headplane integration.
 
-*Type:*
-package
+*Type:* submodule
 
+*Default:* `{ }`
 
 
-*Default:*
-` pkgs.headplane `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.debug
-
-Enable debug logging
-
-
-
-*Type:*
-boolean
-
-
-
-*Default:*
-` false `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings
-
-
-
-Headplane configuration options\. Generates a YAML config file\.
-See: https://github\.com/tale/headplane/blob/main/config\.example\.yaml
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.headscale
-
-
-
-Headscale specific settings for Headplane integration\.
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.headscale\.config_path
-
-
-
-Path to the Headscale configuration file\.
-This is optional, but HIGHLY recommended for the best experience\.
+## settings.headscale.config_path
+*Description:* Path to the Headscale configuration file.
+This is optional, but HIGHLY recommended for the best experience.
 If this is read only, Headplane will show your configuration settings
-in the Web UI, but they cannot be changed\.
+in the Web UI, but they cannot be changed.
 
 
+*Type:* null or absolute path
 
-*Type:*
-null or absolute path
+*Default:* `null`
 
+*Example:* `"/etc/headscale/config.yaml"`
 
 
-*Default:*
-` null `
+## settings.headscale.config_strict
+*Description:* Headplane internally validates the Headscale configuration
+to ensure that it changes the configuration in a safe way.
+If you want to disable this validation, set this to false.
 
 
+*Type:* boolean
 
-*Example:*
-` "/etc/headscale/config.yaml" `
+*Default:* `true`
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+## settings.headscale.dns_records_path
+*Description:* If you are using `dns.extra_records_path` in your Headscale configuration, you need to set this to the path for Headplane to be able to read the DNS records.
+Ensure that the file is both readable and writable by the Headplane process.
+When using this, Headplane will no longer need to automatically restart Headscale for DNS record changes.
 
 
-## services\.headplane\.settings\.headscale\.config_strict
+*Type:* null or absolute path
 
+*Default:* `null`
 
+*Example:* `"/var/lib/headplane/extra_records.json"`
 
-Headplane internally validates the Headscale configuration
-to ensure that it changes the configuration in a safe way\.
-If you want to disable this validation, set this to false\.
 
+## settings.headscale.public_url
+*Description:* Public URL if differrent. This affects certain parts of the web UI.
 
+*Type:* null or string
 
-*Type:*
-boolean
+*Default:* `null`
 
+*Example:* `"https://headscale.example.com"`
 
 
-*Default:*
-` true `
+## settings.headscale.tls_cert_path
+*Description:* Path to a file containing the TLS certificate.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+*Type:* null or absolute path
 
+*Default:* `null`
 
-## services\.headplane\.settings\.headscale\.dns_records_path
+*Example:* `"config.sops.secrets.tls_cert.path"`
 
 
+## settings.headscale.url
+*Description:* The URL to your Headscale instance.
+All API requests are routed through this URL.
+THIS IS NOT the gRPC endpoint, but the HTTP endpoint.
+IMPORTANT: If you are using TLS this MUST be set to `https://`.
 
-If you are using ` dns.extra_records_path ` in your Headscale configuration, you need to set this to the path for Headplane to be able to read the DNS records\.
-Ensure that the file is both readable and writable by the Headplane process\.
-When using this, Headplane will no longer need to automatically restart Headscale for DNS record changes\.
 
+*Type:* string
 
+*Default:* `"http://127.0.0.1:8080"`
 
-*Type:*
-null or absolute path
+*Example:* `"https://headscale.example.com"`
 
 
+## settings.integration
+*Description:* Integration configurations for Headplane to interact with Headscale.
 
-*Default:*
-` null `
+*Type:* submodule
 
+*Default:* `{ }`
 
 
-*Example:*
-` "/var/lib/headplane/extra_records.json" `
+## settings.integration.agent
+*Description:* Agent configuration for the Headplane agent.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
+*Type:* submodule
 
+*Default:* `{ }`
 
 
-## services\.headplane\.settings\.headscale\.public_url
+## settings.integration.agent.cache_path
+*Description:* Where to store the agent cache.
 
+*Type:* absolute path
 
+*Default:* `"/var/lib/headplane/agent_cache.json"`
 
-Public URL if differrent\. This affects certain parts of the web UI\.
 
+## settings.integration.agent.cache_ttl
+*Description:* How long to cache agent information (in milliseconds).
+If you want data to update faster, reduce the TTL, but this will increase the frequency of requests to Headscale.
 
 
-*Type:*
-null or string
+*Type:* signed integer
 
+*Default:* `180000`
 
 
-*Default:*
-` null `
+## settings.integration.agent.enabled
+*Description:* The Headplane agent allows retrieving information about nodes.
+This allows the UI to display version, OS, and connectivity data.
+You will see the Headplane agent in your Tailnet as a node when it connects.
 
 
+*Type:* boolean
 
-*Example:*
-` "https://headscale.example.com" `
+*Default:* `false`
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+## settings.integration.agent.host_name
+*Description:* Optionally change the name of the agent in the Tailnet
 
+*Type:* string
 
-## services\.headplane\.settings\.headscale\.tls_cert_path
+*Default:* `"headplane-agent"`
 
 
+## settings.integration.agent.package
+*Description:* The headplane-agent package to use.
 
-Path to a file containing the TLS certificate\.
+*Type:* package
 
+*Default:* `pkgs.headplane-agent`
 
 
-*Type:*
-null or absolute path
+## settings.integration.agent.pre_authkey_path
+*Description:* Path to a file containing the agent preauth key.
+To connect to your Tailnet, you need to generate a pre-auth key.
+This can be done via the web UI or through the `headscale` CLI.
 
 
+*Type:* null or absolute path
 
-*Default:*
-` null `
+*Default:* `null`
 
+*Example:* `"config.sops.secrets.agent_pre_authkey.path"`
 
 
-*Example:*
-` "config.sops.secrets.tls_cert.path" `
+## settings.integration.agent.work_dir
+*Description:* Do not change this unless you are running a custom deployment.
+The work_dir represents where the agent will store its data to be able to automatically reauthenticate with your Tailnet.
+It needs to be writable by the user running the Headplane process.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+*Type:* absolute path
 
+*Default:* `"/var/lib/headplane/agent"`
 
-## services\.headplane\.settings\.headscale\.url
 
+## settings.integration.proc
+*Description:* Native process integration settings.
 
+*Type:* submodule
 
-The URL to your Headscale instance\.
-All API requests are routed through this URL\.
-THIS IS NOT the gRPC endpoint, but the HTTP endpoint\.
-IMPORTANT: If you are using TLS this MUST be set to ` https:// `\.
+*Default:* `{ }`
 
 
-
-*Type:*
-string
-
-
-
-*Default:*
-` "http://127.0.0.1:8080" `
-
-
-
-*Example:*
-` "https://headscale.example.com" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration
-
-
-
-Integration configurations for Headplane to interact with Headscale\.
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent
-
-
-
-Agent configuration for the Headplane agent\.
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.enabled
-
-
-
-The Headplane agent allows retrieving information about nodes\.
-This allows the UI to display version, OS, and connectivity data\.
-You will see the Headplane agent in your Tailnet as a node when it connects\.
-
-
-
-*Type:*
-boolean
-
-
-
-*Default:*
-` false `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.package
-
-
-
-The headplane-agent package to use\.
-
-
-
-*Type:*
-package
-
-
-
-*Default:*
-` pkgs.headplane-agent `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.cache_path
-
-
-
-Where to store the agent cache\.
-
-
-
-*Type:*
-absolute path
-
-
-
-*Default:*
-` "/var/lib/headplane/agent_cache.json" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.cache_ttl
-
-
-
-How long to cache agent information (in milliseconds)\.
-If you want data to update faster, reduce the TTL, but this will increase the frequency of requests to Headscale\.
-
-
-
-*Type:*
-signed integer
-
-
-
-*Default:*
-` 180000 `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.host_name
-
-
-
-Optionally change the name of the agent in the Tailnet
-
-
-
-*Type:*
-string
-
-
-
-*Default:*
-` "headplane-agent" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.pre_authkey_path
-
-
-
-Path to a file containing the agent preauth key\.
-To connect to your Tailnet, you need to generate a pre-auth key\.
-This can be done via the web UI or through the ` headscale ` CLI\.
-
-
-
-*Type:*
-null or absolute path
-
-
-
-*Default:*
-` null `
-
-
-
-*Example:*
-` "config.sops.secrets.agent_pre_authkey.path" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.agent\.work_dir
-
-
-
-Do not change this unless you are running a custom deployment\.
-The work_dir represents where the agent will store its data to be able to automatically reauthenticate with your Tailnet\.
-It needs to be writable by the user running the Headplane process\.
-
-
-
-*Type:*
-absolute path
-
-
-
-*Default:*
-` "/var/lib/headplane/agent" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.proc
-
-
-
-Native process integration settings\.
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.integration\.proc\.enabled
-
-
-
-Enable “Native” integration that works when Headscale and
-Headplane are running outside of a container\. There is no additional
+## settings.integration.proc.enabled
+*Description:* Enable "Native" integration that works when Headscale and
+Headplane are running outside of a container. There is no additional
 configuration, but you need to ensure that the Headplane process
-can terminate the Headscale process\.
+can terminate the Headscale process.
 
 
+*Type:* boolean
 
-*Type:*
-boolean
+*Default:* `true`
 
 
+## settings.oidc
+*Description:* OIDC Configuration for authentication.
 
-*Default:*
-` true `
+*Type:* submodule
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
+*Default:* `{ }`
 
 
+## settings.oidc.client_id
+*Description:* The client ID for the OIDC client.
 
-## services\.headplane\.settings\.oidc
+*Type:* string
 
+*Default:* `""`
 
+*Example:* `"your-client-id"`
 
-OIDC Configuration for authentication\.
 
+## settings.oidc.client_secret_path
+*Description:* Path to a file containing the OIDC client secret.
 
 
-*Type:*
-submodule
+*Type:* null or absolute path
 
+*Default:* `null`
 
+*Example:* `"config.sops.secrets.oidc_client_secret.path"`
 
-*Default:*
-` { } `
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
+## settings.oidc.disable_api_key_login
+*Description:* Whether to disable API key login.
 
+*Type:* boolean
 
+*Default:* `false`
 
-## services\.headplane\.settings\.oidc\.client_id
 
+## settings.oidc.headscale_api_key_path
+*Description:* Path to a file containing the Headscale API key.
 
 
-The client ID for the OIDC client\.
+*Type:* null or absolute path
 
+*Default:* `null`
 
+*Example:* `"config.sops.secrets.headscale_api_key.path"`
 
-*Type:*
-string
 
+## settings.oidc.issuer
+*Description:* URL to OpenID issuer.
 
+*Type:* string
 
-*Default:*
-` "" `
+*Default:* `""`
 
+*Example:* `"https://provider.example.com/issuer-url"`
 
 
-*Example:*
-` "your-client-id" `
+## settings.oidc.redirect_uri
+*Description:* This should point to your publicly accessible URL
+for your Headplane instance with /admin/oidc/callback.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+*Type:* string
 
+*Default:* `""`
 
-## services\.headplane\.settings\.oidc\.client_secret_path
+*Example:* `"https://headscale.example.com/admin/oidc/callback"`
 
 
+## settings.oidc.token_endpoint_auth_method
+*Description:* The token endpoint authentication method.
 
-Path to a file containing the OIDC client secret\.
+*Type:* one of "client_secret_post", "client_secret_basic", "client_secret_jwt"
 
+*Default:* `"client_secret_post"`
 
 
-*Type:*
-null or absolute path
+## settings.oidc.user_storage_file
+*Description:* Path to a file containing the users and their permissions for Headplane.
 
 
+*Type:* absolute path
 
-*Default:*
-` null `
+*Default:* `"/var/lib/headplane/users.json"`
 
+*Example:* `"/var/lib/headplane/users.json"`
 
 
-*Example:*
-` "config.sops.secrets.oidc_client_secret.path" `
+## settings.server
+*Description:* Server configuration for Headplane web application.
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
+*Type:* submodule
 
+*Default:* `{ }`
 
 
-## services\.headplane\.settings\.oidc\.disable_api_key_login
+## settings.server.cookie_secret_path
+*Description:* Path to a file containing the cookie secret.
+The secret must be exactly 32 characters long.
 
 
+*Type:* null or absolute path
 
-Whether to disable API key login\.
+*Default:* `null`
 
+*Example:* `"config.sops.secrets.headplane_cookie.path"`
 
 
-*Type:*
-boolean
+## settings.server.cookie_secure
+*Description:* Should the cookies only work over HTTPS?
+Set to false if running via HTTP without a proxy.
+Recommended to be true in production.
 
 
+*Type:* boolean
 
-*Default:*
-` false `
+*Default:* `true`
 
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
 
+## settings.server.data_path
+*Description:* The path to persist Headplane specific data.
+All data going forward is stored in this directory, including the internal database and any cache related files.
+Data formats prior to 0.6.1 will automatically be migrated.
 
 
-## services\.headplane\.settings\.oidc\.headscale_api_key_path
+*Type:* absolute path
 
+*Default:* `"/var/lib/headplane"`
 
+*Example:* `"/var/lib/headplane"`
 
-Path to a file containing the Headscale API key\.
 
+## settings.server.host
+*Description:* The host address to bind to.
 
+*Type:* string
 
-*Type:*
-null or absolute path
+*Default:* `"127.0.0.1"`
 
+*Example:* `"0.0.0.0"`
 
 
-*Default:*
-` null `
+## settings.server.port
+*Description:* The port to listen on.
 
+*Type:* 16 bit unsigned integer; between 0 and 65535 (both inclusive)
 
-
-*Example:*
-` "config.sops.secrets.headscale_api_key.path" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.oidc\.issuer
-
-
-
-URL to OpenID issuer\.
-
-
-
-*Type:*
-string
-
-
-
-*Default:*
-` "" `
-
-
-
-*Example:*
-` "https://provider.example.com/issuer-url" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.oidc\.redirect_uri
-
-
-
-This should point to your publicly accessible URL
-for your Headplane instance with /admin/oidc/callback\.
-
-
-
-*Type:*
-string
-
-
-
-*Default:*
-` "" `
-
-
-
-*Example:*
-` "https://headscale.example.com/admin/oidc/callback" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.oidc\.token_endpoint_auth_method
-
-
-
-The token endpoint authentication method\.
-
-
-
-*Type:*
-one of “client_secret_post”, “client_secret_basic”, “client_secret_jwt”
-
-
-
-*Default:*
-` "client_secret_post" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.oidc\.user_storage_file
-
-
-
-Path to a file containing the users and their permissions for Headplane\.
-
-
-
-*Type:*
-absolute path
-
-
-
-*Default:*
-` "/var/lib/headplane/users.json" `
-
-
-
-*Example:*
-` "/var/lib/headplane/users.json" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server
-
-
-
-Server configuration for Headplane web application\.
-
-
-
-*Type:*
-submodule
-
-
-
-*Default:*
-` { } `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server\.cookie_secret_path
-
-
-
-Path to a file containing the cookie secret\.
-The secret must be exactly 32 characters long\.
-
-
-
-*Type:*
-null or absolute path
-
-
-
-*Default:*
-` null `
-
-
-
-*Example:*
-` "config.sops.secrets.headplane_cookie.path" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server\.cookie_secure
-
-
-
-Should the cookies only work over HTTPS?
-Set to false if running via HTTP without a proxy\.
-Recommended to be true in production\.
-
-
-
-*Type:*
-boolean
-
-
-
-*Default:*
-` true `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server\.data_path
-
-
-
-The path to persist Headplane specific data\.
-All data going forward is stored in this directory, including the internal database and any cache related files\.
-Data formats prior to 0\.6\.1 will automatically be migrated\.
-
-
-
-*Type:*
-absolute path
-
-
-
-*Default:*
-` "/var/lib/headplane" `
-
-
-
-*Example:*
-` "/var/lib/headplane" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server\.host
-
-
-
-The host address to bind to\.
-
-
-
-*Type:*
-string
-
-
-
-*Default:*
-` "127.0.0.1" `
-
-
-
-*Example:*
-` "0.0.0.0" `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
-
-
-## services\.headplane\.settings\.server\.port
-
-
-
-The port to listen on\.
-
-
-
-*Type:*
-16 bit unsigned integer; between 0 and 65535 (both inclusive)
-
-
-
-*Default:*
-` 3000 `
-
-*Declared by:*
- - [nix/options.nix](https://github.com/tale/headplane/blob/main/nix/options.nix)
-
+*Default:* `3000`
 
