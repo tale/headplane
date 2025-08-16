@@ -21,7 +21,7 @@ deployment method for most users, as it provides a more feature-complete
 experience.
 
 ## Deployment
-> If you are not looking to deploy with Docker, follow the [**Bare-Metal**](/docs/Bare-Metal.md) deployment guide.
+> If you are not looking to deploy with Docker, follow the [**Bare-Metal**](./Bare-Metal.md) deployment guide.
 > Refer to the `Integrated Mode` section at the bottom for caveats.
 
 Requirements:
@@ -73,7 +73,7 @@ This will result in the Headplane UI being available at the `/admin` path of the
 server you deployed it on. The `/admin` path is currently not configurable unless
 you build the container yourself or run Headplane in Bare-Metal mode.
 
-> Refer to the [**Configuration**](/docs/Configuration.md) guide for help with
+> Refer to the [**Configuration**](./Configuration.md) guide for help with
 > setting up your `config.yaml` file to the appropriate values.
 
 ## Docker Integration
