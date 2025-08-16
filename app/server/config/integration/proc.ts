@@ -46,7 +46,7 @@ export default class ProcIntegration extends Integration<T> {
 
 					return pid;
 				} catch (error) {
-					log.error('config', 'Failed to read %s: %s', path, error);
+					log.debug('config', 'Failed to read %s: %s', path, error);
 				}
 			});
 

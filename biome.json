@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": []
+		"ignore": ["app/wasm_exec.js"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -28,6 +28,9 @@
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "warn"
 			}
 		}
 	},

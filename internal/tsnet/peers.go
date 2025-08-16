@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/tale/headplane/agent/internal/util"
+	"github.com/tale/headplane/internal/util"
 	"tailscale.com/tailcfg"
 	"tailscale.com/types/key"
 
