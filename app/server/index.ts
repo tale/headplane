@@ -78,6 +78,13 @@ export default createHonoServer({
 	overrideGlobalObjects: true,
 	port: config.server.port,
 	hostname: config.server.host,
+	serveStaticOptions: {
+		clientAssets: {
+			// This is part of our monkey-patch for react-router-hono-server
+			// To see the first part, go to the patches/ directory.
+			rewriteRequestPath: (path) => path.replace(`${__PREFIX__}`, ''),
+		},
+	},
 
 	// Only log in development mode
 	defaultLogger: import.meta.env.DEV,
