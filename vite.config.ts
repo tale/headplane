@@ -35,6 +35,9 @@ export default defineConfig(({ isSsrBuild }) => ({
 		host: server.host,
 		port: server.port,
 	},
+	build: {
+		target: 'esnext',
+	},
 	ssr: {
 		target: 'node',
 		noExternal: isSsrBuild ? ['@libsql/client'] : undefined,
