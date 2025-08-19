@@ -49,15 +49,17 @@ const appLoadContext = {
 	),
 
 	// TODO: Better cookie options in config
-	sessions: await createSessionStorage(
-		{
-			name: '_hp_session',
-			maxAge: 60 * 60 * 24, // 24 hours
+	sessions: await createSessionStorage({
+		secret: config.server.cookie_secret,
+		db,
+		oidcUsersFile: config.oidc?.user_storage_file,
+		cookie: {
+			name: '_hp_auth',
 			secure: config.server.cookie_secure,
-			secrets: [config.server.cookie_secret],
+			maxAge: 60 * 60 * 24, // 24 hours
+			// domain: config.server.cookie_domain,
 		},
-		config.oidc?.user_storage_file,
-	),
+	}),
 
 	client: await createApiClient(
 		config.headscale.url,

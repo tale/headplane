@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData, useSubmit } from 'react-router';
+import { useLoaderData } from 'react-router';
 import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
 import { Machine, User } from '~/types';
@@ -32,11 +32,8 @@ export async function loader({
 	);
 
 	const [machines, apiUsers] = await Promise.all([
-		context.client.get<{ nodes: Machine[] }>(
-			'v1/node',
-			session.get('api_key')!,
-		),
-		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
+		context.client.get<{ nodes: Machine[] }>('v1/node', session.api_key),
+		context.client.get<{ users: User[] }>('v1/user', session.api_key),
 	]);
 
 	const users = apiUsers.users.map((user) => ({
@@ -44,30 +41,32 @@ export async function loader({
 		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
 	}));
 
-	const roles = users
-		.sort((a, b) => a.name.localeCompare(b.name))
-		.map((user) => {
-			if (user.provider !== 'oidc') {
-				return 'no-oidc';
-			}
-
-			if (user.provider === 'oidc' && user.providerId) {
-				// For some reason, headscale makes providerID a url where the
-				// last component is the subject, so we need to strip that out
-				const subject = user.providerId.split('/').pop();
-				if (!subject) {
-					return 'invalid-oidc';
+	const roles = await Promise.all(
+		users
+			.sort((a, b) => a.name.localeCompare(b.name))
+			.map(async (user) => {
+				if (user.provider !== 'oidc') {
+					return 'no-oidc';
 				}
 
-				const role = context.sessions.roleForSubject(subject);
-				return role ?? 'no-role';
-			}
+				if (user.provider === 'oidc' && user.providerId) {
+					// For some reason, headscale makes providerID a url where the
+					// last component is the subject, so we need to strip that out
+					const subject = user.providerId.split('/').pop();
+					if (!subject) {
+						return 'invalid-oidc';
+					}
 
-			// No role means the user is not registered in Headplane, but they
-			// are in Headscale. We also need to handle what happens if someone
-			// logs into the UI and they don't have a Headscale setup.
-			return 'no-role';
-		});
+					const role = await context.sessions.roleForSubject(subject);
+					return role ?? 'no-role';
+				}
+
+				// No role means the user is not registered in Headplane, but they
+				// are in Headscale. We also need to handle what happens if someone
+				// logs into the UI and they don't have a Headscale setup.
+				return 'no-role';
+			}),
+	);
 
 	let magic: string | undefined;
 	if (context.hs.readable()) {
@@ -107,7 +106,7 @@ export default function Page() {
 			<p className="mb-8 text-md">
 				Manage the users in your network and their permissions.
 			</p>
-			<ManageBanner oidc={data.oidc} isDisabled={!data.writable} />
+			<ManageBanner isDisabled={!data.writable} oidc={data.oidc} />
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-headplane-600 dark:text-headplane-300">
 					<tr className="text-left px-0.5">
@@ -128,8 +127,8 @@ export default function Page() {
 						.map((user) => (
 							<UserRow
 								key={user.id}
-								user={user}
 								role={data.roles[users.indexOf(user)]}
+								user={user}
 							/>
 						))}
 				</tbody>

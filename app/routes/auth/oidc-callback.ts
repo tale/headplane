@@ -1,8 +1,18 @@
-import { type LoaderFunctionArgs, Session, redirect } from 'react-router';
+import { count } from 'drizzle-orm';
+import { createCookie, type LoaderFunctionArgs, redirect } from 'react-router';
+import { ulid } from 'ulidx';
 import type { LoadContext } from '~/server';
-import type { AuthSession, OidcFlowSession } from '~/server/web/sessions';
+import { users } from '~/server/db/schema';
+import { Roles } from '~/server/web/roles';
 import { finishAuthFlow, formatError } from '~/utils/oidc';
 import { send } from '~/utils/res';
+
+interface OidcFlowSession {
+	state: string;
+	nonce: string;
+	code_verifier: string;
+	redirect_uri: string;
+}
 
 export async function loader({
 	request,
@@ -18,13 +28,21 @@ export async function loader({
 		return redirect('/login');
 	}
 
-	const session = await context.sessions.getOrCreate<OidcFlowSession>(request);
-	if (session.get('state') !== 'flow') {
-		return redirect('/login'); // Haven't started an OIDC flow
+	const cookie = createCookie('__oidc_auth_flow', {
+		httpOnly: true,
+		maxAge: 300, // 5 minutes
+	});
+
+	const data: OidcFlowSession | null = await cookie.parse(
+		request.headers.get('Cookie'),
+	);
+
+	if (data === null) {
+		console.warn('OIDC flow session not found');
+		return redirect('/login');
 	}
 
-	const payload = session.get('oidc')!;
-	const { code_verifier, state, nonce, redirect_uri } = payload;
+	const { code_verifier, state, nonce, redirect_uri } = data;
 	if (!code_verifier || !state || !nonce || !redirect_uri) {
 		return send({ error: 'Missing OIDC state' }, { status: 400 });
 	}
@@ -43,19 +61,30 @@ export async function loader({
 
 	try {
 		const user = await finishAuthFlow(context.oidc, flowOptions);
-		session.unset('oidc');
-		const userSession = session as Session<AuthSession>;
 
-		// TODO: This is breaking, to stop the "over-generation" of API
-		// keys because they are currently non-deletable in the headscale
-		// database. Look at this in the future once we have a solution
-		// or we have permissioned API keys.
-		userSession.set('user', user);
-		userSession.set('api_key', context.config.oidc?.headscale_api_key!);
-		userSession.set('state', 'auth');
+		const [{ count: userCount }] = await context.db
+			.select({ count: count() })
+			.from(users);
+
+		await context.db
+			.insert(users)
+			.values({
+				id: ulid(),
+				sub: user.subject,
+				caps: userCount === 0 ? Roles.owner : Roles.member,
+			})
+			.onConflictDoNothing();
+
 		return redirect('/machines', {
 			headers: {
-				'Set-Cookie': await context.sessions.commit(userSession),
+				'Set-Cookie': await context.sessions.createSession({
+					// TODO: This is breaking, to stop the "over-generation" of API
+					// keys because they are currently non-deletable in the headscale
+					// database. Look at this in the future once we have a solution
+					// or we have permissioned API keys.
+					api_key: context.config.oidc?.headscale_api_key!,
+					user,
+				}),
 			},
 		});
 	} catch (error) {

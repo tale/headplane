@@ -19,3 +19,13 @@ export const hostInfo = sqliteTable('host_info', {
 
 export type HostInfoRecord = typeof hostInfo.$inferSelect;
 export type HostInfoInsert = typeof hostInfo.$inferInsert;
+
+export const users = sqliteTable('users', {
+	id: text('id').primaryKey(),
+	sub: text('sub').notNull().unique(),
+	caps: integer('caps').notNull().default(0),
+	onboarded: integer('onboarded', { mode: 'boolean' }).notNull().default(false),
+});
+
+export type User = typeof users.$inferSelect;
+export type UserInsert = typeof users.$inferInsert;

@@ -22,7 +22,7 @@ export async function pruneEphemeralNodes({
 
 	const { nodes } = await context.client.get<{ nodes: Machine[] }>(
 		'v1/node',
-		session.get('api_key')!,
+		session.api_key,
 	);
 
 	const toPrune = nodes.filter((node) => {
@@ -42,10 +42,7 @@ export async function pruneEphemeralNodes({
 	const promises = toPrune.map((node) => {
 		return async () => {
 			log.debug('api', `Pruning node ${node.name}`);
-			await context.client.delete(
-				`v1/node/${node.id}`,
-				session.get('api_key')!,
-			);
+			await context.client.delete(`v1/node/${node.id}`, session.api_key);
 
 			await context.db
 				.delete(ephemeralNodes)

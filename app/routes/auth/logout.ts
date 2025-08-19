@@ -9,9 +9,10 @@ export async function action({
 	request,
 	context,
 }: ActionFunctionArgs<LoadContext>) {
-	const session = await context.sessions.auth(request);
-	if (!session.has('api_key')) {
-		return redirect('/login');
+	try {
+		await context.sessions.auth(request);
+	} catch {
+		redirect('/login');
 	}
 
 	// When API key is disabled, we need to explicitly redirect
@@ -22,7 +23,7 @@ export async function action({
 
 	return redirect(url, {
 		headers: {
-			'Set-Cookie': await context.sessions.destroy(session),
+			'Set-Cookie': await context.sessions.destroySession(),
 		},
 	});
 }

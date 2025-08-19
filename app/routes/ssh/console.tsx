@@ -1,24 +1,24 @@
+/** biome-ignore-all lint/correctness/noNestedComponentDefinitions: Wtf? */
 import { faker } from '@faker-js/faker';
+import { eq } from 'drizzle-orm';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
 	ActionFunctionArgs,
+	data,
 	LoaderFunctionArgs,
 	ShouldRevalidateFunction,
-	data,
 	useLoaderData,
 	useSubmit,
 } from 'react-router';
+import wasm from '~/hp_ssh.wasm?url';
 import { LoadContext } from '~/server';
+import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
 import { Machine, PreAuthKey, User } from '~/types';
 import { useLiveData } from '~/utils/live-data';
-import XTerm from './xterm.client';
-
-import { eq } from 'drizzle-orm';
-import wasm from '~/hp_ssh.wasm?url';
-import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
 import '~/wasm_exec';
 import UserPrompt from './user-prompt';
+import XTerm from './xterm.client';
 
 export const shouldRevalidate: ShouldRevalidateFunction = () => {
 	return false;
@@ -36,16 +36,12 @@ export async function loader({
 	}
 
 	const session = await context.sessions.auth(request);
-	const user = session.get('user');
-	if (!user) {
-		throw data('Unauthorized', 401);
-	}
-	if (user.subject === 'unknown-non-oauth') {
+	if (session.user.subject === 'unknown-non-oauth') {
 		throw data('Only OAuth users are allowed to use WebSSH', 403);
 	}
 	const { users } = await context.client.get<{ users: User[] }>(
 		'v1/user',
-		session.get('api_key')!,
+		session.api_key,
 	);
 
 	// MARK: This assumes that a user has authenticated with Headscale first
@@ -57,19 +53,19 @@ export async function loader({
 		if (!subject) {
 			return false;
 		}
-		return subject === user.subject;
+		return subject === session.user.subject;
 	});
 
 	if (!lookup) {
 		throw data(
-			`User with subject ${user.subject} not found within Headscale`,
+			`User with subject ${session.user.subject} not found within Headscale`,
 			404,
 		);
 	}
 
 	const { preAuthKey } = await context.client.post<{ preAuthKey: PreAuthKey }>(
 		'v1/preauthkey',
-		session.get('api_key')!,
+		session.api_key,
 		{
 			user: lookup.id,
 			reusable: false,
@@ -122,7 +118,7 @@ export async function loader({
 
 	const { nodes } = await context.client.get<{ nodes: Machine[] }>(
 		'v1/node',
-		session.get('api_key')!,
+		session.api_key,
 	);
 
 	// node.name is the hostname, given_name is the set name
@@ -133,7 +129,7 @@ export async function loader({
 
 	// Last thing is keeping track of the ephemeral node in the database
 	// because Headscale doesn't automatically delete ephemeral nodes???
-	const [ephemeralNode] = await context.db
+	const [_ephemeralNode] = await context.db
 		.insert(ephemeralNodes)
 		.values({
 			auth_key: preAuthKey.key,
@@ -176,7 +172,7 @@ export async function action({
 	request,
 	context,
 }: ActionFunctionArgs<LoadContext>) {
-	const session = await context.sessions.auth(request);
+	const _session = await context.sessions.auth(request);
 	if (!context.agents?.agentID()) {
 		throw data(
 			'WebSSH is only available with the Headplane agent integration',
@@ -274,9 +270,9 @@ export default function Page() {
 			) : (
 				<div className="flex flex-col h-screen">
 					<XTerm
+						hostname={sshDetails.hostname}
 						ipn={ipn}
 						username={sshDetails.username}
-						hostname={sshDetails.hostname}
 					/>
 				</div>
 			)}

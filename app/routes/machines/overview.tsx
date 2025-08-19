@@ -18,7 +18,7 @@ export async function loader({
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
-	const user = session.get('user');
+	const user = session.user;
 	if (!user) {
 		throw new Error('Missing user session. Please log in again.');
 	}
@@ -41,11 +41,8 @@ export async function loader({
 	);
 
 	const [{ nodes }, { users }] = await Promise.all([
-		context.client.get<{ nodes: Machine[] }>(
-			'v1/node',
-			session.get('api_key')!,
-		),
-		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
+		context.client.get<{ nodes: Machine[] }>('v1/node', session.api_key),
+		context.client.get<{ users: User[] }>('v1/user', session.api_key),
 	]);
 
 	let magic: string | undefined;
@@ -90,18 +87,18 @@ export default function Page() {
 					<p>
 						Manage the devices connected to your Tailnet.{' '}
 						<Link
-							to="https://tailscale.com/kb/1372/manage-devices"
 							name="Tailscale Manage Devices Documentation"
+							to="https://tailscale.com/kb/1372/manage-devices"
 						>
 							Learn more
 						</Link>
 					</p>
 				</div>
 				<NewMachine
+					disabledKeys={data.preAuth ? [] : ['pre-auth']}
+					isDisabled={!data.writable}
 					server={data.publicServer ?? data.server}
 					users={data.users}
-					isDisabled={!data.writable}
-					disabledKeys={data.preAuth ? [] : ['pre-auth']}
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
@@ -141,16 +138,16 @@ export default function Page() {
 				>
 					{data.populatedNodes.map((machine) => (
 						<MachineRow
-							key={machine.id}
-							node={machine}
-							users={data.users}
-							magic={data.magic}
 							isAgent={data.agent ? data.agent === machine.nodeKey : undefined}
 							isDisabled={
 								data.writable
 									? false // If the user has write permissions, they can edit all machines
 									: machine.user.providerId?.split('/').pop() !== data.subject
 							}
+							key={machine.id}
+							magic={data.magic}
+							node={machine}
+							users={data.users}
 						/>
 					))}
 				</tbody>

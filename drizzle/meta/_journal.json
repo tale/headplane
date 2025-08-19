@@ -15,6 +15,13 @@
 			"when": 1755554742267,
 			"tag": "0001_naive_lilith",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1755617607599,
+			"tag": "0002_square_bloodstorm",
+			"breakpoints": true
 		}
 	]
 }

@@ -45,6 +45,7 @@
 		"dotenv": "^16.5.0",
 		"drizzle-orm": "^0.44.2",
 		"isbot": "^5.1.28",
+		"jose": "6.0.12",
 		"lucide-react": "^0.511.0",
 		"mime": "^4.0.7",
 		"openid-client": "^6.5.0",
@@ -59,6 +60,7 @@
 		"react-stately": "^3.38.0",
 		"remix-utils": "^8.8.0",
 		"tailwind-merge": "^3.3.0",
+		"ulidx": "2.4.1",
 		"undici": "^7.10.0",
 		"usehooks-ts": "^3.1.1",
 		"yaml": "^2.8.0"
@@ -92,8 +94,14 @@
 	},
 	"pnpm": {
 		"supportedArchitectures": {
-			"os": ["current", "linux"],
-			"cpu": ["x64", "arm64"]
+			"os": [
+				"current",
+				"linux"
+			],
+			"cpu": [
+				"x64",
+				"arm64"
+			]
 		},
 		"onlyBuiltDependencies": [
 			"@biomejs/biome",

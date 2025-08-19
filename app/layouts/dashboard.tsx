@@ -18,13 +18,13 @@ export async function loader({
 	// TODO: Notify in the logs or the UI that OIDC auth key is wrong if enabled
 	if (healthy) {
 		try {
-			await context.client.get('v1/apikey', session.get('api_key')!);
+			await context.client.get('v1/apikey', session.api_key);
 		} catch (error) {
 			if (error instanceof ResponseError) {
 				log.debug('api', 'API Key validation failed %o', error);
 				return redirect('/login', {
 					headers: {
-						'Set-Cookie': await context.sessions.destroy(session),
+						'Set-Cookie': await context.sessions.destroySession(),
 					},
 				});
 			}
@@ -38,11 +38,9 @@ export async function loader({
 
 export default function Layout() {
 	return (
-		<>
-			<main className="container mx-auto overscroll-contain mt-4 mb-24">
-				<Outlet />
-			</main>
-		</>
+		<main className="container mx-auto overscroll-contain mt-4 mb-24">
+			<Outlet />
+		</main>
 	);
 }
 

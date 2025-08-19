@@ -39,9 +39,9 @@ export async function loader({
 	const [machine, { users }] = await Promise.all([
 		context.client.get<{ node: Machine }>(
 			`v1/node/${params.id}`,
-			session.get('api_key')!,
+			session.api_key,
 		),
-		context.client.get<{ users: User[] }>('v1/user', session.get('api_key')!),
+		context.client.get<{ users: User[] }>('v1/user', session.api_key),
 	]);
 
 	const lookup = await context.agents?.lookup([machine.node.nodeKey]);
@@ -77,7 +77,7 @@ export default function Page() {
 	return (
 		<div>
 			<p className="mb-8 text-md">
-				<RemixLink to="/machines" className="font-medium">
+				<RemixLink className="font-medium" to="/machines">
 					All Machines
 				</RemixLink>
 				<span className="mx-2">/</span>
@@ -91,9 +91,9 @@ export default function Page() {
 			>
 				<span className="flex items-baseline gap-x-4 text-sm">
 					<h1 className="text-2xl font-medium">{node.givenName}</h1>
-					<StatusCircle isOnline={node.online} className="w-4 h-4" />
+					<StatusCircle className="w-4 h-4" isOnline={node.online} />
 				</span>
-				<MenuOptions isFullButton node={node} users={users} magic={magic} />
+				<MenuOptions isFullButton magic={magic} node={node} users={users} />
 			</div>
 			<div className="flex gap-1 mb-4">
 				<div className="border-r border-headplane-100 dark:border-headplane-800 p-2 pr-4">
@@ -123,14 +123,14 @@ export default function Page() {
 					</div>
 				</div>
 			</div>
-			<Routes node={node} isOpen={showRouting} setIsOpen={setShowRouting} />
+			<Routes isOpen={showRouting} node={node} setIsOpen={setShowRouting} />
 			<h2 className="text-xl font-medium mt-8">Subnets & Routing</h2>
 			<div className="flex items-center justify-between mb-4">
 				<p>
 					Subnets let you expose physical network routes onto Tailscale.{' '}
 					<Link
-						to="https://tailscale.com/kb/1019/subnets"
 						name="Tailscale Subnets Documentation"
+						to="https://tailscale.com/kb/1019/subnets"
 					>
 						Learn More
 					</Link>
@@ -138,11 +138,11 @@ export default function Page() {
 				<Button onPress={() => setShowRouting(true)}>Review</Button>
 			</div>
 			<Card
-				variant="flat"
 				className={cn(
 					'w-full max-w-full grid sm:grid-cols-2',
 					'md:grid-cols-4 gap-8 mr-2 text-sm mb-8',
 				)}
+				variant="flat"
 			>
 				<div>
 					<span className="text-headplane-600 dark:text-headplane-300 flex items-center gap-x-1">
@@ -166,11 +166,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
-						onPress={() => setShowRouting(true)}
 						className={cn(
 							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
 						)}
+						onPress={() => setShowRouting(true)}
 					>
 						Edit
 					</Button>
@@ -198,11 +198,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
-						onPress={() => setShowRouting(true)}
 						className={cn(
 							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
 						)}
+						onPress={() => setShowRouting(true)}
 					>
 						Edit
 					</Button>
@@ -233,11 +233,11 @@ export default function Page() {
 						)}
 					</div>
 					<Button
-						onPress={() => setShowRouting(true)}
 						className={cn(
 							'px-1.5 py-0.5 rounded-md mt-1.5',
 							'text-blue-500 dark:text-blue-400',
 						)}
+						onPress={() => setShowRouting(true)}
 					>
 						Edit
 					</Button>
@@ -249,15 +249,15 @@ export default function Page() {
 				issues.
 			</p>
 			<Card
-				variant="flat"
 				className="w-full max-w-full grid grid-cols-1 lg:grid-cols-2 gap-y-2 sm:gap-x-12"
+				variant="flat"
 			>
 				<div className="flex flex-col gap-1">
 					<Attribute name="Creator" value={node.user.name || node.user.email} />
 					<Attribute name="Machine name" value={node.givenName} />
 					<Attribute
-						tooltip="OS hostname is published by the machine’s operating system and is used as the default name for the machine."
 						name="OS hostname"
+						tooltip="OS hostname is published by the machine’s operating system and is used as the default name for the machine."
 						value={node.name}
 					/>
 					{stats ? (
@@ -267,14 +267,14 @@ export default function Page() {
 						</>
 					) : undefined}
 					<Attribute
-						tooltip="ID for this machine. Used in the Headscale API."
 						name="ID"
+						tooltip="ID for this machine. Used in the Headscale API."
 						value={node.id}
 					/>
 					<Attribute
 						isCopyable
-						tooltip="Public key which uniquely identifies this machine."
 						name="Node key"
+						tooltip="Public key which uniquely identifies this machine."
 						value={node.nodeKey}
 					/>
 					<Attribute
@@ -311,27 +311,27 @@ export default function Page() {
 					</p>
 					<Attribute
 						isCopyable
-						tooltip="This machine’s IPv4 address within your tailnet (your private Tailscale network)."
 						name="Tailscale IPv4"
+						tooltip="This machine’s IPv4 address within your tailnet (your private Tailscale network)."
 						value={getIpv4Address(node.ipAddresses)}
 					/>
 					<Attribute
 						isCopyable
-						tooltip="This machine’s IPv6 address within your tailnet (your private Tailscale network). Connections within your tailnet support IPv6 even if your ISP does not."
 						name="Tailscale IPv6"
+						tooltip="This machine’s IPv6 address within your tailnet (your private Tailscale network). Connections within your tailnet support IPv6 even if your ISP does not."
 						value={getIpv6Address(node.ipAddresses)}
 					/>
 					<Attribute
 						isCopyable
-						tooltip="Users of your tailnet can use this DNS short name to access this machine."
 						name="Short domain"
+						tooltip="Users of your tailnet can use this DNS short name to access this machine."
 						value={node.givenName}
 					/>
 					{magic ? (
 						<Attribute
 							isCopyable
-							tooltip="Users of your tailnet can use this DNS name to access this machine."
 							name="Full domain"
+							tooltip="Users of your tailnet can use this DNS name to access this machine."
 							value={`${node.givenName}.${magic}`}
 						/>
 					) : undefined}
@@ -341,13 +341,13 @@ export default function Page() {
 								Client Connectivity
 							</p>
 							<Attribute
-								tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."
 								name="Varies"
+								tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."
 								value={stats.NetInfo?.MappingVariesByDestIP ? 'Yes' : 'No'}
 							/>
 							<Attribute
-								tooltip="Whether the machine needs to traverse NATs with hairpinning."
 								name="Hairpinning"
+								tooltip="Whether the machine needs to traverse NATs with hairpinning."
 								value={stats.NetInfo?.HairPinning ? 'Yes' : 'No'}
 							/>
 							<Attribute
