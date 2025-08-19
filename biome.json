@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -7,7 +7,7 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"ignore": ["app/wasm_exec.js"]
+		"includes": ["**", "!app/wasm_exec.js"]
 	},
 	"formatter": {
 		"enabled": true,
@@ -15,8 +15,13 @@
 		"lineWidth": 80,
 		"lineEnding": "lf"
 	},
-	"organizeImports": {
-		"enabled": true
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on",
+				"useSortedAttributes": "on"
+			}
+		}
 	},
 	"linter": {
 		"enabled": true,
