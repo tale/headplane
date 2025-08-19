@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/tale/headplane/internal/config"
 	"github.com/tale/headplane/internal/hpagent"
@@ -31,5 +33,6 @@ func main() {
 		ID:   agent.ID,
 	})
 
+	fmt.Println("READY")
 	hpagent.FollowMaster(agent)
 }

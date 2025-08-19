@@ -4,7 +4,7 @@
 	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
 - Begin using a new SQLite database file in `/var/lib/headplane/hp_persist.db`.
 	- The database is created automatically if it does not exist.
-	- It currently stores SSH connection details and will migrate older data.
+	- It currently stores SSH connection details and HostInfo for the agent.
 - The docker container now runs in a distroless image (closes [#255](https://github.com/tale/headplane/issues/255)).
 	- A debug version of the container that runs as root and has a shell is available as `ghcr.io/tale/headplane:<version>-shell`.
 - Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
@@ -18,6 +18,7 @@
     - Environment variables are interpolatable into these paths
     - See the full reference in the [docs](https://github.com/tale/headplane/blob/main/docs/Configuration.md#sensitive-values)
 - The nix overlay build is fixed for the SSH module (via [#282](https://github.com/tale/headplane/pull/282))
+- Switch our build processes to use TypeScript Go and Rolldown Vite for better build and type-check performance.
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.

@@ -8,7 +8,7 @@ import { loadConfig } from './config/loader';
 import { createDbClient } from './db/client.server';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
-import { loadAgentSocket } from './web/agent';
+import { createHeadplaneAgent } from './hp-agent';
 import { createOidcClient } from './web/oidc';
 import { createSessionStorage } from './web/sessions';
 
@@ -29,12 +29,12 @@ const config = await loadConfig(
 	}),
 );
 
-const agentManager = await loadAgentSocket(
+const db = await createDbClient(join(config.server.data_path, 'hp_persist.db'));
+const agents = await createHeadplaneAgent(
 	config.integration?.agent,
 	config.headscale.url,
+	db,
 );
-
-const db = await createDbClient(join(config.server.data_path, 'hp_persist.db'));
 
 // We also use this file to load anything needed by the react router code.
 // These are usually per-request things that we need access to, like the
@@ -64,7 +64,7 @@ const appLoadContext = {
 		config.headscale.tls_cert_path,
 	),
 
-	agents: agentManager,
+	agents,
 	integration: await loadIntegration(config.integration),
 	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
 	db,

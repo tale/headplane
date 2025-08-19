@@ -1,0 +1,73 @@
+{
+	"version": "6",
+	"dialect": "sqlite",
+	"id": "16f780a3-a6e7-4810-94bb-fad5c6446ab4",
+	"prevId": "ab03ffcd-9aa5-4b4b-9f38-322acc6899a3",
+	"tables": {
+		"ephemeral_nodes": {
+			"name": "ephemeral_nodes",
+			"columns": {
+				"auth_key": {
+					"name": "auth_key",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"node_key": {
+					"name": "node_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		},
+		"host_info": {
+			"name": "host_info",
+			"columns": {
+				"host_id": {
+					"name": "host_id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"payload": {
+					"name": "payload",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		}
+	},
+	"views": {},
+	"enums": {},
+	"_meta": {
+		"schemas": {},
+		"tables": {},
+		"columns": {}
+	},
+	"internal": {
+		"indexes": {}
+	}
+}

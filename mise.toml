@@ -23,6 +23,9 @@ run = "go build -o app/hp_ssh.wasm ./cmd/hp_ssh"
 alias = ["agent"]
 description = "Builds the Go agent for HostInfo"
 run = "go build -o build/hp_agent ./cmd/hp_agent"
+# env = { CGO_ENABLED = "1" }
+# run = "go build -o build/hp_agent.so -buildmode=c-shared ./cmd/hp_agent"
+
 
 [tasks.build-fake-shell]
 alias = ["fake-shell"]
