@@ -1,8 +1,8 @@
 import { ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import EventEmitter from 'node:events';
-import { constants, access, mkdir, open } from 'node:fs/promises';
+import { access, constants, mkdir, open } from 'node:fs/promises';
 import { getegid, geteuid } from 'node:process';
-import { Interface, createInterface } from 'node:readline';
+import { createInterface, Interface } from 'node:readline';
 import { inArray } from 'drizzle-orm';
 import { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { HostInfo } from '~/types';
@@ -240,7 +240,6 @@ class HeadplaneAgent extends EventEmitter<AgentEvents> {
 			gid: getegid?.() ?? undefined,
 			env: {
 				HOME: process.env.HOME,
-				HEADPLANE_EMBEDDED: 'true',
 				HEADPLANE_AGENT_WORK_DIR: this.options.work_dir,
 				HEADPLANE_AGENT_DEBUG: log.debugEnabled ? 'true' : 'false',
 				HEADPLANE_AGENT_HOSTNAME: this.options.host_name,
@@ -394,6 +393,27 @@ class HeadplaneAgent extends EventEmitter<AgentEvents> {
 		if (line.startsWith('ERROR')) {
 			const error = line.slice(6).trim();
 			this.emit('error', new Error(error));
+			return;
+		}
+
+		if (line.startsWith('LOG')) {
+			const logSnippet = line.slice(4).trim();
+			const [level, ...messageParts] = logSnippet.split(' ');
+			const message = messageParts.join(' ');
+			switch (level) {
+				case 'INFO':
+					log.info('agent', message);
+					break;
+				case 'WARN':
+					log.warn('agent', message);
+					break;
+				case 'ERROR':
+					log.error('agent', message);
+					break;
+				default:
+					log.debug('agent', message);
+			}
+
 			return;
 		}
 	}

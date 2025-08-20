@@ -14,7 +14,7 @@ in
     version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
     src = ../.;
     subPackages = ["cmd/hp_ssh"];
-    vendorHash = "sha256-AyJx1os4auTmHvz+KLY+RGyysa3LWi8r2+QLxofPUH4=";
+    vendorHash = "sha256-cPE8cnfTdzi6hAmSXujKmfd5ezivc3sQ6DKOZubCpYI=";
     env.CGO_ENABLED = 0;
 
     nativeBuildInputs = [go];

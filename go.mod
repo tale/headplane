@@ -3,7 +3,6 @@ module github.com/tale/headplane
 go 1.24.4
 
 require (
-	github.com/joho/godotenv v1.5.1
 	go4.org/mem v0.0.0-20240501181205-ae6ca9944745
 	golang.org/x/crypto v0.41.0
 	tailscale.com v1.86.4

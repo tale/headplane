@@ -4,19 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"sync"
-	"time"
 )
 
 type LogLevel string
 
 const (
-	LevelInfo  LogLevel = "info"
-	LevelDebug LogLevel = "debug"
-	LevelError LogLevel = "error"
-	LevelFatal LogLevel = "fatal"
-	LevelMsg   LogLevel = "msg"
+	LevelInfo  LogLevel = "INFO"
+	LevelDebug LogLevel = "DEBUG"
+	LevelError LogLevel = "ERROR"
+	LevelFatal LogLevel = "FATAL"
 )
 
 type LogMessage struct {
@@ -61,19 +58,8 @@ func (l *Logger) SetDebug(enabled bool) {
 
 func (l *Logger) log(level LogLevel, format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
-	timestamp := time.Now().Format(time.RFC3339)
 
-	// Manually construct compact JSON line for performance
-	line := `{"Level":"` + string(level) +
-		`","Time":"` + timestamp +
-		`","Message":"` + escapeString(msg) + `"}` + "\n"
-
-	if level == LevelError || level == LevelFatal {
-		os.Stderr.WriteString(line)
-	}
-
-	// Always write to stdout but also write to stderr for errors
-	os.Stdout.WriteString(line)
+	fmt.Printf("LOG %s %s\n", level, msg)
 	if level == LevelFatal {
 		os.Exit(1)
 	}
@@ -88,53 +74,3 @@ func (l *Logger) Debug(format string, v ...any) {
 func (l *Logger) Info(format string, v ...any)  { l.log(LevelInfo, format, v...) }
 func (l *Logger) Error(format string, v ...any) { l.log(LevelError, format, v...) }
 func (l *Logger) Fatal(format string, v ...any) { l.log(LevelFatal, format, v...) }
-
-func (l *Logger) Msg(obj any) {
-	entry := l.pool.Get().(*LogMessage)
-	defer l.pool.Put(entry)
-
-	entry.Level = LevelMsg
-	entry.Time = time.Now().Format(time.RFC3339)
-	entry.Message = obj
-
-	// Because the encoder is tied to STDOUT we get a message
-	_ = l.encoder.Encode(entry)
-
-	// Reset the entry for reuse
-	entry.Level = ""
-	entry.Time = ""
-	entry.Message = nil
-}
-
-func escapeString(s string) string {
-	var b strings.Builder
-	b.Grow(len(s) + 16) // pre-grow to reduce reallocs
-
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		switch c {
-		case '"':
-			b.WriteString(`\"`)
-		case '\\':
-			b.WriteString(`\\`)
-		case '\b':
-			b.WriteString(`\b`)
-		case '\f':
-			b.WriteString(`\f`)
-		case '\n':
-			b.WriteString(`\n`)
-		case '\r':
-			b.WriteString(`\r`)
-		case '\t':
-			b.WriteString(`\t`)
-		default:
-			if c < 0x20 {
-				// Control characters like 0x01, 0x07 (bell), etc.
-				fmt.Fprintf(&b, `\u%04x`, c)
-			} else {
-				b.WriteByte(c)
-			}
-		}
-	}
-	return b.String()
-}
