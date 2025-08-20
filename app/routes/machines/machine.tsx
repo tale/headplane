@@ -108,7 +108,7 @@ export default function Page() {
 					</span>
 					<div className="flex items-center gap-x-2.5 mt-1">
 						<UserCircle />
-						{node.user.name || node.user.email}
+						{node.user.name || node.user.displayName || node.user.email || node.user.id}
 					</div>
 				</div>
 				<div className="p-2 pl-4">
@@ -253,7 +253,7 @@ export default function Page() {
 				variant="flat"
 			>
 				<div className="flex flex-col gap-1">
-					<Attribute name="Creator" value={node.user.name || node.user.email} />
+					<Attribute name="Creator" value={node.user.name || node.user.displayName || node.user.email || node.user.id} />
 					<Attribute name="Machine name" value={node.givenName} />
 					<Attribute
 						name="OS hostname"

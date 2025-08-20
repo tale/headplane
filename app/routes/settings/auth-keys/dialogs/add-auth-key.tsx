@@ -36,7 +36,7 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 					}}
 				>
 					{data.users.map((user) => (
-						<Select.Item key={user.id}>{user.name}</Select.Item>
+					    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
 					))}
 				</Select>
 				<NumberInput

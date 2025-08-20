@@ -46,7 +46,7 @@ export default function NewMachine(data: NewMachineProps) {
 						placeholder="Select a user"
 					>
 						{data.users.map((user) => (
-							<Select.Item key={user.id}>{user.name}</Select.Item>
+						    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
 						))}
 					</Select>
 				</Dialog.Panel>

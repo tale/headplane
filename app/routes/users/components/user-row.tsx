@@ -26,14 +26,14 @@ export default function UserRow({ user, role }: UserRowProps) {
 					{user.profilePicUrl ? (
 						<img
 							src={user.profilePicUrl}
-							alt={user.name}
+							alt={user.name || user.displayName}
 							className="w-10 h-10 rounded-full"
 						/>
 					) : (
 						<CircleUser className="w-10 h-10" />
 					)}
 					<div className="ml-4">
-						<p className={cn('font-semibold leading-snug')}>{user.name}</p>
+						<p className={cn('font-semibold leading-snug')}>{user.name || user.displayName}</p>
 						<p className="text-sm opacity-50">{user.email}</p>
 					</div>
 				</div>

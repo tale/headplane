@@ -34,7 +34,7 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
 					}}
 				>
 					{users.map((user) => (
-						<Select.Item key={user.id}>{user.name}</Select.Item>
+					    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
 					))}
 				</Select>
 			</Dialog.Panel>
