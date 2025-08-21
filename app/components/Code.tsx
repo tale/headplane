@@ -21,7 +21,6 @@ export default function Code({ isCopyable, children, className }: CodeProps) {
 			{children}
 			{isCopyable && (
 				<button
-					type="button"
 					className="bottom-0 right-0 absolute"
 					onClick={async (event) => {
 						const text = Array.isArray(children) ? children.join('') : children;
@@ -40,6 +39,7 @@ export default function Code({ isCopyable, children, className }: CodeProps) {
 							}
 						}, 1000);
 					}}
+					type="button"
 				>
 					<Check className="h-4.5 w-4.5 p-1 hidden data-copied:block" />
 					<Copy className="h-4.5 w-4.5 p-1 block data-copied:hidden" />

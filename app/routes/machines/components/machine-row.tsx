@@ -1,18 +1,17 @@
-import { ChevronDownIcon, CopyIcon } from '@primer/octicons-react';
+import { ChevronDown, Copy } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link } from 'react-router';
 import Chip from '~/components/Chip';
 import Menu from '~/components/Menu';
 import StatusCircle from '~/components/StatusCircle';
-import type { User } from '~/types';
-import cn from '~/utils/cn';
-import * as hinfo from '~/utils/host-info';
-
 import { ExitNodeTag } from '~/components/tags/ExitNode';
 import { ExpiryTag } from '~/components/tags/Expiry';
 import { HeadplaneAgentTag } from '~/components/tags/HeadplaneAgent';
 import { SubnetTag } from '~/components/tags/Subnet';
 import { TailscaleSSHTag } from '~/components/tags/TailscaleSSH';
+import type { User } from '~/types';
+import cn from '~/utils/cn';
+import * as hinfo from '~/utils/host-info';
 import { PopulatedNode } from '~/utils/node-info';
 import toast from '~/utils/toast';
 import MenuOptions from './menu';
@@ -47,13 +46,13 @@ export default function MachineRow({
 
 	return (
 		<tr
-			key={node.id}
 			className="group hover:bg-headplane-50 dark:hover:bg-headplane-950"
+			key={node.id}
 		>
 			<td className="pl-0.5 py-2 focus-within:ring-3">
 				<Link
-					to={`/machines/${node.id}`}
 					className={cn('group/link h-full focus:outline-hidden')}
+					to={`/machines/${node.id}`}
 				>
 					<p
 						className={cn(
@@ -80,7 +79,7 @@ export default function MachineRow({
 					{node.ipAddresses[0]}
 					<Menu placement="bottom end">
 						<Menu.IconButton className="bg-transparent" label="IP Addresses">
-							<ChevronDownIcon className="w-4 h-4" />
+							<ChevronDown className="w-4 h-4" />
 						</Menu.IconButton>
 						<Menu.Panel
 							onAction={async (key) => {
@@ -98,7 +97,7 @@ export default function MachineRow({
 											)}
 										>
 											{ip}
-											<CopyIcon className="w-3 h-3" />
+											<Copy className="w-3 h-3" />
 										</div>
 									</Menu.Item>
 								))}
@@ -132,8 +131,8 @@ export default function MachineRow({
 					)}
 				>
 					<StatusCircle
-						isOnline={node.online && !node.expired}
 						className="w-4 h-4"
+						isOnline={node.online && !node.expired}
 					/>
 					<p suppressHydrationWarning>
 						{node.online && !node.expired
@@ -144,10 +143,10 @@ export default function MachineRow({
 			</td>
 			<td className="py-2 pr-0.5">
 				<MenuOptions
+					isDisabled={isDisabled}
+					magic={magic}
 					node={node}
 					users={users}
-					magic={magic}
-					isDisabled={isDisabled}
 				/>
 			</td>
 		</tr>
@@ -194,30 +193,30 @@ export function mapTagsToComponents(node: PopulatedNode, uiTags: string[]) {
 		switch (tag) {
 			case 'exit-approved':
 			case 'exit-waiting':
-				return <ExitNodeTag key={tag} isEnabled={tag === 'exit-approved'} />;
+				return <ExitNodeTag isEnabled={tag === 'exit-approved'} key={tag} />;
 
 			case 'subnet-approved':
 			case 'subnet-waiting':
-				return <SubnetTag key={tag} isEnabled={tag === 'subnet-approved'} />;
+				return <SubnetTag isEnabled={tag === 'subnet-approved'} key={tag} />;
 
 			case 'expired':
 			case 'no-expiry':
 				return (
 					<ExpiryTag
+						expiry={node.expiry ?? undefined}
 						key={tag}
 						variant={tag}
-						expiry={node.expiry ?? undefined}
 					/>
 				);
 
 			case 'tailscale-ssh':
-				return <TailscaleSSHTag />;
+				return <TailscaleSSHTag key={tag} />;
 
 			case 'headplane-agent':
-				return <HeadplaneAgentTag />;
+				return <HeadplaneAgentTag key={tag} />;
 
 			default:
-				return;
+				return null;
 		}
 	});
 }

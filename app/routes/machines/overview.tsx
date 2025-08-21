@@ -1,4 +1,4 @@
-import { InfoIcon } from '@primer/octicons-react';
+import { Info } from 'lucide-react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
@@ -110,7 +110,7 @@ export default function Page() {
 								<p className="uppercase text-xs font-bold">Addresses</p>
 								{data.magic ? (
 									<Tooltip>
-										<InfoIcon className="w-4 h-4" />
+										<Info className="w-4 h-4" />
 										<Tooltip.Body className="font-normal">
 											Since MagicDNS is enabled, you can access devices based on
 											their name and also at{' '}

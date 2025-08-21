@@ -1,4 +1,4 @@
-import { RepoForkedIcon } from '@primer/octicons-react';
+import { Split } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import Chip from '~/components/Chip';
 import Dialog from '~/components/Dialog';
@@ -35,15 +35,15 @@ export default function AddNameserver({ nameservers }: Props) {
 			<Dialog.Button>Add nameserver</Dialog.Button>
 			<Dialog.Panel>
 				<Dialog.Title className="mb-4">Add nameserver</Dialog.Title>
-				<input type="hidden" name="action_id" value="add_ns" />
+				<input name="action_id" type="hidden" value="add_ns" />
 				<Input
+					description="Use this IPv4 or IPv6 address to resolve names."
+					isInvalid={isInvalid}
 					isRequired
 					label="Nameserver"
-					description="Use this IPv4 or IPv6 address to resolve names."
-					placeholder="1.2.3.4"
 					name="ns"
 					onChange={setNs}
-					isInvalid={isInvalid}
+					placeholder="1.2.3.4"
 				/>
 				<div className="flex items-center justify-between mt-8">
 					<div className="block">
@@ -53,9 +53,9 @@ export default function AddNameserver({ nameservers }: Props) {
 							</Dialog.Text>
 							<Tooltip>
 								<Chip
-									text="Split DNS"
-									leftIcon={<RepoForkedIcon className="w-4 h-4 mr-0.5" />}
 									className={cn('inline-flex items-center')}
+									leftIcon={<Split className="w-3 h-3 mr-0.5" />}
+									text="Split DNS"
 								/>
 								<Tooltip.Body>
 									Only clients that support split DNS (Tailscale v1.8 or later
@@ -76,9 +76,9 @@ export default function AddNameserver({ nameservers }: Props) {
 						<Input
 							isRequired={split === true}
 							label="Domain"
-							placeholder="example.com"
 							name="split_name"
 							onChange={setDomain}
+							placeholder="example.com"
 						/>
 						<Dialog.Text className="text-sm">
 							Only single-label or fully-qualified queries matching this suffix
@@ -86,7 +86,7 @@ export default function AddNameserver({ nameservers }: Props) {
 						</Dialog.Text>
 					</>
 				) : (
-					<input type="hidden" name="split_name" value="global" />
+					<input name="split_name" type="hidden" value="global" />
 				)}
 			</Dialog.Panel>
 		</Dialog>
