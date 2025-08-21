@@ -1,4 +1,4 @@
-import { constants, access, readFile } from 'node:fs/promises';
+import { access, constants, readFile } from 'node:fs/promises';
 import { env } from 'node:process';
 import { type } from 'arktype';
 import { configDotenv } from 'dotenv';
@@ -23,8 +23,8 @@ export class ConfigError extends Error {
  * Interpolate environment variables in a string
  * Replaces ${VAR_NAME} patterns with the actual environment variable values
  */
-function interpolateEnvVars(str: string): string {
-	return str.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+export function interpolateEnvVars(str: string): string {
+	return str.replace(/\$\{([^}]+)\}/g, (_, varName) => {
 		const value = env[varName];
 		if (value === undefined) {
 			throw new ConfigError(`Environment variable "${varName}" not found`);
@@ -52,9 +52,9 @@ export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 	if (!loadEnv) {
 		log.debug('config', 'Environment variable overrides are disabled');
 		log.debug('config', 'This also disables the loading of a .env file');
-		config = await loadSecretsFromFiles(config);
+		const moddedConfig = await loadSecretsFromFiles(config);
 		log.debug('config', 'Loaded file-based secrets');
-		return config;
+		return moddedConfig;
 	}
 
 	log.info('config', 'Loading a .env file (if available)');
@@ -67,10 +67,10 @@ export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 		);
 	}
 
-	config = await loadSecretsFromFiles(config);
+	const moddedConfig = await loadSecretsFromFiles(config);
 	log.debug('config', 'Loaded file-based secrets');
 
-	return config;
+	return moddedConfig;
 }
 
 /**
@@ -78,13 +78,40 @@ export async function loadConfig({ loadEnv, path }: EnvOverrides) {
  * reads that file and assigns its contents to the corresponding key
  * without the suffix, then removes the "_path" property.
  */
-const SECRET_PATH_KEYS = new Set([
+const SECRET_PATH_KEYS = [
 	'pre_authkey_path',
 	'client_secret_path',
 	'headscale_api_key_path',
 	'cookie_secret_path',
-]);
-async function loadSecretsFromFiles<T extends object>(obj: T): Promise<T> {
+] as const;
+
+// For fast set hashing lookups, but we still need the array for typings
+const SECRET_PATH_KEY_SET = new Set<string>(SECRET_PATH_KEYS);
+
+type SecretPathKey = (typeof SECRET_PATH_KEYS)[number];
+type StripPath<S extends string> = S extends `${infer T}_path` ? T : never;
+type KeysToPromote<T> = Extract<keyof T & string, SecretPathKey>;
+type MappedKeys<T> = StripPath<KeysToPromote<T>>;
+
+type NonNullablized<T> = Omit<T, KeysToPromote<T> | MappedKeys<T>> & {
+	[K in MappedKeys<T>]-?: string;
+};
+
+type NestedNonNullablized<T> = T extends readonly (infer U)[]
+	? readonly NestedNonNullablized<U>[]
+	: T extends (infer U)[]
+		? NestedNonNullablized<U>[]
+		: T extends object
+			? {
+					[K in keyof NonNullablized<T>]: NestedNonNullablized<
+						NonNullablized<T>[K]
+					>;
+				}
+			: T;
+
+async function loadSecretsFromFiles<T extends object>(
+	obj: T,
+): Promise<NestedNonNullablized<T>> {
 	// Work with a Record so we can mutate/delete properties
 	const record = obj as Record<string, unknown>;
 
@@ -97,7 +124,7 @@ async function loadSecretsFromFiles<T extends object>(obj: T): Promise<T> {
 			continue;
 		}
 
-		if (SECRET_PATH_KEYS.has(key) && typeof val === 'string') {
+		if (SECRET_PATH_KEY_SET.has(key) && typeof val === 'string') {
 			try {
 				const path = interpolateEnvVars(val);
 				const content = await readFile(path, 'utf8');
@@ -114,26 +141,7 @@ async function loadSecretsFromFiles<T extends object>(obj: T): Promise<T> {
 	}
 
 	// Cast back to the original T so callers keep their precise type
-	return record as T;
-}
-
-export async function hp_loadConfig() {
-	// 	// OIDC Related Checks
-	// 	if (config.oidc) {
-	// 		if (!config.oidc.client_secret && !config.oidc.client_secret_path) {
-	// 			log.error('CFGX', 'OIDC configuration is missing a secret, disabling');
-	// 			log.error(
-	// 				'CFGX',
-	// 				'Please specify either `oidc.client_secret` or `oidc.client_secret_path`',
-	// 			);
-	// 		}
-	// 		if (config.oidc?.strict_validation) {
-	// 			const result = await testOidc(config.oidc);
-	// 			if (!result) {
-	// 				log.error('CFGX', 'OIDC configuration failed validation, disabling');
-	// 			}
-	// 		}
-	// 	}
+	return record as NestedNonNullablized<T>;
 }
 
 async function validateConfigPath(path: string) {
