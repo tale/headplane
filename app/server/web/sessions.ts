@@ -246,6 +246,16 @@ async function migrateUserDatabase(path: string, db: LibSQLDatabase) {
 
 	try {
 		const data = await readFile(realPath, 'utf8');
+		if (data.trim().length === 0) {
+			log.info('config', 'Old user database file is empty, nothing to migrate');
+			log.info(
+				'config',
+				'You SHOULD remove oidc.user_storage_file from your config!',
+			);
+			await rm(realPath, { force: true });
+			return;
+		}
+
 		const users = JSON.parse(data.trim()) as {
 			u?: string;
 			c?: number;
