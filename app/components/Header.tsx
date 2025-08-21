@@ -42,8 +42,6 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 	return (
 		<div className="relative py-2">
 			<NavLink
-				to={to}
-				prefetch="intent"
 				className={({ isActive }) =>
 					cn(
 						'px-3 py-2 flex items-center rounded-md text-nowrap gap-x-2.5',
@@ -54,6 +52,8 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 						isActive ? 'after:visible' : 'after:invisible',
 					)
 				}
+				prefetch="intent"
+				to={to}
 			>
 				{icon} {name}
 			</NavLink>
@@ -64,13 +64,13 @@ function TabLink({ name, to, icon }: TabLinkProps) {
 function Link({ href, text }: LinkProps) {
 	return (
 		<a
-			href={href}
-			target="_blank"
-			rel="noreferrer"
 			className={cn(
 				'hidden sm:block hover:underline text-sm',
 				'focus:outline-hidden focus:ring-3 rounded-md',
 			)}
+			href={href}
+			rel="noreferrer"
+			target="_blank"
 		>
 			{text}
 		</a>
@@ -101,20 +101,21 @@ export default function Header(data: Props) {
 					{data.user ? (
 						<Menu>
 							<Menu.IconButton
-								label="User"
 								className={cn(data.user.picture ? 'p-0' : '')}
+								label="User"
 							>
 								{data.user.picture ? (
 									<img
-										src={data.user.picture}
-										alt={data.user.name || data.user.displayName}
+										alt={data.user.name}
 										className="w-8 h-8 rounded-full"
+										src={data.user.picture}
 									/>
 								) : (
 									<CircleUser />
 								)}
 							</Menu.IconButton>
 							<Menu.Panel
+								disabledKeys={['profile']}
 								onAction={(key) => {
 									if (key === 'logout') {
 										submit(
@@ -126,12 +127,11 @@ export default function Header(data: Props) {
 										);
 									}
 								}}
-								disabledKeys={['profile']}
 							>
 								<Menu.Section>
 									<Menu.Item key="profile" textValue="Profile">
 										<div className="text-black dark:text-headplane-50">
-											<p className="font-bold">{data.user.name || data.user.displayName}</p>
+											<p className="font-bold">{data.user.name}</p>
 											<p>{data.user.email}</p>
 										</div>
 									</Menu.Item>
@@ -148,39 +148,39 @@ export default function Header(data: Props) {
 				<nav className="container flex items-center gap-x-4 overflow-x-auto font-semibold">
 					{data.access.machines ? (
 						<TabLink
-							to="/machines"
-							name="Machines"
 							icon={<Server className="w-5" />}
+							name="Machines"
+							to="/machines"
 						/>
 					) : undefined}
 					{data.access.users ? (
 						<TabLink
-							to="/users"
-							name="Users"
 							icon={<Users className="w-5" />}
+							name="Users"
+							to="/users"
 						/>
 					) : undefined}
 					{data.access.policy ? (
 						<TabLink
-							to="/acls"
-							name="Access Control"
 							icon={<Lock className="w-5" />}
+							name="Access Control"
+							to="/acls"
 						/>
 					) : undefined}
 					{data.configAvailable ? (
 						<>
 							{data.access.dns ? (
 								<TabLink
-									to="/dns"
-									name="DNS"
 									icon={<Globe2 className="w-5" />}
+									name="DNS"
+									to="/dns"
 								/>
 							) : undefined}
 							{data.access.settings ? (
 								<TabLink
-									to="/settings"
-									name="Settings"
 									icon={<Settings className="w-5" />}
+									name="Settings"
+									to="/settings"
 								/>
 							) : undefined}
 						</>
