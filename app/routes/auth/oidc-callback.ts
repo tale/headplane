@@ -1,10 +1,12 @@
+import { createHash } from 'node:crypto';
 import { count } from 'drizzle-orm';
 import { createCookie, type LoaderFunctionArgs, redirect } from 'react-router';
 import { ulid } from 'ulidx';
 import type { LoadContext } from '~/server';
+import { HeadplaneConfig } from '~/server/config/schema';
 import { users } from '~/server/db/schema';
 import { Roles } from '~/server/web/roles';
-import { finishAuthFlow, formatError } from '~/utils/oidc';
+import { FlowUser, finishAuthFlow, formatError } from '~/utils/oidc';
 import { send } from '~/utils/res';
 
 interface OidcFlowSession {
@@ -60,7 +62,14 @@ export async function loader({
 	};
 
 	try {
-		const user = await finishAuthFlow(context.oidc, flowOptions);
+		let user = await finishAuthFlow(context.oidc, flowOptions);
+		user = {
+			...user,
+			picture: setOidcPictureForSource(
+				user,
+				context.config.oidc?.profile_picture_source ?? 'oidc',
+			),
+		};
 
 		const [{ count: userCount }] = await context.db
 			.select({ count: count() })
@@ -95,4 +104,27 @@ export async function loader({
 			},
 		});
 	}
+}
+
+type PictureSource = NonNullable<
+	HeadplaneConfig['oidc']
+>['profile_picture_source'];
+
+function setOidcPictureForSource(user: FlowUser, source: PictureSource) {
+	// Already set by default in the callback, so we can just return it
+	if (source === 'oidc') {
+		return user.picture;
+	}
+
+	if (source === 'gravatar') {
+		if (!user.email) {
+			return undefined;
+		}
+
+		const emailHash = user.email.trim().toLowerCase();
+		const hash = createHash('sha256').update(emailHash).digest('hex');
+		return `https://www.gravatar.com/avatar/${hash}?s=200&d=identicon&r=x`;
+	}
+
+	return undefined;
 }

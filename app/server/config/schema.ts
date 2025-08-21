@@ -63,6 +63,7 @@ const oidcConfig = type({
 	disable_api_key_login: stringToBool,
 	headscale_api_key: 'string?',
 	headscale_api_key_path: 'string?',
+	profile_picture_source: '"oidc" | "gravatar" = "oidc"',
 	strict_validation: stringToBool.default(true),
 })
 	.narrow((obj: Record<string, unknown>, ctx: any) => {
@@ -94,6 +95,7 @@ const partialOidcConfig = type({
 	disable_api_key_login: stringToBool.optional(),
 	headscale_api_key: 'string?',
 	headscale_api_key_path: 'string?',
+	profile_picture_source: '("oidc" | "gravatar")?',
 	strict_validation: stringToBool.default(true),
 });
 

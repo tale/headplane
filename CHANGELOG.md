@@ -21,6 +21,7 @@
 - The nix overlay build is fixed for the SSH module (via [#282](https://github.com/tale/headplane/pull/282))
 - Switch our build processes to use TypeScript Go and Rolldown Vite for better build and type-check performance.
 - Cookies are now encrypted JWTs, preserving API key secrets (*GHSA-wrqq-v7qw-r5w7*)
+- OIDC profile pictures are now available from Gravatar by setting `oidc.profile_picture_source` to `gravatar` (closes [#232](https://github.com/tale/headplane/issues/232)).
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
