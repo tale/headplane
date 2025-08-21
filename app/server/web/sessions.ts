@@ -221,6 +221,23 @@ async function migrateUserDatabase(path: string, db: LibSQLDatabase) {
 	log.info('config', 'Migrating old user database from %s', path);
 	const realPath = resolve(path);
 
+	log.warn(
+		'config',
+		'oidc.user_storage_file is deprecated and will be removed in Headplane 0.7.0',
+	);
+	log.warn(
+		'config',
+		'You can ignore this warning if you do not use OIDC authentication.',
+	);
+	log.warn(
+		'config',
+		'Data will be automatically migrated to the new SQL database.',
+	);
+	log.warn(
+		'config',
+		'Refer to server.data_path to ensure this path is mounted correctly is using Docker.',
+	);
+
 	try {
 		const handle = await open(realPath, 'a+');
 		await handle.close();

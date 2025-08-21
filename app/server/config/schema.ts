@@ -91,7 +91,7 @@ const partialOidcConfig = type({
 	token_endpoint_auth_method:
 		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 	redirect_uri: 'string.url?',
-	user_storage_file: 'string = "/var/lib/headplane/users.json"',
+	user_storage_file: 'string?',
 	disable_api_key_login: stringToBool.optional(),
 	headscale_api_key: 'string?',
 	headscale_api_key_path: 'string?',

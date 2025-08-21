@@ -17,6 +17,7 @@ server:
   # any cache related files.
   #
   # Data formats prior to 0.6.1 will automatically be migrated.
+  # PLEASE ensure this directory is mounted if running in Docker.
   data_path: "/var/lib/headplane"
 
 # Headscale specific settings to allow Headplane to talk
@@ -160,10 +161,6 @@ oidc:
   # This should point to your publicly accessibly URL
   # for your Headplane instance with /admin/oidc/callback
   redirect_uri: "http://localhost:3000/admin/oidc/callback"
-
-  # Stores the users and their permissions for Headplane
-  # This is a path to a JSON file, default is specified below.
-  user_storage_file: "/var/lib/headplane/users.json"
 
   # By default profile pictures are pulled from the OIDC provider when
   # we go to fetch the userinfo endpoint. Optionally, this can be set to
