@@ -58,7 +58,7 @@ export async function loadConfig({ loadEnv, path }: EnvOverrides) {
 	}
 
 	log.info('config', 'Loading a .env file (if available)');
-	configDotenv({ override: true });
+	configDotenv({ override: true, quiet: true });
 	const merged = coalesceEnv(config);
 	if (merged) config = merged;
 	if (config.headscale && typeof config.headscale.config_path === 'string') {
