@@ -20,7 +20,7 @@ export async function authKeysAction({
 	}
 
 	const formData = await request.formData();
-	const apiKey = session.get('api_key')!;
+	const apiKey = session.api_key;
 	const action = formData.get('action_id')?.toString();
 	if (!action) {
 		throw data('Missing `action_id` in the form data.', {

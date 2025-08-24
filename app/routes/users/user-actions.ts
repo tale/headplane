@@ -1,7 +1,6 @@
-import { ActionFunctionArgs, Session, data } from 'react-router';
+import { ActionFunctionArgs, data } from 'react-router';
 import type { LoadContext } from '~/server';
 import { Capabilities, Roles } from '~/server/web/roles';
-import { AuthSession } from '~/server/web/sessions';
 import { User } from '~/types';
 import { data400, data403 } from '~/utils/res';
 
@@ -15,7 +14,7 @@ export async function userAction({
 		throw data403('You do not have permission to update users');
 	}
 
-	const apiKey = session.get('api_key')!;
+	const apiKey = session.api_key;
 	const formData = await request.formData();
 	const action = formData.get('action_id')?.toString();
 	if (!action) {

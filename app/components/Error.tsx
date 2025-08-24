@@ -1,8 +1,9 @@
-import { AlertIcon } from '@primer/octicons-react';
+import { AlertCircle } from 'lucide-react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
 import ResponseError from '~/server/headscale/api-error';
 import cn from '~/utils/cn';
 import Card from './Card';
+import Code from './Code';
 
 interface Props {
 	type?: 'full' | 'embedded';
@@ -69,14 +70,16 @@ export function ErrorPopup({ type = 'full' }: Props) {
 			)}
 		>
 			<Card>
-				<div className="flex items-center justify-between">
-					<Card.Title className="text-3xl mb-0">
-						{routing ? error.status : title}
-					</Card.Title>
-					<AlertIcon className="w-12 h-12 text-red-500" />
+				<div className="flex items-center gap-4">
+					<AlertCircle className="w-8 h-8 text-red-500" />
+					<div className="flex justify-between items-center gap-2 w-full">
+						<Card.Title className="text-3xl mb-0">{title}</Card.Title>
+						{routing && <Code className="text-2xl">{`${error.status}`}</Code>}
+					</div>
 				</div>
+				<hr className="my-4 text-headplane-100 dark:text-headplane-800" />
 				<Card.Text
-					className={cn('mt-4 text-lg', routing ? 'font-normal' : 'font-mono')}
+					className={cn('py-4 text-lg', routing ? 'font-normal' : 'font-mono')}
 				>
 					{routing ? error.data : message}
 				</Card.Text>

@@ -4,10 +4,10 @@ Simple mode enables you to quickly deploy Headplane and is recommended for any
 testing or simple environments. It does not include the automatic management of
 DNS and Headplane settings, requiring manual editing and reloading when making
 changes. If you're looking for a more feature-complete deployment method, check
-out [**Integrated Mode**](/docs/Integrated-Mode.md).
+out [**Integrated Mode**](./Integrated-Mode.md).
 
 ## Deployment
-> If you are not looking to deploy with Docker, follow the [**Bare-Metal**](/docs/Bare-Metal.md) deployment guide.
+> If you are not looking to deploy with Docker, follow the [**Bare-Metal**](./Bare-Metal.md) deployment guide.
 
 Requirements:
 - Docker and Docker Compose
@@ -33,5 +33,5 @@ This will result in the Headplane UI being available at the `/admin` path of the
 server you deployed it on. The `/admin` path is currently not configurable unless
 you build the container yourself or run Headplane in Bare-Metal mode.
 
-> Refer to the [**Configuration**](/docs/Configuration.md) guide for help with
+> Refer to the [**Configuration**](./Configuration.md) guide for help with
 > setting up your `config.yaml` file to the appropriate values.

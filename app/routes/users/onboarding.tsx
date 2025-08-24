@@ -4,12 +4,7 @@ import { GrApple } from 'react-icons/gr';
 import { ImFinder } from 'react-icons/im';
 import { MdAndroid } from 'react-icons/md';
 import { PiTerminalFill, PiWindowsLogoFill } from 'react-icons/pi';
-import {
-	LoaderFunctionArgs,
-	NavLink,
-	redirect,
-	useLoaderData,
-} from 'react-router';
+import { LoaderFunctionArgs, NavLink, useLoaderData } from 'react-router';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
 import Link from '~/components/Link';
@@ -27,10 +22,6 @@ export async function loader({
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
 	const session = await context.sessions.auth(request);
-	const user = session.get('user');
-	if (!user) {
-		return redirect('/login');
-	}
 
 	// Try to determine the OS split between Linux, Windows, macOS, iOS, and Android
 	// We need to convert this to a known value to return it to the client so we can
@@ -60,11 +51,11 @@ export async function loader({
 			break;
 	}
 
-	let firstMachine: Machine | undefined = undefined;
+	let firstMachine: Machine | undefined;
 	try {
 		const { nodes } = await context.client.get<{ nodes: Machine[] }>(
 			'v1/node',
-			session.get('api_key')!,
+			session.api_key,
 		);
 
 		const node = nodes.find((n) => {
@@ -79,12 +70,7 @@ export async function loader({
 				return false;
 			}
 
-			const sessionUser = session.get('user');
-			if (!sessionUser) {
-				return false;
-			}
-
-			if (subject !== sessionUser.subject) {
+			if (subject !== session.user.subject) {
 				return false;
 			}
 
@@ -98,7 +84,7 @@ export async function loader({
 	}
 
 	return {
-		user,
+		user: session.user,
 		osValue,
 		firstMachine,
 	};
@@ -126,7 +112,7 @@ export default function Page() {
 	return (
 		<div className="fixed w-full h-screen flex items-center px-4">
 			<div className="w-fit mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 mb-24">
-				<Card variant="flat" className="max-w-lg">
+				<Card className="max-w-lg" variant="flat">
 					<Card.Title className="mb-8">
 						Welcome!
 						<br />
@@ -138,9 +124,9 @@ export default function Page() {
 					</Card.Text>
 
 					<Options
+						className="my-4"
 						defaultSelectedKey={osValue}
 						label="Download Selector"
-						className="my-4"
 					>
 						<Options.Item
 							key="linux"
@@ -183,12 +169,12 @@ export default function Page() {
 							}
 						>
 							<a
-								href="https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe"
 								aria-label="Download for Windows"
-								target="_blank"
+								href="https://pkgs.tailscale.com/stable/tailscale-setup-latest.exe"
 								rel="noreferrer"
+								target="_blank"
 							>
-								<Button variant="heavy" className="my-4 w-full">
+								<Button className="my-4 w-full" variant="heavy">
 									Download for Windows
 								</Button>
 							</a>
@@ -206,12 +192,12 @@ export default function Page() {
 							}
 						>
 							<a
-								href="https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg"
 								aria-label="Download for macOS"
-								target="_blank"
+								href="https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg"
 								rel="noreferrer"
+								target="_blank"
 							>
-								<Button variant="heavy" className="my-4 w-full">
+								<Button className="my-4 w-full" variant="heavy">
 									Download for macOS
 								</Button>
 							</a>
@@ -238,12 +224,12 @@ export default function Page() {
 							}
 						>
 							<a
-								href="https://apps.apple.com/us/app/tailscale/id1470499037"
 								aria-label="Download for iOS"
-								target="_blank"
+								href="https://apps.apple.com/us/app/tailscale/id1470499037"
 								rel="noreferrer"
+								target="_blank"
 							>
-								<Button variant="heavy" className="my-4 w-full">
+								<Button className="my-4 w-full" variant="heavy">
 									Download for iOS
 								</Button>
 							</a>
@@ -261,12 +247,12 @@ export default function Page() {
 							}
 						>
 							<a
-								href="https://play.google.com/store/apps/details?id=com.tailscale.ipn"
 								aria-label="Download for Android"
-								target="_blank"
+								href="https://play.google.com/store/apps/details?id=com.tailscale.ipn"
 								rel="noreferrer"
+								target="_blank"
 							>
-								<Button variant="heavy" className="my-4 w-full">
+								<Button className="my-4 w-full" variant="heavy">
 									Download for Android
 								</Button>
 							</a>
@@ -287,8 +273,8 @@ export default function Page() {
 							<div className="border border-headplane-100 dark:border-headplane-800 rounded-xl p-4">
 								<div className="flex items-start gap-4">
 									<StatusCircle
-										isOnline={firstMachine.online}
 										className="size-6 mt-3"
+										isOnline={firstMachine.online}
 									/>
 									<div>
 										<p className="font-semibold leading-snug">
@@ -300,7 +286,7 @@ export default function Page() {
 										<div className="mt-6">
 											<p className="text-sm font-semibold">IP Addresses</p>
 											{firstMachine.ipAddresses.map((ip) => (
-												<p key={ip} className="text-xs font-mono opacity-50">
+												<p className="text-xs font-mono opacity-50" key={ip}>
 													{ip}
 												</p>
 											))}
@@ -308,8 +294,8 @@ export default function Page() {
 									</div>
 								</div>
 							</div>
-							<NavLink to="/">
-								<Button variant="heavy" className="w-full">
+							<NavLink to="/onboarding/skip">
+								<Button className="w-full" variant="heavy">
 									Continue
 								</Button>
 							</NavLink>
@@ -335,7 +321,7 @@ export default function Page() {
 						</div>
 					)}
 				</Card>
-				<NavLink to="/onboarding/skip" className="col-span-2 w-max mx-auto">
+				<NavLink className="col-span-2 w-max mx-auto" to="/onboarding/skip">
 					<Button className="flex items-center gap-1">
 						I already know what I'm doing
 						<ArrowRight className="p-1" />

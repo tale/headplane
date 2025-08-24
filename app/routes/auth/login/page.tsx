@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import {
 	ActionFunctionArgs,
+	data,
 	Form,
 	LoaderFunctionArgs,
 	Link as RemixLink,
-	data,
 	redirect,
 	useActionData,
 	useLoaderData,
@@ -24,10 +24,8 @@ export async function loader({
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
 	try {
-		const session = await context.sessions.auth(request);
-		if (session.has('api_key')) {
-			return redirect('/machines');
-		}
+		await context.sessions.auth(request);
+		return redirect('/machines');
 	} catch {}
 
 	const qp = new URL(request.url).searchParams;
@@ -104,26 +102,26 @@ export default function Page() {
 						terminal.
 					</Card.Text>
 					<Input
+						className="mt-8 mb-2"
 						isRequired
-						labelHidden
 						label="API Key"
+						labelHidden
 						name="api_key"
 						placeholder="API Key"
 						type="password"
-						className="mt-8 mb-2"
 					/>
 					{formData?.success === false ? (
 						<Card.Text className="text-sm mb-2 text-red-600 dark:text-red-300">
 							{formData.message}
 						</Card.Text>
 					) : undefined}
-					<Button className="w-full" variant="heavy" type="submit">
+					<Button className="w-full" type="submit" variant="heavy">
 						Sign In
 					</Button>
 				</Form>
 				{oidc ? (
 					<RemixLink to="/oidc/start">
-						<Button variant="light" className="w-full mt-2">
+						<Button className="w-full mt-2" variant="light">
 							Single Sign-On
 						</Button>
 					</RemixLink>

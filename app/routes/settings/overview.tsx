@@ -1,4 +1,4 @@
-import { ArrowRightIcon } from '@primer/octicons-react';
+import { ArrowRight } from 'lucide-react';
 import {
 	LoaderFunctionArgs,
 	Link as RemixLink,
@@ -34,8 +34,8 @@ export default function Page() {
 					add devices to your Tailnet. To learn more about using
 					pre-authentication keys, visit the{' '}
 					<Link
-						to="https://tailscale.com/kb/1085/auth-keys/"
 						name="Tailscale Auth Keys documentation"
+						to="https://tailscale.com/kb/1085/auth-keys/"
 					>
 						Tailscale documentation
 					</Link>
@@ -44,7 +44,7 @@ export default function Page() {
 			<RemixLink to="/settings/auth-keys">
 				<div className="text-lg font-medium flex items-center">
 					Manage Auth Keys
-					<ArrowRightIcon className="w-5 h-5 ml-2" />
+					<ArrowRight className="w-5 h-5 ml-2" />
 				</div>
 			</RemixLink>
 			{config && oidc ? (
@@ -60,8 +60,8 @@ export default function Page() {
 							groups and Headplane will also respect these settings when
 							authenticating.{' '}
 							<Link
-								to="https://headscale.net/stable/ref/oidc/#basic-configuration"
 								name="Headscale OIDC documentation"
+								to="https://headscale.net/stable/ref/oidc/#basic-configuration"
 							>
 								Learn More
 							</Link>
@@ -70,7 +70,7 @@ export default function Page() {
 					<RemixLink to="/settings/restrictions">
 						<div className="text-lg font-medium flex items-center">
 							Manage Restrictions
-							<ArrowRightIcon className="w-5 h-5 ml-2" />
+							<ArrowRight className="w-5 h-5 ml-2" />
 						</div>
 					</RemixLink>
 				</>

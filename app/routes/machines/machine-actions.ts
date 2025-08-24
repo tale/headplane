@@ -14,7 +14,7 @@ export async function machineAction({
 	);
 
 	const formData = await request.formData();
-	const apiKey = session.get('api_key')!;
+	const apiKey = session.api_key;
 
 	const action = formData.get('action_id')?.toString();
 	if (!action) {
@@ -55,7 +55,7 @@ export async function machineAction({
 	}
 
 	if (
-		node.user.providerId?.split('/').pop() !== session.get('user')!.subject &&
+		node.user.providerId?.split('/').pop() !== session.user.subject &&
 		!check
 	) {
 		throw data('You do not have permission to act on this machine', {

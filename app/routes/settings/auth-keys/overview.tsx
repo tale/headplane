@@ -1,8 +1,7 @@
 import { FileKey2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData } from 'react-router';
-import { Link as RemixLink } from 'react-router';
+import { Link as RemixLink, useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
@@ -23,7 +22,7 @@ export async function loader({
 	const session = await context.sessions.auth(request);
 	const { users } = await context.client.get<{ users: User[] }>(
 		'v1/user',
-		session.get('api_key')!,
+		session.api_key,
 	);
 
 	const preAuthKeys = await Promise.all(
@@ -36,7 +35,7 @@ export async function loader({
 				try {
 					const { preAuthKeys } = await context.client.get<{
 						preAuthKeys: PreAuthKey[];
-					}>(`v1/preauthkey?${qp.toString()}`, session.get('api_key')!);
+					}>(`v1/preauthkey?${qp.toString()}`, session.api_key);
 					return {
 						success: true,
 						user,
@@ -139,13 +138,15 @@ export default function Page() {
 
 					return key.reusable;
 				}
+
+				return false;
 			});
 	}, [keys, selectedUser, status]);
 
 	return (
 		<div className="flex flex-col md:w-2/3">
 			<p className="mb-8 text-md">
-				<RemixLink to="/settings" className="font-medium">
+				<RemixLink className="font-medium" to="/settings">
 					Settings
 				</RemixLink>
 				<span className="mx-2">/</span> Pre-Auth Keys
@@ -176,8 +177,8 @@ export default function Page() {
 				devices to your Tailnet. To learn more about using pre-authentication
 				keys, visit the{' '}
 				<Link
-					to="https://tailscale.com/kb/1085/auth-keys/"
 					name="Tailscale Auth Keys documentation"
+					to="https://tailscale.com/kb/1085/auth-keys/"
 				>
 					Tailscale documentation
 				</Link>
@@ -185,14 +186,14 @@ export default function Page() {
 			<AddAuthKey users={users} />
 			<div className="flex items-center gap-4 mt-4">
 				<Select
-					label="User"
-					placeholder="Select a user"
 					className="w-full"
 					defaultSelectedKey="__headplane_all"
 					isDisabled={isDisabled}
+					label="User"
 					onSelectionChange={(value) =>
 						setSelectedUser(value?.toString() ?? '')
 					}
+					placeholder="Select a user"
 				>
 					{[
 						<Select.Item key="__headplane_all">All</Select.Item>,
@@ -202,14 +203,14 @@ export default function Page() {
 					]}
 				</Select>
 				<Select
-					label="Status"
-					placeholder="Select a status"
 					className="w-full"
 					defaultSelectedKey="active"
 					isDisabled={isDisabled}
+					label="Status"
 					onSelectionChange={(value) =>
 						setStatus((value?.toString() ?? 'active') as Status)
 					}
+					placeholder="Select a status"
 				>
 					<Select.Item key="all">All</Select.Item>
 					<Select.Item key="active">Active</Select.Item>

@@ -69,10 +69,18 @@ interface FlowOptions {
 	nonce?: string;
 }
 
+export interface FlowUser {
+	subject: string;
+	name: string;
+	email: string | undefined;
+	username: string | undefined;
+	picture: string | undefined;
+}
+
 export async function finishAuthFlow(
 	config: Configuration,
 	options: FlowOptions,
-) {
+): Promise<FlowUser> {
 	const tokens = await client.authorizationCodeGrant(
 		config,
 		new URL(options.redirect_uri),

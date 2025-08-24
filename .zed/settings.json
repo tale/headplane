@@ -6,12 +6,20 @@
 	},
 	"code_actions_on_format": {
 		"source.fixAll.biome": true,
-		"source.organizeImports.biome": true
+		"source.organizeImports.biome": true,
+		"source.organizeImports": true
 	},
 	"languages": {
 		"YAML": {
 			"tab_size": 2,
 			"hard_tabs": false
+		},
+		"Go": {
+			"formatter": {
+				"language_server": {
+					"name": "gopls"
+				}
+			}
 		}
 	}
 }

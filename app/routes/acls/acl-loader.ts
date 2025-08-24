@@ -34,7 +34,7 @@ export async function aclLoader({
 		const { policy, updatedAt } = await context.client.get<{
 			policy: string;
 			updatedAt: string | null;
-		}>('v1/policy', session.get('api_key')!);
+		}>('v1/policy', session.api_key);
 
 		// Successfully loaded the policy, mark it as readable
 		// If `updatedAt` is null, it means the policy is in file mode.

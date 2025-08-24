@@ -4,15 +4,15 @@
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/preview-dark.png"
+        srcset="./docs/assets/preview-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/preview-light.png"
+        srcset="./docs/assets/preview-light.png"
     >
     <img
         alt="Preview"
-        src="./assets/preview-dark.png"
+        src="./docs/assets/preview-dark.png"
     >
 </picture>
 
@@ -44,12 +44,12 @@ There are 2 ways to deploy Headplane:
   Simple mode does not include the automatic management of DNS and Headplane
   settings, requiring manual editing and reloading when making changes.
 
-### Versioning
+## Versioning
 Headplane uses [semantic versioning](https://semver.org/) for its releases (since v0.6.0).
 Pre-release builds are available under the `next` tag and get updated when a new release
 PR is opened and actively in testing.
 
-### Contributing
+## Contributing
 Headplane is an open-source project and contributions are welcome! If you have
 any suggestions, bug reports, or feature requests, please open an issue. Also
 refer to the [contributor guidelines](./docs/CONTRIBUTING.md) for more info.
@@ -59,30 +59,30 @@ refer to the [contributor guidelines](./docs/CONTRIBUTING.md) for more info.
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/acls-dark.png"
+        srcset="./docs/assets/acls-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/acls-light.png"
+        srcset="./docs/assets/acls-light.png"
     >
     <img
         alt="ACLs"
-        src="./assets/acls-dark.png"
+        src="./docs/assets/acls-dark.png"
     >
 </picture>
 
 <picture>
     <source
         media="(prefers-color-scheme: dark)"
-        srcset="./assets/machine-dark.png"
+        srcset="./docs/assets/machine-dark.png"
     >
     <source
         media="(prefers-color-scheme: light)"
-        srcset="./assets/machine-light.png"
+        srcset="./docs/assets/machine-light.png"
     >
     <img
         alt="Machine Management"
-        src="./assets/machine-dark.png"
+        src="./docs/assets/machine-dark.png"
     >
 </picture>
 

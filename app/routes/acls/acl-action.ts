@@ -31,7 +31,7 @@ export async function aclAction({
 		const { policy, updatedAt } = await context.client.put<{
 			policy: string;
 			updatedAt: string;
-		}>('v1/policy', session.get('api_key')!, {
+		}>('v1/policy', session.api_key, {
 			policy: policyData,
 		});
 
