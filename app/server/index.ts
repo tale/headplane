@@ -80,6 +80,11 @@ export default createHonoServer({
 	overrideGlobalObjects: true,
 	port: config.server.port,
 	hostname: config.server.host,
+	beforeAll: async (app) => {
+		app.use(__PREFIX__, async (c) => {
+			return c.redirect(`${__PREFIX__}/`);
+		});
+	},
 	serveStaticOptions: {
 		clientAssets: {
 			// This is part of our monkey-patch for react-router-hono-server
