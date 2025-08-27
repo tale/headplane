@@ -2,7 +2,7 @@
 
 ## Gitlab
 
-To build heaplane using a Gitlab docker runner.
+To build heaplane using a Gitlab docker runner and add it to the generic package registry.
 
 ###### .gitlab-ci.yml
 
