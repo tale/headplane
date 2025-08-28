@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { count } from 'drizzle-orm';
+import { count, eq } from 'drizzle-orm';
 import { createCookie, type LoaderFunctionArgs, redirect } from 'react-router';
 import { ulid } from 'ulidx';
 import type { LoadContext } from '~/server';
@@ -73,7 +73,8 @@ export async function loader({
 
 		const [{ count: userCount }] = await context.db
 			.select({ count: count() })
-			.from(users);
+			.from(users)
+			.where(eq(users.caps, Roles.owner));
 
 		await context.db
 			.insert(users)
