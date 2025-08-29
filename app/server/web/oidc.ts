@@ -1,90 +1,37 @@
-import { readFile } from 'node:fs/promises';
-import * as client from 'openid-client';
+import * as oidc from 'openid-client';
 import log from '~/utils/log';
-import type { HeadplaneConfig } from '../config/schema';
+import { HeadplaneConfig } from '../config/schema';
 
-async function loadClientSecret(path: string) {
-	// We need to interpolate environment variables into the path
-	// Path formatting can be like ${ENV_NAME}/path/to/secret
-	const matches = path.match(/\${(.*?)}/g);
-	let resolvedPath = path;
+export type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
 
-	if (matches) {
-		for (const match of matches) {
-			const env = match.slice(2, -1);
-			const value = process.env[env];
-			if (!value) {
-				log.error('config', 'Environment variable %s is not set', env);
-				return;
-			}
-
-			log.debug('config', 'Interpolating %s with %s', match, value);
-			resolvedPath = resolvedPath.replace(match, value);
-		}
-	}
-
-	try {
-		log.debug('config', 'Reading client secret from %s', resolvedPath);
-		const secret = await readFile(resolvedPath, 'utf-8');
-		if (secret.trim().length === 0) {
-			log.error('config', 'Empty OIDC client secret');
-			return;
-		}
-
-		return secret.trim();
-	} catch (error) {
-		log.error('config', 'Failed to read client secret from %s', path);
-		log.error('config', 'Error: %s', error);
-		log.debug('config', 'Error details: %o', error);
-	}
-}
-
-function clientAuthMethod(
-	method: string,
-): (secret: string) => client.ClientAuth {
-	switch (method) {
-		case 'client_secret_post':
-			return client.ClientSecretPost;
+export async function configureOidcAuth(config: OidcConfig) {
+	log.debug('config', 'Running OIDC discovery for %s', config.issuer);
+	let clientAuthMethod: oidc.ClientAuth;
+	switch (config.token_endpoint_auth_method) {
 		case 'client_secret_basic':
-			return client.ClientSecretBasic;
+			clientAuthMethod = oidc.ClientSecretBasic(config.client_secret!);
+			break;
+		case 'client_secret_post':
+			clientAuthMethod = oidc.ClientSecretPost(config.client_secret!);
+			break;
 		case 'client_secret_jwt':
-			return client.ClientSecretJwt;
+			clientAuthMethod = oidc.ClientSecretJwt(config.client_secret!);
+			break;
 		default:
 			throw new Error('Invalid client authentication method');
 	}
-}
 
-// Loads and configures an OIDC client to support OIDC authentication.
-// This runs under the assumption the OIDC configuration exists and is valid.
-// If it is invalid, Headplane automatically disables it.
-//
-// TODO: Support custom endpoints instead of relying on OIDC discovery.
-// This will enable us to support servers like GitHub that do not support
-// nor advertise a .well-known endpoint.
-export async function createOidcClient(
-	config: NonNullable<HeadplaneConfig['oidc']>,
-) {
-	// const secret = await loadClientSecret(oidc);
-	const secret = config.client_secret_path
-		? await loadClientSecret(config.client_secret_path)
-		: config.client_secret;
-
-	if (!secret) {
-		log.error('config', 'Missing an OIDC client secret');
-		return;
-	}
-
-	log.debug('config', 'Running OIDC discovery for %s', config.issuer);
+	let oidcClient: oidc.Configuration;
 	try {
-		const oidc = await client.discovery(
+		const discovery = await oidc.discovery(
 			new URL(config.issuer),
 			config.client_id,
-			secret,
-			clientAuthMethod(config.token_endpoint_auth_method)(secret),
+			config.client_secret!, // TODO: Fix this config schema
+			clientAuthMethod,
 		);
 
-		const metadata = oidc.serverMetadata();
-		if (!metadata.authorization_endpoint) {
+		const meta = discovery.serverMetadata();
+		if (!meta.authorization_endpoint) {
 			log.error(
 				'config',
 				'Issuer discovery did not return `authorization_endpoint`',
@@ -93,70 +40,118 @@ export async function createOidcClient(
 				'config',
 				'OIDC server does not support authorization code flow',
 			);
+			log.error('config', 'You may need to set this manually in the config');
 			return;
 		}
 
-		if (!metadata.token_endpoint) {
+		if (!meta.token_endpoint) {
 			log.error('config', 'Issuer discovery did not return `token_endpoint`');
-			log.error('config', 'OIDC server does not support token exchange');
+			log.error(
+				'config',
+				'OIDC server does not support authorization code flow',
+			);
+			log.error('config', 'You may need to set this manually in the config');
 			return;
 		}
 
-		// If this field is missing, assume the server supports all response types
-		// and that we can continue safely.
-		if (metadata.response_types_supported) {
-			if (!metadata.response_types_supported.includes('code')) {
-				log.error(
-					'config',
-					'Issuer discovery `response_types_supported` does not include `code`',
-				);
-				log.error('config', 'OIDC server does not support code flow');
-				return;
-			}
+		if (!meta.userinfo_endpoint) {
+			log.error(
+				'config',
+				'Issuer discovery did not return `userinfo_endpoint`',
+			);
+			log.error('config', 'OIDC server does not support user info endpoint');
+			log.error('config', 'You may need to set this manually in the config');
+			return;
 		}
 
-		if (metadata.token_endpoint_auth_methods_supported) {
+		if (meta.token_endpoint_auth_methods_supported) {
 			if (
-				!metadata.token_endpoint_auth_methods_supported.includes(
+				!meta.token_endpoint_auth_methods_supported.includes(
 					config.token_endpoint_auth_method,
 				)
 			) {
 				log.error(
 					'config',
-					'Issuer discovery `token_endpoint_auth_methods_supported` does not include `%s`',
+					'OIDC server does not support client authentication method %s',
 					config.token_endpoint_auth_method,
 				);
 				log.error(
 					'config',
-					'OIDC server does not support %s',
-					config.token_endpoint_auth_method,
+					'Supported methods: %s',
+					meta.token_endpoint_auth_methods_supported.join(', '),
 				);
 				return;
 			}
 		}
 
-		if (!metadata.userinfo_endpoint) {
-			log.error(
-				'config',
-				'Issuer discovery did not return `userinfo_endpoint`',
-			);
-			log.error('config', 'OIDC server does not support userinfo endpoint');
-			return;
-		}
-
-		log.debug('config', 'OIDC client created successfully');
-		log.info('config', 'Using %s as the OIDC issuer', config.issuer);
+		log.debug('config', 'OIDC discovery successful');
 		log.debug(
 			'config',
 			'Authorization endpoint: %s',
-			metadata.authorization_endpoint,
+			meta.authorization_endpoint,
 		);
-		log.debug('config', 'Token endpoint: %s', metadata.token_endpoint);
-		log.debug('config', 'Userinfo endpoint: %s', metadata.userinfo_endpoint);
-		return oidc;
-	} catch (error) {
-		log.error('config', 'Failed to discover OIDC issuer');
-		log.error('config', 'Error: %s', error);
-		log.debug('config', 'Error details: %o', error);
+		log.debug('config', 'Token endpoint: %s', meta.token_endpoint);
+		log.debug('config', 'Userinfo endpoint: %s', meta.userinfo_endpoint);
+
+		// Manually construct the endpoints to coalesce with config if needed
+		oidcClient = new oidc.Configuration(
+			{
+				issuer: config.issuer,
+				authorization_endpoint:
+					config.authorization_endpoint || meta.authorization_endpoint,
+				token_endpoint: config.token_endpoint || meta.token_endpoint,
+				userinfo_endpoint: config.userinfo_endpoint || meta.userinfo_endpoint,
+			},
+			config.client_id,
+			config.client_secret!,
+			clientAuthMethod,
+		);
+	} catch (err) {
+		log.error('config', 'OIDC discovery failed: %s', err);
+		log.debug('config', 'Error details: %o', err);
+		log.error(
+			'config',
+			'This may be an error, or the server may not support discovery',
+		);
+
+		if (
+			!config.authorization_endpoint ||
+			!config.token_endpoint ||
+			!config.userinfo_endpoint
+		) {
+			log.error(
+				'config',
+				'Endpoints are not fully configured, cannot continue',
+			);
+			log.error(
+				'config',
+				'You must set authorization_endpoint, token_endpoint and userinfo_endpoint manually in the config or fix the discovery issue',
+			);
+			return;
+		}
+
+		oidcClient = new oidc.Configuration(
+			{
+				issuer: config.issuer,
+				authorization_endpoint: config.authorization_endpoint,
+				token_endpoint: config.token_endpoint,
+				userinfo_endpoint: config.userinfo_endpoint,
+			},
+			config.client_id,
+			config.client_secret!,
+			clientAuthMethod,
+		);
+
+		log.debug('config', 'Using manually configured endpoints');
+		log.debug(
+			'config',
+			'Authorization endpoint: %s',
+			config.authorization_endpoint,
+		);
+		log.debug('config', 'Token endpoint: %s', config.token_endpoint);
+		log.debug('config', 'Userinfo endpoint: %s', config.userinfo_endpoint);
 	}
+
+	log.info('config', 'Successfully configured OIDC authentication');
+	return oidcClient;
 }

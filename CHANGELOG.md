@@ -22,6 +22,10 @@
 - Switch our build processes to use TypeScript Go and Rolldown Vite for better build and type-check performance.
 - Cookies are now encrypted JWTs, preserving API key secrets (*GHSA-wrqq-v7qw-r5w7*)
 - OIDC profile pictures are now available from Gravatar by setting `oidc.profile_picture_source` to `gravatar` (closes [#232](https://github.com/tale/headplane/issues/232)).
+- OIDC now allows passing many custom parameters:
+	- `oidc.authorization_endpoint`, `oidc.token_endpoint`, and `oidc.userinfo_endpoint` can be overridden to support non-standard providers or scenarios without discovery (closes [#117](https://github.com/tale/headplane/issues/117)).
+	- `oidc.scope` can be set to specify custom scopes (defaults to `openid email profile`).
+	- `oidc.extra_params` can be set to pass arbitrary query parameters to the authorization endpoint (closes [#197](https://github.com/tale/headplane/issues/197)).
 
 ### 0.6.0 (May 25, 2025)
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.

@@ -25,7 +25,8 @@ export async function loader({
 	const data = await beginAuthFlow(
 		context.oidc,
 		redirectUri,
-		context.config.oidc.token_endpoint_auth_method,
+		context.config.oidc.scope,
+		context.config.oidc.extra_params,
 	);
 
 	return redirect(data.url, {

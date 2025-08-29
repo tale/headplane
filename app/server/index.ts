@@ -9,7 +9,7 @@ import { createDbClient } from './db/client.server';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { createHeadplaneAgent } from './hp-agent';
-import { createOidcClient } from './web/oidc';
+import { configureOidcAuth } from './web/oidc';
 import { createSessionStorage } from './web/sessions';
 
 declare global {
@@ -68,7 +68,7 @@ const appLoadContext = {
 
 	agents,
 	integration: await loadIntegration(config.integration),
-	oidc: config.oidc ? await createOidcClient(config.oidc) : undefined,
+	oidc: config.oidc ? await configureOidcAuth(config.oidc) : undefined,
 	db,
 };
 

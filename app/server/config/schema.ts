@@ -65,6 +65,11 @@ const oidcConfig = type({
 	headscale_api_key_path: 'string?',
 	profile_picture_source: '"oidc" | "gravatar" = "oidc"',
 	strict_validation: stringToBool.default(true),
+	scope: 'string = "openid email profile"',
+	extra_params: 'Record<string, string>?',
+	authorization_endpoint: 'string.url?',
+	token_endpoint: 'string.url?',
+	userinfo_endpoint: 'string.url?',
 })
 	.narrow((obj: Record<string, unknown>, ctx: any) => {
 		const hasVal =
@@ -97,6 +102,11 @@ const partialOidcConfig = type({
 	headscale_api_key_path: 'string?',
 	profile_picture_source: '("oidc" | "gravatar")?',
 	strict_validation: stringToBool.default(true),
+	scope: 'string?',
+	extra_params: 'Record<string, string>?',
+	authorization_endpoint: 'string.url?',
+	token_endpoint: 'string.url?',
+	userinfo_endpoint: 'string.url?',
 });
 
 const headscaleConfig = type({
