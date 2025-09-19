@@ -26,7 +26,13 @@
     ]
     settingsWithAgentExecutablePath;
   settingsWithoutNulls = filterAttrsRecursive (key: value: value != null) settingsWithoutAgentPackage;
-  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutNulls;
+  settingsWithoutEmptyOidc = 
+    if settingsWithoutNulls ? oidc && 
+       ((settingsWithoutNulls.oidc.issuer or "") == "" && (settingsWithoutNulls.oidc.client_id or "") == "") then
+      builtins.removeAttrs settingsWithoutNulls ["oidc"]
+    else
+      settingsWithoutNulls;
+  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutEmptyOidc;
 in {
   imports = [./options.nix];
   config = mkIf cfg.enable {
