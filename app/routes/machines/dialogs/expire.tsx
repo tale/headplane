@@ -16,8 +16,8 @@ export default function Expire({ machine, isOpen, setIsOpen }: ExpireProps) {
 					This will disconnect the machine from your Tailnet. In order to
 					reconnect, you will need to re-authenticate from the device.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="expire" />
-				<input type="hidden" name="node_id" value={machine.id} />
+				<input name="action_id" type="hidden" value="expire" />
+				<input name="node_id" type="hidden" value={machine.id} />
 			</Dialog.Panel>
 		</Dialog>
 	);

@@ -81,24 +81,26 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 
 		let onUnload: ((e: Event) => void) | null = null;
 		const session = ipn.OpenSSH(hostname, username, {
-			Rows: terminal.rows,
-			Cols: terminal.cols,
+			rows: terminal.rows,
+			cols: terminal.cols,
 
-			OnStdout: (data) => terminal.write(data),
-			OnStderr: (data) => {
+			onStdout: (data) => terminal.write(data),
+			onStderr: (data) => {
 				terminal.write(data);
 				console.log('SSH stderr:', data);
 				toast(data);
 			},
-			OnStdin: (func) => {
+			onStdin: (func) => {
+				console.log('SSH session is ready to receive input');
 				inputRef.current = func;
+				console.log('Stdin handler set', func);
 			},
-			OnConnect: () => {
+			onConnect: () => {
 				console.log('SSH session connected');
 				setIsLoading(false);
 			},
 
-			OnDisconnect: () => {
+			onDisconnect: () => {
 				ro?.disconnect();
 				terminal.dispose();
 				if (onUnload) {
@@ -156,8 +158,8 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 				</div>
 			) : undefined}
 			<div
-				ref={container}
 				className={cn('w-full h-full', isLoading ? 'opacity-0' : 'opacity-100')}
+				ref={container}
 			/>
 			{term.current && isResizing ? (
 				<div
@@ -172,7 +174,7 @@ export default function XTerm({ ipn, username, hostname }: XTermProps) {
 			{isFailed ? (
 				<div
 					className={cn(
-						'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2',
+						'absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center',
 						'px-4 py-2 bg-headplane-800 text-white rounded-full shadow z-50',
 					)}
 				>

@@ -14,7 +14,7 @@ import (
 	"tailscale.com/ipn/ipnlocal"
 	"tailscale.com/ipn/ipnserver"
 	"tailscale.com/ipn/store/mem"
-	"tailscale.com/net/netmon"
+	// "tailscale.com/net/netmon"
 	"tailscale.com/net/netns"
 	"tailscale.com/net/tsdial"
 	"tailscale.com/safesocket"
@@ -52,30 +52,31 @@ func NewTsWasmIpn(options *TsWasmNetOptions, callbacks *TsWasmNetCallbacks) (*Ts
 	// Base system (NewSystem() creates a bus automatically)
 	// We supply an in-memory store
 	sys := tsd.NewSystem()
-	bus := sys.Bus.Get()
+	// bus := sys.Bus.Get()
 	sys.Set(new(mem.Store))
 
 	dialer := &tsdial.Dialer{Logf: logf}
-	netmon, err := netmon.New(bus, logf)
-	if err != nil {
-		return nil, err
-	}
+	// netmon, err := netmon.New(bus, logf)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	// Userspace Wireguard engine
 	engine, err := wgengine.NewUserspaceEngine(logf, wgengine.Config{
-		Dialer:        dialer,
-		NetMon:        netmon,
+		Dialer: dialer,
+		// NetMon:        netmon,
 		SetSubsystem:  sys.Set,
 		ControlKnobs:  sys.ControlKnobs(),
 		HealthTracker: sys.HealthTracker(),
 		Metrics:       sys.UserMetricsRegistry(),
+		EventBus:      sys.Bus.Get(),
 	})
 
-	sys.Set(engine)
 	if err != nil {
 		return nil, err
 	}
 
+	sys.Set(engine)
 	tun := sys.Tun.Get()
 	msock := sys.MagicSock.Get()
 	dnsman := sys.DNSManager.Get()

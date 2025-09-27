@@ -59,12 +59,12 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		return nil, errors.New("SSHXtermConfig cannot be undefined or null")
 	}
 
-	timeout := safeInt("Timeout", obj)
-	rows := safeInt("Rows", obj)
-	cols := safeInt("Cols", obj)
+	timeout := safeInt("timeout", obj)
+	rows := safeInt("rows", obj)
+	cols := safeInt("cols", obj)
 
 	if rows <= 0 || cols <= 0 {
-		return nil, errors.New("Rows and Cols must be positive integers")
+		return nil, errors.New("`rows` and `cols` must be positive integers")
 	}
 
 	if timeout <= 0 {
@@ -77,63 +77,43 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		Cols:    cols,
 	}
 
-	onStdout := obj.Get("OnStdout")
-	if onStdout.IsUndefined() || onStdout.IsNull() {
-		return nil, errors.New("OnStdout must be a function")
-	}
-
-	if onStdout.Type() != js.TypeFunction {
-		return nil, errors.New("OnStdout must be a function")
+	onStdout := obj.Get("onStdout")
+	if onStdout.IsUndefined() || onStdout.IsNull() || (onStdout.Type() != js.TypeFunction) {
+		return nil, errors.New("`onStdout` is required and must be a function")
 	}
 
 	config.OnStdout = func(data string) {
 		onStdout.Invoke(data)
 	}
 
-	onStderr := obj.Get("OnStderr")
-	if onStderr.IsUndefined() || onStderr.IsNull() {
-		return nil, errors.New("OnStderr must be a function")
-	}
-
-	if onStderr.Type() != js.TypeFunction {
-		return nil, errors.New("OnStderr must be a function")
+	onStderr := obj.Get("onStderr")
+	if onStderr.IsUndefined() || onStderr.IsNull() || (onStderr.Type() != js.TypeFunction) {
+		return nil, errors.New("`onStderr` is required and must be a function")
 	}
 
 	config.OnStderr = func(error string) {
 		onStderr.Invoke(error)
 	}
 
-	onStdin := obj.Get("OnStdin")
-	if onStdin.IsUndefined() || onStdin.IsNull() {
-		return nil, errors.New("OnStdin must be a function")
-	}
-
-	if onStdin.Type() != js.TypeFunction {
-		return nil, errors.New("OnStdin must be a function")
+	onStdin := obj.Get("onStdin")
+	if onStdin.IsUndefined() || onStdin.IsNull() || (onStdin.Type() != js.TypeFunction) {
+		return nil, errors.New("`onStdin` is required and must be a function")
 	}
 
 	config.OnStdin = onStdin
 
-	onConnect := obj.Get("OnConnect")
-	if onConnect.IsUndefined() || onConnect.IsNull() {
-		return nil, errors.New("OnConnect must be a function")
-	}
-
-	if onConnect.Type() != js.TypeFunction {
-		return nil, errors.New("OnConnect must be a function")
+	onConnect := obj.Get("onConnect")
+	if onConnect.IsUndefined() || onConnect.IsNull() || (onConnect.Type() != js.TypeFunction) {
+		return nil, errors.New("`onConnect` is required and must be a function")
 	}
 
 	config.OnConnect = func() {
 		onConnect.Invoke()
 	}
 
-	onDisconnect := obj.Get("OnDisconnect")
-	if onDisconnect.IsUndefined() || onDisconnect.IsNull() {
-		return nil, errors.New("OnDisconnect must be a function")
-	}
-
-	if onDisconnect.Type() != js.TypeFunction {
-		return nil, errors.New("OnDisconnect must be a function")
+	onDisconnect := obj.Get("onDisconnect")
+	if onDisconnect.IsUndefined() || onDisconnect.IsNull() || (onDisconnect.Type() != js.TypeFunction) {
+		return nil, errors.New("`onDisconnect` is required and must be a function")
 	}
 
 	config.OnDisconnect = func() {

@@ -39,15 +39,16 @@ type IPNState =
 	| 'Running';
 
 interface XtermConfig {
-	Rows: number;
-	Cols: number;
+	rows: number;
+	cols: number;
+	timeout?: number;
 
-	OnStdout: (data: string) => void;
-	OnStderr: (data: string) => void;
-	OnStdin: (func: (input: string) => void) => void;
+	onStdout: (data: string) => void;
+	onStderr: (data: string) => void;
+	onStdin: (func: (input: string) => void) => void;
 
-	OnConnect: () => void;
-	OnDisconnect: () => void;
+	onConnect: () => void;
+	onDisconnect: () => void;
 }
 
 interface SSHSession {
