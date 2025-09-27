@@ -23,8 +23,8 @@ if (!version) {
 const config = await readFile('config.example.yaml', 'utf-8');
 const { server } = parse(config);
 
-export default defineConfig(({ isSsrBuild }) => ({
-	base: `${prefix}/`,
+export default defineConfig(({ mode, isSsrBuild }) => ({
+	base: mode !== 'development' ? `${prefix}/` : undefined,
 	plugins: [
 		reactRouterHonoServer(),
 		reactRouter(),
