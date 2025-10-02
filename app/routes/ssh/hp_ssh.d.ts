@@ -43,9 +43,9 @@ interface XtermConfig {
 	cols: number;
 	timeout?: number;
 
-	onStdout: (data: string) => void;
-	onStderr: (data: string) => void;
-	onStdin: (func: (input: string) => void) => void;
+	onStdout: (data: Uint8Array) => void;
+	onStderr: (data: Uint8Array) => void;
+	onStdin: (func: (input: Uint8Array) => void) => void;
 
 	onConnect: () => void;
 	onDisconnect: () => void;

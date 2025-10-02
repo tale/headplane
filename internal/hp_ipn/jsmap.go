@@ -4,7 +4,6 @@ package hp_ipn
 
 import (
 	"errors"
-	"log"
 	"syscall/js"
 )
 
@@ -43,14 +42,14 @@ func ParseTsWasmNetOptions(obj js.Value) (*TsWasmNetOptions, error) {
 
 // Options passed from the JS side to pass data to xterm.js.
 type SSHXtermConfig struct {
-	Timeout      int                // Timeout in seconds for the PTY connection.
-	Rows         int                // Number of rows in the PTY.
-	Cols         int                // Number of columns in the PTY.
-	OnStdout     func(data string)  // Fires when the PTY has output.
-	OnStderr     func(error string) // Fires when the PTY has an error.
-	OnStdin      js.Value           // Passes a function to the JS side to provide input.
-	OnConnect    func()             // Fires when the PTY is opened.
-	OnDisconnect func()             // Fires when the PTY is closed.
+	Timeout      int                  // Timeout in seconds for the PTY connection.
+	Rows         int                  // Number of rows in the PTY.
+	Cols         int                  // Number of columns in the PTY.
+	OnStdout     func(data js.Value)  // Fires when the PTY has output.
+	OnStderr     func(error js.Value) // Fires when the PTY has an error.
+	OnStdin      js.Value             // Passes a function to the JS side to provide input.
+	OnConnect    func()               // Fires when the PTY is opened.
+	OnDisconnect func()               // Fires when the PTY is closed.
 }
 
 // Parses the provided JS object to validate and extract SSHXtermConfig.
@@ -82,7 +81,7 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		return nil, errors.New("`onStdout` is required and must be a function")
 	}
 
-	config.OnStdout = func(data string) {
+	config.OnStdout = func(data js.Value) {
 		onStdout.Invoke(data)
 	}
 
@@ -91,7 +90,7 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 		return nil, errors.New("`onStderr` is required and must be a function")
 	}
 
-	config.OnStderr = func(error string) {
+	config.OnStderr = func(error js.Value) {
 		onStderr.Invoke(error)
 	}
 
@@ -121,20 +120,6 @@ func ParseSSHXtermConfig(obj js.Value) (*SSHXtermConfig, error) {
 	}
 
 	return config, nil
-}
-
-func (t *SSHXtermConfig) PassStdinHandler(fn func(string)) {
-	handler := js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 1 || args[0].Type() != js.TypeString {
-			return nil
-		}
-
-		fn(args[0].String())
-		return nil
-	})
-
-	log.Printf("Passing stdin handler to JS: %v", handler)
-	t.OnStdin.Invoke(handler)
 }
 
 // Retrieves a string value from a JS object safely.

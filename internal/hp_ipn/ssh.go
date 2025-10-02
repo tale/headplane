@@ -3,11 +3,12 @@
 package hp_ipn
 
 import (
-	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"syscall/js"
 	"time"
 
 	"golang.org/x/crypto/ssh"
@@ -35,6 +36,9 @@ type SSHSession struct {
 
 	// Tracks resize notifications for columns.
 	ResizeCols int
+
+	// Reference to our stdin handler, released on close.
+	stdinHandler *js.Func
 }
 
 // Creates a new SSH session given a hostname and username.
@@ -92,24 +96,6 @@ func (s *SSHSession) ConnectAndRun() {
 	defer pty.Close()
 	s.Pty = pty
 
-	pty.Stdout = XtermPipe{s.TermConfig.OnStdout}
-	pty.Stderr = XtermPipe{s.TermConfig.OnStdout}
-
-	// TODO: Set Stdin func
-	stdin, err := pty.StdinPipe()
-	if err != nil {
-		s.writeError("SSH", err)
-		return
-	}
-
-	s.TermConfig.PassStdinHandler(func(input string) {
-		_, err := stdin.Write([]byte(input))
-		if err != nil {
-			s.writeError("SSH", err)
-			return
-		}
-	})
-
 	rows := s.TermConfig.Rows
 	if s.ResizeRows != 0 {
 		rows = s.ResizeRows
@@ -120,12 +106,45 @@ func (s *SSHSession) ConnectAndRun() {
 		cols = s.ResizeCols
 	}
 
-	err = pty.RequestPty("xterm", rows, cols, ssh.TerminalModes{})
+	err = pty.RequestPty("xterm", rows, cols, ssh.TerminalModes{
+		ssh.ECHO:          1,     // enable echoing
+		ssh.ICANON:        1,     // canonical mode
+		ssh.ISIG:          1,     // enable signals
+		ssh.ICRNL:         1,     // map CR to NL on input
+		ssh.IUTF8:         1,     // input is UTF-8
+		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	})
+
 	if err != nil {
 		s.writeError("SSH", err)
 		return
 	}
 
+	stdin, err := pty.StdinPipe()
+	if err != nil {
+		s.writeError("SSH", err)
+		return
+	}
+
+	s.wireStdinHandler(stdin)
+
+	stdout, err := pty.StdoutPipe()
+	if err != nil {
+		s.writeError("SSH", err)
+		return
+	}
+
+	stderr, err := pty.StderrPipe()
+	if err != nil {
+		s.writeError("SSH", err)
+		return
+	}
+
+	go io.Copy(XtermPipe{s.TermConfig.OnStdout}, stdout)
+	go io.Copy(XtermPipe{s.TermConfig.OnStderr}, stderr)
+
+	// Create our shell
 	err = pty.Shell()
 	if err != nil {
 		s.writeError("SSH", err)
@@ -155,29 +174,67 @@ func (s *SSHSession) Resize(rows, cols int) error {
 
 // Closes the SSH session.
 func (s *SSHSession) Close() error {
-	if s.Pty == nil {
-		return nil
+	if s.stdinHandler != nil {
+		s.stdinHandler.Release()
+		s.stdinHandler = nil
 	}
 
-	return s.Pty.Close()
+	if s.Pty != nil {
+		err := s.Pty.Close()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// Wires up the stdin handler to pass data from JS to the SSH session.
+func (s *SSHSession) wireStdinHandler(w io.Writer) {
+	if s.stdinHandler != nil {
+		s.stdinHandler.Release()
+		s.stdinHandler = nil
+	}
+
+	cb := js.FuncOf(func(this js.Value, args []js.Value) any {
+		v := args[0] // This is ALWAYS a Uint8Array technically
+		len := v.Get("byteLength").Int()
+		buf := make([]byte, len)
+		js.CopyBytesToGo(buf, v)
+
+		if _, err := w.Write(buf); err != nil {
+			s.writeError("SSH Stdin", err)
+			return nil
+		}
+
+		// TODO: Remove debug log
+		log.Printf("SSH wrote %d bytes: %v (%q)", len, buf, string(buf))
+		return nil
+	})
+
+	s.stdinHandler = &cb
+	s.TermConfig.OnStdin.Invoke(cb)
 }
 
 // Quick easy formatter for writing errors to the terminal.
 func (s *SSHSession) writeError(label string, err error) {
 	o := fmt.Sprintf("%s error: %v\r\n", label, err)
-	s.TermConfig.OnStderr(o)
+	uint8Array := js.Global().Get("Uint8Array").New(len(o))
+
+	js.CopyBytesToJS(uint8Array, []byte(o))
+	s.TermConfig.OnStderr(uint8Array)
 }
 
 // io.Writer "emulator" to pass to the ssh module.
 type XtermPipe struct {
 	// Function to call when data is written.
-	Send func(data string)
+	Send func(data js.Value)
 }
 
 // Write implements the io.Writer interface for XtermPipe.
 func (x XtermPipe) Write(data []byte) (int, error) {
-	// Tailscale's webSSH does this to fix issues in xterm.js
-	res := bytes.Replace(data, []byte("\n"), []byte("\n\r"), -1)
-	x.Send(string(res))
+	uint8Array := js.Global().Get("Uint8Array").New(len(data))
+	js.CopyBytesToJS(uint8Array, data)
+	x.Send(uint8Array)
 	return len(data), nil
 }
