@@ -22,29 +22,9 @@ rec {
       "x86_64-linux"
     ]
     (system: let
-      # Overlay: bump go_1_25 to 1.25.1 while nixpkgs-unstable lags behind
-      # https://nixpk.gs/pr-tracker.html?pr=441125 / https://github.com/NixOS/nixpkgs/pull/441125
-      # https://github.com/NixOS/nixpkgs/issues/440982
-      go1251Overlay = (final: prev:
-        let
-          newVersion = "1.25.1";
-        in {
-          go_1_25 = prev.go_1_25.overrideAttrs (old: {
-            version = newVersion;
-            src = prev.fetchurl {
-              url = "https://go.dev/dl/go${newVersion}.src.tar.gz";
-              hash = "sha256-0BDBCc7pTYDv5oHqtGvepJGskGv0ZYPDLp8NuwvRpZQ=";
-            };
-          });
-          # ensure pkgs.go resolves to the bumped compiler
-          go = final.go_1_25;
-        });
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [
-          devshell.overlays.default
-          go1251Overlay
-        ];
+        overlays = [ devshell.overlays.default ];
       };
     in rec {
       formatter = pkgs.alejandra;
