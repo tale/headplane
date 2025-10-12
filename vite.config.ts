@@ -13,6 +13,7 @@ if (prefix.endsWith('/')) {
 
 // Load the version via package.json
 const pkg = await readFile('package.json', 'utf-8');
+const isNext = process.env.IMAGE_TAG?.includes('next');
 const { version } = JSON.parse(pkg);
 if (!version) {
 	throw new Error('Unable to read version from package.json');
@@ -22,8 +23,8 @@ if (!version) {
 const config = await readFile('config.example.yaml', 'utf-8');
 const { server } = parse(config);
 
-export default defineConfig(({ isSsrBuild }) => ({
-	base: isSsrBuild ? `${prefix}/` : undefined,
+export default defineConfig(({ command, isSsrBuild }) => ({
+	base: command === 'build' ? `${prefix}/` : undefined,
 	plugins: [
 		reactRouterHonoServer(),
 		reactRouter(),
@@ -34,12 +35,18 @@ export default defineConfig(({ isSsrBuild }) => ({
 		host: server.host,
 		port: server.port,
 	},
+	build: {
+		target: 'esnext',
+	},
 	ssr: {
 		target: 'node',
-		noExternal: isSsrBuild ? true : undefined,
+		noExternal: isSsrBuild ? ['@libsql/client'] : undefined,
+	},
+	optimizeDeps: {
+		include: ['@libsql/client'],
 	},
 	define: {
-		__VERSION__: JSON.stringify(version),
+		__VERSION__: JSON.stringify(isNext ? `${version}-next` : version),
 		__PREFIX__: JSON.stringify(prefix),
 	},
 }));

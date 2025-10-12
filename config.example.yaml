@@ -12,6 +12,14 @@ server:
   # (I recommend this is true in production)
   cookie_secure: true
 
+  # The path to persist Headplane specific data. All data going forward
+  # is stored in this directory, including the internal database and
+  # any cache related files.
+  #
+  # Data formats prior to 0.6.1 will automatically be migrated.
+  # PLEASE ensure this directory is mounted if running in Docker.
+  data_path: "/var/lib/headplane"
+
 # Headscale specific settings to allow Headplane to talk
 # to Headscale and access deep integration features
 headscale:
@@ -129,6 +137,17 @@ integration:
 oidc:
   issuer: "https://accounts.google.com"
 
+  # If your OIDC provider does not support discovery (does not have the URL at
+  # `/.well-known/openid-configuration`), you need to manually set endpoints.
+  # This also works to override endpoints if you so desire or if your OIDC
+  # discovery is missing certain endpoints (ie GitHub).
+  # For some typical providers, see the documentation.
+
+  # authorization_endpoint: ""
+  # token_endpoint: ""
+  # userinfo_endpoint: ""
+
+  # The client ID for the OIDC client
   # For the best experience please ensure this is *identical* to the client_id
   # you are using for Headscale. A lot of OIDC providers will use different
   # subjects per user based on the client_id and for this to work correctly
@@ -142,6 +161,9 @@ oidc:
   # The path specified can resolve environment variables, making integration
   # with systemd's `LoadCredential` straightforward:
   # client_secret_path: "${CREDENTIALS_DIRECTORY}/oidc_client_secret"
+
+  # Defaults to 'openid email profile'
+  # scope: "openid email profile"
 
   disable_api_key_login: false
   token_endpoint_auth_method: "client_secret_post"
@@ -159,6 +181,13 @@ oidc:
   # for your Headplane instance with /admin/oidc/callback
   redirect_uri: "http://localhost:3000/admin/oidc/callback"
 
-  # Stores the users and their permissions for Headplane
-  # This is a path to a JSON file, default is specified below.
-  user_storage_file: "/var/lib/headplane/users.json"
+  # By default profile pictures are pulled from the OIDC provider when
+  # we go to fetch the userinfo endpoint. Optionally, this can be set to
+  # "oidc" or "gravatar" as of 0.6.1.
+  # profile_picture_source: "gravatar"
+
+  # Extra query parameters can be passed to the authorization endpoint
+  # by setting them here. This is useful for providers that require any kind
+  # of custom hinting.
+  # extra_params:
+  #   prompt: "select_account" # Example: force account selection on Google

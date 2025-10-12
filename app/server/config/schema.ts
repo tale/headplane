@@ -19,8 +19,36 @@ const stringToBool = type('string | boolean').pipe((v) => {
 const serverConfig = type({
 	host: 'string.ip',
 	port: type('string | number.integer').pipe((v) => Number(v)),
-	cookie_secret: '32 <= string <= 32',
+	data_path: 'string = "/var/lib/headplane/"',
+	cookie_secret: '(32 <= string <= 32)?',
+	cookie_secret_path: 'string?',
 	cookie_secure: stringToBool,
+})
+	.narrow((obj: Record<string, unknown>, ctx: any) => {
+		const hasVal = obj.cookie_secret != null && `${obj.cookie_secret}` !== '';
+		const hasPath =
+			obj.cookie_secret_path != null && obj.cookie_secret_path !== '';
+		if (hasVal && hasPath)
+			return ctx.reject(
+				`Only one of "cookie_secret" or "cookie_secret_path" may be set.`,
+			);
+		if (!hasVal && !hasPath)
+			return ctx.reject(
+				`Either "cookie_secret" or "cookie_secret_path" must be provided for cookie_secret.`,
+			);
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
+
+const partialServerConfig = type({
+	host: 'string.ip?',
+	port: type('string | number.integer')
+		.pipe((v) => Number(v))
+		.optional(),
+	data_path: 'string = "/var/lib/headplane/"',
+	cookie_secret: '32 <= string <= 32?',
+	cookie_secret_path: 'string?',
+	cookie_secure: stringToBool.optional(),
 });
 
 const oidcConfig = type({
@@ -33,9 +61,53 @@ const oidcConfig = type({
 	redirect_uri: 'string.url?',
 	user_storage_file: 'string = "/var/lib/headplane/users.json"',
 	disable_api_key_login: stringToBool,
-	headscale_api_key: 'string',
+	headscale_api_key: 'string?',
+	headscale_api_key_path: 'string?',
+	profile_picture_source: '"oidc" | "gravatar" = "oidc"',
 	strict_validation: stringToBool.default(true),
-}).onDeepUndeclaredKey('reject');
+	scope: 'string = "openid email profile"',
+	extra_params: 'Record<string, string>?',
+	authorization_endpoint: 'string.url?',
+	token_endpoint: 'string.url?',
+	userinfo_endpoint: 'string.url?',
+})
+	.narrow((obj: Record<string, unknown>, ctx: any) => {
+		const hasVal =
+			obj.headscale_api_key != null && `${obj.headscale_api_key}` !== '';
+		const hasPath =
+			obj.headscale_api_key_path != null && obj.headscale_api_key_path !== '';
+		if (hasVal && hasPath)
+			return ctx.reject(
+				`Only one of "headscale_api_key" or "headscale_api_key_path" may be set.`,
+			);
+		if (!hasVal && !hasPath)
+			return ctx.reject(
+				`Either "headscale_api_key" or "headscale_api_key_path" must be provided.`,
+			);
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
+
+const partialOidcConfig = type({
+	issuer: 'string.url?',
+	client_id: 'string?',
+	client_secret: 'string?',
+	client_secret_path: 'string?',
+	token_endpoint_auth_method:
+		'"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
+	redirect_uri: 'string.url?',
+	user_storage_file: 'string?',
+	disable_api_key_login: stringToBool.optional(),
+	headscale_api_key: 'string?',
+	headscale_api_key_path: 'string?',
+	profile_picture_source: '("oidc" | "gravatar")?',
+	strict_validation: stringToBool.default(true),
+	scope: 'string?',
+	extra_params: 'Record<string, string>?',
+	authorization_endpoint: 'string.url?',
+	token_endpoint: 'string.url?',
+	userinfo_endpoint: 'string.url?',
+});
 
 const headscaleConfig = type({
 	url: type('string.url').pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v)),
@@ -46,25 +118,52 @@ const headscaleConfig = type({
 	dns_records_path: 'string?',
 }).onDeepUndeclaredKey('reject');
 
+const partialHeadscaleConfig = type({
+	url: type('string.url')
+		.pipe((v) => (v.endsWith('/') ? v.slice(0, -1) : v))
+		.optional(),
+	tls_cert_path: 'string?',
+	public_url: 'string.url?',
+	config_path: 'string?',
+	config_strict: stringToBool.optional(),
+	dns_records_path: 'string?',
+});
+
 const agentConfig = type({
 	enabled: stringToBool.default(false),
 	host_name: 'string = "headplane-agent"',
-	pre_authkey: 'string = ""',
+	pre_authkey: 'string?',
+	pre_authkey_path: 'string?',
+	cache_ttl: 'number.integer = 180000',
+	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
+	executable_path: 'string = "/usr/libexec/headplane/agent"',
+	work_dir: 'string = "/var/lib/headplane/agent"',
+})
+	.narrow((obj: Record<string, unknown>, ctx: any) => {
+		const hasVal = obj.pre_authkey != null && `${obj.pre_authkey}` !== '';
+		const hasPath = obj.pre_authkey_path != null && obj.pre_authkey_path !== '';
+		if (hasVal && hasPath)
+			return ctx.reject(
+				`Only one of "pre_authkey" or "pre_authkey_path" may be set.`,
+			);
+		if (!hasVal && !hasPath)
+			return ctx.reject(
+				`Either "pre_authkey" or "pre_authkey_path" must be provided.`,
+			);
+		return true;
+	})
+	.onDeepUndeclaredKey('reject');
+
+const partialAgentConfig = type({
+	enabled: stringToBool.default(false),
+	host_name: 'string = "headplane-agent"',
+	pre_authkey: 'string?',
+	pre_authkey_path: 'string?',
 	cache_ttl: 'number.integer = 180000',
 	cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
 	executable_path: 'string = "/usr/libexec/headplane/agent"',
 	work_dir: 'string = "/var/lib/headplane/agent"',
 });
-
-const partialAgentConfig = type({
-	enabled: stringToBool,
-	host_name: 'string | undefined',
-	pre_authkey: 'string | undefined',
-	cache_ttl: 'number.integer | undefined',
-	cache_path: 'string | undefined',
-	executable_path: 'string | undefined',
-	work_dir: 'string | undefined',
-}).partial();
 
 const dockerConfig = type({
 	enabled: stringToBool,
@@ -114,10 +213,10 @@ export const headplaneConfig = type({
 
 export const partialHeadplaneConfig = type({
 	debug: stringToBool,
-	server: serverConfig.partial(),
-	'oidc?': oidcConfig.partial(),
+	server: partialServerConfig,
+	'oidc?': partialOidcConfig,
 	'integration?': partialIntegrationConfig,
-	headscale: headscaleConfig.partial(),
+	headscale: partialHeadscaleConfig,
 }).partial();
 
 export type HeadplaneConfig = typeof headplaneConfig.infer;

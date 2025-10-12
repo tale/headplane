@@ -12,7 +12,7 @@ different needs.
 
 Requirements:
 - Headscale 0.26 or newer (already deployed)
-- Node.js 22 LTS or newer
+- Node.js **22.16** LTS or newer
 - [PNPM](https://pnpm.io/installation) 10.x
 - A finished configuration file (config.yaml)
 
@@ -42,7 +42,7 @@ The structure of this folder is very important and should not be tampered with.
 
 ### Integrated Mode
 Since you are running Headplane in Bare-Metal, you most likely also are running
-Headscale in Bare-Metal. Refer to the [**Integrated Mode**](/docs/Integrated-Mode.md)
+Headscale in Bare-Metal. Refer to the [**Integrated Mode**](./Integrated-Mode.md)
 guide for instructions on setting up the integrated mode in Native Linux (/proc).
 
 ### Changing the Admin Path
@@ -58,7 +58,7 @@ Just keep in mind that the admin path is not configurable at runtime, so you
 will need to rebuild the project if you want to change it. Also, anything aside
 from `/admin` is not officially supported and could break in future versions.
 
-> Refer to the [**Configuration**](/docs/Configuration.md) guide for help with
+> Refer to the [**Configuration**](./Configuration.md) guide for help with
 > setting up your `config.yaml` file to the appropriate values.
 
 ### Systemd Unit

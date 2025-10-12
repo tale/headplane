@@ -45,3 +45,9 @@ before commit to make these changes automatically.
 > All of these guidelines are fairly simple to follow and are flexible if needed.
 > I won't automatically close PRs or issues if they don't follow these rules,
 > but instead we can discuss them and see if we can come to a compromise.
+
+### Contribution Tooling
+If you plan to work with the WASM SSH agent, you will need to install
+`mkcert` or an equivalent to create certificates in `./test/caddy/certs`.
+It expects a `localhost.pem` and `localhost-key.pem` file to be present in that
+directory. PNPM has a script to do it with `pnpm mkcert` already already.

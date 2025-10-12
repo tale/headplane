@@ -1,0 +1,10 @@
+https://localhost {
+    reverse_proxy headscale:8080
+	tls /certs/localhost.pem /certs/localhost-key.pem
+
+    header {
+        Access-Control-Allow-Origin  *
+        Access-Control-Allow-Headers *
+        Access-Control-Allow-Methods GET, POST, OPTIONS
+    }
+}

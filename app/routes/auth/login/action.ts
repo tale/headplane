@@ -60,25 +60,23 @@ export async function loginAction({
 			};
 		}
 
-		// Set the session
-		const session = await context.sessions.getOrCreate(request);
 		const expiresDays = Math.round(
 			(expiry.getTime() - Date.now()) / 1000 / 60 / 60 / 24,
 		);
 
-		session.set('state', 'auth');
-		session.set('api_key', apiKey);
-		session.set('user', {
-			subject: 'unknown-non-oauth',
-			name: `${lookup.prefix}...`,
-			email: `expires@${expiresDays.toString()}-days`,
-		});
-
 		return redirect('/machines', {
 			headers: {
-				'Set-Cookie': await context.sessions.commit(session, {
-					maxAge: expiry.getTime() - Date.now(),
-				}),
+				'Set-Cookie': await context.sessions.createSession(
+					{
+						api_key: apiKey,
+						user: {
+							subject: 'unknown-non-oauth',
+							name: `${lookup.prefix}...`,
+							email: `expires@${expiresDays.toString()}-days`,
+						},
+					},
+					expiry.getTime() - Date.now(),
+				),
 			},
 		});
 	} catch (error) {

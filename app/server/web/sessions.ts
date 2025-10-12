@@ -1,17 +1,28 @@
-import { open, readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { open, readFile, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { exit } from 'node:process';
-import {
-	CookieSerializeOptions,
-	Session,
-	SessionStorage,
-	createCookieSessionStorage,
-} from 'react-router';
+import { eq } from 'drizzle-orm';
+import { LibSQLDatabase } from 'drizzle-orm/libsql/driver';
+import { EncryptJWT, jwtDecrypt } from 'jose';
+import { createCookie } from 'react-router';
+import { ulid } from 'ulidx';
 import log from '~/utils/log';
+import { users } from '../db/schema';
 import { Capabilities, Roles } from './roles';
 
 export interface AuthSession {
 	state: 'auth';
+	api_key: string;
+	user: {
+		subject: string;
+		name: string;
+		email?: string;
+		username?: string;
+		picture?: string;
+	};
+}
+
+interface JWTSession {
 	api_key: string;
 	user: {
 		subject: string;
@@ -32,264 +43,243 @@ export interface OidcFlowSession {
 	};
 }
 
-type JoinedSession = AuthSession | OidcFlowSession;
-interface Error {
-	error: string;
-}
-
-interface CookieOptions {
-	name: string;
-	secure: boolean;
-	maxAge: number;
-	secrets: string[];
-	domain?: string;
+interface AuthSessionOptions {
+	secret: string;
+	db: LibSQLDatabase;
+	oidcUsersFile?: string;
+	cookie: {
+		name: string;
+		secure: boolean;
+		maxAge: number;
+		domain?: string;
+	};
 }
 
 class Sessionizer {
-	private storage: SessionStorage<JoinedSession, Error>;
-	private caps: Record<string, { c: Capabilities; oo?: boolean }>;
-	private capsPath?: string;
+	private options: AuthSessionOptions;
 
-	constructor(
-		options: CookieOptions,
-		caps: Record<string, { c: Capabilities; oo?: boolean }>,
-		capsPath?: string,
-	) {
-		this.caps = caps;
-		this.capsPath = capsPath;
-		this.storage = createCookieSessionStorage({
-			cookie: {
-				...options,
-				httpOnly: true,
-				path: __PREFIX__, // Only match on the prefix
-				sameSite: 'lax', // TODO: Strictify with Domain,
-			},
-		});
+	constructor(options: AuthSessionOptions) {
+		this.options = options;
 	}
 
 	// This throws on the assumption that auth is already checked correctly
 	// on something that wraps the route calling auth. The top-level routes
 	// that call this are wrapped with try/catch to handle the error.
 	async auth(request: Request) {
-		const cookie = request.headers.get('cookie');
-		const session = await this.storage.getSession(cookie);
-		const type = session.get('state');
-		if (!type) {
-			throw new Error('Session state not found');
-		}
-
-		if (type !== 'auth') {
-			throw new Error('Session is not authenticated');
-		}
-
-		return session as Session<AuthSession, Error>;
+		return decodeSession(request, this.options);
 	}
 
-	roleForSubject(subject: string): keyof typeof Roles | undefined {
-		const role = this.caps[subject]?.c;
-		if (!role) {
+	async createSession(
+		payload: JWTSession,
+		maxAge = this.options.cookie.maxAge,
+	) {
+		// TODO: What the hell is this garbage
+		return createSession(payload, {
+			...this.options,
+			cookie: {
+				...this.options.cookie,
+				maxAge,
+			},
+		});
+	}
+
+	async destroySession() {
+		return destroySession(this.options);
+	}
+
+	async roleForSubject(
+		subject: string,
+	): Promise<keyof typeof Roles | undefined> {
+		const [user] = await this.options.db
+			.select()
+			.from(users)
+			.where(eq(users.sub, subject))
+			.limit(1);
+
+		if (!user) {
 			return;
 		}
 
 		// We need this in string form based on Object.keys of the roles
 		for (const [key, value] of Object.entries(Roles)) {
-			if (value === role) {
+			if (value === user.caps) {
 				return key as keyof typeof Roles;
 			}
 		}
-	}
-
-	onboardForSubject(subject: string) {
-		return this.caps[subject]?.oo ?? false;
 	}
 
 	// Given an OR of capabilities, check if the session has the required
 	// capabilities. If not, return false. Can throw since it calls auth()
 	async check(request: Request, capabilities: Capabilities) {
 		const session = await this.auth(request);
-		const { subject } = session.get('user') ?? {};
-		if (!subject) {
+
+		// This is the subject we set on API key based sessions. API keys
+		// inherently imply admin access so we return true for all checks.
+		if (session.user.subject === 'unknown-non-oauth') {
+			return true;
+		}
+
+		const [user] = await this.options.db
+			.select()
+			.from(users)
+			.where(eq(users.sub, session.user.subject))
+			.limit(1);
+
+		if (!user) {
 			return false;
 		}
 
-		// This is the subject we set on API key based sessions. API keys
-		// inherently imply admin access so we return true for all checks.
-		if (subject === 'unknown-non-oauth') {
-			return true;
-		}
-
-		// If the role does not exist, then this is a new subject that we have
-		// not seen before. Since this is new, we set access to the lowest
-		// level by default which is the member role.
-		//
-		// This also allows us to avoid configuring preventing sign ups with
-		// OIDC, since the default sign up logic gives member which does not
-		// have access to the UI whatsoever.
-		const role = this.caps[subject];
-		if (!role) {
-			const memberRole = await this.registerSubject(subject);
-			return (capabilities & memberRole.c) === capabilities;
-		}
-
-		return (capabilities & role.c) === capabilities;
-	}
-
-	async checkSubject(subject: string, capabilities: Capabilities) {
-		// This is the subject we set on API key based sessions. API keys
-		// inherently imply admin access so we return true for all checks.
-		if (subject === 'unknown-non-oauth') {
-			return true;
-		}
-
-		// If the role does not exist, then this is a new subject that we have
-		// not seen before. Since this is new, we set access to the lowest
-		// level by default which is the member role.
-		//
-		// This also allows us to avoid configuring preventing sign ups with
-		// OIDC, since the default sign up logic gives member which does not
-		// have access to the UI whatsoever.
-		const role = this.caps[subject];
-		if (!role) {
-			const memberRole = await this.registerSubject(subject);
-			return (capabilities & memberRole.c) === capabilities;
-		}
-
-		return (capabilities & role.c) === capabilities;
-	}
-
-	// This code is very simple, if the user does not exist in the database
-	// file then we register it with the lowest level of access. If the user
-	// database is empty, the first user to sign in will be given the owner
-	// role.
-	private async registerSubject(subject: string) {
-		if (this.caps[subject]) {
-			return this.caps[subject];
-		}
-
-		if (Object.keys(this.caps).length === 0) {
-			log.debug('auth', 'First user registered as owner: %s', subject);
-			this.caps[subject] = { c: Roles.owner };
-			await this.flushUserDatabase();
-			return this.caps[subject];
-		}
-
-		log.debug('auth', 'New user registered as member: %s', subject);
-		this.caps[subject] = { c: Roles.member };
-		await this.flushUserDatabase();
-		return this.caps[subject];
-	}
-
-	private async flushUserDatabase() {
-		if (!this.capsPath) {
-			return;
-		}
-
-		const data = Object.entries(this.caps).map(([u, { c, oo }]) => ({
-			u,
-			c,
-			oo,
-		}));
-		try {
-			const handle = await open(this.capsPath, 'w');
-			await handle.write(JSON.stringify(data));
-			await handle.close();
-		} catch (error) {
-			log.error('config', 'Error writing user database file: %s', error);
-		}
+		return (capabilities & user.caps) === capabilities;
 	}
 
 	// Updates the capabilities and roles of a subject
 	async reassignSubject(subject: string, role: keyof typeof Roles) {
 		// Check if we are owner
-		if (this.roleForSubject(subject) === 'owner') {
+		const subjectRole = await this.roleForSubject(subject);
+		if (subjectRole === 'owner') {
 			return false;
 		}
 
-		this.caps[subject] = {
-			...this.caps[subject], // Preserve the existing capabilities if any
-			c: Roles[role],
-		};
+		await this.options.db
+			.update(users)
+			.set({
+				caps: Roles[role],
+			})
+			.where(eq(users.sub, subject));
 
-		await this.flushUserDatabase();
 		return true;
 	}
-
-	// Overrides the onboarding status for a subject
-	async overrideOnboarding(subject: string, onboarding: boolean) {
-		this.caps[subject] = {
-			...this.caps[subject], // Preserve the existing capabilities if any
-			oo: onboarding,
-		};
-		await this.flushUserDatabase();
-	}
-
-	getOrCreate<T extends JoinedSession = AuthSession>(request: Request) {
-		return this.storage.getSession(request.headers.get('cookie')) as Promise<
-			Session<T, Error>
-		>;
-	}
-
-	destroy(session: Session) {
-		return this.storage.destroySession(session);
-	}
-
-	commit(session: Session, options?: CookieSerializeOptions) {
-		return this.storage.commitSession(session, options);
-	}
 }
 
-export async function createSessionStorage(
-	options: CookieOptions,
-	usersPath?: string,
-) {
-	const map: Record<
-		string,
-		{
-			c: number;
-			oo?: boolean;
-		}
-	> = {};
-	if (usersPath) {
-		// We need to load our users from the file (default to empty map)
-		// We then translate each user into a capability object using the helper
-		// method defined in the roles.ts file
-		const data = await loadUserFile(usersPath);
-		log.debug('config', 'Loaded %d users from database', data.length);
+async function createSession(payload: JWTSession, options: AuthSessionOptions) {
+	const secret = createHash('sha256').update(options.secret, 'utf8').digest();
+	const jwt = await new EncryptJWT({
+		...payload,
+	})
+		.setProtectedHeader({ alg: 'dir', enc: 'A256GCM', typ: 'JWT' })
+		.setIssuedAt()
+		.setExpirationTime('1d')
+		.setIssuer('urn:tale:headplane')
+		.setAudience('urn:tale:headplane')
+		.setJti(ulid())
+		.encrypt(secret);
 
-		for (const user of data) {
-			map[user.u] = {
-				c: user.c,
-				oo: user.oo,
-			};
-		}
-	}
+	const cookie = createCookie(options.cookie.name, {
+		...options.cookie,
+		path: __PREFIX__,
+	});
 
-	return new Sessionizer(options, map, usersPath);
+	return cookie.serialize(jwt);
 }
 
-async function loadUserFile(path: string) {
+async function decodeSession(request: Request, options: AuthSessionOptions) {
+	const cookieHeader = request.headers.get('cookie');
+	if (cookieHeader === null) {
+		throw new Error('No session cookie found');
+	}
+
+	const cookie = createCookie(options.cookie.name, {
+		...options.cookie,
+		path: __PREFIX__,
+	});
+
+	const cookieValue = (await cookie.parse(cookieHeader)) as string | null;
+	if (cookieValue === null) {
+		throw new Error('Session cookie is empty');
+	}
+
+	const secret = createHash('sha256').update(options.secret, 'utf8').digest();
+	const { payload } = await jwtDecrypt(cookieValue, secret, {
+		issuer: 'urn:tale:headplane',
+		audience: 'urn:tale:headplane',
+	});
+
+	// Safe since we encode the session directly into the JWT
+	return payload as unknown as JWTSession;
+}
+
+async function destroySession(options: AuthSessionOptions) {
+	const cookie = createCookie(options.cookie.name, {
+		...options.cookie,
+		path: __PREFIX__,
+	});
+
+	return cookie.serialize('', {
+		expires: new Date(0),
+	});
+}
+
+export async function createSessionStorage(options: AuthSessionOptions) {
+	if (options.oidcUsersFile) {
+		await migrateUserDatabase(options.oidcUsersFile, options.db);
+	}
+
+	return new Sessionizer(options);
+}
+
+async function migrateUserDatabase(path: string, db: LibSQLDatabase) {
+	log.info('config', 'Migrating old user database from %s', path);
 	const realPath = resolve(path);
+
+	log.warn(
+		'config',
+		'oidc.user_storage_file is deprecated and will be removed in Headplane 0.7.0',
+	);
+	log.warn(
+		'config',
+		'You can ignore this warning if you do not use OIDC authentication.',
+	);
+	log.warn(
+		'config',
+		'Data will be automatically migrated to the new SQL database.',
+	);
+	log.warn(
+		'config',
+		'Refer to server.data_path to ensure this path is mounted correctly is using Docker.',
+	);
 
 	try {
 		const handle = await open(realPath, 'a+');
-		log.info('config', 'Using user database file at %s', realPath);
 		await handle.close();
 	} catch (error) {
-		log.info('config', 'User database file not accessible at %s', realPath);
+		log.warn('config', 'Failed to migrate old user database at %s', realPath);
+		log.warn(
+			'config',
+			'This is not an error, but existing users will not be migrated',
+		);
+		log.warn('config', 'Unable to open user database file: %s', error);
 		log.debug('config', 'Error details: %s', error);
-		exit(1);
+		return;
 	}
+
+	log.info('config', 'Found old user database file at %s', realPath);
+	log.info('config', 'Migrating user database to the new SQL database');
+
+	let migratableUsers: {
+		u: string;
+		c: number;
+		oo?: boolean;
+	}[];
 
 	try {
 		const data = await readFile(realPath, 'utf8');
+		if (data.trim().length === 0) {
+			log.info('config', 'Old user database file is empty, nothing to migrate');
+			log.info(
+				'config',
+				'You SHOULD remove oidc.user_storage_file from your config!',
+			);
+			await rm(realPath, { force: true });
+			return;
+		}
+
 		const users = JSON.parse(data.trim()) as {
 			u?: string;
 			c?: number;
 			oo?: boolean;
 		}[];
 
-		// Never trust user input
-		return users.filter(
+		migratableUsers = users.filter(
 			(user) => user.u !== undefined && user.c !== undefined,
 		) as {
 			u: string;
@@ -297,8 +287,38 @@ async function loadUserFile(path: string) {
 			oo?: boolean;
 		}[];
 	} catch (error) {
-		log.debug('config', 'Error reading user database file: %s', error);
-		log.debug('config', 'Using empty user database');
-		return [];
+		log.warn('config', 'Error reading old user database file: %s', error);
+		log.warn('config', 'Not migrating any users');
+		return;
 	}
+
+	if (migratableUsers.length === 0) {
+		log.info('config', 'No users found in the old database to migrate');
+		return;
+	}
+
+	log.info(
+		'config',
+		'Migrating %d users from the old database',
+		migratableUsers.length,
+	);
+
+	const updated = await db
+		.insert(users)
+		.values(
+			migratableUsers.map((user) => ({
+				id: ulid(),
+				sub: user.u,
+				caps: user.c,
+				onboarded: user.oo ?? false,
+			})),
+		)
+		.onConflictDoNothing({
+			target: users.sub,
+		})
+		.returning();
+
+	log.info('config', 'Migrated %d users successfully', updated.length);
+	log.info('config', 'Removed old user database file %s', realPath);
+	await rm(realPath, { force: true });
 }

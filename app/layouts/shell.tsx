@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { CircleCheckIcon } from 'lucide-react';
 import {
 	LoaderFunctionArgs,
@@ -10,9 +11,8 @@ import Card from '~/components/Card';
 import Footer from '~/components/Footer';
 import Header from '~/components/Header';
 import type { LoadContext } from '~/server';
+import { users } from '~/server/db/schema';
 import { Capabilities } from '~/server/web/roles';
-import { User } from '~/types';
-import log from '~/utils/log';
 import toast from '~/utils/toast';
 
 // This loads the bare minimum for the application to function
@@ -23,72 +23,18 @@ export async function loader({
 }: LoaderFunctionArgs<LoadContext>) {
 	try {
 		const session = await context.sessions.auth(request);
-		if (!session.has('api_key')) {
-			// There is a session, but it's not valid
-			return redirect('/login', {
-				headers: {
-					'Set-Cookie': await context.sessions.destroy(session),
-				},
-			});
-		}
+		if (
+			context.oidc &&
+			session.user.subject !== 'unknown-non-oauth' &&
+			!request.url.endsWith('/onboarding')
+		) {
+			const [user] = await context.db
+				.select()
+				.from(users)
+				.where(eq(users.sub, session.user.subject))
+				.limit(1);
 
-		// Onboarding is only a feature of the OIDC flow
-		if (context.oidc && !request.url.endsWith('/onboarding')) {
-			let onboarded = false;
-
-			const sessionUser = session.get('user');
-			if (sessionUser) {
-				if (context.sessions.onboardForSubject(sessionUser.subject)) {
-					// Assume onboarded
-					onboarded = true;
-				} else {
-					try {
-						const { users } = await context.client.get<{ users: User[] }>(
-							'v1/user',
-							session.get('api_key')!,
-						);
-
-						if (users.length === 0) {
-							onboarded = false;
-						}
-
-						const user = users.find((u) => {
-							if (u.provider !== 'oidc') {
-								return false;
-							}
-
-							// For some reason, headscale makes providerID a url where the
-							// last component is the subject, so we need to strip that out
-							const subject = u.providerId?.split('/').pop();
-							if (!subject) {
-								return false;
-							}
-
-							const sessionUser = session.get('user');
-							if (!sessionUser) {
-								return false;
-							}
-
-							if (context.sessions.onboardForSubject(sessionUser.subject)) {
-								// Assume onboarded
-								return true;
-							}
-
-							return subject === sessionUser.subject;
-						});
-
-						if (user) {
-							onboarded = true;
-						}
-					} catch (e) {
-						// If we cannot lookup users, just assume our user is onboarded
-						log.debug('api', 'Failed to lookup users %o', e);
-						onboarded = true;
-					}
-				}
-			}
-
-			if (!onboarded) {
+			if (!user?.onboarded) {
 				return redirect('/onboarding');
 			}
 		}
@@ -99,7 +45,7 @@ export async function loader({
 			url: context.config.headscale.public_url ?? context.config.headscale.url,
 			configAvailable: context.hs.readable(),
 			debug: context.config.debug,
-			user: session.get('user'),
+			user: session.user,
 			uiAccess: check,
 			access: {
 				ui: await context.sessions.check(request, Capabilities.ui_access),
@@ -119,8 +65,11 @@ export async function loader({
 			healthy: await context.client.healthcheck(),
 		};
 	} catch {
-		// No session, so we can just return
-		return redirect('/login');
+		return redirect('/login', {
+			headers: {
+				'Set-Cookie': await context.sessions.destroySession(),
+			},
+		});
 	}
 }
 

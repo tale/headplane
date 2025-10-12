@@ -103,6 +103,7 @@ export const headscaleConfig = type({
 	dns: {
 		magic_dns: goBool.default(true),
 		base_domain: 'string = "headscale.net"',
+		override_local_dns: goBool.default(false),
 		nameservers: type({
 			global: type('string[]').default(() => []),
 			split: type('Record<string, string[]>').default(() => ({})),

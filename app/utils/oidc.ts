@@ -33,22 +33,21 @@ export function getRedirectUri(req: Request) {
 export async function beginAuthFlow(
 	config: Configuration,
 	redirect_uri: string,
-	token_endpoint_auth_method: string,
+	scope: string,
+	extra_params: Record<string, string> = {},
 ) {
 	const codeVerifier = client.randomPKCECodeVerifier();
 	const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
 	const params: Record<string, string> = {
+		...extra_params,
+		scope,
 		redirect_uri,
-		scope: 'openid profile email',
 		code_challenge: codeChallenge,
 		code_challenge_method: 'S256',
-		token_endpoint_auth_method,
 		state: client.randomState(),
 	};
 
-	// PKCE is backwards compatible with non-PKCE servers
-	// so if we don't support it, just set our nonce
 	if (!config.serverMetadata().supportsPKCE()) {
 		params.nonce = client.randomNonce();
 	}
@@ -69,10 +68,18 @@ interface FlowOptions {
 	nonce?: string;
 }
 
+export interface FlowUser {
+	subject: string;
+	name: string;
+	email: string | undefined;
+	username: string | undefined;
+	picture: string | undefined;
+}
+
 export async function finishAuthFlow(
 	config: Configuration,
 	options: FlowOptions,
-) {
+): Promise<FlowUser> {
 	const tokens = await client.authorizationCodeGrant(
 		config,
 		new URL(options.redirect_uri),

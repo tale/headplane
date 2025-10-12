@@ -17,8 +17,12 @@ export default function AuthKeyRow({ authKey, user, url }: Props) {
 
 	return (
 		<div className="w-full">
-			<Attribute name="Key" value={authKey.key} isCopyable />
-			<Attribute name="User" value={user.name || user.displayName} isCopyable />
+			<Attribute isCopyable name="Key" value={authKey.key} />
+			<Attribute
+				isCopyable
+				name="User"
+				value={user.name || user.displayName || user.email || user.id}
+			/>
 			<Attribute name="Reusable" value={authKey.reusable ? 'Yes' : 'No'} />
 			<Attribute name="Ephemeral" value={authKey.ephemeral ? 'Yes' : 'No'} />
 			<Attribute name="Used" value={authKey.used ? 'Yes' : 'No'} />
@@ -30,13 +34,12 @@ export default function AuthKeyRow({ authKey, user, url }: Props) {
 			<Code className="text-sm">
 				tailscale up --login-server={url} --authkey {authKey.key}
 			</Code>
-			<div suppressHydrationWarning className="flex gap-4 items-center">
+			<div className="flex gap-4 items-center" suppressHydrationWarning>
 				{(authKey.used && !authKey.reusable) ||
 				new Date(authKey.expiration) < new Date() ? undefined : (
 					<ExpireAuthKey authKey={authKey} user={user} />
 				)}
 				<Button
-					variant="light"
 					className="my-4"
 					onPress={async () => {
 						await navigator.clipboard.writeText(
@@ -45,6 +48,7 @@ export default function AuthKeyRow({ authKey, user, url }: Props) {
 
 						toast('Copied command to clipboard');
 					}}
+					variant="light"
 				>
 					Copy Tailscale Command
 				</Button>

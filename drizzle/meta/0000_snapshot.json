@@ -1,0 +1,42 @@
+{
+	"version": "6",
+	"dialect": "sqlite",
+	"id": "ab03ffcd-9aa5-4b4b-9f38-322acc6899a3",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"tables": {
+		"ephemeral_nodes": {
+			"name": "ephemeral_nodes",
+			"columns": {
+				"auth_key": {
+					"name": "auth_key",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true,
+					"autoincrement": false
+				},
+				"node_key": {
+					"name": "node_key",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"checkConstraints": {}
+		}
+	},
+	"views": {},
+	"enums": {},
+	"_meta": {
+		"schemas": {},
+		"tables": {},
+		"columns": {}
+	},
+	"internal": {
+		"indexes": {}
+	}
+}

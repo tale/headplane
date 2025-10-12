@@ -24,13 +24,15 @@ rec {
     (system: let
       pkgs = import nixpkgs {
         inherit system;
-        overlays = [devshell.overlays.default];
+        overlays = [ devshell.overlays.default ];
       };
     in rec {
       formatter = pkgs.alejandra;
       packages = {
-        headplane = pkgs.callPackage ./nix/package.nix {};
+        headplane = pkgs.callPackage ./nix/package.nix {headplane-ssh-wasm = packages.headplane-ssh-wasm;};
         headplane-agent = pkgs.callPackage ./nix/agent.nix {};
+        headplane-nixos-docs = pkgs.callPackage ./nix/docs.nix {};
+        headplane-ssh-wasm = pkgs.callPackage ./nix/ssh-wasm.nix {};
       };
       checks.default = pkgs.symlinkJoin {
         name = "headplane-with-agent";
@@ -55,14 +57,18 @@ rec {
           pkgs.nodejs-slim_22
           pkgs.pnpm_10
           pkgs.typescript-language-server
+          pkgs.mise
+          pkgs.mkcert
         ];
         env = [];
       };
     })
     // {
       overlays.default = final: prev: {
-        headplane = final.callPackage ./nix/package.nix {};
+        headplane = final.callPackage ./nix/package.nix {headplane-ssh-wasm = final.headplane-ssh-wasm;};
         headplane-agent = final.callPackage ./nix/agent.nix {};
+        headplane-nixos-docs = final.callPackage ./nix/docs.nix {};
+        headplane-ssh-wasm = final.callPackage ./nix/ssh-wasm.nix {};
       };
       nixosModules.headplane = import ./nix/module.nix;
     };

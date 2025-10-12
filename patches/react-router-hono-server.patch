@@ -1,34 +1,13 @@
 diff --git a/dist/adapters/node.js b/dist/adapters/node.js
-index 966604f94ca8528b684ef95fe7891c2e6352561b..8222cf31333668f8c2ebe65986b6ab9a3711b587 100644
+index ec81622898d583ddd8c2f4d9eaf5c0ed23776475..047ef1d45ad82e4b476a882b4ab5c8962faa0df1 100644
 --- a/dist/adapters/node.js
 +++ b/dist/adapters/node.js
-@@ -46,16 +46,25 @@ async function createHonoServer(options) {
+@@ -49,7 +49,7 @@ async function createHonoServer(options) {
    }
    await mergedOptions.beforeAll?.(app);
    app.use(
 -    `/${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
-+    `/${__PREFIX__}${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
++    `${import.meta.env.REACT_ROUTER_HONO_SERVER_BASENAME}${import.meta.env.REACT_ROUTER_HONO_SERVER_ASSETS_DIR}/*`,
      cache(60 * 60 * 24 * 365),
      // 1 year
--    serveStatic({ root: clientBuildPath, ...mergedOptions.serveStaticOptions?.clientAssets })
-+    serveStatic({
-+   	  root: clientBuildPath,
-+      ...mergedOptions.serveStaticOptions?.clientAssets,
-+      rewriteRequestPath: path => path.replace(__PREFIX__, "/")
-+    })
-   );
-+  app.use(__PREFIX__, (c) => c.redirect(`${__PREFIX__}/`));
-   app.use(
--    "*",
-+    `${__PREFIX__}/*`,
-     cache(60 * 60),
-     // 1 hour
--    serveStatic({ root: PRODUCTION ? clientBuildPath : "./public", ...mergedOptions.serveStaticOptions?.publicAssets })
-+    serveStatic({
-+      root: PRODUCTION ? clientBuildPath : "./public",
-+      ...mergedOptions.serveStaticOptions?.publicAssets,
-+      rewriteRequestPath: path => path.replace(__PREFIX__, "/")
-+    })
-   );
-   if (mergedOptions.defaultLogger) {
-     app.use("*", logger());
+     serveStatic({ root: clientBuildPath, ...mergedOptions.serveStaticOptions?.clientAssets })

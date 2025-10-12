@@ -1,5 +1,6 @@
-import { Cog, Ellipsis } from 'lucide-react';
+import { Cog, Ellipsis, SquareTerminal } from 'lucide-react';
 import { useState } from 'react';
+import Button from '~/components/Button';
 import Menu from '~/components/Menu';
 import type { User } from '~/types';
 import cn from '~/utils/cn';
@@ -10,7 +11,6 @@ import Move from '../dialogs/move';
 import Rename from '../dialogs/rename';
 import Routes from '../dialogs/routes';
 import Tags from '../dialogs/tags';
-
 interface MenuProps {
 	node: PopulatedNode;
 	users: User[];
@@ -29,8 +29,11 @@ export default function MachineMenu({
 	isDisabled,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
+	const supportsTailscaleSSH =
+		node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
+
 	return (
-		<>
+		<div className="flex items-center justify-end px-4 gap-1.5">
 			{modal === 'remove' && (
 				<Delete
 					machine={node}
@@ -88,6 +91,49 @@ export default function MachineMenu({
 				/>
 			)}
 
+			{supportsTailscaleSSH ? (
+				isFullButton ? (
+					<Button
+						className="flex items-center gap-x-2"
+						variant="heavy"
+						onPress={() => {
+							// We need to use JS to open the SSH URL
+							// in a new WINDOW since href can only
+							// do a new TAB.
+							window.open(
+								`${__PREFIX__}/ssh?hostname=${node.name}`,
+								'_blank',
+								'noopener,noreferrer,width=800,height=600',
+							);
+						}}
+					>
+						<SquareTerminal className="h-5" />
+						<p>SSH</p>
+					</Button>
+				) : (
+					<Button
+						onPress={() => {
+							// We need to use JS to open the SSH URL
+							// in a new WINDOW since href can only
+							// do a new TAB.
+							window.open(
+								`${__PREFIX__}/ssh?hostname=${node.name}`,
+								'_blank',
+								'noopener,noreferrer,width=800,height=600',
+							);
+						}}
+						className={cn(
+							'py-0.5 w-fit bg-transparent border-transparent',
+							'border group-hover:border-headplane-200',
+							'dark:group-hover:border-headplane-700',
+							'opacity-0 pointer-events-none group-hover:opacity-100',
+							'group-hover:pointer-events-auto',
+						)}
+					>
+						SSH
+					</Button>
+				)
+			) : undefined}
 			<Menu isDisabled={isDisabled}>
 				{isFullButton ? (
 					<Menu.Button className="flex items-center gap-x-2">
@@ -126,6 +172,6 @@ export default function MachineMenu({
 					</Menu.Section>
 				</Menu.Panel>
 			</Menu>
-		</>
+		</div>
 	);
 }
