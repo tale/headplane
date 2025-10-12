@@ -5,11 +5,10 @@ export default defineConfig({
 	description: 'The missing dashboard for Headscale',
 	ignoreDeadLinks: ['/docs/Integrated-Mode', '/docs/Simple-Mode'],
 	cleanUrls: true,
+	head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
 	themeConfig: {
-		nav: [
-			{ text: 'Home', link: '/' },
-			{ text: 'Sponsor Headplane', link: 'https://github.com/sponsors/tale' },
-		],
+		logo: '/logo-dark-bg.svg',
+		nav: [{ text: 'Home', link: '/' }],
 		sidebar: [
 			{
 				text: 'Chapters',
@@ -30,6 +29,8 @@ export default defineConfig({
 
 		socialLinks: [
 			{ icon: 'github', link: 'https://github.com/tale/headplane' },
+			{ icon: 'githubsponsors', link: 'https://github.com/sponsors/tale' },
+			{ icon: 'kofi', link: 'https://ko-fi.com/atale' },
 		],
 
 		lastUpdated: {
