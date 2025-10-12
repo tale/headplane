@@ -148,6 +148,10 @@ oidc:
   # userinfo_endpoint: ""
 
   # The client ID for the OIDC client
+  # For the best experience please ensure this is *identical* to the client_id
+  # you are using for Headscale. A lot of OIDC providers will use different
+  # subjects per user based on the client_id and for this to work correctly
+  # they need to be identical between Headscale and Headplane.
   client_id: "your-client-id"
 
   # The client secret for the OIDC client
