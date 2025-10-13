@@ -55,7 +55,7 @@ headscale:
   image:
     repository: headscale/headscale
     pullPolicy: IfNotPresent
-    tag: "0.25.1"
+    tag: "0.26.1"
   config:
     url: https://headscale.example.com
     dns:
