@@ -7,7 +7,7 @@ data:
     server:
       host: 0.0.0.0
       port: 3000
-      cookie_secret: replaced-by-environment-variable
+      cookie_secret_path: /var/secrets/headplane/server/{{ .Values.headplane.config.cookieSecret.secretKey }}
       cookie_secure: true
     headscale:
       url: http://127.0.0.1:8080
@@ -17,23 +17,17 @@ data:
       config_path: /etc/headscale/config.yaml
       config_strict: true
     integration:
-      agent:
-        enabled: false
-      docker:
-        enabled: false
       kubernetes:
         enabled: true
         validate_manifest: true
         pod_name: replaced-by-environment-variable
-      proc:
-        enabled: false
     {{- if .Values.headplane.config.oidc.enabled }}
     oidc:
       issuer: {{ .Values.headplane.config.oidc.issuerUrl }}
       client_id: {{ .Values.headplane.config.oidc.clientId }}
-      client_secret_path: /var/secrets/headplane/oidc/client-secret
+      client_secret_path: /var/secrets/headplane/oidc/{{ .Values.headplane.config.oidc.clientSecret.secretKey }}
       disable_api_key_login: {{ .Values.headplane.config.oidc.disableApiKeyLogin }}
       token_endpoint_auth_method: {{ .Values.headplane.config.oidc.tokenEndpointAuthMethod }}
-      headscale_api_key: replaced-by-environment-variable
+      headscale_api_key_path: /var/secrets/headplane/headscale/{{ .Values.headplane.config.oidc.headscaleApiKey.secretKey }}
       redirect_uri: {{ .Values.headplane.config.url }}/admin/oidc/callback
     {{- end }}

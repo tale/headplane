@@ -36,18 +36,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-            - name: 'HEADPLANE_SERVER__COOKIE_SECRET'
-              valueFrom:
-                secretKeyRef:
-                  name: {{ default "headplane-cookie-secret" .Values.headplane.config.cookieSecret.secretName }}
-                  key: {{ .Values.headplane.config.cookieSecret.secretKey }}
-            {{- if .Values.headplane.config.oidc.enabled }}
-            - name: 'HEADPLANE_OIDC__HEADSCALE_API_KEY'
-              valueFrom:
-                secretKeyRef:
-                  name: {{ default "headscale-api-key" .Values.headplane.config.oidc.headscaleApiKey.secretName }}
-                  key: {{ .Values.headplane.config.oidc.headscaleApiKey.secretKey }}
-            {{- end }}
           ports:
             - name: app
               containerPort: 3000
@@ -56,9 +44,13 @@ spec:
           volumeMounts:
             - name: headplane-config
               mountPath: /etc/headplane
+            - name: headplane-server-cookie-secret
+              mountPath: /var/secrets/headplane/server
             {{- if .Values.headplane.config.oidc.enabled }}
             - name: headplane-oidc-client-secret
               mountPath: /var/secrets/headplane/oidc
+            - name: headplane-oidc-headscale-api-key
+              mountPath: /var/secrets/headplane/headscale
             {{- end }}
             - name: headplane-data
               mountPath: /var/lib/headplane
@@ -122,13 +114,22 @@ spec:
               mountPath: /etc/scripts
         {{- end }}
       volumes:
+        ###
+        ### Headplane Volumes ###
+        ###
         - name: headplane-config
           configMap:
             name: headplane
+        - name: headplane-server-cookie-secret
+          secret:
+            secretName: {{ default "headplane-cookie-secret" .Values.headplane.config.cookieSecret.secretName }}
         {{- if .Values.headplane.config.oidc.enabled }}
         - name: headplane-oidc-client-secret
           secret:
             secretName: {{ default "headplane-oidc-client-secret" .Values.headplane.config.oidc.clientSecret.secretName }}
+        - name: headplane-oidc-headscale-api-key
+          secret:
+            secretName: {{ default "headscale-api-key" .Values.headplane.config.oidc.headscaleApiKey.secretName }}
         {{- end }}
         - name: headplane-data
           {{- if .Values.headplane.persistence.enabled }}
@@ -144,6 +145,9 @@ spec:
             name: headplane-scripts
             defaultMode: 0777
         {{- end }}
+        ###
+        ### Headscale Volumes ###
+        ###
         - name: headscale-config
           configMap:
             name: headscale
