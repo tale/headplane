@@ -159,7 +159,7 @@ spec:
         - name: headscale-data
           {{- if .Values.headscale.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: headscale-config
+            claimName: headscale-data
           {{- else }}
           emptyDir:
             sizeLimit: 500Mi
