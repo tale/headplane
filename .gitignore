@@ -4,9 +4,9 @@ node_modules
 /build
 /test
 .env
-app/hp_ssh.wasm
-app/wasm_exec.js
-/docs/.vitepress/dist/
-/docs/.vitepress/cache/
+/app/hp_ssh.wasm
+/app/wasm_exec.js
+/.vitepress/dist/
+/.vitepress/cache/
 
 /.direnv
