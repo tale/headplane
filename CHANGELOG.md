@@ -1,4 +1,4 @@
-### 0.6.1 (Next)
+### 0.6.1 (October 12, 2025)
 - **Headplane now supports connecting to machines via SSH in the web browser.**
 	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
 	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.

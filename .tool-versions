@@ -1,4 +1,0 @@
-# REMEMBER TO UPDATE mise.toml TOO
-pnpm 10.4.0
-node 22.16
-go 1.25.1

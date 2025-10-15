@@ -1,5 +1,5 @@
 FROM --platform=$BUILDPLATFORM jdxcode/mise:latest AS mise-context
-COPY mise.toml .tool-versions ./
+COPY mise.toml ./
 RUN --mount=type=secret,id=gh_token,env=MISE_GITHUB_TOKEN mise install
 
 FROM --platform=$BUILDPLATFORM mise-context AS go-build
