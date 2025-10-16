@@ -6,9 +6,8 @@ export default defineConfig({
 	ignoreDeadLinks: ['/docs/Integrated-Mode', '/docs/Simple-Mode'],
 	cleanUrls: true,
 	head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
-	srcDir: 'docs',
 	themeConfig: {
-		logo: '/logo-dark-bg.svg',
+		logo: '/logo.svg',
 		nav: [{ text: 'Home', link: '/' }],
 		sidebar: [
 			{

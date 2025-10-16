@@ -6,7 +6,7 @@ node_modules
 .env
 /app/hp_ssh.wasm
 /app/wasm_exec.js
-/.vitepress/dist/
-/.vitepress/cache/
+/docs/.vitepress/dist/
+/docs/.vitepress/cache/
 
 /.direnv

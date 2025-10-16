@@ -6,7 +6,7 @@ hero:
   name: "Headplane"
   tagline: "A full-featured admin interface for Headscale"
   image:
-    src: "/logo-dark-bg.svg"
+    src: "/logo.svg"
     alt: "Headplane"
   actions:
     - text: "Getting Started"
