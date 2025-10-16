@@ -11,9 +11,9 @@
 		"start": "node build/server/index.js",
 		"typecheck": "react-router typegen && tsgo",
 		"test": "vitest run",
-		"docs:dev": "vitepress dev docs",
-		"docs:build": "vitepress build docs",
-		"docs:preview": "vitepress preview docs"
+		"docs:dev": "vitepress dev",
+		"docs:build": "vitepress build",
+		"docs:preview": "vitepress preview"
 	},
 	"dependencies": {
 		"@dnd-kit/core": "^6.3.1",
