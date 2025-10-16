@@ -11,7 +11,6 @@ import {
 	useLoaderData,
 	useSubmit,
 } from 'react-router';
-import wasm from '~/hp_ssh.wasm?url';
 import { LoadContext } from '~/server';
 import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
 import { Machine, PreAuthKey, User } from '~/types';
@@ -215,46 +214,49 @@ export default function Page() {
 
 		pause();
 		const go = new Go(); // Go is defined by wasm_exec.js
-		WebAssembly.instantiateStreaming(fetch(wasm), go.importObject).then(
-			(value) => {
-				go.run(value.instance);
-				const handle = TsWasmNet(ipnDetails, {
-					NotifyState: (state) => {
-						console.log('State changed:', state);
-						if (state === 'Running') {
-							setIpn(handle);
-						}
-					},
-					NotifyNetMap: (netmap) => {
-						// Only set NodeKey if it is not already set and then
-						// also dispatch that to the backend to track the
-						// ephemeral node.
-						//
-						// We open an SSE connection to the backend
-						// so that when the connection is closed,
-						// the backend can delete the ephemeral node.
-						if (nodeKey === null) {
-							setNodeKey(netmap.NodeKey);
-							submit(
-								{
-									node_key: netmap.NodeKey,
-									auth_key: ipnDetails.PreAuthKey,
-								},
-								{ method: 'POST' },
-							);
-						}
-					},
-					NotifyBrowseToURL: (url) => {
-						console.log('Browse to URL:', url);
-					},
-					NotifyPanicRecover: (message) => {
-						console.error('Panic recover:', message);
-					},
-				});
 
-				handle.Start();
-			},
-		);
+		import('~/hp_ssh.wasm?url').then(({ default: url }) => {
+			WebAssembly.instantiateStreaming(fetch(url), go.importObject).then(
+				(value) => {
+					go.run(value.instance);
+					const handle = TsWasmNet(ipnDetails, {
+						NotifyState: (state) => {
+							console.log('State changed:', state);
+							if (state === 'Running') {
+								setIpn(handle);
+							}
+						},
+						NotifyNetMap: (netmap) => {
+							// Only set NodeKey if it is not already set and then
+							// also dispatch that to the backend to track the
+							// ephemeral node.
+							//
+							// We open an SSE connection to the backend
+							// so that when the connection is closed,
+							// the backend can delete the ephemeral node.
+							if (nodeKey === null) {
+								setNodeKey(netmap.NodeKey);
+								submit(
+									{
+										node_key: netmap.NodeKey,
+										auth_key: ipnDetails.PreAuthKey,
+									},
+									{ method: 'POST' },
+								);
+							}
+						},
+						NotifyBrowseToURL: (url) => {
+							console.log('Browse to URL:', url);
+						},
+						NotifyPanicRecover: (message) => {
+							console.error('Panic recover:', message);
+						},
+					});
+
+					handle.Start();
+				},
+			);
+		});
 	}, []);
 
 	if (!sshDetails.username) {

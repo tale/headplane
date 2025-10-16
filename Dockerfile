@@ -35,6 +35,7 @@ COPY --from=go-build /build/app/wasm_exec.js /build/app/wasm_exec.js
 ARG IMAGE_TAG
 RUN IMAGE_TAG=$IMAGE_TAG pnpm run build
 RUN mkdir -p /var/lib/headplane/agent
+RUN pnpm prune --prod
 
 FROM gcr.io/distroless/nodejs22-debian12:latest AS final
 COPY --from=js-build /build/build/ /app/build/

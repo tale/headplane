@@ -1,9 +1,6 @@
+import { Icon } from '@iconify/react';
 import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
-import { GrApple } from 'react-icons/gr';
-import { ImFinder } from 'react-icons/im';
-import { MdAndroid } from 'react-icons/md';
-import { PiTerminalFill, PiWindowsLogoFill } from 'react-icons/pi';
 import { LoaderFunctionArgs, NavLink, useLoaderData } from 'react-router';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
@@ -132,7 +129,7 @@ export default function Page() {
 							key="linux"
 							title={
 								<div className="flex items-center gap-1">
-									<PiTerminalFill className="ml-1 w-4" />
+									<Icon className="ml-1 w-4" icon="ion:terminal" />
 									<span>Linux</span>
 								</div>
 							}
@@ -163,7 +160,7 @@ export default function Page() {
 							key="windows"
 							title={
 								<div className="flex items-center gap-1">
-									<PiWindowsLogoFill className="ml-1 w-4" />
+									<Icon className="ml-1 w-4" icon="mdi:microsoft" />
 									<span>Windows</span>
 								</div>
 							}
@@ -186,7 +183,10 @@ export default function Page() {
 							key="macos"
 							title={
 								<div className="flex items-center gap-1">
-									<ImFinder className="ml-1 w-4" />
+									<Icon
+										className="ml-1 w-4"
+										icon="streamline-logos:mac-finder-logo-solid"
+									/>
 									<span>macOS</span>
 								</div>
 							}
@@ -218,7 +218,7 @@ export default function Page() {
 							key="ios"
 							title={
 								<div className="flex items-center gap-1">
-									<GrApple className="ml-1 w-4" />
+									<Icon className="ml-1 w-4" icon="grommet-icons:apple" />
 									<span>iOS</span>
 								</div>
 							}
@@ -241,7 +241,7 @@ export default function Page() {
 							key="android"
 							title={
 								<div className="flex items-center gap-1">
-									<MdAndroid className="ml-1 w-4" />
+									<Icon className="ml-1 w-4" icon="material-symbols:android" />
 									<span>Android</span>
 								</div>
 							}

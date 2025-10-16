@@ -1,3 +1,6 @@
+### 0.6.2 (Next)
+- Bundle all `node_modules` aside from native ones to reduce bundle and container size (closes [#331](https://github.com/tale/headplane/issues/331)).
+
 ### 0.6.1 (October 12, 2025)
 - **Headplane now supports connecting to machines via SSH in the web browser.**
 	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.

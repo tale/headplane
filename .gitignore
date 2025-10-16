@@ -9,4 +9,5 @@ node_modules
 /docs/.vitepress/dist/
 /docs/.vitepress/cache/
 
+>>>>>>> origin/main
 /.direnv
