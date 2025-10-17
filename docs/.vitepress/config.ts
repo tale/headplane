@@ -9,7 +9,7 @@ export default defineConfig({
 		logo: '/logo.svg',
 		nav: [
 			{ text: 'Home', link: '/' },
-			{ text: 'Changelog', link: '/changelog' },
+			{ text: 'Changelog', link: '/CHANGELOG' },
 		],
 		sidebar: [
 			{
@@ -39,8 +39,8 @@ export default defineConfig({
 						text: 'Development',
 						collapsed: true,
 						items: [
-							{ text: 'Contributing', link: '/contributing' },
-							{ text: 'Security', link: '/security' },
+							{ text: 'Contributing', link: '/CONTRIBUTING' },
+							{ text: 'Security', link: '/SECURITY' },
 						],
 					},
 				],
