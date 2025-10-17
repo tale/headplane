@@ -43,8 +43,9 @@ It's important to mount your configuration file and also provide a persistent
 storage location for Headplane to store its own data. You can also change the
 port mapping if you want to run it on a different port.
 
-<details>
-<summary>Example Docker Compose configuration</summary>
+### Optional: Docker Compose
+If you prefer using Docker Compose, here is a minimal example of a
+`compose.yaml` file that runs Headplane in Limited Mode:
 
 ```yaml
 services:
@@ -58,7 +59,6 @@ services:
       - '/path/to/your/config.yaml:/etc/headplane/config.yaml'
       - '/path/to/data/storage:/var/lib/headplane'
 ```
-</details>
 
 ## Accessing Headplane
 

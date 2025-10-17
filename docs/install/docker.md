@@ -192,9 +192,6 @@ Keep in mind this won't work on its own as you'll need to configure Traefik
 and TLS certificates as needed. This is just a snippet to show how to configure
 the routing for Headplane and Headscale.
 
-<details>
-<summary>Traefik config snippet</summary>
-
 ```yaml
 services:
   # Same as before
@@ -262,5 +259,4 @@ services:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
       - '/path/to/certs/storage:/certs'
 ```
-</details>
 

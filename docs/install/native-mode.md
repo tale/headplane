@@ -51,8 +51,7 @@ path by setting the `HEADPLANE_CONFIG_PATH` environment variable.
 > Ensure that the `build/` directory exists relative to where the start command
 > is run, otherwise Headplane will not be able to find the frontend assets.
 
-<details>
-<summary>Example Systemd service file</summary>
+### Example systemd Service
 
 Slotting this file into `/etc/systemd/system/headplane.service` will allow
 you to manage Headplane via systemd. Adjust the paths and user as needed,
@@ -79,7 +78,6 @@ RestartSec=5s
 [Install]
 WantedBy=multi-user.target
 ```
-</details>
 
 To access Headplane, navigate to `http://localhost:3000/admin` in your web
 browser (replace `localhost` with your server's IP address or domain name if
@@ -177,9 +175,6 @@ The following configuration will set up Nginx to proxy all Headscale requests
 on `headscale.example.com` and serve the Headplane UI under the `/admin` path.
 This is identical to how Tailscale's own admin console is served.
 
-<details>
-<summary>Nginx config snippet</summary>
-
 ```nginx
 server {
     listen 80;
@@ -223,7 +218,6 @@ server {
     }
 }
 ```
-</details>
 
 ## Custom Path Prefix
 
