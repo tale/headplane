@@ -3,7 +3,6 @@ import { defineConfig } from 'vitepress';
 export default defineConfig({
 	title: 'Headplane',
 	description: 'The missing dashboard for Headscale',
-	ignoreDeadLinks: ['/docs/Integrated-Mode', '/docs/Simple-Mode'],
 	cleanUrls: true,
 	head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
 	themeConfig: {
@@ -11,13 +10,19 @@ export default defineConfig({
 		nav: [{ text: 'Home', link: '/' }],
 		sidebar: [
 			{
-				text: 'Chapters',
+				text: 'Getting Started',
 				items: [
-					{ text: 'Getting Started', link: '/README' },
+					{ text: 'What is Headplane?', link: '/introduction' },
+					{
+						text: 'Installation',
+						link: '/install',
+						items: [
+							{ text: 'Limited Mode', link: '/install/limited-mode' },
+							{ text: 'Native Mode', link: '/install/native-mode' },
+							{ text: 'Docker', link: '/install/docker' },
+						],
+					},
 					{ text: 'Configuration', link: '/Configuration' },
-					{ text: 'Bare-Metal Mode', link: '/Bare-Metal' },
-					{ text: 'Integrated Mode', link: '/Integrated-Mode' },
-					{ text: 'Simple Mode', link: '/Simple-Mode' },
 					{ text: 'Nix', link: '/Nix' },
 					{ text: 'NixOS', link: '/NixOS-options' },
 					{ text: 'Security', link: '/SECURITY' },

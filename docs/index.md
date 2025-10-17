@@ -10,7 +10,10 @@ hero:
     alt: "Headplane"
   actions:
     - text: "Getting Started"
-      link: "/README"
+      link: "/introduction"
+    - text: "Installation"
+      link: "/install"
+      theme: "alt"
     - text: "GitHub"
       link: "https://github.com/tale/headplane"
       theme: "alt"
