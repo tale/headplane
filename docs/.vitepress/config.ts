@@ -25,7 +25,7 @@ export default defineConfig({
 							{ text: 'Docker', link: '/install/docker' },
 						],
 					},
-					{ text: 'Configuration', link: '/Configuration' },
+					{ text: 'Configuration', link: '/configuration' },
 					{ text: 'Nix', link: '/Nix' },
 					{ text: 'NixOS', link: '/NixOS-options' },
 					{
