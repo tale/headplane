@@ -6,7 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
+		"prebuild": "mise run build-go-wasm",
 		"build": "react-router build",
+		"postbuild": "mise run build-go-agent",
 		"dev": "HEADPLANE_LOAD_ENV_OVERRIDES=true HEADPLANE_CONFIG_PATH=./config.example.yaml react-router dev",
 		"start": "node build/server/index.js",
 		"typecheck": "react-router typegen && tsgo",
@@ -65,6 +67,7 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.0",
+		"@jdxcode/mise": "^2025.10.10",
 		"@react-router/dev": "^7.8.1",
 		"@tailwindcss/vite": "^4.1.12",
 		"@types/node": "^24.3.0",
