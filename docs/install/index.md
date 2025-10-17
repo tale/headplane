@@ -1,6 +1,7 @@
---
+---
 title: Installation
 description: Get started with Headplane.
+outline: [2, 3]
 ---
 
 # Installation

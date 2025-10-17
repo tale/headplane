@@ -7,7 +7,10 @@ export default defineConfig({
 	head: [['link', { rel: 'icon', href: '/favicon.ico' }]],
 	themeConfig: {
 		logo: '/logo.svg',
-		nav: [{ text: 'Home', link: '/' }],
+		nav: [
+			{ text: 'Home', link: '/' },
+			{ text: 'Changelog', link: '/changelog' },
+		],
 		sidebar: [
 			{
 				text: 'Getting Started',
@@ -25,9 +28,21 @@ export default defineConfig({
 					{ text: 'Configuration', link: '/Configuration' },
 					{ text: 'Nix', link: '/Nix' },
 					{ text: 'NixOS', link: '/NixOS-options' },
-					{ text: 'Security', link: '/SECURITY' },
-					{ text: 'Contributing', link: '/CONTRIBUTING' },
-					{ text: 'Changelog', link: '/CHANGELOG' },
+					{
+						text: 'Features',
+						items: [
+							{ text: 'Single Sign-On (SSO)', link: '/features/sso' },
+							{ text: 'Headplane Agent / SSH', link: '/features/agent' },
+						],
+					},
+					{
+						text: 'Development',
+						collapsed: true,
+						items: [
+							{ text: 'Contributing', link: '/contributing' },
+							{ text: 'Security', link: '/security' },
+						],
+					},
 				],
 			},
 		],
