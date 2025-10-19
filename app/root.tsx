@@ -8,6 +8,7 @@ import {
 	useNavigation,
 } from 'react-router';
 import '@fontsource-variable/inter';
+import { ExternalScripts } from 'remix-utils/external-scripts';
 import { ErrorPopup } from '~/components/Error';
 import ProgressBar from '~/components/ProgressBar';
 import ToastProvider from '~/components/ToastProvider';
@@ -38,16 +39,17 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 			<html lang="en">
 				<head>
 					<meta charSet="utf-8" />
-					<meta name="viewport" content="width=device-width, initial-scale=1" />
+					<meta content="width=device-width, initial-scale=1" name="viewport" />
 					<Meta />
 					<Links />
-					<link rel="icon" href="favicon.ico" />
+					<link href="favicon.ico" rel="icon" />
 				</head>
 				<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
 					{children}
 					<ToastProvider queue={toastQueue} />
 					<ScrollRestoration />
 					<Scripts />
+					<ExternalScripts />
 				</body>
 			</html>
 		</LiveDataProvider>
