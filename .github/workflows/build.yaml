@@ -55,7 +55,7 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.mod', '**/go.sum') }}
 
       - name: CI pipeline
-        run: mise run ci
+        run: ./build.sh --skip-pnpm-prune
 
   nix:
     name: nix
