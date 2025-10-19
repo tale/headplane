@@ -32,17 +32,7 @@ These are some of the features that Headplane offers:
 - Configurability for Headscale's settings
 
 ## Deployment
-Headplane runs as a server-based web-application, meaning you'll need a server to run it.
-It's available as a Docker image (recommended) or through a manual installation.
-There are 2 ways to deploy Headplane:
-
-- ### [Integrated Mode (Recommended)](/docs/Integrated-Mode.md)
-  Integrated mode unlocks all the features of Headplane and is the most
-  feature-complete deployment method. It communicates with Headscale directly.
-
-- ### [Simple Mode](/docs/Simple-Mode.md)
-  Simple mode does not include the automatic management of DNS and Headplane
-  settings, requiring manual editing and reloading when making changes.
+Refer to the [website](https://headplane.net) for detailed installation instructions.
 
 ## Versioning
 Headplane uses [semantic versioning](https://semver.org/) for its releases (since v0.6.0).

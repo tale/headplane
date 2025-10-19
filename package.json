@@ -6,7 +6,9 @@
 	"type": "module",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",
+		"prebuild": "npx @jdxcode/mise run build-go-wasm",
 		"build": "react-router build",
+		"postbuild": "npx @jdxcode/mise run build-go-agent",
 		"dev": "HEADPLANE_LOAD_ENV_OVERRIDES=true HEADPLANE_CONFIG_PATH=./config.example.yaml react-router dev",
 		"start": "node build/server/index.js",
 		"typecheck": "react-router typegen && tsgo",

@@ -6,11 +6,14 @@ hero:
   name: "Headplane"
   tagline: "A full-featured admin interface for Headscale"
   image:
-    src: "/logo-dark-bg.svg"
+    src: "/logo.svg"
     alt: "Headplane"
   actions:
     - text: "Getting Started"
-      link: "/README"
+      link: "/introduction"
+    - text: "Installation"
+      link: "/install"
+      theme: "alt"
     - text: "GitHub"
       link: "https://github.com/tale/headplane"
       theme: "alt"

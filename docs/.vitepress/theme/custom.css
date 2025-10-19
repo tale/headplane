@@ -5,3 +5,13 @@ html.dark .light-only {
 html:not(.dark) .dark-only {
 	display: none !important;
 }
+
+figure {
+	padding: 1em;
+}
+
+figcaption {
+	text-align: center;
+	font-size: 0.9em;
+	margin-top: 0.5em;
+}
