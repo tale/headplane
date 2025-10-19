@@ -106,3 +106,13 @@ export default createHonoServer({
 		log.info('server', 'Running on %s:%s', info.address, info.port);
 	},
 });
+
+process.on('SIGINT', () => {
+	log.info('server', 'Received SIGINT, shutting down...');
+	process.exit(0);
+});
+
+process.on('SIGTERM', () => {
+	log.info('server', 'Received SIGTERM, shutting down...');
+	process.exit(0);
+});
