@@ -22,6 +22,7 @@ Here are a few more examples:
 
 - `HEADPLANE_HEADSCALE__URL`: `headscale.url`
 - `HEADPLANE_SERVER__PORT`: `server.port`
+- `HEADPLANE_INTEGRATION_AGENT__ENABLED`: `integration.agent.enabled`
 
 **This functionality is NOT enabled by default!**
 To enable it, set the environment variable **`HEADPLANE_LOAD_ENV_OVERRIDES=true`**.
