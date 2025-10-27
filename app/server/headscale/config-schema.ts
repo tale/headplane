@@ -14,7 +14,7 @@ const databaseConfig = type({
 	type: '"sqlite" | "sqlite3"',
 	sqlite: {
 		path: 'string',
-		write_head_log: goBool.default(true),
+		write_ahead_log: goBool.default(true),
 		wal_autocheckpoint: 'number = 1000',
 	},
 })
