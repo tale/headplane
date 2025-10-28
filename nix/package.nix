@@ -36,7 +36,7 @@ in
       runHook preBuild
       cp ${headplane-ssh-wasm}/hp_ssh.wasm app/hp_ssh.wasm
       cp ${headplane-ssh-wasm}/wasm_exec.js app/wasm_exec.js
-      pnpm build
+      pnpm react-router build
       runHook postBuild
     '';
 
