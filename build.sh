@@ -104,6 +104,10 @@ if [ "$SKIP_PATH_CHECKS" -eq 0 ]; then
 	fi
 
 	if [ $need_pnpm -eq 1 ]; then
+		echo "==> Checking for node"
+		command -v node >/dev/null 2>&1 || die "node not installed"
+		node --version >/dev/null 2>&1 || die "node not working"
+
 		echo "==> Checking for pnpm"
 		command -v pnpm >/dev/null 2>&1 || die "pnpm not installed"
 		pnpm --version >/dev/null 2>&1 || die "pnpm not working"
