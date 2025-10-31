@@ -2,14 +2,12 @@ name: Build
 on:
   push:
     paths-ignore:
-      - ".zed/**"
       - "assets/**"
       - "docs/**"
       - "CHANGELOG.md"
       - "README.md"
     branches:
       - "main"
-      - "next"
   pull_request:
 
 concurrency:
@@ -21,41 +19,34 @@ permissions:
   contents: read # Read access to the repository
 
 jobs:
-  native:
-    name: native
+  ci:
+    name: Build and Test
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - name: Setup Mise
-        uses: jdx/mise-action@v2
-
-      - name: Set caching paths
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-          echo "GO_CACHE=$(go env GOCACHE)" >> $GITHUB_ENV
-          echo "GO_MODCACHE=$(go env GOMODCACHE)" >> $GITHUB_ENV
-
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
+          run_install: false
 
-      - name: Setup Go cache
-        uses: actions/cache@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
         with:
-          path: |
-            ${{ env.GO_CACHE }}
-            ${{ env.GO_MODCACHE }}
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.mod', '**/go.sum') }}
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
 
       - name: CI pipeline
         run: ./build.sh --skip-pnpm-prune
+
+      - name: Run tests
+        run: pnpm test
 
   nix:
     name: nix
