@@ -1,7 +1,11 @@
-node_modules
-.dockerignore
-Dockerfile
-
 /.cache
+/.github
+/.react-router
+/node_modules
 /build
+/docs
+/nix
+
+.dockerignore
 .env
+Dockerfile

@@ -1,4 +1,5 @@
 /** biome-ignore-all lint/correctness/noNestedComponentDefinitions: Wtf? */
+
 import { faker } from '@faker-js/faker';
 import { eq } from 'drizzle-orm';
 import { Loader2 } from 'lucide-react';
@@ -6,17 +7,17 @@ import { useEffect, useState } from 'react';
 import {
 	ActionFunctionArgs,
 	data,
+	LinksFunction,
 	LoaderFunctionArgs,
 	ShouldRevalidateFunction,
 	useLoaderData,
 	useSubmit,
 } from 'react-router';
-import wasm from '~/hp_ssh.wasm?url';
+import { ExternalScriptsHandle } from 'remix-utils/external-scripts';
 import { LoadContext } from '~/server';
 import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
 import { Machine, PreAuthKey, User } from '~/types';
 import { useLiveData } from '~/utils/live-data';
-import '~/wasm_exec';
 import UserPrompt from './user-prompt';
 import XTerm from './xterm.client';
 
@@ -28,6 +29,19 @@ export async function loader({
 	request,
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
+	const origin = new URL(request.url).origin;
+	const assets = ['/wasm_exec.js', '/hp_ssh.wasm'];
+	const missing: string[] = [];
+
+	for (const file of assets) {
+		const res = await fetch(`${origin}${file}`, { method: 'HEAD' });
+		if (!res.ok) missing.push(file);
+	}
+
+	if (missing.length > 0) {
+		throw data('WebSSH is not configured in this build.', 405);
+	}
+
 	if (!context.agents?.agentID()) {
 		throw data(
 			'WebSSH is only available with the Headplane agent integration',
@@ -200,6 +214,26 @@ export async function action({
 		.where(eq(ephemeralNodes.auth_key, authKey));
 }
 
+export const links: LinksFunction = () => [
+	{
+		rel: 'preload',
+		href: '/hp_ssh.wasm',
+		as: 'fetch',
+		type: 'application/wasm',
+		crossOrigin: 'anonymous',
+	},
+];
+
+export const handle: ExternalScriptsHandle = {
+	scripts: [
+		{
+			src: '/wasm_exec.js',
+			crossOrigin: 'anonymous',
+			preload: true,
+		},
+	],
+};
+
 export default function Page() {
 	const submit = useSubmit();
 	const { pause } = useLiveData();
@@ -215,46 +249,47 @@ export default function Page() {
 
 		pause();
 		const go = new Go(); // Go is defined by wasm_exec.js
-		WebAssembly.instantiateStreaming(fetch(wasm), go.importObject).then(
-			(value) => {
-				go.run(value.instance);
-				const handle = TsWasmNet(ipnDetails, {
-					NotifyState: (state) => {
-						console.log('State changed:', state);
-						if (state === 'Running') {
-							setIpn(handle);
-						}
-					},
-					NotifyNetMap: (netmap) => {
-						// Only set NodeKey if it is not already set and then
-						// also dispatch that to the backend to track the
-						// ephemeral node.
-						//
-						// We open an SSE connection to the backend
-						// so that when the connection is closed,
-						// the backend can delete the ephemeral node.
-						if (nodeKey === null) {
-							setNodeKey(netmap.NodeKey);
-							submit(
-								{
-									node_key: netmap.NodeKey,
-									auth_key: ipnDetails.PreAuthKey,
-								},
-								{ method: 'POST' },
-							);
-						}
-					},
-					NotifyBrowseToURL: (url) => {
-						console.log('Browse to URL:', url);
-					},
-					NotifyPanicRecover: (message) => {
-						console.error('Panic recover:', message);
-					},
-				});
+		WebAssembly.instantiateStreaming(
+			fetch('/hp_ssh.wasm'),
+			go.importObject,
+		).then((value) => {
+			go.run(value.instance);
+			const handle = TsWasmNet(ipnDetails, {
+				NotifyState: (state) => {
+					console.log('State changed:', state);
+					if (state === 'Running') {
+						setIpn(handle);
+					}
+				},
+				NotifyNetMap: (netmap) => {
+					// Only set NodeKey if it is not already set and then
+					// also dispatch that to the backend to track the
+					// ephemeral node.
+					//
+					// We open an SSE connection to the backend
+					// so that when the connection is closed,
+					// the backend can delete the ephemeral node.
+					if (nodeKey === null) {
+						setNodeKey(netmap.NodeKey);
+						submit(
+							{
+								node_key: netmap.NodeKey,
+								auth_key: ipnDetails.PreAuthKey,
+							},
+							{ method: 'POST' },
+						);
+					}
+				},
+				NotifyBrowseToURL: (url) => {
+					console.log('Browse to URL:', url);
+				},
+				NotifyPanicRecover: (message) => {
+					console.error('Panic recover:', message);
+				},
+			});
 
-				handle.Start();
-			},
-		);
+			handle.Start();
+		});
 	}, []);
 
 	if (!sshDetails.username) {

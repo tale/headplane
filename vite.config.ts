@@ -37,10 +37,23 @@ export default defineConfig(({ command, isSsrBuild }) => ({
 	},
 	build: {
 		target: 'esnext',
+		sourcemap: true,
+		rolldownOptions:
+			command === 'build'
+				? {
+						// Exclude libsql from the server side since it's a native module
+						// Exclude WASM from the client since it fetches from the server
+						external: isSsrBuild ? [/^@libsql\//] : [/\.wasm(\?url)?$/],
+						output: {
+							manualChunks: undefined,
+							inlineDynamicImports: isSsrBuild,
+						},
+					}
+				: undefined,
 	},
 	ssr: {
 		target: 'node',
-		noExternal: isSsrBuild ? ['@libsql/client'] : undefined,
+		noExternal: command === 'build' ? true : undefined,
 	},
 	optimizeDeps: {
 		include: ['@libsql/client'],
