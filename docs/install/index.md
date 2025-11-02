@@ -23,7 +23,7 @@ is available to use as a starting point. Some of the important fields include:
 | **`server.data_path`** | Just a path to keep in mind, especially if you're using Docker. |
 
 The configuration file is rather complicated and has many more options. Refer to
-the [Configuration](../configuration.md) guide for a detailed explanation of all
+the [Configuration](../configuration/index.md) guide for a detailed explanation of all
 the available options, as well as guidance on securely setting up your values
 through secret path options and environment variables.
 
