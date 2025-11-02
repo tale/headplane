@@ -40,6 +40,12 @@ const agents = await createHeadplaneAgent(
 // These are usually per-request things that we need access to, like the
 // helper that can issue and revoke cookies.
 export type LoadContext = typeof appLoadContext;
+
+import 'react-router';
+declare module 'react-router' {
+	interface AppLoadContext extends LoadContext {}
+}
+
 const appLoadContext = {
 	config,
 	hs: await loadHeadscaleConfig(

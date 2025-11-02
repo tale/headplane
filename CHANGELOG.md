@@ -2,6 +2,7 @@
 - Bundle all `node_modules` aside from native ones to reduce bundle and container size (closes [#331](https://github.com/tale/headplane/issues/331)).
 - Allow conditionally compiling the SSH WASM integration when building (closes [#337](https://github.com/tale/headplane/issues/337)).
 - Implemented the ability to customize the build with a custom script (see `./build.sh --help` for more information).
+- Attempt to warn against misconfigured cookie settings on the login page.
 
 ---
 
