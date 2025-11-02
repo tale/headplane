@@ -152,13 +152,14 @@ class Sessionizer {
 }
 
 async function createSession(payload: JWTSession, options: AuthSessionOptions) {
+	const now = Math.floor(Date.now() / 1000);
 	const secret = createHash('sha256').update(options.secret, 'utf8').digest();
 	const jwt = await new EncryptJWT({
 		...payload,
 	})
 		.setProtectedHeader({ alg: 'dir', enc: 'A256GCM', typ: 'JWT' })
 		.setIssuedAt()
-		.setExpirationTime('1d')
+		.setExpirationTime(now + options.cookie.maxAge)
 		.setIssuer('urn:tale:headplane')
 		.setAudience('urn:tale:headplane')
 		.setJti(ulid())

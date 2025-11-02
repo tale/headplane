@@ -23,6 +23,8 @@ const serverConfig = type({
 	cookie_secret: '(32 <= string <= 32)?',
 	cookie_secret_path: 'string?',
 	cookie_secure: stringToBool,
+	cookie_domain: 'string?',
+	cookie_max_age: 'number.integer = 86400',
 })
 	.narrow((obj: Record<string, unknown>, ctx: any) => {
 		const hasVal = obj.cookie_secret != null && `${obj.cookie_secret}` !== '';
@@ -49,6 +51,8 @@ const partialServerConfig = type({
 	cookie_secret: '32 <= string <= 32?',
 	cookie_secret_path: 'string?',
 	cookie_secure: stringToBool.optional(),
+	cookie_domain: 'string?',
+	cookie_max_age: 'number.integer?',
 });
 
 const oidcConfig = type({

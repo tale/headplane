@@ -12,6 +12,14 @@ server:
   # (I recommend this is true in production)
   cookie_secure: true
 
+  # The maximum age of the session cookie in seconds
+  cookie_max_age: 86400 # 1 day in seconds
+
+  # This is not required, but if you want to restrict the cookie
+  # to a specific domain, set it here. Otherwise leave it commented out.
+  # This may not work as expected if not using a reverse proxy.
+  # cookie_domain: ""
+
   # The path to persist Headplane specific data. All data going forward
   # is stored in this directory, including the internal database and
   # any cache related files.

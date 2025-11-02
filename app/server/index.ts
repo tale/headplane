@@ -62,8 +62,8 @@ const appLoadContext = {
 		cookie: {
 			name: '_hp_auth',
 			secure: config.server.cookie_secure,
-			maxAge: 60 * 60 * 24, // 24 hours
-			// domain: config.server.cookie_domain,
+			maxAge: config.server.cookie_max_age,
+			domain: config.server.cookie_domain,
 		},
 	}),
 

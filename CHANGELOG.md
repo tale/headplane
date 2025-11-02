@@ -3,6 +3,7 @@
 - Allow conditionally compiling the SSH WASM integration when building (closes [#337](https://github.com/tale/headplane/issues/337)).
 - Implemented the ability to customize the build with a custom script (see `./build.sh --help` for more information).
 - Attempt to warn against misconfigured cookie settings on the login page.
+- Made `server.cookie_max_age` and `server.cookie_domain` configurable (closes [#348](https://github.com/tale/headplane/issues/348)).
 
 ---
 
