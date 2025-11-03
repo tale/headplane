@@ -64,6 +64,25 @@ in {
                   '';
                 };
 
+                cookie_max_age = mkOption {
+                  type = types.int;
+                  default = 86400;
+                  description = "The maximum age of the session cookie in seconds.";
+                  example = "3600";
+                };
+
+                cookie_domain = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = ''
+                    This is not required, but if you want to restrict the
+                    cookie to a specific domain, set it here. Otherwise leave
+                    it commented out. This may not work as expected if not
+                    using a reverse proxy.
+                  '';
+                  example = "headscale.example.com";
+                };
+
                 data_path = mkOption {
                   type = types.path;
                   default = "/var/lib/headplane";
