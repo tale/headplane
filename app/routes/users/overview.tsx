@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { useLoaderData } from 'react-router';
-import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import { Machine, User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
+import type { Route } from './+types/overview';
 import ManageBanner from './components/manage-banner';
 import UserRow from './components/user-row';
 import { userAction } from './user-actions';
@@ -13,10 +11,7 @@ interface UserMachine extends User {
 	machines: Machine[];
 }
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	const check = await context.sessions.check(request, Capabilities.read_users);
 	if (!check) {
@@ -31,14 +26,12 @@ export async function loader({
 		Capabilities.write_users,
 	);
 
-	const [machines, apiUsers] = await Promise.all([
-		context.client.get<{ nodes: Machine[] }>('v1/node', session.api_key),
-		context.client.get<{ users: User[] }>('v1/user', session.api_key),
-	]);
+	const api = context.hsApi.getRuntimeClient(session.api_key);
+	const [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
 
-	const users = apiUsers.users.map((user) => ({
+	const users = apiUsers.map((user) => ({
 		...user,
-		machines: machines.nodes.filter((machine) => machine.user.id === user.id),
+		machines: nodes.filter((node) => node.user.id === user.id),
 	}));
 
 	const roles = await Promise.all(
@@ -77,28 +70,29 @@ export async function loader({
 
 	return {
 		writable: writablePermission, // whether the user can write to the API
-		oidc: context.config.oidc,
+		oidc: context.config.oidc
+			? {
+					issuer: context.config.oidc.issuer,
+				}
+			: undefined,
 		roles,
 		magic,
 		users,
 	};
 }
 
-export async function action(data: ActionFunctionArgs) {
-	return userAction(data);
-}
+export const action = userAction;
 
-export default function Page() {
-	const data = useLoaderData<typeof loader>();
-	const [users, setUsers] = useState<UserMachine[]>(data.users);
+export default function Page({ loaderData }: Route.ComponentProps) {
+	const [users, setUsers] = useState<UserMachine[]>(loaderData.users);
 
 	// This useEffect is entirely for the purpose of updating the users when the
 	// drag and drop changes the machines between users. It's pretty hacky, but
 	// the idea is to treat data.users as the source of truth and update the
 	// local state when it changes.
 	useEffect(() => {
-		setUsers(data.users);
-	}, [data.users]);
+		setUsers(loaderData.users);
+	}, [loaderData.users]);
 
 	return (
 		<>
@@ -106,7 +100,7 @@ export default function Page() {
 			<p className="mb-8 text-md">
 				Manage the users in your network and their permissions.
 			</p>
-			<ManageBanner isDisabled={!data.writable} oidc={data.oidc} />
+			<ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
 			<table className="table-auto w-full rounded-lg">
 				<thead className="text-headplane-600 dark:text-headplane-300">
 					<tr className="text-left px-0.5">
@@ -127,7 +121,7 @@ export default function Page() {
 						.map((user) => (
 							<UserRow
 								key={user.id}
-								role={data.roles[users.indexOf(user)]}
+								role={loaderData.roles[users.indexOf(user)]}
 								user={user}
 							/>
 						))}

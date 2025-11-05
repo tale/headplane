@@ -7,7 +7,6 @@ import { loadIntegration } from './config/integration';
 import { loadConfig } from './config/loader';
 import { createDbClient } from './db/client.server';
 import { createHeadscaleInterface } from './headscale/api';
-import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { createHeadplaneAgent } from './hp-agent';
 import { configureOidcAuth } from './web/oidc';
@@ -69,11 +68,6 @@ const appLoadContext = {
 	}),
 
 	hsApi: await createHeadscaleInterface(
-		config.headscale.url,
-		config.headscale.tls_cert_path,
-	),
-
-	client: await createApiClient(
 		config.headscale.url,
 		config.headscale.tls_cert_path,
 	),

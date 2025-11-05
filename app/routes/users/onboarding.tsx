@@ -1,23 +1,20 @@
 import { Icon } from '@iconify/react';
 import { ArrowRight } from 'lucide-react';
 import { useEffect } from 'react';
-import { LoaderFunctionArgs, NavLink, useLoaderData } from 'react-router';
+import { NavLink } from 'react-router';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
 import Link from '~/components/Link';
 import Options from '~/components/Options';
 import StatusCircle from '~/components/StatusCircle';
-import { LoadContext } from '~/server';
 import { Machine } from '~/types';
 import cn from '~/utils/cn';
 import { useLiveData } from '~/utils/live-data';
 import log from '~/utils/log';
 import toast from '~/utils/toast';
+import type { Route } from './+types/onboarding';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 
 	// Try to determine the OS split between Linux, Windows, macOS, iOS, and Android
@@ -48,13 +45,10 @@ export async function loader({
 			break;
 	}
 
+	const api = context.hsApi.getRuntimeClient(session.api_key);
 	let firstMachine: Machine | undefined;
 	try {
-		const { nodes } = await context.client.get<{ nodes: Machine[] }>(
-			'v1/node',
-			session.api_key,
-		);
-
+		const nodes = await api.getNodes();
 		const node = nodes.find((n) => {
 			if (n.user.provider !== 'oidc') {
 				return false;
@@ -87,8 +81,9 @@ export async function loader({
 	};
 }
 
-export default function Page() {
-	const { user, osValue, firstMachine } = useLoaderData<typeof loader>();
+export default function Page({
+	loaderData: { user, osValue, firstMachine },
+}: Route.ComponentProps) {
 	const { pause, resume } = useLiveData();
 	useEffect(() => {
 		if (firstMachine) {

@@ -1,40 +1,35 @@
-import { ActionFunctionArgs, data } from 'react-router';
-import { LoadContext } from '~/server';
+import { data } from 'react-router';
 import ResponseError from '~/server/headscale/api/response-error';
 import { Capabilities } from '~/server/web/roles';
-import { data400, data403 } from '~/utils/res';
+import type { Route } from './+types/overview';
 
 // We only check capabilities here and assume it is writable
 // If it isn't, it'll gracefully error anyways, since this means some
 // fishy client manipulation is happening.
-export async function aclAction({
-	request,
-	context,
-}: ActionFunctionArgs<LoadContext>) {
+export async function aclAction({ request, context }: Route.ActionArgs) {
 	const session = await context.sessions.auth(request);
 	const check = await context.sessions.check(
 		request,
 		Capabilities.write_policy,
 	);
 	if (!check) {
-		throw data403('You do not have permission to write to the ACL policy');
+		throw data('You do not have permission to write to the ACL policy', {
+			status: 403,
+		});
 	}
 
 	// Try to write to the ACL policy via the API or via config file (TODO).
 	const formData = await request.formData();
 	const policyData = formData.get('policy')?.toString();
 	if (!policyData) {
-		throw data400('Missing `policy` in the form data.');
+		throw data('Missing `policy` in the form data.', {
+			status: 400,
+		});
 	}
 
+	const api = context.hsApi.getRuntimeClient(session.api_key);
 	try {
-		const { policy, updatedAt } = await context.client.put<{
-			policy: string;
-			updatedAt: string;
-		}>('v1/policy', session.api_key, {
-			policy: policyData,
-		});
-
+		const { policy, updatedAt } = await api.setPolicy(policyData);
 		return data({
 			success: true,
 			error: undefined,
@@ -50,7 +45,7 @@ export async function aclAction({
 			// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
 			if (message.includes('update is disabled')) {
 				// This means the policy is not writable
-				throw data403('Policy is not writable');
+				throw data('Policy is not writable', { status: 403 });
 			}
 
 			// https://github.com/juanfont/headscale/blob/main/hscontrol/policy/v1/acls.go#L81

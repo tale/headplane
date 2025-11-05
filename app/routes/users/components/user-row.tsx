@@ -18,22 +18,24 @@ export default function UserRow({ user, role }: UserRowProps) {
 
 	return (
 		<tr
-			key={user.id}
 			className="group hover:bg-headplane-50 dark:hover:bg-headplane-950"
+			key={user.id}
 		>
 			<td className="pl-0.5 py-2">
 				<div className="flex items-center">
 					{user.profilePicUrl ? (
 						<img
-							src={user.profilePicUrl}
 							alt={user.name || user.displayName}
 							className="w-10 h-10 rounded-full"
+							src={user.profilePicUrl}
 						/>
 					) : (
 						<CircleUser className="w-10 h-10" />
 					)}
 					<div className="ml-4">
-						<p className={cn('font-semibold leading-snug')}>{user.name || user.displayName}</p>
+						<p className={cn('font-semibold leading-snug')}>
+							{user.name || user.displayName}
+						</p>
 						<p className="text-sm opacity-50">{user.email}</p>
 					</div>
 				</div>
@@ -43,8 +45,8 @@ export default function UserRow({ user, role }: UserRowProps) {
 			</td>
 			<td className="pl-0.5 py-2">
 				<p
-					suppressHydrationWarning
 					className="text-sm text-headplane-600 dark:text-headplane-300"
+					suppressHydrationWarning
 				>
 					{new Date(user.createdAt).toLocaleDateString()}
 				</p>
@@ -56,7 +58,7 @@ export default function UserRow({ user, role }: UserRowProps) {
 						'text-headplane-600 dark:text-headplane-300',
 					)}
 				>
-					<StatusCircle isOnline={isOnline} className="w-4 h-4" />
+					<StatusCircle className="w-4 h-4" isOnline={isOnline} />
 					<p suppressHydrationWarning>
 						{isOnline ? 'Connected' : new Date(lastSeen).toLocaleString()}
 					</p>

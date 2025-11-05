@@ -15,18 +15,18 @@ export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
 			<Dialog.Panel>
 				<Dialog.Title>Rename {user.name || user.displayName}?</Dialog.Title>
 				<Dialog.Text className="mb-6">
-					Enter a new username for {user.name || user.displayName}. Changing a username will not
-					update any ACL policies that may refer to this user by their old
-					username.
+					Enter a new username for {user.name || user.displayName}. Changing a
+					username will not update any ACL policies that may refer to this user
+					by their old username.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="rename_user" />
-				<input type="hidden" name="user_id" value={user.id} />
+				<input name="action_id" type="hidden" value="rename_user" />
+				<input name="user_id" type="hidden" value={user.id} />
 				<Input
-					isRequired
-					name="new_name"
-					label="Username"
-					placeholder="my-new-name"
 					defaultValue={user.name}
+					isRequired
+					label="Username"
+					name="new_name"
+					placeholder="my-new-name"
 				/>
 			</Dialog.Panel>
 		</Dialog>

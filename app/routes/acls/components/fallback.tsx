@@ -23,12 +23,12 @@ export default function Fallback({ acl }: Props) {
 				/>
 			</div>
 			<textarea
-				readOnly
 				className={cn(
 					'w-full h-editor font-mono resize-none text-sm',
 					'bg-headplane-50 dark:bg-headplane-950 opacity-60',
 					'pl-1 pt-1 leading-snug',
 				)}
+				readOnly
 				value={acl}
 			/>
 		</div>

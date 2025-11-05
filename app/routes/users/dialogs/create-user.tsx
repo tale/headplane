@@ -24,15 +24,14 @@ export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
 						</>
 					) : undefined}
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="create_user" />
+				<input name="action_id" type="hidden" value="create_user" />
 				<div className="flex flex-col gap-4">
 					<Input
 						isRequired
-						name="username"
-						type="text"
 						label="Username"
+						name="username"
 						placeholder="my-new-user"
-						validationBehavior="native"
+						type="text"
 						validate={(value) => {
 							if (value.trim().length === 0) {
 								return 'Username is required';
@@ -44,19 +43,20 @@ export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
 
 							return true;
 						}}
-					/>
-					<Input
-						name="display_name"
-						type="text"
-						label="Display Name"
-						placeholder="John Doe"
 						validationBehavior="native"
 					/>
 					<Input
-						name="email"
-						type="email"
+						label="Display Name"
+						name="display_name"
+						placeholder="John Doe"
+						type="text"
+						validationBehavior="native"
+					/>
+					<Input
 						label="Email"
+						name="email"
 						placeholder="name@example.com"
+						type="email"
 						validationBehavior="native"
 					/>
 				</div>

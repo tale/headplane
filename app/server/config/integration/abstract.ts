@@ -1,4 +1,4 @@
-import type { ApiClient } from '~/server/headscale/api-client';
+import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 
 export abstract class Integration<T> {
 	protected context: NonNullable<T>;
@@ -11,6 +11,6 @@ export abstract class Integration<T> {
 	}
 
 	abstract isAvailable(): Promise<boolean> | boolean;
-	abstract onConfigChange(client: ApiClient): Promise<void> | void;
+	abstract onConfigChange(client: RuntimeApiClient): Promise<void> | void;
 	abstract get name(): string;
 }

@@ -30,15 +30,15 @@ export default function AddUser({ users, isDisabled }: AddUserProps) {
 					Add this user to a list of allowed users that can authenticate with
 					Headscale via OIDC.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="add_user" />
+				<input name="action_id" type="hidden" value="add_user" />
 				<Input
+					description="The user to allow for OIDC authentication."
+					isInvalid={user.trim().length === 0 || isInvalid}
 					isRequired
 					label="User"
-					description="The user to allow for OIDC authentication."
-					placeholder="john_doe"
 					name="user"
 					onChange={setUser}
-					isInvalid={user.trim().length === 0 || isInvalid}
+					placeholder="john_doe"
 				/>
 				{isInvalid && (
 					<p className="text-red-500 text-sm mt-2">

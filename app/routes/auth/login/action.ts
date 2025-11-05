@@ -1,13 +1,9 @@
-import { ActionFunctionArgs, data, redirect } from 'react-router';
-import { LoadContext } from '~/server';
+import { data, redirect } from 'react-router';
 import ResponseError from '~/server/headscale/api/response-error';
-import { Key } from '~/types';
 import log from '~/utils/log';
+import type { Route } from './+types/page';
 
-export async function loginAction({
-	request,
-	context,
-}: ActionFunctionArgs<LoadContext>) {
+export async function loginAction({ request, context }: Route.LoaderArgs) {
 	const formData = await request.formData();
 	const apiKey = formData.has('api_key')
 		? String(formData.get('api_key'))
@@ -31,11 +27,9 @@ export async function loginAction({
 		throw data('Received an empty `api_key`', { status: 400 });
 	}
 
+	const api = context.hsApi.getRuntimeClient(apiKey);
 	try {
-		const { apiKeys } = await context.client.get<{ apiKeys: Key[] }>(
-			'v1/apikey',
-			apiKey,
-		);
+		const apiKeys = await api.getApiKeys();
 
 		// We don't need to check for 0 API keys because this request cannot
 		// be authenticated correctly without an API key

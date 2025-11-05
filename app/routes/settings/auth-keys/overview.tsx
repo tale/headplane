@@ -1,41 +1,29 @@
 import { FileKey2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { Link as RemixLink, useLoaderData } from 'react-router';
+import { Link as RemixLink } from 'react-router';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Select from '~/components/Select';
 import TableList from '~/components/TableList';
-import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import type { PreAuthKey, User } from '~/types';
 import log from '~/utils/log';
+import type { Route } from './+types/overview';
 import { authKeysAction } from './actions';
 import AuthKeyRow from './auth-key-row';
 import AddAuthKey from './dialogs/add-auth-key';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
-	const { users } = await context.client.get<{ users: User[] }>(
-		'v1/user',
-		session.api_key,
-	);
+	const api = context.hsApi.getRuntimeClient(session.api_key);
 
+	const users = await api.getUsers();
 	const preAuthKeys = await Promise.all(
 		users
 			.filter((user) => user.name?.length > 0) // Filter out any invalid users
 			.map(async (user) => {
-				const qp = new URLSearchParams();
-				qp.set('user', user.id);
-
 				try {
-					const { preAuthKeys } = await context.client.get<{
-						preAuthKeys: PreAuthKey[];
-					}>(`v1/preauthkey?${qp.toString()}`, session.api_key);
+					const preAuthKeys = await api.getPreAuthKeys(user.id);
 					return {
 						success: true,
 						user,
@@ -47,7 +35,7 @@ export async function loader({
 						success: false,
 						user,
 						error,
-						preAuthKeys: [] as PreAuthKey[],
+						preAuthKeys: [],
 					};
 				}
 			}),
@@ -79,13 +67,12 @@ export async function loader({
 	};
 }
 
-export async function action(request: ActionFunctionArgs<LoadContext>) {
-	return authKeysAction(request);
-}
+export const action = authKeysAction;
 
 type Status = 'all' | 'active' | 'expired' | 'reusable' | 'ephemeral';
-export default function Page() {
-	const { keys, missing, users, url, access } = useLoaderData<typeof loader>();
+export default function Page({
+	loaderData: { keys, missing, users, url, access },
+}: Route.ComponentProps) {
 	const [selectedUser, setSelectedUser] = useState('__headplane_all');
 	const [status, setStatus] = useState<Status>('active');
 	const isDisabled =
@@ -198,7 +185,9 @@ export default function Page() {
 					{[
 						<Select.Item key="__headplane_all">All</Select.Item>,
 						...keys.map(({ user }) => (
-							<Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
+							<Select.Item key={user.id}>
+								{user.name || user.displayName || user.email || user.id}
+							</Select.Item>
 						)),
 					]}
 				</Select>

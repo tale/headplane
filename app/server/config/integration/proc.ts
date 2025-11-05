@@ -1,11 +1,11 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { platform } from 'node:os';
 import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
-import { ApiClient } from '~/server/headscale/api-client';
+import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 import log from '~/utils/log';
-import { HeadplaneConfig } from '../schema';
+import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
 type T = NonNullable<HeadplaneConfig['integration']>['proc'];
@@ -68,30 +68,37 @@ export default class ProcIntegration extends Integration<T> {
 					pids.join(', '),
 				);
 
-        log.debug('config', 'Checking if any of them have Parent PID = 1, assuming thats the correct PID');
-        const ppidRegex = /(?:PPid:\s)(\d+)(?:\n?)/;
-        for (const pid of pids) {
-          const pidStatusPath = join('/proc', pid.toString(), 'status');
-          try {
-            log.debug('config', 'Reading %s', pidStatusPath);
-            const pidData = await readFile(pidStatusPath, 'utf8');
-            const ppidResult = pidData.match(ppidRegex);
+				log.debug(
+					'config',
+					'Checking if any of them have Parent PID = 1, assuming thats the correct PID',
+				);
+				const ppidRegex = /(?:PPid:\s)(\d+)(?:\n?)/;
+				for (const pid of pids) {
+					const pidStatusPath = join('/proc', pid.toString(), 'status');
+					try {
+						log.debug('config', 'Reading %s', pidStatusPath);
+						const pidData = await readFile(pidStatusPath, 'utf8');
+						const ppidResult = pidData.match(ppidRegex);
 
-            if (ppidResult !== null) {
-              const potentialPPid = Number.parseInt(ppidResult[1], 10);
-              if (potentialPPid === 1) {
-                this.pid = pid;
-                log.info('config', 'Found potential Headscale process with PID: %d based on Parent PID = 1', this.pid);
-                return true;
-              }
-            }
-          } catch (error) {
-            log.error('config', 'Failed to read %s: %s', pidStatusPath, error);
-          }
-        }
+						if (ppidResult !== null) {
+							const potentialPPid = Number.parseInt(ppidResult[1], 10);
+							if (potentialPPid === 1) {
+								this.pid = pid;
+								log.info(
+									'config',
+									'Found potential Headscale process with PID: %d based on Parent PID = 1',
+									this.pid,
+								);
+								return true;
+							}
+						}
+					} catch (error) {
+						log.error('config', 'Failed to read %s: %s', pidStatusPath, error);
+					}
+				}
 
-        return false;
-      }
+				return false;
+			}
 
 			if (pids.length === 0) {
 				log.error('config', 'Could not find Headscale process');
@@ -107,7 +114,7 @@ export default class ProcIntegration extends Integration<T> {
 		}
 	}
 
-	async onConfigChange(client: ApiClient) {
+	async onConfigChange(client: RuntimeApiClient) {
 		if (!this.pid) {
 			return;
 		}
@@ -125,7 +132,7 @@ export default class ProcIntegration extends Integration<T> {
 		while (attempts <= this.maxAttempts) {
 			try {
 				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
-				const status = await client.healthcheck();
+				const status = await client.isHealthy();
 				if (status === false) {
 					log.error('config', 'Headscale is not running');
 					return;
@@ -133,7 +140,7 @@ export default class ProcIntegration extends Integration<T> {
 
 				log.info('config', 'Headscale is up and running');
 				return;
-			} catch (error) {
+			} catch {
 				if (attempts < this.maxAttempts) {
 					attempts++;
 					await setTimeout(1000);

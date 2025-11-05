@@ -1,8 +1,7 @@
-import { LoaderFunctionArgs } from 'react-router';
-import { LoadContext } from '~/server';
+import { data } from 'react-router';
 import ResponseError from '~/server/headscale/api/response-error';
 import { Capabilities } from '~/server/web/roles';
-import { data403 } from '~/utils/res';
+import type { Route } from './+types/overview';
 
 // The logic for deciding policy factors is very complicated because
 // there are so many factors that need to be accounted for:
@@ -11,15 +10,13 @@ import { data403 } from '~/utils/res';
 // 3. Is the Headscale policy in file or database mode?
 //    If database, we can read/write easily via the API.
 //    If in file mode, we can only write if context.config is available.
-// TODO: Consider adding back file editing mode instead of database
-export async function aclLoader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function aclLoader({ request, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	const check = await context.sessions.check(request, Capabilities.read_policy);
 	if (!check) {
-		throw data403('You do not have permission to read the ACL policy.');
+		throw data('You do not have permission to read the ACL policy.', {
+			status: 403,
+		});
 	}
 
 	const flags = {
@@ -30,11 +27,9 @@ export async function aclLoader({
 	};
 
 	// Try to load the ACL policy from the API.
+	const api = context.hsApi.getRuntimeClient(session.api_key);
 	try {
-		const { policy, updatedAt } = await context.client.get<{
-			policy: string;
-			updatedAt: string | null;
-		}>('v1/policy', session.api_key);
+		const { policy, updatedAt } = await api.getPolicy();
 
 		// Successfully loaded the policy, mark it as readable
 		// If `updatedAt` is null, it means the policy is in file mode.

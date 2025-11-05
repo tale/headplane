@@ -1,7 +1,7 @@
-import { constants, access } from 'node:fs/promises';
+import { access, constants } from 'node:fs/promises';
 import { setTimeout } from 'node:timers/promises';
 import { Client } from 'undici';
-import { ApiClient } from '~/server/headscale/api-client';
+import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 import log from '~/utils/log';
 import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
@@ -193,7 +193,7 @@ export default class DockerIntegration extends Integration<T> {
 		return this.client !== undefined && this.containerId !== undefined;
 	}
 
-	async onConfigChange(client: ApiClient) {
+	async onConfigChange(client: RuntimeApiClient) {
 		if (!this.client) {
 			return;
 		}
@@ -233,14 +233,14 @@ export default class DockerIntegration extends Integration<T> {
 		while (attempts <= this.maxAttempts) {
 			try {
 				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
-				const status = await client.healthcheck();
+				const status = await client.isHealthy();
 				if (status === false) {
 					throw new Error('Headscale is not running');
 				}
 
 				log.info('config', 'Headscale is up and running');
 				return;
-			} catch (error) {
+			} catch {
 				if (attempts < this.maxAttempts) {
 					attempts++;
 					await setTimeout(1000);

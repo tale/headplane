@@ -1,12 +1,12 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { platform } from 'node:os';
 import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
-import { ApiClient } from '~/server/headscale/api-client';
+import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 import log from '~/utils/log';
-import { HeadplaneConfig } from '../schema';
+import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
 // https://github.com/kubernetes-client/javascript/blob/055b83c6504dfd1b2a2d081efd974163c6cbb808/src/config.ts#L40
@@ -202,7 +202,7 @@ export default class KubernetesIntegration extends Integration<T> {
 		}
 	}
 
-	async onConfigChange(client: ApiClient) {
+	async onConfigChange(client: RuntimeApiClient) {
 		if (!this.pid) {
 			return;
 		}
@@ -220,14 +220,14 @@ export default class KubernetesIntegration extends Integration<T> {
 		while (attempts <= this.maxAttempts) {
 			try {
 				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
-				const status = await client.healthcheck();
+				const status = await client.isHealthy();
 				if (status === false) {
 					throw new Error('Headscale is not running');
 				}
 
 				log.info('config', 'Headscale is up and running');
 				return;
-			} catch (error) {
+			} catch {
 				if (attempts < this.maxAttempts) {
 					attempts++;
 					await setTimeout(1000);

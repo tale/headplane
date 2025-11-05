@@ -22,40 +22,40 @@ export default function UserMenu({ user }: MenuProps) {
 		<>
 			{modal === 'rename' && (
 				<Rename
-					user={user}
 					isOpen={modal === 'rename'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
+					user={user}
 				/>
 			)}
 			{modal === 'delete' && (
 				<Delete
-					user={user}
 					isOpen={modal === 'delete'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
+					user={user}
 				/>
 			)}
 			{modal === 'reassign' && (
 				<Reassign
-					user={user}
 					isOpen={modal === 'reassign'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
+					user={user}
 				/>
 			)}
 
 			<Menu disabledKeys={user.provider === 'oidc' ? ['rename'] : ['reassign']}>
 				<Menu.IconButton
-					label="Machine Options"
 					className={cn(
 						'py-0.5 w-10 bg-transparent border-transparent',
 						'border group-hover:border-headplane-200',
 						'dark:group-hover:border-headplane-700',
 					)}
+					label="Machine Options"
 				>
 					<Ellipsis className="h-5" />
 				</Menu.IconButton>

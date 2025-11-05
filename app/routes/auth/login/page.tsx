@@ -50,9 +50,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	};
 }
 
-export async function action(request: Route.ActionArgs) {
-	return loginAction(request);
-}
+export const action = loginAction;
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 	const { isOidcEnabled, isCookieSecureEnabled, urlState } = loaderData;

@@ -1,12 +1,9 @@
 import { eq } from 'drizzle-orm';
-import { LoaderFunctionArgs, redirect } from 'react-router';
-import { LoadContext } from '~/server';
+import { redirect } from 'react-router';
 import { users } from '~/server/db/schema';
+import type { Route } from './+types/onboarding-skip';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	try {
 		const { user } = await context.sessions.auth(request);
 		await context.db

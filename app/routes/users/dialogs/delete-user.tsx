@@ -32,8 +32,8 @@ export default function DeleteUser({ user, isOpen, setIsOpen }: DeleteProps) {
 						)}
 					</Dialog.Text>
 				)}
-				<input type="hidden" name="action_id" value="delete_user" />
-				<input type="hidden" name="user_id" value={user.id} />
+				<input name="action_id" type="hidden" value="delete_user" />
+				<input name="user_id" type="hidden" value={user.id} />
 			</Dialog.Panel>
 		</Dialog>
 	);

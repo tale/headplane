@@ -1,34 +1,23 @@
 import { Construction, Eye, FlaskConical, Pencil } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-	ActionFunctionArgs,
-	LoaderFunctionArgs,
-	useFetcher,
-	useLoaderData,
-	useRevalidator,
-} from 'react-router';
+import { useFetcher, useRevalidator } from 'react-router';
 import Button from '~/components/Button';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Tabs from '~/components/Tabs';
-import type { LoadContext } from '~/server';
 import toast from '~/utils/toast';
+import type { Route } from './+types/overview';
 import { aclAction } from './acl-action';
 import { aclLoader } from './acl-loader';
 import { Differ, Editor } from './components/cm.client';
 
-export async function loader(request: LoaderFunctionArgs<LoadContext>) {
-	return aclLoader(request);
-}
+export const loader = aclLoader;
+export const action = aclAction;
 
-export async function action(request: ActionFunctionArgs<LoadContext>) {
-	return aclAction(request);
-}
-
-export default function Page() {
-	// Access is a write check here, we already check read in aclLoader
-	const { access, writable, policy } = useLoaderData<typeof loader>();
+export default function Page({
+	loaderData: { access, writable, policy },
+}: Route.ComponentProps) {
 	const [codePolicy, setCodePolicy] = useState(policy);
 	const fetcher = useFetcher<typeof action>();
 	const { revalidate } = useRevalidator();
@@ -75,15 +64,15 @@ export default function Page() {
 				The ACL file is used to define the access control rules for your
 				network. You can find more information about the ACL file in the{' '}
 				<Link
-					to="https://tailscale.com/kb/1018/acls"
 					name="Tailscale ACL documentation"
+					to="https://tailscale.com/kb/1018/acls"
 				>
 					Tailscale ACL guide
 				</Link>{' '}
 				and the{' '}
 				<Link
-					to="https://headscale.net/stable/ref/acls/"
 					name="Headscale ACL documentation"
+					to="https://headscale.net/stable/ref/acls/"
 				>
 					Headscale docs
 				</Link>
@@ -91,14 +80,14 @@ export default function Page() {
 			</p>
 			{fetcher.data?.error !== undefined ? (
 				<Notice
-					variant="error"
 					title={fetcher.data.error.split(':')[0] ?? 'Error'}
+					variant="error"
 				>
 					{fetcher.data.error.split(':').slice(1).join(': ') ??
 						'An unknown error occurred while trying to update the ACL policy.'}
 				</Notice>
 			) : undefined}
-			<Tabs label="ACL Editor" className="mb-4">
+			<Tabs className="mb-4" label="ACL Editor">
 				<Tabs.Item
 					key="edit"
 					title={
@@ -110,8 +99,8 @@ export default function Page() {
 				>
 					<Editor
 						isDisabled={disabled}
-						value={codePolicy}
 						onChange={setCodePolicy}
+						value={codePolicy}
 					/>
 				</Tabs.Item>
 				<Tabs.Item
@@ -145,7 +134,6 @@ export default function Page() {
 				</Tabs.Item>
 			</Tabs>
 			<Button
-				variant="heavy"
 				className="mr-2"
 				isDisabled={
 					disabled ||
@@ -158,6 +146,7 @@ export default function Page() {
 					formData.append('policy', codePolicy);
 					fetcher.submit(formData, { method: 'PATCH' });
 				}}
+				variant="heavy"
 			>
 				Save
 			</Button>

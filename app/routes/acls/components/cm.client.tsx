@@ -38,14 +38,14 @@ export function Editor(props: EditorProps) {
 				<ClientOnly fallback={<Fallback acl={props.value} />}>
 					{() => (
 						<CodeMirror
-							value={props.value}
-							editable={!props.isDisabled} // Allow editing unless disabled
-							readOnly={props.isDisabled} // Use readOnly if disabled
-							height="100%"
-							extensions={[shopify.jsonc()]}
+							editable={!props.isDisabled}
+							extensions={[shopify.jsonc()]} // Allow editing unless disabled
+							height="100%" // Use readOnly if disabled
+							onChange={(value) => props.onChange(value)}
+							readOnly={props.isDisabled}
 							style={{ height: '100%' }}
 							theme={light ? xcodeLight : xcodeDark}
-							onChange={(value) => props.onChange(value)}
+							value={props.value}
 						/>
 					)}
 				</ClientOnly>
@@ -92,14 +92,14 @@ export function Differ(props: DifferProps) {
 							{() => (
 								<Merge orientation="a-b" theme={light ? xcodeLight : xcodeDark}>
 									<Merge.Original
+										extensions={[shopify.jsonc()]}
 										readOnly
 										value={props.left}
-										extensions={[shopify.jsonc()]}
 									/>
 									<Merge.Modified
+										extensions={[shopify.jsonc()]}
 										readOnly
 										value={props.right}
-										extensions={[shopify.jsonc()]}
 									/>
 								</Merge>
 							)}

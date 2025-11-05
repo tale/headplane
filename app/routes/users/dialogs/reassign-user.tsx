@@ -21,14 +21,16 @@ export default function ReassignUser({
 			<Dialog.Panel
 				variant={user.headplaneRole === 'owner' ? 'unactionable' : 'normal'}
 			>
-				<Dialog.Title>Change role for {user.name || user.displayName}?</Dialog.Title>
+				<Dialog.Title>
+					Change role for {user.name || user.displayName}?
+				</Dialog.Title>
 				<Dialog.Text className="mb-6">
 					Most roles are carried straight from Tailscale. However, keep in mind
 					that I have not fully implemented permissions yet and some things may
 					be accessible to everyone. The only fully completed role is Member.{' '}
 					<Link
-						to="https://tailscale.com/kb/1138/user-roles"
 						name="Tailscale User Roles documentation"
+						to="https://tailscale.com/kb/1138/user-roles"
 					>
 						Learn More
 					</Link>
@@ -37,21 +39,21 @@ export default function ReassignUser({
 					<Notice>The Tailnet owner cannot be reassigned.</Notice>
 				) : (
 					<>
-						<input type="hidden" name="action_id" value="reassign_user" />
-						<input type="hidden" name="user_id" value={user.id} />
+						<input name="action_id" type="hidden" value="reassign_user" />
+						<input name="user_id" type="hidden" value={user.id} />
 						<RadioGroup
-							isRequired
-							name="new_role"
-							label="Role"
 							className="gap-4"
 							defaultValue={user.headplaneRole}
+							isRequired
+							label="Role"
+							name="new_role"
 						>
 							{Object.keys(Roles)
 								.filter((role) => role !== 'owner')
 								.map((role) => {
 									const { name, desc } = mapRoleToName(role);
 									return (
-										<RadioGroup.Radio key={role} value={role} label={name}>
+										<RadioGroup.Radio key={role} label={name} value={role}>
 											<div className="block">
 												<p className="font-bold">{name}</p>
 												<p className="opacity-70">{desc}</p>

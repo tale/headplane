@@ -40,18 +40,18 @@ export default function RestrictionTable({
 							)}
 							<Form method="POST">
 								<input
-									type="hidden"
 									name="action_id"
+									type="hidden"
 									value={`remove_${type}`}
 								/>
-								<input type="hidden" name={type} value={value} />
+								<input name={type} type="hidden" value={value} />
 								<Button
-									isDisabled={isDisabled}
-									type="submit"
 									className={cn(
 										'px-2 py-1 rounded-md',
 										'text-red-500 dark:text-red-400',
 									)}
+									isDisabled={isDisabled}
+									type="submit"
 								>
 									Remove
 								</Button>

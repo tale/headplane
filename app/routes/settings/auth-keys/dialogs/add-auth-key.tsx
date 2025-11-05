@@ -1,5 +1,4 @@
 import { Key, useState } from 'react';
-import { useFetcher } from 'react-router';
 import Dialog from '~/components/Dialog';
 import Link from '~/components/Link';
 import NumberInput from '~/components/NumberInput';
@@ -22,36 +21,38 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 			<Dialog.Button className="my-4">Create pre-auth key</Dialog.Button>
 			<Dialog.Panel>
 				<Dialog.Title>Generate auth key</Dialog.Title>
-				<input type="hidden" name="action_id" value="add_preauthkey" />
-				<input type="hidden" name="user_id" value={userId?.toString()} />
+				<input name="action_id" type="hidden" value="add_preauthkey" />
+				<input name="user_id" type="hidden" value={userId?.toString()} />
 				<Select
+					className="mb-2"
+					description="This is the user machines will belong to when they authenticate."
 					isRequired
 					label="User"
 					name="user"
-					placeholder="Select a user"
-					description="This is the user machines will belong to when they authenticate."
-					className="mb-2"
 					onSelectionChange={(value) => {
 						setUserId(value);
 					}}
+					placeholder="Select a user"
 				>
 					{data.users.map((user) => (
-					    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
+						<Select.Item key={user.id}>
+							{user.name || user.displayName || user.email || user.id}
+						</Select.Item>
 					))}
 				</Select>
 				<NumberInput
-					isRequired
-					name="expiry"
-					label="Key Expiration"
-					description="Set this key to expire after a certain number of days."
-					minValue={1}
-					maxValue={365_000} // 1000 years
 					defaultValue={90}
+					description="Set this key to expire after a certain number of days."
 					formatOptions={{
 						style: 'unit',
 						unit: 'day',
 						unitDisplay: 'short',
 					}}
+					isRequired
+					label="Key Expiration"
+					maxValue={365_000} // 1000 years
+					minValue={1}
+					name="expiry"
 				/>
 				<div className="flex justify-between items-center gap-2 mt-6">
 					<div>
@@ -61,15 +62,15 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 						</Dialog.Text>
 					</div>
 					<Switch
+						defaultSelected={reusable}
 						label="Reusable"
 						name="reusable"
-						defaultSelected={reusable}
 						onChange={() => {
 							setReusable(!reusable);
 						}}
 					/>
 				</div>
-				<input type="hidden" name="reusable" value={reusable.toString()} />
+				<input name="reusable" type="hidden" value={reusable.toString()} />
 				<div className="flex justify-between items-center gap-2 mt-6">
 					<div>
 						<Dialog.Text className="font-semibold">Ephemeral</Dialog.Text>
@@ -77,23 +78,23 @@ export default function AddAuthKey(data: AddAuthKeyProps) {
 							Devices authenticated with this key will be automatically removed
 							once they go offline.{' '}
 							<Link
-								to="https://tailscale.com/kb/1111/ephemeral-nodes"
 								name="Tailscale Ephemeral Nodes Documentation"
+								to="https://tailscale.com/kb/1111/ephemeral-nodes"
 							>
 								Learn more
 							</Link>
 						</Dialog.Text>
 					</div>
 					<Switch
+						defaultSelected={ephemeral}
 						label="Ephemeral"
 						name="ephemeral"
-						defaultSelected={ephemeral}
 						onChange={() => {
 							setEphemeral(!ephemeral);
 						}}
 					/>
 				</div>
-				<input type="hidden" name="ephemeral" value={ephemeral.toString()} />
+				<input name="ephemeral" type="hidden" value={ephemeral.toString()} />
 			</Dialog.Panel>
 		</Dialog>
 	);

@@ -30,15 +30,15 @@ export default function AddGroup({ groups, isDisabled }: AddGroupProps) {
 					Add this group to a list of allowed groups that can authenticate with
 					Headscale via OIDC.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="add_group" />
+				<input name="action_id" type="hidden" value="add_group" />
 				<Input
+					description="The group to allow for OIDC authentication."
+					isInvalid={group.trim().length === 0 || isInvalid}
 					isRequired
 					label="Group"
-					description="The group to allow for OIDC authentication."
-					placeholder="admin"
 					name="group"
 					onChange={setGroup}
-					isInvalid={group.trim().length === 0 || isInvalid}
+					placeholder="admin"
 				/>
 				{isInvalid && (
 					<p className="text-red-500 text-sm mt-2">

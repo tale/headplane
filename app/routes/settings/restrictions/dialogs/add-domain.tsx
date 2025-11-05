@@ -39,19 +39,19 @@ export default function AddDomain({ domains, isDisabled }: AddDomainProps) {
 					Add this domain to a list of allowed email domains that can
 					authenticate with Headscale via OIDC.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="add_domain" />
+				<input name="action_id" type="hidden" value="add_domain" />
 				<Input
-					isRequired
-					label="Domain"
 					description={
 						domain.trim().length > 0
 							? `Matches users with <user>@${domain.trim()}`
 							: 'Enter a domain to match users with their email addresses.'
 					}
-					placeholder="example.com"
+					isInvalid={domain.trim().length === 0 || isInvalid}
+					isRequired
+					label="Domain"
 					name="domain"
 					onChange={setDomain}
-					isInvalid={domain.trim().length === 0 || isInvalid}
+					placeholder="example.com"
 				/>
 				{isInvalid && (
 					<p className="text-red-500 text-sm mt-2">
