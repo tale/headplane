@@ -1,6 +1,6 @@
 import { ActionFunctionArgs, data, redirect } from 'react-router';
 import { LoadContext } from '~/server';
-import ResponseError from '~/server/headscale/api-error';
+import ResponseError from '~/server/headscale/api/error';
 import { Key } from '~/types';
 import log from '~/utils/log';
 

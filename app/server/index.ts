@@ -6,6 +6,7 @@ import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
 import { loadConfig } from './config/loader';
 import { createDbClient } from './db/client.server';
+import { createHeadscaleInterface } from './headscale/api';
 import { createApiClient } from './headscale/api-client';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { createHeadplaneAgent } from './hp-agent';
@@ -66,6 +67,11 @@ const appLoadContext = {
 			domain: config.server.cookie_domain,
 		},
 	}),
+
+	hsApi: await createHeadscaleInterface(
+		config.headscale.url,
+		config.headscale.tls_cert_path,
+	),
 
 	client: await createApiClient(
 		config.headscale.url,

@@ -1,9 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { data } from 'react-router';
-import { Agent, Dispatcher, request } from 'undici';
-import { errors } from 'undici';
+import { Agent, Dispatcher, errors, request } from 'undici';
 import log from '~/utils/log';
-import ResponseError from './api-error';
+import ResponseError from './api/error';
 
 function isNodeNetworkError(error: unknown): error is NodeJS.ErrnoException {
 	const keys = Object.keys(error as Record<string, unknown>);

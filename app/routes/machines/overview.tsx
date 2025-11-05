@@ -6,7 +6,6 @@ import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
 import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
-import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import { mapNodes } from '~/utils/node-info';
 import MachineRow from './components/machine-row';
@@ -40,10 +39,8 @@ export async function loader({
 		Capabilities.write_machines,
 	);
 
-	const [{ nodes }, { users }] = await Promise.all([
-		context.client.get<{ nodes: Machine[] }>('v1/node', session.api_key),
-		context.client.get<{ users: User[] }>('v1/user', session.api_key),
-	]);
+	const api = context.hsApi.getRuntimeClient(session.api_key);
+	const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
 
 	let magic: string | undefined;
 	if (context.hs.readable()) {

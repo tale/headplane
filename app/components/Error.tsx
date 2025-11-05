@@ -1,6 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import { isRouteErrorResponse, useRouteError } from 'react-router';
-import ResponseError from '~/server/headscale/api-error';
+import ResponseError from '~/server/headscale/api/error';
 import cn from '~/utils/cn';
 import Card from './Card';
 import Code from './Code';
