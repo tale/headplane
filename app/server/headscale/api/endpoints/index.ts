@@ -1,5 +1,6 @@
 import {
 	composeEndpoints,
+	defineApiEndpoints,
 	type ExtractApiEndpoints,
 	type UnionToIntersection,
 } from '../factory';
@@ -10,12 +11,42 @@ import policyEndpoints from './policy';
 import preAuthKeyEndpoints from './pre-auth-keys';
 import userEndpoints from './users';
 
+interface HealthcheckEndpoint {
+	/**
+	 * Checks if the Headscale instance is healthy.
+	 *
+	 * @returns A boolean indicating if the instance is healthy.
+	 */
+	isHealthy(): Promise<boolean>;
+}
+
+const healthcheckEndpoint = defineApiEndpoints<HealthcheckEndpoint>(
+	(client, apiKey) => ({
+		isHealthy: async () => {
+			try {
+				const res = await client.rawFetch('/health', {
+					method: 'GET',
+					headers: {
+						// This doesn't really matter
+						Authorization: `Bearer ${apiKey}`,
+					},
+				});
+
+				return res.statusCode === 200;
+			} catch {
+				return false;
+			}
+		},
+	}),
+);
+
 /**
  * A constant list of all endpoint groups.
  * Add new endpoint groups here.
  */
 export const endpointSets = [
 	apiKeyEndpoints,
+	healthcheckEndpoint,
 	nodeEndpoints,
 	policyEndpoints,
 	preAuthKeyEndpoints,

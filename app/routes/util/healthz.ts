@@ -1,8 +1,10 @@
-import { LoaderFunctionArgs } from 'react-router';
-import type { LoadContext } from '~/server';
+import type { Route } from './+types/healthz';
 
-export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
-	const healthy = await context.client.healthcheck();
+export async function loader({ context }: Route.LoaderArgs) {
+	// Use a fake API key for healthcheck
+	const api = context.hsApi.getRuntimeClient('fake-api-key');
+	const healthy = await api.isHealthy();
+
 	return new Response(JSON.stringify({ status: healthy ? 'OK' : 'ERROR' }), {
 		status: healthy ? 200 : 500,
 		headers: {

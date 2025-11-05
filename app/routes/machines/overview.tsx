@@ -1,5 +1,4 @@
 import { Info } from 'lucide-react';
-import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
@@ -67,9 +66,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export const action = machineAction;
 
-export default function Page() {
-	const data = useLoaderData<typeof loader>();
-
+export default function Page({ loaderData }: Route.ComponentProps) {
 	return (
 		<>
 			<div className="flex justify-between items-center mb-6">
@@ -86,10 +83,10 @@ export default function Page() {
 					</p>
 				</div>
 				<NewMachine
-					disabledKeys={data.preAuth ? [] : ['pre-auth']}
-					isDisabled={!data.writable}
-					server={data.publicServer ?? data.server}
-					users={data.users}
+					disabledKeys={loaderData.preAuth ? [] : ['pre-auth']}
+					isDisabled={!loaderData.writable}
+					server={loaderData.publicServer ?? loaderData.server}
+					users={loaderData.users}
 				/>
 			</div>
 			<table className="table-auto w-full rounded-lg">
@@ -99,7 +96,7 @@ export default function Page() {
 						<th className="pb-2 w-1/4">
 							<div className="flex items-center gap-x-1">
 								<p className="uppercase text-xs font-bold">Addresses</p>
-								{data.magic ? (
+								{loaderData.magic ? (
 									<Tooltip>
 										<Info className="w-4 h-4" />
 										<Tooltip.Body className="font-normal">
@@ -107,7 +104,7 @@ export default function Page() {
 											their name and also at{' '}
 											<Code>
 												[name].
-												{data.magic}
+												{loaderData.magic}
 											</Code>
 										</Tooltip.Body>
 									</Tooltip>
@@ -115,7 +112,7 @@ export default function Page() {
 							</div>
 						</th>
 						{/* We only want to show the version column if there are agents */}
-						{data.agent !== undefined ? (
+						{loaderData.agent !== undefined ? (
 							<th className="uppercase text-xs font-bold pb-2">Version</th>
 						) : undefined}
 						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
@@ -127,18 +124,21 @@ export default function Page() {
 						'border-t border-headplane-100 dark:border-headplane-800',
 					)}
 				>
-					{data.populatedNodes.map((machine) => (
+					{loaderData.populatedNodes.map((node) => (
 						<MachineRow
-							isAgent={data.agent ? data.agent === machine.nodeKey : undefined}
-							isDisabled={
-								data.writable
-									? false // If the user has write permissions, they can edit all machines
-									: machine.user.providerId?.split('/').pop() !== data.subject
+							isAgent={
+								loaderData.agent ? loaderData.agent === node.nodeKey : undefined
 							}
-							key={machine.id}
-							magic={data.magic}
-							node={machine}
-							users={data.users}
+							isDisabled={
+								loaderData.writable
+									? false // If the user has write permissions, they can edit all machines
+									: node.user.providerId?.split('/').pop() !==
+										loaderData.subject
+							}
+							key={node.id}
+							magic={loaderData.magic}
+							node={node}
+							users={loaderData.users}
 						/>
 					))}
 				</tbody>

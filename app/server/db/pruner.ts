@@ -1,14 +1,12 @@
 import { eq, isNotNull } from 'drizzle-orm';
-import { LoaderFunctionArgs } from 'react-router';
-import { Machine } from '~/types';
 import log from '~/utils/log';
-import { LoadContext } from '..';
+import type { Route } from '../../layouts/+types/dashboard';
 import { ephemeralNodes } from './schema';
 
 export async function pruneEphemeralNodes({
 	context,
 	request,
-}: LoaderFunctionArgs<LoadContext>) {
+}: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	const ephemerals = await context.db
 		.select()
@@ -20,11 +18,8 @@ export async function pruneEphemeralNodes({
 		return;
 	}
 
-	const { nodes } = await context.client.get<{ nodes: Machine[] }>(
-		'v1/node',
-		session.api_key,
-	);
-
+	const api = context.hsApi.getRuntimeClient(session.api_key);
+	const nodes = await api.getNodes();
 	const toPrune = nodes.filter((node) => {
 		if (node.online) {
 			return false;
@@ -42,7 +37,7 @@ export async function pruneEphemeralNodes({
 	const promises = toPrune.map((node) => {
 		return async () => {
 			log.debug('api', `Pruning node ${node.name}`);
-			await context.client.delete(`v1/node/${node.id}`, session.api_key);
+			await api.deleteNode(node.id);
 
 			await context.db
 				.delete(ephemeralNodes)

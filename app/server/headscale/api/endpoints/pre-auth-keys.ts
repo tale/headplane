@@ -15,7 +15,7 @@ export interface PreAuthKeyEndpoints {
 	 *
 	 * @param user The user to create the pre-authentication key for.
 	 * @param ephemeral Whether the key is ephemeral.
-	 * @param uses The number of uses for the key.
+	 * @param reusable Whether the key is reusable.
 	 * @param expiration The expiration date of the key, or `null` for no expiration.
 	 * @param aclTags An array of ACL tags to associate with the key, or `null` for none.
 	 * @returns A `PreAuthKey` object representing the newly created pre-authentication key.
@@ -23,7 +23,7 @@ export interface PreAuthKeyEndpoints {
 	createPreAuthKey(
 		user: string,
 		ephemeral: boolean,
-		uses: number,
+		reusable: boolean,
 		expiration: Date | null,
 		aclTags: string[] | null,
 	): Promise<PreAuthKey>;
@@ -46,13 +46,13 @@ export default defineApiEndpoints<PreAuthKeyEndpoints>((client, apiKey) => ({
 		return preAuthKeys;
 	},
 
-	createPreAuthKey: async (user, ephemeral, uses, expiration, aclTags) => {
+	createPreAuthKey: async (user, ephemeral, reusable, expiration, aclTags) => {
 		const { preAuthKey } = await client.apiFetch<{
 			preAuthKey: PreAuthKey;
 		}>('POST', 'v1/preauthkey', apiKey, {
 			user,
 			ephemeral,
-			uses,
+			reusable,
 			expiration: expiration ? expiration.toISOString() : null,
 			aclTags,
 		});

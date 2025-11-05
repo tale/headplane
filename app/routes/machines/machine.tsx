@@ -1,6 +1,6 @@
 import { CheckCircle, CircleSlash, Info, UserCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { data, Link as RemixLink, useLoaderData } from 'react-router';
+import { data, Link as RemixLink } from 'react-router';
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
@@ -58,9 +58,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export const action = machineAction;
 
-export default function Page() {
-	const { node, tags, magic, users, agent, stats } =
-		useLoaderData<typeof loader>();
+export default function Page({
+	loaderData: { node, tags, users, magic, agent, stats },
+}: Route.ComponentProps) {
 	const [showRouting, setShowRouting] = useState(false);
 
 	const uiTags = useMemo(() => {

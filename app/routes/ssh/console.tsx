@@ -4,20 +4,11 @@ import { faker } from '@faker-js/faker';
 import { eq } from 'drizzle-orm';
 import { Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import {
-	ActionFunctionArgs,
-	data,
-	LinksFunction,
-	LoaderFunctionArgs,
-	ShouldRevalidateFunction,
-	useLoaderData,
-	useSubmit,
-} from 'react-router';
+import { data, type ShouldRevalidateFunction, useSubmit } from 'react-router';
 import { ExternalScriptsHandle } from 'remix-utils/external-scripts';
-import { LoadContext } from '~/server';
 import { EphemeralNodeInsert, ephemeralNodes } from '~/server/db/schema';
-import { Machine, PreAuthKey, User } from '~/types';
 import { useLiveData } from '~/utils/live-data';
+import type { Route } from './+types/console';
 import UserPrompt from './user-prompt';
 import XTerm from './xterm.client';
 
@@ -25,10 +16,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
 	return false;
 };
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const origin = new URL(request.url).origin;
 	const assets = ['/wasm_exec.js', '/hp_ssh.wasm'];
 	const missing: string[] = [];
@@ -53,10 +41,9 @@ export async function loader({
 	if (session.user.subject === 'unknown-non-oauth') {
 		throw data('Only OAuth users are allowed to use WebSSH', 403);
 	}
-	const { users } = await context.client.get<{ users: User[] }>(
-		'v1/user',
-		session.api_key,
-	);
+
+	const api = context.hsApi.getRuntimeClient(session.api_key);
+	const users = await api.getUsers();
 
 	// MARK: This assumes that a user has authenticated with Headscale first
 	// Since the only way to enforce permissions via ACLs is to generate a
@@ -77,15 +64,12 @@ export async function loader({
 		);
 	}
 
-	const { preAuthKey } = await context.client.post<{ preAuthKey: PreAuthKey }>(
-		'v1/preauthkey',
-		session.api_key,
-		{
-			user: lookup.id,
-			reusable: false,
-			ephemeral: true,
-			expiration: new Date(Date.now() + 60 * 1000).toISOString(), // 1 minute
-		},
+	const preAuthKey = await api.createPreAuthKey(
+		lookup.id,
+		true, // ephemeral
+		false, // reusable
+		new Date(Date.now() + 60 * 1000), // expiration: 1 minute
+		null, // aclTags
 	);
 
 	// TODO: Enable config to enforce generate_authkeys capability
@@ -130,13 +114,8 @@ export async function loader({
 	// 	);
 	// }
 
-	const { nodes } = await context.client.get<{ nodes: Machine[] }>(
-		'v1/node',
-		session.api_key,
-	);
-
-	// node.name is the hostname, given_name is the set name
-	const lookupNode = nodes.find((n) => n.name === hostname);
+	const nodes = await api.getNodes();
+	const lookupNode = nodes.find((n) => n.givenName === hostname);
 	if (!lookupNode) {
 		throw data(`Node with hostname ${hostname} not found`, 404);
 	}
@@ -182,11 +161,8 @@ function generateHostname(username: string) {
 	return `ssh-${adjective}-${noun}-${username}`;
 }
 
-export async function action({
-	request,
-	context,
-}: ActionFunctionArgs<LoadContext>) {
-	const _session = await context.sessions.auth(request);
+export async function action({ request, context }: Route.ActionArgs) {
+	await context.sessions.auth(request);
 	if (!context.agents?.agentID()) {
 		throw data(
 			'WebSSH is only available with the Headplane agent integration',
@@ -214,7 +190,7 @@ export async function action({
 		.where(eq(ephemeralNodes.auth_key, authKey));
 }
 
-export const links: LinksFunction = () => [
+export const links: Route.LinksFunction = () => [
 	{
 		rel: 'preload',
 		href: '/hp_ssh.wasm',
@@ -234,13 +210,14 @@ export const handle: ExternalScriptsHandle = {
 	],
 };
 
-export default function Page() {
+export default function Page({
+	loaderData: { ipnDetails, sshDetails },
+}: Route.ComponentProps) {
 	const submit = useSubmit();
 	const { pause } = useLiveData();
 
 	const [ipn, setIpn] = useState<TsWasmNet | null>(null);
 	const [nodeKey, setNodeKey] = useState<string | null>(null);
-	const { ipnDetails, sshDetails } = useLoaderData<typeof loader>();
 
 	useEffect(() => {
 		if (!ipnDetails) {
