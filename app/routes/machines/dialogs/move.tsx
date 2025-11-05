@@ -20,21 +20,23 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
 				<Dialog.Text>
 					The owner of the machine is the user associated with it.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="reassign" />
-				<input type="hidden" name="node_id" value={machine.id} />
-				<input type="hidden" name="user_id" value={userId?.toString()} />
+				<input name="action_id" type="hidden" value="reassign" />
+				<input name="node_id" type="hidden" value={machine.id} />
+				<input name="user_id" type="hidden" value={userId?.toString()} />
 				<Select
+					defaultSelectedKey={machine.user.id}
 					isRequired
 					label="Owner"
 					name="user"
-					placeholder="Select a user"
-					defaultSelectedKey={machine.user.id}
 					onSelectionChange={(key) => {
 						setUserId(key);
 					}}
+					placeholder="Select a user"
 				>
 					{users.map((user) => (
-					    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
+						<Select.Item key={user.id}>
+							{user.name || user.displayName || user.email || user.id}
+						</Select.Item>
 					))}
 				</Select>
 			</Dialog.Panel>

@@ -30,14 +30,14 @@ export default function NewMachine(data: NewMachineProps) {
 						<Code isCopyable>tailscale up --login-server={data.server}</Code> on
 						your device.
 					</Dialog.Text>
-					<input type="hidden" name="action_id" value="register" />
+					<input name="action_id" type="hidden" value="register" />
 					<Input
 						isRequired
 						label="Machine Key"
-						placeholder="AbCd..."
-						validationBehavior="native"
 						name="register_key"
 						onChange={setMkey}
+						placeholder="AbCd..."
+						validationBehavior="native"
 					/>
 					<Select
 						isRequired
@@ -46,12 +46,14 @@ export default function NewMachine(data: NewMachineProps) {
 						placeholder="Select a user"
 					>
 						{data.users.map((user) => (
-						    <Select.Item key={user.id}>{user.name || user.displayName || user.email || user.id}</Select.Item>
+							<Select.Item key={user.id}>
+								{user.name || user.displayName || user.email || user.id}
+							</Select.Item>
 						))}
 					</Select>
 				</Dialog.Panel>
 			</Dialog>
-			<Menu isDisabled={data.isDisabled} disabledKeys={data.disabledKeys}>
+			<Menu disabledKeys={data.disabledKeys} isDisabled={data.isDisabled}>
 				<Menu.Button variant="heavy">Add Device</Menu.Button>
 				<Menu.Panel
 					onAction={(key) => {

@@ -1,6 +1,6 @@
 import { LoaderFunctionArgs } from 'react-router';
 import { LoadContext } from '~/server';
-import ResponseError from '~/server/headscale/api/error';
+import ResponseError from '~/server/headscale/api/response-error';
 import { Capabilities } from '~/server/web/roles';
 import { data403 } from '~/utils/res';
 

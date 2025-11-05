@@ -2,7 +2,7 @@ import { type LoaderFunctionArgs, Outlet, redirect } from 'react-router';
 import { ErrorPopup } from '~/components/Error';
 import type { LoadContext } from '~/server';
 import { pruneEphemeralNodes } from '~/server/db/pruner';
-import ResponseError from '~/server/headscale/api/error';
+import ResponseError from '~/server/headscale/api/response-error';
 import log from '~/utils/log';
 
 export async function loader({

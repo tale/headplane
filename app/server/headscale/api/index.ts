@@ -3,13 +3,11 @@ import { readFile } from 'node:fs/promises';
 import { dereference } from '@readme/openapi-parser';
 import type { OpenAPIV2 } from 'openapi-types';
 import { Agent, type Dispatcher, request } from 'undici';
-import type { Key, Machine, PreAuthKey, User } from '~/types';
 import log from '~/utils/log';
 import endpointSets, { RuntimeApiClient } from './endpoints';
-import ResponseError, { friendlyError } from './error';
+import { friendlyError } from './error';
+import ResponseError from './response-error';
 import { detectApiVersion, isAtLeast, type Version } from './version';
-
-export type RuntimeApiClient2 = {};
 
 /**
  * A low-level composed interface for interacting with the Headscale API.

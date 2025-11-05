@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { data } from 'react-router';
 import { Agent, Dispatcher, errors, request } from 'undici';
 import log from '~/utils/log';
-import ResponseError from './api/error';
+import ResponseError from './api/response-error';
 
 function isNodeNetworkError(error: unknown): error is NodeJS.ErrnoException {
 	const keys = Object.keys(error as Record<string, unknown>);
@@ -144,6 +144,9 @@ export async function createApiClient(base: string, certPath?: string) {
 	}
 }
 
+/**
+ * @deprecated Use the new RuntimeApiClient instead.
+ */
 export class ApiClient {
 	private agent: Agent;
 	private base: string;
@@ -153,7 +156,7 @@ export class ApiClient {
 		this.base = base;
 	}
 
-	private async defaultFetch(
+	async defaultFetch(
 		url: string,
 		options?: Partial<Dispatcher.RequestOptions>,
 	) {
@@ -178,6 +181,9 @@ export class ApiClient {
 		}
 	}
 
+	/**
+	 * @deprecated Use the new RuntimeApiClient instead.
+	 */
 	async healthcheck() {
 		try {
 			const res = await request(new URL('/health', this.base), {
@@ -195,6 +201,9 @@ export class ApiClient {
 		}
 	}
 
+	/**
+	 * @deprecated Use the new RuntimeApiClient instead.
+	 */
 	async get<T = unknown>(url: string, key: string) {
 		const res = await this.defaultFetch(`/api/${url}`, {
 			headers: {
@@ -204,12 +213,19 @@ export class ApiClient {
 
 		if (res.statusCode >= 400) {
 			log.debug('api', 'GET %s failed with status %d', url, res.statusCode);
-			throw new ResponseError(res.statusCode, await res.body.text());
+			throw new ResponseError(
+				res.statusCode,
+				await res.body.text(),
+				`GET ${url}`,
+			);
 		}
 
 		return res.body.json() as Promise<T>;
 	}
 
+	/**
+	 * @deprecated Use the new RuntimeApiClient instead.
+	 */
 	async post<T = unknown>(url: string, key: string, body?: unknown) {
 		const res = await this.defaultFetch(`/api/${url}`, {
 			method: 'POST',
@@ -221,12 +237,19 @@ export class ApiClient {
 
 		if (res.statusCode >= 400) {
 			log.debug('api', 'POST %s failed with status %d', url, res.statusCode);
-			throw new ResponseError(res.statusCode, await res.body.text());
+			throw new ResponseError(
+				res.statusCode,
+				await res.body.text(),
+				`POST ${url}`,
+			);
 		}
 
 		return res.body.json() as Promise<T>;
 	}
 
+	/**
+	 * @deprecated Use the new RuntimeApiClient instead.
+	 */
 	async put<T = unknown>(url: string, key: string, body?: unknown) {
 		const res = await this.defaultFetch(`/api/${url}`, {
 			method: 'PUT',
@@ -238,12 +261,19 @@ export class ApiClient {
 
 		if (res.statusCode >= 400) {
 			log.debug('api', 'PUT %s failed with status %d', url, res.statusCode);
-			throw new ResponseError(res.statusCode, await res.body.text());
+			throw new ResponseError(
+				res.statusCode,
+				await res.body.text(),
+				`PUT ${url}`,
+			);
 		}
 
 		return res.body.json() as Promise<T>;
 	}
 
+	/**
+	 * @deprecated Use the new RuntimeApiClient instead.
+	 */
 	async delete<T = unknown>(url: string, key: string) {
 		const res = await this.defaultFetch(`/api/${url}`, {
 			method: 'DELETE',
@@ -254,7 +284,11 @@ export class ApiClient {
 
 		if (res.statusCode >= 400) {
 			log.debug('api', 'DELETE %s failed with status %d', url, res.statusCode);
-			throw new ResponseError(res.statusCode, await res.body.text());
+			throw new ResponseError(
+				res.statusCode,
+				await res.body.text(),
+				`DELETE ${url}`,
+			);
 		}
 
 		return res.body.json() as Promise<T>;

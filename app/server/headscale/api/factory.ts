@@ -1,4 +1,4 @@
-import { HeadscaleApiInterface } from '../api';
+import type { HeadscaleApiInterface } from '../api';
 
 /**
  * Creates a strongly-typed group factory for a given endpoint interface.

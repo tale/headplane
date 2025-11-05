@@ -11,6 +11,7 @@ import Move from '../dialogs/move';
 import Rename from '../dialogs/rename';
 import Routes from '../dialogs/routes';
 import Tags from '../dialogs/tags';
+
 interface MenuProps {
 	node: PopulatedNode;
 	users: User[];
@@ -36,8 +37,8 @@ export default function MachineMenu({
 		<div className="flex items-center justify-end px-4 gap-1.5">
 			{modal === 'remove' && (
 				<Delete
-					machine={node}
 					isOpen={modal === 'remove'}
+					machine={node}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
@@ -45,19 +46,19 @@ export default function MachineMenu({
 			)}
 			{modal === 'move' && (
 				<Move
-					machine={node}
-					users={users}
 					isOpen={modal === 'move'}
+					machine={node}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
+					users={users}
 				/>
 			)}
 			{modal === 'rename' && (
 				<Rename
+					isOpen={modal === 'rename'}
 					machine={node}
 					magic={magic}
-					isOpen={modal === 'rename'}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
@@ -65,8 +66,8 @@ export default function MachineMenu({
 			)}
 			{modal === 'routes' && (
 				<Routes
-					node={node}
 					isOpen={modal === 'routes'}
+					node={node}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
@@ -74,8 +75,8 @@ export default function MachineMenu({
 			)}
 			{modal === 'tags' && (
 				<Tags
-					machine={node}
 					isOpen={modal === 'tags'}
+					machine={node}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
@@ -83,8 +84,8 @@ export default function MachineMenu({
 			)}
 			{node.expired && modal === 'expire' ? undefined : (
 				<Expire
-					machine={node}
 					isOpen={modal === 'expire'}
+					machine={node}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
@@ -95,33 +96,23 @@ export default function MachineMenu({
 				isFullButton ? (
 					<Button
 						className="flex items-center gap-x-2"
-						variant="heavy"
 						onPress={() => {
 							// We need to use JS to open the SSH URL
 							// in a new WINDOW since href can only
 							// do a new TAB.
 							window.open(
-								`${__PREFIX__}/ssh?hostname=${node.name}`,
+								`${__PREFIX__}/ssh?hostname=${node.givenName}`,
 								'_blank',
 								'noopener,noreferrer,width=800,height=600',
 							);
 						}}
+						variant="heavy"
 					>
 						<SquareTerminal className="h-5" />
 						<p>SSH</p>
 					</Button>
 				) : (
 					<Button
-						onPress={() => {
-							// We need to use JS to open the SSH URL
-							// in a new WINDOW since href can only
-							// do a new TAB.
-							window.open(
-								`${__PREFIX__}/ssh?hostname=${node.name}`,
-								'_blank',
-								'noopener,noreferrer,width=800,height=600',
-							);
-						}}
 						className={cn(
 							'py-0.5 w-fit bg-transparent border-transparent',
 							'border group-hover:border-headplane-200',
@@ -129,6 +120,16 @@ export default function MachineMenu({
 							'opacity-0 pointer-events-none group-hover:opacity-100',
 							'group-hover:pointer-events-auto',
 						)}
+						onPress={() => {
+							// We need to use JS to open the SSH URL
+							// in a new WINDOW since href can only
+							// do a new TAB.
+							window.open(
+								`${__PREFIX__}/ssh?hostname=${node.givenName}`,
+								'_blank',
+								'noopener,noreferrer,width=800,height=600',
+							);
+						}}
 					>
 						SSH
 					</Button>
@@ -142,19 +143,19 @@ export default function MachineMenu({
 					</Menu.Button>
 				) : (
 					<Menu.IconButton
-						label="Machine Options"
 						className={cn(
 							'py-0.5 w-10 bg-transparent border-transparent',
 							'border group-hover:border-headplane-200',
 							'dark:group-hover:border-headplane-700',
 						)}
+						label="Machine Options"
 					>
 						<Ellipsis className="h-5" />
 					</Menu.IconButton>
 				)}
 				<Menu.Panel
-					onAction={(key) => setModal(key as Modal)}
 					disabledKeys={node.expired ? ['expire'] : []}
+					onAction={(key) => setModal(key as Modal)}
 				>
 					<Menu.Section>
 						<Menu.Item key="rename">Edit machine name</Menu.Item>

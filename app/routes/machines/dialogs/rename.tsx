@@ -27,16 +27,15 @@ export default function Rename({
 					This name is shown in the admin panel, in Tailscale clients, and used
 					when generating MagicDNS names.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="rename" />
-				<input type="hidden" name="node_id" value={machine.id} />
+				<input name="action_id" type="hidden" value="rename" />
+				<input name="node_id" type="hidden" value={machine.id} />
 				<Input
+					defaultValue={machine.givenName}
 					isRequired
 					label="Machine name"
-					placeholder="Machine name"
-					validationBehavior="native"
 					name="name"
-					defaultValue={machine.givenName}
 					onChange={setName}
+					placeholder="Machine name"
 					validate={(value) => {
 						if (value.length === 0) {
 							return 'Cannot be empty';
@@ -66,6 +65,7 @@ export default function Rename({
 							return 'Cannot contain consecutive hyphens';
 						}
 					}}
+					validationBehavior="native"
 				/>
 				{magic ? (
 					name.length > 0 && name !== machine.givenName ? (

@@ -26,16 +26,16 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 					ACL tags can be used to reference machines in your ACL policies. See
 					the{' '}
 					<Link
-						to="https://tailscale.com/kb/1068/acl-tags"
 						name="Tailscale documentation"
+						to="https://tailscale.com/kb/1068/acl-tags"
 					>
 						Tailscale documentation
 					</Link>{' '}
 					for more information.
 				</Dialog.Text>
-				<input type="hidden" name="action_id" value="update_tags" />
-				<input type="hidden" name="node_id" value={machine.id} />
-				<input type="hidden" name="tags" value={tags.join(',')} />
+				<input name="action_id" type="hidden" value="update_tags" />
+				<input name="node_id" type="hidden" value={machine.id} />
+				<input name="tags" type="hidden" value={tags.join(',')} />
 				<TableList className="mt-4">
 					{tags.length === 0 ? (
 						<TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
@@ -44,7 +44,7 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 						</TableList.Item>
 					) : (
 						tags.map((item) => (
-							<TableList.Item className="font-mono" key={item} id={item}>
+							<TableList.Item className="font-mono" id={item} key={item}>
 								{item}
 								<Button
 									className="rounded-md p-0.5"
@@ -66,14 +66,14 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 						)}
 					>
 						<Input
-							labelHidden
-							label="Add a tag"
-							placeholder="tag:example"
-							onChange={setTag}
 							className={cn(
 								'border-none font-mono p-0',
 								'rounded-none focus:ring-0 w-full',
 							)}
+							label="Add a tag"
+							labelHidden
+							onChange={setTag}
+							placeholder="tag:example"
 						/>
 						<Button
 							className={cn(

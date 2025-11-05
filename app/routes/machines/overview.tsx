@@ -1,21 +1,17 @@
 import { Info } from 'lucide-react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { useLoaderData } from 'react-router';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
-import type { LoadContext } from '~/server';
 import { Capabilities } from '~/server/web/roles';
 import cn from '~/utils/cn';
 import { mapNodes } from '~/utils/node-info';
+import type { Route } from './+types/overview';
 import MachineRow from './components/machine-row';
 import NewMachine from './dialogs/new';
 import { machineAction } from './machine-actions';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	const user = session.user;
 	if (!user) {
@@ -69,9 +65,7 @@ export async function loader({
 	};
 }
 
-export async function action(request: ActionFunctionArgs) {
-	return machineAction(request);
-}
+export const action = machineAction;
 
 export default function Page() {
 	const data = useLoaderData<typeof loader>();

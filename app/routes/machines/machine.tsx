@@ -1,7 +1,6 @@
 import { CheckCircle, CircleSlash, Info, UserCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
-import { Link as RemixLink, useLoaderData } from 'react-router';
+import { data, Link as RemixLink, useLoaderData } from 'react-router';
 import Attribute from '~/components/Attribute';
 import Button from '~/components/Button';
 import Card from '~/components/Card';
@@ -9,24 +8,23 @@ import Chip from '~/components/Chip';
 import Link from '~/components/Link';
 import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
-import type { LoadContext } from '~/server';
-import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import { getOSInfo, getTSVersion } from '~/utils/host-info';
 import { mapNodes } from '~/utils/node-info';
+import type { Route } from './+types/machine';
 import { mapTagsToComponents, uiTagsForNode } from './components/machine-row';
 import MenuOptions from './components/menu';
 import Routes from './dialogs/routes';
 import { machineAction } from './machine-actions';
 
-export async function loader({
-	request,
-	params,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	if (!params.id) {
 		throw new Error('No machine ID provided');
+	}
+
+	if (params.id.endsWith('.ico')) {
+		throw data(null, { status: 204 });
 	}
 
 	let magic: string | undefined;
@@ -36,33 +34,29 @@ export async function loader({
 		}
 	}
 
-	const [machine, { users }] = await Promise.all([
-		context.client.get<{ node: Machine }>(
-			`v1/node/${params.id}`,
-			session.api_key,
-		),
-		context.client.get<{ users: User[] }>('v1/user', session.api_key),
+	const api = context.hsApi.getRuntimeClient(session.api_key);
+	const [node, users] = await Promise.all([
+		api.getNode(params.id),
+		api.getUsers(),
 	]);
 
-	const lookup = await context.agents?.lookup([machine.node.nodeKey]);
-	const [node] = mapNodes([machine.node], lookup);
+	const lookup = await context.agents?.lookup([node.nodeKey]);
+	const [enhancedNode] = mapNodes([node], lookup);
 	const tags = Array.from(
 		new Set([...node.validTags, ...node.forcedTags]),
 	).sort();
 
 	return {
-		node,
+		node: enhancedNode,
 		tags,
 		users,
 		magic,
 		agent: context.agents?.agentID(),
-		stats: lookup?.[node.nodeKey],
+		stats: lookup?.[enhancedNode.nodeKey],
 	};
 }
 
-export async function action(request: ActionFunctionArgs) {
-	return machineAction(request);
-}
+export const action = machineAction;
 
 export default function Page() {
 	const { node, tags, magic, users, agent, stats } =

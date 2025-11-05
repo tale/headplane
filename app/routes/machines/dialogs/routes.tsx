@@ -30,8 +30,8 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 					Connect to devices you can&apos;t install Tailscale on by advertising
 					IP ranges as subnet routes.{' '}
 					<Link
-						to="https://tailscale.com/kb/1019/subnets"
 						name="Tailscale Subnets Documentation"
+						to="https://tailscale.com/kb/1019/subnets"
 					>
 						Learn More
 					</Link>
@@ -70,8 +70,8 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 				<Dialog.Text>
 					Allow your network to route internet traffic through this machine.{' '}
 					<Link
-						to="https://tailscale.com/kb/1103/exit-nodes"
 						name="Tailscale Exit-node Documentation"
+						to="https://tailscale.com/kb/1103/exit-nodes"
 					>
 						Learn More
 					</Link>
