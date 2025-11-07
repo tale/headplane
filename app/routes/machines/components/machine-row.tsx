@@ -9,7 +9,7 @@ import { ExpiryTag } from '~/components/tags/Expiry';
 import { HeadplaneAgentTag } from '~/components/tags/HeadplaneAgent';
 import { SubnetTag } from '~/components/tags/Subnet';
 import { TailscaleSSHTag } from '~/components/tags/TailscaleSSH';
-import type { User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import * as hinfo from '~/utils/host-info';
 import { PopulatedNode } from '~/utils/node-info';
@@ -22,6 +22,7 @@ interface Props {
 	isAgent?: boolean;
 	magic?: string;
 	isDisabled?: boolean;
+	nodeList?: Machine[];
 }
 
 export default function MachineRow({
@@ -30,6 +31,7 @@ export default function MachineRow({
 	isAgent,
 	magic,
 	isDisabled,
+	nodeList,
 }: Props) {
 	const uiTags = useMemo(() => {
 		const tags = uiTagsForNode(node, isAgent);
@@ -149,6 +151,7 @@ export default function MachineRow({
 					isDisabled={isDisabled}
 					magic={magic}
 					node={node}
+					nodeList={nodeList}
 					users={users}
 				/>
 			</td>

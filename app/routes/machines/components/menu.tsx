@@ -2,7 +2,7 @@ import { Cog, Ellipsis, SquareTerminal } from 'lucide-react';
 import { useState } from 'react';
 import Button from '~/components/Button';
 import Menu from '~/components/Menu';
-import type { User } from '~/types';
+import type { Machine, User } from '~/types';
 import cn from '~/utils/cn';
 import { PopulatedNode } from '~/utils/node-info';
 import Delete from '../dialogs/delete';
@@ -18,6 +18,7 @@ interface MenuProps {
 	magic?: string;
 	isFullButton?: boolean;
 	isDisabled?: boolean;
+	nodeList?: Machine[];
 }
 
 type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
@@ -28,6 +29,7 @@ export default function MachineMenu({
 	users,
 	isFullButton,
 	isDisabled,
+	nodeList,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
 	const supportsTailscaleSSH =
@@ -77,6 +79,7 @@ export default function MachineMenu({
 				<Tags
 					isOpen={modal === 'tags'}
 					machine={node}
+					nodeList={nodeList}
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}

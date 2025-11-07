@@ -138,6 +138,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 							key={node.id}
 							magic={loaderData.magic}
 							node={node}
+							nodeList={loaderData.nodes}
 							users={loaderData.users}
 						/>
 					))}

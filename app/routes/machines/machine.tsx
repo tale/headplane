@@ -35,9 +35,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	}
 
 	const api = context.hsApi.getRuntimeClient(session.api_key);
-	const [node, users] = await Promise.all([
+	const [node, users, allNodes] = await Promise.all([
 		api.getNode(params.id),
 		api.getUsers(),
+		api.getNodes(),
 	]);
 
 	const lookup = await context.agents?.lookup([node.nodeKey]);
@@ -53,13 +54,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 		magic,
 		agent: context.agents?.agentID(),
 		stats: lookup?.[enhancedNode.nodeKey],
+		nodeList: allNodes,
 	};
 }
 
 export const action = machineAction;
 
 export default function Page({
-	loaderData: { node, tags, users, magic, agent, stats },
+	loaderData: { node, tags, users, magic, agent, stats, nodeList },
 }: Route.ComponentProps) {
 	const [showRouting, setShowRouting] = useState(false);
 
@@ -87,7 +89,13 @@ export default function Page({
 					<h1 className="text-2xl font-medium">{node.givenName}</h1>
 					<StatusCircle className="w-4 h-4" isOnline={node.online} />
 				</span>
-				<MenuOptions isFullButton magic={magic} node={node} users={users} />
+				<MenuOptions
+					isFullButton
+					magic={magic}
+					node={node}
+					nodeList={nodeList}
+					users={users}
+				/>
 			</div>
 			<div className="flex gap-1 mb-4">
 				<div className="border-r border-headplane-100 dark:border-headplane-800 p-2 pr-4">
