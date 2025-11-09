@@ -12,14 +12,14 @@ interface TagsProps {
 	machine: Machine;
 	isOpen: boolean;
 	setIsOpen: (isOpen: boolean) => void;
-	nodeList?: Machine[];
+	existingTags?: string[];
 }
 
 export default function Tags({
 	machine,
 	isOpen,
 	setIsOpen,
-	nodeList,
+	existingTags,
 }: TagsProps) {
 	const [tags, setTags] = useState(machine.forcedTags);
 	const [tag, setTag] = useState('tag:');
@@ -28,13 +28,7 @@ export default function Tags({
 	}, [tag, tags]);
 
 	const validNodeTags = useMemo(() => {
-		if (!nodeList?.length) return [];
-		const allNodeTags = Array.from(
-			new Set(
-				nodeList.flatMap((node) => [...node.validTags, ...node.forcedTags]),
-			),
-		).sort();
-		return allNodeTags.filter((nodeTag) => !tags.includes(nodeTag));
+		return existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [];
 	}, [tags]);
 
 	return (

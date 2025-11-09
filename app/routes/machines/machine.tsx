@@ -10,7 +10,7 @@ import StatusCircle from '~/components/StatusCircle';
 import Tooltip from '~/components/Tooltip';
 import cn from '~/utils/cn';
 import { getOSInfo, getTSVersion } from '~/utils/host-info';
-import { mapNodes } from '~/utils/node-info';
+import { mapNodes, sortNodeTags } from '~/utils/node-info';
 import type { Route } from './+types/machine';
 import { mapTagsToComponents, uiTagsForNode } from './components/machine-row';
 import MenuOptions from './components/menu';
@@ -35,11 +35,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	}
 
 	const api = context.hsApi.getRuntimeClient(session.api_key);
-	const [node, users, allNodes] = await Promise.all([
-		api.getNode(params.id),
-		api.getUsers(),
-		api.getNodes(),
-	]);
+	const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
+	const node = nodes.find((node) => node.id === params.id);
 
 	const lookup = await context.agents?.lookup([node.nodeKey]);
 	const [enhancedNode] = mapNodes([node], lookup);
@@ -54,14 +51,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 		magic,
 		agent: context.agents?.agentID(),
 		stats: lookup?.[enhancedNode.nodeKey],
-		nodeList: allNodes,
+		existingTags: sortNodeTags(nodes),
 	};
 }
 
 export const action = machineAction;
 
 export default function Page({
-	loaderData: { node, tags, users, magic, agent, stats, nodeList },
+	loaderData: { node, tags, users, magic, agent, stats, existingTags },
 }: Route.ComponentProps) {
 	const [showRouting, setShowRouting] = useState(false);
 
@@ -90,10 +87,10 @@ export default function Page({
 					<StatusCircle className="w-4 h-4" isOnline={node.online} />
 				</span>
 				<MenuOptions
+					existingTags={existingTags}
 					isFullButton
 					magic={magic}
 					node={node}
-					nodeList={nodeList}
 					users={users}
 				/>
 			</div>
