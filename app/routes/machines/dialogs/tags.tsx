@@ -1,9 +1,9 @@
 import { Plus, TagsIcon, X } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import Button from '~/components/Button';
 import Dialog from '~/components/Dialog';
-import Input from '~/components/Input';
 import Link from '~/components/Link';
+import Select from '~/components/Select';
 import TableList from '~/components/TableList';
 import type { Machine } from '~/types';
 import cn from '~/utils/cn';
@@ -12,11 +12,24 @@ interface TagsProps {
 	machine: Machine;
 	isOpen: boolean;
 	setIsOpen: (isOpen: boolean) => void;
+	existingTags?: string[];
 }
 
-export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
+export default function Tags({
+	machine,
+	isOpen,
+	setIsOpen,
+	existingTags,
+}: TagsProps) {
 	const [tags, setTags] = useState(machine.forcedTags);
-	const [tag, setTag] = useState('');
+	const [tag, setTag] = useState('tag:');
+	const tagIsInvalid = useMemo(() => {
+		return tag.length === 0 || !tag.startsWith('tag:') || tags.includes(tag);
+	}, [tag, tags]);
+
+	const validNodeTags = useMemo(() => {
+		return existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [];
+	}, [tags]);
 
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -57,44 +70,36 @@ export default function Tags({ machine, isOpen, setIsOpen }: TagsProps) {
 							</TableList.Item>
 						))
 					)}
-					<TableList.Item
-						className={cn(
-							'rounded-b-xl focus-within:ring-3',
-							tag.length > 0 &&
-								(!tag.startsWith('tag:') || tags.includes(tag)) &&
-								'ring-3 ring-red-500 ring-opacity-50',
-						)}
-					>
-						<Input
-							className={cn(
-								'border-none font-mono p-0',
-								'rounded-none focus:ring-0 w-full',
-							)}
-							label="Add a tag"
-							labelHidden
-							onChange={setTag}
-							placeholder="tag:example"
-						/>
-						<Button
-							className={cn(
-								'rounded-md p-0.5',
-								(!tag.startsWith('tag:') || tags.includes(tag)) &&
-									'opacity-50 cursor-not-allowed',
-							)}
-							isDisabled={
-								tag.length === 0 ||
-								!tag.startsWith('tag:') ||
-								tags.includes(tag)
-							}
-							onPress={() => {
-								setTags([...tags, tag]);
-								setTag('');
-							}}
-						>
-							<Plus className="p-1" />
-						</Button>
-					</TableList.Item>
 				</TableList>
+
+				<div className="flex items-center gap-2 mt-2">
+					<Select
+						allowsCustomValue
+						aria-label="Add a tag"
+						className="w-full"
+						inputValue={tag}
+						isInvalid={tag.length > 0 && tagIsInvalid}
+						onInputChange={setTag}
+						placeholder="tag:example"
+					>
+						{validNodeTags.map((nodeTag) => {
+							return <Select.Item key={nodeTag}>{nodeTag}</Select.Item>;
+						})}
+					</Select>
+					<Button
+						className={cn(
+							'rounded-md p-1',
+							tagIsInvalid && 'opacity-50 cursor-not-allowed',
+						)}
+						isDisabled={tagIsInvalid}
+						onPress={() => {
+							setTags([...tags, tag]);
+							setTag('tag:');
+						}}
+					>
+						<Plus className="p-1" size={30} />
+					</Button>
+				</div>
 			</Dialog.Panel>
 		</Dialog>
 	);

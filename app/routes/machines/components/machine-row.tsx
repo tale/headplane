@@ -22,6 +22,7 @@ interface Props {
 	isAgent?: boolean;
 	magic?: string;
 	isDisabled?: boolean;
+	existingTags?: string[];
 }
 
 export default function MachineRow({
@@ -30,6 +31,7 @@ export default function MachineRow({
 	isAgent,
 	magic,
 	isDisabled,
+	existingTags,
 }: Props) {
 	const uiTags = useMemo(() => {
 		const tags = uiTagsForNode(node, isAgent);
@@ -146,6 +148,7 @@ export default function MachineRow({
 			</td>
 			<td className="py-2 pr-0.5">
 				<MenuOptions
+					existingTags={existingTags}
 					isDisabled={isDisabled}
 					magic={magic}
 					node={node}

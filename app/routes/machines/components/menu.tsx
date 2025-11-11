@@ -18,6 +18,7 @@ interface MenuProps {
 	magic?: string;
 	isFullButton?: boolean;
 	isDisabled?: boolean;
+	existingTags?: string[];
 }
 
 type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
@@ -28,6 +29,7 @@ export default function MachineMenu({
 	users,
 	isFullButton,
 	isDisabled,
+	existingTags,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
 	const supportsTailscaleSSH =
@@ -75,6 +77,7 @@ export default function MachineMenu({
 			)}
 			{modal === 'tags' && (
 				<Tags
+					existingTags={existingTags}
 					isOpen={modal === 'tags'}
 					machine={node}
 					setIsOpen={(isOpen) => {

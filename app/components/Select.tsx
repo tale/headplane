@@ -50,11 +50,11 @@ function Select(props: SelectProps) {
 		<div className={cn('flex flex-col', props.className)}>
 			<label
 				{...labelProps}
-				htmlFor={id}
 				className={cn(
 					'text-xs font-medium px-3 mb-0.5',
 					'text-headplane-700 dark:text-headplane-100',
 				)}
+				htmlFor={id}
 			>
 				{props.label}
 			</label>
@@ -63,18 +63,18 @@ function Select(props: SelectProps) {
 					'flex rounded-xl focus:outline-hidden focus-within:ring-3',
 					'bg-white dark:bg-headplane-900',
 					'border border-headplane-100 dark:border-headplane-800',
+					props.isInvalid && 'ring-red-400',
 				)}
 			>
 				<input
 					{...inputProps}
-					ref={inputRef}
-					id={id}
 					className="outline-hidden px-3 py-2 rounded-l-xl w-full bg-transparent"
 					data-1p-ignore
+					id={id}
+					ref={inputRef}
 				/>
 				<button
 					{...buttonProps}
-					ref={buttonRef}
 					className={cn(
 						'flex items-center justify-center p-1 rounded-lg m-1',
 						'bg-headplane-100 dark:bg-headplane-700/30 font-medium',
@@ -82,6 +82,7 @@ function Select(props: SelectProps) {
 							? 'opacity-50 cursor-not-allowed'
 							: 'hover:bg-headplane-200/90 dark:hover:bg-headplane-800/30',
 					)}
+					ref={buttonRef}
 				>
 					<ChevronDown className="p-0.5" />
 				</button>
@@ -99,12 +100,12 @@ function Select(props: SelectProps) {
 			)}
 			{state.isOpen && (
 				<Popover
-					popoverRef={popoverRef}
-					triggerRef={inputRef}
-					state={state}
+					className="w-full max-w-xs"
 					isNonModal
 					placement="bottom start"
-					className="w-full max-w-xs"
+					popoverRef={popoverRef}
+					state={state}
+					triggerRef={inputRef}
 				>
 					<ListBox {...listBoxProps} listBoxRef={listBoxRef} state={state} />
 				</Popover>
@@ -114,23 +115,22 @@ function Select(props: SelectProps) {
 }
 
 interface ListBoxProps extends AriaListBoxOptions<object> {
-	listBoxRef?: React.RefObject<HTMLUListElement | null>;
+	listBoxRef: React.RefObject<HTMLUListElement | null>;
 	state: ListState<object>;
 }
 
 function ListBox(props: ListBoxProps) {
 	const { listBoxRef, state } = props;
-	const ref = listBoxRef ?? useRef<HTMLUListElement | null>(null);
-	const { listBoxProps } = useListBox(props, state, ref);
+	const { listBoxProps } = useListBox(props, state, listBoxRef);
 
 	return (
 		<ul
 			{...listBoxProps}
-			ref={listBoxRef}
 			className="w-full max-h-72 overflow-auto outline-hidden pt-1"
+			ref={listBoxRef}
 		>
 			{[...state.collection].map((item) => (
-				<Option key={item.key} item={item} state={state} />
+				<Option item={item} key={item.key} state={state} />
 			))}
 		</ul>
 	);
@@ -154,7 +154,6 @@ function Option({ item, state }: OptionProps) {
 	return (
 		<li
 			{...optionProps}
-			ref={ref}
 			className={cn(
 				'flex items-center justify-between',
 				'py-2 px-3 mx-1 rounded-lg mb-1',
@@ -164,6 +163,7 @@ function Option({ item, state }: OptionProps) {
 					: 'hover:bg-headplane-100/50 dark:hover:bg-headplane-800',
 				isDisabled && 'text-headplane-300 dark:text-headplane-600',
 			)}
+			ref={ref}
 		>
 			{item.rendered}
 			{isSelected && <Check className="p-0.5" />}
