@@ -45,8 +45,11 @@ jobs:
       - name: CI pipeline
         run: ./build.sh --skip-pnpm-prune
 
-      - name: Run tests
+      - name: Run unit tests
         run: pnpm test
+
+      - name: Run integration tests
+        run: pnpm run test:integration
 
   nix:
     name: nix

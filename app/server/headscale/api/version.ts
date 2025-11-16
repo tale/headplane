@@ -1,3 +1,4 @@
+import canonicals from '~/openapi-canonical-families.json';
 import hashes from '~/openapi-operation-hashes.json';
 import log from '~/utils/log';
 
@@ -64,7 +65,30 @@ export function detectApiVersion(
 		);
 	}
 
-	return bestVersion;
+	const canonical = Object.entries(canonicals).find(([_, family]) =>
+		family.includes(bestVersion),
+	)?.[0] as Version | undefined;
+
+	if (!canonical) {
+		log.warn(
+			'api',
+			'Could not canonicalize detected version %s, using as-is',
+			bestVersion,
+		);
+
+		return bestVersion;
+	}
+
+	if (canonical !== bestVersion) {
+		log.info(
+			'api',
+			'Canonicalizing detected version %s → %s (same schema)',
+			bestVersion,
+			canonical,
+		);
+	}
+
+	return canonical;
 }
 
 /**

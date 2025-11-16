@@ -12,10 +12,6 @@ export interface ApiKeyEndpoints {
 
 export default defineApiEndpoints<ApiKeyEndpoints>((client, apiKey) => ({
 	getApiKeys: async () => {
-		if (client.isAtleast('0.27.0')) {
-			console.log('wow we are at least 0.27.0!');
-		}
-
 		const { apiKeys } = await client.apiFetch<{ apiKeys: Key[] }>(
 			'GET',
 			'v1/apikey',

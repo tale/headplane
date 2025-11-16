@@ -11,9 +11,11 @@
 		"start": "node build/server/index.js",
 		"typecheck": "react-router typegen && tsgo",
 		"test": "vitest run",
+		"test:integration": "vitest run --mode integration",
 		"docs:dev": "vitepress dev docs",
 		"docs:build": "vitepress build docs",
-		"docs:preview": "vitepress preview docs"
+		"docs:preview": "vitepress preview docs",
+		"gen:hashes": "tsx tests/generate-openapi-hashes.ts"
 	},
 	"dependencies": {
 		"@libsql/client": "0.15.15"
