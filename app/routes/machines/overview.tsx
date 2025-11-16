@@ -4,7 +4,7 @@ import Link from '~/components/Link';
 import Tooltip from '~/components/Tooltip';
 import { Capabilities } from '~/server/web/roles';
 import cn from '~/utils/cn';
-import { mapNodes } from '~/utils/node-info';
+import { mapNodes, sortNodeTags } from '~/utils/node-info';
 import type { Route } from './+types/overview';
 import MachineRow from './components/machine-row';
 import NewMachine from './dialogs/new';
@@ -126,6 +126,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 				>
 					{loaderData.populatedNodes.map((node) => (
 						<MachineRow
+							existingTags={sortNodeTags(loaderData.nodes)}
 							isAgent={
 								loaderData.agent ? loaderData.agent === node.nodeKey : undefined
 							}
