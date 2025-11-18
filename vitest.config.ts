@@ -15,22 +15,32 @@ if (!version) {
 	throw new Error('Unable to read version from package.json');
 }
 
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
 	test: {
+		projects: [
+			{
+				extends: true,
+				test: {
+					name: 'unit',
+					include: ['tests/unit/*.test.ts'],
+					setupFiles: ['tests/unit/setup/overlay-fs.ts'],
+				},
+			},
+			{
+				extends: true,
+				test: {
+					name: 'integration',
+					include: ['tests/integration/*.test.ts'],
+					setupFiles: ['tests/integration/setup/vitest-hook.ts'],
+					testTimeout: 15_000,
+				},
+			},
+		],
 		env: {
 			HEADPLANE_DEBUG_LOG: 'true',
 		},
-		// bail: mode === 'integration' ? 1 : undefined,
 		environment: 'node',
-		include:
-			mode === 'integration'
-				? ['tests/integration/*.test.ts']
-				: ['tests/**/*.test.js'],
 		exclude: ['node_modules/**', 'build/**'],
-		setupFiles:
-			mode === 'integration'
-				? ['./tests/integration/setup/vitest-hook.ts']
-				: ['./tests/setupOverlayFs.js'],
 	},
 	resolve: {
 		alias: {
@@ -41,4 +51,4 @@ export default defineConfig(({ mode }) => ({
 		__VERSION__: JSON.stringify(isNext ? `${version}-next` : version),
 		__PREFIX__: JSON.stringify(prefix),
 	},
-}));
+});

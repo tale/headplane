@@ -122,9 +122,6 @@ importers:
       jose:
         specifier: 6.1.2
         version: 6.1.2
-      js-yaml:
-        specifier: ^4.1.1
-        version: 4.1.1
       lefthook:
         specifier: ^2.0.4
         version: 2.0.4
