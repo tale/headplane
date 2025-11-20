@@ -9,6 +9,7 @@ export function clearFakeFiles() {
 	fakeFs.clear();
 }
 
+// @ts-expect-error: I have no clue why vitest's types are wrong here
 vi.mock(import('node:fs/promises'), async (importOrig) => {
 	const orig = await importOrig();
 	return {
