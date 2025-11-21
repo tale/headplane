@@ -94,7 +94,7 @@ export default class DockerIntegration extends Integration<T> {
 
 			try {
 				log.info('config', 'Checking API: %s', fetchU);
-				await fetch(new URL('/v1.30/version', fetchU).href);
+				await fetch(new URL('/v1.44/version', fetchU).href);
 			} catch (error) {
 				log.error('config', 'Failed to connect to Docker API: %s', error);
 				log.debug('config', 'Connection error: %o', error);
@@ -140,7 +140,7 @@ export default class DockerIntegration extends Integration<T> {
 		);
 		const res = await this.client.request({
 			method: 'GET',
-			path: `/v1.30/containers/json?${qp.toString()}`,
+			path: `/v1.44/containers/json?${qp.toString()}`,
 		});
 
 		if (res.statusCode !== 200) {
@@ -211,7 +211,7 @@ export default class DockerIntegration extends Integration<T> {
 
 			const response = await this.client.request({
 				method: 'POST',
-				path: `/v1.30/containers/${this.containerId}/restart`,
+				path: `/v1.44/containers/${this.containerId}/restart`,
 			});
 
 			if (response.statusCode !== 204) {
