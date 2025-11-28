@@ -11,7 +11,11 @@ export async function loader({
 		return redirect('/machines');
 	} catch {}
 
-	if (!context.oidc || !context.config.oidc) {
+	if (
+		!context.oidc ||
+		typeof context.oidc === 'string' ||
+		!context.config.oidc
+	) {
 		throw new Error('OIDC is not enabled');
 	}
 

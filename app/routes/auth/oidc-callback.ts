@@ -20,7 +20,7 @@ export async function loader({
 	request,
 	context,
 }: LoaderFunctionArgs<LoadContext>) {
-	if (!context.oidc) {
+	if (!context.oidc || typeof context.oidc === 'string') {
 		throw new Error('OIDC is not enabled');
 	}
 
@@ -92,7 +92,7 @@ export async function loader({
 					// keys because they are currently non-deletable in the headscale
 					// database. Look at this in the future once we have a solution
 					// or we have permissioned API keys.
-					api_key: context.config.oidc?.headscale_api_key!,
+					api_key: context.config.oidc!.headscale_api_key,
 					user,
 				}),
 			},

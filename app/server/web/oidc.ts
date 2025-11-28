@@ -1,10 +1,31 @@
 import * as oidc from 'openid-client';
 import log from '~/utils/log';
 import { HeadplaneConfig } from '../config/schema';
+import type { RuntimeApiClient } from '../headscale/api/endpoints';
+import { isDataUnauthorizedError } from '../headscale/api/error-client';
 
 export type OidcConfig = NonNullable<HeadplaneConfig['oidc']>;
+export type OidcConfigError = string;
 
-export async function configureOidcAuth(config: OidcConfig) {
+export async function configureOidcAuth(
+	config: OidcConfig,
+	client: RuntimeApiClient,
+): Promise<oidc.Configuration | OidcConfigError> {
+	// Don't waste any of our time if the OIDC API key is invalid
+	try {
+		await client.getApiKeys();
+	} catch (error) {
+		if (isDataUnauthorizedError(error)) {
+			return [
+				'The supplied API key for OIDC is invalid.',
+				'OIDC will be disabled until a valid API key is given',
+			].join(' ');
+		}
+
+		// MARK: Otherwise assume the API key is valid since the API request
+		// failed for another reason that isn't 401
+	}
+
 	log.debug('config', 'Running OIDC discovery for %s', config.issuer);
 	let clientAuthMethod: oidc.ClientAuth;
 	switch (config.token_endpoint_auth_method) {
@@ -18,6 +39,7 @@ export async function configureOidcAuth(config: OidcConfig) {
 			clientAuthMethod = oidc.ClientSecretJwt(config.client_secret!);
 			break;
 		default:
+			// MARK: Throwing because this is a developer skill issue
 			throw new Error('Invalid client authentication method');
 	}
 
@@ -41,7 +63,7 @@ export async function configureOidcAuth(config: OidcConfig) {
 				'OIDC server does not support authorization code flow',
 			);
 			log.error('config', 'You may need to set this manually in the config');
-			return;
+			return 'OIDC provider did not return `authorization_endpoint`, please check logs';
 		}
 
 		if (!meta.token_endpoint) {
@@ -51,7 +73,7 @@ export async function configureOidcAuth(config: OidcConfig) {
 				'OIDC server does not support authorization code flow',
 			);
 			log.error('config', 'You may need to set this manually in the config');
-			return;
+			return 'OIDC provider did not return `token_endpoint`, please check logs';
 		}
 
 		if (!meta.userinfo_endpoint) {
@@ -61,7 +83,7 @@ export async function configureOidcAuth(config: OidcConfig) {
 			);
 			log.error('config', 'OIDC server does not support user info endpoint');
 			log.error('config', 'You may need to set this manually in the config');
-			return;
+			return 'OIDC provider did not return `user_info`, please check logs';
 		}
 
 		if (meta.token_endpoint_auth_methods_supported) {
@@ -80,7 +102,14 @@ export async function configureOidcAuth(config: OidcConfig) {
 					'Supported methods: %s',
 					meta.token_endpoint_auth_methods_supported.join(', '),
 				);
-				return;
+
+				return [
+					'Headplane is expecting the following client authencation method:',
+					config.token_endpoint_auth_method,
+					'while the OIDC server only supports',
+					`${meta.token_endpoint_auth_methods_supported.join(', ')}.`,
+					'OIDC wil be disabled until configured correctly.',
+				].join(' ');
 			}
 		}
 
@@ -127,7 +156,7 @@ export async function configureOidcAuth(config: OidcConfig) {
 				'config',
 				'You must set authorization_endpoint, token_endpoint and userinfo_endpoint manually in the config or fix the discovery issue',
 			);
-			return;
+			return 'OIDC provider could not be configured, please check logs.';
 		}
 
 		oidcClient = new oidc.Configuration(

@@ -16,7 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	try {
 		const session = await context.sessions.auth(request);
 		if (
-			context.oidc &&
+			typeof context.oidc === 'object' &&
 			session.user.subject !== 'unknown-non-oauth' &&
 			!request.url.endsWith('/onboarding')
 		) {

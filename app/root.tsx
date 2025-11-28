@@ -9,12 +9,13 @@ import {
 } from 'react-router';
 import '@fontsource-variable/inter';
 import { ExternalScripts } from 'remix-utils/external-scripts';
-import { ErrorPopup } from '~/components/Error';
 import ProgressBar from '~/components/ProgressBar';
 import ToastProvider from '~/components/ToastProvider';
 import stylesheet from '~/tailwind.css?url';
 import { LiveDataProvider } from '~/utils/live-data';
 import { useToastQueue } from '~/utils/toast';
+import type { Route } from './+types/root';
+import { ErrorBanner } from './components/error-banner';
 
 export const meta: MetaFunction = () => [
 	{ title: 'Headplane' },
@@ -56,8 +57,12 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 	);
 }
 
-export function ErrorBoundary() {
-	return <ErrorPopup />;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	return (
+		<div className="w-screen h-screen flex items-center justify-center p-4">
+			<ErrorBanner className="max-w-2xl" error={error} />
+		</div>
+	);
 }
 
 export default function App() {

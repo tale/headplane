@@ -1,24 +1,27 @@
 import { Outlet, redirect } from 'react-router';
-import { ErrorPopup } from '~/components/Error';
+import { ErrorBanner } from '~/components/error-banner';
 import { pruneEphemeralNodes } from '~/server/db/pruner';
-import ResponseError from '~/server/headscale/api/response-error';
+import { isDataUnauthorizedError } from '~/server/headscale/api/error-client';
 import log from '~/utils/log';
 import type { Route } from './+types/dashboard';
 
 export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
 	const session = await context.sessions.auth(request);
 	const api = context.hsApi.getRuntimeClient(session.api_key);
-	await pruneEphemeralNodes({ context, request, ...rest });
-	const healthy = await api.isHealthy();
 
-	// We shouldn't session invalidate if Headscale is down
-	// TODO: Notify in the logs or the UI whether or not the OIDC auth key is wrong if enabled
+	// MARK: The session should stay valid if Headscale isn't healthy
+	const healthy = await api.isHealthy();
 	if (healthy) {
 		try {
 			await api.getApiKeys();
+			await pruneEphemeralNodes({ context, request, ...rest });
 		} catch (error) {
-			if (error instanceof ResponseError) {
-				log.debug('api', 'API Key validation failed %o', error);
+			if (isDataUnauthorizedError(error)) {
+				log.warn(
+					'auth',
+					'Logging out %s due to expired API key',
+					session.user.name,
+				);
 				return redirect('/login', {
 					headers: {
 						'Set-Cookie': await context.sessions.destroySession(),
@@ -41,6 +44,10 @@ export default function Layout() {
 	);
 }
 
-export function ErrorBoundary() {
-	return <ErrorPopup type="embedded" />;
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	return (
+		<div className="w-fit mx-auto overscroll-contain my-24">
+			<ErrorBanner className="max-w-2xl" error={error} />
+		</div>
+	);
 }

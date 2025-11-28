@@ -10,7 +10,11 @@ import { LoadContext } from '~/server';
 export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
 	return {
 		config: context.hs.writable(),
-		oidc: context.oidc,
+		oidc: context.oidc
+			? typeof context.oidc === 'string'
+				? undefined
+				: context.oidc
+			: undefined,
 	};
 }
 

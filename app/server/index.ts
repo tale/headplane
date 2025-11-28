@@ -36,6 +36,11 @@ const agents = await createHeadplaneAgent(
 	db,
 );
 
+const hsApi = await createHeadscaleInterface(
+	config.headscale.url,
+	config.headscale.tls_cert_path,
+);
+
 // We also use this file to load anything needed by the react router code.
 // These are usually per-request things that we need access to, like the
 // helper that can issue and revoke cookies.
@@ -67,14 +72,15 @@ const appLoadContext = {
 		},
 	}),
 
-	hsApi: await createHeadscaleInterface(
-		config.headscale.url,
-		config.headscale.tls_cert_path,
-	),
-
+	hsApi,
 	agents,
 	integration: await loadIntegration(config.integration),
-	oidc: config.oidc ? await configureOidcAuth(config.oidc) : undefined,
+	oidc: config.oidc
+		? await configureOidcAuth(
+				config.oidc,
+				hsApi.getRuntimeClient(config.oidc.headscale_api_key),
+			)
+		: undefined,
 	db,
 };
 

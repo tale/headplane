@@ -2,11 +2,12 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { dereference } from '@readme/openapi-parser';
 import type { OpenAPIV2 } from 'openapi-types';
+import { data } from 'react-router';
 import { Agent, type Dispatcher, request } from 'undici';
 import log from '~/utils/log';
 import endpointSets, { RuntimeApiClient } from './endpoints';
-import { friendlyError } from './error';
-import ResponseError from './response-error';
+import { undiciToFriendlyError } from './error';
+import { HeadscaleAPIError } from './error-client';
 import { detectApiVersion, isAtLeast, type Version } from './version';
 
 /**
@@ -133,7 +134,11 @@ export async function createHeadscaleInterface(
 
 			return res;
 		} catch (error) {
-			throw friendlyError(error);
+			const errorBody = undiciToFriendlyError(error, `${method} ${url}`);
+			throw data(errorBody, {
+				status: 502,
+				statusText: 'Bad Gateway',
+			});
 		}
 	};
 
@@ -183,10 +188,27 @@ export async function createHeadscaleInterface(
 				apiPath,
 				res.statusCode,
 			);
-			throw new ResponseError(
-				res.statusCode,
-				await res.body.text(),
-				`${method} ${apiPath}`,
+
+			const rawData = await res.body.text();
+			const jsonData = (() => {
+				try {
+					return JSON.parse(rawData) as Record<string, unknown>;
+				} catch {
+					return null;
+				}
+			})();
+
+			throw data(
+				{
+					requestUrl: `${method} ${apiPath}`,
+					statusCode: res.statusCode,
+					rawData,
+					data: jsonData,
+				} satisfies HeadscaleAPIError,
+				{
+					status: 502,
+					statusText: 'Bad Gateway',
+				},
 			);
 		}
 

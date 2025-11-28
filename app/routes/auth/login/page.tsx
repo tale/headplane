@@ -31,7 +31,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const ssoOnly = context.config.oidc?.disable_api_key_login;
 	if (urlState !== 'logout' && ssoOnly) {
 		// This shouldn't be possible, but still a safe sanity check
-		if (!context.oidc) {
+		if (!context.oidc || typeof context.oidc === 'string') {
 			throw data(
 				'`oidc.disable_api_key_login` was set without a valid OIDC configuration',
 				{
@@ -44,8 +44,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	}
 
 	return {
-		isOidcEnabled: context.oidc !== undefined,
 		isCookieSecureEnabled: context.config.server.cookie_secure,
+		isOidcEnabled: context.oidc !== undefined,
+		oidcErrorMessage:
+			typeof context.oidc === 'string' ? context.oidc : undefined,
 		urlState,
 	};
 }
@@ -53,7 +55,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export const action = loginAction;
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
-	const { isOidcEnabled, isCookieSecureEnabled, urlState } = loaderData;
+	const { isOidcEnabled, isCookieSecureEnabled, oidcErrorMessage, urlState } =
+		loaderData;
 	const [showCookieWarning, setShowCookieWarning] = useState(false);
 	const [params] = useSearchParams();
 	const { pause } = useLiveData();
@@ -92,25 +95,40 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 	return (
 		<div className="flex w-screen h-screen items-center justify-center">
 			<div>
-				{showCookieWarning ? (
+				{showCookieWarning || oidcErrorMessage ? (
 					<Card className="max-w-md m-4 sm:m-0 mb-4 sm:mb-4 border border-red-500">
 						<div className="flex items-center justify-between gap-4">
 							<Card.Title className="text-red-500">
-								Configuration Issue
+								Configuration Issue(s)
 							</Card.Title>
 							<AlertCircle className="w-6 h-6 mb-2 text-red-500" />
 						</div>
-						<Card.Text className="text-sm text-red-600 dark:text-red-400">
-							Headplane is configured to use secure cookies, but this site is
-							being served over an insecure connection and login will not work
-							correctly.{' '}
-							<Link
-								name="Headplane Common Issues"
-								to="https://headplane.net/configuration/common-issues#issue-logging-in-does-not-do-anything"
-							>
-								Learn more.
-							</Link>
-						</Card.Text>
+						<div className="flex flex-col gap-2">
+							{showCookieWarning ? (
+								<Card.Text className="text-sm text-red-600 dark:text-red-400">
+									Headplane is configured to use secure cookies, but this site
+									is being served over an insecure connection and login will not
+									work correctly.{' '}
+									<Link
+										name="Headplane Common Issues"
+										to="https://headplane.net/configuration/common-issues#issue-logging-in-does-not-do-anything"
+									>
+										Learn more.
+									</Link>
+								</Card.Text>
+							) : undefined}
+							{oidcErrorMessage ? (
+								<Card.Text className="text-sm text-red-600 dark:text-red-400">
+									{oidcErrorMessage}{' '}
+									<Link
+										name="Headplane OIDC Issues"
+										to="https://headplane.net/configuration/sso#help"
+									>
+										Learn more.
+									</Link>
+								</Card.Text>
+							) : undefined}
+						</div>
 					</Card>
 				) : undefined}
 				<Card className="max-w-md m-4 sm:m-0">
@@ -141,7 +159,11 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 					</Form>
 					{isOidcEnabled ? (
 						<RemixLink to="/oidc/start">
-							<Button className="w-full mt-2" variant="light">
+							<Button
+								className="w-full mt-2"
+								isDisabled={oidcErrorMessage !== undefined}
+								variant="light"
+							>
 								Single Sign-On
 							</Button>
 						</RemixLink>

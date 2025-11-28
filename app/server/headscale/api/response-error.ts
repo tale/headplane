@@ -3,6 +3,7 @@
 export default class ResponseError extends Error {
 	status: number;
 	response: string;
+	requestUrl: string;
 	responseObject?: Record<string, unknown>;
 
 	constructor(status: number, response: string, requestUrl: string) {
@@ -10,6 +11,7 @@ export default class ResponseError extends Error {
 		this.name = 'ResponseError';
 		this.status = status;
 		this.response = response;
+		this.requestUrl = requestUrl;
 
 		try {
 			// Try to parse the response as JSON to get a response object

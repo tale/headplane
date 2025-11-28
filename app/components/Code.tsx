@@ -5,7 +5,7 @@ import toast from '~/utils/toast';
 
 export interface CodeProps extends HTMLProps<HTMLSpanElement> {
 	isCopyable?: boolean;
-	children: string | string[];
+	children: string | string[] | number;
 }
 
 export default function Code({ isCopyable, children, className }: CodeProps) {
