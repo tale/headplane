@@ -1,5 +1,5 @@
-import { HeadplaneConfig } from '~/server/config/schema';
 import log from '~/utils/log';
+import type { HeadplaneConfig } from '../config-schema';
 import dockerIntegration from './docker';
 import kubernetesIntegration from './kubernetes';
 import procIntegration from './proc';
@@ -47,16 +47,16 @@ function getIntegration(integration: HeadplaneConfig['integration']) {
 
 	if (docker?.enabled) {
 		log.info('config', 'Using Docker integration');
-		return new dockerIntegration(integration?.docker);
+		return new dockerIntegration(integration!.docker!);
 	}
 
 	if (k8s?.enabled) {
 		log.info('config', 'Using Kubernetes integration');
-		return new kubernetesIntegration(integration?.kubernetes);
+		return new kubernetesIntegration(integration!.kubernetes!);
 	}
 
 	if (proc?.enabled) {
 		log.info('config', 'Using Proc integration');
-		return new procIntegration(integration?.proc);
+		return new procIntegration(integration!.proc!);
 	}
 }

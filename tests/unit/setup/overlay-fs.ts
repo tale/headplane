@@ -30,7 +30,7 @@ vi.mock(import('node:fs/promises'), async (importOrig) => {
 
 		access: (path, mode) => {
 			const p = path.toString();
-			if (p === '/var/lib/headplane/' || p === '/var/lib/headplane') {
+			if (fakeFs.has(p)) {
 				return Promise.resolve();
 			}
 

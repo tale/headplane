@@ -3,18 +3,34 @@ import { platform } from 'node:os';
 import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
+import { type } from 'arktype';
 import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 import log from '~/utils/log';
-import type { HeadplaneConfig } from '../schema';
+import type { HeadplaneConfig } from '../config-schema';
 import { Integration } from './abstract';
 
-type T = NonNullable<HeadplaneConfig['integration']>['proc'];
-export default class ProcIntegration extends Integration<T> {
+const configSchema = {
+	full: type({
+		enabled: 'boolean',
+	}),
+
+	partial: type({
+		enabled: 'boolean?',
+	}).partial(),
+};
+
+export default class ProcIntegration extends Integration<
+	typeof configSchema.full.infer
+> {
 	private pid: number | undefined;
 	private maxAttempts = 10;
 
 	get name() {
 		return 'Native Linux (/proc)';
+	}
+
+	static get configSchema() {
+		return configSchema;
 	}
 
 	async isAvailable() {

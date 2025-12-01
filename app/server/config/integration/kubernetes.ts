@@ -4,9 +4,9 @@ import { join, resolve } from 'node:path';
 import { kill } from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { CoreV1Api, KubeConfig } from '@kubernetes/client-node';
+import { type } from 'arktype';
 import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
 import log from '~/utils/log';
-import type { HeadplaneConfig } from '../schema';
 import { Integration } from './abstract';
 
 // https://github.com/kubernetes-client/javascript/blob/055b83c6504dfd1b2a2d081efd974163c6cbb808/src/config.ts#L40
@@ -15,13 +15,32 @@ const svcCaPath = `${svcRoot}/ca.crt`;
 const svcTokenPath = `${svcRoot}/token`;
 const svcNamespacePath = `${svcRoot}/namespace`;
 
-type T = NonNullable<HeadplaneConfig['integration']>['kubernetes'];
-export default class KubernetesIntegration extends Integration<T> {
+const configSchema = {
+	full: type({
+		enabled: 'boolean',
+		pod_name: 'string',
+		validate_manifest: 'boolean = true',
+	}),
+
+	partial: type({
+		enabled: 'boolean?',
+		pod_name: 'string?',
+		validate_manifest: 'boolean?',
+	}).partial(),
+};
+
+export default class KubernetesIntegration extends Integration<
+	typeof configSchema.full.infer
+> {
 	private pid: number | undefined;
 	private maxAttempts = 10;
 
 	get name() {
 		return 'Kubernetes (k8s)';
+	}
+
+	static get configSchema() {
+		return configSchema;
 	}
 
 	async isAvailable() {

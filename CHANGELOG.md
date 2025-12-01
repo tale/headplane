@@ -4,7 +4,10 @@
 - Implemented the ability to customize the build with a custom script (see `./build.sh --help` for more information).
 - Attempt to warn against misconfigured cookie settings on the login page.
 - Made `server.cookie_max_age` and `server.cookie_domain` configurable (closes [#348](https://github.com/tale/headplane/issues/348)).
-
+- Re-worked the configuration loading system with several enhancements:
+    - It is now possible to skip a configuration file and only use environment variables (closes [#150](https://github.com/tale/headplane/issues/150)).
+    - Secret path loading has been reworked from the ground up to be more reliable (closes [#334](https://github.com/tale/headplane/issues/334)).
+    - Added better testing and validation for configuration loading
 ---
 
 # 0.6.1 (October 12, 2025)

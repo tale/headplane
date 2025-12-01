@@ -7,7 +7,7 @@ import { inArray } from 'drizzle-orm';
 import { LibSQLDatabase } from 'drizzle-orm/libsql/driver-core';
 import { HostInfo } from '~/types';
 import log from '~/utils/log';
-import { HeadplaneConfig } from './config/schema';
+import { HeadplaneConfig } from './config/config-schema';
 import { hostInfo } from './db/schema';
 
 export async function createHeadplaneAgent(

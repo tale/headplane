@@ -1,15 +1,17 @@
 # Configuration for the Headplane server and web application
 server:
+  # These are the default values, change them as needed
   host: "0.0.0.0"
   port: 3000
 
-  # The secret used to encode and decode web sessions
-  # Ensure that this is exactly 32 characters long
+  # The secret used to encode and decode web sessions (must be 32 characters)
+  # You may also provide `cookie_secret_path` instead to read a value from disk.
+  # See https://headplane.net/configuration/#sensitive-values
   cookie_secret: "<change_me_to_something_secure!>"
 
-  # Should the cookies only work over HTTPS?
-  # Set to false if running via HTTP without a proxy
-  # (I recommend this is true in production)
+  # Whether cookies should be marked as Secure
+  # * Should be false if running without HTTPs
+  # * Should be true if running behind a reverse proxy with HTTPs
   cookie_secure: true
 
   # The maximum age of the session cookie in seconds
@@ -40,11 +42,11 @@ headscale:
 
   # If you use the TLS configuration in Headscale, and you are not using
   # Let's Encrypt for your certificate, pass in the path to the certificate.
-  # (This has no effect `url` does not start with `https://`)
+  # (This has no effect if `url` does not start with `https://`)
   # tls_cert_path: "/var/lib/headplane/tls.crt"
 
-  # Optional, public URL if they differ
-  # This affects certain parts of the web UI
+  # Optional, public URL if its different from the `headscale.url`
+  # This affects certain parts of the web UI which shows Headscale's URL
   # public_url: "https://headscale.example.com"
 
   # Path to the Headscale configuration file
@@ -53,9 +55,13 @@ headscale:
   # in the Web UI, but they cannot be changed.
   config_path: "/etc/headscale/config.yaml"
 
-  # Headplane internally validates the Headscale configuration
-  # to ensure that it changes the configuration in a safe way.
-  # If you want to disable this validation, set this to false.
+  # Whether the Headscale configuration should be strictly validated
+  # when reading from `config_path`. If true, Headplane will not interact
+  # with Headscale if there are any issues with the configuration file.
+  #
+  # This is recommended to be true for production deployments to, however it
+  # may not work if you are using a version of Headscale that has configuration
+  # options unknown to Headplane.
   config_strict: true
 
   # If you are using `dns.extra_records_path` in your Headscale
@@ -70,15 +76,17 @@ headscale:
 
 # Integration configurations for Headplane to interact with Headscale
 integration:
+  # The Headplane agent allows retrieving information about nodes
+  # This allows the UI to display version, OS, and connectivity data
+  # You will see the Headplane agent in your Tailnet as a node when
+  # it connects.
   agent:
-    # The Headplane agent allows retrieving information about nodes
-    # This allows the UI to display version, OS, and connectivity data
-    # You will see the Headplane agent in your Tailnet as a node when
-    # it connects.
     enabled: false
+
     # To connect to your Tailnet, you need to generate a pre-auth key
     # This can be done via the web UI or through the `headscale` CLI.
     pre_authkey: "<your-preauth-key>"
+
     # Optionally change the name of the agent in the Tailnet.
     # host_name: "headplane-agent"
 
@@ -89,10 +97,11 @@ integration:
     # cache_ttl: 60
     # cache_path: /var/lib/headplane/agent_cache.json
 
-    # Do not change this unless you are running a custom deployment.
     # The work_dir represents where the agent will store its data to be able
     # to automatically reauthenticate with your Tailnet. It needs to be
     # writable by the user running the Headplane process.
+    #
+    # If using Docker, it is best to leave this as the default.
     # work_dir: "/var/lib/headplane/agent"
 
   # Only one of these should be enabled at a time or you will get errors
@@ -140,59 +149,54 @@ integration:
   proc:
     enabled: false
 
-# OIDC Configuration for simpler authentication
-# (This is optional, but recommended for the best experience)
-oidc:
-  issuer: "https://accounts.google.com"
+  # OIDC Configuration for simpler authentication
+  # (This is optional, but recommended for the best experience)
+  # oidc:
+  # The OIDC issuer URL
+  # issuer: "https://accounts.google.com"
+
+  # If you are using OIDC, you need to generate an API key
+  # that can be used to authenticate other sessions when signing in.
+  #
+  # This can be done with `headscale apikeys create --expiration 999d`
+  # headscale_api_key: "<your-headscale-api-key>"
 
   # If your OIDC provider does not support discovery (does not have the URL at
   # `/.well-known/openid-configuration`), you need to manually set endpoints.
   # This also works to override endpoints if you so desire or if your OIDC
   # discovery is missing certain endpoints (ie GitHub).
-  # For some typical providers, see the documentation.
-
+  # For some typical providers, see https://headplane.net/features/sso.
   # authorization_endpoint: ""
   # token_endpoint: ""
   # userinfo_endpoint: ""
 
   # The client ID for the OIDC client
   # For the best experience please ensure this is *identical* to the client_id
-  # you are using for Headscale. A lot of OIDC providers will use different
-  # subjects per user based on the client_id and for this to work correctly
-  # they need to be identical between Headscale and Headplane.
-  client_id: "your-client-id"
+  # you are using for Headscale. because
+  # client_id: "your-client-id"
 
   # The client secret for the OIDC client
-  # Either this or `client_secret_path` must be set for OIDC to work
-  client_secret: "<your-client-secret>"
-  # You can alternatively set `client_secret_path` to read the secret from disk.
-  # The path specified can resolve environment variables, making integration
-  # with systemd's `LoadCredential` straightforward:
-  # client_secret_path: "${CREDENTIALS_DIRECTORY}/oidc_client_secret"
+  # You may also provide `client_secret_path` instead to read a value from disk.
+  # See https://headplane.net/configuration/#sensitive-values
+  # client_secret: "<your-client-secret>"
 
-  # Defaults to 'openid email profile'
-  # scope: "openid email profile"
-
-  disable_api_key_login: false
-  token_endpoint_auth_method: "client_secret_post"
-
-  # If you are using OIDC, you need to generate an API key
-  # that can be used to authenticate other sessions when signing in.
-  #
-  # This can be done with `headscale apikeys create --expiration 999d`
-  headscale_api_key: "<your-headscale-api-key>"
+  # If you want to disable traditional login via Headscale API keys
+  # disable_api_key_login: false
 
   # Optional, but highly recommended otherwise Headplane
   # will attempt to automatically guess this from the issuer
   #
   # This should point to your publicly accessibly URL
   # for your Headplane instance with /admin/oidc/callback
-  redirect_uri: "http://localhost:3000/admin/oidc/callback"
+  # redirect_uri: "http://localhost:3000/admin/oidc/callback"
 
   # By default profile pictures are pulled from the OIDC provider when
   # we go to fetch the userinfo endpoint. Optionally, this can be set to
   # "oidc" or "gravatar" as of 0.6.1.
   # profile_picture_source: "gravatar"
+
+  # The scopes to request when authenticating users. The default is below.
+  # scope: "openid email profile"
 
   # Extra query parameters can be passed to the authorization endpoint
   # by setting them here. This is useful for providers that require any kind

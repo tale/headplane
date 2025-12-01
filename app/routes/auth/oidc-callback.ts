@@ -3,7 +3,7 @@ import { count, eq } from 'drizzle-orm';
 import { createCookie, type LoaderFunctionArgs, redirect } from 'react-router';
 import { ulid } from 'ulidx';
 import type { LoadContext } from '~/server';
-import { HeadplaneConfig } from '~/server/config/schema';
+import { HeadplaneConfig } from '~/server/config/config-schema';
 import { users } from '~/server/db/schema';
 import { Roles } from '~/server/web/roles';
 import { FlowUser, finishAuthFlow, formatError } from '~/utils/oidc';

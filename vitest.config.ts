@@ -22,7 +22,7 @@ export default defineConfig({
 				extends: true,
 				test: {
 					name: 'unit',
-					include: ['tests/unit/*.test.ts'],
+					include: ['tests/unit/**/*.test.ts'],
 					setupFiles: ['tests/unit/setup/overlay-fs.ts'],
 				},
 			},

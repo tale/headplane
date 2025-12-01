@@ -1,10 +1,9 @@
 import { join } from 'node:path';
-import { env, versions } from 'node:process';
+import { versions } from 'node:process';
 import { createHonoServer } from 'react-router-hono-server/node';
 import log from '~/utils/log';
-import { configureConfig, configureLogger, envVariables } from './config/env';
 import { loadIntegration } from './config/integration';
-import { loadConfig } from './config/loader';
+import { loadConfig } from './config/load';
 import { createDbClient } from './db/client.server';
 import { createHeadscaleInterface } from './headscale/api';
 import { loadHeadscaleConfig } from './headscale/config-loader';
@@ -21,13 +20,7 @@ declare global {
 // This module contains a side-effect because everything running here
 // exists for the lifetime of the process, making it appropriate.
 log.info('server', 'Running Node.js %s', versions.node);
-configureLogger(env[envVariables.debugLog]);
-const config = await loadConfig(
-	configureConfig({
-		loadEnv: env[envVariables.envOverrides],
-		path: env[envVariables.configPath],
-	}),
-);
+const config = await loadConfig();
 
 const db = await createDbClient(join(config.server.data_path, 'hp_persist.db'));
 const agents = await createHeadplaneAgent(

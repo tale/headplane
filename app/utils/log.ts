@@ -14,10 +14,11 @@ export interface Logger
 	debugEnabled: boolean;
 }
 
+const logLevels = getLogLevels();
 export default {
-	debugEnabled: true,
+	debugEnabled: logLevels.includes('debug'),
 	...Object.fromEntries(
-		levels.map((level) => [
+		logLevels.map((level) => [
 			level,
 			(category: Category, message: string, ...args: unknown[]) => {
 				const date = new Date().toISOString();
@@ -29,3 +30,18 @@ export default {
 		]),
 	),
 } as Logger;
+
+function getLogLevels() {
+	const debugLog = process.env.HEADPLANE_DEBUG_LOG;
+	if (debugLog == null) {
+		return ['info', 'warn', 'error'];
+	}
+
+	const normalized = debugLog.trim().toLowerCase();
+	const truthyValues = ['1', 'true', 'yes', 'on'];
+	if (!truthyValues.includes(normalized)) {
+		return ['info', 'warn', 'error'];
+	}
+
+	return ['info', 'warn', 'error', 'debug'];
+}
