@@ -14,6 +14,7 @@ const SPEC_MAP = {
 	'0.26.0': '/v0.26.0/gen/openapiv2/headscale/v1/headscale.swagger.json',
 	'0.26.1': '/v0.26.1/gen/openapiv2/headscale/v1/headscale.swagger.json',
 	'0.27.0': '/v0.27.0/gen/openapiv2/headscale/v1/headscale.swagger.json',
+	'0.27.1': '/v0.27.1/gen/openapiv2/headscale/v1/headscale.swagger.json',
 } as const;
 
 async function hashOpenApiOperations(specUrl: string) {
