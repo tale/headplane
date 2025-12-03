@@ -17,6 +17,7 @@ export interface Logger
 const logLevels = getLogLevels();
 export default {
 	debugEnabled: logLevels.includes('debug'),
+	debug: (..._: Parameters<Logger['debug']>) => {},
 	...Object.fromEntries(
 		logLevels.map((level) => [
 			level,
