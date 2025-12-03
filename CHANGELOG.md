@@ -1,4 +1,5 @@
 # 0.6.2 (Next)
+- Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
 - Bundle all `node_modules` aside from native ones to reduce bundle and container size (closes [#331](https://github.com/tale/headplane/issues/331)).
 - Allow conditionally compiling the SSH WASM integration when building (closes [#337](https://github.com/tale/headplane/issues/337)).

@@ -16,6 +16,49 @@ import { PopulatedNode } from '~/utils/node-info';
 import toast from '~/utils/toast';
 import MenuOptions from './menu';
 
+/**
+ * Formats the time delta since last seen into a human-readable string.
+ * - Under 1 hour: "X minutes ago"
+ * - Under 1 day: "X hours, Y minutes ago"
+ * - Under 1 month: "X days, Y hours ago"
+ * - Over 1 month: "X months, Y days ago"
+ */
+function formatTimeDelta(lastSeen: Date): string {
+	const now = new Date();
+	const diffMs = now.getTime() - lastSeen.getTime();
+
+	const minutes = Math.floor(diffMs / (1000 * 60));
+	const hours = Math.floor(diffMs / (1000 * 60 * 60));
+	const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+	const months = Math.floor(days / 30);
+
+	if (minutes < 60) {
+		return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+	}
+
+	if (hours < 24) {
+		const remainingMinutes = minutes % 60;
+		if (remainingMinutes === 0) {
+			return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+		}
+		return `${hours} hour${hours !== 1 ? 's' : ''}, ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''} ago`;
+	}
+
+	if (days < 30) {
+		const remainingHours = hours % 24;
+		if (remainingHours === 0) {
+			return `${days} day${days !== 1 ? 's' : ''} ago`;
+		}
+		return `${days} day${days !== 1 ? 's' : ''}, ${remainingHours} hour${remainingHours !== 1 ? 's' : ''} ago`;
+	}
+
+	const remainingDays = days % 30;
+	if (remainingDays === 0) {
+		return `${months} month${months !== 1 ? 's' : ''} ago`;
+	}
+	return `${months} month${months !== 1 ? 's' : ''}, ${remainingDays} day${remainingDays !== 1 ? 's' : ''} ago`;
+}
+
 interface Props {
 	node: PopulatedNode;
 	users: User[];
@@ -33,10 +76,7 @@ export default function MachineRow({
 	isDisabled,
 	existingTags,
 }: Props) {
-	const uiTags = useMemo(() => {
-		const tags = uiTagsForNode(node, isAgent);
-		return tags;
-	}, [node, isAgent]);
+	const uiTags = useMemo(() => uiTagsForNode(node, isAgent), [node, isAgent]);
 
 	const ipOptions = useMemo(() => {
 		if (magic) {
@@ -129,22 +169,30 @@ export default function MachineRow({
 				</td>
 			) : undefined}
 			<td className="py-2">
-				<span
-					className={cn(
-						'flex items-center gap-x-1 text-sm',
-						'text-headplane-600 dark:text-headplane-300',
-					)}
-				>
+				<div className="flex items-start gap-x-1">
 					<StatusCircle
-						className="w-4 h-4"
+						className="w-4 h-4 mt-0.5"
 						isOnline={node.online && !node.expired}
 					/>
-					<p suppressHydrationWarning>
-						{node.online && !node.expired
-							? 'Connected'
-							: new Date(node.lastSeen).toLocaleString()}
-					</p>
-				</span>
+					<div>
+						<p
+							className={cn(
+								'text-sm',
+								'text-headplane-600 dark:text-headplane-300',
+							)}
+							suppressHydrationWarning
+						>
+							{node.online && !node.expired
+								? 'Connected'
+								: new Date(node.lastSeen).toLocaleString()}
+						</p>
+						{!(node.online && !node.expired) && (
+							<p className="text-xs opacity-50" suppressHydrationWarning>
+								{formatTimeDelta(new Date(node.lastSeen))}
+							</p>
+						)}
+					</div>
+				</div>
 			</td>
 			<td className="py-2 pr-0.5">
 				<MenuOptions
