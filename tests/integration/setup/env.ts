@@ -4,12 +4,14 @@ import {
 	type HeadscaleApiInterface,
 } from '~/server/headscale/api';
 import { type HeadscaleEnv, startHeadscale } from './start-headscale';
+import { startTailscaleNode, TailscaleNodeEnv } from './start-tailscale';
 
 export type Version = keyof typeof hashes;
 export const HS_VERSIONS = Object.keys(hashes) as Version[];
 
 interface VersionStateEntry {
 	env: HeadscaleEnv;
+	tailscaleNode: TailscaleNodeEnv;
 	bootstrap: HeadscaleApiInterface;
 }
 
@@ -20,9 +22,13 @@ async function ensureVersion(version: Version) {
 	}
 
 	const env = await startHeadscale(version);
+	const tailscaleNode = await startTailscaleNode(
+		version,
+		env.container.getMappedPort(8080),
+	);
 	const bootstrap = await createHeadscaleInterface(env.apiUrl);
 
-	const entry = { env, bootstrap };
+	const entry = { env, tailscaleNode, bootstrap };
 	versionState.set(version, entry);
 	return entry;
 }
@@ -37,9 +43,22 @@ export async function getRuntimeClient(version: Version) {
 	return bootstrap.getRuntimeClient(env.apiKey);
 }
 
+export async function getNode(version: Version) {
+	const { tailscaleNode } = await ensureVersion(version);
+	return {
+		authCode: tailscaleNode.authCode,
+		nodeName: tailscaleNode.nodeName,
+	};
+}
+
 export async function stopAllVersions() {
-	for (const { env } of versionState.values()) {
+	for (const { env, tailscaleNode } of versionState.values()) {
 		await env.container.stop({
+			remove: true,
+			removeVolumes: true,
+		});
+
+		await tailscaleNode.container.stop({
 			remove: true,
 			removeVolumes: true,
 		});

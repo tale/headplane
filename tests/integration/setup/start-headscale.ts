@@ -49,5 +49,3 @@ export async function startHeadscale(version: string): Promise<HeadscaleEnv> {
 	const apiKey = JSON.parse(exec.stdout.toString());
 	return { container, apiUrl, apiKey };
 }
-
-// await startHeadscale('0.26.0');
