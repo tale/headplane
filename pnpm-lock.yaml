@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   react-router-hono-server:
-    hash: b68723a36649e2c3bd9e9edcfff3a8bc0fdb48e1cf6d64eba37c04f7bfbb1417
+    hash: e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77
     path: patches/react-router-hono-server.patch
 
 importers:
@@ -166,7 +166,7 @@ importers:
         version: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       react-router-hono-server:
         specifier: 2.22.0
-        version: 2.22.0(patch_hash=b68723a36649e2c3bd9e9edcfff3a8bc0fdb48e1cf6d64eba37c04f7bfbb1417)(@hono/node-server@1.19.6(hono@4.10.4))(@react-router/dev@7.9.6(@types/node@24.10.1)(@vitejs/plugin-rsc@0.4.11(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)))(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))(yaml@2.8.1))(@types/react@19.2.5)(bufferutil@4.0.9)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(utf-8-validate@5.0.10)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
+        version: 2.22.0(patch_hash=e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77)(@hono/node-server@1.19.6(hono@4.10.4))(@react-router/dev@7.9.6(@types/node@24.10.1)(@vitejs/plugin-rsc@0.4.11(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)))(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))(yaml@2.8.1))(@types/react@19.2.5)(bufferutil@4.0.9)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(utf-8-validate@5.0.10)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))
       react-stately:
         specifier: 3.42.0
         version: 3.42.0(react@19.2.0)
@@ -8232,7 +8232,7 @@ snapshots:
       react-dom: 19.2.0(react@19.2.0)
       react-router: 7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
 
-  react-router-hono-server@2.22.0(patch_hash=b68723a36649e2c3bd9e9edcfff3a8bc0fdb48e1cf6d64eba37c04f7bfbb1417)(@hono/node-server@1.19.6(hono@4.10.4))(@react-router/dev@7.9.6(@types/node@24.10.1)(@vitejs/plugin-rsc@0.4.11(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)))(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))(yaml@2.8.1))(@types/react@19.2.5)(bufferutil@4.0.9)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(utf-8-validate@5.0.10)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)):
+  react-router-hono-server@2.22.0(patch_hash=e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77)(@hono/node-server@1.19.6(hono@4.10.4))(@react-router/dev@7.9.6(@types/node@24.10.1)(@vitejs/plugin-rsc@0.4.11(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)))(jiti@2.6.1)(lightningcss@1.30.2)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(terser@5.39.0)(tsx@4.20.6)(typescript@5.9.3)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1))(yaml@2.8.1))(@types/react@19.2.5)(bufferutil@4.0.9)(react-router@7.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(utf-8-validate@5.0.10)(vite@8.0.0-beta.0(@types/node@24.10.1)(esbuild@0.25.12)(jiti@2.6.1)(terser@5.39.0)(tsx@4.20.6)(yaml@2.8.1)):
     dependencies:
       '@drizzle-team/brocli': 0.11.0
       '@hono/node-server': 1.19.6(hono@4.10.4)

@@ -13,6 +13,7 @@
 - Removed several unnecessarily verbose or spammy log messages.
 - Updated the minimum Docker API used to support the latest Docker versions (via [#370](https://github.com/tale/headplane/pull/370)).
 - Enhanced the node tag dialog to show a dropdown of assignable tags (via [#362](https://github.com/tale/headplane/pull/362)).
+- Fixed an issue where the website favicon would not load correctly (closes [#323](https://github.com/tale/headplane/issues/323)).
 ---
 
 # 0.6.1 (October 12, 2025)

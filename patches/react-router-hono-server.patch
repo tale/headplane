@@ -1,8 +1,8 @@
 diff --git a/dist/adapters/node.js b/dist/adapters/node.js
-index ec81622898d583ddd8c2f4d9eaf5c0ed23776475..047ef1d45ad82e4b476a882b4ab5c8962faa0df1 100644
+index e081ab36a04ea100cf5da3fb5eb54c5174186f4d..35433810d05a829f2c824d63714e71bf5ed069a0 100644
 --- a/dist/adapters/node.js
 +++ b/dist/adapters/node.js
-@@ -49,7 +49,7 @@ async function createHonoServer(options) {
+@@ -49,13 +49,13 @@ async function createHonoServer(options) {
    }
    await mergedOptions.beforeAll?.(app);
    app.use(
@@ -11,3 +11,10 @@ index ec81622898d583ddd8c2f4d9eaf5c0ed23776475..047ef1d45ad82e4b476a882b4ab5c896
      cache(60 * 60 * 24 * 365),
      // 1 year
      serveStatic({ root: clientBuildPath, ...mergedOptions.serveStaticOptions?.clientAssets })
+   );
+   app.use(
+-    "*",
++    `${import.meta.env.REACT_ROUTER_HONO_SERVER_BASENAME}*`,
+     cache(60 * 60),
+     // 1 hour
+     serveStatic({ root: PRODUCTION ? clientBuildPath : "./public", ...mergedOptions.serveStaticOptions?.publicAssets })
