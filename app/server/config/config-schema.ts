@@ -12,7 +12,7 @@ export const pathSupportedKeys = [
 ] as const;
 
 const serverConfig = type({
-	host: 'string.ip = "127.0.0.1"',
+	host: 'string.ip = "0.0.0.0"',
 	port: 'number.integer = 3000',
 	data_path: 'string.lower = "/var/lib/headplane/"',
 
@@ -65,8 +65,8 @@ const oidcConfig = type({
 	redirect_uri: 'string.url?',
 	disable_api_key_login: 'boolean = false',
 	scope: 'string = "openid email profile"',
-	extra_params: 'Record<string, string>?',
 	profile_picture_source: '"oidc" | "gravatar" = "oidc"',
+	extra_params: 'Record<string, string>?',
 
 	authorization_endpoint: 'string.url?',
 	token_endpoint: 'string.url?',

@@ -1,26 +1,18 @@
 import { ArrowRight } from 'lucide-react';
-import {
-	LoaderFunctionArgs,
-	Link as RemixLink,
-	useLoaderData,
-} from 'react-router';
+import { Link as RemixLink } from 'react-router';
 import Link from '~/components/Link';
-import { LoadContext } from '~/server';
+import type { Route } from './+types/overview';
 
-export async function loader({ context }: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ context }: Route.LoaderArgs) {
 	return {
 		config: context.hs.writable(),
-		oidc: context.oidc
-			? typeof context.oidc === 'string'
-				? undefined
-				: context.oidc
-			: undefined,
+		isOidcEnabled: context.oidcConnector?.isValid ?? false,
 	};
 }
 
-export default function Page() {
-	const { config, oidc } = useLoaderData<typeof loader>();
-
+export default function Page({
+	loaderData: { config, isOidcEnabled },
+}: Route.ComponentProps) {
 	return (
 		<div className="flex flex-col gap-8 max-w-(--breakpoint-lg)">
 			<div className="flex flex-col w-2/3">
@@ -51,7 +43,7 @@ export default function Page() {
 					<ArrowRight className="w-5 h-5 ml-2" />
 				</div>
 			</RemixLink>
-			{config && oidc ? (
+			{config && isOidcEnabled ? (
 				<>
 					<div className="flex flex-col w-2/3">
 						<h1 className="text-2xl font-medium mb-4">

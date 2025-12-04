@@ -8,7 +8,6 @@ import { createDbClient } from './db/client.server';
 import { createHeadscaleInterface } from './headscale/api';
 import { loadHeadscaleConfig } from './headscale/config-loader';
 import { createHeadplaneAgent } from './hp-agent';
-import { configureOidcAuth } from './web/oidc';
 import { createSessionStorage } from './web/sessions';
 
 declare global {
@@ -40,6 +39,8 @@ const hsApi = await createHeadscaleInterface(
 export type LoadContext = typeof appLoadContext;
 
 import 'react-router';
+import { createOidcConnector } from './web/oidc-connector';
+
 declare module 'react-router' {
 	interface AppLoadContext extends LoadContext {}
 }
@@ -68,8 +69,8 @@ const appLoadContext = {
 	hsApi,
 	agents,
 	integration: await loadIntegration(config.integration),
-	oidc: config.oidc
-		? await configureOidcAuth(
+	oidcConnector: config.oidc
+		? await createOidcConnector(
 				config.oidc,
 				hsApi.getRuntimeClient(config.oidc.headscale_api_key),
 			)
