@@ -9,6 +9,7 @@
     - It is now possible to skip a configuration file and only use environment variables (closes [#150](https://github.com/tale/headplane/issues/150)).
     - Secret path loading has been reworked from the ground up to be more reliable (closes [#334](https://github.com/tale/headplane/issues/334)).
     - Added better testing and validation for configuration loading
+- Re-worked the OIDC integration to adhere to the correct standards and surface more errors to the user.
 ---
 
 # 0.6.1 (October 12, 2025)
