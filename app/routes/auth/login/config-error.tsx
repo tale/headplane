@@ -24,7 +24,7 @@ export function OidcConfigErrorNotice({
 				</ul>{' '}
 				<Link
 					name="Headplane OIDC Issues"
-					to="https://headplane.net/configuration/sso#help"
+					to="https://headplane.net/configuration/sso#troubleshooting"
 				>
 					Learn more
 				</Link>
