@@ -1,7 +1,6 @@
 import { AlertCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import {
-	data,
 	Form,
 	Link as RemixLink,
 	redirect,
@@ -12,7 +11,6 @@ import Card from '~/components/Card';
 import Code from '~/components/Code';
 import Input from '~/components/Input';
 import Link from '~/components/Link';
-import { OidcConnectorError } from '~/server/web/oidc-connector';
 import { useLiveData } from '~/utils/live-data';
 import type { Route } from './+types/page';
 import { loginAction } from './action';

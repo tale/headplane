@@ -47,7 +47,7 @@ function getErrorMessage(code: string) {
 		case 'error_auth_failed':
 			return (
 				<Card.Text>
-					Authentication with the SSO provider failed. Please tray again later.
+					Authentication with the SSO provider failed. Please try again later.
 					Headplane logs may provide more information.
 				</Card.Text>
 			);

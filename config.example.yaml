@@ -185,15 +185,14 @@ integration:
   # See https://headplane.net/configuration/#sensitive-values
   # client_secret: "<your-client-secret>"
 
+  # Whether to use PKCE when authenticating users. This is recommended as it
+  # adds an extra layer of security to the authentication process. Enabling this
+  # means your OIDC provider must support PKCE and it must be enabled on the
+  # client.
+  # use_pkce: true
+
   # If you want to disable traditional login via Headscale API keys
   # disable_api_key_login: false
-
-  # Optional, but highly recommended otherwise Headplane
-  # will attempt to automatically guess this from the issuer
-  #
-  # This should point to your publicly accessibly URL
-  # for your Headplane instance with /admin/oidc/callback
-  # redirect_uri: "http://localhost:3000/admin/oidc/callback"
 
   # By default profile pictures are pulled from the OIDC provider when
   # we go to fetch the userinfo endpoint. Optionally, this can be set to

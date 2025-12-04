@@ -82,6 +82,20 @@ oidc:
   #  baz: "qux"
 ```
 
+### PKCE
+By default, Headplane does not use PKCE (Proof Key for Code Exchange) when
+communicating with the Identity Provider. PKCE is generally a best practice for
+OIDC and can enhance security. To enable PKCE you'll need to set `oidc.use_pkce`
+to `true` in your Headplane configuration file:
+
+```yaml
+oidc:
+  use_pkce: true
+```
+
+You'll also need to ensure that your Identity Provider supports PKCE and is
+properly configured to handle PKCE requests from Headplane.
+
 ## Troubleshooting
 Some of the common issues you may encounter when configuring OIDC with Headplane
 include:

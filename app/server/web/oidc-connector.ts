@@ -25,6 +25,7 @@ export type OidcConnector =
 	| {
 			isValid: true;
 			isExclusive: boolean;
+			usePKCE: boolean;
 			client: oidc.Configuration;
 			apiKey: string;
 			scope: string;
@@ -96,6 +97,7 @@ export async function createOidcConnector(
 	return {
 		isValid: true,
 		isExclusive: config.disable_api_key_login,
+		usePKCE: config.use_pkce,
 		client: oidcClientOrErrors,
 		apiKey: config.headscale_api_key,
 		scope: config.scope,
@@ -120,6 +122,13 @@ async function discoveryCoalesce(
 			config.client_id,
 		);
 		metadata = client.serverMetadata();
+		if (config.use_pkce === true && !client.serverMetadata().supportsPKCE()) {
+			log.warn(
+				'config',
+				'OIDC provider does not support PKCE, but it is enabled in the config',
+			);
+		}
+
 		if (metadata.claims_supported != null) {
 			if (!metadata.claims_supported.includes('sub')) {
 				log.error('config', 'OIDC provider does not support `sub` claim');

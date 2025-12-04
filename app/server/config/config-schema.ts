@@ -65,6 +65,7 @@ const oidcConfig = type({
 	client_id: 'string',
 	client_secret: 'string',
 	headscale_api_key: 'string',
+	use_pkce: 'boolean = false',
 	redirect_uri: type('string.url')
 		.pipe((value, ctx) => {
 			log.warn(
@@ -111,6 +112,7 @@ const partialOidcConfig = type({
 	issuer: 'string.url?',
 	client_id: 'string?',
 	client_secret: 'string?',
+	use_pkce: 'boolean?',
 	headscale_api_key: 'string?',
 	redirect_uri: 'string.url?',
 	disable_api_key_login: 'boolean?',

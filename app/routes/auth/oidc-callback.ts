@@ -1,18 +1,15 @@
 import { createHash } from 'node:crypto';
 import { count, eq } from 'drizzle-orm';
 import * as oidc from 'openid-client';
-import { data, type LoaderFunctionArgs, redirect } from 'react-router';
+import { data, redirect } from 'react-router';
 import { ulid } from 'ulidx';
-import type { LoadContext } from '~/server';
 import { users } from '~/server/db/schema';
 import { Roles } from '~/server/web/roles';
 import log from '~/utils/log';
 import { createOidcStateCookie } from '~/utils/oidc-state';
+import type { Route } from './+types/oidc-callback';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	if (!context.oidcConnector?.isValid) {
 		throw data('OIDC is not enabled or misconfigured', { status: 501 });
 	}
@@ -30,8 +27,8 @@ export async function loader({
 		return redirect('/login?s=error_no_session');
 	}
 
-	const { state, nonce, redirect_uri } = oidcCookieState;
-	if (!state || !nonce || !redirect_uri) {
+	const { state, nonce, redirect_uri, verifier } = oidcCookieState;
+	if (!state || !nonce || !redirect_uri || !verifier) {
 		log.warn('auth', 'OIDC session cookie is missing required fields');
 		return redirect('/login?s=error_invalid_session');
 	}
@@ -47,6 +44,9 @@ export async function loader({
 			{
 				expectedState: state,
 				expectedNonce: nonce,
+				...(context.oidcConnector.usePKCE
+					? { pkceCodeVerifier: verifier }
+					: {}),
 			},
 		);
 

@@ -1,13 +1,10 @@
 import * as oidc from 'openid-client';
-import { data, type LoaderFunctionArgs, redirect } from 'react-router';
-import type { LoadContext } from '~/server';
+import { data, redirect } from 'react-router';
 import { HeadplaneConfig } from '~/server/config/config-schema';
 import { createOidcStateCookie } from '~/utils/oidc-state';
+import type { Route } from './+types/oidc-start';
 
-export async function loader({
-	request,
-	context,
-}: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: Route.LoaderArgs) {
 	try {
 		await context.sessions.auth(request);
 		return redirect('/');
@@ -21,6 +18,7 @@ export async function loader({
 	const redirect_uri = getRedirectUri(context.config, request);
 
 	const nonce = oidc.randomNonce();
+	const verifier = oidc.randomPKCECodeVerifier();
 	const state = oidc.randomState();
 
 	const url = oidc.buildAuthorizationUrl(context.oidcConnector.client, {
@@ -29,6 +27,12 @@ export async function loader({
 		redirect_uri,
 		state,
 		nonce,
+		...(context.oidcConnector.usePKCE
+			? {
+					code_challenge_method: 'S256',
+					code_challenge: await oidc.calculatePKCECodeChallenge(verifier),
+				}
+			: {}),
 	});
 
 	return redirect(url.href, {
@@ -37,6 +41,7 @@ export async function loader({
 			'Set-Cookie': await cookie.serialize({
 				state,
 				nonce,
+				verifier,
 				redirect_uri,
 			}),
 		},

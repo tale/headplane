@@ -4,6 +4,7 @@ import type { HeadplaneConfig } from '~/server/config/config-schema';
 export interface OidcStateCookie {
 	nonce: string;
 	state: string;
+	verifier: string;
 	redirect_uri: string;
 }
 
@@ -31,6 +32,7 @@ export function createOidcStateCookie(config: HeadplaneConfig) {
 				typeof parsed !== 'object' ||
 				typeof parsed.nonce !== 'string' ||
 				typeof parsed.state !== 'string' ||
+				typeof parsed.verifier !== 'string' ||
 				typeof parsed.redirect_uri !== 'string'
 			) {
 				return null;
@@ -39,6 +41,7 @@ export function createOidcStateCookie(config: HeadplaneConfig) {
 			return {
 				nonce: parsed.nonce,
 				state: parsed.state,
+				verifier: parsed.verifier,
 				redirect_uri: parsed.redirect_uri,
 			};
 		},
