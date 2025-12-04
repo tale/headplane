@@ -37,7 +37,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	const isOidcConnectorEnabled = context.oidcConnector?.isValid;
 	const oidcErrorCodes = !isOidcConnectorEnabled
-		? context.oidcConnector!.errors
+		? (context.oidcConnector?.errors ?? [])
 		: [];
 
 	return {
