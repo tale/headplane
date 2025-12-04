@@ -1,18 +1,13 @@
 import { createHash } from 'node:crypto';
 import { count, eq } from 'drizzle-orm';
 import * as oidc from 'openid-client';
-import {
-	createCookie,
-	data,
-	type LoaderFunctionArgs,
-	redirect,
-} from 'react-router';
+import { data, type LoaderFunctionArgs, redirect } from 'react-router';
 import { ulid } from 'ulidx';
 import type { LoadContext } from '~/server';
 import { users } from '~/server/db/schema';
 import { Roles } from '~/server/web/roles';
 import log from '~/utils/log';
-import type { OidcCookieState } from './oidc-start';
+import { createOidcStateCookie } from '~/utils/oidc-state';
 
 export async function loader({
 	request,
@@ -27,32 +22,28 @@ export async function loader({
 		return redirect('/login?s=error_no_query');
 	}
 
-	const cookie = createCookie('__oidc_auth_flow', {
-		httpOnly: true,
-		maxAge: 300,
-		secure: context.config.server.cookie_secure,
-		domain: context.config.server.cookie_domain,
-	});
+	const cookie = createOidcStateCookie(context.config);
+	const oidcCookieState = await cookie.parse(request.headers.get('Cookie'));
 
-	const oidcCookieState: OidcCookieState | null = await cookie.parse(
-		request.headers.get('Cookie'),
-	);
-
-	if (oidcCookieState == null || typeof oidcCookieState !== 'object') {
+	if (oidcCookieState == null) {
 		log.warn('auth', 'Called OIDC callback without session cookie');
 		return redirect('/login?s=error_no_session');
 	}
 
-	const { state, nonce } = oidcCookieState;
-	if (!state || !nonce) {
+	const { state, nonce, redirect_uri } = oidcCookieState;
+	if (!state || !nonce || !redirect_uri) {
 		log.warn('auth', 'OIDC session cookie is missing required fields');
 		return redirect('/login?s=error_invalid_session');
 	}
 
 	try {
+		const callbackUrl = new URL(redirect_uri);
+		const currentUrl = new URL(request.url);
+		callbackUrl.search = currentUrl.search;
+
 		const tokens = await oidc.authorizationCodeGrant(
 			context.oidcConnector.client,
-			request,
+			callbackUrl,
 			{
 				expectedState: state,
 				expectedNonce: nonce,

@@ -10,6 +10,7 @@
     - Secret path loading has been reworked from the ground up to be more reliable (closes [#334](https://github.com/tale/headplane/issues/334)).
     - Added better testing and validation for configuration loading
 - Re-worked the OIDC integration to adhere to the correct standards and surface more errors to the user.
+    - Deprecated `oidc.redirect_uri` and automated callback URL detection in favor of setting `server.base_url` correctly.
 - Removed several unnecessarily verbose or spammy log messages.
 - Updated the minimum Docker API used to support the latest Docker versions (via [#370](https://github.com/tale/headplane/pull/370)).
 - Enhanced the node tag dialog to show a dropdown of assignable tags (via [#362](https://github.com/tale/headplane/pull/362)).

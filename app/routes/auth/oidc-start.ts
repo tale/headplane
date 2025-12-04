@@ -1,16 +1,8 @@
 import * as oidc from 'openid-client';
-import {
-	createCookie,
-	data,
-	type LoaderFunctionArgs,
-	redirect,
-} from 'react-router';
+import { data, type LoaderFunctionArgs, redirect } from 'react-router';
 import type { LoadContext } from '~/server';
-
-export interface OidcCookieState {
-	nonce: string;
-	state: string;
-}
+import { HeadplaneConfig } from '~/server/config/config-schema';
+import { createOidcStateCookie } from '~/utils/oidc-state';
 
 export async function loader({
 	request,
@@ -25,15 +17,8 @@ export async function loader({
 		throw data('OIDC is not enabled or misconfigured', { status: 501 });
 	}
 
-	const cookie = createCookie('__oidc_auth_flow', {
-		httpOnly: true,
-		maxAge: 300,
-		secure: context.config.server.cookie_secure,
-		domain: context.config.server.cookie_domain,
-	});
-
-	const redirectUri =
-		context.config.oidc?.redirect_uri ?? getRedirectUri(request);
+	const cookie = createOidcStateCookie(context.config);
+	const redirect_uri = getRedirectUri(context.config, request);
 
 	const nonce = oidc.randomNonce();
 	const state = oidc.randomState();
@@ -41,7 +26,7 @@ export async function loader({
 	const url = oidc.buildAuthorizationUrl(context.oidcConnector.client, {
 		...(context.oidcConnector.extraParams ?? {}),
 		scope: context.oidcConnector.scope,
-		redirect_uri: redirectUri,
+		redirect_uri,
 		state,
 		nonce,
 	});
@@ -52,12 +37,26 @@ export async function loader({
 			'Set-Cookie': await cookie.serialize({
 				state,
 				nonce,
-			} satisfies OidcCookieState),
+				redirect_uri,
+			}),
 		},
 	});
 }
 
-function getRedirectUri(req: Request) {
+function getRedirectUri(config: HeadplaneConfig, req: Request): string {
+	if (config.server.base_url != null) {
+		const url = new URL(`${__PREFIX__}/oidc/callback`, config.server.base_url);
+		return url.href;
+	}
+
+	if (config.oidc?.redirect_uri != null) {
+		const url = new URL(
+			`${__PREFIX__}/oidc/callback`,
+			config.oidc.redirect_uri,
+		);
+		return url.href;
+	}
+
 	const url = new URL(`${__PREFIX__}/oidc/callback`, req.url);
 	let host = req.headers.get('Host');
 	if (!host) {

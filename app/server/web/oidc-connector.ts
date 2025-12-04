@@ -40,16 +40,23 @@ export type OidcConnector =
  * Creates an OIDC connector based on the configuration and Headscale API.
  * This will attempt to validate the configuration and return any errors.
  *
+ * @param baseUrl The base URL of the Headplane server.
  * @param config The OIDC configuration.
  * @param client The Headscale runtime API client.
  * @returns An OIDC connector with validation status.
  */
 export async function createOidcConnector(
+	baseUrl: string | undefined,
 	config: OidcConfig,
 	client: RuntimeApiClient,
 ): Promise<OidcConnector> {
-	// TODO: MEANINGFUL LOGS NOT JUST DEBUG SPAM LOL
-	//
+	if (baseUrl == null && config.redirect_uri == null) {
+		log.warn(
+			'config',
+			'OIDC is enabled but `server.base_url` is not set in the config. Starting in Headplane 0.7.0 this will be required for OIDC to function properly and will throw errors if not set, see https://headplane.net/features/sso#configuring-oidc for more information.',
+		);
+	}
+
 	const errors: OidcConnectorError[] = [];
 	if (!config.headscale_api_key) {
 		errors.push('INVALID_API_KEY');

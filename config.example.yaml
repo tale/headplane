@@ -4,6 +4,11 @@ server:
   host: "0.0.0.0"
   port: 3000
 
+  # The base URL for Headplane. Please keep in mind that this will be required
+  # for Headscale to properly function going forward AND it should not include
+  # the dashboard prefix (/admin) portion.
+  base_url: "http://localhost:3000"
+
   # The secret used to encode and decode web sessions (must be 32 characters)
   # You may also provide `cookie_secret_path` instead to read a value from disk.
   # See https://headplane.net/configuration/#sensitive-values

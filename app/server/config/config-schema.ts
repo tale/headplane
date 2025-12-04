@@ -1,4 +1,5 @@
 import { type } from 'arktype';
+import log from '~/utils/log';
 import DockerIntegration from './integration/docker';
 import KubernetesIntegration from './integration/kubernetes';
 import ProcIntegration from './integration/proc';
@@ -14,6 +15,7 @@ export const pathSupportedKeys = [
 const serverConfig = type({
 	host: 'string.ip = "0.0.0.0"',
 	port: 'number.integer = 3000',
+	base_url: 'string.url?',
 	data_path: 'string.lower = "/var/lib/headplane/"',
 
 	cookie_secret: '(32 <= string <= 32)',
@@ -25,6 +27,7 @@ const serverConfig = type({
 const partialServerConfig = type({
 	host: 'string.ip?',
 	port: 'number.integer?',
+	base_url: 'string.url?',
 	data_path: 'string.lower?',
 
 	cookie_secret: '(32 <= string <= 32)?',
@@ -62,7 +65,31 @@ const oidcConfig = type({
 	client_id: 'string',
 	client_secret: 'string',
 	headscale_api_key: 'string',
-	redirect_uri: 'string.url?',
+	redirect_uri: type('string.url')
+		.pipe((value, ctx) => {
+			log.warn(
+				'config',
+				'%s is deprecated and will be removed in 0.7.0',
+				ctx.propString,
+			);
+
+			const cleanedValue = new URL(value.trim());
+			if (cleanedValue.pathname.endsWith(`${__PREFIX__}/oidc/callback`)) {
+				cleanedValue.pathname = cleanedValue.pathname.replace(
+					`${__PREFIX__}/oidc/callback`,
+					'/',
+				);
+
+				log.warn(
+					'config',
+					'Please migrate to using `server.base_url` with a value of "%s"',
+					cleanedValue.toString(),
+				);
+			}
+
+			return cleanedValue.toString();
+		})
+		.optional(),
 	disable_api_key_login: 'boolean = false',
 	scope: 'string = "openid email profile"',
 	profile_picture_source: '"oidc" | "gravatar" = "oidc"',

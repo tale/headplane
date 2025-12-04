@@ -83,6 +83,7 @@ const appLoadContext = {
 	integration: await loadIntegration(config.integration),
 	oidcConnector: config.oidc
 		? await createOidcConnector(
+				config.server.base_url,
 				config.oidc,
 				hsApi.getRuntimeClient(config.oidc.headscale_api_key),
 			)
