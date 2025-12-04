@@ -219,36 +219,28 @@ export async function createSessionStorage(options: AuthSessionOptions) {
 }
 
 async function migrateUserDatabase(path: string, db: LibSQLDatabase) {
-	log.info('config', 'Migrating old user database from %s', path);
 	const realPath = resolve(path);
-
-	log.warn(
-		'config',
-		'oidc.user_storage_file is deprecated and will be removed in Headplane 0.7.0',
-	);
-	log.warn(
-		'config',
-		'You can ignore this warning if you do not use OIDC authentication.',
-	);
-	log.warn(
-		'config',
-		'Data will be automatically migrated to the new SQL database.',
-	);
-	log.warn(
-		'config',
-		'Refer to server.data_path to ensure this path is mounted correctly is using Docker.',
-	);
 
 	try {
 		const handle = await open(realPath, 'a+');
 		await handle.close();
 	} catch (error) {
+		if (
+			error != null &&
+			typeof error === 'object' &&
+			'code' in error &&
+			error.code === 'ENOENT'
+		) {
+			log.debug('config', 'No old user database file found at %s', realPath);
+			return;
+		}
+
 		log.warn('config', 'Failed to migrate old user database at %s', realPath);
 		log.warn(
 			'config',
 			'This is not an error, but existing users will not be migrated',
 		);
-		log.warn('config', 'Unable to open user database file: %s', error);
+		log.warn('config', 'Unable to open user database file: %s', String(error));
 		log.debug('config', 'Error details: %s', error);
 		return;
 	}

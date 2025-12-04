@@ -7,7 +7,7 @@ import { Agent, type Dispatcher, request } from 'undici';
 import log from '~/utils/log';
 import endpointSets, { RuntimeApiClient } from './endpoints';
 import { undiciToFriendlyError } from './error';
-import { HeadscaleAPIError } from './error-client';
+import { HeadscaleAPIError, isApiError } from './error-client';
 import { detectApiVersion, isAtLeast, type Version } from './version';
 
 /**
@@ -238,8 +238,11 @@ export async function createHeadscaleInterface(
 				Object.keys(hashes).length,
 			);
 			return hashes;
-		} catch (err) {
-			log.warn('api', 'Error during OpenAPI polling: %o', err);
+		} catch (error) {
+			if (isApiError(error)) {
+				log.debug('api', 'Failed to fetch OpenAPI spec: %d', error.statusCode);
+			}
+
 			return null;
 		}
 	}
