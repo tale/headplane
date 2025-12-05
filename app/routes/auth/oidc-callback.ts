@@ -121,20 +121,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				'Got an OIDC response error body: %s',
 				JSON.stringify(error.cause),
 			);
-		}
-
-		if (error instanceof oidc.AuthorizationResponseError) {
+		} else if (error instanceof oidc.AuthorizationResponseError) {
 			log.error(
 				'auth',
 				'Got an OIDC authorization response error: %s',
 				error.error,
 			);
-		}
-
-		if (error instanceof oidc.WWWAuthenticateChallengeError) {
+		} else if (error instanceof oidc.WWWAuthenticateChallengeError) {
 			log.error('auth', 'Got an OIDC WWW-Authenticate challenge error');
+		} else if (error instanceof oidc.ClientError) {
+			log.error(
+				'auth',
+				'Got an OIDC authorization client error: %s',
+				error.cause.message,
+			);
+		} else {
+				log.error(
+				'auth',
+				'Got an OIDC error: %s',
+				JSON.stringify(error.cause),
+			);
 		}
-
 		return redirect('/login?s=error_auth_failed');
 	}
 }
