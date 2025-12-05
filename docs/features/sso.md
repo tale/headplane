@@ -1,6 +1,7 @@
 ---
 title: Single Sign-On (SSO)
 description: Configure Single Sign-On (SSO) authentication for Headplane.
+outline: [2, 3]
 ---
 
 # Single Sign-On (SSO)
@@ -11,66 +12,68 @@ description: Configure Single Sign-On (SSO) authentication for Headplane.
     <figcaption>SSO Configuration Page</figcaption>
 </figure>
 
-Headplane supports Single Sign-On (SSO) authentication using OpenID Connect
-(OIDC). This allows users to authenticate using an external Identity Provider
-(IdP) that supports OIDC, streamlining the login process and enhancing security.
+Single Sign-On allows users to authenticate with Headplane through an external
+Identity Provider (IdP). It does this using the OpenID Connect (OIDC) protocol,
+which is widely supported by many popular IdPs.
 
-This is generally the recommended authentication method when using Headplane in
-production environments as it provides the deepest integration with Headscale
-and allows for seamless user management.
+## Getting Started
+To set up Single Sign-On (SSO) with Headplane, there are several steps involved.
+As a general recommendation, please read through the entire guide before
+beginning the process as there are several important factors to consider.
 
-## Configuring OIDC
-To configure Single Sign-On (SSO) you'll need to first setup a client with your
-Identity Provider that supports OIDC. The exact steps to do this will vary, but
-generally you'll need to be able to provide the following information to
-Headplane:
+### Requirements
 
-| Field                     | Description                                      |
-|---------------------------|--------------------------------------------------|
-| **Client ID**             | The client identifier provided by your IdP.      |
-| **Client Secret**         | The client secret provided by your IdP.          |
-| **Issuer URL**            | The OIDC issuer URL given by your IdP.           |
+::: warning
+If you are also using OpenID Connect (OIDC) authentication with Headscale, it is
+**fundamentally important** that both Headscale and Headplane are configured to
+use the *exact same client* in your Identity Provider (IdP). This means that
+both services should share the same client ID and secret.
 
-::: tip
-If you are using a custom prefix other than `/admin` for the Headplane web UI,
-please ensure that you adjust the redirect URL accordingly when setting up
-your OIDC client.
+This is necessary because Headplane relies on the user IDs provided by the IdP
+to match users with their equivalent Headscale users. If Headscale and Headplane
+are using different clients, the user IDs may not match up correctly, preventing
+a user from viewing their devices in Headplane.
 :::
 
-Before creating the client, configure Headplane to use a redirect URL that your
-IdP will accept. You'll need to set **`server.base_url`** to the public URL of your
-Headplane instance in your configuration file. For example, if your Headplane
-instance runs on `https://headplane.example.com/admin`, set:
+You'll need the following things set up before proceeding:
+- A working Headplane installation that is already configured.
+- An Identity Provider (IdP) that supports OAuth2 and OpenID Connect (OIDC).
+- `server.base_url` set to the public URL of your Headplane instance in your
+configuration file (ie. the domain that's visible in the browser).
+- A Headscale API key with a relatively long expiration time (eg. 1 year).
 
-```yaml
-server:
-  base_url: "https://headplane.example.com"
-```
+### Configuring the Client
+You'll need to create a client in your Identity Provider (IdP) that Headplane
+can use for authentication. A part of that step involves giving an allowed
+"redirect URL" to your IdP. This URL is where the IdP will send users back to
+after they have authenticated.
 
-and provide the following redirect URL to your IdP when creating the client:
+For Headplane, the redirect URL will be in the following format, where the
+domain is replaced with the value set for `server.base_url` in your Headplane
+configuration:
 
 ```
 https://headplane.example.com/admin/auth/callback
 ```
 
-### Headscale API Key
-Once you have created the client with your IdP, you'll need to generate an API
-key for Headplane to use when communicating with Headscale. You can do this by
-running `headscale apikeys create -e 1y` to create an API key that is valid for
-one year (you can adjust the expiration as needed). Make sure to copy the
-generated API key as you will need it for the Headplane configuration.
+Once you have created the client in your IdP, make note of the following
+information as you'll need it for the Headplane configuration:
+- Client ID
+- Client Secret (if applicable)
+- Issuer URL
 
-
-### Headplane Configuration
-Finally, you can configure Headplane to use OIDC by adding the following fields
-to your Headplane configuration file:
+### OIDC Configuration
+To enable OIDC authentication in Headplane, you'll need to add the necessary
+configuration options via the file or environment variables. See below:
 
 ```yaml
 oidc:
+  headscale_api_key: "<generated-api-key>"
   issuer: "https://your-idp.com"
   client_id: "your-client-id"
   client_secret: "your-client-secret"
-  headscale_api_key: "<generated-api-key>"
+  # You can also provide the client secret via a file:
+  # client_secret_path: "${HOME}/secrets/headplane_oidc_client_secret.txt"
 
   # Those options should generally be sufficient, but you can also set these:
   # authorization_endpoint: ""
@@ -82,19 +85,27 @@ oidc:
   #  baz: "qux"
 ```
 
+Headplane automatically tries to discover the necessary OIDC endpoints but if
+your IdP does not support discovery, you may need to manually specify them.
+
 ### PKCE
+
+::: warning
+Headplane currently only supports the **`S256`** code challenge method for PKCE.
+You may need to ensure that your Identity Provider is configured to accept this
+method.
+:::
+
 By default, Headplane does not use PKCE (Proof Key for Code Exchange) when
 communicating with the Identity Provider. PKCE is generally a best practice for
-OIDC and can enhance security. To enable PKCE you'll need to set `oidc.use_pkce`
+OIDC and can enhance security. *Some Identity Providers may even require PKCE
+to be used.* To enable PKCE you'll need to set `oidc.use_pkce`
 to `true` in your Headplane configuration file:
 
 ```yaml
 oidc:
   use_pkce: true
 ```
-
-You'll also need to ensure that your Identity Provider supports PKCE and is
-properly configured to handle PKCE requests from Headplane.
 
 ## Troubleshooting
 Some of the common issues you may encounter when configuring OIDC with Headplane
