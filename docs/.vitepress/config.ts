@@ -11,6 +11,9 @@ export default defineConfig({
 			{ text: 'Home', link: '/' },
 			{ text: 'Changelog', link: '/CHANGELOG' },
 		],
+		search: {
+			provider: 'local',
+		},
 		sidebar: [
 			{
 				text: 'Getting Started',
@@ -30,6 +33,10 @@ export default defineConfig({
 						link: '/configuration',
 						items: [
 							{ text: 'Common Issues', link: '/configuration/common-issues' },
+							{
+								text: 'Sensitive Values',
+								link: '/configuration#sensitive-values',
+							},
 						],
 					},
 					{ text: 'Nix', link: '/Nix' },
