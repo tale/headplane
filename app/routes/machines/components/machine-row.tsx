@@ -13,6 +13,7 @@ import type { User } from '~/types';
 import cn from '~/utils/cn';
 import * as hinfo from '~/utils/host-info';
 import { PopulatedNode } from '~/utils/node-info';
+import { formatTimeDelta } from '~/utils/time';
 import toast from '~/utils/toast';
 import MenuOptions from './menu';
 
@@ -33,10 +34,7 @@ export default function MachineRow({
 	isDisabled,
 	existingTags,
 }: Props) {
-	const uiTags = useMemo(() => {
-		const tags = uiTagsForNode(node, isAgent);
-		return tags;
-	}, [node, isAgent]);
+	const uiTags = useMemo(() => uiTagsForNode(node, isAgent), [node, isAgent]);
 
 	const ipOptions = useMemo(() => {
 		if (magic) {
@@ -129,22 +127,30 @@ export default function MachineRow({
 				</td>
 			) : undefined}
 			<td className="py-2">
-				<span
-					className={cn(
-						'flex items-center gap-x-1 text-sm',
-						'text-headplane-600 dark:text-headplane-300',
-					)}
-				>
+				<div className="flex items-start gap-x-1">
 					<StatusCircle
-						className="w-4 h-4"
+						className="w-4 h-4 mt-0.5"
 						isOnline={node.online && !node.expired}
 					/>
-					<p suppressHydrationWarning>
-						{node.online && !node.expired
-							? 'Connected'
-							: new Date(node.lastSeen).toLocaleString()}
-					</p>
-				</span>
+					<div>
+						<p
+							className={cn(
+								'text-sm',
+								'text-headplane-600 dark:text-headplane-300',
+							)}
+							suppressHydrationWarning
+						>
+							{node.online && !node.expired
+								? 'Connected'
+								: new Date(node.lastSeen).toLocaleString()}
+						</p>
+						{!(node.online && !node.expired) && (
+							<p className="text-xs opacity-50" suppressHydrationWarning>
+								{formatTimeDelta(new Date(node.lastSeen))}
+							</p>
+						)}
+					</div>
+				</div>
 			</td>
 			<td className="py-2 pr-0.5">
 				<MenuOptions
