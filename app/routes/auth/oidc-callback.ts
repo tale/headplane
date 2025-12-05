@@ -115,12 +115,14 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			},
 		});
 	} catch (error) {
+		var error_logged = false;
 		if (error instanceof oidc.ResponseBodyError) {
 			log.error(
 				'auth',
 				'Got an OIDC response error body: %s',
 				JSON.stringify(error.cause),
 			);
+			error_logged = true;
 		}
 
 		if (error instanceof oidc.AuthorizationResponseError) {
@@ -129,12 +131,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				'Got an OIDC authorization response error: %s',
 				error.error,
 			);
+			error_logged = true;
 		}
 
 		if (error instanceof oidc.WWWAuthenticateChallengeError) {
 			log.error('auth', 'Got an OIDC WWW-Authenticate challenge error');
+			error_logged = true;
 		}
 
+		if (error instanceof oidc.ClientError) {
+			log.error(
+				'auth',
+				'Got an OIDC authorization client error: %s',
+				JSON.stringify(error.cause),
+			);
+			error_logged = true;
+		}
+		if (!error_logged) {
+				log.error(
+				'auth',
+				'Got an OIDC error: %s',
+				JSON.stringiy(error.cause),
+			);
+		}
 		return redirect('/login?s=error_auth_failed');
 	}
 }
