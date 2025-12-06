@@ -17,6 +17,7 @@ const serverConfig = type({
 	port: 'number.integer = 3000',
 	base_url: 'string.url?',
 	data_path: 'string.lower = "/var/lib/headplane/"',
+	info_secret: 'string?',
 
 	cookie_secret: '(32 <= string <= 32)',
 	cookie_secure: 'boolean = true',
@@ -29,6 +30,7 @@ const partialServerConfig = type({
 	port: 'number.integer?',
 	base_url: 'string.url?',
 	data_path: 'string.lower?',
+	info_secret: 'string?',
 
 	cookie_secret: '(32 <= string <= 32)?',
 	cookie_secure: 'boolean?',

@@ -35,6 +35,16 @@ server:
   # PLEASE ensure this directory is mounted if running in Docker.
   data_path: "/var/lib/headplane"
 
+  # The info secret is optional and allows access to certain debug endpoints
+  # that may expose sensitive information about your Headplane instance.
+  #
+  # As of now, this protects the /api/info endpoint which exposes details about
+  # the Headplane and Headscale versions in use. In the future, more endpoints
+  # may be protected by this secret.
+  #
+  # If not set, these endpoints will be disabled.
+  # info_secret: "<change_me_to_something_secure!>"
+
 # Headscale specific settings to allow Headplane to talk
 # to Headscale and access deep integration features
 headscale:

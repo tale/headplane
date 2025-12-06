@@ -5,6 +5,9 @@ export default [
 	index('routes/util/redirect.ts'),
 	route('/healthz', 'routes/util/healthz.ts'),
 
+	// API Routes
+	...prefix('/api', [route('/info', 'routes/util/info.ts')]),
+
 	// Authentication Routes
 	route('/login', 'routes/auth/login/page.tsx'),
 	route('/logout', 'routes/auth/logout.ts'),
