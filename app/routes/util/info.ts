@@ -37,7 +37,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const healthy = await api.isHealthy();
 
 	const body = {
-		status: healthy ? 'OK' : 'ERROR',
+		status: healthy ? 'healthy' : 'unhealthy',
 		headplane_version: __VERSION__,
 		headscale_canonical_version: healthy ? context.hsApi.apiVersion : 'unknown',
 		internal_versions: {
