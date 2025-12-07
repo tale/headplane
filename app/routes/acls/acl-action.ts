@@ -1,5 +1,6 @@
 import { data } from 'react-router';
-import ResponseError from '~/server/headscale/api/response-error';
+import { isApiError } from '~/server/headscale/api/error-client';
+// import ResponseError from '~/server/headscale/api/response-error'; // Unused
 import { Capabilities } from '~/server/web/roles';
 import type { Route } from './+types/overview';
 
@@ -36,73 +37,159 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 			policy,
 			updatedAt,
 		});
-	} catch (error) {
+		// biome-ignore lint/suspicious/noExplicitAny: Error handling needs to catch all types
+	} catch (error: unknown) {
+		console.error('ACL Action Error:', error);
+
+		// Handle data() throw objects (DataWithResponseInit) which aren't instanceof Response
+		// but have the structure: { data: { ... }, init: { status: 502, ... } }
+		if (isDataWithResponseInit(error)) {
+			const statusCode = error.init.status || 500;
+			const statusText = error.init.statusText || 'Error';
+
+			// The internal error from Headscale
+			const internalData = error.data.data;
+			let message = internalData?.message;
+
+			if (!message) {
+				// Fallback to raw data or stringified object
+				message = error.data?.rawData || JSON.stringify(error.data);
+			}
+
+			// Clean up common prefixes if present
+			if (typeof message === 'string') {
+				if (message.includes('setting policy:')) {
+					message = message.replace('setting policy:', '').trim();
+				}
+				if (message.includes('parsing policy:')) {
+					message = message.replace('parsing policy:', '').trim();
+				}
+			}
+
+			return data(
+				{
+					success: false,
+					error: `${message}\n\nStatus: ${statusCode} ${statusText}`,
+					policy: undefined,
+					updatedAt: undefined,
+				},
+				// We return 200 or 400 to the UI so it renders the page with the error
+				// instead of triggering an ErrorBoundary
+				400,
+			);
+		}
+
 		// This means Headscale returned a protobuf error to us
 		// It also means we 100% know this is in database mode
-		if (error instanceof ResponseError && error.responseObject?.message) {
-			const message = error.responseObject.message as string;
-			// This is stupid, refer to the link
-			// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
-			if (message.includes('update is disabled')) {
-				// This means the policy is not writable
-				throw data('Policy is not writable', { status: 403 });
-			}
+		if (error instanceof Response) {
+			try {
+				const payload = await error.json();
+				console.error('ACL Action Payload:', payload);
 
-			// https://github.com/juanfont/headscale/blob/main/hscontrol/policy/v1/acls.go#L81
-			if (message.includes('parsing hujson')) {
-				// This means the policy was invalid, return a 400
-				// with the actual error message from Headscale
-				const cutIndex = message.indexOf('err: hujson:');
-				const trimmed =
-					cutIndex > -1
-						? `Syntax error: ${message.slice(cutIndex + 12)}`
-						: message;
+				if (isApiError(payload)) {
+					let message =
+						(payload.data?.message as string) ||
+						payload.rawData ||
+						'Unknown error';
 
-				return data(
-					{
-						success: false,
-						error: trimmed,
-						policy: undefined,
-						updatedAt: undefined,
-					},
-					400,
-				);
-			}
+					if (typeof message === 'object') {
+						message = JSON.stringify(message);
+					}
 
-			if (message.includes('unmarshalling policy')) {
-				// This means the policy was invalid, return a 400
-				// with the actual error message from Headscale
-				const cutIndex = message.indexOf('err:');
-				const trimmed =
-					cutIndex > -1
-						? `Syntax error: ${message.slice(cutIndex + 5)}`
-						: message;
+					// This is stupid, refer to the link
+					// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
+					if (message.includes('update is disabled')) {
+						// This means the policy is not writable
+						return data(
+							{
+								success: false,
+								error: 'Policy is not writable (File mode enabled)',
+								policy: undefined,
+								updatedAt: undefined,
+							},
+							403,
+						);
+					}
 
-				return data(
-					{
-						success: false,
-						error: trimmed,
-						policy: undefined,
-						updatedAt: undefined,
-					},
-					400,
-				);
-			}
+					// https://github.com/juanfont/headscale/blob/main/hscontrol/policy/v1/acls.go#L81
+					if (message.includes('parsing hujson')) {
+						// This means the policy was invalid, return a 400
+						// with the actual error message from Headscale
+						const cutIndex = message.indexOf('err: hujson:');
+						const trimmed =
+							cutIndex > -1
+								? `Syntax error: ${message.slice(cutIndex + 12)}`
+								: message;
 
-			if (message.includes('empty policy')) {
-				return data(
-					{
-						success: false,
-						error: 'Policy error: Supplied policy was empty',
-						policy: undefined,
-						updatedAt: undefined,
-					},
-					400,
-				);
+						return data(
+							{
+								success: false,
+								error: trimmed,
+								policy: undefined,
+								updatedAt: undefined,
+							},
+							400,
+						);
+					}
+
+					if (message.includes('unmarshalling policy')) {
+						// This means the policy was invalid, return a 400
+						// with the actual error message from Headscale
+						const cutIndex = message.indexOf('err:');
+						const trimmed =
+							cutIndex > -1
+								? `Syntax error: ${message.slice(cutIndex + 5)}`
+								: message;
+
+						return data(
+							{
+								success: false,
+								error: trimmed,
+								policy: undefined,
+								updatedAt: undefined,
+							},
+							400,
+						);
+					}
+
+					if (message.includes('empty policy')) {
+						return data(
+							{
+								success: false,
+								error: 'Policy error: Supplied policy was empty',
+								policy: undefined,
+								updatedAt: undefined,
+							},
+							400,
+						);
+					}
+
+					// Return the raw error if no specific match
+					return data(
+						{
+							success: false,
+							error: message,
+							policy: undefined,
+							updatedAt: undefined,
+						},
+						payload.statusCode,
+					);
+				}
+			} catch (e) {
+				console.error('Failed to parse error response:', e);
 			}
 		}
 
-		// Otherwise, this is a Headscale error that we can just propagate.
-		throw error;
+		// Otherwise, catch generic errors and return them to the UI
+		// instead of throwing (which triggers ErrorBoundary).
+		return data(
+			{
+				success: false,
+				error: error instanceof Error ? error.message : String(error),
+				policy: undefined,
+				updatedAt: undefined,
+			},
+			500,
+		);
 	}
 }
