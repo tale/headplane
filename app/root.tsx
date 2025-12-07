@@ -72,7 +72,6 @@ export default function App() {
 		<>
 			<ProgressBar isVisible={nav.state === 'loading'} />
 			<Outlet />
-			{/* Force HMR */}
 		</>
 	);
 }
