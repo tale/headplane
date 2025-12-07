@@ -34,13 +34,6 @@ export default defineConfig(({ command, isSsrBuild }) => ({
 	server: {
 		host: server.host,
 		port: server.port,
-		allowedHosts: ['hs-admin.rahatol.com'],
-		hmr: {
-			host: 'hs-admin.rahatol.com',
-			clientPort: 443,
-			protocol: 'wss',
-			path: '/hmr',
-		},
 	},
 	build: {
 		target: 'esnext',
