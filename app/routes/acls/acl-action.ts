@@ -7,6 +7,28 @@ import type { Route } from './+types/overview';
 // We only check capabilities here and assume it is writable
 // If it isn't, it'll gracefully error anyways, since this means some
 // fishy client manipulation is happening.
+interface DataWithResponseInit {
+	data: {
+		data?: {
+			message?: string;
+		};
+		rawData?: string;
+	};
+	init: {
+		status?: number;
+		statusText?: string;
+	};
+}
+
+function isDataWithResponseInit(error: unknown): error is DataWithResponseInit {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'data' in error &&
+		'init' in error
+	);
+}
+
 export async function aclAction({ request, context }: Route.ActionArgs) {
 	const session = await context.sessions.auth(request);
 	const check = await context.sessions.check(

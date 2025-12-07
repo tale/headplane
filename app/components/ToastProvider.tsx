@@ -4,7 +4,7 @@ import {
 	useToast,
 	useToastRegion,
 } from '@react-aria/toast';
-import { ToastQueue, ToastState } from '@react-stately/toast';
+import { ToastQueue, ToastState, useToastQueue } from '@react-stately/toast';
 import { X } from 'lucide-react';
 import React, { useRef } from 'react';
 import IconButton from '~/components/IconButton';

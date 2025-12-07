@@ -1,4 +1,5 @@
 import { data } from 'react-router';
+import { isApiError } from '~/server/headscale/api/error-client';
 import ResponseError from '~/server/headscale/api/response-error';
 import { Capabilities } from '~/server/web/roles';
 import type { Route } from './+types/overview';
@@ -39,18 +40,24 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
 	} catch (error) {
 		// This means Headscale returned a protobuf error to us
 		// It also means we 100% know this is in database mode
-		if (error instanceof ResponseError && error.responseObject?.message) {
-			const message = error.responseObject.message as string;
-			// This is stupid, refer to the link
-			// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
-			if (message.includes('acl policy not found')) {
-				// This means the policy has never been initiated, and we can
-				// write to it to get it started or ignore it.
-				flags.policy = ''; // Start with an empty policy
-				flags.writable = true;
-			}
+		if (error instanceof Response) {
+			const payload = await error.json();
+			if (isApiError(payload)) {
+				const message =
+					(payload.data?.message as string) ||
+					payload.rawData ||
+					'Unknown error';
 
-			return flags;
+				// This is stupid, refer to the link
+				// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
+				if (message.includes('acl policy not found')) {
+					// This means the policy has never been initiated, and we can
+					// write to it to get it started or ignore it.
+					flags.policy = ''; // Start with an empty policy
+					flags.writable = true;
+					return flags;
+				}
+			}
 		}
 
 		// Otherwise, this is a Headscale error that we can just propagate.

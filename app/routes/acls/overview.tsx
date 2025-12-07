@@ -32,13 +32,17 @@ export default function Page({
 
 	useEffect(() => {
 		if (!fetcher.data) {
-			// No data yet, return
 			return;
 		}
 
 		if (fetcher.data.success === true) {
-			toast('Updated policy');
+			toast('ACL Policy updated', { type: 'success' });
 			revalidate();
+		} else if (fetcher.data.error) {
+			toast(fetcher.data.error, {
+				type: 'error',
+				timeout: 1_000 * 60 * 60 * 24, // 24 hours (effectively infinite)
+			});
 		}
 	}, [fetcher.data]);
 
@@ -78,15 +82,7 @@ export default function Page({
 				</Link>
 				.
 			</p>
-			{fetcher.data?.error !== undefined ? (
-				<Notice
-					title={fetcher.data.error.split(':')[0] ?? 'Error'}
-					variant="error"
-				>
-					{fetcher.data.error.split(':').slice(1).join(': ') ??
-						'An unknown error occurred while trying to update the ACL policy.'}
-				</Notice>
-			) : undefined}
+
 			<Tabs className="mb-4" label="ACL Editor">
 				<Tabs.Item
 					key="edit"
