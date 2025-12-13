@@ -1,5 +1,5 @@
 import { data } from 'react-router';
-import ResponseError from '~/server/headscale/api/response-error';
+import { isDataWithApiError } from '~/server/headscale/api/error-client';
 import { Capabilities } from '~/server/web/roles';
 import type { Route } from './+types/overview';
 
@@ -30,30 +30,19 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
 	const api = context.hsApi.getRuntimeClient(session.api_key);
 	try {
 		const { policy, updatedAt } = await api.getPolicy();
-
-		// Successfully loaded the policy, mark it as readable
-		// If `updatedAt` is null, it means the policy is in file mode.
 		flags.writable = updatedAt !== null;
 		flags.policy = policy;
 		return flags;
 	} catch (error) {
-		// This means Headscale returned a protobuf error to us
-		// It also means we 100% know this is in database mode
-		if (error instanceof ResponseError && error.responseObject?.message) {
-			const message = error.responseObject.message as string;
-			// This is stupid, refer to the link
-			// https://github.com/juanfont/headscale/blob/main/hscontrol/types/policy.go
-			if (message.includes('acl policy not found')) {
-				// This means the policy has never been initiated, and we can
-				// write to it to get it started or ignore it.
-				flags.policy = ''; // Start with an empty policy
+		if (isDataWithApiError(error)) {
+			// https://github.com/juanfont/headscale/blob/c4600346f9c29b514dc9725ac103efb9d0381f23/hscontrol/types/policy.go#L10
+			if (error.data.rawData.includes('acl policy not found')) {
+				flags.policy = '';
 				flags.writable = true;
+				return flags;
 			}
-
-			return flags;
 		}
 
-		// Otherwise, this is a Headscale error that we can just propagate.
 		throw error;
 	}
 }

@@ -1,5 +1,5 @@
 import { data, redirect } from 'react-router';
-import ResponseError from '~/server/headscale/api/response-error';
+import { isDataWithApiError } from '~/server/headscale/api/error-client';
 import log from '~/utils/log';
 import type { Route } from './+types/page';
 
@@ -74,12 +74,15 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
 			},
 		});
 	} catch (error) {
-		if (error instanceof ResponseError) {
+		// Check if this is a React Router DataWithResponseInit wrapping a Headscale API error
+		if (isDataWithApiError(error)) {
+			const apiError = error.data;
 			// TODO: What in gods name is wrong with the headscale API?
 			if (
-				error.status === 401 ||
-				error.status === 403 ||
-				(error.status === 500 && error.response.trim() === 'Unauthorized')
+				apiError.statusCode === 401 ||
+				apiError.statusCode === 403 ||
+				(apiError.statusCode === 500 &&
+					apiError.rawData.trim() === 'Unauthorized')
 			) {
 				return {
 					success: false,

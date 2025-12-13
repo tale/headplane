@@ -18,15 +18,26 @@ export function getErrorMessage(error: Error | unknown): {
 			const { statusCode, rawData, data, requestUrl } = error.data;
 			if (statusCode >= 500) {
 				return {
-					title: 'Cannot connect to Headscale API',
+					title: 'Headscale API Error',
 					jsxMessage: (
-						<Card.Text>
-							There was an error communicating with the Headscale API.
-							<br />
-							The server responded with a status code of{' '}
-							<strong>{statusCode}</strong>, indicating a server-side issue.
-							Please check the Headscale server status and try again later.
-						</Card.Text>
+						<>
+							<Card.Text>
+								There was an error communicating with the Headscale API.
+								<br />
+								The server responded with a status code of{' '}
+								<strong>{statusCode}</strong>, indicating a server-side issue.
+								Please check the Headscale server status and try again later.
+							</Card.Text>
+							{(error.data.data != null || error.data.rawData != null) && (
+								<pre className="mt-2 p-2 bg-headplane-100 dark:bg-headplane-800 rounded-lg overflow-x-auto">
+									{error.data.data != null ? (
+										<code>{JSON.stringify(error.data.data, null, 2)}</code>
+									) : (
+										<code>{error.data.rawData}</code>
+									)}
+								</pre>
+							)}
+						</>
 					),
 				};
 			}

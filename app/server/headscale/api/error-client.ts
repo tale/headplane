@@ -44,6 +44,13 @@ export function isConnectionError(
 	);
 }
 
+/**
+ * Type guard to check if an error is a DataUnauthorizedError.
+ * This checks if the error has a `data` property with a `statusCode` of 401.
+ *
+ * @param error - The error to check.
+ * @returns True if the error is a DataUnauthorizedError, false otherwise.
+ */
 export function isDataUnauthorizedError(error: unknown): boolean {
 	return (
 		error != null &&
@@ -53,5 +60,25 @@ export function isDataUnauthorizedError(error: unknown): boolean {
 		error.data != null &&
 		'statusCode' in error.data &&
 		error.data.statusCode === 401
+	);
+}
+
+/**
+ * Type guard to check if an error is a DataWithResponseInit wrapping a
+ * HeadscaleAPIError. This is used in loaders/actions to handle errors thrown by
+ * `data()` before they reach the ErrorBoundary.
+ *
+ * @param error - The error to check.
+ * @returns True if the error is a DataWithResponseInit containing a
+ * HeadscaleAPIError, false otherwise.
+ */
+export function isDataWithApiError(
+	error: unknown,
+): error is { data: HeadscaleAPIError } {
+	return (
+		error != null &&
+		typeof error === 'object' &&
+		'data' in error &&
+		isApiError(error.data)
 	);
 }

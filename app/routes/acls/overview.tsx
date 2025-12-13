@@ -1,11 +1,19 @@
-import { Construction, Eye, FlaskConical, Pencil } from 'lucide-react';
+import {
+	AlertCircle,
+	Construction,
+	Eye,
+	FlaskConical,
+	Pencil,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { useFetcher, useRevalidator } from 'react-router';
+import { isRouteErrorResponse, useFetcher, useRevalidator } from 'react-router';
 import Button from '~/components/Button';
+import Card from '~/components/Card';
 import Code from '~/components/Code';
 import Link from '~/components/Link';
 import Notice from '~/components/Notice';
 import Tabs from '~/components/Tabs';
+import { isApiError } from '~/server/headscale/api/error-client';
 import toast from '~/utils/toast';
 import type { Route } from './+types/overview';
 import { aclAction } from './acl-action';
@@ -163,4 +171,50 @@ export default function Page({
 			</Button>
 		</div>
 	);
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+	if (
+		isRouteErrorResponse(error) &&
+		isApiError(error.data) &&
+		error.data.rawData.includes('reading policy from path') &&
+		error.data.rawData.includes('no such file or directory')
+	) {
+		return (
+			<div className="flex flex-col gap-4">
+				<Card className="max-w-2xl" variant="flat">
+					<div className="flex items-center justify-between gap-4">
+						<Card.Title>ACL Policy Unavailable</Card.Title>
+						<AlertCircle className="w-6 h-6 mb-2 text-red-500" />
+					</div>
+					<Card.Text>
+						The ACL policy is currently unavailable because the policy file does
+						not exist on the server. This usually indicates that Headscale is
+						running in <Code>file</Code> mode for ACLs, and the specified policy
+						file is missing.
+					</Card.Text>
+				</Card>
+				<Card className="max-w-2xl" variant="flat">
+					<Card.Text>
+						In order to resolve this issue, there are two possible actions you
+						can take:
+					</Card.Text>
+					<ul className="list-disc list-outside mt-2 ml-4 space-y-1 text-sm">
+						<li>
+							Create the ACL policy file at the specified path in your Headscale
+							configuration.
+						</li>
+						<li>
+							Alternatively, you can switch Headscale to use{' '}
+							<Code>database</Code> mode for ACLs by updating your Headscale
+							configuration. This will allow Headplane to manage the ACL policy
+							directly through the web interface.
+						</li>
+					</ul>
+				</Card>
+			</div>
+		);
+	}
+
+	throw error;
 }
