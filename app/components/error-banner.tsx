@@ -170,12 +170,10 @@ export function getErrorMessage(error: Error | unknown): {
 
 	// Traverse the error chain to find the root cause
 	let rootError = error;
-	console.log('error', error.cause != null);
 	if (error.cause != null) {
 		rootError = error.cause as Error;
 		while (rootError.cause != null) {
 			rootError = rootError.cause as Error;
-			console.log('setting rootError', rootError.message);
 		}
 	}
 

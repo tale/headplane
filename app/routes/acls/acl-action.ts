@@ -55,8 +55,6 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 				throw error;
 			}
 
-			console.log('rawData', message);
-
 			// Starting in Headscale 0.27.0 the ACLs parsing was changed meaning
 			// we need to reference other error messages based on API version.
 			if (context.hsApi.clientHelpers.isAtleast('0.27.0')) {
