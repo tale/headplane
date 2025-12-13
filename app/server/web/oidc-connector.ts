@@ -200,6 +200,7 @@ async function discoveryCoalesce(
 
 	const oidcClient = new oidc.Configuration(
 		{
+			...metadata,
 			issuer: config.issuer,
 			authorization_endpoint,
 			token_endpoint,
