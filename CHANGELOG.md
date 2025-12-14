@@ -19,6 +19,7 @@
 - Fixed an issue where the website favicon would not load correctly (closes [#323](https://github.com/tale/headplane/issues/323)).
 - Correctly handle invalid ACL policy inserts on Headscale 0.27+ (closes [#383](https://github.com/tale/headplane/issues/383)).
 - Prevent a machine from changing its owner to itself (closes [#373](https://github.com/tale/headplane/issues/373)).
+- Added an `/admin/api/info` route that can expose sensitive information if `server.info_secret` is set in the configuration (closes [#324](https://github.com/tale/headplane/issues/324)).
 ---
 
 # 0.6.1 (October 12, 2025)
