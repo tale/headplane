@@ -135,7 +135,7 @@ export function getErrorMessage(error: Error | unknown): {
 					<br />
 					Status Code: <strong>{error.status}</strong>
 					<br />
-					Status Text: <strong>{error.statusText}</strong>
+					Status Text: <strong>{error.data}</strong>
 				</>
 			),
 		};

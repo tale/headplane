@@ -11,11 +11,11 @@ interface MoveProps {
 }
 
 export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
-	const [userId, setUserId] = useState<Key | null>(null);
+	const [userId, setUserId] = useState<Key | null>(machine.user.id);
 
 	return (
 		<Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-			<Dialog.Panel>
+			<Dialog.Panel isDisabled={userId === machine.user.id}>
 				<Dialog.Title>Change the owner of {machine.givenName}</Dialog.Title>
 				<Dialog.Text>
 					The owner of the machine is the user associated with it.
