@@ -13,18 +13,30 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 		Capabilities.write_policy,
 	);
 	if (!check) {
-		throw data('You do not have permission to write to the ACL policy', {
-			status: 403,
-		});
+		return data(
+			{
+				success: false,
+				error: 'You do not have permission to write to the ACL policy',
+				policy: undefined,
+				updatedAt: undefined,
+			},
+			403,
+		);
 	}
 
 	// Try to write to the ACL policy via the API or via config file (TODO).
 	const formData = await request.formData();
 	const policyData = formData.get('policy')?.toString();
 	if (!policyData) {
-		throw data('Missing `policy` in the form data.', {
-			status: 400,
-		});
+		return data(
+			{
+				success: false,
+				error: 'Missing `policy` in the form data.',
+				policy: undefined,
+				updatedAt: undefined,
+			},
+			400,
+		);
 	}
 
 	const api = context.hsApi.getRuntimeClient(session.api_key);
@@ -41,7 +53,15 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 			const rawData = error.data.rawData;
 			// https://github.com/juanfont/headscale/blob/c4600346f9c29b514dc9725ac103efb9d0381f23/hscontrol/types/policy.go#L11
 			if (rawData.includes('update is disabled')) {
-				throw data('Policy is not writable', { status: 403 });
+				return data(
+					{
+						success: false,
+						error: 'Policy is not writable',
+						policy: undefined,
+						updatedAt: undefined,
+					},
+					403,
+				);
 			}
 
 			const message =
@@ -133,7 +153,25 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 			}
 		}
 
-		// Otherwise, this is a Headscale error that we can just propagate.
-		throw error;
+		// Otherwise, this is a Headscale or generic error. Don't crash the route;
+		// instead, surface a generic error payload that the UI can show in a toast.
+		console.error(error);
+
+		const message =
+			error instanceof ResponseError && error.responseObject?.message
+				? (error.responseObject.message as string)
+				: error instanceof Error
+					? error.message
+					: 'An unexpected error occurred while updating the ACL policy.';
+
+		return data(
+			{
+				success: false,
+				error: `Policy error: ${message}`,
+				policy: undefined,
+				updatedAt: undefined,
+			},
+			500,
+		);
 	}
 }
