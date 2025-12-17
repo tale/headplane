@@ -22,26 +22,51 @@ function Toast({ state, ...props }: ToastProps) {
 		ref,
 	);
 
+	const content = props.toast.content;
+	let variant: 'default' | 'error' | 'warning' = 'default';
+
+	const contentElement = React.isValidElement(content)
+		? (content as React.ReactElement<{ 'data-variant'?: string }>)
+		: null;
+
+	if (
+		contentElement &&
+		typeof contentElement.props['data-variant'] === 'string'
+	) {
+		if (contentElement.props['data-variant'] === 'error') {
+			variant = 'error';
+		} else if (contentElement.props['data-variant'] === 'warning') {
+			variant = 'warning';
+		}
+	}
+
+	const bgClass =
+		variant === 'error'
+			? 'bg-red-600 dark:bg-red-700'
+			: variant === 'warning'
+				? 'bg-amber-500 dark:bg-amber-600'
+				: 'bg-headplane-900 dark:bg-headplane-950';
+
 	return (
 		<div
 			{...toastProps}
-			ref={ref}
 			className={cn(
 				'flex items-center justify-between gap-x-3 pl-4 pr-3',
 				'text-white shadow-lg dark:shadow-md rounded-xl py-3',
-				'bg-headplane-900 dark:bg-headplane-950',
+				bgClass,
 			)}
+			ref={ref}
 		>
 			<div {...contentProps} className="flex flex-col gap-2">
 				<div {...titleProps}>{props.toast.content}</div>
 			</div>
 			<IconButton
 				{...closeButtonProps}
-				label="Close"
 				className={cn(
 					'bg-transparent hover:bg-headplane-700',
 					'dark:bg-transparent dark:hover:bg-headplane-800',
 				)}
+				label="Close"
 			>
 				<X className="p-1" />
 			</IconButton>
@@ -60,11 +85,11 @@ function ToastRegion({ state, ...props }: ToastRegionProps) {
 	return (
 		<div
 			{...regionProps}
-			ref={ref}
 			className={cn('fixed bottom-20 right-4', 'flex flex-col gap-4')}
+			ref={ref}
 		>
 			{state.visibleToasts.map((toast) => (
-				<Toast key={toast.key} toast={toast} state={state} />
+				<Toast key={toast.key} state={state} toast={toast} />
 			))}
 		</div>
 	);
