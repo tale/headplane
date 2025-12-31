@@ -81,6 +81,7 @@ export interface DialogPanelProps extends AriaDialogProps {
 	onSubmit?: React.FormEventHandler<HTMLFormElement>;
 	method?: HTMLFormMethod;
 	isDisabled?: boolean;
+	confirmLabel?: string;
 
 	// Anonymous (passed by parent)
 	close?: () => void;
@@ -94,6 +95,7 @@ function Panel(props: DialogPanelProps) {
 		close,
 		variant,
 		method = 'POST',
+		confirmLabel,
 	} = props;
 	const ref = useRef<HTMLFormElement | null>(null);
 	const { dialogProps } = useDialog(
@@ -107,6 +109,11 @@ function Panel(props: DialogPanelProps) {
 	return (
 		<Form
 			{...dialogProps}
+			className={cn(
+				'outline-hidden rounded-3xl w-full max-w-lg',
+				'bg-white dark:bg-headplane-900',
+			)}
+			method={method ?? 'POST'}
 			onSubmit={(event) => {
 				if (onSubmit) {
 					onSubmit(event);
@@ -114,12 +121,7 @@ function Panel(props: DialogPanelProps) {
 
 				close?.();
 			}}
-			method={method ?? 'POST'}
 			ref={ref}
-			className={cn(
-				'outline-hidden rounded-3xl w-full max-w-lg',
-				'bg-white dark:bg-headplane-900',
-			)}
 		>
 			<Card className="w-full max-w-lg" variant="flat">
 				{children}
@@ -130,11 +132,11 @@ function Panel(props: DialogPanelProps) {
 						<>
 							<Button onPress={close}>Cancel</Button>
 							<Button
+								isDisabled={isDisabled}
 								type="submit"
 								variant={variant === 'destructive' ? 'danger' : 'heavy'}
-								isDisabled={isDisabled}
 							>
-								Confirm
+								{confirmLabel ?? 'Confirm'}
 							</Button>
 						</>
 					)}

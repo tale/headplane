@@ -6,12 +6,15 @@ import {
 } from 'lucide-react';
 import React from 'react';
 import Card from '~/components/Card';
+import cn from '~/utils/cn';
 
 export interface NoticeProps {
 	children: React.ReactNode;
 	title?: string;
 	variant?: 'default' | 'error' | 'warning';
 	icon?: React.ReactElement<LucideProps>;
+	className?: string;
+	fullWidth?: boolean;
 }
 
 export default function Notice({
@@ -19,9 +22,18 @@ export default function Notice({
 	title,
 	variant,
 	icon,
+	className,
+	fullWidth,
 }: NoticeProps) {
 	return (
-		<Card variant="flat" className="max-w-2xl my-6">
+		<Card
+			className={cn(
+				'my-6',
+				fullWidth ? 'w-full max-w-none' : 'max-w-2xl',
+				className,
+			)}
+			variant="flat"
+		>
 			<div className="flex items-center justify-between">
 				{title ? (
 					<Card.Title className="text-xl mb-0">{title}</Card.Title>

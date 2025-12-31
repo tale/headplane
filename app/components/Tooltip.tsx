@@ -72,6 +72,7 @@ function Body({ state, className, ...props }: TooltipBodyProps) {
 				'border border-headplane-100 dark:border-headplane-800',
 				className,
 			)}
+			style={{ width: 'max-content', maxWidth: 600 }}
 		>
 			{props.children}
 		</span>
