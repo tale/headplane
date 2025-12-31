@@ -53,7 +53,7 @@ domain is replaced with the value set for `server.base_url` in your Headplane
 configuration:
 
 ```
-https://headplane.example.com/admin/auth/callback
+https://headplane.example.com/admin/oidc/callback
 ```
 
 Once you have created the client in your IdP, make note of the following
