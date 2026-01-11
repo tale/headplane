@@ -121,6 +121,26 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 				'Got an OIDC response error body: %s',
 				JSON.stringify(error.cause),
 			);
+
+			// Check for PKCE-related errors
+			if (
+				error.error.toLowerCase().includes('code_verifier') ||
+				error.error.toLowerCase().includes('code verifier') ||
+				error.error.toLowerCase().includes('pkce')
+			) {
+				log.error(
+					'auth',
+					'PKCE error detected. Your OIDC provider may require PKCE to be enabled. Current setting: use_pkce=%s',
+					context.oidcConnector?.usePKCE,
+				);
+
+				if (!context.oidcConnector?.usePKCE) {
+					log.error(
+						'auth',
+						'Consider setting oidc.use_pkce=true in your configuration if your provider requires PKCE',
+					);
+				}
+			}
 		} else if (error instanceof oidc.AuthorizationResponseError) {
 			log.error(
 				'auth',
@@ -133,13 +153,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			log.error(
 				'auth',
 				'Got an OIDC authorization client error: %s',
-				error.cause.message,
+				error.cause instanceof Error
+					? error.cause.message
+					: String(error.cause),
 			);
 		} else {
-				log.error(
+			log.error(
 				'auth',
 				'Got an OIDC error: %s',
-				JSON.stringify(error.cause),
+				error instanceof Error && error.cause
+					? JSON.stringify(error.cause)
+					: String(error),
 			);
 		}
 		return redirect('/login?s=error_auth_failed');
