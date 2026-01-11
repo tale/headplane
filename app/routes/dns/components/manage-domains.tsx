@@ -1,18 +1,18 @@
-import { DndContext, DragOverlay, closestCorners } from '@dnd-kit/core';
+import { closestCorners, DndContext, DragOverlay } from '@dnd-kit/core';
 import {
 	restrictToParentElement,
 	restrictToVerticalAxis,
 } from '@dnd-kit/modifiers';
 import {
-	SortableContext,
 	arrayMove,
+	SortableContext,
 	useSortable,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { type FetcherWithComponents, Form, useFetcher } from 'react-router';
+import { Form } from 'react-router';
 import Button from '~/components/Button';
 import Input from '~/components/Input';
 import TableList from '~/components/TableList';
@@ -37,18 +37,15 @@ export default function ManageDomains({
 	}, [searchDomains]);
 
 	return (
-		<div className="flex flex-col w-2/3">
+		<div className="flex flex-col w-full sm:w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Search Domains</h1>
 			<p className="mb-4">
 				Set custom DNS search domains for your Tailnet. When using Magic DNS,
 				your tailnet domain is used as the first search domain.
 			</p>
 			<DndContext
-				modifiers={[restrictToVerticalAxis, restrictToParentElement]}
 				collisionDetection={closestCorners}
-				onDragStart={(event) => {
-					setActiveId(event.active.id);
-				}}
+				modifiers={[restrictToVerticalAxis, restrictToParentElement]}
 				onDragEnd={(event) => {
 					setActiveId(null);
 					const { active, over } = event;
@@ -69,6 +66,9 @@ export default function ManageDomains({
 					if (oldIndex !== newIndex) {
 						setLocalDomains(arrayMove(localDomains, oldIndex, newIndex));
 					}
+				}}
+				onDragStart={(event) => {
+					setActiveId(event.active.id);
 				}}
 			>
 				<TableList>
@@ -91,19 +91,19 @@ export default function ManageDomains({
 					>
 						{localDomains.map((sd, index) => (
 							<Domain
-								key={sd}
 								domain={sd}
 								id={index + 1}
 								isDisabled={isDisabled}
+								key={sd}
 							/>
 						))}
 						<DragOverlay adjustScale>
 							{activeId ? (
 								<Domain
-									isDragging
 									domain={localDomains[(activeId as number) - 1]}
 									id={(activeId as number) - 1}
 									isDisabled={isDisabled}
+									isDragging
 								/>
 							) : undefined}
 						</DragOverlay>
@@ -111,28 +111,28 @@ export default function ManageDomains({
 					{isDisabled ? undefined : (
 						<TableList.Item key="add-sd">
 							<Form
-								method="POST"
 								className="flex items-center justify-between w-full"
+								method="POST"
 							>
-								<input type="hidden" name="action_id" value="add_domain" />
+								<input name="action_id" type="hidden" value="add_domain" />
 								<Input
-									type="text"
 									className={cn(
 										'border-none font-mono p-0 text-sm',
 										'rounded-none focus:ring-0 w-full ml-1',
 									)}
-									placeholder="Search Domain"
-									label="Search Domain"
-									name="domain"
-									labelHidden
 									isRequired
+									label="Search Domain"
+									labelHidden
+									name="domain"
+									placeholder="Search Domain"
+									type="text"
 								/>
 								<Button
-									type="submit"
 									className={cn(
 										'px-2 py-1 rounded-md',
 										'text-blue-500 dark:text-blue-400',
 									)}
+									type="submit"
 								>
 									Add
 								</Button>
@@ -164,11 +164,11 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 
 	return (
 		<TableList.Item
-			ref={setNodeRef}
 			className={cn(
 				isSortableDragging ? 'opacity-50' : '',
 				isDragging ? 'ring-3 bg-white dark:bg-headplane-900' : '',
 			)}
+			ref={setNodeRef}
 			style={{
 				transform: CSS.Transform.toString(transform),
 				transition,
@@ -186,15 +186,15 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 			</p>
 			{isDragging ? undefined : (
 				<Form method="POST">
-					<input type="hidden" name="action_id" value="remove_domain" />
-					<input type="hidden" name="domain" value={domain} />
+					<input name="action_id" type="hidden" value="remove_domain" />
+					<input name="domain" type="hidden" value={domain} />
 					<Button
-						type="submit"
-						isDisabled={isDisabled}
 						className={cn(
 							'px-2 py-1 rounded-md',
 							'text-red-500 dark:text-red-400',
 						)}
+						isDisabled={isDisabled}
+						type="submit"
 					>
 						Remove
 					</Button>

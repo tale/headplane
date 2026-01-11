@@ -45,7 +45,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
 					<Links />
 					<link href="favicon.ico" rel="icon" />
 				</head>
-				<body className="overscroll-none dark:bg-headplane-900 dark:text-headplane-50">
+				<body className="overscroll-none overflow-x-hidden dark:bg-headplane-900 dark:text-headplane-50">
 					{children}
 					<ToastProvider queue={toastQueue} />
 					<ScrollRestoration />

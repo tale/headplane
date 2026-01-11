@@ -84,20 +84,20 @@ export default function Page() {
 					tailnet.
 				</Notice>
 			)}
-			<RenameTailnet name={data.baseDomain} isDisabled={isDisabled} />
+			<RenameTailnet isDisabled={isDisabled} name={data.baseDomain} />
 			<ManageNS
-				nameservers={allNs}
 				isDisabled={isDisabled}
+				nameservers={allNs}
 				overrideLocalDns={data.overrideDns}
 			/>
-			<ManageRecords records={data.extraRecords} isDisabled={isDisabled} />
+			<ManageRecords isDisabled={isDisabled} records={data.extraRecords} />
 			<ManageDomains
-				searchDomains={data.searchDomains}
 				isDisabled={isDisabled}
 				magic={data.magicDns ? data.baseDomain : undefined}
+				searchDomains={data.searchDomains}
 			/>
 
-			<div className="flex flex-col w-2/3">
+			<div className="flex flex-col w-full sm:w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Magic DNS</h1>
 				<p className="mb-4">
 					Automatically register domain names for each device on the tailnet.
@@ -108,7 +108,7 @@ export default function Page() {
 					</Code>{' '}
 					when Magic DNS is enabled.
 				</p>
-				<ToggleMagic isEnabled={data.magicDns} isDisabled={isDisabled} />
+				<ToggleMagic isDisabled={isDisabled} isEnabled={data.magicDns} />
 			</div>
 		</div>
 	);

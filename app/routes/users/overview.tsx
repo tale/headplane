@@ -114,32 +114,34 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 				Manage the users in your network and their permissions.
 			</p>
 			<ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
-			<table className="table-auto w-full rounded-lg">
-				<thead className="text-headplane-600 dark:text-headplane-300">
-					<tr className="text-left px-0.5">
-						<th className="uppercase text-xs font-bold pb-2">User</th>
-						<th className="uppercase text-xs font-bold pb-2">Role</th>
-						<th className="uppercase text-xs font-bold pb-2">Created At</th>
-						<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
-					</tr>
-				</thead>
-				<tbody
-					className={cn(
-						'divide-y divide-headplane-100 dark:divide-headplane-800 align-top',
-						'border-t border-headplane-100 dark:border-headplane-800',
-					)}
-				>
-					{users
-						.sort((a, b) => a.name.localeCompare(b.name))
-						.map((user) => (
-							<UserRow
-								key={user.id}
-								role={loaderData.roles[users.indexOf(user)]}
-								user={user}
-							/>
-						))}
-				</tbody>
-			</table>
+			<div className="overflow-x-auto">
+				<table className="table-auto w-full rounded-lg min-w-[640px]">
+					<thead className="text-headplane-600 dark:text-headplane-300">
+						<tr className="text-left px-0.5">
+							<th className="uppercase text-xs font-bold pb-2">User</th>
+							<th className="uppercase text-xs font-bold pb-2">Role</th>
+							<th className="uppercase text-xs font-bold pb-2">Created At</th>
+							<th className="uppercase text-xs font-bold pb-2">Last Seen</th>
+						</tr>
+					</thead>
+					<tbody
+						className={cn(
+							'divide-y divide-headplane-100 dark:divide-headplane-800 align-top',
+							'border-t border-headplane-100 dark:border-headplane-800',
+						)}
+					>
+						{users
+							.sort((a, b) => a.name.localeCompare(b.name))
+							.map((user) => (
+								<UserRow
+									key={user.id}
+									role={loaderData.roles[users.indexOf(user)]}
+									user={user}
+								/>
+							))}
+					</tbody>
+				</table>
+			</div>
 		</>
 	);
 }

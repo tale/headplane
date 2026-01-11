@@ -15,7 +15,7 @@ export default function Page({
 }: Route.ComponentProps) {
 	return (
 		<div className="flex flex-col gap-8 max-w-(--breakpoint-lg)">
-			<div className="flex flex-col w-2/3">
+			<div className="flex flex-col w-full sm:w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Settings</h1>
 				<p>
 					The settings page is still under construction. As I'm able to add more
@@ -23,7 +23,7 @@ export default function Page({
 					free to open an issue on the GitHub repository.
 				</p>
 			</div>
-			<div className="flex flex-col w-2/3">
+			<div className="flex flex-col w-full sm:w-2/3">
 				<h1 className="text-2xl font-medium mb-4">Pre-Auth Keys</h1>
 				<p>
 					Headscale fully supports pre-authentication keys in order to easily
@@ -45,7 +45,7 @@ export default function Page({
 			</RemixLink>
 			{config && isOidcEnabled ? (
 				<>
-					<div className="flex flex-col w-2/3">
+					<div className="flex flex-col w-full sm:w-2/3">
 						<h1 className="text-2xl font-medium mb-4">
 							Authentication Restrictions
 						</h1>

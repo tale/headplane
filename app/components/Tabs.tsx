@@ -23,15 +23,15 @@ function Tabs({ label, className, ...props }: TabsProps) {
 		<div className={cn('flex flex-col', className)}>
 			<div
 				{...tabListProps}
-				ref={ref}
 				className={cn(
-					'flex items-center rounded-t-xl w-fit',
+					'flex items-center rounded-t-xl w-fit max-w-full overflow-x-auto',
 					'border-headplane-100 dark:border-headplane-800',
 					'border-t border-x',
 				)}
+				ref={ref}
 			>
 				{[...state.collection].map((item) => (
-					<Tab key={item.key} item={item} state={state} />
+					<Tab item={item} key={item.key} state={state} />
 				))}
 			</div>
 			<TabsPanel key={state.selectedItem?.key} state={state} />
@@ -52,7 +52,6 @@ function Tab({ item, state }: TabsTabProps) {
 	return (
 		<div
 			{...tabProps}
-			ref={ref}
 			className={cn(
 				'pl-2 pr-3 py-2.5',
 				'aria-selected:bg-headplane-100 dark:aria-selected:bg-headplane-950',
@@ -60,6 +59,7 @@ function Tab({ item, state }: TabsTabProps) {
 				'border-r border-headplane-100 dark:border-headplane-800',
 				'first:rounded-tl-xl last:rounded-tr-xl last:border-r-0',
 			)}
+			ref={ref}
 		>
 			{rendered}
 		</div>
@@ -76,11 +76,11 @@ function TabsPanel({ state, ...props }: TabsPanelProps) {
 	return (
 		<div
 			{...tabPanelProps}
-			ref={ref}
 			className={cn(
 				'w-full overflow-clip rounded-b-xl rounded-r-xl',
 				'border border-headplane-100 dark:border-headplane-800',
 			)}
+			ref={ref}
 		>
 			{state.selectedItem?.props.children}
 		</div>

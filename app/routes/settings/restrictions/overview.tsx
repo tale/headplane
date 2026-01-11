@@ -43,7 +43,7 @@ export default function Page({
 
 	return (
 		<div className="flex flex-col gap-4 max-w-(--breakpoint-lg)">
-			<div className="flex flex-col w-2/3">
+			<div className="flex flex-col w-full sm:w-2/3">
 				<p className="mb-4 text-md">
 					<RemixLink className="font-medium" to="/settings">
 						Settings

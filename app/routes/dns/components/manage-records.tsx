@@ -13,14 +13,14 @@ interface Props {
 
 export default function ManageRecords({ records, isDisabled }: Props) {
 	return (
-		<div className="flex flex-col w-2/3">
+		<div className="flex flex-col w-full sm:w-2/3">
 			<h1 className="text-2xl font-medium mb-4">DNS Records</h1>
 			<p>
 				Headscale supports adding custom DNS records to your Tailnet. As of now,
 				only <Code>A</Code> and <Code>AAAA</Code> records are supported.{' '}
 				<Link
-					to="https://headscale.net/stable/ref/dns"
 					name="Headscale DNS Records documentation"
+					to="https://headscale.net/stable/ref/dns"
 				>
 					Learn More
 				</Link>
@@ -32,7 +32,7 @@ export default function ManageRecords({ records, isDisabled }: Props) {
 							<p className="opacity-50 mx-auto">No DNS records found</p>
 						</TableList.Item>
 					) : (
-						records.map((record, index) => (
+						records.map((record) => (
 							<TableList.Item key={`${record.name}-${record.value}`}>
 								<div className="flex gap-2 items-center w-full">
 									<p
@@ -43,22 +43,24 @@ export default function ManageRecords({ records, isDisabled }: Props) {
 									>
 										{record.type}
 									</p>
-									<div className="grid grid-cols-2 gap-2 w-full">
-										<p className="font-mono text-sm">{record.name}</p>
-										<p className="font-mono text-sm">{record.value}</p>
+									<div className="flex flex-col sm:flex-row sm:gap-2 flex-1 min-w-0">
+										<p className="font-mono text-sm truncate">{record.name}</p>
+										<p className="font-mono text-sm truncate opacity-70 sm:opacity-100">
+											{record.value}
+										</p>
 									</div>
 								</div>
 								<Form method="POST">
-									<input type="hidden" name="action_id" value="remove_record" />
-									<input type="hidden" name="record_name" value={record.name} />
-									<input type="hidden" name="record_type" value={record.type} />
+									<input name="action_id" type="hidden" value="remove_record" />
+									<input name="record_name" type="hidden" value={record.name} />
+									<input name="record_type" type="hidden" value={record.type} />
 									<Button
-										type="submit"
-										isDisabled={isDisabled}
 										className={cn(
 											'px-2 py-1 rounded-md',
 											'text-red-500 dark:text-red-400',
 										)}
+										isDisabled={isDisabled}
+										type="submit"
 									>
 										Remove
 									</Button>

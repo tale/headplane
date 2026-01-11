@@ -22,6 +22,7 @@
 - Added an `/admin/api/info` route that can expose sensitive information if `server.info_secret` is set in the configuration (closes [#324](https://github.com/tale/headplane/issues/324)).
 - Correctly apply Gravatar profile pictures on the user page if applicable (closes [#405](https://github.com/tale/headplane/issues/405)).
 - Machine key registration no longer works if the key isn't 24 characters long (closes [#415](https://github.com/tale/headplane/issues/415)).
+- Fixed some mobile CSS issues across the application (closes [#401](https://github.com/tale/headplane/issues/401)).
 ---
 
 # 0.6.1 (October 12, 2025)

@@ -20,14 +20,14 @@ export default function ManageNS({
 	overrideLocalDns,
 }: Props) {
 	return (
-		<div className="flex flex-col w-2/3">
+		<div className="flex flex-col w-full sm:w-2/3">
 			<h1 className="text-2xl font-medium mb-4">Nameservers</h1>
 			<p>
 				Set the nameservers used by devices on the Tailnet to resolve DNS
 				queries.{' '}
 				<Link
-					to="https://tailscale.com/kb/1054/dns"
 					name="Tailscale DNS Documentation"
+					to="https://tailscale.com/kb/1054/dns"
 				>
 					Learn more
 				</Link>
@@ -35,12 +35,12 @@ export default function ManageNS({
 			<div className="mt-4">
 				{Object.keys(nameservers).map((key) => (
 					<NameserverList
-						key={key}
-						isGlobal={key === 'global'}
 						isDisabled={isDisabled}
+						isGlobal={key === 'global'}
+						key={key}
+						name={key}
 						nameservers={nameservers}
 						overrideLocalDns={overrideLocalDns}
-						name={key}
 					/>
 				))}
 
@@ -66,16 +66,17 @@ function NameserverList({
 	name,
 }: ListProps) {
 	const list = isGlobal ? nameservers.global : nameservers[name];
+	const submit = useSubmit();
+
 	if (list.length === 0) {
 		return null;
 	}
 
-	const submit = useSubmit();
 	return (
 		<div className="mb-8">
 			<div className="flex items-center justify-between mb-2">
 				{isGlobal ? (
-					<div className="flex items-center justify-between w-full">
+					<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-2">
 						<h2 className="text-md font-medium opacity-80">
 							Global Nameservers
 						</h2>
@@ -87,8 +88,8 @@ function NameserverList({
 									names outside the tailnet. When disabled (default), devices
 									will prefer their local DNS configuration.
 									<Link
-										to="https://tailscale.com/kb/1054/dns#global-nameservers"
 										name="Tailscale Global Nameservers Documentation"
+										to="https://tailscale.com/kb/1054/dns#global-nameservers"
 									>
 										Learn More
 									</Link>
@@ -96,11 +97,10 @@ function NameserverList({
 							</Tooltip>
 							<p>Override DNS servers</p>
 							<Switch
-								label="Override local DNS settings"
-								className="h-[15px] w-[23px] p-[2px]"
-								switchClassName="h-[9px] w-[9px]"
-								name="override_dns"
+								className="h-[15px] w-[23px] p-0.5"
 								defaultSelected={overrideLocalDns}
+								label="Override local DNS settings"
+								name="override_dns"
 								onChange={(v) => {
 									submit(
 										{
@@ -112,6 +112,7 @@ function NameserverList({
 										},
 									);
 								}}
+								switchClassName="h-[9px] w-[9px]"
 							/>
 						</div>
 					</div>
@@ -125,20 +126,20 @@ function NameserverList({
 							<TableList.Item key={ns}>
 								<p className="font-mono text-sm">{ns}</p>
 								<Form method="POST">
-									<input type="hidden" name="action_id" value="remove_ns" />
-									<input type="hidden" name="ns" value={ns} />
+									<input name="action_id" type="hidden" value="remove_ns" />
+									<input name="ns" type="hidden" value={ns} />
 									<input
-										type="hidden"
 										name="split_name"
+										type="hidden"
 										value={isGlobal ? 'global' : name}
 									/>
 									<Button
-										isDisabled={isDisabled}
-										type="submit"
 										className={cn(
 											'px-2 py-1 rounded-md',
 											'text-red-500 dark:text-red-400',
 										)}
+										isDisabled={isDisabled}
+										type="submit"
 									>
 										Remove
 									</Button>

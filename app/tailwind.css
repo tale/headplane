@@ -65,6 +65,7 @@
 @utility container {
 	margin-inline: auto;
 	padding-inline: 1rem;
+	max-width: 100%;
 
 	/* biome-ignore lint/correctness/noUnknownFunction: Tailwind CSS */
 	@media (width >= theme(--breakpoint-sm)) {
