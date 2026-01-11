@@ -20,10 +20,12 @@ export default function NewMachine(data: NewMachineProps) {
 	const [mkey, setMkey] = useState('');
 	const navigate = useNavigate();
 
+	const isMkeyInvalid = mkey.length > 0 && mkey.length !== 24;
+
 	return (
 		<>
 			<Dialog isOpen={pushDialog} onOpenChange={setPushDialog}>
-				<Dialog.Panel isDisabled={mkey.length < 1}>
+				<Dialog.Panel isDisabled={mkey.length !== 24}>
 					<Dialog.Title>Register Machine Key</Dialog.Title>
 					<Dialog.Text className="mb-4">
 						The machine key is given when you run{' '}
@@ -32,6 +34,8 @@ export default function NewMachine(data: NewMachineProps) {
 					</Dialog.Text>
 					<input name="action_id" type="hidden" value="register" />
 					<Input
+						errorMessage="Machine key must be exactly 24 characters"
+						isInvalid={isMkeyInvalid}
 						isRequired
 						label="Machine Key"
 						name="register_key"

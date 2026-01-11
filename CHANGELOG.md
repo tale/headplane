@@ -21,6 +21,7 @@
 - Prevent a machine from changing its owner to itself (closes [#373](https://github.com/tale/headplane/issues/373)).
 - Added an `/admin/api/info` route that can expose sensitive information if `server.info_secret` is set in the configuration (closes [#324](https://github.com/tale/headplane/issues/324)).
 - Correctly apply Gravatar profile pictures on the user page if applicable (closes [#405](https://github.com/tale/headplane/issues/405)).
+- Machine key registration no longer works if the key isn't 24 characters long (closes [#415](https://github.com/tale/headplane/issues/415)).
 ---
 
 # 0.6.1 (October 12, 2025)

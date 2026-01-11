@@ -8,11 +8,18 @@ export interface InputProps extends AriaTextFieldProps<HTMLInputElement> {
 	labelHidden?: boolean;
 	isRequired?: boolean;
 	className?: string;
+	isInvalid?: boolean;
+	errorMessage?: string;
 }
 
-// TODO: Custom isInvalid logic for custom error messages
 export default function Input(props: InputProps) {
-	const { label, labelHidden, className } = props;
+	const {
+		label,
+		labelHidden,
+		className,
+		isInvalid: customIsInvalid,
+		errorMessage,
+	} = props;
 	const ref = useRef<HTMLInputElement | null>(null);
 	const id = useId(props.id);
 
@@ -21,7 +28,7 @@ export default function Input(props: InputProps) {
 		inputProps,
 		descriptionProps,
 		errorMessageProps,
-		isInvalid,
+		isInvalid: ariaIsInvalid,
 		validationErrors,
 	} = useTextField(
 		{
@@ -32,16 +39,18 @@ export default function Input(props: InputProps) {
 		ref,
 	);
 
+	const isInvalid = customIsInvalid ?? ariaIsInvalid;
+
 	return (
-		<div className="flex flex-col w-full" aria-label={label}>
+		<div className="flex flex-col w-full">
 			<label
 				{...labelProps}
-				htmlFor={id}
 				className={cn(
 					'text-xs font-medium px-3 mb-0.5',
 					'text-headplane-700 dark:text-headplane-100',
 					labelHidden && 'sr-only',
 				)}
+				htmlFor={id}
 			>
 				{label}
 				{props.isRequired && (
@@ -50,8 +59,6 @@ export default function Input(props: InputProps) {
 			</label>
 			<input
 				{...inputProps}
-				required={props.isRequired}
-				ref={ref}
 				className={cn(
 					'rounded-xl px-3 py-2',
 					'focus:outline-hidden focus:ring-3',
@@ -59,6 +66,8 @@ export default function Input(props: InputProps) {
 					'border border-headplane-100 dark:border-headplane-800',
 					className,
 				)}
+				ref={ref}
+				required={props.isRequired}
 			/>
 			{props.description && (
 				<div
@@ -76,7 +85,7 @@ export default function Input(props: InputProps) {
 					{...errorMessageProps}
 					className={cn('text-xs px-3 mt-1', 'text-red-500 dark:text-red-400')}
 				>
-					{validationErrors.join(' ')}
+					{errorMessage ?? validationErrors.join(' ')}
 				</div>
 			) : null}
 		</div>
