@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { useEffect, useState } from 'react';
 import { Capabilities } from '~/server/web/roles';
 import type { Machine, User } from '~/types';
@@ -32,6 +33,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 	const users = apiUsers.map((user) => ({
 		...user,
 		machines: nodes.filter((node) => node.user.id === user.id),
+		profilePicUrl:
+			context.config.oidc?.profile_picture_source === 'gravatar'
+				? (() => {
+						if (!user.email) {
+							return undefined;
+						}
+
+						const emailHash = user.email.trim().toLowerCase();
+						const hash = createHash('sha256').update(emailHash).digest('hex');
+						return `https://www.gravatar.com/avatar/${hash}?s=200&d=identicon&r=x`;
+					})()
+				: user.profilePicUrl,
 	}));
 
 	const roles = await Promise.all(

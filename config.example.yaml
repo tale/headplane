@@ -164,9 +164,9 @@ integration:
   proc:
     enabled: false
 
-  # OIDC Configuration for simpler authentication
-  # (This is optional, but recommended for the best experience)
-  # oidc:
+# OIDC Configuration for simpler authentication
+# (This is optional, but recommended for the best experience)
+# oidc:
   # The OIDC issuer URL
   # issuer: "https://accounts.google.com"
 
