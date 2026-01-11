@@ -1,15 +1,15 @@
 name: Feature Request
 description: Request a new feature or enhancement for Headplane
 assignees: [tale]
-labels: [enhancement, triage]
+labels: ["Feature", "Needs Triage"]
 body:
-    - type: textarea
-      attributes:
-          label: Description
-          description: |
-              A detailed description of the feature you would like to see added.
-              Please include any relevant context, such as why this feature is
-              important and how it would benefit other users beyond yourself.
-          placeholder: e.g. "I would like to see support for custom themes in Headplane so that I can personalize the interface to my liking."
-      validations:
-          required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        A detailed description of the feature you would like to see added.
+        Please include any relevant context, such as why this feature is
+        important and how it would benefit other users beyond yourself.
+      placeholder: e.g. "I would like to see support for custom themes in Headplane so that I can personalize the interface to my liking."
+    validations:
+      required: true
