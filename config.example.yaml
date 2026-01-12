@@ -166,54 +166,54 @@ integration:
 # OIDC Configuration for simpler authentication
 # (This is optional, but recommended for the best experience)
 # oidc:
-# The OIDC issuer URL
-# issuer: "https://accounts.google.com"
+#   The OIDC issuer URL
+#   issuer: "https://accounts.google.com"
 
-# If you are using OIDC, you need to generate an API key
-# that can be used to authenticate other sessions when signing in.
+#   If you are using OIDC, you need to generate an API key
+#   that can be used to authenticate other sessions when signing in.
 #
-# This can be done with `headscale apikeys create --expiration 999d`
-# headscale_api_key: "<your-headscale-api-key>"
+#   This can be done with `headscale apikeys create --expiration 999d`
+#   headscale_api_key: "<your-headscale-api-key>"
 
-# If your OIDC provider does not support discovery (does not have the URL at
-# `/.well-known/openid-configuration`), you need to manually set endpoints.
-# This also works to override endpoints if you so desire or if your OIDC
-# discovery is missing certain endpoints (ie GitHub).
-# For some typical providers, see https://headplane.net/features/sso.
-# authorization_endpoint: ""
-# token_endpoint: ""
-# userinfo_endpoint: ""
+#   If your OIDC provider does not support discovery (does not have the URL at
+#   `/.well-known/openid-configuration`), you need to manually set endpoints.
+#   This also works to override endpoints if you so desire or if your OIDC
+#   discovery is missing certain endpoints (ie GitHub).
+#   For some typical providers, see https://headplane.net/features/sso.
+#   authorization_endpoint: ""
+#   token_endpoint: ""
+#   userinfo_endpoint: ""
 
-# The client ID for the OIDC client
-# For the best experience please ensure this is *identical* to the client_id
-# you are using for Headscale. because
-# client_id: "your-client-id"
+#   The client ID for the OIDC client
+#   For the best experience please ensure this is *identical* to the client_id
+#   you are using for Headscale. because
+#   client_id: "your-client-id"
 
-# The client secret for the OIDC client
-# You may also provide `client_secret_path` instead to read a value from disk.
-# See https://headplane.net/configuration/#sensitive-values
-# client_secret: "<your-client-secret>"
+#   The client secret for the OIDC client
+#   You may also provide `client_secret_path` instead to read a value from disk.
+#   See https://headplane.net/configuration/#sensitive-values
+#   client_secret: "<your-client-secret>"
 
-# Whether to use PKCE when authenticating users. This is recommended as it
-# adds an extra layer of security to the authentication process. Enabling this
-# means your OIDC provider must support PKCE and it must be enabled on the
-# client.
-# use_pkce: true
+#   Whether to use PKCE when authenticating users. This is recommended as it
+#   adds an extra layer of security to the authentication process. Enabling this
+#   means your OIDC provider must support PKCE and it must be enabled on the
+#   client.
+#   use_pkce: true
 
-# If you want to disable traditional login via Headscale API keys
-# Requires to be explicitely defined if using OIDC
-# disable_api_key_login: false
+#   If you want to disable traditional login via Headscale API keys
+#   Requires to be explicitely defined if using OIDC
+#   disable_api_key_login: false
 
-# By default profile pictures are pulled from the OIDC provider when
-# we go to fetch the userinfo endpoint. Optionally, this can be set to
-# "oidc" or "gravatar" as of 0.6.1.
-# profile_picture_source: "gravatar"
+#   By default profile pictures are pulled from the OIDC provider when
+#   we go to fetch the userinfo endpoint. Optionally, this can be set to
+#   "oidc" or "gravatar" as of 0.6.1.
+#   profile_picture_source: "gravatar"
 
-# The scopes to request when authenticating users. The default is below.
-# scope: "openid email profile"
+#   The scopes to request when authenticating users. The default is below.
+#   scope: "openid email profile"
 
-# Extra query parameters can be passed to the authorization endpoint
-# by setting them here. This is useful for providers that require any kind
-# of custom hinting.
-# extra_params:
-#   prompt: "select_account" # Example: force account selection on Google
+#   Extra query parameters can be passed to the authorization endpoint
+#   by setting them here. This is useful for providers that require any kind
+#   of custom hinting.
+#   extra_params:
+#     prompt: "select_account" # Example: force account selection on Google
