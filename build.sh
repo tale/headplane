@@ -16,6 +16,7 @@ BUILD_WASM=0
 BUILD_APP=0
 BUILD_AGENT=0
 BUILD_FAKE_SHELL=0
+BUILD_HEALTHCHECK=0
 SKIP_PATH_CHECKS=0
 SKIP_PNPM_PRUNE=0
 APP_INSTALL_ONLY=0
@@ -23,6 +24,7 @@ APP_INSTALL_ONLY=0
 WASM_OUTPUT="$PUBLIC_DIR/hp_ssh.wasm"
 AGENT_OUTPUT="$BUILD_DIR/hp_agent"
 FAKE_SHELL_OUTPUT="$BUILD_DIR/hp_fake_sh"
+HEALTHCHECK_OUTPUT="$BUILD_DIR/hp_healthcheck"
 
 die() { echo "error: $*" >&2; exit 1; }
 run() { echo ">> $*"; "$@"; }
@@ -33,6 +35,7 @@ while [ $# -gt 0 ]; do
 		--app) BUILD_APP=1 ;;
 		--agent) BUILD_AGENT=1 ;;
 		--fake-shell) BUILD_FAKE_SHELL=1 ;;
+		--healthcheck) BUILD_HEALTHCHECK=1 ;;
 		--skip-path-checks) SKIP_PATH_CHECKS=1 ;;
 		--skip-pnpm-prune) SKIP_PNPM_PRUNE=1 ;;
 		--app-install-only) APP_INSTALL_ONLY=1 ;;
@@ -55,6 +58,12 @@ while [ $# -gt 0 ]; do
 			FAKE_SHELL_OUTPUT=$1
 			;;
 
+		--healthcheck-output)
+			shift
+			[ $# -gt 0 ] || die "--healthcheck-output requires a path"
+			HEALTHCHECK_OUTPUT=$1
+			;;
+
 		--help)
 			cat <<EOF
 Usage: $0 [flags]
@@ -62,12 +71,14 @@ Usage: $0 [flags]
   --app                        build react-router app
   --agent                      build tailscale agent
   --fake-shell                 build fake shell binary (for Docker)
+  --healthcheck                build healthcheck binary
   --skip-path-checks           skip safety checks (ie. checking PATH)
   --skip-pnpm-prune            skip pruning devDependencies from node_modules
   --app-install-only           only install app dependencies, skip build
   --wasm-output <path>         override wasm output path
   --agent-output <path>        override agent output path
   --fake-shell-output <path>   override fake shell output path
+  --healthcheck-output <path>  override healthcheck output path
 EOF
 			exit 0
 			;;
@@ -84,6 +95,8 @@ if [ "$BUILD_WASM" -eq 0 ] && [ "$BUILD_APP" -eq 0 ] && \
 	BUILD_WASM=1
 	BUILD_APP=1
 	BUILD_AGENT=1
+	BUILD_HEALTHCHECK=1
+	BUILD_FAKE_SHELL=0
 fi
 
 if [ "$SKIP_PATH_CHECKS" -eq 0 ]; then
@@ -96,6 +109,7 @@ if [ "$SKIP_PATH_CHECKS" -eq 0 ]; then
 	[ "$BUILD_APP" -eq 1 ] && need_pnpm=1
 	[ "$BUILD_AGENT" -eq 1 ] && need_go=1
 	[ "$BUILD_FAKE_SHELL" -eq 1 ] && need_go=1
+	[ "$BUILD_HEALTHCHECK" -eq 1 ] && need_go=1
 
 	if [ $need_go -eq 1 ]; then
 		echo "==> Checking for Go toolchain"
@@ -160,11 +174,16 @@ build_fake_shell() {
 		-o "$FAKE_SHELL_OUTPUT" ./cmd/fake_sh
 }
 
-[ "$BUILD_FAKE_SHELL" = 1 ] && build_fake_shell
+build_healthcheck() {
+	echo "==> Building healthcheck binary → $HEALTHCHECK_OUTPUT"
+	mkdir -p "$(dirname "$HEALTHCHECK_OUTPUT")"
+	go build -o "$HEALTHCHECK_OUTPUT" ./cmd/hp_healthcheck
+}
 
 [ "$BUILD_WASM" = 1 ] && build_wasm
 [ "$BUILD_APP" = 1 ] && build_app
 [ "$BUILD_AGENT" = 1 ] && build_agent
 [ "$BUILD_FAKE_SHELL" = 1 ] && build_fake_shell
+[ "$BUILD_HEALTHCHECK" = 1 ] && build_healthcheck
 
 echo "✅ Build complete."

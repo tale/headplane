@@ -11,14 +11,16 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG IMAGE_TAG
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH CGO_ENABLED=0 IMAGE_TAG=$IMAGE_TAG \
-	./build.sh --wasm --agent --fake-shell \
+	./build.sh --wasm --agent --fake-shell --healthcheck \
 		--wasm-output /bin/hp_ssh.wasm \
 		--agent-output /bin/hp_agent \
-		--fake-shell-output /bin/fake-sh
+		--fake-shell-output /bin/fake-sh \
+		--healthcheck-output /bin/hp_healthcheck
 
 RUN chmod +x /bin/hp_ssh.wasm
 RUN chmod +x /bin/hp_agent
 RUN chmod +x /bin/fake-sh
+RUN chmod +x /bin/hp_healthcheck
 
 # Folder needs to exist for later stages
 RUN mkdir -p /var/lib/headplane/agent
@@ -49,6 +51,10 @@ COPY --from=go-base /var/lib/headplane /var/lib/headplane
 COPY --from=go-base /bin/fake-sh /bin/sh
 COPY --from=go-base /bin/fake-sh /bin/bash
 
+COPY --from=go-base /bin/hp_healthcheck /bin/hp_healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+	CMD ["/bin/hp_healthcheck"]
+
 WORKDIR /app
 CMD [ "/app/build/server/index.js" ]
 
@@ -61,6 +67,10 @@ COPY --from=js-base /run/node_modules /app/node_modules
 
 COPY --from=go-base /bin/hp_agent /usr/libexec/headplane/agent
 COPY --from=go-base /var/lib/headplane /var/lib/headplane
+COPY --from=go-base /bin/hp_healthcheck /bin/hp_healthcheck
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+	CMD ["/bin/hp_healthcheck"]
 
 WORKDIR /app
 CMD [ "node", "/app/build/server/index.js" ]

@@ -24,6 +24,7 @@
 - Correctly apply Gravatar profile pictures on the user page if applicable (closes [#405](https://github.com/tale/headplane/issues/405)).
 - Machine key registration no longer works if the key isn't 24 characters long (closes [#415](https://github.com/tale/headplane/issues/415)).
 - Fixed some mobile CSS issues across the application (closes [#401](https://github.com/tale/headplane/issues/401)).
+- Added a Docker healthcheck to the container (closes [#411](https://github.com/tale/headplane/issues/411)).
 ---
 
 # 0.6.1 (October 12, 2025)

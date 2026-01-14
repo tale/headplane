@@ -39,6 +39,28 @@ It's important to mount your configuration file and also provide a persistent
 storage location for Headplane to store its own data. You can also change the
 port mapping if you want to run it on a different port.
 
+## Health Checks
+
+The Docker image includes a built-in healthcheck that verifies the Headplane
+server is running and responding. Docker will automatically monitor the
+container and report its health status. No additional configuration is required.
+
+The healthcheck binary is located at `/bin/hp_healthcheck` inside the container.
+If you need to override the default healthcheck behavior, you can do so in your
+`compose.yaml`:
+
+```yaml
+services:
+  headplane:
+    image: ghcr.io/tale/headplane:latest
+    healthcheck:
+      test: ["/bin/hp_healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+```
+
 ## Accessing Headplane
 
 After starting the container, you can access the Headplane web interface by
