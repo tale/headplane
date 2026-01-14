@@ -208,7 +208,53 @@ async function discoveryCoalesce(
 		},
 		config.client_id,
 		config.client_secret,
+		negotiateTokenEndpointAuthMethod(config, metadata),
 	);
 
 	return oidcClient;
+}
+
+/**
+ * Determines the token endpoint authentication method based on config and metadata.
+ *
+ * @param config The OIDC configuration.
+ * @param metadata The OIDC server metadata.
+ * @returns The client authentication method for the token endpoint.
+ */
+function negotiateTokenEndpointAuthMethod(
+	config: OidcConfig,
+	metadata: oidc.ServerMetadata,
+): oidc.ClientAuth {
+	if (config.token_endpoint_auth_method != null) {
+		switch (config.token_endpoint_auth_method) {
+			case 'client_secret_basic':
+				return oidc.ClientSecretBasic(config.client_secret);
+			case 'client_secret_post':
+				return oidc.ClientSecretPost(config.client_secret);
+			case 'client_secret_jwt':
+				return oidc.ClientSecretJwt(config.client_secret);
+		}
+	}
+
+	const supported = metadata.token_endpoint_auth_methods_supported;
+	if (supported != null && supported.length > 0) {
+		// Prefer client_secret_basic (spec default), otherwise use first available
+		if (supported.includes('client_secret_basic')) {
+			return oidc.ClientSecretBasic(config.client_secret);
+		}
+
+		if (supported.includes('client_secret_post')) {
+			return oidc.ClientSecretPost(config.client_secret);
+		}
+
+		if (supported.includes('client_secret_jwt')) {
+			return oidc.ClientSecretJwt(config.client_secret);
+		}
+	}
+
+	log.warn(
+		'config',
+		'Falling back to client_secret_basic for token endpoint authentication',
+	);
+	return oidc.ClientSecretBasic(config.client_secret);
 }

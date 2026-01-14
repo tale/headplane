@@ -13,6 +13,7 @@
 - Re-worked the OIDC integration to adhere to the correct standards and surface more errors to the user.
     - Deprecated `oidc.redirect_uri` and automated callback URL detection in favor of setting `server.base_url` correctly.
     - Explicitly added `oidc.use_pkce` to correctly determine PKCE configuration.
+    - `oidc.token_endpoint_auth_method` is now optional and will attempt to be auto-detected, defaulting to `client_secret_basic` if unavailable (closes [#410](https://github.com/tale/headplane/issues/410)).
 - Removed several unnecessarily verbose or spammy log messages.
 - Updated the minimum Docker API used to support the latest Docker versions (via [#370](https://github.com/tale/headplane/pull/370)).
 - Enhanced the node tag dialog to show a dropdown of assignable tags (via [#362](https://github.com/tale/headplane/pull/362)).
