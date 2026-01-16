@@ -254,7 +254,7 @@ function negotiateTokenEndpointAuthMethod(
 
 	log.warn(
 		'config',
-		'Falling back to client_secret_basic for token endpoint authentication',
+		'Falling back to client_secret_post for token endpoint authentication',
 	);
-	return oidc.ClientSecretBasic(config.client_secret);
+	return oidc.ClientSecretPost(config.client_secret);
 }
