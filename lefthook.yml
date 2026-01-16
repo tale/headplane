@@ -1,8 +1,12 @@
 pre-commit:
   commands:
-    check:
+    lint:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: pnpm biome check --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+      run: pnpm lint --fix {staged_files}
+      stage_fixed: true
+    format:
+      glob: "*"
+      run: pnpm format {staged_files}
       stage_fixed: true
     check_go:
       glob: "*.go"
