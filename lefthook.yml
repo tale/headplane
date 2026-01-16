@@ -6,7 +6,7 @@ pre-commit:
       stage_fixed: true
     format:
       glob: "*"
-      run: pnpm format {staged_files}
+      run: pnpm format --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     check_go:
       glob: "*.go"
