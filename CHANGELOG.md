@@ -1,4 +1,5 @@
 # 0.6.2 (Next)
+
 - Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
 - Bundle all `node_modules` aside from native ones to reduce bundle and container size (closes [#331](https://github.com/tale/headplane/issues/331)).
@@ -7,13 +8,13 @@
 - Attempt to warn against misconfigured cookie settings on the login page.
 - Made `server.cookie_max_age` and `server.cookie_domain` configurable (closes [#348](https://github.com/tale/headplane/issues/348)).
 - Re-worked the configuration loading system with several enhancements:
-    - It is now possible to skip a configuration file and only use environment variables (closes [#150](https://github.com/tale/headplane/issues/150)).
-    - Secret path loading has been reworked from the ground up to be more reliable (closes [#334](https://github.com/tale/headplane/issues/334)).
-    - Added better testing and validation for configuration loading
+  - It is now possible to skip a configuration file and only use environment variables (closes [#150](https://github.com/tale/headplane/issues/150)).
+  - Secret path loading has been reworked from the ground up to be more reliable (closes [#334](https://github.com/tale/headplane/issues/334)).
+  - Added better testing and validation for configuration loading
 - Re-worked the OIDC integration to adhere to the correct standards and surface more errors to the user.
-    - Deprecated `oidc.redirect_uri` and automated callback URL detection in favor of setting `server.base_url` correctly.
-    - Explicitly added `oidc.use_pkce` to correctly determine PKCE configuration.
-    - `oidc.token_endpoint_auth_method` is now optional and will attempt to be auto-detected, defaulting to `client_secret_basic` if unavailable (closes [#410](https://github.com/tale/headplane/issues/410)).
+  - Deprecated `oidc.redirect_uri` and automated callback URL detection in favor of setting `server.base_url` correctly.
+  - Explicitly added `oidc.use_pkce` to correctly determine PKCE configuration.
+  - `oidc.token_endpoint_auth_method` is now optional and will attempt to be auto-detected, defaulting to `client_secret_basic` if unavailable (closes [#410](https://github.com/tale/headplane/issues/410)).
 - Removed several unnecessarily verbose or spammy log messages.
 - Updated the minimum Docker API used to support the latest Docker versions (via [#370](https://github.com/tale/headplane/pull/370)).
 - Enhanced the node tag dialog to show a dropdown of assignable tags (via [#362](https://github.com/tale/headplane/pull/362)).
@@ -25,18 +26,22 @@
 - Machine key registration no longer works if the key isn't 24 characters long (closes [#415](https://github.com/tale/headplane/issues/415)).
 - Fixed some mobile CSS issues across the application (closes [#401](https://github.com/tale/headplane/issues/401)).
 - Added a Docker healthcheck to the container (closes [#411](https://github.com/tale/headplane/issues/411)).
+- Strengthened the validation for the `/proc` integration to correctly discover the Headscale PID.
+- Added lazy retry logic for OIDC providers if they initially fail to respond (closes [#423](https://github.com/tale/headplane/issues/423)).
+
 ---
 
 # 0.6.1 (October 12, 2025)
+
 - **Headplane now supports connecting to machines via SSH in the web browser.**
-	- This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
-	- This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
+  - This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
+  - This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
 - Begin using a new SQLite database file in `/var/lib/headplane/hp_persist.db`.
-	- The database is created automatically if it does not exist.
-	- It currently stores SSH connection details and HostInfo for the agent.
-	- User information is automatically migrated from the previous database.
+  - The database is created automatically if it does not exist.
+  - It currently stores SSH connection details and HostInfo for the agent.
+  - User information is automatically migrated from the previous database.
 - The docker container now runs in a distroless image (closes [#255](https://github.com/tale/headplane/issues/255)).
-	- A debug version of the container that runs as root and has a shell is available as `ghcr.io/tale/headplane:<version>-shell`.
+  - A debug version of the container that runs as root and has a shell is available as `ghcr.io/tale/headplane:<version>-shell`.
 - Removing a Split DNS record will no longer make the split domain unresolvable by clients (closes [#231](https://github.com/tale/headplane/issues/231)).
 - Reintroduce the toggle for overriding local DNS settings in the Headscale config (closes [#236](https://github.com/tale/headplane/issues/236)).
 - Prefer cross-compiling in the Dockerfile to speed up builds while still supporting multiple architectures.
@@ -44,32 +49,33 @@
 - Implement more accurate guessing on the PID with the `/proc` integration (via [#219](https://github.com/tale/headplane/pull/219)).
 - Usernames will now correctly fall back to emails if not provided (via [#257](https://github.com/tale/headplane/pull/257)).
 - Configuration loading via paths is now supported for sensitive values (via [#283](https://github.com/tale/headplane/pulls/283))
-    - Options like `server.cookie_secret_path` can override `server.cookie_secret`
-    - Environment variables are interpolatable into these paths
-    - See the full reference in the [docs](https://github.com/tale/headplane/blob/main/docs/Configuration.md#sensitive-values)
+  - Options like `server.cookie_secret_path` can override `server.cookie_secret`
+  - Environment variables are interpolatable into these paths
+  - See the full reference in the [docs](https://github.com/tale/headplane/blob/main/docs/Configuration.md#sensitive-values)
 - The nix overlay build is fixed for the SSH module (via [#282](https://github.com/tale/headplane/pull/282))
 - Switch our build processes to use TypeScript Go and Rolldown Vite for better build and type-check performance.
-- Cookies are now encrypted JWTs, preserving API key secrets (*GHSA-wrqq-v7qw-r5w7*)
+- Cookies are now encrypted JWTs, preserving API key secrets (_GHSA-wrqq-v7qw-r5w7_)
 - OIDC profile pictures are now available from Gravatar by setting `oidc.profile_picture_source` to `gravatar` (closes [#232](https://github.com/tale/headplane/issues/232)).
 - OIDC now allows passing many custom parameters:
-	- `oidc.authorization_endpoint`, `oidc.token_endpoint`, and `oidc.userinfo_endpoint` can be overridden to support non-standard providers or scenarios without discovery (closes [#117](https://github.com/tale/headplane/issues/117)).
-	- `oidc.scope` can be set to specify custom scopes (defaults to `openid email profile`).
-	- `oidc.extra_params` can be set to pass arbitrary query parameters to the authorization endpoint (closes [#197](https://github.com/tale/headplane/issues/197)).
+  - `oidc.authorization_endpoint`, `oidc.token_endpoint`, and `oidc.userinfo_endpoint` can be overridden to support non-standard providers or scenarios without discovery (closes [#117](https://github.com/tale/headplane/issues/117)).
+  - `oidc.scope` can be set to specify custom scopes (defaults to `openid email profile`).
+  - `oidc.extra_params` can be set to pass arbitrary query parameters to the authorization endpoint (closes [#197](https://github.com/tale/headplane/issues/197)).
 
 ---
 
 # 0.6.0 (May 25, 2025)
+
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
-    - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
-    - Older versions of Headscale will not work with Headplane.
+  - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
+  - Older versions of Headscale will not work with Headplane.
 
 - OIDC authorization restrictions can now be controlled from the settings UI. (closes [#102](https://github.com/tale/headplane/issues/102))
-	- The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
-	- Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
+  - The required permission role for this is **IT Admin** or **Admin/Owner** and require the Headscale configuration.
+  - Changes made will modify the `oidc.allowed_{domains,groups,users}` fields in the Headscale config file.
 - The Pre-Auth keys page has been fully reworked (closes [#179](https://github.com/tale/headplane/issues/179), [#143](https://github.com/tale/headplane/issues/143)).
 - The Headplane agent is now available as an integration (closes [#65](https://github.com/tale/headplane/issues/65)).
-	- The agent runs as an embedded process alongside the Headplane server and reports host information and system metrics.
-	- Refer to the `integrations.agent` section of the config file for more information and how to enable it.
+  - The agent runs as an embedded process alongside the Headplane server and reports host information and system metrics.
+  - Refer to the `integrations.agent` section of the config file for more information and how to enable it.
 - Requests to `/admin` will now be redirected to `/admin/` to prevent issues with the React Router (works with custom prefixes, closes [#173](https://github.com/tale/headplane/issues/173)).
 - The Login page has been simplified and separately reports errors versus incorrect API keys (closes [#186](https://github.com/tale/headplane/issues/186)).
 - The machine actions backend has been reworked to better handle errors and provide more information to the user (closes [#185](https://github.com/tale/headplane/issues/185)).
@@ -86,11 +92,13 @@
 ---
 
 # 0.5.10 (April 4, 2025)
+
 - Fix an issue where other preferences to skip onboarding affected every user.
 
 ---
 
 # 0.5.9 (April 3, 2025)
+
 - Filter out empty users from the pre-auth keys page which could possibly cause a crash with unmigrated users.
 - OIDC users cannot be renamed, so that functionality has been disabled in the menu options.
 - Suppress hydration errors for any fields with a date in it.
@@ -98,6 +106,7 @@
 ---
 
 # 0.5.8 (April 3, 2025)
+
 - You can now skip the onboarding page if desired.
 - Added the UI to change user roles in the dashboard.
 - Fixed an issue where integrations would throw instead of loading properly.
@@ -108,6 +117,7 @@
 ---
 
 # 0.5.7 (April 2, 2025)
+
 - Hotfix an issue where assets aren't served under `/admin` or the prefix.
 
 ---
@@ -115,9 +125,10 @@
 # 0.5.6 (April 2, 2025)
 
 ### IMPORTANT
-> **PLEASE** update to this ASAP if you were using Google OIDC. This is because previously *ANY* accounts have admin access to your Tailnet if they discover the URL that Headplane is being hosted on. This new change enforces that new logins by default are not given any permissions. You will need to re-login to Headplane to generate an owner account and prevent unauthorized access.
 
-Implemented *proper* authentication methods for OIDC.
+> **PLEASE** update to this ASAP if you were using Google OIDC. This is because previously _ANY_ accounts have admin access to your Tailnet if they discover the URL that Headplane is being hosted on. This new change enforces that new logins by default are not given any permissions. You will need to re-login to Headplane to generate an owner account and prevent unauthorized access.
+
+Implemented _proper_ authentication methods for OIDC.
 This is a large update and copies the permission system from Tailscale.
 Permissions are not automatically derived from OIDC, but they can be configured via the UI.
 Additionally, certain roles give certain capabilities, limiting access to parts of the dashboard.
@@ -125,6 +136,7 @@ By default, new users will have a `member` role which forbids access to the UI.
 If there are no users, the first user will be given an `owner` role which cannot be removed.
 
 **Changes**:
+
 - Switched the internal server to use `hono` for better performance.
 - Fixed an issue that caused dialogs to randomly refocus every 3 seconds.
 - Headplane will not send API requests when the tab is not focused.
@@ -135,11 +147,13 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.5.5 (March 18, 2025)
+
 - Hotfix an issue that caused Headplane to crash if no agents are available
 
 ---
 
 # 0.5.4 (March 18, 2025)
+
 - Fixed a typo in the Kubernetes documentation
 - Handle split and global DNS records not being set in the Headscale config (via [#129](https://github.com/tale/headplane/pull/129))
 - Stop checking for the `mkey:` prefix on machine registration (via [#131](https://github.com/tale/headplane/pull/131))
@@ -156,6 +170,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.5.3 (March 1, 2025)
+
 - Fixed an issue where Headplane expected the incorrect config value for OIDC scope (fixes [#111](https://github.com/tale/headplane/issues/111))
 - Added an ARIA indicator for when an input is required and fixed the confirm buttons (fixed [#116](https://github.com/tale/headplane/issues/116))
 - Fixed a typo in the docs that defaulted to `/var/run/docker.dock` for the Docker socket (via [#112](https://github.com/tale/headplane/pull/112))
@@ -163,11 +178,13 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.5.2 (February 28, 2025)
+
 - Hotfixed an issue where the server bundle got reloaded on each request
 
 ---
 
 # 0.5.1 (February 28, 2025)
+
 - Fixed an issue that caused the entire server to crash on start
 - Fixed the published semver tags from Docker
 - Fixed the Kubernetes integration not reading the config
@@ -175,6 +192,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.5 (February 27, 2025)
+
 > This release is a major overhaul and contains a significant breaking change.
 > We now use a config file for all settings instead of environment variables.
 > Please see [config.example.yaml](/config.example.yaml) for the new format.
@@ -192,11 +210,13 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.4.1 (January 18, 2025)
+
 - Fixed an urgent issue where the OIDC redirect URI would mismatch.
 
 ---
 
 # 0.4.0 (January 18, 2025)
+
 - Switched from Remix.run to React-Router
 - Fixed an issue where some config fields were marked as required even if they weren't (fixes [#66](https://github.com/tale/headplane/issues/66))
 - Fixed an issue where the toasts would be obscured by the footer (fixes [#68](https://github.com/tale/headplane/issues/68))
@@ -212,11 +232,13 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.9 (December 6, 2024)
+
 - Fixed a race condition bug in the OIDC validation code
 
 ---
 
 # 0.3.8 (December 6, 2024)
+
 - Added a little HTML footer to show the login page and link to a donation page.
 - Allow creating pre-auth keys that expire past 90 days (fixes [#58](https://github.com/tale/headplane/issues/58))
 - Validates OIDC config and ignores validation if specified via variables or Headscale config (fixes [#63](https://github.com/tale/headplane/issues/63))
@@ -224,6 +246,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.7 (November 30, 2024)
+
 - Allow customizing the OIDC token endpoint auth method via `OIDC_CLIENT_SECRET_METHOD` (fixes [#57](https://github.com/tale/headplane/issues/57))
 - Added a `/healthz` endpoint for Kubernetes and other health checks (fixes [#59](https://github.com/tale/headplane/issues/59))
 - Allow `HEADSCALE_PUBLIC_URL` to be set if `HEADSCALE_URL` points to a different internal address (fixes [#60](https://github.com/tale/headplane/issues/60))
@@ -232,18 +255,21 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.6 (November 20, 2024)
+
 - Fixed an issue where select dropdowns would not scroll (fixes [#53](https://github.com/tale/headplane/issues/53))
 - Added a button to copy the machine registration command to the clipboard (fixes [#52](https://github.com/tale/headplane/issues/52))
 
 ---
 
 # 0.3.5 (November 8, 2024)
+
 - Quickfix a bug where environment variables are ignored on the server.
 - Remove a nagging error about missing cookie since that happens when signed out.
 
 ---
 
 # 0.3.4 (November 7, 2024)
+
 - Clicking on the machine name in the users page now takes you to the machine overview page.
 - Completely rebuilt the production server to work better outside of Docker and be lighter. More specifically, we've switched from the `@remix-run/serve` package to our own custom built server.
 - Fixed a bunch of silly issues introduced by me not typechecking the codebase.
@@ -256,6 +282,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.3 (October 28, 2024)
+
 - Added the ability to load a `.env` file from the PWD when `LOAD_ENV_FILE=true` is set as an environment variable.
 - Fixed an issue where non-English languages could not create Pre-auth keys due to a localization error
 - Improved ACL editor performance by switching back to CodeMirror 6
@@ -265,6 +292,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.2 (October 11, 2024)
+
 - Implement the ability to create and expire pre-auth keys (fixes [#22](https://github.com/tale/headplane/issues/22))
 - Fix machine registration not working as expected (fixes [#27](https://github.com/tale/headplane/issues/27))
 - Removed more references to usernames in MagicDNS hostnames (fixes [#35](https://github.com/tale/headplane/issues/35))
@@ -274,6 +302,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.1 (October 3, 2024)
+
 - Fixed the Docker integration to properly support custom socket paths. This regressed at some point previously.
 - Allow you to register a machine using machine keys (`nodekey:...`) on the machines page.
 - Added the option for debug logs with the `DEBUG=true` environment variable.
@@ -281,12 +310,14 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.3.0 (September 25, 2024)
+
 - Bumped the minimum supported version of Headscale to 0.23.
 - Updated the UI to respect `dns.use_username_in_magic_dns`.
 
 ---
 
 # 0.2.4 (August 24, 2024)
+
 - Removed ACL management from the integration since Headscale 0.23-beta2 now supports it natively.
 - Removed the `ACL_FILE` environment variable since it's no longer needed.
 - Introduce a `COOKIE_SECURE=false` environment variable to disable HTTPS requirements for cookies.
@@ -295,6 +326,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.2.3 (August 23, 2024)
+
 - Change the minimum required version of Headscale to 0.23-beta2
 - Support the new API policy mode for Headscale 0.23-beta1
 - Switch to the new DNS configuration in Headscale 0.23-beta2 (fixes [#29](https://github.com/tale/headplane/issues/29))
@@ -303,6 +335,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.2.2 (August 2, 2024)
+
 - Added a proper Kubernetes integration which utilizes `shareProcessNamespace` for PIDs.
 - Added a new logger utility that shows categories, levels, and timestamps.
 - Reimplemented the integration system to be more resilient and log more information.
@@ -311,6 +344,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.2.1 (July 7, 2024)
+
 - Added the ability to manage custom DNS records on your Tailnet.
 - ACL tags for machines are now able to be changed via the machine menu.
 - Fixed a bug where the ACL editor did not show the diffs correctly.
@@ -319,12 +353,14 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.2.0 (June 23, 2024)
+
 - Fix the dropdown options for machines not working on the machines page.
 - Add an option to change the machine owner in the dropdown (aside from the users page).
 
 ---
 
 # 0.1.9 (June 2, 2024)
+
 - Switch to Monaco editor with proper HuJSON and YAML syntax highlighting.
 - Utilize magic DNS hostnames for the machine overview page.
 - Fixed the expiry issue once and for all.
@@ -333,6 +369,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.1.8 (June 2, 2024)
+
 - Built basic functionality for the machine overview page (by machine ID).
 - Possibly fixed an issue where expiry disabled machines' timestamps weren't handled correctly.
 - Prevent users from being deleted if they still have ownership of machines.
@@ -341,6 +378,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.1.7 (May 30, 2024)
+
 - Added support for the `HEADSCALE_INTEGRATION` variable to allow for advanced integration without Docker.
 - Fixed a bug where the `expiry` field on the Headscale configuration could cause crashes.
 - Made the strict configuration loader more lenient to allow for more flexibility.
@@ -351,6 +389,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.1.6 (May 22, 2024)
+
 - Added experimental support for advanced integration without Docker.
 - Fixed a crash where the Docker integration tried to use `process.env.API_KEY` instead of context.
 - Fixed a crash where `ROOT_API_KEY` was not respected in the OIDC flow.
@@ -358,6 +397,7 @@ If there are no users, the first user will be given an `owner` role which cannot
 ---
 
 # 0.1.5 (May 20, 2024)
+
 - Robust configuration handling with fallbacks based on the headscale source.
 - Support for `client_secret_path` on configuration file based OIDC.
 - `DISABLE_API_KEY_LOGIN` now works as expected (non 'true' values work).
