@@ -32,4 +32,4 @@ jobs:
 
       - name: Push Helm chart to GHCR OCI repository
         run: |
-          helm push ./kubernetes/headplane oci://ghcr.io/${{ github.repository }}/charts/${{ github.repository }}
+          helm push ./kubernetes/headplane oci://ghcr.io/${{ github.repository }}/charts/headplane
