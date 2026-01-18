@@ -39,7 +39,6 @@ jobs:
 
       - name: Push chart to GHCR
         run: |
-          shopt -s nullglob
           for pkg in .cr-release-packages/*.tgz; do
             if [ -z "${pkg:-}" ]; then
               break
