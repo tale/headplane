@@ -3,4 +3,4 @@ appVersion: 0.6.1
 description: Kubernetes Helm Chart for Headplane in integrated mode
 name: headplane
 type: application
-version: 1.0.0
+version: 0.6.1
