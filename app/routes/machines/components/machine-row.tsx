@@ -71,7 +71,7 @@ export default function MachineRow({
 					</p>
 					<div className="flex gap-1 flex-wrap mt-1.5">
 						{mapTagsToComponents(node, uiTags)}
-						{node.validTags.map((tag) => (
+						{node.tags.map((tag) => (
 							<Chip key={tag} text={tag} />
 						))}
 					</div>

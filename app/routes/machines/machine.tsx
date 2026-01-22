@@ -41,7 +41,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 	const lookup = await context.agents?.lookup([node.nodeKey]);
 	const [enhancedNode] = mapNodes([node], lookup);
 	const tags = Array.from(
-		new Set([...node.validTags, ...node.forcedTags]),
+		new Set([...node.tags]),
 	).sort();
 
 	return {

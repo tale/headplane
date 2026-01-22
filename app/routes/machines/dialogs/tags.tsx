@@ -21,7 +21,7 @@ export default function Tags({
 	setIsOpen,
 	existingTags,
 }: TagsProps) {
-	const [tags, setTags] = useState(machine.forcedTags);
+	const [tags, setTags] = useState(machine.tags);
 	const [tag, setTag] = useState('tag:');
 	const tagIsInvalid = useMemo(() => {
 		return tag.length === 0 || !tag.startsWith('tag:') || tags.includes(tag);
