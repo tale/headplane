@@ -7,7 +7,6 @@ import cn from '~/utils/cn';
 import { PopulatedNode } from '~/utils/node-info';
 import Delete from '../dialogs/delete';
 import Expire from '../dialogs/expire';
-import Move from '../dialogs/move';
 import Rename from '../dialogs/rename';
 import Routes from '../dialogs/routes';
 import Tags from '../dialogs/tags';
@@ -21,7 +20,7 @@ interface MenuProps {
 	existingTags?: string[];
 }
 
-type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
+type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'tags' | null;
 
 export default function MachineMenu({
 	node,
@@ -44,16 +43,6 @@ export default function MachineMenu({
 					setIsOpen={(isOpen) => {
 						if (!isOpen) setModal(null);
 					}}
-				/>
-			)}
-			{modal === 'move' && (
-				<Move
-					isOpen={modal === 'move'}
-					machine={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-					users={users}
 				/>
 			)}
 			{modal === 'rename' && (
@@ -164,7 +153,6 @@ export default function MachineMenu({
 						<Menu.Item key="rename">Edit machine name</Menu.Item>
 						<Menu.Item key="routes">Edit route settings</Menu.Item>
 						<Menu.Item key="tags">Edit ACL tags</Menu.Item>
-						<Menu.Item key="move">Change owner</Menu.Item>
 					</Menu.Section>
 					<Menu.Section>
 						<Menu.Item key="expire" textValue="Expire">
