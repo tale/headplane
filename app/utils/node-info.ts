@@ -54,9 +54,20 @@ export function mapNodes(
 }
 
 export function sortNodeTags(nodes: Machine[]): string[] {
-	return Array.from(
-		new Set(
-			nodes.flatMap((node) => node.tags),
-		),
-	).sort();
+	try {
+		return Array.from(
+			new Set(
+				nodes.flatMap((node) => node.tags),
+			),
+		).sort();
+	} catch {
+		return Array.from(
+			new Set(
+				nodes.flatMap(({ validTags, forcedTags }) => [
+					...validTags,
+					...forcedTags,
+				]),
+			),
+		).sort();
+	}
 }
