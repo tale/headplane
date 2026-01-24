@@ -19,6 +19,7 @@ interface MenuProps {
 	isFullButton?: boolean;
 	isDisabled?: boolean;
 	existingTags?: string[];
+	supportsNodeOwnerChange: boolean;
 }
 
 type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
@@ -30,6 +31,7 @@ export default function MachineMenu({
 	isFullButton,
 	isDisabled,
 	existingTags,
+	supportsNodeOwnerChange,
 }: MenuProps) {
 	const [modal, setModal] = useState<Modal>(null);
 	const supportsTailscaleSSH =
@@ -164,7 +166,7 @@ export default function MachineMenu({
 						<Menu.Item key="rename">Edit machine name</Menu.Item>
 						<Menu.Item key="routes">Edit route settings</Menu.Item>
 						<Menu.Item key="tags">Edit ACL tags</Menu.Item>
-						<Menu.Item key="move">Change owner</Menu.Item>
+						{supportsNodeOwnerChange && <Menu.Item key="move">Change owner</Menu.Item>}
 					</Menu.Section>
 					<Menu.Section>
 						<Menu.Item key="expire" textValue="Expire">

@@ -48,6 +48,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 	const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
 	const populatedNodes = mapNodes(nodes, stats);
+	const supportsNodeOwnerChange = ! context.hsApi.clientHelpers.isAtleast("0.28.0-beta.1");
 
 	return {
 		populatedNodes,
@@ -63,6 +64,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 			Capabilities.generate_authkeys,
 		),
 		subject: user.subject,
+		supportsNodeOwnerChange: supportsNodeOwnerChange,
 	};
 }
 
@@ -380,6 +382,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 									magic={loaderData.magic}
 									node={node}
 									users={loaderData.users}
+									supportsNodeOwnerChange={loaderData.supportsNodeOwnerChange}
 								/>
 							))
 						)}
