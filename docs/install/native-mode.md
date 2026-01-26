@@ -5,6 +5,7 @@ outline: [2, 3]
 ---
 
 # Native Mode
+
 ::: tip
 If you are looking to deploy with Docker, follow the
 [**Docker**](./docker.md) deployment guide.
@@ -15,11 +16,12 @@ for Docker. This method is suitable for users who already run Headscale natively
 or prefer to avoid containers.
 
 ## Prerequisites
+
 - A Linux-based operating system (e.g, Ubuntu, Debian, CentOS, Fedora)
 - Go version 1.25.1 installed (only needed to build Headplane)
 - Node.js version 22.16.x and [pnpm](https://pnpm.io/) version 10.4.x installed
 - Headscale version 0.26.0 or later installed and running
-- A [completed configuration file](./index.md#configuration) for Headplane. 
+- A [completed configuration file](./index.md#configuration) for Headplane.
 
 Before building and running Headplane, ensure that the directory defined in
 `server.data_path` in your configuration exists and is writable by the user who
@@ -32,6 +34,7 @@ sudo chown -R $(whoami):$(whoami) /var/lib/headplane
 ```
 
 ## Building Headplane
+
 Clone the Headplane repository, install dependencies, and build the project:
 
 ```bash
@@ -43,6 +46,7 @@ pnpm build
 ```
 
 ## Running Headplane
+
 Running Headplane is as straightforward as running `pnpm start` (or also
 directly with `node build/server/index.js`). Headplane will look for a config
 file at `/etc/headplane/config.yaml` by default, but you can specify a different
@@ -81,7 +85,7 @@ WantedBy=multi-user.target
 
 To access Headplane, navigate to `http://localhost:3000/admin` in your web
 browser (replace `localhost` with your server's IP address or domain name if
-not running locally). 
+not running locally).
 
 In order to log in, you'll need to supply a Headscale API key. You can create
 one by running the following command within your Headscale environment:
@@ -103,6 +107,7 @@ Network management allows you to configure Tailnet settings such as DNS servers,
 custom A records, the tailnet domain name, and MagicDNS from the Headplane UI.
 
 #### Prerequisites
+
 Network management (and other configurable Headscale features) requires that
 Headplane and Headscale both run on the same machine because Headplane needs
 
@@ -114,11 +119,11 @@ Headplane and Headscale both run on the same machine because Headplane needs
 Enabling network management is as simple as setting a few additional fields in
 your Headplane configuration file:
 
-| Field               | Description                                            |
-|---------------------|--------------------------------------------------------|
-| **`integration.proc.enabled`** | Set to `true` to enable process inspection. |
-| **`headscale.config_path`** | Path to your Head**scale** configuration file (e.g., `/etc/headscale/config.yaml`). |
-| `headscale.dns_records_path` | *Optional*. Refer to the [example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml) for details. |
+| Field                          | Description                                                                                                                    |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **`integration.proc.enabled`** | Set to `true` to enable process inspection.                                                                                    |
+| **`headscale.config_path`**    | Path to your Head**scale** configuration file (e.g., `/etc/headscale/config.yaml`).                                            |
+| `headscale.dns_records_path`   | _Optional_. Refer to the [example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml) for details. |
 
 With these settings in place, restart Headplane. You should now see additional
 options in the UI navbar such as "DNS" and "Settings" where you can manage your
@@ -138,7 +143,6 @@ setup instructions and specifically follow the
 [native mode configuration](../features/agent.md#native-mode-configuration)
 section to point Headplane to the correct agent location.
 
-
 ### Single Sign-On (SSO)
 
 Single Sign-On (SSO) authentication allows users to log in to Headplane using
@@ -148,14 +152,14 @@ supports OpenID Connect (OIDC).
 To get started with SSO, refer to the [SSO documentation](../features/sso.md)
 for detailed setup instructions.
 
-
 ## Reverse Proxying
 
-You *should* run Headplane behind a reverse proxy such as Nginx or Caddy in
+You _should_ run Headplane behind a reverse proxy such as Nginx or Caddy in
 production. Additionally, putting Headscale beind the reverse proxy allows
 you to access both services via the same domain and TLS certificate.
 
 #### Configuration
+
 ::: tip
 If you are using a [custom path prefix](#custom-path-prefix) for Headplane,
 adjust the `/admin` paths in the examples below accordingly.
@@ -205,7 +209,7 @@ server {
     }
 
     location /admin/ { # Headplane is served under /admin
-        proxy_pass http://localhost:3000/; # Adjust if Headplane runs on a different port
+        proxy_pass http://localhost:3000; # Adjust if Headplane runs on a different port
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
