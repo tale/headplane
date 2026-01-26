@@ -1,0 +1,23 @@
+{{- if .Values.headscale.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headscale-data
+  {{- with .Values.headscale.persistence.pvc.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.headscale.persistence.pvc.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.headscale.persistence.pvc.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.headscale.persistence.pvc.storage }}
+  {{- if .Values.headscale.persistence.pvc.storageClassName }}
+  storageClassName: {{ .Values.headscale.persistence.pvc.storageClassName }}
+  {{- end }}
+{{- end }}
