@@ -27,6 +27,7 @@ interface Props {
   magic?: string;
   isDisabled?: boolean;
   existingTags?: string[];
+  supportsNodeOwnerChange: boolean;
 }
 
 export default function MachineRow({
@@ -36,6 +37,7 @@ export default function MachineRow({
   magic,
   isDisabled,
   existingTags,
+  supportsNodeOwnerChange,
 }: Props) {
   const uiTags = useMemo(() => uiTagsForNode(node, isAgent), [node, isAgent]);
 
@@ -142,6 +144,7 @@ export default function MachineRow({
           magic={magic}
           node={node}
           users={users}
+          supportsNodeOwnerChange={supportsNodeOwnerChange}
         />
       </td>
     </tr>

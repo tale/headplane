@@ -43,6 +43,11 @@ export async function getRuntimeClient(version: Version) {
 	return bootstrap.getRuntimeClient(env.apiKey);
 }
 
+export async function getIsAtLeast(version: Version) {
+	const { env, bootstrap } = await ensureVersion(version);
+	return bootstrap.clientHelpers.isAtleast;
+}
+
 export async function getNode(version: Version) {
 	const { tailscaleNode } = await ensureVersion(version);
 	return {
