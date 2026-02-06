@@ -1,5 +1,6 @@
 import { Plus, TagsIcon, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useFetcher } from "react-router";
 
 import type { Machine } from "~/types";
 
@@ -18,6 +19,8 @@ interface TagsProps {
 }
 
 export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsProps) {
+  const fetcher = useFetcher();
+  const submittingRef = useRef(false);
   const [tags, setTags] = useState([...machine.tags]);
   const [tag, setTag] = useState("tag:");
   const tagIsInvalid = useMemo(() => {
@@ -28,9 +31,45 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
     return existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [];
   }, [tags]);
 
+  const error = fetcher.data && !fetcher.data.success ? fetcher.data.error : null;
+
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      submittingRef.current = false;
+      setIsOpen(false);
+    }
+
+    if (fetcher.state === "idle" && fetcher.data && !fetcher.data.success) {
+      submittingRef.current = false;
+    }
+  }, [fetcher.data, fetcher.state]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTags([...machine.tags]);
+    }
+  }, [isOpen]);
+
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel>
+    <Dialog
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open && submittingRef.current) return;
+        setIsOpen(open);
+      }}
+    >
+      <Dialog.Panel
+        onSubmit={(event) => {
+          event.preventDefault();
+          submittingRef.current = true;
+          const form = new FormData();
+          form.set("action_id", "update_tags");
+          form.set("node_id", machine.id);
+          form.set("tags", tags.filter((t) => t !== "").join(","));
+          fetcher.submit(form, { method: "POST" });
+        }}
+        isDisabled={fetcher.state !== "idle"}
+      >
         <Dialog.Title>Edit ACL tags for {machine.givenName}</Dialog.Title>
         <Dialog.Text>
           ACL tags can be used to reference machines in your ACL policies. See the{" "}
@@ -39,9 +78,11 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
           </Link>{" "}
           for more information.
         </Dialog.Text>
-        <input name="action_id" type="hidden" value="update_tags" />
-        <input name="node_id" type="hidden" value={machine.id} />
-        <input name="tags" type="hidden" value={tags.join(",")} />
+        {error ? (
+          <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+            {error}
+          </p>
+        ) : null}
         <TableList className="mt-4">
           {tags.length === 0 ? (
             <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
@@ -90,6 +131,10 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
             <Plus className="p-1" size={30} />
           </Button>
         </div>
+        <p className="mt-2 text-sm opacity-50">
+          Not seeing the tags you expect? Tags need to be defined in your access control policy
+          before they can be assigned to machines.
+        </p>
       </Dialog.Panel>
     </Dialog>
   );

@@ -19,7 +19,7 @@ interface RawMachine extends Omit<Machine, "tags"> {
  * @returns A Machine object with normalized tags.
  */
 function normalizeTags(client: HeadscaleApiInterface["clientHelpers"], node: RawMachine): Machine {
-  if (client.isAtleast("0.28.0-beta.1")) {
+  if (client.isAtleast("0.28.0")) {
     return { ...node, tags: node.tags ?? [] } as Machine;
   }
 
@@ -103,7 +103,6 @@ export interface NodeEndpoints {
 export default defineApiEndpoints<NodeEndpoints>((client, apiKey) => ({
   getNodes: async () => {
     const { nodes } = await client.apiFetch<{ nodes: RawMachine[] }>("GET", "v1/node", apiKey);
-
     return nodes.map((node) => normalizeTags(client, node));
   },
 
