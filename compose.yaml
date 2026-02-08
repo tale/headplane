@@ -24,7 +24,7 @@ services:
       - "./test/caddy/config:/config"
       - "./test/caddy/certs:/certs"
   headscale:
-    image: "headscale/headscale:0.27.0-debug"
+    image: "headscale/headscale:0.28.0"
     container_name: "headscale"
     labels:
       me.tale.headplane.target: headscale
