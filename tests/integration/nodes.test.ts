@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { getNode, getRuntimeClient, HS_VERSIONS } from './setup/env';
+import { getNode, getRuntimeClient, getIsAtLeast, HS_VERSIONS } from './setup/env';
 
 describe.sequential.for(HS_VERSIONS)('Headscale %s: Users', (version) => {
 	let workingNodeId: string;
@@ -41,13 +41,15 @@ describe.sequential.for(HS_VERSIONS)('Headscale %s: Users', (version) => {
 	});
 
 	test('nodes can be reassigned to another user', async () => {
-		const client = await getRuntimeClient(version);
-		const user = await client.createUser('node-reassign@');
+		if (! getIsAtLeast("0.28.0")) {
+			const client = await getRuntimeClient(version);
+			const user = await client.createUser('node-reassign@');
 
-		await client.setNodeUser(workingNodeId, user.id);
-		const reassignedNode = await client.getNode(workingNodeId);
-		expect(reassignedNode).toBeDefined();
-		expect(reassignedNode.user.name).toBe(user.name);
+			await client.setNodeUser(workingNodeId, user.id);
+			const reassignedNode = await client.getNode(workingNodeId);
+			expect(reassignedNode).toBeDefined();
+			expect(reassignedNode.user.name).toBe(user.name);
+		}
 	});
 
 	test('nodes can be expired', async () => {

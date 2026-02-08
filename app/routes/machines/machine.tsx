@@ -44,6 +44,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const lookup = await context.agents?.lookup([node.nodeKey]);
   const [enhancedNode] = mapNodes([node], lookup);
   const tags = [...node.tags].sort();
+  const supportsNodeOwnerChange = ! context.hsApi.clientHelpers.isAtleast("0.28.0-beta.1");
 
   return {
     node: enhancedNode,
@@ -53,13 +54,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     agent: context.agents?.agentID(),
     stats: lookup?.[enhancedNode.nodeKey],
     existingTags: sortNodeTags(nodes),
+    supportsNodeOwnerChange: supportsNodeOwnerChange,
   };
 }
 
 export const action = machineAction;
 
 export default function Page({
-  loaderData: { node, tags, users, magic, agent, stats, existingTags },
+  loaderData: { node, tags, users, magic, agent, stats, existingTags, supportsNodeOwnerChange },
 }: Route.ComponentProps) {
   const [showRouting, setShowRouting] = useState(false);
 
@@ -93,6 +95,7 @@ export default function Page({
           magic={magic}
           node={node}
           users={users}
+          supportsNodeOwnerChange={supportsNodeOwnerChange}
         />
       </div>
       <div className="mb-4 flex gap-1">
