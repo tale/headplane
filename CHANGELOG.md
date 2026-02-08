@@ -29,6 +29,7 @@
 - Strengthened the validation for the `/proc` integration to correctly discover the Headscale PID.
 - Added lazy retry logic for OIDC providers if they initially fail to respond (closes [#423](https://github.com/tale/headplane/issues/423)).
 - Fixed API key login on Headcale 0.28.0-beta.1+ (closes [#429](https://github.com/tale/headplane/issues/429)).
+- Fixed an issue that prevented the pre-auth-key UI from being usable on Headscale 0.28 and later.
 
 ---
 
