@@ -156,6 +156,11 @@ export default defineApiEndpoints<NodeEndpoints>((client, apiKey) => ({
   },
 
   setNodeUser: async (nodeId, user) => {
+    // Headscale 0.28.0 got rid of node reassignment to users
+    if (client.isAtleast("0.28.0")) {
+      return;
+    }
+
     await client.apiFetch<void>("POST", `v1/node/${nodeId}/user`, apiKey, {
       user,
     });
