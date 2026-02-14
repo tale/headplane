@@ -55,7 +55,7 @@ in {
         Group = config.services.headscale.group;
         StateDirectory = "headplane";
 
-        ExecStart = "${pkgs.headplane}/bin/headplane";
+        ExecStart = "${cfg.package}/bin/headplane";
         Restart = "always";
         RestartSec = 5;
 
