@@ -1,0 +1,216 @@
+# Headplane UI and API configuration
+headplane:
+  # The container image for Headplane
+  image: ghcr.io/tale/headplane:0.6.0
+  oidc:
+    # Enable OIDC integration for Headplane
+    enabled: false
+    # OIDC issuer URL
+    issuer: "https://your-oidc-issuer-url.com"
+    # Disable API key login
+    disable_api_key_login: true
+    # OIDC token endpoint auth method
+    token_endpoint_auth_method: "client_secret_post"
+    # OIDC redirect URI
+    redirect_uri: "https://your-headplane-admin-domain.com/admin/oidc/callback"
+    # OIDC client ID
+    client_id: "REPLACE_IT_WITH_YOUR_OIDC_CLIENT_ID_FOR_HEADPLANE"
+    # Name of the secret containing OIDC credentials
+    secret_name: "oidc-secrets"
+  config:
+    server:
+      # The host address for the Headplane server
+      host: "0.0.0.0"
+      # The port for the Headplane server
+      port: 3000
+      # Use secure cookies (should be true in production)
+      cookie_secure: true
+    headscale:
+      # The URL for the Headscale server
+      url: "https://vpn.example.com"
+      # Path to the Headscale config file
+      config_path: "/etc/headscale/config.yaml"
+      # Enable strict config mode
+      config_strict: "true"
+    integration:
+      kubernetes:
+        # Enable Kubernetes integration
+        enabled: true
+        # Validate Kubernetes manifest
+        validate_manifest: true
+        # The pod name for Headplane
+        pod_name: "headplane-0"
+  # Additional secrets to mount as environment variables
+  envFrom: []
+    # - secretRef:
+    #     name: headscale-api-token
+
+# Headscale server configuration
+headscale:
+  # The container image for Headscale
+  image: headscale/headscale:0.26.1
+
+  # Access Control List configuration (JSON format)
+  # Only applicable if headscale.config.policy.mode is 'file'
+  acl: |
+    {
+      "acls": []
+    }
+
+  oidc:
+    # Enable OIDC integration for Headscale
+    enabled: false
+    # OIDC issuer URL
+    issuer: "https://your-oidc-issuer.com"
+    # OIDC client ID
+    client_id: "YOUR_OIDC_CLIENT_ID_FOR_HEADSCALE"
+    # Name of the secret containing OIDC credentials
+    secret_name: "oidc-secrets"
+    pkce:
+      enabled: false
+      method: S256
+  config:
+    # The public URL for the Headscale server
+    server_url: https://vpn.example.com
+    # The address Headscale listens on
+    listen_addr: 0.0.0.0:8080
+    # The address for metrics
+    metrics_listen_addr: 0.0.0.0:9090
+    # The address for gRPC
+    grpc_listen_addr: 0.0.0.0:50443
+    # Allow insecure gRPC connections
+    grpc_allow_insecure: false
+    policy:
+      # Policy mode: 'file' or 'database'
+      mode: database
+      # Path to the policy file (used if mode is 'file')
+      path: "/etc/headscale/acl.hujson"
+    prefixes:
+      # IPv4 prefix for Headscale
+      v4: 100.64.0.0/10
+      # IPv6 prefix for Headscale
+      v6: fd7a:115c:a1e0::/48
+      # IP allocation mode
+      allocation: sequential
+    database:
+      # Database type (sqlite recommended for demo/testing)
+      type: sqlite
+      # Enable database debug logging
+      debug: false
+      sqlite:
+        # Path to the SQLite database file
+        path: /etc/headscale/db.sqlite
+    noise:
+      # Path to the Noise protocol private key
+      private_key_path: /etc/headscale/noise_private.key
+    derp:
+      server:
+        # Enable embedded DERP server
+        enabled: false
+        # DERP region ID
+        region_id: 999
+        # DERP region code
+        region_code: "headscale"
+        # DERP region name
+        region_name: "Headscale Embedded DERP"
+        # STUN listen address
+        stun_listen_addr: "0.0.0.0:3478"
+        # Path to DERP server private key
+        private_key_path: /var/lib/headscale/derp_server_private.key
+        # Automatically add embedded DERP region
+        automatically_add_embedded_derp_region: true
+        # DERP IPv4 address
+        ipv4: 1.2.3.4
+        # DERP IPv6 address
+        ipv6: 2001:db8::1
+      # List of DERP map URLs
+      urls:
+        - https://controlplane.tailscale.com/derpmap/default
+      # Additional DERP paths
+      paths: []
+    dns:
+      # Enable MagicDNS
+      magic_dns: true
+      # Base domain for MagicDNS
+      base_domain: headscale.vpn
+      nameservers:
+        global:
+          - 1.1.1.1
+          - 8.8.8.8
+      # allowed_groups:
+      #   - vpn_access
+      # allowed_domains:
+      #   - example.com
+      # allowed_users:
+      #   - alice@example.com
+  # Additional secrets to mount as environment variables
+  envFrom: []
+
+# Tailscale relay configuration
+relay:
+  # Enable the Tailscale relay
+  enabled: false
+  # The container image for the Tailscale relay
+  image: ghcr.io/tailscale/tailscale:v1.80.3
+  config:
+    # This is an insecure field, be sure to NOT use a reusable auth key here
+    # if not provided, will use TS_AUTHKEY from tailscale-auth secret
+    authKey: ""
+    # Hostname for the relay
+    hostname: "example.com"
+    # Exit node configuration
+    exit_node: "example.com"
+    # Tailscale login server URL
+    login_server: "https://vpn.example.com"
+    # Whether to advertise as exit node
+    advertise_exit_node: "true"
+    # Enable firewall debug mode
+    firewall_debug: "false"
+    # Routes to advertise
+    routes: "10.0.0.0/8"
+  pvc:
+    # Enable persistent storage for the relay
+    enabled: false
+    # Name of the PVC for relay data
+    name: tailscale-relay-data
+    # Access modes for the PVC
+    accessModes:
+      - ReadWriteOnce
+    # Storage size for the PVC
+    storage: 1Gi
+#  storageClassName: default
+
+# Persistent volume claim for Headscale
+pvc:
+  # Enable persistent storage for Headscale
+  enabled: true
+  # Name of the PVC for Headscale data
+  name: headscale-config
+  # Access modes for the PVC
+  accessModes:
+    - ReadWriteOnce
+  # Storage size for the PVC
+  storage: 1Gi
+  # Annotations for the PVC
+  annotations: {}
+  # Labels for the PVC
+  labels: []
+#  storageClassName: default
+
+# Ingress configuration
+ingress:
+  # Enable ingress for Headplane and Headscale
+  enabled: false
+  # Ingress class name
+  className: nginx
+  # Additional ingress annotations
+  annotations: []
+  #   cert-manager.io/cluster-issuer: "cloudflare"
+  # Additional ingress labels
+  labels: []
+  # Domain for Headplane UI
+  headplaneDomain: "headplane.example.com"
+  # Domain for Headscale API
+  headscaleDomain: "vpn.example.com"
+  # Name of the TLS secret
+  tlsSecretName: "headplane-tls"
