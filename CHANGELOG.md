@@ -1,5 +1,9 @@
 # 0.6.2 (Next)
-
+- Improved ACL editor error handling and feedback (via [#425](https://github.com/tale/headplane/pull/425)):
+    - Added ACL testing support
+    - Syntax errors show the specific line and character in the editor with highlighting for errors returned by
+    server.
+    - Auto-run ACL tests when save fails because of ACL test failure.
 - Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
 - Bundle all `node_modules` aside from native ones to reduce bundle and container size (closes [#331](https://github.com/tale/headplane/issues/331)).
