@@ -323,6 +323,30 @@ for your Headplane instance with /admin/oidc/callback.
 *Default:* `{ }`
 
 
+## settings.server.cookie_domain
+*Description:* This is not required, but if you want to restrict the
+cookie to a specific domain, set it here. Otherwise leave
+it commented out. This may not work as expected if not
+using a reverse proxy.
+
+
+*Type:* null or string
+
+*Default:* `null`
+
+*Example:* `"headscale.example.com"`
+
+
+## settings.server.cookie_max_age
+*Description:* The maximum age of the session cookie in seconds.
+
+*Type:* signed integer
+
+*Default:* `86400`
+
+*Example:* `"3600"`
+
+
 ## settings.server.cookie_secret_path
 *Description:* Path to a file containing the cookie secret.
 The secret must be exactly 32 characters long.
