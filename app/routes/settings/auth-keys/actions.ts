@@ -25,9 +25,17 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
 
   switch (action) {
     case "add_preauthkey": {
-      const user = formData.get("user_id")?.toString();
-      if (!user) {
-        return data("Missing `user_id` in the form data.", {
+      const user = formData.get("user_id")?.toString() || null;
+      const aclTagsRaw = formData.get("acl_tags")?.toString() || "";
+
+      const aclTags = aclTagsRaw
+        .split(",")
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0);
+
+      // Must have either a user or tags
+      if (!user && aclTags.length === 0) {
+        return data("Must specify either a user or ACL tags.", {
           status: 400,
         });
       }
@@ -53,17 +61,16 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      // Extract the first "word" from expiry which is the day number
-      // Calculate the date X days from now using the day number
       const day = Number(expiry.toString().split(" ")[0]);
       const date = new Date();
       date.setDate(date.getDate() + day);
+
       const key = await api.createPreAuthKey(
         user,
         ephemeral === "on",
         reusable === "on",
         date,
-        [], // TODO
+        aclTags.length > 0 ? aclTags : null,
       );
 
       return data({ success: true as const, key: key.key });
