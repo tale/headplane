@@ -1,0 +1,87 @@
+name: Release Lifecycle
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  issues: write
+
+jobs:
+  beta:
+    name: Beta Release
+    if: contains(github.ref_name, '-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Label and comment on referenced issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, skipping"
+            exit 0
+          fi
+
+          echo "Processing issues referenced between ${PREV_TAG} and ${TAG}"
+          ISSUES=$(git log --format="%B" "${PREV_TAG}..HEAD" | grep -oE '#[0-9]+' | sort -u | tr -d '#')
+
+          for ISSUE in $ISSUES; do
+            [ -z "$ISSUE" ] && continue
+
+            STATE=$(gh issue view "$ISSUE" --json state --jq '.state' \
+              --repo "${{ github.repository }}" 2>/dev/null || echo "")
+            [ "$STATE" != "OPEN" ] && continue
+
+            echo "Labeling and commenting on #${ISSUE}"
+            gh issue edit "$ISSUE" --add-label "In Beta" \
+              --repo "${{ github.repository }}" 2>/dev/null || true
+            gh issue comment "$ISSUE" \
+              --body "🧪 Available in [\`${TAG}\`](https://github.com/${{ github.repository }}/releases/tag/${TAG})" \
+              --repo "${{ github.repository }}" 2>/dev/null || true
+          done
+
+  stable:
+    name: Stable Release
+    if: ${{ !contains(github.ref_name, '-') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Close milestone issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+
+          MILESTONE_NUMBER=$(gh api "repos/${{ github.repository }}/milestones" \
+            --jq ".[] | select(.title == \"${VERSION}\") | .number" 2>/dev/null || echo "")
+
+          if [ -z "$MILESTONE_NUMBER" ]; then
+            echo "No milestone found for ${VERSION}, skipping"
+            exit 0
+          fi
+
+          echo "Processing milestone ${VERSION} (#${MILESTONE_NUMBER})"
+          gh api "repos/${{ github.repository }}/issues?milestone=${MILESTONE_NUMBER}&state=open&per_page=100" \
+            --paginate --jq '.[].number' 2>/dev/null | while IFS= read -r ISSUE; do
+            [ -z "$ISSUE" ] && continue
+
+            echo "Closing #${ISSUE}"
+            gh issue edit "$ISSUE" --remove-label "In Beta" \
+              --repo "${{ github.repository }}" 2>/dev/null || true
+            gh issue comment "$ISSUE" \
+              --body "✅ Released in [\`${TAG}\`](https://github.com/${{ github.repository }}/releases/tag/${TAG})" \
+              --repo "${{ github.repository }}" 2>/dev/null || true
+            gh issue close "$ISSUE" \
+              --repo "${{ github.repository }}" 2>/dev/null || true
+          done
+
+          echo "Closing milestone ${VERSION}"
+          gh api -X PATCH "repos/${{ github.repository }}/milestones/${MILESTONE_NUMBER}" \
+            -f state=closed 2>/dev/null || true

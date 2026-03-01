@@ -1,0 +1,20 @@
+name: Triage
+on:
+  issues:
+    types: [milestoned]
+
+permissions:
+  issues: write
+
+jobs:
+  remove-triage:
+    name: Remove Needs Triage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove Needs Triage label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue edit ${{ github.event.issue.number }} \
+            --remove-label "Needs Triage" \
+            --repo ${{ github.repository }} 2>/dev/null || true
