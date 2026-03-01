@@ -1,0 +1,45 @@
+Agent:
+  - changed-files:
+      - any-glob-to-any-file:
+          - cmd/hp_agent/**
+          - internal/**
+          - go.mod
+          - go.sum
+
+UI/UX:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/components/**
+          - app/layouts/**
+          - app/root.tsx
+          - app/tailwind.css
+
+Authentication:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/server/web/**
+          - app/routes/auth*/**
+
+Config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/server/config/**
+          - internal/config/**
+          - config.example.yaml
+
+Integrations:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/server/headscale/**
+          - app/openapi-*.json
+
+Web SSH:
+  - changed-files:
+      - any-glob-to-any-file:
+          - cmd/hp_ssh/**
+
+Docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - README.md
