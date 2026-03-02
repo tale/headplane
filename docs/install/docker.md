@@ -17,7 +17,7 @@ with Docker.
 ## Prerequisites
 - Docker and Docker Compose
 - Headscale version 0.26.0 or later installed and running
-- A [completed configuration file](/index.md#configuration) for Headplane. 
+- A [completed configuration file](/docker.md#configuration) for Headplane. 
 
 
 ## Installation
