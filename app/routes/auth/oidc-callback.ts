@@ -82,19 +82,35 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           })()
         : userInfo.picture;
 
-    const [{ count: userCount }] = await context.db
+    const [{ count: ownerCount }] = await context.db
       .select({ count: count() })
       .from(users)
       .where(eq(users.caps, Roles.owner));
 
-    await context.db
-      .insert(users)
-      .values({
-        id: ulid(),
-        sub: claims.sub,
-        caps: userCount === 0 ? Roles.owner : Roles.member,
-      })
-      .onConflictDoNothing();
+    const needsOwner = ownerCount === 0;
+
+    if (needsOwner) {
+      await context.db
+        .insert(users)
+        .values({
+          id: ulid(),
+          sub: claims.sub,
+          caps: Roles.owner,
+        })
+        .onConflictDoUpdate({
+          target: users.sub,
+          set: { caps: Roles.owner },
+        });
+    } else {
+      await context.db
+        .insert(users)
+        .values({
+          id: ulid(),
+          sub: claims.sub,
+          caps: Roles.member,
+        })
+        .onConflictDoNothing();
+    }
 
     return redirect("/", {
       headers: {
