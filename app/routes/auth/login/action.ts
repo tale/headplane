@@ -1,4 +1,4 @@
-import { data, redirect } from "react-router";
+import { redirect } from "react-router";
 
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import log from "~/utils/log";
@@ -15,7 +15,10 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       "auth",
       "If this is unexpected, ensure your reverse proxy (if applicable) is configured correctly",
     );
-    throw data("Missing `api_key`", { status: 400 });
+    return {
+      success: false,
+      message: "Missing API key. Please enter your API key.",
+    };
   }
 
   if (apiKey.length === 0) {
@@ -24,13 +27,15 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       "auth",
       "If this is unexpected, ensure your reverse proxy (if applicable) is configured correctly",
     );
-    throw data("Received an empty `api_key`", { status: 400 });
+    return {
+      success: false,
+      message: "API key cannot be empty. Please enter a valid API key.",
+    };
   }
 
   const api = context.hsApi.getRuntimeClient(apiKey);
   try {
     const apiKeys = await api.getApiKeys();
-    console.log(apiKeys);
 
     // We don't need to check for 0 API keys because this request cannot
     // be authenticated correctly without an API key
@@ -47,7 +52,10 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
 
     if (lookup.expiration === null || lookup.expiration === undefined) {
       log.error("auth", "Got an API key without an expiration");
-      throw data("API key is malformed", { status: 500 });
+      return {
+        success: false,
+        message: "API key is malformed (missing expiration). Please generate a new API key.",
+      };
     }
 
     const expiry = new Date(lookup.expiration);
