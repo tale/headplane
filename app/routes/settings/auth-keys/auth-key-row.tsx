@@ -1,6 +1,6 @@
-import type { PreAuthKey, User } from "~/types";
-
 import Attribute from "~/components/Attribute";
+import type { PreAuthKey, User } from "~/types";
+import { getUserDisplayName } from "~/utils/user";
 
 import ExpireAuthKey from "./dialogs/expire-auth-key";
 
@@ -14,7 +14,7 @@ export default function AuthKeyRow({ authKey, user }: Props) {
   const expiration = new Date(authKey.expiration).toLocaleString();
   const isExpired =
     (authKey.used && !authKey.reusable) || new Date(authKey.expiration) < new Date();
-  const userDisplay = user ? user.name || user.displayName || user.email || user.id : "(Tag Only)";
+  const userDisplay = user ? getUserDisplayName(user) : "(Tag Only)";
 
   return (
     <div className="w-full">

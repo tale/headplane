@@ -2,20 +2,18 @@ import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link as RemixLink } from "react-router";
 
-import type { PreAuthKey } from "~/types";
-import type { User } from "~/types/User";
-
 import Code from "~/components/Code";
 import Link from "~/components/Link";
 import Notice from "~/components/Notice";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
 import { Capabilities } from "~/server/web/roles";
+import type { PreAuthKey } from "~/types";
+import type { User } from "~/types/User";
 import log from "~/utils/log";
-import { filterUsersWithValidIds, getUserDisplayName } from "~/utils/user";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
-
 import { authKeysAction } from "./actions";
 import AuthKeyRow from "./auth-key-row";
 import AddAuthKey from "./dialogs/add-auth-key";
@@ -63,15 +61,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       | { success: false; user: User; error: unknown; preAuthKeys: [] };
 
     const results: FetchResult[] = await Promise.all(
-      filterUsersWithValidIds(users).map(async (user) => {
-        try {
-          const preAuthKeys = await api.getPreAuthKeys(user.id);
-          return { success: true as const, user, preAuthKeys };
-        } catch (error) {
-          log.error("api", "GET /v1/preauthkey for %s: %o", user.name, error);
-          return { success: false as const, user, error, preAuthKeys: [] as const };
-        }
-      }),
+      users
+        .filter((u) => u.id?.length > 0)
+        .map(async (user) => {
+          try {
+            const preAuthKeys = await api.getPreAuthKeys(user.id);
+            return { success: true as const, user, preAuthKeys };
+          } catch (error) {
+            log.error("api", "GET /v1/preauthkey for %s: %o", user.name, error);
+            return { success: false as const, user, error, preAuthKeys: [] as const };
+          }
+        }),
     );
 
     keys = results

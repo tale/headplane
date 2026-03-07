@@ -1,10 +1,8 @@
-import { eq } from "drizzle-orm";
 import { ClockIcon, LogOut, RefreshCw, UserCheck } from "lucide-react";
 import { Form, redirect } from "react-router";
 
 import Button from "~/components/Button";
 import Card from "~/components/Card";
-import { users } from "~/server/db/schema";
 import { Capabilities } from "~/server/web/roles";
 import toast from "~/utils/toast";
 
@@ -24,18 +22,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       return redirect("/machines");
     }
 
-    const [user] = await context.db
-      .select()
-      .from(users)
-      .where(eq(users.sub, session.user.subject))
-      .limit(1);
-
     const url = context.config.headscale.public_url ?? context.config.headscale.url;
 
     return {
       user: session.user,
       url,
-      exists: !!user,
     };
   } catch {
     return redirect("/login", {

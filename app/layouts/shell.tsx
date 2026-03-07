@@ -47,9 +47,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       configAvailable: context.hs.readable(),
       debug: context.config.debug,
       user: session.user,
-      uiAccess: check,
       access: {
-        ui: await context.sessions.check(request, Capabilities.ui_access),
+        ui: check,
         dns: await context.sessions.check(request, Capabilities.read_network),
         users: await context.sessions.check(request, Capabilities.read_users),
         policy: await context.sessions.check(request, Capabilities.read_policy),

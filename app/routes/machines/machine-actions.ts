@@ -60,9 +60,10 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  // Tag-only nodes (Headscale 0.28+) have no user, so we rely on role-based permissions
+  // Tag-only nodes (Headscale 0.28+) have no user — only role-based permissions apply
   const nodeOwnerId = node.user?.providerId?.split("/").pop();
-  if (nodeOwnerId !== session.user.subject && !check) {
+  const isOwner = nodeOwnerId !== undefined && nodeOwnerId === session.user.subject;
+  if (!isOwner && !check) {
     throw data("You do not have permission to act on this machine", {
       status: 403,
     });

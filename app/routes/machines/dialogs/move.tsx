@@ -1,9 +1,9 @@
 import { Key, useState } from "react";
 
-import type { Machine, User } from "~/types";
-
 import Dialog from "~/components/Dialog";
 import Select from "~/components/Select";
+import type { Machine, User } from "~/types";
+import { getUserDisplayName } from "~/utils/user";
 
 interface MoveProps {
   machine: Machine;
@@ -34,9 +34,7 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
           placeholder="Select a user"
         >
           {users.map((user) => (
-            <Select.Item key={user.id}>
-              {user.name || user.displayName || user.email || user.id}
-            </Select.Item>
+            <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
           ))}
         </Select>
       </Dialog.Panel>

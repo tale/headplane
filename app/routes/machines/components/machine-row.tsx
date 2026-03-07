@@ -2,8 +2,6 @@ import { ChevronDown, Copy } from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 
-import type { User } from "~/types";
-
 import Chip from "~/components/Chip";
 import Menu from "~/components/Menu";
 import StatusCircle from "~/components/StatusCircle";
@@ -12,11 +10,13 @@ import { ExpiryTag } from "~/components/tags/Expiry";
 import { HeadplaneAgentTag } from "~/components/tags/HeadplaneAgent";
 import { SubnetTag } from "~/components/tags/Subnet";
 import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
+import type { User } from "~/types";
 import cn from "~/utils/cn";
 import * as hinfo from "~/utils/host-info";
 import { PopulatedNode } from "~/utils/node-info";
 import { formatTimeDelta } from "~/utils/time";
 import toast from "~/utils/toast";
+import { getUserDisplayName } from "~/utils/user";
 
 import MenuOptions from "./menu";
 
@@ -63,9 +63,7 @@ export default function MachineRow({
             {node.givenName}
           </p>
           <p className="text-sm opacity-50">
-            {node.user
-              ? node.user.name || node.user.displayName || node.user.email || node.user.id
-              : "Tag-owned"}
+            {node.user ? getUserDisplayName(node.user) : "Tag-owned"}
           </p>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {mapTagsToComponents(node, uiTags)}

@@ -17,6 +17,20 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
     });
   }
 
+  async function checkSelfServiceOwnership(userId: string) {
+    if (canGenerateAny || !canGenerateOwn) return;
+    const [targetUser] = await api.getUsers(userId);
+    if (!targetUser) {
+      throw data("User not found.", { status: 404 });
+    }
+    const targetSubject = targetUser.providerId?.split("/").pop();
+    if (targetSubject !== session.user.subject) {
+      throw data("You do not have permission to manage this user's pre-auth keys", {
+        status: 403,
+      });
+    }
+  }
+
   const formData = await request.formData();
   const action = formData.get("action_id")?.toString();
   if (!action) {
@@ -40,18 +54,8 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      // Only allow self-service users to create keys for themselves
-      if (!canGenerateAny && canGenerateOwn && user) {
-        const [targetUser] = await api.getUsers(user);
-        if (!targetUser) {
-          return data("User not found.", { status: 404 });
-        }
-        const targetSubject = targetUser.providerId?.split("/").pop();
-        if (targetSubject !== session.user.subject) {
-          throw data("You can only create pre-auth keys for your own user", {
-            status: 403,
-          });
-        }
+      if (user) {
+        await checkSelfServiceOwnership(user);
       }
 
       const expiry = formData.get("expiry")?.toString();
@@ -104,19 +108,7 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      // Only allow self-service users to expire their own keys
-      if (!canGenerateAny && canGenerateOwn) {
-        const [targetUser] = await api.getUsers(user);
-        if (!targetUser) {
-          return data("User not found.", { status: 404 });
-        }
-        const targetSubject = targetUser.providerId?.split("/").pop();
-        if (targetSubject !== session.user.subject) {
-          throw data("You can only expire pre-auth keys for your own user", {
-            status: 403,
-          });
-        }
-      }
+      await checkSelfServiceOwnership(user);
 
       await api.expirePreAuthKey(user, key);
       return data("Pre-auth key expired");

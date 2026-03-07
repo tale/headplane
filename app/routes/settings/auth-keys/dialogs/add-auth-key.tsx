@@ -1,8 +1,6 @@
 import { Key, useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import type { User } from "~/types";
-
 import Button from "~/components/Button";
 import Code from "~/components/Code";
 import Dialog from "~/components/Dialog";
@@ -11,7 +9,9 @@ import Link from "~/components/Link";
 import NumberInput from "~/components/NumberInput";
 import Select from "~/components/Select";
 import Switch from "~/components/Switch";
+import type { User } from "~/types";
 import toast from "~/utils/toast";
+import { getUserDisplayName } from "~/utils/user";
 
 interface AddAuthKeyProps {
   users: User[];
@@ -152,9 +152,7 @@ export default function AddAuthKey({
               selectedKey={userId}
             >
               {availableUsers.map((user) => (
-                <Select.Item key={user.id}>
-                  {user.name || user.displayName || user.email || user.id}
-                </Select.Item>
+                <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
               ))}
             </Select>
           )}

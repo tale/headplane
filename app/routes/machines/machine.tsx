@@ -12,9 +12,9 @@ import Tooltip from "~/components/Tooltip";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { mapNodes, sortNodeTags } from "~/utils/node-info";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
-
 import { mapTagsToComponents, uiTagsForNode } from "./components/machine-row";
 import MenuOptions from "./components/menu";
 import Routes from "./dialogs/routes";
@@ -109,9 +109,7 @@ export default function Page({
           </span>
           <div className="mt-1 flex items-center gap-x-2.5">
             <UserCircle />
-            {node.user
-              ? node.user.name || node.user.displayName || node.user.email || node.user.id
-              : "Tag-owned"}
+            {node.user ? getUserDisplayName(node.user) : "Tag-owned"}
           </div>
         </div>
         <div className="p-2 pl-4">
@@ -243,11 +241,7 @@ export default function Page({
         <div className="flex flex-col gap-1">
           <Attribute
             name="Creator"
-            value={
-              node.user
-                ? node.user.name || node.user.displayName || node.user.email || node.user.id
-                : "Tag-owned"
-            }
+            value={node.user ? getUserDisplayName(node.user) : "Tag-owned"}
           />
           <Attribute name="Machine name" value={node.givenName} />
           <Attribute
