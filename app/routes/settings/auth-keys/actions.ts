@@ -1,15 +1,17 @@
 import { data } from "react-router";
 
+import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/overview";
 
 export async function authKeysAction({ request, context }: Route.ActionArgs) {
-  const session = await context.sessions.auth(request);
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const principal = await context.auth.require(request);
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
 
-  const canGenerateAny = await context.sessions.check(request, Capabilities.generate_authkeys);
-  const canGenerateOwn = await context.sessions.check(request, Capabilities.generate_own_authkeys);
+  const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
+  const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);
 
   if (!canGenerateAny && !canGenerateOwn) {
     throw data("You do not have permission to manage pre-auth keys", {
@@ -23,8 +25,8 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
     if (!targetUser) {
       throw data("User not found.", { status: 404 });
     }
-    const targetSubject = targetUser.providerId?.split("/").pop();
-    if (targetSubject !== session.user.subject) {
+    const targetSubject = getOidcSubject(targetUser);
+    if (principal.kind !== "oidc" || targetSubject !== principal.user.subject) {
       throw data("You do not have permission to manage this user's pre-auth keys", {
         status: 403,
       });

@@ -10,30 +10,24 @@ import cn from "~/utils/cn";
 import { mapNodes, sortNodeTags } from "~/utils/node-info";
 
 import type { Route } from "./+types/overview";
-
 import MachineRow from "./components/machine-row";
 import NewMachine from "./dialogs/new";
 import { machineAction } from "./machine-actions";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await context.sessions.auth(request);
-  const user = session.user;
-  if (!user) {
-    throw new Error("Missing user session. Please log in again.");
-  }
+  const principal = await context.auth.require(request);
 
-  const check = await context.sessions.check(request, Capabilities.read_machines);
-
-  if (!check) {
-    // Not authorized to view this page
+  if (!context.auth.can(principal, Capabilities.read_machines)) {
     throw new Error(
       "You do not have permission to view this page. Please contact your administrator.",
     );
   }
 
-  const writablePermission = await context.sessions.check(request, Capabilities.write_machines);
+  const writablePermission = context.auth.can(principal, Capabilities.write_machines);
 
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const api = context.hsApi.getRuntimeClient(
+    context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
+  );
   const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
 
   let magic: string | undefined;
@@ -56,8 +50,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     publicServer: context.config.headscale.public_url,
     agent: context.agents?.agentID(),
     writable: writablePermission,
-    preAuth: await context.sessions.check(request, Capabilities.generate_authkeys),
-    subject: user.subject,
+    preAuth: context.auth.can(principal, Capabilities.generate_authkeys),
+    headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,
     supportsNodeOwnerChange: supportsNodeOwnerChange,
   };
 }
@@ -363,7 +357,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                   isDisabled={
                     loaderData.writable
                       ? false // If the user has write permissions, they can edit all machines
-                      : node.user?.providerId?.split("/").pop() !== loaderData.subject
+                      : node.user?.id !== loaderData.headscaleUserId
                   }
                   key={node.id}
                   magic={loaderData.magic}

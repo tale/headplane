@@ -1,31 +1,50 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
-import { HostInfo } from '~/types';
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const ephemeralNodes = sqliteTable('ephemeral_nodes', {
-	auth_key: text('auth_key').primaryKey(),
-	node_key: text('node_key'),
+import { HostInfo } from "~/types";
+
+export const ephemeralNodes = sqliteTable("ephemeral_nodes", {
+  auth_key: text("auth_key").primaryKey(),
+  node_key: text("node_key"),
 });
 
 export type EphemeralNode = typeof ephemeralNodes.$inferSelect;
 export type EphemeralNodeInsert = typeof ephemeralNodes.$inferInsert;
 
-export const hostInfo = sqliteTable('host_info', {
-	host_id: text('host_id').primaryKey(),
-	payload: text('payload', { mode: 'json' }).$type<HostInfo>(),
-	updated_at: integer('updated_at', { mode: 'timestamp' }).$default(
-		() => new Date(),
-	),
+export const hostInfo = sqliteTable("host_info", {
+  host_id: text("host_id").primaryKey(),
+  payload: text("payload", { mode: "json" }).$type<HostInfo>(),
+  updated_at: integer("updated_at", { mode: "timestamp" }).$default(() => new Date()),
 });
 
 export type HostInfoRecord = typeof hostInfo.$inferSelect;
 export type HostInfoInsert = typeof hostInfo.$inferInsert;
 
-export const users = sqliteTable('users', {
-	id: text('id').primaryKey(),
-	sub: text('sub').notNull().unique(),
-	caps: integer('caps').notNull().default(0),
-	onboarded: integer('onboarded', { mode: 'boolean' }).notNull().default(false),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  sub: text("sub").notNull().unique(),
+  role: text("role").notNull().default("member"),
+  headscale_user_id: text("headscale_user_id"),
+  onboarded: integer("onboarded", { mode: "boolean" }).notNull().default(false),
+  created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
+  updated_at: integer("updated_at", { mode: "timestamp" }).$default(() => new Date()),
+  last_login_at: integer("last_login_at", { mode: "timestamp" }),
+
+  // Deprecated: kept for migration compatibility, will be removed in 1.0
+  caps: integer("caps").notNull().default(0),
 });
 
-export type User = typeof users.$inferSelect;
-export type UserInsert = typeof users.$inferInsert;
+export type HeadplaneUser = typeof users.$inferSelect;
+export type HeadplaneUserInsert = typeof users.$inferInsert;
+
+export const authSessions = sqliteTable("auth_sessions", {
+  id: text("id").primaryKey(),
+  kind: text("kind").notNull(), // 'oidc' | 'api_key'
+  user_id: text("user_id"),
+  api_key_hash: text("api_key_hash"),
+  api_key_display: text("api_key_display"),
+  expires_at: integer("expires_at", { mode: "timestamp" }).notNull(),
+  created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
+});
+
+export type AuthSessionRecord = typeof authSessions.$inferSelect;
+export type AuthSessionInsert = typeof authSessions.$inferInsert;

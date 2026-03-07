@@ -1,9 +1,7 @@
-import { eq } from "drizzle-orm";
 import { Outlet, redirect } from "react-router";
 
 import Footer from "~/components/Footer";
 import Header from "~/components/Header";
-import { users } from "~/server/db/schema";
 import { Capabilities } from "~/server/web/roles";
 
 import { Route } from "./+types/shell";
@@ -12,48 +10,49 @@ import { Route } from "./+types/shell";
 // So we know that if context fails to load then well, oops?
 export async function loader({ request, context }: Route.LoaderArgs) {
   try {
-    const session = await context.sessions.auth(request);
+    const principal = await context.auth.require(request);
+
     if (
       typeof context.oidc === "object" &&
-      session.user.subject !== "unknown-non-oauth" &&
+      principal.kind === "oidc" &&
+      !principal.user.onboarded &&
       !request.url.endsWith("/onboarding")
     ) {
-      const [user] = await context.db
-        .select()
-        .from(users)
-        .where(eq(users.sub, session.user.subject))
-        .limit(1);
-
-      if (!user?.onboarded) {
-        return redirect("/onboarding");
-      }
+      return redirect("/onboarding");
     }
 
-    const api = context.hsApi.getRuntimeClient(session.api_key);
-    const check = await context.sessions.check(request, Capabilities.ui_access);
+    const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+    const api = context.hsApi.getRuntimeClient(apiKey);
+    const check = context.auth.can(principal, Capabilities.ui_access);
 
-    // OIDC users without ui_access go to pending approval
-    if (
-      !check &&
-      session.user.subject !== "unknown-non-oauth" &&
-      !request.url.endsWith("/onboarding")
-    ) {
-      return redirect("/pending-approval");
+    if (!check && principal.kind === "oidc" && !request.url.endsWith("/onboarding")) {
+      throw new Error("You do not have permission to access the UI");
     }
+
+    const user =
+      principal.kind === "oidc"
+        ? {
+            subject: principal.user.subject,
+            name: principal.profile.name,
+            email: principal.profile.email,
+            username: principal.profile.username,
+            picture: principal.profile.picture,
+          }
+        : { subject: "api_key", name: principal.displayName };
 
     return {
       config: context.hs.c,
       url: context.config.headscale.public_url ?? context.config.headscale.url,
       configAvailable: context.hs.readable(),
       debug: context.config.debug,
-      user: session.user,
+      user,
       access: {
         ui: check,
-        dns: await context.sessions.check(request, Capabilities.read_network),
-        users: await context.sessions.check(request, Capabilities.read_users),
-        policy: await context.sessions.check(request, Capabilities.read_policy),
-        machines: await context.sessions.check(request, Capabilities.read_machines),
-        settings: await context.sessions.check(request, Capabilities.read_feature),
+        dns: context.auth.can(principal, Capabilities.read_network),
+        users: context.auth.can(principal, Capabilities.read_users),
+        policy: context.auth.can(principal, Capabilities.read_policy),
+        machines: context.auth.can(principal, Capabilities.read_machines),
+        settings: context.auth.can(principal, Capabilities.read_feature),
       },
       onboarding: request.url.endsWith("/onboarding"),
       healthy: await api.isHealthy(),
@@ -61,7 +60,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   } catch {
     return redirect("/login", {
       headers: {
-        "Set-Cookie": await context.sessions.destroySession(),
+        "Set-Cookie": await context.auth.destroySession(request),
       },
     });
   }

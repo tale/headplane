@@ -13,7 +13,6 @@ export default [
   route("/logout", "routes/auth/logout.ts"),
   route("/oidc/callback", "routes/auth/oidc-callback.ts"),
   route("/oidc/start", "routes/auth/oidc-start.ts"),
-  route("/pending-approval", "routes/auth/pending-approval.tsx"),
   route("/ssh", "routes/ssh/console.tsx"),
 
   // All the main logged-in dashboard routes

@@ -21,7 +21,7 @@ import Routes from "./dialogs/routes";
 import { machineAction } from "./machine-actions";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const session = await context.sessions.auth(request);
+  const principal = await context.auth.require(request);
   if (!params.id) {
     throw new Error("No machine ID provided");
   }
@@ -37,7 +37,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     }
   }
 
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const api = context.hsApi.getRuntimeClient(
+    context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
+  );
   const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
   const node = nodes.find((node) => node.id === params.id);
 

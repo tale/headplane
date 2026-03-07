@@ -19,8 +19,9 @@ import AuthKeyRow from "./auth-key-row";
 import AddAuthKey from "./dialogs/add-auth-key";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await context.sessions.auth(request);
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const principal = await context.auth.require(request);
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
 
   const users = await api.getUsers();
 
@@ -83,8 +84,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .map(({ user, error }) => ({ user, error }));
   }
 
-  const canGenerateAny = await context.sessions.check(request, Capabilities.generate_authkeys);
-  const canGenerateOwn = await context.sessions.check(request, Capabilities.generate_own_authkeys);
+  const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
+  const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);
 
   return {
     keys,
@@ -92,7 +93,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     users,
     access: canGenerateAny || canGenerateOwn,
     selfServiceOnly: !canGenerateAny && canGenerateOwn,
-    currentSubject: session.user.subject,
+    currentSubject: principal.kind === "oidc" ? principal.user.subject : undefined,
     url: context.config.headscale.public_url ?? context.config.headscale.url,
   };
 }
