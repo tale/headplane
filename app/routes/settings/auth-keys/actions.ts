@@ -6,16 +6,18 @@ import type { Route } from "./+types/overview";
 
 export async function authKeysAction({ request, context }: Route.ActionArgs) {
   const session = await context.sessions.auth(request);
-  const check = await context.sessions.check(request, Capabilities.generate_authkeys);
+  const api = context.hsApi.getRuntimeClient(session.api_key);
 
-  if (!check) {
+  const canGenerateAny = await context.sessions.check(request, Capabilities.generate_authkeys);
+  const canGenerateOwn = await context.sessions.check(request, Capabilities.generate_own_authkeys);
+
+  if (!canGenerateAny && !canGenerateOwn) {
     throw data("You do not have permission to manage pre-auth keys", {
       status: 403,
     });
   }
 
   const formData = await request.formData();
-  const api = context.hsApi.getRuntimeClient(session.api_key);
   const action = formData.get("action_id")?.toString();
   if (!action) {
     throw data("Missing `action_id` in the form data.", {
@@ -36,6 +38,20 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         return data("Must specify either a user or ACL tags.", {
           status: 400,
         });
+      }
+
+      // Only allow self-service users to create keys for themselves
+      if (!canGenerateAny && canGenerateOwn && user) {
+        const [targetUser] = await api.getUsers(user);
+        if (!targetUser) {
+          return data("User not found.", { status: 404 });
+        }
+        const targetSubject = targetUser.providerId?.split("/").pop();
+        if (targetSubject !== session.user.subject) {
+          throw data("You can only create pre-auth keys for your own user", {
+            status: 403,
+          });
+        }
       }
 
       const expiry = formData.get("expiry")?.toString();
@@ -86,6 +102,20 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         return data("Missing `user_id` in the form data.", {
           status: 400,
         });
+      }
+
+      // Only allow self-service users to expire their own keys
+      if (!canGenerateAny && canGenerateOwn) {
+        const [targetUser] = await api.getUsers(user);
+        if (!targetUser) {
+          return data("User not found.", { status: 404 });
+        }
+        const targetSubject = targetUser.providerId?.split("/").pop();
+        if (targetSubject !== session.user.subject) {
+          throw data("You can only expire pre-auth keys for your own user", {
+            status: 403,
+          });
+        }
       }
 
       await api.expirePreAuthKey(user, key);

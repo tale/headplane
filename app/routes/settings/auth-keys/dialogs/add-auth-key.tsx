@@ -16,16 +16,29 @@ import toast from "~/utils/toast";
 interface AddAuthKeyProps {
   users: User[];
   url: string;
+  selfServiceOnly: boolean;
+  currentSubject: string;
 }
 
-export default function AddAuthKey({ users, url }: AddAuthKeyProps) {
+function findCurrentUser(users: User[], subject: string): User | undefined {
+  return users.find((u) => u.providerId?.split("/").pop() === subject);
+}
+
+export default function AddAuthKey({
+  users,
+  url,
+  selfServiceOnly,
+  currentSubject,
+}: AddAuthKeyProps) {
   const fetcher = useFetcher();
   const submittingRef = useRef(false);
   const [isOpen, setIsOpen] = useState(false);
   const [reusable, setReusable] = useState(false);
   const [ephemeral, setEphemeral] = useState(false);
   const [tagOnly, setTagOnly] = useState(false);
-  const [userId, setUserId] = useState<Key | null>(users[0]?.id);
+  const currentUser = selfServiceOnly ? findCurrentUser(users, currentSubject) : null;
+  const availableUsers = selfServiceOnly && currentUser ? [currentUser] : users;
+  const [userId, setUserId] = useState<Key | null>(availableUsers[0]?.id);
   const [tags, setTags] = useState("");
 
   const createdKey = fetcher.data?.success ? fetcher.data.key : null;
@@ -41,7 +54,7 @@ export default function AddAuthKey({ users, url }: AddAuthKeyProps) {
       setReusable(false);
       setEphemeral(false);
       setTagOnly(false);
-      setUserId(users[0]?.id);
+      setUserId(availableUsers[0]?.id);
       setTags("");
       fetcher.data = undefined;
     }
@@ -107,30 +120,38 @@ export default function AddAuthKey({ users, url }: AddAuthKeyProps) {
         >
           <Dialog.Title>Generate auth key</Dialog.Title>
 
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <div>
-              <Dialog.Text className="font-semibold">Tag-only key</Dialog.Text>
-              <Dialog.Text className="text-sm">
-                Create a key owned by ACL tags instead of a user.
-              </Dialog.Text>
+          {!selfServiceOnly && (
+            <div className="mb-4 flex items-center justify-between gap-2">
+              <div>
+                <Dialog.Text className="font-semibold">Tag-only key</Dialog.Text>
+                <Dialog.Text className="text-sm">
+                  Create a key owned by ACL tags instead of a user.
+                </Dialog.Text>
+              </div>
+              <Switch
+                defaultSelected={tagOnly}
+                label="Tag-only"
+                onChange={() => setTagOnly(!tagOnly)}
+              />
             </div>
-            <Switch
-              defaultSelected={tagOnly}
-              label="Tag-only"
-              onChange={() => setTagOnly(!tagOnly)}
-            />
-          </div>
+          )}
 
           {!tagOnly && (
             <Select
               className="mb-2"
-              description="Machines will belong to this user when they authenticate."
+              description={
+                selfServiceOnly
+                  ? "You can only create keys for your own user."
+                  : "Machines will belong to this user when they authenticate."
+              }
+              isDisabled={selfServiceOnly}
               isRequired
               label="User"
               onSelectionChange={(value) => setUserId(value)}
               placeholder="Select a user"
+              selectedKey={userId}
             >
-              {users.map((user) => (
+              {availableUsers.map((user) => (
                 <Select.Item key={user.id}>
                   {user.name || user.displayName || user.email || user.id}
                 </Select.Item>

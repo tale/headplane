@@ -2,14 +2,15 @@ import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link as RemixLink } from "react-router";
 
+import type { PreAuthKey } from "~/types";
+import type { User } from "~/types/User";
+
 import Code from "~/components/Code";
 import Link from "~/components/Link";
 import Notice from "~/components/Notice";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
 import { Capabilities } from "~/server/web/roles";
-import type { PreAuthKey } from "~/types";
-import type { User } from "~/types/User";
 import log from "~/utils/log";
 import { filterUsersWithValidIds, getUserDisplayName } from "~/utils/user";
 
@@ -82,11 +83,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .map(({ user, error }) => ({ user, error }));
   }
 
+  const canGenerateAny = await context.sessions.check(request, Capabilities.generate_authkeys);
+  const canGenerateOwn = await context.sessions.check(request, Capabilities.generate_own_authkeys);
+
   return {
     keys,
     missing,
     users,
-    access: await context.sessions.check(request, Capabilities.generate_authkeys),
+    access: canGenerateAny || canGenerateOwn,
+    selfServiceOnly: !canGenerateAny && canGenerateOwn,
+    currentSubject: session.user.subject,
     url: context.config.headscale.public_url ?? context.config.headscale.url,
   };
 }
@@ -95,7 +101,7 @@ export const action = authKeysAction;
 
 type Status = "all" | "active" | "expired" | "reusable" | "ephemeral";
 export default function Page({
-  loaderData: { keys, missing, users, url, access },
+  loaderData: { keys, missing, users, url, access, selfServiceOnly, currentSubject },
 }: Route.ComponentProps) {
   const [selectedUser, setSelectedUser] = useState("__headplane_all");
   const [status, setStatus] = useState<Status>("active");
@@ -193,7 +199,12 @@ export default function Page({
           Tailscale documentation
         </Link>
       </p>
-      <AddAuthKey url={url} users={users} />
+      <AddAuthKey
+        currentSubject={currentSubject}
+        selfServiceOnly={selfServiceOnly}
+        url={url}
+        users={users}
+      />
       <div className="mt-4 flex items-center gap-4">
         <Select
           className="w-full"
