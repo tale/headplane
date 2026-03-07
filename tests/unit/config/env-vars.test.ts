@@ -1,54 +1,85 @@
-import { beforeEach, describe, expect, test } from 'vitest';
-import { ConfigError } from '~/server/config/error';
-import { loadConfig, loadConfigEnv } from '~/server/config/load';
+import { beforeEach, describe, expect, test } from "vitest";
+
+import { ConfigError } from "~/server/config/error";
+import { loadConfig, loadConfigEnv } from "~/server/config/load";
 
 const envVarSnapshot = { ...process.env };
-describe('Configuration environment variable handling', () => {
-	beforeEach(() => {
-		process.env = { ...envVarSnapshot };
-	});
+describe("Configuration environment variable handling", () => {
+  beforeEach(() => {
+    process.env = { ...envVarSnapshot };
+  });
 
-	test('should correctly parse different types from env vars', async () => {
-		process.env.HEADPLANE_HEADSCALE__URL = 'http://localhost:8080';
-		process.env.HEADPLANE_OIDC__CLIENT_ID = 'my-client-id';
-		process.env.HEADPLANE_SERVER__PORT = '8000';
-		process.env.HEADPLANE_INTEGRATION__AGENT__ENABLED = 'true';
+  test("should correctly parse different types from env vars", async () => {
+    process.env.HEADPLANE_HEADSCALE__URL = "http://localhost:8080";
+    process.env.HEADPLANE_OIDC__CLIENT_ID = "my-client-id";
+    process.env.HEADPLANE_SERVER__PORT = "8000";
+    process.env.HEADPLANE_INTEGRATION__AGENT__ENABLED = "true";
 
-		const config = await loadConfigEnv();
-		expect(config?.headscale?.url).toBe('http://localhost:8080');
-		expect(config?.oidc?.client_id).toBe('my-client-id');
-		expect(config?.server?.port).toBe(8000);
-		expect(config?.integration?.agent?.enabled).toBe(true);
-	});
+    const config = await loadConfigEnv();
+    expect(config?.headscale?.url).toBe("http://localhost:8080");
+    expect(config?.oidc?.client_id).toBe("my-client-id");
+    expect(config?.server?.port).toBe(8000);
+    expect(config?.integration?.agent?.enabled).toBe(true);
+  });
 
-	test('should not load env vars without the HEADPLANE_ prefix', async () => {
-		process.env.HEADPLANE_HEADSCALE__URL = 'http://localhost:8080';
-		process.env.OTHER_PREFIX_OIDC__CLIENT_ID = 'should-not-be-loaded';
+  test("should not load env vars without the HEADPLANE_ prefix", async () => {
+    process.env.HEADPLANE_HEADSCALE__URL = "http://localhost:8080";
+    process.env.OTHER_PREFIX_OIDC__CLIENT_ID = "should-not-be-loaded";
 
-		const config = await loadConfigEnv();
-		expect(config?.headscale?.url).toBe('http://localhost:8080');
-		expect(config?.oidc?.client_id).toBeUndefined();
-	});
+    const config = await loadConfigEnv();
+    expect(config?.headscale?.url).toBe("http://localhost:8080");
+    expect(config?.oidc?.client_id).toBeUndefined();
+  });
 
-	test('should correctly get a finalized config from env vars', async () => {
-		process.env.HEADPLANE_HEADSCALE__URL = 'http://localhost:8080';
-		process.env.HEADPLANE_SERVER__COOKIE_SECRET =
-			'thirtytwo-character-cookiesecret';
+  test("should correctly get a finalized config from env vars", async () => {
+    process.env.HEADPLANE_HEADSCALE__URL = "http://localhost:8080";
+    process.env.HEADPLANE_SERVER__COOKIE_SECRET = "thirtytwo-character-cookiesecret";
 
-		const config = await loadConfig('./non-existent-path.yaml');
-		expect(config.headscale.url).toBe('http://localhost:8080');
-		expect(config.server.cookie_secret).toBe(
-			'thirtytwo-character-cookiesecret',
-		);
-	});
+    const config = await loadConfig("./non-existent-path.yaml");
+    expect(config.headscale.url).toBe("http://localhost:8080");
+    expect(config.server.cookie_secret).toBe("thirtytwo-character-cookiesecret");
+  });
 
-	test('should throw error for missing required fields', async () => {
-		process.env.HEADPLANE_SERVER__PORT = '8000';
+  test("should throw error for missing required fields", async () => {
+    process.env.HEADPLANE_SERVER__PORT = "8000";
 
-		await expect(loadConfig('./non-existent-path.yaml')).rejects.toEqual(
-			expect.objectContaining(
-				ConfigError.from('INVALID_REQUIRED_FIELDS', { messages: [] }),
-			),
-		);
-	});
+    await expect(loadConfig("./non-existent-path.yaml")).rejects.toEqual(
+      expect.objectContaining(ConfigError.from("INVALID_REQUIRED_FIELDS", { messages: [] })),
+    );
+  });
+
+  test("oidc.enabled can be set via HEADPLANE_OIDC__ENABLED env var", async () => {
+    process.env.HEADPLANE_OIDC__ENABLED = "true";
+    process.env.HEADPLANE_OIDC__ISSUER = "https://accounts.google.com";
+    process.env.HEADPLANE_OIDC__CLIENT_ID = "my-client-id";
+
+    const config = await loadConfigEnv();
+    expect(config?.oidc?.enabled).toBe(true);
+    expect(config?.oidc?.issuer).toBe("https://accounts.google.com");
+  });
+
+  test("oidc.enabled=false can be set via env var", async () => {
+    process.env.HEADPLANE_OIDC__ENABLED = "false";
+    process.env.HEADPLANE_OIDC__ISSUER = "https://accounts.google.com";
+    process.env.HEADPLANE_OIDC__CLIENT_ID = "my-client-id";
+
+    const config = await loadConfigEnv();
+    expect(config?.oidc?.enabled).toBe(false);
+  });
+
+  test("oidc.enabled=false via env var preserves full OIDC config", async () => {
+    process.env.HEADPLANE_HEADSCALE__URL = "http://localhost:8080";
+    process.env.HEADPLANE_SERVER__COOKIE_SECRET = "thirtytwo-character-cookiesecret";
+    process.env.HEADPLANE_OIDC__ENABLED = "false";
+    process.env.HEADPLANE_OIDC__ISSUER = "https://accounts.google.com";
+    process.env.HEADPLANE_OIDC__CLIENT_ID = "my-client-id";
+    process.env.HEADPLANE_OIDC__CLIENT_SECRET = "my-client-secret";
+    process.env.HEADPLANE_OIDC__HEADSCALE_API_KEY = "my-api-key";
+
+    const config = await loadConfig("./non-existent-path.yaml");
+    expect(config.oidc).toBeDefined();
+    expect(config.oidc?.enabled).toBe(false);
+    expect(config.oidc?.issuer).toBe("https://accounts.google.com");
+    expect(config.oidc?.client_id).toBe("my-client-id");
+  });
 });
