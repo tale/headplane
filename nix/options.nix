@@ -343,15 +343,6 @@ in {
                   example = "config.sops.secrets.headscale_api_key.path";
                 };
 
-                user_storage_file = mkOption {
-                  type = types.path;
-                  default = "/var/lib/headplane/users.json";
-                  description = ''
-                    Path to a file containing the users and their permissions for Headplane.
-                  '';
-                  example = "/var/lib/headplane/users.json";
-                };
-
                 use_pkce = mkOption {
                   type = types.bool;
                   default = false;

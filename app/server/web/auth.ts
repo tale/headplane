@@ -1,6 +1,6 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
-import { eq, lt } from "drizzle-orm";
+import { eq, lt, sql } from "drizzle-orm";
 import { LibSQLDatabase } from "drizzle-orm/libsql/driver";
 import { createCookie } from "react-router";
 import { ulid } from "ulidx";
@@ -212,8 +212,9 @@ export class AuthService {
   }
 
   /**
-   * Create a new API key session. The API key is stored server-side
-   * as a SHA-256 hash — it never appears in the cookie.
+   * Create a new API key session. A SHA-256 hash of the key is stored
+   * server-side for auditing. The plaintext key is carried in the
+   * HMAC-signed cookie so it can be used for Headscale API calls.
    * Returns the Set-Cookie header value.
    */
   async createApiKeySession(apiKey: string, displayName: string, maxAge: number): Promise<string> {
@@ -272,9 +273,10 @@ export class AuthService {
 
   /**
    * Find or create a Headplane user by OIDC subject. Returns the
-   * user ID. Used during OIDC callback to establish identity.
+   * user ID. The first user ever created is automatically granted
+   * the owner role (bootstrap). Uses upsert to avoid race conditions.
    */
-  async findOrCreateUser(subject: string, defaultRole: Role): Promise<string> {
+  async findOrCreateUser(subject: string): Promise<string> {
     const [existing] = await this.opts.db
       .select()
       .from(users)
@@ -293,20 +295,25 @@ export class AuthService {
     await this.opts.db.insert(users).values({
       id,
       sub: subject,
-      role: defaultRole,
-      caps: capsForRole(defaultRole),
+      role: "member",
+      caps: capsForRole("member"),
       onboarded: false,
     });
 
-    return id;
-  }
+    // If this is the only user in the table, promote to owner.
+    // The unique constraint on `sub` prevents two concurrent inserts
+    // for the same subject; for different subjects, COUNT atomically
+    // reflects all committed rows so at most one will see count === 1.
+    const [{ count }] = await this.opts.db.select({ count: sql<number>`count(*)` }).from(users);
 
-  /**
-   * Check if there are any users in the database (for bootstrap).
-   */
-  async hasAnyUsers(): Promise<boolean> {
-    const [row] = await this.opts.db.select({ id: users.id }).from(users).limit(1);
-    return row !== undefined;
+    if (count === 1) {
+      await this.opts.db
+        .update(users)
+        .set({ role: "owner", caps: capsForRole("owner") })
+        .where(eq(users.id, id));
+    }
+
+    return id;
   }
 
   /**
@@ -377,9 +384,7 @@ export class AuthService {
     });
 
     const signed = Buffer.from(JSON.stringify(payload)).toString("base64url");
-    const hmac = createHash("sha256")
-      .update(this.opts.secret + signed)
-      .digest("base64url");
+    const hmac = createHmac("sha256", this.opts.secret).update(signed).digest("base64url");
 
     return cookie.serialize(`${signed}.${hmac}`);
   }
@@ -408,9 +413,7 @@ export class AuthService {
     const signed = raw.slice(0, dotIndex);
     const hmac = raw.slice(dotIndex + 1);
 
-    const expected = createHash("sha256")
-      .update(this.opts.secret + signed)
-      .digest("base64url");
+    const expected = createHmac("sha256", this.opts.secret).update(signed).digest("base64url");
 
     if (hmac !== expected) {
       throw new Error("Invalid session cookie signature");

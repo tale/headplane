@@ -100,7 +100,6 @@ const oidcConfig = type({
   token_endpoint_auth_method: '"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 
   // Old/deprecated options
-  user_storage_file: 'string.lower = "/var/lib/headplane/users.json"',
   strict_validation: type("unknown").narrow(deprecatedField()).optional(),
 });
 
@@ -123,7 +122,6 @@ const partialOidcConfig = type({
   token_endpoint_auth_method: '"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 
   // Old/deprecated options
-  user_storage_file: "string.lower?",
   strict_validation: type("unknown").narrow(deprecatedField()).optional(),
 });
 
