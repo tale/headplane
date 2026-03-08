@@ -1,11 +1,14 @@
 import { createHash } from "node:crypto";
 
+import { eq } from "drizzle-orm";
 import { useEffect, useState } from "react";
 
+import { users as usersTable } from "~/server/db/schema";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
 import cn from "~/utils/cn";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
 import ManageBanner from "./components/manage-banner";
@@ -74,6 +77,28 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
   }
 
+  // Build linkable Headscale users for admin link dialog
+  const claimed = await context.auth.claimedHeadscaleUserIds();
+  const headscaleUsers = apiUsers.map((u) => ({
+    id: u.id,
+    name: getUserDisplayName(u),
+    claimed: claimed.has(u.id),
+  }));
+
+  // Build a map of Headscale user -> linked Headplane subject
+  const userLinks: Record<string, string | undefined> = {};
+  for (const u of apiUsers) {
+    const subject = getOidcSubject(u);
+    if (subject) {
+      const [hp] = await context.db
+        .select({ hsId: usersTable.headscale_user_id })
+        .from(usersTable)
+        .where(eq(usersTable.sub, subject))
+        .limit(1);
+      userLinks[u.id] = hp?.hsId ?? undefined;
+    }
+  }
+
   return {
     writable: writablePermission, // whether the user can write to the API
     oidc: context.config.oidc
@@ -84,6 +109,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     roles,
     magic,
     users,
+    headscaleUsers,
+    userLinks,
   };
 }
 
@@ -124,7 +151,13 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             {users
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((user) => (
-                <UserRow key={user.id} role={loaderData.roles[users.indexOf(user)]} user={user} />
+                <UserRow
+                  key={user.id}
+                  currentLink={loaderData.userLinks[user.id]}
+                  headscaleUsers={loaderData.headscaleUsers}
+                  role={loaderData.roles[users.indexOf(user)]}
+                  user={user}
+                />
               ))}
           </tbody>
         </table>

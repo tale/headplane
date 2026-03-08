@@ -125,34 +125,47 @@ export default function Page({
   return (
     <div className="fixed flex h-screen w-full items-center px-4">
       <div className="mx-auto mb-24 grid w-fit grid-cols-1 gap-4 md:grid-cols-2">
-        {needsUserLink && headscaleUsers.length > 0 ? (
+        {needsUserLink ? (
           <Card className="col-span-2 mx-auto max-w-lg" variant="flat">
             <Card.Title className="mb-4">Link your Headscale account</Card.Title>
             <Card.Text className="mb-4">
-              Headplane couldn't automatically match your SSO identity to a Headscale user. Select
-              which Headscale user you are to continue.
+              Headplane couldn't automatically match your SSO identity to a Headscale user.
+              {headscaleUsers.length > 0
+                ? " Select which Headscale user you are, or skip to continue without linking."
+                : " All Headscale users are already linked. You can skip this step and ask an admin to link your account later."}
             </Card.Text>
-            <Form method="POST" action="/onboarding/skip">
-              <select
-                className={cn(
-                  "w-full rounded-lg border p-2 mb-4",
-                  "border-headplane-200 dark:border-headplane-700",
-                  "bg-headplane-50 dark:bg-headplane-900",
-                )}
-                name="headscale_user_id"
-                required
-              >
-                <option value="">Select a user...</option>
-                {headscaleUsers.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-              <Button className="w-full" type="submit" variant="heavy">
-                Link and Continue
+            {headscaleUsers.length > 0 ? (
+              <Form method="POST" action="/onboarding/skip">
+                <select
+                  className={cn(
+                    "mb-4 w-full rounded-lg border p-2",
+                    "border-headplane-200 dark:border-headplane-700",
+                    "bg-headplane-50 dark:bg-headplane-900",
+                  )}
+                  name="headscale_user_id"
+                  required
+                >
+                  <option value="">Select a user...</option>
+                  {headscaleUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+                <Button className="w-full" type="submit" variant="heavy">
+                  Link and Continue
+                </Button>
+              </Form>
+            ) : undefined}
+            <NavLink className="mt-3 block text-center" to="/onboarding/skip">
+              <Button className="w-full" variant="light">
+                Skip — I'll do this later
               </Button>
-            </Form>
+            </NavLink>
+            <p className="text-headplane-500 mt-2 text-center text-xs">
+              Without linking, you won't be able to see your own machines or generate pre-auth keys.
+              An admin can link your account later from the Users page.
+            </p>
           </Card>
         ) : undefined}
         <Card className="max-w-lg" variant="flat">

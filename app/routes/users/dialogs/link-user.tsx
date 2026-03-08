@@ -1,0 +1,58 @@
+import Dialog from "~/components/Dialog";
+import Notice from "~/components/Notice";
+import type { User } from "~/types";
+import cn from "~/utils/cn";
+
+interface LinkUserProps {
+  user: User & { headplaneRole: string };
+  headscaleUsers: { id: string; name: string }[];
+  currentLink?: string;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+export default function LinkUser({
+  user,
+  headscaleUsers,
+  currentLink,
+  isOpen,
+  setIsOpen,
+}: LinkUserProps) {
+  return (
+    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
+      <Dialog.Panel>
+        <Dialog.Title>Link Headscale user for {user.name || user.displayName}</Dialog.Title>
+        <Dialog.Text className="mb-6">
+          Select which Headscale user this OIDC identity should be linked to. This controls which
+          machines they can manage and enables self-service features.
+        </Dialog.Text>
+        {headscaleUsers.length === 0 ? (
+          <Notice>All Headscale users are already linked to other accounts.</Notice>
+        ) : (
+          <>
+            <input name="action_id" type="hidden" value="link_user" />
+            <input name="user_id" type="hidden" value={user.id} />
+            <select
+              className={cn(
+                "w-full rounded-lg border p-2",
+                "border-headplane-200 dark:border-headplane-700",
+                "bg-headplane-50 dark:bg-headplane-900",
+              )}
+              defaultValue={currentLink ?? ""}
+              name="headscale_user_id"
+              required
+            >
+              <option value="">Select a Headscale user...</option>
+              {headscaleUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                  {u.id === currentLink ? " (current)" : ""}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+      </Dialog.Panel>
+    </Dialog>
+  );
+}

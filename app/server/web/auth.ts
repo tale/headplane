@@ -340,6 +340,25 @@ export class AuthService {
   }
 
   /**
+   * Link a Headplane user (identified by OIDC subject) to a Headscale
+   * user. Used by admin UI when subjects are more accessible than
+   * internal Headplane IDs. Returns false if already claimed.
+   */
+  async linkHeadscaleUserBySubject(subject: string, headscaleUserId: string): Promise<boolean> {
+    const [user] = await this.opts.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.sub, subject))
+      .limit(1);
+
+    if (!user) {
+      return false;
+    }
+
+    return this.linkHeadscaleUser(user.id, headscaleUserId);
+  }
+
+  /**
    * Returns the set of Headscale user IDs that are already claimed
    * by a Headplane user. Used to filter the onboarding dropdown.
    */

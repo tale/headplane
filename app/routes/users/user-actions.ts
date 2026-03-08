@@ -104,6 +104,33 @@ export async function userAction({ request, context }: Route.ActionArgs) {
 
       return { message: "User reassigned successfully" };
     }
+    case "link_user": {
+      const userId = formData.get("user_id")?.toString();
+      const headscaleUserId = formData.get("headscale_user_id")?.toString();
+      if (!userId || !headscaleUserId) {
+        throw data("Missing `user_id` or `headscale_user_id` in the form data.", {
+          status: 400,
+        });
+      }
+
+      const users = await api.getUsers(userId);
+      const user = users.find((user) => user.id === userId);
+      if (!user) {
+        throw data("Specified user not found", { status: 400 });
+      }
+
+      const subject = getOidcSubject(user);
+      if (!subject) {
+        throw data("Specified user is not an OIDC user or has no subject.", { status: 400 });
+      }
+
+      const linked = await context.auth.linkHeadscaleUserBySubject(subject, headscaleUserId);
+      if (!linked) {
+        throw data("That Headscale user is already linked to another account.", { status: 409 });
+      }
+
+      return { message: "Headscale user linked successfully" };
+    }
     default:
       throw data("Invalid `action_id` provided.", {
         status: 400,

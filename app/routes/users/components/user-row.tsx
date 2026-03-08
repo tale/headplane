@@ -9,9 +9,11 @@ import MenuOptions from "./menu";
 interface UserRowProps {
   role: string;
   user: User & { machines: Machine[] };
+  headscaleUsers: { id: string; name: string; claimed: boolean }[];
+  currentLink?: string;
 }
 
-export default function UserRow({ user, role }: UserRowProps) {
+export default function UserRow({ user, role, headscaleUsers, currentLink }: UserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
@@ -59,7 +61,11 @@ export default function UserRow({ user, role }: UserRowProps) {
         </span>
       </td>
       <td className="py-2 pr-0.5">
-        <MenuOptions user={{ ...user, headplaneRole: role }} />
+        <MenuOptions
+          currentLink={currentLink}
+          headscaleUsers={headscaleUsers}
+          user={{ ...user, headplaneRole: role }}
+        />
       </td>
     </tr>
   );
