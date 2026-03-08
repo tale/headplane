@@ -1,5 +1,7 @@
-import { Outlet, redirect } from "react-router";
+import { Form, Outlet, redirect } from "react-router";
 
+import Button from "~/components/Button";
+import Card from "~/components/Card";
 import Footer from "~/components/Footer";
 import Header from "~/components/Header";
 import { Capabilities } from "~/server/web/roles";
@@ -24,10 +26,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
     const api = context.hsApi.getRuntimeClient(apiKey);
     const check = context.auth.can(principal, Capabilities.ui_access);
-
-    if (!check && principal.kind === "oidc" && !request.url.endsWith("/onboarding")) {
-      throw new Error("You do not have permission to access the UI");
-    }
 
     const user =
       principal.kind === "oidc"
@@ -55,6 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         settings: context.auth.can(principal, Capabilities.read_feature),
       },
       onboarding: request.url.endsWith("/onboarding"),
+      pendingApproval: !check && principal.kind === "oidc",
       healthy: await api.isHealthy(),
     };
   } catch {
@@ -67,6 +66,34 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Shell({ loaderData }: Route.ComponentProps) {
+  if (loaderData.pendingApproval && !loaderData.onboarding) {
+    return (
+      <>
+        <Header {...loaderData} />
+        <main className="container mx-auto mt-4 mb-24 overscroll-contain">
+          <div className="mx-auto mt-24 max-w-lg">
+            <Card variant="flat">
+              <Card.Title className="mb-4">Pending Approval</Card.Title>
+              <Card.Text>
+                Your account has been created but you don't have access to the UI yet. An
+                administrator needs to assign you a role before you can continue.
+              </Card.Text>
+              <Card.Text className="mt-2">
+                If you believe this is a mistake, please contact your administrator.
+              </Card.Text>
+              <Form action="/logout" className="mt-6" method="POST">
+                <Button className="w-full" type="submit" variant="light">
+                  Sign out
+                </Button>
+              </Form>
+            </Card>
+          </div>
+        </main>
+        <Footer {...loaderData} />
+      </>
+    );
+  }
+
   return (
     <>
       <Header {...loaderData} />

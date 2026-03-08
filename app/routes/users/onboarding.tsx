@@ -55,12 +55,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const hsUserId = principal.user.headscaleUserId;
   let firstMachine: Machine | undefined;
   let needsUserLink = false;
+  let linkedUserName: string | undefined;
   let headscaleUsers: { id: string; name: string }[] = [];
 
   try {
     const [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
 
     if (hsUserId) {
+      const hsUser = apiUsers.find((u) => u.id === hsUserId);
+      linkedUserName = hsUser ? getUserDisplayName(hsUser) : undefined;
       firstMachine = nodes.find((n) => n.user?.id === hsUserId);
     } else {
       const matched = findHeadscaleUserBySubject(
@@ -71,6 +74,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
       if (matched) {
         await context.auth.linkHeadscaleUser(principal.user.id, matched.id);
+        linkedUserName = getUserDisplayName(matched);
         firstMachine = nodes.find((n) => n.user?.id === matched.id);
       } else {
         needsUserLink = true;
@@ -98,12 +102,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     osValue,
     firstMachine,
     needsUserLink,
+    linkedUserName,
     headscaleUsers,
   };
 }
 
 export default function Page({
-  loaderData: { user, osValue, firstMachine, needsUserLink, headscaleUsers },
+  loaderData: { user, osValue, firstMachine, needsUserLink, linkedUserName, headscaleUsers },
 }: Route.ComponentProps) {
   const { pause, resume } = useLiveData();
   useEffect(() => {
@@ -165,6 +170,13 @@ export default function Page({
             <p className="text-headplane-500 mt-2 text-center text-xs">
               Without linking, you won't be able to see your own machines or generate pre-auth keys.
               An admin can link your account later from the Users page.
+            </p>
+          </Card>
+        ) : undefined}
+        {linkedUserName && !needsUserLink ? (
+          <Card className="col-span-2 mx-auto max-w-lg" variant="flat">
+            <p className="text-sm">
+              ✓ Your account has been linked to Headscale user <strong>{linkedUserName}</strong>.
             </p>
           </Card>
         ) : undefined}
