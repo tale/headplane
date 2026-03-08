@@ -1,27 +1,29 @@
 import { Icon } from "@iconify/react";
 import { ArrowRight } from "lucide-react";
 import { useEffect } from "react";
-import { NavLink } from "react-router";
+import { Form, NavLink } from "react-router";
 
 import Button from "~/components/Button";
 import Card from "~/components/Card";
 import Link from "~/components/Link";
 import Options from "~/components/Options";
 import StatusCircle from "~/components/StatusCircle";
+import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { Machine } from "~/types";
 import cn from "~/utils/cn";
 import { useLiveData } from "~/utils/live-data";
 import log from "~/utils/log";
 import toast from "~/utils/toast";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/onboarding";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await context.sessions.auth(request);
+  const principal = await context.auth.require(request);
+  if (principal.kind !== "oidc") {
+    throw new Error("Onboarding is only available for OIDC users.");
+  }
 
-  // Try to determine the OS split between Linux, Windows, macOS, iOS, and Android
-  // We need to convert this to a known value to return it to the client so we can
-  // automatically tab to the correct download button.
   const userAgent = request.headers.get("user-agent");
   const os = userAgent?.match(/(Linux|Windows|Mac OS X|iPhone|iPad|Android)/);
   let osValue = "linux";
@@ -47,45 +49,66 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       break;
   }
 
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
+
+  const hsUserId = principal.user.headscaleUserId;
   let firstMachine: Machine | undefined;
+  let needsUserLink = false;
+  let linkedUserName: string | undefined;
+  let headscaleUsers: { id: string; name: string }[] = [];
+
   try {
-    const nodes = await api.getNodes();
-    const node = nodes.find((n) => {
-      // Tag-only nodes have no user
-      if (!n.user || n.user.provider !== "oidc") {
-        return false;
+    const [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
+
+    if (hsUserId) {
+      const hsUser = apiUsers.find((u) => u.id === hsUserId);
+      linkedUserName = hsUser ? getUserDisplayName(hsUser) : undefined;
+      firstMachine = nodes.find((n) => n.user?.id === hsUserId);
+    } else {
+      const matched = findHeadscaleUserBySubject(
+        apiUsers,
+        principal.user.subject,
+        principal.profile.email,
+      );
+
+      if (matched) {
+        await context.auth.linkHeadscaleUser(principal.user.id, matched.id);
+        linkedUserName = getUserDisplayName(matched);
+        firstMachine = nodes.find((n) => n.user?.id === matched.id);
+      } else {
+        needsUserLink = true;
+        const claimed = await context.auth.claimedHeadscaleUserIds();
+        headscaleUsers = apiUsers
+          .filter((u) => !claimed.has(u.id))
+          .map((u) => ({
+            id: u.id,
+            name: getUserDisplayName(u),
+          }));
       }
-
-      // For some reason, headscale makes providerID a url where the
-      // last component is the subject, so we need to strip that out
-      const subject = n.user.providerId?.split("/").pop();
-      if (!subject) {
-        return false;
-      }
-
-      if (subject !== session.user.subject) {
-        return false;
-      }
-
-      return true;
-    });
-
-    firstMachine = node;
+    }
   } catch (e) {
-    // If we cannot lookup nodes, we cannot proceed
     log.debug("api", "Failed to lookup nodes %o", e);
   }
 
   return {
-    user: session.user,
+    user: {
+      subject: principal.user.subject,
+      name: principal.profile.name,
+      email: principal.profile.email,
+      username: principal.profile.username,
+      picture: principal.profile.picture,
+    },
     osValue,
     firstMachine,
+    needsUserLink,
+    linkedUserName,
+    headscaleUsers,
   };
 }
 
 export default function Page({
-  loaderData: { user, osValue, firstMachine },
+  loaderData: { user, osValue, firstMachine, needsUserLink, linkedUserName, headscaleUsers },
 }: Route.ComponentProps) {
   const { pause, resume } = useLiveData();
   useEffect(() => {
@@ -107,6 +130,56 @@ export default function Page({
   return (
     <div className="fixed flex h-screen w-full items-center px-4">
       <div className="mx-auto mb-24 grid w-fit grid-cols-1 gap-4 md:grid-cols-2">
+        {needsUserLink ? (
+          <Card className="col-span-2 mx-auto max-w-lg" variant="flat">
+            <Card.Title className="mb-4">Link your Headscale account</Card.Title>
+            <Card.Text className="mb-4">
+              Headplane couldn't automatically match your SSO identity to a Headscale user.
+              {headscaleUsers.length > 0
+                ? " Select which Headscale user you are, or skip to continue without linking."
+                : " All Headscale users are already linked. You can skip this step and ask an admin to link your account later."}
+            </Card.Text>
+            {headscaleUsers.length > 0 ? (
+              <Form method="POST" action="/onboarding/skip">
+                <select
+                  className={cn(
+                    "mb-4 w-full rounded-lg border p-2",
+                    "border-headplane-200 dark:border-headplane-700",
+                    "bg-headplane-50 dark:bg-headplane-900",
+                  )}
+                  name="headscale_user_id"
+                  required
+                >
+                  <option value="">Select a user...</option>
+                  {headscaleUsers.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+                <Button className="w-full" type="submit" variant="heavy">
+                  Link and Continue
+                </Button>
+              </Form>
+            ) : undefined}
+            <NavLink className="mt-3 block text-center" to="/onboarding/skip">
+              <Button className="w-full" variant="light">
+                Skip — I'll do this later
+              </Button>
+            </NavLink>
+            <p className="text-headplane-500 mt-2 text-center text-xs">
+              Without linking, you won't be able to see your own machines or generate pre-auth keys.
+              An admin can link your account later from the Users page.
+            </p>
+          </Card>
+        ) : undefined}
+        {linkedUserName && !needsUserLink ? (
+          <Card className="col-span-2 mx-auto max-w-lg" variant="flat">
+            <p className="text-sm">
+              ✓ Your account has been linked to Headscale user <strong>{linkedUserName}</strong>.
+            </p>
+          </Card>
+        ) : undefined}
         <Card className="max-w-lg" variant="flat">
           <Card.Title className="mb-8">
             Welcome!

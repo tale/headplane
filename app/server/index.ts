@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { exit, versions } from "node:process";
+
 import { createHonoServer } from "react-router-hono-server/node";
 
 import log from "~/utils/log";
@@ -10,7 +11,7 @@ import { createDbClient } from "./db/client.server";
 import { createHeadscaleInterface } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createHeadplaneAgent } from "./hp-agent";
-import { createSessionStorage } from "./web/sessions";
+import { createAuthService } from "./web/auth";
 
 declare global {
   const __PREFIX__: string;
@@ -60,11 +61,9 @@ const appLoadContext = {
     config.headscale.dns_records_path,
   ),
 
-  // TODO: Better cookie options in config
-  sessions: await createSessionStorage({
+  auth: createAuthService({
     secret: config.server.cookie_secret,
     db,
-    oidcUsersFile: config.oidc?.user_storage_file,
     cookie: {
       name: "_hp_auth",
       secure: config.server.cookie_secure,
@@ -76,13 +75,16 @@ const appLoadContext = {
   hsApi,
   agents,
   integration: await loadIntegration(config.integration),
-  oidcConnector:
+  oidc:
     config.oidc && config.oidc.enabled !== false
-      ? createLazyOidcConnector(
-          config.server.base_url,
-          config.oidc,
-          hsApi.getRuntimeClient(config.oidc.headscale_api_key),
-        )
+      ? {
+          apiKey: config.oidc.headscale_api_key,
+          connector: createLazyOidcConnector(
+            config.server.base_url,
+            config.oidc,
+            hsApi.getRuntimeClient(config.oidc.headscale_api_key),
+          ),
+        }
       : undefined,
   db,
 };
@@ -126,6 +128,14 @@ export default createHonoServer({
     log.info("server", "Running on %s:%s", info.address, info.port);
   },
 });
+
+// Prune expired auth sessions every 15 minutes
+setInterval(
+  () => {
+    appLoadContext.auth.pruneExpiredSessions();
+  },
+  15 * 60 * 1000,
+);
 
 process.on("SIGINT", () => {
   log.info("server", "Received SIGINT, shutting down...");

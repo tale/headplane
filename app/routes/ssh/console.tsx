@@ -6,10 +6,10 @@ import { data, type ShouldRevalidateFunction, useSubmit } from "react-router";
 import { ExternalScriptsHandle } from "remix-utils/external-scripts";
 
 import { EphemeralNodeInsert, ephemeralNodes } from "~/server/db/schema";
+import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { useLiveData } from "~/utils/live-data";
 
 import type { Route } from "./+types/console";
-
 import UserPrompt from "./user-prompt";
 import XTerm from "./xterm.client";
 
@@ -35,28 +35,23 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw data("WebSSH is only available with the Headplane agent integration", 400);
   }
 
-  const session = await context.sessions.auth(request);
-  if (session.user.subject === "unknown-non-oauth") {
+  const principal = await context.auth.require(request);
+  if (principal.kind === "api_key") {
     throw data("Only OAuth users are allowed to use WebSSH", 403);
   }
 
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
   const users = await api.getUsers();
 
   // MARK: This assumes that a user has authenticated with Headscale first
   // Since the only way to enforce permissions via ACLs is to generate a
   // pre-authkey which REQUIRES a user ID, meaning the user has to have
   // authenticated with Headscale first.
-  const lookup = users.find((u) => {
-    const subject = u.providerId?.split("/").pop();
-    if (!subject) {
-      return false;
-    }
-    return subject === session.user.subject;
-  });
+  const lookup = findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
 
   if (!lookup) {
-    throw data(`User with subject ${session.user.subject} not found within Headscale`, 404);
+    throw data(`User with subject ${principal.user.subject} not found within Headscale`, 404);
   }
 
   const preAuthKey = await api.createPreAuthKey(
@@ -157,7 +152,7 @@ function generateHostname(username: string) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  await context.sessions.auth(request);
+  await context.auth.require(request);
   if (!context.agents?.agentID()) {
     throw data("WebSSH is only available with the Headplane agent integration", 400);
   }

@@ -1,27 +1,34 @@
 {
-	"version": "7",
-	"dialect": "sqlite",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "6",
-			"when": 1750355487927,
-			"tag": "0000_spicy_bloodscream",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "6",
-			"when": 1755554742267,
-			"tag": "0001_naive_lilith",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "6",
-			"when": 1755617607599,
-			"tag": "0002_square_bloodstorm",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1750355487927,
+      "tag": "0000_spicy_bloodscream",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1755554742267,
+      "tag": "0001_naive_lilith",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1755617607599,
+      "tag": "0002_square_bloodstorm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1772917638504,
+      "tag": "0003_thick_otto_octavius",
+      "breakpoints": true
+    }
+  ]
 }

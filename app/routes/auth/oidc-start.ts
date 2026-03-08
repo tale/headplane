@@ -8,11 +8,11 @@ import type { Route } from "./+types/oidc-start";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   try {
-    await context.sessions.auth(request);
+    await context.auth.require(request);
     return redirect("/");
   } catch {}
 
-  const oidcConnector = await context.oidcConnector?.get();
+  const oidcConnector = await context.oidc?.connector.get();
   if (!oidcConnector?.isValid) {
     throw data("OIDC is not enabled or misconfigured", { status: 501 });
   }

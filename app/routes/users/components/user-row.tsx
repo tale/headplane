@@ -9,9 +9,11 @@ import MenuOptions from "./menu";
 interface UserRowProps {
   role: string;
   user: User & { machines: Machine[] };
+  headscaleUsers: { id: string; name: string; claimed: boolean }[];
+  currentLink?: string;
 }
 
-export default function UserRow({ user, role }: UserRowProps) {
+export default function UserRow({ user, role, headscaleUsers, currentLink }: UserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
@@ -59,7 +61,11 @@ export default function UserRow({ user, role }: UserRowProps) {
         </span>
       </td>
       <td className="py-2 pr-0.5">
-        <MenuOptions user={{ ...user, headplaneRole: role }} />
+        <MenuOptions
+          currentLink={currentLink}
+          headscaleUsers={headscaleUsers}
+          user={{ ...user, headplaneRole: role }}
+        />
       </td>
     </tr>
   );
@@ -84,12 +90,7 @@ function mapRoleToName(role: string) {
     case "auditor":
       return "Auditor";
     case "member":
-      return (
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-          <span className="text-amber-600 dark:text-amber-400">Pending Approval</span>
-        </span>
-      );
+      return <p className="opacity-50">No Access</p>;
     default:
       return "Unknown";
   }

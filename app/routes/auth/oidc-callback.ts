@@ -1,18 +1,16 @@
-import { count, eq } from "drizzle-orm";
 import { createHash } from "node:crypto";
+
 import * as oidc from "openid-client";
 import { data, redirect } from "react-router";
-import { ulid } from "ulidx";
 
-import { users } from "~/server/db/schema";
-import { Roles } from "~/server/web/roles";
+import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import log from "~/utils/log";
 import { createOidcStateCookie } from "~/utils/oidc-state";
 
 import type { Route } from "./+types/oidc-callback";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const oidcConnector = await context.oidcConnector?.get();
+  const oidcConnector = await context.oidc?.connector.get();
   if (!oidcConnector?.isValid) {
     throw data("OIDC is not enabled or misconfigured", { status: 501 });
   }
@@ -82,47 +80,26 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           })()
         : userInfo.picture;
 
-    const [{ count: ownerCount }] = await context.db
-      .select({ count: count() })
-      .from(users)
-      .where(eq(users.caps, Roles.owner));
+    const userId = await context.auth.findOrCreateUser(claims.sub);
 
-    const needsOwner = ownerCount === 0;
-
-    if (needsOwner) {
-      await context.db
-        .insert(users)
-        .values({
-          id: ulid(),
-          sub: claims.sub,
-          caps: Roles.owner,
-        })
-        .onConflictDoUpdate({
-          target: users.sub,
-          set: { caps: Roles.owner },
-        });
-    } else {
-      await context.db
-        .insert(users)
-        .values({
-          id: ulid(),
-          sub: claims.sub,
-          caps: Roles.member,
-        })
-        .onConflictDoNothing();
+    try {
+      const hsApi = context.hsApi.getRuntimeClient(context.oidc!.apiKey);
+      const hsUsers = await hsApi.getUsers();
+      const hsUser = findHeadscaleUserBySubject(hsUsers, claims.sub, userInfo.email);
+      if (hsUser) {
+        await context.auth.linkHeadscaleUser(userId, hsUser.id);
+      }
+    } catch (error) {
+      log.warn("auth", "Failed to link Headscale user: %s", String(error));
     }
 
     return redirect("/", {
       headers: {
-        "Set-Cookie": await context.sessions.createSession({
-          api_key: oidcConnector.apiKey,
-          user: {
-            subject: claims.sub,
-            username,
-            name,
-            email: userInfo.email,
-            picture,
-          },
+        "Set-Cookie": await context.auth.createOidcSession(userId, {
+          name,
+          email: userInfo.email,
+          username,
+          picture,
         }),
       },
     });

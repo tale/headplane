@@ -6,11 +6,12 @@ import { Capabilities } from "~/server/web/roles";
 import type { Route } from "./+types/machine";
 
 export async function machineAction({ request, context }: Route.ActionArgs) {
-  const session = await context.sessions.auth(request);
-  const check = await context.sessions.check(request, Capabilities.write_machines);
+  const principal = await context.auth.require(request);
 
   const formData = await request.formData();
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const api = context.hsApi.getRuntimeClient(
+    context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
+  );
 
   const action = formData.get("action_id")?.toString();
   if (!action) {
@@ -21,7 +22,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
 
   // Fast track register since it doesn't require an existing machine
   if (action === "register") {
-    if (!check) {
+    if (!context.auth.can(principal, Capabilities.write_machines)) {
       throw data("You do not have permission to manage machines", {
         status: 403,
       });
@@ -60,10 +61,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  // Tag-only nodes (Headscale 0.28+) have no user — only role-based permissions apply
-  const nodeOwnerId = node.user?.providerId?.split("/").pop();
-  const isOwner = nodeOwnerId !== undefined && nodeOwnerId === session.user.subject;
-  if (!isOwner && !check) {
+  if (!context.auth.canManageNode(principal, node)) {
     throw data("You do not have permission to act on this machine", {
       status: 403,
     });

@@ -1,13 +1,16 @@
 import { createHash } from "node:crypto";
+
+import { eq } from "drizzle-orm";
 import { useEffect, useState } from "react";
 
-import type { Machine, User } from "~/types";
-
+import { users as usersTable } from "~/server/db/schema";
+import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
+import type { Machine, User } from "~/types";
 import cn from "~/utils/cn";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
-
 import ManageBanner from "./components/manage-banner";
 import UserRow from "./components/user-row";
 import { userAction } from "./user-actions";
@@ -17,8 +20,8 @@ interface UserMachine extends User {
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const session = await context.sessions.auth(request);
-  const check = await context.sessions.check(request, Capabilities.read_users);
+  const principal = await context.auth.require(request);
+  const check = await context.auth.can(principal, Capabilities.read_users);
   if (!check) {
     // Not authorized to view this page
     throw new Error(
@@ -26,9 +29,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     );
   }
 
-  const writablePermission = await context.sessions.check(request, Capabilities.write_users);
+  const writablePermission = await context.auth.can(principal, Capabilities.write_users);
 
-  const api = context.hsApi.getRuntimeClient(session.api_key);
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
   const [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
 
   const users = apiUsers.map((user) => ({
@@ -56,22 +60,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           return "no-oidc";
         }
 
-        if (user.provider === "oidc" && user.providerId) {
-          // For some reason, headscale makes providerID a url where the
-          // last component is the subject, so we need to strip that out
-          const subject = user.providerId.split("/").pop();
-          if (!subject) {
-            return "invalid-oidc";
-          }
-
-          const role = await context.sessions.roleForSubject(subject);
-          return role ?? "no-role";
+        const subject = getOidcSubject(user);
+        if (!subject) {
+          return "invalid-oidc";
         }
 
-        // No role means the user is not registered in Headplane, but they
-        // are in Headscale. We also need to handle what happens if someone
-        // logs into the UI and they don't have a Headscale setup.
-        return "no-role";
+        const role = await context.auth.roleForSubject(subject);
+        return role ?? "no-role";
       }),
   );
 
@@ -79,6 +74,28 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   if (context.hs.readable()) {
     if (context.hs.c?.dns.magic_dns) {
       magic = context.hs.c.dns.base_domain;
+    }
+  }
+
+  // Build linkable Headscale users for admin link dialog
+  const claimed = await context.auth.claimedHeadscaleUserIds();
+  const headscaleUsers = apiUsers.map((u) => ({
+    id: u.id,
+    name: getUserDisplayName(u),
+    claimed: claimed.has(u.id),
+  }));
+
+  // Build a map of Headscale user -> linked Headplane subject
+  const userLinks: Record<string, string | undefined> = {};
+  for (const u of apiUsers) {
+    const subject = getOidcSubject(u);
+    if (subject) {
+      const [hp] = await context.db
+        .select({ hsId: usersTable.headscale_user_id })
+        .from(usersTable)
+        .where(eq(usersTable.sub, subject))
+        .limit(1);
+      userLinks[u.id] = hp?.hsId ?? undefined;
     }
   }
 
@@ -92,6 +109,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     roles,
     magic,
     users,
+    headscaleUsers,
+    userLinks,
   };
 }
 
@@ -132,7 +151,13 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             {users
               .sort((a, b) => a.name.localeCompare(b.name))
               .map((user) => (
-                <UserRow key={user.id} role={loaderData.roles[users.indexOf(user)]} user={user} />
+                <UserRow
+                  key={user.id}
+                  currentLink={loaderData.userLinks[user.id]}
+                  headscaleUsers={loaderData.headscaleUsers}
+                  role={loaderData.roles[users.indexOf(user)]}
+                  user={user}
+                />
               ))}
           </tbody>
         </table>

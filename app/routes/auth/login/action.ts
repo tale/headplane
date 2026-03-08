@@ -66,19 +66,11 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       };
     }
 
-    const expiresDays = Math.round((expiry.getTime() - Date.now()) / 1000 / 60 / 60 / 24);
-
     return redirect("/machines", {
       headers: {
-        "Set-Cookie": await context.sessions.createSession(
-          {
-            api_key: apiKey,
-            user: {
-              subject: "unknown-non-oauth",
-              name: `${lookup.prefix}...`,
-              email: `expires@${expiresDays.toString()}-days`,
-            },
-          },
+        "Set-Cookie": await context.auth.createApiKeySession(
+          apiKey,
+          `${lookup.prefix}...`,
           expiry.getTime() - Date.now(),
         ),
       },

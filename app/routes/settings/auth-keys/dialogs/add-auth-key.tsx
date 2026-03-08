@@ -17,11 +17,15 @@ interface AddAuthKeyProps {
   users: User[];
   url: string;
   selfServiceOnly: boolean;
-  currentSubject: string;
+  currentSubject?: string;
 }
 
-function findCurrentUser(users: User[], subject: string): User | undefined {
-  return users.find((u) => u.providerId?.split("/").pop() === subject);
+function findCurrentUser(users: User[], subject: string | undefined): User | undefined {
+  if (!subject) return undefined;
+  return users.find((u) => {
+    if (u.provider !== "oidc" || !u.providerId) return false;
+    return u.providerId.split("/").pop() === subject;
+  });
 }
 
 export default function AddAuthKey({

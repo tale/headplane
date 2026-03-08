@@ -6,7 +6,7 @@ import Link from "~/components/Link";
 import type { Route } from "./+types/overview";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const oidcConnector = await context.oidcConnector?.get();
+  const oidcConnector = await context.oidc?.connector.get();
   return {
     config: context.hs.writable(),
     isOidcEnabled: oidcConnector?.isValid ?? false,

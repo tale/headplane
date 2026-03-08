@@ -10,7 +10,6 @@ import Link from "~/components/Link";
 import { useLiveData } from "~/utils/live-data";
 
 import type { Route } from "./+types/page";
-
 import { loginAction } from "./action";
 import { OidcConfigErrorNotice, OidcDiscoveryFailedNotice } from "./config-error";
 import Logout from "./logout";
@@ -18,14 +17,14 @@ import { OidcErrorNotice } from "./oidc-error";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   try {
-    await context.sessions.auth(request);
+    await context.auth.require(request);
     return redirect("/machines");
   } catch {}
 
   const qp = new URL(request.url).searchParams;
   const urlState = qp.get("s") ?? undefined;
 
-  const oidcConnector = await context.oidcConnector?.get();
+  const oidcConnector = await context.oidc?.connector.get();
 
   // MARK: This works because the OIDC connector will always return false
   // for `isExclusive` if the OIDC config isn't usable.
