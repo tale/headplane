@@ -90,12 +90,7 @@ function mapRoleToName(role: string) {
     case "auditor":
       return "Auditor";
     case "member":
-      return (
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 animate-pulse rounded-full bg-amber-500" />
-          <span className="text-amber-600 dark:text-amber-400">Pending Approval</span>
-        </span>
-      );
+      return <p className="opacity-50">No Access</p>;
     default:
       return "Unknown";
   }

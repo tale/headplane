@@ -53,7 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         settings: context.auth.can(principal, Capabilities.read_feature),
       },
       onboarding: request.url.endsWith("/onboarding"),
-      pendingApproval: !check && principal.kind === "oidc",
+      noAccess: !check && principal.kind === "oidc",
       healthy: await api.isHealthy(),
     };
   } catch {
@@ -66,20 +66,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Shell({ loaderData }: Route.ComponentProps) {
-  if (loaderData.pendingApproval && !loaderData.onboarding) {
+  if (loaderData.noAccess && !loaderData.onboarding) {
     return (
       <>
         <Header {...loaderData} />
         <main className="container mx-auto mt-4 mb-24 overscroll-contain">
           <div className="mx-auto mt-24 max-w-lg">
             <Card variant="flat">
-              <Card.Title className="mb-4">Pending Approval</Card.Title>
+              <Card.Title className="mb-4">No Access</Card.Title>
               <Card.Text>
-                Your account has been created but you don't have access to the UI yet. An
-                administrator needs to assign you a role before you can continue.
-              </Card.Text>
-              <Card.Text className="mt-2">
-                If you believe this is a mistake, please contact your administrator.
+                Your account doesn't have permission to access the dashboard. Contact an
+                administrator if you need access.
               </Card.Text>
               <Form action="/logout" className="mt-6" method="POST">
                 <Button className="w-full" type="submit" variant="light">
