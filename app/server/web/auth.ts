@@ -317,13 +317,42 @@ export class AuthService {
   }
 
   /**
-   * Update the Headscale user link for a Headplane user.
+   * Link a Headplane user to a Headscale user. Returns false if the
+   * Headscale user is already claimed by another Headplane user.
    */
-  async linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<void> {
+  async linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean> {
+    const [existing] = await this.opts.db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.headscale_user_id, headscaleUserId))
+      .limit(1);
+
+    if (existing && existing.id !== userId) {
+      return false;
+    }
+
     await this.opts.db
       .update(users)
       .set({ headscale_user_id: headscaleUserId, updated_at: new Date() })
       .where(eq(users.id, userId));
+
+    return true;
+  }
+
+  /**
+   * Returns the set of Headscale user IDs that are already claimed
+   * by a Headplane user. Used to filter the onboarding dropdown.
+   */
+  async claimedHeadscaleUserIds(): Promise<Set<string>> {
+    const rows = await this.opts.db.select({ hsId: users.headscale_user_id }).from(users);
+
+    const ids = new Set<string>();
+    for (const row of rows) {
+      if (row.hsId) {
+        ids.add(row.hsId);
+      }
+    }
+    return ids;
   }
 
   /**

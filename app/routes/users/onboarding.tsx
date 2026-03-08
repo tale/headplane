@@ -74,10 +74,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         firstMachine = nodes.find((n) => n.user?.id === matched.id);
       } else {
         needsUserLink = true;
-        headscaleUsers = apiUsers.map((u) => ({
-          id: u.id,
-          name: getUserDisplayName(u),
-        }));
+        const claimed = await context.auth.claimedHeadscaleUserIds();
+        headscaleUsers = apiUsers
+          .filter((u) => !claimed.has(u.id))
+          .map((u) => ({
+            id: u.id,
+            name: getUserDisplayName(u),
+          }));
       }
     }
   } catch (e) {

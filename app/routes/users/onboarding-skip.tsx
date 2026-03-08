@@ -34,7 +34,10 @@ export async function action({ request, context }: Route.ActionArgs) {
     const headscaleUserId = formData.get("headscale_user_id")?.toString();
 
     if (headscaleUserId) {
-      await context.auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
+      const linked = await context.auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
+      if (!linked) {
+        return redirect("/onboarding");
+      }
     }
 
     await context.db

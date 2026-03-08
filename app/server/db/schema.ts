@@ -23,7 +23,7 @@ export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   sub: text("sub").notNull().unique(),
   role: text("role").notNull().default("member"),
-  headscale_user_id: text("headscale_user_id"),
+  headscale_user_id: text("headscale_user_id").unique(),
   onboarded: integer("onboarded", { mode: "boolean" }).notNull().default(false),
   created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
   updated_at: integer("updated_at", { mode: "timestamp" }).$default(() => new Date()),

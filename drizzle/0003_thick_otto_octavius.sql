@@ -10,6 +10,7 @@ CREATE TABLE `auth_sessions` (
 --> statement-breakpoint
 ALTER TABLE `users` ADD `role` text DEFAULT 'member' NOT NULL;--> statement-breakpoint
 ALTER TABLE `users` ADD `headscale_user_id` text;--> statement-breakpoint
+CREATE UNIQUE INDEX `users_headscale_user_id_unique` ON `users` (`headscale_user_id`);--> statement-breakpoint
 ALTER TABLE `users` ADD `created_at` integer;--> statement-breakpoint
 ALTER TABLE `users` ADD `updated_at` integer;--> statement-breakpoint
 ALTER TABLE `users` ADD `last_login_at` integer;--> statement-breakpoint

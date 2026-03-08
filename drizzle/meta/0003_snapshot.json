@@ -193,6 +193,11 @@
           "name": "users_sub_unique",
           "columns": ["sub"],
           "isUnique": true
+        },
+        "users_headscale_user_id_unique": {
+          "name": "users_headscale_user_id_unique",
+          "columns": ["headscale_user_id"],
+          "isUnique": true
         }
       },
       "foreignKeys": {},

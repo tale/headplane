@@ -129,6 +129,14 @@ export default createHonoServer({
   },
 });
 
+// Prune expired auth sessions every 15 minutes
+setInterval(
+  () => {
+    appLoadContext.auth.pruneExpiredSessions();
+  },
+  15 * 60 * 1000,
+);
+
 process.on("SIGINT", () => {
   log.info("server", "Received SIGINT, shutting down...");
   process.exit(0);

@@ -80,9 +80,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           })()
         : userInfo.picture;
 
-    const hasUsers = await context.auth.hasAnyUsers();
-    const defaultRole = hasUsers ? "member" : "owner";
-    const userId = await context.auth.findOrCreateUser(claims.sub, defaultRole);
+    const userId = await context.auth.findOrCreateUser(claims.sub);
 
     try {
       const hsApi = context.hsApi.getRuntimeClient(context.oidc!.apiKey);
