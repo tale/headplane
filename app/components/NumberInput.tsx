@@ -43,7 +43,8 @@ export default function NumberInput(props: InputProps) {
         {...groupProps}
         className={cn(
           "flex items-center gap-1 rounded-md pr-1",
-          "focus-within:outline-hidden focus-within:ring-3",
+          "focus-within:outline-hidden focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
+          "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
           "bg-white dark:bg-mist-900",
           "border border-mist-100 dark:border-mist-800",
         )}

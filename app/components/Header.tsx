@@ -42,7 +42,8 @@ function TabLink({ name, to, icon }: TabLinkProps) {
             "after:absolute after:bottom-0 after:left-3 after:right-3",
             "after:h-0.5 after:bg-mist-900 dark:after:bg-mist-200",
             "hover:bg-mist-200 dark:hover:bg-mist-900",
-            "focus:outline-hidden focus:ring-3",
+            "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
+            "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
             isActive ? "after:visible" : "after:invisible",
           )
         }
@@ -60,7 +61,8 @@ function Link({ href, text }: LinkProps) {
     <a
       className={cn(
         "hidden sm:block hover:underline text-sm",
-        "focus:outline-hidden focus:ring-3 rounded-md",
+        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1 rounded-md",
+        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
       )}
       href={href}
       rel="noreferrer"

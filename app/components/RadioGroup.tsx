@@ -62,7 +62,9 @@ function Radio({ children, label, className, ...props }: RadioProps) {
         className={cn(
           "w-5 h-5 aspect-square rounded-full p-1 border-2",
           "border border-mist-600 dark:border-mist-300",
-          isFocusVisible ? "ring-4" : "",
+          isFocusVisible
+            ? "ring-2 ring-indigo-500/40 ring-offset-1 dark:ring-indigo-400/40 dark:ring-offset-mist-900"
+            : "",
           isDisabled ? "opacity-50 cursor-not-allowed" : "",
           isSelected ? "border-[6px] border-mist-900 dark:border-mist-100" : "",
           className,

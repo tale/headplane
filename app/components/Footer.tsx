@@ -42,7 +42,8 @@ export default function Footer({ url, debug, healthy }: FooterProps) {
               tabIndex={0} // Allows keyboard focus
               className={cn(
                 "blur-sm hover:blur-none focus:blur-none transition",
-                "focus:outline-hidden focus:ring-2 rounded-xs",
+                "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1 rounded-xs",
+                "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
               )}
             >
               {url}

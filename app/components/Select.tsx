@@ -58,7 +58,8 @@ function Select(props: SelectProps) {
       </label>
       <div
         className={cn(
-          "flex rounded-md focus:outline-hidden focus-within:ring-3",
+          "flex rounded-md focus:outline-hidden focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
+          "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
           "bg-white dark:bg-mist-900",
           "border border-mist-100 dark:border-mist-800",
           props.isInvalid && "ring-red-400",

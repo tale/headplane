@@ -3,7 +3,6 @@ import { useState } from "react";
 
 import Menu from "~/components/Menu";
 import type { Machine, User } from "~/types";
-import cn from "~/utils/cn";
 
 import Delete from "../dialogs/delete-user";
 import LinkUser from "../dialogs/link-user";
@@ -77,11 +76,7 @@ export default function UserMenu({ user, headscaleUsers, currentLink }: MenuProp
 
       <Menu disabledKeys={disabledKeys}>
         <Menu.IconButton
-          className={cn(
-            "w-10 border-transparent bg-transparent py-0.5",
-            "border group-hover:border-mist-200",
-            "dark:group-hover:border-mist-700",
-          )}
+          className="w-10 bg-transparent py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800"
           label="User Options"
         >
           <Ellipsis className="h-5" />

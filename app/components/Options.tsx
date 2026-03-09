@@ -43,7 +43,8 @@ function Option({ item, state }: OptionsOptionProps) {
       className={cn(
         "pl-0.5 pr-2 py-0.5 rounded-md cursor-pointer",
         "aria-selected:bg-mist-100 dark:aria-selected:bg-mist-950",
-        "focus:outline-hidden focus:ring-3 z-10",
+        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1 z-10",
+        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
         "border border-mist-100 dark:border-mist-800",
       )}
     >

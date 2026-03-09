@@ -35,7 +35,8 @@ export default function Switch(props: SwitchProps) {
           "bg-mist-300 dark:bg-mist-700",
           "border border-transparent dark:border-mist-800",
           state.isSelected && "bg-mist-900 dark:bg-mist-950",
-          isFocusVisible && "ring-2",
+          isFocusVisible &&
+            "ring-2 ring-indigo-500/40 ring-offset-1 dark:ring-indigo-400/40 dark:ring-offset-mist-900",
           props.isDisabled && "opacity-50",
           props.className,
         )}

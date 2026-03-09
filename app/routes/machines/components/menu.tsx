@@ -120,12 +120,11 @@ export default function MachineMenu({
         ) : (
           <Button
             className={cn(
-              "py-0.5 w-fit bg-transparent border-transparent",
-              "border group-hover:border-mist-200",
-              "dark:group-hover:border-mist-700",
+              "py-0.5",
               "opacity-0 pointer-events-none group-hover:opacity-100",
               "group-hover:pointer-events-auto",
             )}
+            variant="ghost"
             onPress={() => {
               // We need to use JS to open the SSH URL
               // in a new WINDOW since href can only
@@ -149,11 +148,7 @@ export default function MachineMenu({
           </Menu.Button>
         ) : (
           <Menu.IconButton
-            className={cn(
-              "py-0.5 w-10 bg-transparent border-transparent",
-              "border group-hover:border-mist-200",
-              "dark:group-hover:border-mist-700",
-            )}
+            className="w-10 bg-transparent py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800"
             label="Machine Options"
           >
             <Ellipsis className="h-5" />

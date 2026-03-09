@@ -164,8 +164,9 @@ export default function Page({
             )}
           </div>
           <Button
-            className={cn("px-1.5 py-0.5 rounded-md mt-1.5", "text-blue-500 dark:text-blue-400")}
+            className="mt-1.5 px-1.5 py-0.5"
             onPress={() => setShowRouting(true)}
+            variant="ghost"
           >
             Edit
           </Button>
@@ -193,8 +194,9 @@ export default function Page({
             )}
           </div>
           <Button
-            className={cn("px-1.5 py-0.5 rounded-md mt-1.5", "text-blue-500 dark:text-blue-400")}
+            className="mt-1.5 px-1.5 py-0.5"
             onPress={() => setShowRouting(true)}
+            variant="ghost"
           >
             Edit
           </Button>
@@ -225,8 +227,9 @@ export default function Page({
             )}
           </div>
           <Button
-            className={cn("px-1.5 py-0.5 rounded-md mt-1.5", "text-blue-500 dark:text-blue-400")}
+            className="mt-1.5 px-1.5 py-0.5"
             onPress={() => setShowRouting(true)}
+            variant="ghost"
           >
             Edit
           </Button>

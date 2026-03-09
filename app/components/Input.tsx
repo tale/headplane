@@ -54,7 +54,8 @@ export default function Input(props: InputProps) {
         {...inputProps}
         className={cn(
           "rounded-md px-3 py-2",
-          "focus:outline-hidden focus:ring-3",
+          "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
+          "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
           "bg-white dark:bg-mist-900",
           "border border-mist-100 dark:border-mist-800",
           className,

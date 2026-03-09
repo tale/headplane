@@ -22,19 +22,18 @@ export default function IconButton({ variant = "light", ...props }: IconButtonPr
       {...buttonProps}
       aria-label={props.label}
       className={cn(
-        "rounded-full flex items-center justify-center p-1",
-        "focus:outline-hidden focus:ring-3",
-        props.isDisabled && "opacity-60 cursor-not-allowed",
+        "flex items-center justify-center rounded-full p-1",
+        "transition-colors duration-100",
+        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
+        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
+        props.isDisabled && "pointer-events-none opacity-50",
         ...(variant === "heavy"
           ? [
-              "bg-mist-900 dark:bg-mist-50 font-semibold",
-              "hover:bg-mist-900/90 dark:hover:bg-mist-50/90",
-              "text-mist-200 dark:text-mist-800",
+              "bg-indigo-500 font-semibold text-white",
+              "hover:bg-indigo-500/90",
+              "dark:bg-indigo-500/90 dark:hover:bg-indigo-500/80",
             ]
-          : [
-              "bg-mist-100 dark:bg-mist-700/30 font-medium",
-              "hover:bg-mist-200/90 dark:hover:bg-mist-800/30",
-            ]),
+          : ["bg-mist-100 dark:bg-mist-700/30", "hover:bg-mist-200/90 dark:hover:bg-mist-800/30"]),
         props.className,
       )}
     >
