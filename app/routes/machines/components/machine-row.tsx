@@ -1,8 +1,8 @@
 import { ChevronDown, Copy } from "lucide-react";
 import { useMemo } from "react";
-import { Link } from "react-router";
 
 import Chip from "~/components/Chip";
+import Link from "~/components/link";
 import Menu from "~/components/Menu";
 import StatusCircle from "~/components/StatusCircle";
 import { ExitNodeTag } from "~/components/tags/ExitNode";

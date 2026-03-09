@@ -1,12 +1,12 @@
 import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Form, Link as RemixLink, redirect, useSearchParams } from "react-router";
+import { Form, redirect, useSearchParams } from "react-router";
 
 import Button from "~/components/Button";
 import Card from "~/components/Card";
 import Code from "~/components/Code";
 import Input from "~/components/Input";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import { useLiveData } from "~/utils/live-data";
 
 import type { Route } from "./+types/page";
@@ -103,6 +103,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
                 Headplane is configured to use secure cookies, but this site is being served over an
                 insecure connection and login will not work correctly.{" "}
                 <Link
+                  isExternal
                   name="Headplane Common Issues"
                   to="https://headplane.net/configuration/common-issues#issue-logging-in-does-not-do-anything"
                 >
@@ -138,7 +139,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
             </Button>
           </Form>
           {isOidcConnectorEnabled ? (
-            <RemixLink to="/oidc/start">
+            <Link to="/oidc/start">
               <Button
                 className="mt-2 w-full"
                 isDisabled={oidcErrorCodes.length > 0}
@@ -146,7 +147,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
               >
                 Single Sign-On
               </Button>
-            </RemixLink>
+            </Link>
           ) : undefined}
         </Card>
       </div>

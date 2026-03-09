@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 import Code from "~/components/Code";
 import Input from "~/components/Input";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import Tooltip from "~/components/Tooltip";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
@@ -151,6 +151,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           <p>
             Manage the devices connected to your Tailnet.{" "}
             <Link
+              isExternal
               name="Tailscale Manage Devices Documentation"
               to="https://tailscale.com/kb/1372/manage-devices"
             >

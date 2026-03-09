@@ -5,7 +5,7 @@ import { Form, NavLink } from "react-router";
 
 import Button from "~/components/Button";
 import Card from "~/components/Card";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import Options from "~/components/Options";
 import StatusCircle from "~/components/StatusCircle";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
@@ -216,6 +216,7 @@ export default function Page({
               <p className="mt-1 text-center text-xs text-mist-600 dark:text-mist-300">
                 Click this button to copy the command.{" "}
                 <Link
+                  isExternal
                   name="Linux installation script"
                   to="https://github.com/tailscale/tailscale/blob/main/scripts/installer.sh"
                 >
@@ -270,6 +271,7 @@ export default function Page({
                 <br />
                 You can also download Tailscale on the{" "}
                 <Link
+                  isExternal
                   name="macOS App Store"
                   to="https://apps.apple.com/ca/app/tailscale/id1475387142"
                 >

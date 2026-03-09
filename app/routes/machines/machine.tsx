@@ -1,12 +1,12 @@
 import { CheckCircle, CircleSlash, Info, UserCircle } from "lucide-react";
 import { useMemo, useState } from "react";
-import { data, Link as RemixLink } from "react-router";
+import { data } from "react-router";
 
 import Attribute from "~/components/Attribute";
 import Button from "~/components/Button";
 import Card from "~/components/Card";
 import Chip from "~/components/Chip";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import StatusCircle from "~/components/StatusCircle";
 import Tooltip from "~/components/Tooltip";
 import cn from "~/utils/cn";
@@ -75,9 +75,9 @@ export default function Page({
   return (
     <div>
       <p className="text-md mb-8">
-        <RemixLink className="font-medium" to="/machines">
+        <Link className="font-medium" to="/machines">
           All Machines
-        </RemixLink>
+        </Link>
         <span className="mx-2">/</span>
         {node.givenName}
       </p>
@@ -129,7 +129,11 @@ export default function Page({
       <div className="mb-4 flex items-center justify-between">
         <p>
           Subnets let you expose physical network routes onto Tailscale.{" "}
-          <Link name="Tailscale Subnets Documentation" to="https://tailscale.com/kb/1019/subnets">
+          <Link
+            isExternal
+            name="Tailscale Subnets Documentation"
+            to="https://tailscale.com/kb/1019/subnets"
+          >
             Learn More
           </Link>
         </p>

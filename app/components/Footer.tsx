@@ -1,6 +1,6 @@
 import { CircleX } from "lucide-react";
 
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import cn from "~/utils/cn";
 
 interface FooterProps {
@@ -28,7 +28,7 @@ export default function Footer({ url, debug, healthy }: FooterProps) {
         <div className={cn("text-xs leading-none", !healthy && "hidden md:block")}>
           <p>
             Headplane is free. Please consider{" "}
-            <Link to="https://github.com/sponsors/tale" name="Aarnav's GitHub Sponsors">
+            <Link isExternal to="https://github.com/sponsors/tale" name="Aarnav's GitHub Sponsors">
               donating
             </Link>{" "}
             to support development.{" "}

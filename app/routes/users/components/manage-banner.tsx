@@ -1,7 +1,7 @@
 import { Building2, House, Key } from "lucide-react";
 
 import Card from "~/components/Card";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 
 import CreateUser from "../dialogs/create-user";
 
@@ -21,7 +21,7 @@ export default function ManageBanner({ oidc, isDisabled }: ManageBannerProps) {
             {oidc ? (
               <>
                 Users are managed through your{" "}
-                <Link name="OIDC Provider" to={oidc.issuer}>
+                <Link isExternal name="OIDC Provider" to={oidc.issuer}>
                   OpenID Connect provider
                 </Link>
                 {". "}

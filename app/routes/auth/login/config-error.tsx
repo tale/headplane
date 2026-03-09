@@ -2,7 +2,7 @@ import { AlertCircle, CloudOff } from "lucide-react";
 
 import Card from "~/components/Card";
 import Code from "~/components/Code";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import { OidcConnectorError } from "~/server/web/oidc-connector";
 
 export function OidcDiscoveryFailedNotice() {
@@ -35,6 +35,7 @@ export function OidcConfigErrorNotice({ errors }: { errors: OidcConnectorError[]
           ))}
         </ul>{" "}
         <Link
+          isExternal
           name="Headplane OIDC Issues"
           to="https://headplane.net/configuration/sso#troubleshooting"
         >

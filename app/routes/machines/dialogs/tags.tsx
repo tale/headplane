@@ -2,13 +2,12 @@ import { Plus, TagsIcon, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import type { Machine } from "~/types";
-
 import Button from "~/components/Button";
 import Dialog from "~/components/Dialog";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
+import type { Machine } from "~/types";
 import cn from "~/utils/cn";
 
 interface TagsProps {
@@ -73,7 +72,11 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
         <Dialog.Title>Edit ACL tags for {machine.givenName}</Dialog.Title>
         <Dialog.Text>
           ACL tags can be used to reference machines in your ACL policies. See the{" "}
-          <Link name="Tailscale documentation" to="https://tailscale.com/kb/1068/acl-tags">
+          <Link
+            isExternal
+            name="Tailscale documentation"
+            to="https://tailscale.com/kb/1068/acl-tags"
+          >
             Tailscale documentation
           </Link>{" "}
           for more information.

@@ -2,7 +2,7 @@ import { Form } from "react-router";
 
 import Button from "~/components/Button";
 import Code from "~/components/Code";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import TableList from "~/components/TableList";
 import cn from "~/utils/cn";
 
@@ -20,7 +20,11 @@ export default function ManageRecords({ records, isDisabled }: Props) {
       <p>
         Headscale supports adding custom DNS records to your Tailnet. As of now, only <Code>A</Code>{" "}
         and <Code>AAAA</Code> records are supported.{" "}
-        <Link name="Headscale DNS Records documentation" to="https://headscale.net/stable/ref/dns">
+        <Link
+          isExternal
+          name="Headscale DNS Records documentation"
+          to="https://headscale.net/stable/ref/dns"
+        >
           Learn More
         </Link>
       </p>

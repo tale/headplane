@@ -6,7 +6,7 @@ import cn from "~/utils/cn";
 
 import Card from "./Card";
 import Code from "./Code";
-import Link from "./Link";
+import Link from "./link";
 
 export function getErrorMessage(error: Error | unknown): {
   title: string;
@@ -137,7 +137,7 @@ export function getErrorMessage(error: Error | unknown): {
           <Card.Text>
             An unexpected error occurred which is most likely a bug. Please consider reporting
             filing an issue on the{" "}
-            <Link name="Headplane GitHub" to="https://github.com/tale/headplane/issues">
+            <Link isExternal name="Headplane GitHub" to="https://github.com/tale/headplane/issues">
               Headplane GitHub
             </Link>{" "}
             repository with the details below.

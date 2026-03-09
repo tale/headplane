@@ -1,6 +1,6 @@
-import { data, Link as RemixLink } from "react-router";
+import { data } from "react-router";
 
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import Notice from "~/components/Notice";
 import { Capabilities } from "~/server/web/roles";
 
@@ -46,9 +46,9 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-4">
       <div className="flex w-full flex-col sm:w-2/3">
         <p className="text-md mb-4">
-          <RemixLink className="font-medium" to="/settings">
+          <Link className="font-medium" to="/settings">
             Settings
-          </RemixLink>
+          </Link>
           <span className="mx-2">/</span> Authentication Restrictions
         </p>
         {!access ? (
@@ -70,6 +70,7 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
           certain users or groups and Headplane will also respect these settings when
           authenticating.{" "}
           <Link
+            isExternal
             name="Headscale OIDC documentation"
             to="https://headscale.net/stable/ref/oidc/#basic-configuration"
           >

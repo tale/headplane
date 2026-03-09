@@ -5,7 +5,7 @@ import Button from "~/components/Button";
 import Code from "~/components/Code";
 import Dialog from "~/components/Dialog";
 import Input from "~/components/Input";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import NumberInput from "~/components/NumberInput";
 import Select from "~/components/Select";
 import Switch from "~/components/Switch";
@@ -204,6 +204,7 @@ export default function AddAuthKey({
                 Devices authenticated with this key will be automatically removed once they go
                 offline.{" "}
                 <Link
+                  isExternal
                   name="Tailscale Ephemeral Nodes Documentation"
                   to="https://tailscale.com/kb/1111/ephemeral-nodes"
                 >

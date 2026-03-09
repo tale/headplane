@@ -1,9 +1,8 @@
 import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link as RemixLink } from "react-router";
 
 import Code from "~/components/Code";
-import Link from "~/components/Link";
+import Link from "~/components/link";
 import Notice from "~/components/Notice";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
@@ -167,9 +166,9 @@ export default function Page({
   return (
     <div className="flex flex-col md:w-2/3">
       <p className="text-md mb-8">
-        <RemixLink className="font-medium" to="/settings">
+        <Link className="font-medium" to="/settings">
           Settings
-        </RemixLink>
+        </Link>
         <span className="mx-2">/</span> Pre-Auth Keys
       </p>
       {!access ? (
@@ -194,6 +193,7 @@ export default function Page({
         Headscale fully supports pre-authentication keys in order to easily add devices to your
         Tailnet. To learn more about using pre-authentication keys, visit the{" "}
         <Link
+          isExternal
           name="Tailscale Auth Keys documentation"
           to="https://tailscale.com/kb/1085/auth-keys/"
         >
