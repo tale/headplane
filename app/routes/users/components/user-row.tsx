@@ -21,7 +21,7 @@ export default function UserRow({ user, role, headscaleUsers, currentLink }: Use
   );
 
   return (
-    <tr className="group hover:bg-headplane-50 dark:hover:bg-headplane-950" key={user.id}>
+    <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={user.id}>
       <td className="py-2 pl-0.5">
         <div className="flex items-center">
           {user.profilePicUrl ? (
@@ -43,16 +43,13 @@ export default function UserRow({ user, role, headscaleUsers, currentLink }: Use
         <p>{mapRoleToName(role)}</p>
       </td>
       <td className="py-2 pl-0.5">
-        <p className="text-headplane-600 dark:text-headplane-300 text-sm" suppressHydrationWarning>
+        <p className="text-sm text-mist-600 dark:text-mist-300" suppressHydrationWarning>
           {new Date(user.createdAt).toLocaleDateString()}
         </p>
       </td>
       <td className="py-2 pl-0.5">
         <span
-          className={cn(
-            "flex items-center gap-x-1 text-sm",
-            "text-headplane-600 dark:text-headplane-300",
-          )}
+          className={cn("flex items-center gap-x-1 text-sm", "text-mist-600 dark:text-mist-300")}
         >
           <StatusCircle className="h-4 w-4" isOnline={isOnline} />
           <p suppressHydrationWarning>

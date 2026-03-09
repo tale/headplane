@@ -13,41 +13,14 @@
   --transition-duration-25: 25ms;
   --transition-duration-50: 50ms;
 
-  --color-main-50: #f8fafc;
-  --color-main-100: #f1f5f9;
-  --color-main-200: #e2e8f0;
-  --color-main-300: #cbd5e1;
-  --color-main-400: #94a3b8;
-  --color-main-500: #64748b;
-  --color-main-600: #475569;
-  --color-main-700: #334155;
-  --color-main-800: #1e293b;
-  --color-main-900: #0f172a;
-  --color-main-950: #020617;
+  /* Design tokens: border-radius */
+  --radius-sm: 0.375rem; /* 6px — chips, badges, inline elements */
+  --radius-md: 0.5rem; /* 8px — buttons, inputs, interactive controls */
+  --radius-lg: 0.75rem; /* 12px — cards, panels, dialogs, popovers */
 
-  --color-ui-50: #fafafa;
-  --color-ui-100: #f5f5f5;
-  --color-ui-200: #e5e5e5;
-  --color-ui-300: #d4d4d4;
-  --color-ui-400: #a3a3a3;
-  --color-ui-500: #737373;
-  --color-ui-600: #525252;
-  --color-ui-700: #404040;
-  --color-ui-800: #262626;
-  --color-ui-900: #171717;
-  --color-ui-950: #0a0a0a;
-
-  --color-headplane-50: #f2f2f2;
-  --color-headplane-100: #e6e6e6;
-  --color-headplane-200: #cccccc;
-  --color-headplane-300: #b3b3b3;
-  --color-headplane-400: #999999;
-  --color-headplane-500: #808080;
-  --color-headplane-600: #666666;
-  --color-headplane-700: #4d4d4d;
-  --color-headplane-800: #343434;
-  --color-headplane-900: #1a1a1a;
-  --color-headplane-950: #0d0d0d;
+  /* Design tokens: box-shadow */
+  --shadow-surface: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 1px 3px 0 rgb(0 0 0 / 0.06);
+  --shadow-overlay: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -1px rgb(0 0 0 / 0.06);
 
   --animate-loading: loader 0.8s infinite ease-in-out;
 

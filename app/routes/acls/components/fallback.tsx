@@ -1,36 +1,36 @@
-import cn from '~/utils/cn';
+import cn from "~/utils/cn";
 
 interface Props {
-	readonly acl: string;
+  readonly acl: string;
 }
 
 export default function Fallback({ acl }: Props) {
-	return (
-		<div className="relative w-full h-editor flex">
-			<div
-				className={cn(
-					'h-full w-8 flex justify-center p-1',
-					'border-r border-headscale-400 dark:border-headscale-800',
-				)}
-			>
-				<div
-					aria-hidden
-					className={cn(
-						'h-5 w-5 animate-spin rounded-full',
-						'border-headplane-900 dark:border-headplane-100',
-						'border-2 border-t-transparent dark:border-t-transparent',
-					)}
-				/>
-			</div>
-			<textarea
-				className={cn(
-					'w-full h-editor font-mono resize-none text-sm',
-					'bg-headplane-50 dark:bg-headplane-950 opacity-60',
-					'pl-1 pt-1 leading-snug',
-				)}
-				readOnly
-				value={acl}
-			/>
-		</div>
-	);
+  return (
+    <div className="h-editor relative flex w-full">
+      <div
+        className={cn(
+          "h-full w-8 flex justify-center p-1",
+          "border-r border-mist-400 dark:border-mist-800",
+        )}
+      >
+        <div
+          aria-hidden
+          className={cn(
+            "h-5 w-5 animate-spin rounded-full",
+            "border-mist-900 dark:border-mist-100",
+            "border-2 border-t-transparent dark:border-t-transparent",
+          )}
+        />
+      </div>
+      <textarea
+        className={cn(
+          "w-full h-editor font-mono resize-none text-sm",
+          "bg-mist-50 dark:bg-mist-950 opacity-60",
+          "pl-1 pt-1 leading-snug",
+        )}
+        readOnly
+        value={acl}
+      />
+    </div>
+  );
 }

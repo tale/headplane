@@ -84,7 +84,7 @@ export default function Page({
       <div
         className={cn(
           "flex justify-between items-center pb-2",
-          "border-b border-headplane-100 dark:border-headplane-800",
+          "border-b border-mist-100 dark:border-mist-800",
         )}
       >
         <span className="flex items-baseline gap-x-4 text-sm">
@@ -101,8 +101,8 @@ export default function Page({
         />
       </div>
       <div className="mb-4 flex gap-1">
-        <div className="border-headplane-100 dark:border-headplane-800 border-r p-2 pr-4">
-          <span className="text-headplane-600 dark:text-headplane-300 flex items-center gap-x-1 text-sm">
+        <div className="border-r border-mist-100 p-2 pr-4 dark:border-mist-800">
+          <span className="flex items-center gap-x-1 text-sm text-mist-600 dark:text-mist-300">
             Managed by
             <Tooltip>
               <Info className="p-1" />
@@ -115,7 +115,7 @@ export default function Page({
           </div>
         </div>
         <div className="p-2 pl-4">
-          <p className="text-headplane-600 dark:text-headplane-300 text-sm">Status</p>
+          <p className="text-sm text-mist-600 dark:text-mist-300">Status</p>
           <div className="mt-1 mb-8 flex gap-1">
             {mapTagsToComponents(node, uiTags)}
             {tags.map((tag) => (
@@ -143,7 +143,7 @@ export default function Page({
         variant="flat"
       >
         <div>
-          <span className="text-headplane-600 dark:text-headplane-300 flex items-center gap-x-1">
+          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Approved
             <Tooltip>
               <Info className="h-3.5 w-3.5" />
@@ -171,7 +171,7 @@ export default function Page({
           </Button>
         </div>
         <div>
-          <span className="text-headplane-600 dark:text-headplane-300 flex items-center gap-x-1">
+          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Awaiting Approval
             <Tooltip>
               <Info className="h-3.5 w-3.5" />
@@ -200,7 +200,7 @@ export default function Page({
           </Button>
         </div>
         <div>
-          <span className="text-headplane-600 dark:text-headplane-300 flex items-center gap-x-1">
+          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Exit Node
             <Tooltip>
               <Info className="h-3.5 w-3.5" />

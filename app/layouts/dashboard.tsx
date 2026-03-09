@@ -39,7 +39,7 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
 
 export default function Layout() {
   return (
-    <main className="container mx-auto mt-4 mb-24 overscroll-contain">
+    <main className="container mt-4 mb-24 overscroll-contain">
       <Outlet />
     </main>
   );

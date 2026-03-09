@@ -256,10 +256,10 @@ export default function Page({ loaderData: { ipnDetails, sshDetails } }: Route.C
   }
 
   return (
-    <div className="bg-headplane-900 h-screen w-screen">
+    <div className="h-screen w-screen bg-mist-900">
       {ipn === null ? (
         <div className="mx-auto flex h-screen items-center justify-center">
-          <Loader2 className="text-headplane-50 size-10 animate-spin" />
+          <Loader2 className="size-10 animate-spin text-mist-50" />
         </div>
       ) : (
         <div className="flex h-screen flex-col">

@@ -89,7 +89,7 @@ export default function AddAuthKey({
           <Dialog.Text>
             Copy this key now. You will not be able to see the full key again.
           </Dialog.Text>
-          <div className="bg-headplane-100 dark:bg-headplane-800 mt-4 flex items-center gap-2 rounded-lg px-3 py-2">
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-mist-100 px-3 py-2 dark:bg-mist-800">
             <code className="min-w-0 flex-1 truncate font-mono text-sm">{createdKey}</code>
             <Button
               className="shrink-0"

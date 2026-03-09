@@ -35,8 +35,8 @@ export default function LinkUser({
             <select
               className={cn(
                 "w-full rounded-lg border p-2",
-                "border-headplane-200 dark:border-headplane-700",
-                "bg-headplane-50 dark:bg-headplane-900",
+                "border-mist-200 dark:border-mist-700",
+                "bg-mist-50 dark:bg-mist-900",
               )}
               defaultValue={currentLink ?? ""}
               name="headscale_user_id"

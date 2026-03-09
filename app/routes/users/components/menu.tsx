@@ -79,8 +79,8 @@ export default function UserMenu({ user, headscaleUsers, currentLink }: MenuProp
         <Menu.IconButton
           className={cn(
             "w-10 border-transparent bg-transparent py-0.5",
-            "border group-hover:border-headplane-200",
-            "dark:group-hover:border-headplane-700",
+            "border group-hover:border-mist-200",
+            "dark:group-hover:border-mist-700",
           )}
           label="User Options"
         >

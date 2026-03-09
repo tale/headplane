@@ -50,7 +50,7 @@ export default function MachineRow({
   }, [magic, node.ipAddresses]);
 
   return (
-    <tr className="group hover:bg-headplane-50 dark:hover:bg-headplane-950" key={node.id}>
+    <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={node.id}>
       <td className="py-2 pl-0.5 focus-within:ring-3">
         <Link className={cn("group/link h-full focus:outline-hidden")} to={`/machines/${node.id}`}>
           <p
@@ -122,7 +122,7 @@ export default function MachineRow({
           <StatusCircle className="mt-0.5 h-4 w-4" isOnline={node.online && !node.expired} />
           <div>
             <p
-              className={cn("text-sm", "text-headplane-600 dark:text-headplane-300")}
+              className={cn("text-sm", "text-mist-600 dark:text-mist-300")}
               suppressHydrationWarning
             >
               {node.online && !node.expired

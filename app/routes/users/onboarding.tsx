@@ -144,8 +144,8 @@ export default function Page({
                 <select
                   className={cn(
                     "mb-4 w-full rounded-lg border p-2",
-                    "border-headplane-200 dark:border-headplane-700",
-                    "bg-headplane-50 dark:bg-headplane-900",
+                    "border-mist-200 dark:border-mist-700",
+                    "bg-mist-50 dark:bg-mist-900",
                   )}
                   name="headscale_user_id"
                   required
@@ -167,7 +167,7 @@ export default function Page({
                 Skip — I'll do this later
               </Button>
             </NavLink>
-            <p className="text-headplane-500 mt-2 text-center text-xs">
+            <p className="mt-2 text-center text-xs text-mist-500">
               Without linking, you won't be able to see your own machines or generate pre-auth keys.
               An admin can link your account later from the Users page.
             </p>
@@ -213,7 +213,7 @@ export default function Page({
               >
                 curl -fsSL https://tailscale.com/install.sh | sh
               </Button>
-              <p className="text-headplane-600 dark:text-headplane-300 mt-1 text-center text-xs">
+              <p className="mt-1 text-center text-xs text-mist-600 dark:text-mist-300">
                 Click this button to copy the command.{" "}
                 <Link
                   name="Linux installation script"
@@ -242,7 +242,7 @@ export default function Page({
                   Download for Windows
                 </Button>
               </a>
-              <p className="text-headplane-600 dark:text-headplane-300 text-center text-sm">
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
                 Requires Windows 10 or later.
               </p>
             </Options.Item>
@@ -265,7 +265,7 @@ export default function Page({
                   Download for macOS
                 </Button>
               </a>
-              <p className="text-headplane-600 dark:text-headplane-300 text-center text-sm">
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
                 Requires macOS Big Sur 11.0 or later.
                 <br />
                 You can also download Tailscale on the{" "}
@@ -297,7 +297,7 @@ export default function Page({
                   Download for iOS
                 </Button>
               </a>
-              <p className="text-headplane-600 dark:text-headplane-300 text-center text-sm">
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
                 Requires iOS 15 or later.
               </p>
             </Options.Item>
@@ -320,7 +320,7 @@ export default function Page({
                   Download for Android
                 </Button>
               </a>
-              <p className="text-headplane-600 dark:text-headplane-300 text-center text-sm">
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
                 Requires Android 8 or later.
               </p>
             </Options.Item>
@@ -334,7 +334,7 @@ export default function Page({
                 <br />
                 We found your first device
               </Card.Title>
-              <div className="border-headplane-100 dark:border-headplane-800 rounded-xl border p-4">
+              <div className="rounded-xl border border-mist-100 p-4 dark:border-mist-800">
                 <div className="flex items-start gap-4">
                   <StatusCircle className="mt-3 size-6" isOnline={firstMachine.online} />
                   <div>
@@ -364,12 +364,10 @@ export default function Page({
                   className={cn(
                     "absolute inline-flex h-full w-full",
                     "rounded-full opacity-75 animate-ping",
-                    "bg-headplane-500",
+                    "bg-mist-500",
                   )}
                 />
-                <span
-                  className={cn("relative inline-flex size-4 rounded-full", "bg-headplane-400")}
-                />
+                <span className={cn("relative inline-flex size-4 rounded-full", "bg-mist-400")} />
               </span>
               <p className="font-lg">Waiting for your first device...</p>
             </div>

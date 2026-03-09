@@ -1,183 +1,184 @@
-import { Cog, Ellipsis, SquareTerminal } from 'lucide-react';
-import { useState } from 'react';
-import Button from '~/components/Button';
-import Menu from '~/components/Menu';
-import type { User } from '~/types';
-import cn from '~/utils/cn';
-import { PopulatedNode } from '~/utils/node-info';
-import Delete from '../dialogs/delete';
-import Expire from '../dialogs/expire';
-import Move from '../dialogs/move';
-import Rename from '../dialogs/rename';
-import Routes from '../dialogs/routes';
-import Tags from '../dialogs/tags';
+import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
+import { useState } from "react";
+
+import Button from "~/components/Button";
+import Menu from "~/components/Menu";
+import type { User } from "~/types";
+import cn from "~/utils/cn";
+import { PopulatedNode } from "~/utils/node-info";
+
+import Delete from "../dialogs/delete";
+import Expire from "../dialogs/expire";
+import Move from "../dialogs/move";
+import Rename from "../dialogs/rename";
+import Routes from "../dialogs/routes";
+import Tags from "../dialogs/tags";
 
 interface MenuProps {
-	node: PopulatedNode;
-	users: User[];
-	magic?: string;
-	isFullButton?: boolean;
-	isDisabled?: boolean;
-	existingTags?: string[];
-	supportsNodeOwnerChange: boolean;
+  node: PopulatedNode;
+  users: User[];
+  magic?: string;
+  isFullButton?: boolean;
+  isDisabled?: boolean;
+  existingTags?: string[];
+  supportsNodeOwnerChange: boolean;
 }
 
-type Modal = 'rename' | 'expire' | 'remove' | 'routes' | 'move' | 'tags' | null;
+type Modal = "rename" | "expire" | "remove" | "routes" | "move" | "tags" | null;
 
 export default function MachineMenu({
-	node,
-	magic,
-	users,
-	isFullButton,
-	isDisabled,
-	existingTags,
-	supportsNodeOwnerChange,
+  node,
+  magic,
+  users,
+  isFullButton,
+  isDisabled,
+  existingTags,
+  supportsNodeOwnerChange,
 }: MenuProps) {
-	const [modal, setModal] = useState<Modal>(null);
-	const supportsTailscaleSSH =
-		node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
+  const [modal, setModal] = useState<Modal>(null);
+  const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
-	return (
-		<div className="flex items-center justify-end px-4 gap-1.5">
-			{modal === 'remove' && (
-				<Delete
-					isOpen={modal === 'remove'}
-					machine={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-				/>
-			)}
-			{modal === 'move' && (
-				<Move
-					isOpen={modal === 'move'}
-					machine={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-					users={users}
-				/>
-			)}
-			{modal === 'rename' && (
-				<Rename
-					isOpen={modal === 'rename'}
-					machine={node}
-					magic={magic}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-				/>
-			)}
-			{modal === 'routes' && (
-				<Routes
-					isOpen={modal === 'routes'}
-					node={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-				/>
-			)}
-			{modal === 'tags' && (
-				<Tags
-					existingTags={existingTags}
-					isOpen={modal === 'tags'}
-					machine={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-				/>
-			)}
-			{node.expired && modal === 'expire' ? undefined : (
-				<Expire
-					isOpen={modal === 'expire'}
-					machine={node}
-					setIsOpen={(isOpen) => {
-						if (!isOpen) setModal(null);
-					}}
-				/>
-			)}
+  return (
+    <div className="flex items-center justify-end gap-1.5 px-4">
+      {modal === "remove" && (
+        <Delete
+          isOpen={modal === "remove"}
+          machine={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
+      {modal === "move" && (
+        <Move
+          isOpen={modal === "move"}
+          machine={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+          users={users}
+        />
+      )}
+      {modal === "rename" && (
+        <Rename
+          isOpen={modal === "rename"}
+          machine={node}
+          magic={magic}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
+      {modal === "routes" && (
+        <Routes
+          isOpen={modal === "routes"}
+          node={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
+      {modal === "tags" && (
+        <Tags
+          existingTags={existingTags}
+          isOpen={modal === "tags"}
+          machine={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
+      {node.expired && modal === "expire" ? undefined : (
+        <Expire
+          isOpen={modal === "expire"}
+          machine={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
 
-			{supportsTailscaleSSH ? (
-				isFullButton ? (
-					<Button
-						className="flex items-center gap-x-2"
-						onPress={() => {
-							// We need to use JS to open the SSH URL
-							// in a new WINDOW since href can only
-							// do a new TAB.
-							window.open(
-								`${__PREFIX__}/ssh?hostname=${node.givenName}`,
-								'_blank',
-								'noopener,noreferrer,width=800,height=600',
-							);
-						}}
-						variant="heavy"
-					>
-						<SquareTerminal className="h-5" />
-						<p>SSH</p>
-					</Button>
-				) : (
-					<Button
-						className={cn(
-							'py-0.5 w-fit bg-transparent border-transparent',
-							'border group-hover:border-headplane-200',
-							'dark:group-hover:border-headplane-700',
-							'opacity-0 pointer-events-none group-hover:opacity-100',
-							'group-hover:pointer-events-auto',
-						)}
-						onPress={() => {
-							// We need to use JS to open the SSH URL
-							// in a new WINDOW since href can only
-							// do a new TAB.
-							window.open(
-								`${__PREFIX__}/ssh?hostname=${node.givenName}`,
-								'_blank',
-								'noopener,noreferrer,width=800,height=600',
-							);
-						}}
-					>
-						SSH
-					</Button>
-				)
-			) : undefined}
-			<Menu isDisabled={isDisabled}>
-				{isFullButton ? (
-					<Menu.Button className="flex items-center gap-x-2">
-						<Cog className="h-5" />
-						<p>Machine Settings</p>
-					</Menu.Button>
-				) : (
-					<Menu.IconButton
-						className={cn(
-							'py-0.5 w-10 bg-transparent border-transparent',
-							'border group-hover:border-headplane-200',
-							'dark:group-hover:border-headplane-700',
-						)}
-						label="Machine Options"
-					>
-						<Ellipsis className="h-5" />
-					</Menu.IconButton>
-				)}
-				<Menu.Panel
-					disabledKeys={node.expired ? ['expire'] : []}
-					onAction={(key) => setModal(key as Modal)}
-				>
-					<Menu.Section>
-						<Menu.Item key="rename">Edit machine name</Menu.Item>
-						<Menu.Item key="routes">Edit route settings</Menu.Item>
-						<Menu.Item key="tags">Edit ACL tags</Menu.Item>
-						{supportsNodeOwnerChange && <Menu.Item key="move">Change owner</Menu.Item>}
-					</Menu.Section>
-					<Menu.Section>
-						<Menu.Item key="expire" textValue="Expire">
-							<p className="text-red-500 dark:text-red-400">Expire</p>
-						</Menu.Item>
-						<Menu.Item key="remove" textValue="Remove">
-							<p className="text-red-500 dark:text-red-400">Remove</p>
-						</Menu.Item>
-					</Menu.Section>
-				</Menu.Panel>
-			</Menu>
-		</div>
-	);
+      {supportsTailscaleSSH ? (
+        isFullButton ? (
+          <Button
+            className="flex items-center gap-x-2"
+            onPress={() => {
+              // We need to use JS to open the SSH URL
+              // in a new WINDOW since href can only
+              // do a new TAB.
+              window.open(
+                `${__PREFIX__}/ssh?hostname=${node.givenName}`,
+                "_blank",
+                "noopener,noreferrer,width=800,height=600",
+              );
+            }}
+            variant="heavy"
+          >
+            <SquareTerminal className="h-5" />
+            <p>SSH</p>
+          </Button>
+        ) : (
+          <Button
+            className={cn(
+              "py-0.5 w-fit bg-transparent border-transparent",
+              "border group-hover:border-mist-200",
+              "dark:group-hover:border-mist-700",
+              "opacity-0 pointer-events-none group-hover:opacity-100",
+              "group-hover:pointer-events-auto",
+            )}
+            onPress={() => {
+              // We need to use JS to open the SSH URL
+              // in a new WINDOW since href can only
+              // do a new TAB.
+              window.open(
+                `${__PREFIX__}/ssh?hostname=${node.givenName}`,
+                "_blank",
+                "noopener,noreferrer,width=800,height=600",
+              );
+            }}
+          >
+            SSH
+          </Button>
+        )
+      ) : undefined}
+      <Menu isDisabled={isDisabled}>
+        {isFullButton ? (
+          <Menu.Button className="flex items-center gap-x-2">
+            <Cog className="h-5" />
+            <p>Machine Settings</p>
+          </Menu.Button>
+        ) : (
+          <Menu.IconButton
+            className={cn(
+              "py-0.5 w-10 bg-transparent border-transparent",
+              "border group-hover:border-mist-200",
+              "dark:group-hover:border-mist-700",
+            )}
+            label="Machine Options"
+          >
+            <Ellipsis className="h-5" />
+          </Menu.IconButton>
+        )}
+        <Menu.Panel
+          disabledKeys={node.expired ? ["expire"] : []}
+          onAction={(key) => setModal(key as Modal)}
+        >
+          <Menu.Section>
+            <Menu.Item key="rename">Edit machine name</Menu.Item>
+            <Menu.Item key="routes">Edit route settings</Menu.Item>
+            <Menu.Item key="tags">Edit ACL tags</Menu.Item>
+            {supportsNodeOwnerChange && <Menu.Item key="move">Change owner</Menu.Item>}
+          </Menu.Section>
+          <Menu.Section>
+            <Menu.Item key="expire" textValue="Expire">
+              <p className="text-red-500 dark:text-red-400">Expire</p>
+            </Menu.Item>
+            <Menu.Item key="remove" textValue="Remove">
+              <p className="text-red-500 dark:text-red-400">Remove</p>
+            </Menu.Item>
+          </Menu.Section>
+        </Menu.Panel>
+      </Menu>
+    </div>
+  );
 }

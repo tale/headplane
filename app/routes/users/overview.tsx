@@ -134,18 +134,21 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] table-auto rounded-lg">
-          <thead className="text-headplane-600 dark:text-headplane-300">
+          <thead className="text-mist-600 dark:text-mist-300">
             <tr className="px-0.5 text-left">
               <th className="pb-2 text-xs font-bold uppercase">User</th>
               <th className="pb-2 text-xs font-bold uppercase">Role</th>
               <th className="pb-2 text-xs font-bold uppercase">Created At</th>
               <th className="pb-2 text-xs font-bold uppercase">Last Seen</th>
+              <th className="w-12 pb-2">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody
             className={cn(
-              "divide-y divide-headplane-100 dark:divide-headplane-800 align-top",
-              "border-t border-headplane-100 dark:border-headplane-800",
+              "divide-y divide-mist-100 dark:divide-mist-800 align-top",
+              "border-t border-mist-100 dark:border-mist-800",
             )}
           >
             {users

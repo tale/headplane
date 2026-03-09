@@ -181,9 +181,9 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               className={cn(
                 "absolute right-2 top-1/2 -translate-y-1/2",
                 "p-1 rounded-full",
-                "text-headplane-400 hover:text-headplane-600",
-                "dark:text-headplane-500 dark:hover:text-headplane-300",
-                "hover:bg-headplane-100 dark:hover:bg-headplane-800",
+                "text-mist-400 hover:text-mist-600",
+                "dark:text-mist-500 dark:hover:text-mist-300",
+                "hover:bg-mist-100 dark:hover:bg-mist-800",
               )}
               onClick={() => setSearchQuery("")}
               type="button"
@@ -192,7 +192,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             </button>
           )}
         </div>
-        <span className="text-headplane-500 text-sm whitespace-nowrap">
+        <span className="text-sm whitespace-nowrap text-mist-500">
           {searchQuery
             ? `Showing ${filteredAndSortedNodes.length} of ${loaderData.populatedNodes.length} machines`
             : `${loaderData.populatedNodes.length} machines`}
@@ -200,7 +200,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] table-auto rounded-lg">
-          <thead className="text-headplane-600 dark:text-headplane-300">
+          <thead className="text-mist-600 dark:text-mist-300">
             <tr className="px-0.5 text-left">
               <th
                 aria-sort={
@@ -216,7 +216,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                   aria-label="Sort by name"
                   className={cn(
                     "flex items-center gap-x-1 cursor-pointer",
-                    "hover:text-headplane-900 dark:hover:text-headplane-100",
+                    "hover:text-mist-900 dark:hover:text-mist-100",
                   )}
                   onClick={() => handleSort("name")}
                   type="button"
@@ -245,7 +245,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     aria-label="Sort by IP address"
                     className={cn(
                       "flex items-center gap-x-1 cursor-pointer uppercase text-xs font-bold",
-                      "hover:text-headplane-900 dark:hover:text-headplane-100",
+                      "hover:text-mist-900 dark:hover:text-mist-100",
                     )}
                     onClick={() => handleSort("ip")}
                     type="button"
@@ -289,7 +289,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     aria-label="Sort by version"
                     className={cn(
                       "flex items-center gap-x-1 cursor-pointer",
-                      "hover:text-headplane-900 dark:hover:text-headplane-100",
+                      "hover:text-mist-900 dark:hover:text-mist-100",
                     )}
                     onClick={() => handleSort("version")}
                     type="button"
@@ -318,7 +318,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                   aria-label="Sort by last seen"
                   className={cn(
                     "flex items-center gap-x-1 cursor-pointer",
-                    "hover:text-headplane-900 dark:hover:text-headplane-100",
+                    "hover:text-mist-900 dark:hover:text-mist-100",
                   )}
                   onClick={() => handleSort("lastSeen")}
                   type="button"
@@ -332,19 +332,22 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     ))}
                 </button>
               </th>
+              <th className="w-12 pb-2">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody
             className={cn(
-              "divide-y divide-headplane-100 dark:divide-headplane-800 align-top",
-              "border-t border-headplane-100 dark:border-headplane-800",
+              "divide-y divide-mist-100 dark:divide-mist-800 align-top",
+              "border-t border-mist-100 dark:border-mist-800",
             )}
           >
             {filteredAndSortedNodes.length === 0 ? (
               <tr>
                 <td
-                  className="text-headplane-500 py-8 text-center"
-                  colSpan={loaderData.agent !== undefined ? 5 : 4}
+                  className="py-8 text-center text-mist-500"
+                  colSpan={loaderData.agent !== undefined ? 6 : 5}
                 >
                   No machines found matching "{searchQuery}"
                 </td>
