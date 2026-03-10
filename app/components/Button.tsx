@@ -20,7 +20,7 @@ export default function Button({ variant = "light", ...props }: ButtonProps) {
       ref={ref}
       {...buttonProps}
       className={cn(
-        "w-fit rounded-lg px-3.5 py-2 text-sm leading-tight",
+        "w-fit rounded-md px-3.5 py-2 text-sm leading-tight",
         "transition-colors duration-100",
         "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
         "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",

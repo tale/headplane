@@ -32,7 +32,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   try {
     allKeys = await api.getAllPreAuthKeys();
   } catch {
-    // older versions don't support this endpoint
+    // Older versions don't support this endpoint
   }
 
   if (allKeys !== null) {
@@ -47,12 +47,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     keys = [];
     const tagOnly = keysByUser.get(null);
     if (tagOnly?.length) {
-      keys.push({ user: null, preAuthKeys: tagOnly });
+      keys.push({ preAuthKeys: tagOnly, user: null });
     }
     for (const user of users) {
       const userKeys = keysByUser.get(user.id);
       if (userKeys?.length) {
-        keys.push({ user, preAuthKeys: userKeys });
+        keys.push({ preAuthKeys: userKeys, user });
       }
     }
   } else {
@@ -66,34 +66,34 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         .map(async (user) => {
           try {
             const preAuthKeys = await api.getPreAuthKeys(user.id);
-            return { success: true as const, user, preAuthKeys };
+            return { preAuthKeys, success: true as const, user };
           } catch (error) {
             log.error("api", "GET /v1/preauthkey for %s: %o", user.name, error);
-            return { success: false as const, user, error, preAuthKeys: [] as const };
+            return { error, preAuthKeys: [] as const, success: false as const, user };
           }
         }),
     );
 
     keys = results
       .filter(({ success }) => success)
-      .map(({ user, preAuthKeys }) => ({ user, preAuthKeys }));
+      .map(({ user, preAuthKeys }) => ({ preAuthKeys, user }));
 
     missing = results
       .filter((r): r is Extract<FetchResult, { success: false }> => !r.success)
-      .map(({ user, error }) => ({ user, error }));
+      .map(({ user, error }) => ({ error, user }));
   }
 
   const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
   const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);
 
   return {
+    access: canGenerateAny || canGenerateOwn,
+    currentSubject: principal.kind === "oidc" ? principal.user.subject : undefined,
     keys,
     missing,
-    users,
-    access: canGenerateAny || canGenerateOwn,
     selfServiceOnly: !canGenerateAny && canGenerateOwn,
-    currentSubject: principal.kind === "oidc" ? principal.user.subject : undefined,
     url: context.config.headscale.public_url ?? context.config.headscale.url,
+    users,
   };
 }
 
@@ -192,11 +192,7 @@ export default function Page({
       <p className="mb-4">
         Headscale fully supports pre-authentication keys in order to easily add devices to your
         Tailnet. To learn more about using pre-authentication keys, visit the{" "}
-        <Link
-          isExternal
-          name="Tailscale Auth Keys documentation"
-          to="https://tailscale.com/kb/1085/auth-keys/"
-        >
+        <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
           Tailscale documentation
         </Link>
       </p>

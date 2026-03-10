@@ -28,12 +28,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     access: context.auth.can(principal, Capabilities.configure_iam),
-    writable: context.hs.writable(),
     settings: {
       domains: [...new Set(context.hs.c.oidc.allowed_domains)],
       groups: [...new Set(context.hs.c.oidc.allowed_groups)],
       users: [...new Set(context.hs.c.oidc.allowed_users)],
     },
+    writable: context.hs.writable(),
   };
 }
 
@@ -69,11 +69,7 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
           groups, or users to authenticate. This can be used to limit access to your Tailnet to only
           certain users or groups and Headplane will also respect these settings when
           authenticating.{" "}
-          <Link
-            isExternal
-            name="Headscale OIDC documentation"
-            to="https://headscale.net/stable/ref/oidc/#basic-configuration"
-          >
+          <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
             Learn More
           </Link>
         </p>

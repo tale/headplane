@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 import Chip from "~/components/Chip";
 import Link from "~/components/link";
-import Menu from "~/components/Menu";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import StatusCircle from "~/components/StatusCircle";
 import { ExitNodeTag } from "~/components/tags/ExitNode";
 import { ExpiryTag } from "~/components/tags/Expiry";
@@ -13,7 +13,7 @@ import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
 import type { User } from "~/types";
 import cn from "~/utils/cn";
 import * as hinfo from "~/utils/host-info";
-import { PopulatedNode } from "~/utils/node-info";
+import type { PopulatedNode } from "~/utils/node-info";
 import { formatTimeDelta } from "~/utils/time";
 import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
@@ -76,29 +76,28 @@ export default function MachineRow({
       <td className="py-2">
         <div className="flex items-center gap-x-1">
           {node.ipAddresses[0]}
-          <Menu placement="bottom end">
-            <Menu.IconButton className="bg-transparent" label="IP Addresses">
+          <Menu>
+            <MenuTrigger className="rounded-full bg-transparent p-1 hover:bg-mist-100 dark:hover:bg-mist-800">
               <ChevronDown className="h-4 w-4" />
-            </Menu.IconButton>
-            <Menu.Panel
-              onAction={async (key) => {
-                await navigator.clipboard.writeText(key.toString());
-                toast("Copied IP address to clipboard");
-              }}
-            >
-              <Menu.Section>
-                {ipOptions.map((ip) => (
-                  <Menu.Item key={ip} textValue={ip}>
-                    <div
-                      className={cn("flex items-center justify-between", "text-sm w-full gap-x-6")}
-                    >
-                      {ip}
-                      <Copy className="h-3 w-3" />
-                    </div>
-                  </Menu.Item>
-                ))}
-              </Menu.Section>
-            </Menu.Panel>
+            </MenuTrigger>
+            <MenuContent align="end">
+              {ipOptions.map((ip) => (
+                <MenuItem
+                  key={ip}
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(ip);
+                    toast("Copied IP address to clipboard");
+                  }}
+                >
+                  <div
+                    className={cn("flex items-center justify-between", "text-sm w-full gap-x-6")}
+                  >
+                    {ip}
+                    <Copy className="h-3 w-3" />
+                  </div>
+                </MenuItem>
+              ))}
+            </MenuContent>
           </Menu>
         </div>
       </td>
@@ -190,25 +189,31 @@ export function mapTagsToComponents(node: PopulatedNode, uiTags: string[]) {
   return uiTags.map((tag) => {
     switch (tag) {
       case "exit-approved":
-      case "exit-waiting":
+      case "exit-waiting": {
         return <ExitNodeTag isEnabled={tag === "exit-approved"} key={tag} />;
+      }
 
       case "subnet-approved":
-      case "subnet-waiting":
+      case "subnet-waiting": {
         return <SubnetTag isEnabled={tag === "subnet-approved"} key={tag} />;
+      }
 
       case "expired":
-      case "no-expiry":
+      case "no-expiry": {
         return <ExpiryTag expiry={node.expiry ?? undefined} key={tag} variant={tag} />;
+      }
 
-      case "tailscale-ssh":
+      case "tailscale-ssh": {
         return <TailscaleSSHTag key={tag} />;
+      }
 
-      case "headplane-agent":
+      case "headplane-agent": {
         return <HeadplaneAgentTag key={tag} />;
+      }
 
-      default:
+      default: {
         return null;
+      }
     }
   });
 }

@@ -2,7 +2,7 @@ import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
 
 import Button from "~/components/Button";
-import Menu from "~/components/Menu";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { User } from "~/types";
 import cn from "~/utils/cn";
 import { PopulatedNode } from "~/utils/node-info";
@@ -140,39 +140,38 @@ export default function MachineMenu({
           </Button>
         )
       ) : undefined}
-      <Menu isDisabled={isDisabled}>
-        {isFullButton ? (
-          <Menu.Button className="flex items-center gap-x-2">
-            <Cog className="h-5" />
-            <p>Machine Settings</p>
-          </Menu.Button>
-        ) : (
-          <Menu.IconButton
-            className="w-10 bg-transparent py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800"
-            label="Machine Options"
-          >
-            <Ellipsis className="h-5" />
-          </Menu.IconButton>
-        )}
-        <Menu.Panel
-          disabledKeys={node.expired ? ["expire"] : []}
-          onAction={(key) => setModal(key as Modal)}
+      <Menu disabled={isDisabled}>
+        <MenuTrigger
+          className={
+            isFullButton
+              ? "gap-x-2 rounded-md border border-mist-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-mist-50 dark:border-mist-700 dark:bg-mist-800/50 dark:hover:bg-mist-700/50"
+              : "w-10 rounded-full bg-transparent p-1 hover:bg-mist-100 dark:hover:bg-mist-800"
+          }
         >
-          <Menu.Section>
-            <Menu.Item key="rename">Edit machine name</Menu.Item>
-            <Menu.Item key="routes">Edit route settings</Menu.Item>
-            <Menu.Item key="tags">Edit ACL tags</Menu.Item>
-            {supportsNodeOwnerChange && <Menu.Item key="move">Change owner</Menu.Item>}
-          </Menu.Section>
-          <Menu.Section>
-            <Menu.Item key="expire" textValue="Expire">
-              <p className="text-red-500 dark:text-red-400">Expire</p>
-            </Menu.Item>
-            <Menu.Item key="remove" textValue="Remove">
-              <p className="text-red-500 dark:text-red-400">Remove</p>
-            </Menu.Item>
-          </Menu.Section>
-        </Menu.Panel>
+          {isFullButton ? (
+            <>
+              <Cog className="h-5" />
+              <p>Machine Settings</p>
+            </>
+          ) : (
+            <Ellipsis className="h-5" />
+          )}
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem onClick={() => setModal("rename")}>Edit machine name</MenuItem>
+          <MenuItem onClick={() => setModal("routes")}>Edit route settings</MenuItem>
+          <MenuItem onClick={() => setModal("tags")}>Edit ACL tags</MenuItem>
+          {supportsNodeOwnerChange && (
+            <MenuItem onClick={() => setModal("move")}>Change owner</MenuItem>
+          )}
+          <MenuSeparator />
+          <MenuItem variant="danger" disabled={node.expired} onClick={() => setModal("expire")}>
+            Expire
+          </MenuItem>
+          <MenuItem variant="danger" onClick={() => setModal("remove")}>
+            Remove
+          </MenuItem>
+        </MenuContent>
       </Menu>
     </div>
   );

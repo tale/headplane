@@ -2,7 +2,7 @@ import { eq, isNotNull } from "drizzle-orm";
 
 import log from "~/utils/log";
 
-import type { Route } from "../../layouts/+types/dashboard";
+import type { Route } from "../../layout/+types/app";
 import { ephemeralNodes } from "./schema";
 
 export async function pruneEphemeralNodes({ context, request }: Route.LoaderArgs) {

@@ -42,17 +42,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0-beta.1");
 
   return {
-    populatedNodes,
-    nodes,
-    users,
-    magic,
-    server: context.config.headscale.url,
-    publicServer: context.config.headscale.public_url,
     agent: context.agents?.agentID(),
-    writable: writablePermission,
-    preAuth: context.auth.can(principal, Capabilities.generate_authkeys),
     headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,
+    magic,
+    nodes,
+    populatedNodes,
+    preAuth: context.auth.can(principal, Capabilities.generate_authkeys),
+    publicServer: context.config.headscale.public_url,
+    server: context.config.headscale.url,
     supportsNodeOwnerChange: supportsNodeOwnerChange,
+    users,
+    writable: writablePermission,
   };
 }
 
@@ -69,19 +69,26 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     const query = searchQuery.toLowerCase().trim();
 
     let nodes = loaderData.populatedNodes.filter((node) => {
-      if (!query) return true;
-      if (node.givenName.toLowerCase().includes(query)) return true;
-      if (node.ipAddresses.some((ip) => ip.toLowerCase().includes(query))) return true;
+      if (!query) {
+        return true;
+      }
+      if (node.givenName.toLowerCase().includes(query)) {
+        return true;
+      }
+      if (node.ipAddresses.some((ip) => ip.toLowerCase().includes(query))) {
+        return true;
+      }
       return false;
     });
 
-    nodes = [...nodes].sort((a, b) => {
+    nodes = [...nodes].toSorted((a, b) => {
       let comparison = 0;
 
       switch (sortField) {
-        case "name":
+        case "name": {
           comparison = a.givenName.localeCompare(b.givenName);
           break;
+        }
         case "ip": {
           const getIPv4 = (addresses: string[]) =>
             addresses.find((ip) => !ip.includes(":")) || addresses[0] || "";
@@ -119,13 +126,14 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           }
           break;
         }
-        case "lastSeen":
+        case "lastSeen": {
           if (a.online !== b.online) {
             comparison = a.online ? 1 : -1;
             break;
           }
           comparison = new Date(a.lastSeen).getTime() - new Date(b.lastSeen).getTime();
           break;
+        }
       }
 
       return sortDirection === "asc" ? comparison : -comparison;
@@ -150,11 +158,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           <h1 className="mb-2 text-2xl font-medium">Machines</h1>
           <p>
             Manage the devices connected to your Tailnet.{" "}
-            <Link
-              isExternal
-              name="Tailscale Manage Devices Documentation"
-              to="https://tailscale.com/kb/1372/manage-devices"
-            >
+            <Link external styled to="https://tailscale.com/kb/1372/manage-devices">
               Learn more
             </Link>
           </p>

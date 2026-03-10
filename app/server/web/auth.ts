@@ -234,6 +234,7 @@ export class AuthService {
    * Get the Headscale API key for making API calls.
    * OIDC sessions use the configured oidc.headscale_api_key.
    * API key sessions use the user-provided key stored in the cookie.
+   * TODO: Get rid of this AI garbage
    */
   getHeadscaleApiKey(principal: Principal, oidcApiKey?: string): string {
     if (principal.kind === "api_key") {

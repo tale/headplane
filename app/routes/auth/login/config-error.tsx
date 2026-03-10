@@ -3,7 +3,7 @@ import { AlertCircle, CloudOff } from "lucide-react";
 import Card from "~/components/Card";
 import Code from "~/components/Code";
 import Link from "~/components/link";
-import { OidcConnectorError } from "~/server/web/oidc-connector";
+import type { OidcConnectorError } from "~/server/web/oidc-connector";
 
 export function OidcDiscoveryFailedNotice() {
   return (
@@ -34,11 +34,7 @@ export function OidcConfigErrorNotice({ errors }: { errors: OidcConnectorError[]
             <li key={code.key}>{code.node}</li>
           ))}
         </ul>{" "}
-        <Link
-          isExternal
-          name="Headplane OIDC Issues"
-          to="https://headplane.net/configuration/sso#troubleshooting"
-        >
+        <Link external styled to="https://headplane.net/configuration/sso#troubleshooting">
           Learn more
         </Link>
       </Card.Text>
@@ -54,7 +50,7 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
 
   for (const error of errors) {
     switch (error) {
-      case "INVALID_API_KEY":
+      case "INVALID_API_KEY": {
         messages.push({
           key: error,
           node: (
@@ -65,8 +61,9 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
 
-      case "MISSING_AUTHORIZATION_ENDPOINT":
+      case "MISSING_AUTHORIZATION_ENDPOINT": {
         messages.push({
           key: error,
           node: (
@@ -77,8 +74,9 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
 
-      case "MISSING_TOKEN_ENDPOINT":
+      case "MISSING_TOKEN_ENDPOINT": {
         messages.push({
           key: error,
           node: (
@@ -89,8 +87,9 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
 
-      case "MISSING_USERINFO_ENDPOINT":
+      case "MISSING_USERINFO_ENDPOINT": {
         messages.push({
           key: error,
           node: (
@@ -101,8 +100,9 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
 
-      case "MISSING_REQUIRED_CLAIMS":
+      case "MISSING_REQUIRED_CLAIMS": {
         messages.push({
           key: error,
           node: (
@@ -113,8 +113,9 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
 
-      case "UNKNOWN_ERROR":
+      case "UNKNOWN_ERROR": {
         messages.push({
           key: error,
           node: (
@@ -125,6 +126,7 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           ),
         });
         break;
+      }
     }
   }
 

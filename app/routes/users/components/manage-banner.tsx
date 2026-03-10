@@ -21,28 +21,18 @@ export default function ManageBanner({ oidc, isDisabled }: ManageBannerProps) {
             {oidc ? (
               <>
                 Users are managed through your{" "}
-                <Link isExternal name="OIDC Provider" to={oidc.issuer}>
+                <Link external styled to={oidc.issuer}>
                   OpenID Connect provider
                 </Link>
                 {". "}
                 Groups and user information do not automatically sync.{" "}
-                <Link
-                  name="Headscale OIDC Documentation"
-                  to="https://headscale.net/stable/ref/oidc"
-                >
-                  Learn more
-                </Link>
+                <Link to="https://headscale.net/stable/ref/oidc">Learn more</Link>
               </>
             ) : (
               <>
                 Users are not managed externally. Using OpenID Connect can create a better
                 experience when using Headscale.{" "}
-                <Link
-                  name="Headscale OIDC Documentation"
-                  to="https://headscale.net/stable/ref/oidc"
-                >
-                  Learn more
-                </Link>
+                <Link to="https://headscale.net/stable/ref/oidc">Learn more</Link>
               </>
             )}
           </p>

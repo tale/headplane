@@ -27,7 +27,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const oidcConnector = await context.oidc?.connector.get();
 
   // MARK: This works because the OIDC connector will always return false
-  // for `isExclusive` if the OIDC config isn't usable.
+  // For `isExclusive` if the OIDC config isn't usable.
   if (oidcConnector?.isExclusive && urlState !== "logout") {
     return redirect("/oidc/start");
   }
@@ -63,14 +63,14 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 
   useEffect(() => {
     // State is a one time thing, we need to remove it after it has
-    // been consumed to prevent logic loops.
+    // Been consumed to prevent logic loops.
     if (urlState !== null) {
       const searchParams = new URLSearchParams(params);
       searchParams.delete("s");
 
       // Replacing because it's not a navigation, just a cleanup of the URL
       // We can't use the useSearchParams method since it revalidates
-      // which will trigger a full reload
+      // Which will trigger a full reload
       const newUrl = searchParams.toString()
         ? `{${window.location.pathname}?${searchParams.toString()}`
         : window.location.pathname;
@@ -103,8 +103,8 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
                 Headplane is configured to use secure cookies, but this site is being served over an
                 insecure connection and login will not work correctly.{" "}
                 <Link
-                  isExternal
-                  name="Headplane Common Issues"
+                  external
+                  styled
                   to="https://headplane.net/configuration/common-issues#issue-logging-in-does-not-do-anything"
                 >
                   Learn more.

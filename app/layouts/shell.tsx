@@ -1,11 +1,11 @@
 import { Outlet, redirect } from "react-router";
 
 import Footer from "~/components/Footer";
-import Header from "~/components/Header";
+import Header from "~/layout/header";
 import { Capabilities } from "~/server/web/roles";
 import { getUserDisplayName } from "~/utils/user";
 
-import { Route } from "./+types/shell";
+import type { Route } from "./+types/shell";
 import NoAccess from "./no-access";
 
 // This loads the bare minimum for the application to function
@@ -31,13 +31,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const user =
       principal.kind === "oidc"
         ? {
-            subject: principal.user.subject,
-            name: principal.profile.name,
             email: principal.profile.email,
-            username: principal.profile.username,
+            name: principal.profile.name,
             picture: principal.profile.picture,
+            subject: principal.user.subject,
+            username: principal.profile.username,
           }
-        : { subject: "api_key", name: principal.displayName };
+        : { name: principal.displayName, subject: "api_key" };
 
     let linkedUserName: string | undefined;
     let osValue: string | undefined;
@@ -57,31 +57,31 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       const userAgent = request.headers.get("user-agent");
       const os = userAgent?.match(/(Linux|Windows|Mac OS X|iPhone|iPad|Android)/);
       switch (os?.[0]) {
-        case "Windows":
+        case "Windows": {
           osValue = "windows";
           break;
-        case "Mac OS X":
+        }
+        case "Mac OS X": {
           osValue = "macos";
           break;
+        }
         case "iPhone":
-        case "iPad":
+        case "iPad": {
           osValue = "ios";
           break;
-        case "Android":
+        }
+        case "Android": {
           osValue = "android";
           break;
-        default:
+        }
+        default: {
           osValue = "linux";
           break;
+        }
       }
     }
 
     return {
-      config: context.hs.c,
-      url: context.config.headscale.public_url ?? context.config.headscale.url,
-      configAvailable: context.hs.readable(),
-      debug: context.config.debug,
-      user,
       access: {
         ui: check,
         dns: context.auth.can(principal, Capabilities.read_network),
@@ -90,11 +90,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         machines: context.auth.can(principal, Capabilities.read_machines),
         settings: context.auth.can(principal, Capabilities.read_feature),
       },
-      onboarding: request.url.endsWith("/onboarding"),
-      noAccess,
-      linkedUserName,
-      osValue,
+      config: context.hs.c,
+      configAvailable: context.hs.readable(),
+      debug: context.config.debug,
       healthy: await api.isHealthy(),
+      linkedUserName,
+      noAccess,
+      onboarding: request.url.endsWith("/onboarding"),
+      osValue,
+      url: context.config.headscale.public_url ?? context.config.headscale.url,
+      user,
     };
   } catch {
     return redirect("/login", {
@@ -109,7 +114,7 @@ export default function Shell({ loaderData }: Route.ComponentProps) {
   if (loaderData.noAccess && !loaderData.onboarding) {
     return (
       <>
-        <Header {...loaderData} />
+        <Header user={loaderData.user} />
         <NoAccess linkedUserName={loaderData.linkedUserName} osValue={loaderData.osValue} />
         <Footer {...loaderData} />
       </>
@@ -118,7 +123,7 @@ export default function Shell({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <Header {...loaderData} />
+      <Header user={loaderData.user} />
       <Outlet />
       <Footer {...loaderData} />
     </>

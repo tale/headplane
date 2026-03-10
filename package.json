@@ -20,6 +20,7 @@
     "format": "oxfmt"
   },
   "dependencies": {
+    "@base-ui/react": "^1.2.0",
     "@libsql/client": "0.17.0"
   },
   "devDependencies": {
@@ -65,7 +66,7 @@
     "openid-client": "6.8.2",
     "oxfmt": "^0.35.0",
     "oxlint": "^1.50.0",
-    "oxlint-tsgolint": "^0.15.0",
+    "oxlint-tsgolint": "^0.16.0",
     "postcss": "^8.5.6",
     "react": "19.2.4",
     "react-aria": "3.46.0",

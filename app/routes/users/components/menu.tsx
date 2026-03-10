@@ -1,7 +1,7 @@
 import { Ellipsis } from "lucide-react";
 import { useState } from "react";
 
-import Menu from "~/components/Menu";
+import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { Machine, User } from "~/types";
 
 import Delete from "../dialogs/delete-user";
@@ -74,23 +74,28 @@ export default function UserMenu({ user, headscaleUsers, currentLink }: MenuProp
         />
       )}
 
-      <Menu disabledKeys={disabledKeys}>
-        <Menu.IconButton
-          className="w-10 bg-transparent py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800"
-          label="User Options"
-        >
+      <Menu>
+        <MenuTrigger className="w-10 rounded-full bg-transparent p-1 py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800">
           <Ellipsis className="h-5" />
-        </Menu.IconButton>
-        <Menu.Panel onAction={(key) => setModal(key as Modal)}>
-          <Menu.Section>
-            <Menu.Item key="rename">Rename user</Menu.Item>
-            <Menu.Item key="reassign">Change role</Menu.Item>
-            <Menu.Item key="link">Link Headscale user</Menu.Item>
-            <Menu.Item key="delete" textValue="Delete">
-              <p className="text-red-500 dark:text-red-400">Delete</p>
-            </Menu.Item>
-          </Menu.Section>
-        </Menu.Panel>
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem disabled={disabledKeys.includes("rename")} onClick={() => setModal("rename")}>
+            Rename user
+          </MenuItem>
+          <MenuItem
+            disabled={disabledKeys.includes("reassign")}
+            onClick={() => setModal("reassign")}
+          >
+            Change role
+          </MenuItem>
+          <MenuItem disabled={disabledKeys.includes("link")} onClick={() => setModal("link")}>
+            Link Headscale user
+          </MenuItem>
+          <MenuSeparator />
+          <MenuItem variant="danger" onClick={() => setModal("delete")}>
+            Delete
+          </MenuItem>
+        </MenuContent>
       </Menu>
     </>
   );

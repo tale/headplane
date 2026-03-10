@@ -28,11 +28,7 @@ export default function Page({ loaderData: { config, isOidcEnabled } }: Route.Co
         <p>
           Headscale fully supports pre-authentication keys in order to easily add devices to your
           Tailnet. To learn more about using pre-authentication keys, visit the{" "}
-          <Link
-            isExternal
-            name="Tailscale Auth Keys documentation"
-            to="https://tailscale.com/kb/1085/auth-keys/"
-          >
+          <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
             Tailscale documentation
           </Link>
         </p>
@@ -52,11 +48,7 @@ export default function Page({ loaderData: { config, isOidcEnabled } }: Route.Co
               domains, groups, or users to authenticate. This can be used to limit access to your
               Tailnet to only certain users or groups and Headplane will also respect these settings
               when authenticating.{" "}
-              <Link
-                isExternal
-                name="Headscale OIDC documentation"
-                to="https://headscale.net/stable/ref/oidc/#basic-configuration"
-              >
+              <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
                 Learn More
               </Link>
             </p>

@@ -22,13 +22,15 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
   const submittingRef = useRef(false);
   const [tags, setTags] = useState([...machine.tags]);
   const [tag, setTag] = useState("tag:");
-  const tagIsInvalid = useMemo(() => {
-    return tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag);
-  }, [tag, tags]);
+  const tagIsInvalid = useMemo(
+    () => tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag),
+    [tag, tags],
+  );
 
-  const validNodeTags = useMemo(() => {
-    return existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [];
-  }, [tags]);
+  const validNodeTags = useMemo(
+    () => existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [],
+    [tags],
+  );
 
   const error = fetcher.data && !fetcher.data.success ? fetcher.data.error : null;
 
@@ -53,7 +55,9 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
     <Dialog
       isOpen={isOpen}
       onOpenChange={(open) => {
-        if (!open && submittingRef.current) return;
+        if (!open && submittingRef.current) {
+          return;
+        }
         setIsOpen(open);
       }}
     >
@@ -72,11 +76,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
         <Dialog.Title>Edit ACL tags for {machine.givenName}</Dialog.Title>
         <Dialog.Text>
           ACL tags can be used to reference machines in your ACL policies. See the{" "}
-          <Link
-            isExternal
-            name="Tailscale documentation"
-            to="https://tailscale.com/kb/1068/acl-tags"
-          >
+          <Link external styled to="https://tailscale.com/kb/1068/acl-tags">
             Tailscale documentation
           </Link>{" "}
           for more information.
@@ -119,9 +119,9 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
             onInputChange={setTag}
             placeholder="tag:example"
           >
-            {validNodeTags.map((nodeTag) => {
-              return <Select.Item key={nodeTag}>{nodeTag}</Select.Item>;
-            })}
+            {validNodeTags.map((nodeTag) => (
+              <Select.Item key={nodeTag}>{nodeTag}</Select.Item>
+            ))}
           </Select>
           <Button
             className={cn("rounded-md p-1", tagIsInvalid && "opacity-50 cursor-not-allowed")}

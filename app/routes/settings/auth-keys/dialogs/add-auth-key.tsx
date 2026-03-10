@@ -1,4 +1,5 @@
-import { Key, useEffect, useRef, useState } from "react";
+import type { Key } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/Button";
@@ -21,9 +22,13 @@ interface AddAuthKeyProps {
 }
 
 function findCurrentUser(users: User[], subject: string | undefined): User | undefined {
-  if (!subject) return undefined;
+  if (!subject) {
+    return undefined;
+  }
   return users.find((u) => {
-    if (u.provider !== "oidc" || !u.providerId) return false;
+    if (u.provider !== "oidc" || !u.providerId) {
+      return false;
+    }
     return u.providerId.split("/").pop() === subject;
   });
 }
@@ -76,7 +81,9 @@ export default function AddAuthKey({
     <Dialog
       isOpen={isOpen}
       onOpenChange={(open) => {
-        if (!open && submittingRef.current) return;
+        if (!open && submittingRef.current) {
+          return;
+        }
         setIsOpen(open);
       }}
     >
@@ -203,11 +210,7 @@ export default function AddAuthKey({
               <Dialog.Text className="text-sm">
                 Devices authenticated with this key will be automatically removed once they go
                 offline.{" "}
-                <Link
-                  isExternal
-                  name="Tailscale Ephemeral Nodes Documentation"
-                  to="https://tailscale.com/kb/1111/ephemeral-nodes"
-                >
+                <Link external styled to="https://tailscale.com/kb/1111/ephemeral-nodes">
                   Learn more
                 </Link>
               </Dialog.Text>

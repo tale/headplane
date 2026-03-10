@@ -17,7 +17,6 @@ export function getErrorMessage(error: Error | unknown): {
       const { statusCode, rawData, data, requestUrl } = error.data;
       if (statusCode >= 500) {
         return {
-          title: "Headscale API Error",
           jsxMessage: (
             <>
               <Card.Text>
@@ -37,13 +36,13 @@ export function getErrorMessage(error: Error | unknown): {
               )}
             </>
           ),
+          title: "Headscale API Error",
         };
       }
 
       const authError = error.data.statusCode === 401 || error.data.statusCode === 403;
 
       return {
-        title: "Invalid response from Headscale API",
         jsxMessage: (
           <>
             <Card.Text className="leading-snug">
@@ -84,13 +83,13 @@ export function getErrorMessage(error: Error | unknown): {
             </pre>
           </>
         ),
+        title: "Invalid response from Headscale API",
       };
     }
 
     if (isConnectionError(error.data)) {
       const { requestUrl, errorCode, errorMessage, extraData } = error.data;
       return {
-        title: "Cannot connect to Headscale API",
         jsxMessage: (
           <>
             <Card.Text className="leading-snug">
@@ -112,11 +111,11 @@ export function getErrorMessage(error: Error | unknown): {
             </pre>
           </>
         ),
+        title: "Cannot connect to Headscale API",
       };
     }
 
     return {
-      title: `Error ${error.status}`,
       jsxMessage: (
         <>
           There was an error processing your request.
@@ -126,18 +125,18 @@ export function getErrorMessage(error: Error | unknown): {
           Status Text: <strong>{error.data}</strong>
         </>
       ),
+      title: `Error ${error.status}`,
     };
   }
 
   if (!(error instanceof Error)) {
     return {
-      title: "Unexpected Error",
       jsxMessage: (
         <>
           <Card.Text>
             An unexpected error occurred which is most likely a bug. Please consider reporting
             filing an issue on the{" "}
-            <Link isExternal name="Headplane GitHub" to="https://github.com/tale/headplane/issues">
+            <Link external styled to="https://github.com/tale/headplane/issues">
               Headplane GitHub
             </Link>{" "}
             repository with the details below.
@@ -148,6 +147,7 @@ export function getErrorMessage(error: Error | unknown): {
           </pre>
         </>
       ),
+      title: "Unexpected Error",
     };
   }
 
@@ -166,11 +166,11 @@ export function getErrorMessage(error: Error | unknown): {
   }
 
   return {
+    jsxMessage: rootError.message,
     title:
       rootError.name.length > 0 && rootError.name !== "Error"
         ? `Error: ${rootError.name}`
         : "Error",
-    jsxMessage: rootError.message,
   };
 }
 

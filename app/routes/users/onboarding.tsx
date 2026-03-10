@@ -9,7 +9,7 @@ import Link from "~/components/link";
 import Options from "~/components/Options";
 import StatusCircle from "~/components/StatusCircle";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
-import { Machine } from "~/types";
+import type { Machine } from "~/types";
 import cn from "~/utils/cn";
 import { useLiveData } from "~/utils/live-data";
 import log from "~/utils/log";
@@ -28,25 +28,30 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const os = userAgent?.match(/(Linux|Windows|Mac OS X|iPhone|iPad|Android)/);
   let osValue = "linux";
   switch (os?.[0]) {
-    case "Windows":
+    case "Windows": {
       osValue = "windows";
       break;
-    case "Mac OS X":
+    }
+    case "Mac OS X": {
       osValue = "macos";
       break;
+    }
 
     case "iPhone":
-    case "iPad":
+    case "iPad": {
       osValue = "ios";
       break;
+    }
 
-    case "Android":
+    case "Android": {
       osValue = "android";
       break;
+    }
 
-    default:
+    default: {
       osValue = "linux";
       break;
+    }
   }
 
   const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
@@ -87,11 +92,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           }));
       }
     }
-  } catch (e) {
-    log.debug("api", "Failed to lookup nodes %o", e);
+  } catch (error) {
+    log.debug("api", "Failed to lookup nodes %o", error);
   }
 
   return {
+    firstMachine,
+    headscaleUsers,
+    linkedUserName,
+    needsUserLink,
+    osValue,
     user: {
       subject: principal.user.subject,
       name: principal.profile.name,
@@ -99,11 +109,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       username: principal.profile.username,
       picture: principal.profile.picture,
     },
-    osValue,
-    firstMachine,
-    needsUserLink,
-    linkedUserName,
-    headscaleUsers,
   };
 }
 
@@ -216,8 +221,8 @@ export default function Page({
               <p className="mt-1 text-center text-xs text-mist-600 dark:text-mist-300">
                 Click this button to copy the command.{" "}
                 <Link
-                  isExternal
-                  name="Linux installation script"
+                  external
+                  styled
                   to="https://github.com/tailscale/tailscale/blob/main/scripts/installer.sh"
                 >
                   View script source
@@ -270,14 +275,10 @@ export default function Page({
                 Requires macOS Big Sur 11.0 or later.
                 <br />
                 You can also download Tailscale on the{" "}
-                <Link
-                  isExternal
-                  name="macOS App Store"
-                  to="https://apps.apple.com/ca/app/tailscale/id1475387142"
-                >
+                <Link external styled to="https://apps.apple.com/ca/app/tailscale/id1475387142">
                   macOS App Store
                 </Link>
-                {"."}
+                .
               </p>
             </Options.Item>
             <Options.Item

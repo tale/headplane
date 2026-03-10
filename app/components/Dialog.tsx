@@ -15,7 +15,6 @@ import {
 } from "react-stately";
 
 import Button, { ButtonProps } from "~/components/Button";
-import Card from "~/components/Card";
 import IconButton, { IconButtonProps } from "~/components/IconButton";
 import Text from "~/components/Text";
 import Title from "~/components/Title";
@@ -101,7 +100,13 @@ function Panel(props: DialogPanelProps) {
   return (
     <Form
       {...dialogProps}
-      className={cn("outline-hidden rounded-lg w-full max-w-lg", "bg-white dark:bg-mist-900")}
+      className={cn(
+        "w-full max-w-lg rounded-xl p-4",
+        "outline-hidden",
+        "bg-white dark:bg-mist-900",
+        "border border-mist-200 dark:border-mist-800",
+        "shadow-overlay",
+      )}
       method={method ?? "POST"}
       onSubmit={(event) => {
         if (onSubmit) {
@@ -112,25 +117,23 @@ function Panel(props: DialogPanelProps) {
       }}
       ref={ref}
     >
-      <Card className="w-full max-w-lg" variant="flat">
-        {children}
-        <div className="mt-6 flex justify-end gap-4">
-          {variant === "unactionable" ? (
-            <Button onPress={close}>Close</Button>
-          ) : (
-            <>
-              <Button onPress={close}>Cancel</Button>
-              <Button
-                isDisabled={isDisabled}
-                type="submit"
-                variant={variant === "destructive" ? "danger" : "heavy"}
-              >
-                Confirm
-              </Button>
-            </>
-          )}
-        </div>
-      </Card>
+      <div className="flex flex-col gap-4">{children}</div>
+      <div className="mt-5 flex justify-end gap-3">
+        {variant === "unactionable" ? (
+          <Button onPress={close}>Close</Button>
+        ) : (
+          <>
+            <Button onPress={close}>Cancel</Button>
+            <Button
+              isDisabled={isDisabled}
+              type="submit"
+              variant={variant === "destructive" ? "danger" : "heavy"}
+            >
+              Confirm
+            </Button>
+          </>
+        )}
+      </div>
     </Form>
   );
 }
@@ -155,9 +158,9 @@ function DModal(props: DModalProps) {
         {...underlayProps}
         aria-hidden="true"
         className={cn(
-          "fixed inset-0 h-screen w-screen z-20",
+          "fixed inset-0 z-20 h-screen w-screen",
           "flex items-center justify-center",
-          "bg-mist-900/15 dark:bg-mist-900/30",
+          "bg-mist-900/30 dark:bg-mist-950/60",
           "entering:animate-in exiting:animate-out",
           "entering:fade-in entering:duration-100 entering:ease-out",
           "exiting:fade-out exiting:duration-50 exiting:ease-in",
@@ -165,7 +168,10 @@ function DModal(props: DModalProps) {
       />
       <div
         {...modalProps}
-        className={cn("fixed inset-0 h-screen w-screen z-20", "flex items-center justify-center")}
+        className={cn(
+          "fixed inset-0 z-20 h-screen w-screen",
+          "flex items-center justify-center p-4",
+        )}
       >
         {children}
       </div>

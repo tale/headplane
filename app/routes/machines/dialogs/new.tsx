@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 import Code from "~/components/Code";
 import Dialog from "~/components/Dialog";
 import Input from "~/components/Input";
-import Menu from "~/components/Menu";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import Select from "~/components/Select";
 import type { User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
@@ -51,35 +51,30 @@ export default function NewMachine(data: NewMachineProps) {
           </Select>
         </Dialog.Panel>
       </Dialog>
-      <Menu disabledKeys={data.disabledKeys} isDisabled={data.isDisabled}>
-        <Menu.Button variant="heavy">Add Device</Menu.Button>
-        <Menu.Panel
-          onAction={(key) => {
-            if (key === "register") {
-              setPushDialog(true);
-              return;
-            }
-
-            if (key === "pre-auth") {
-              navigate("/settings/auth-keys");
-            }
-          }}
-        >
-          <Menu.Section>
-            <Menu.Item key="register" textValue="Register Machine Key">
-              <div className="flex items-center gap-x-3">
-                <Computer className="w-4" />
-                Register Machine Key
-              </div>
-            </Menu.Item>
-            <Menu.Item key="pre-auth" textValue="Generate Pre-auth Key">
-              <div className="flex items-center gap-x-3">
-                <FileKey2 className="w-4" />
-                Generate Pre-auth Key
-              </div>
-            </Menu.Item>
-          </Menu.Section>
-        </Menu.Panel>
+      <Menu disabled={data.isDisabled}>
+        <MenuTrigger className="rounded-md bg-indigo-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-500/90 dark:bg-indigo-500/90 dark:hover:bg-indigo-500/80">
+          Add Device
+        </MenuTrigger>
+        <MenuContent>
+          <MenuItem
+            disabled={data.disabledKeys?.includes("register")}
+            onClick={() => setPushDialog(true)}
+          >
+            <div className="flex items-center gap-x-3">
+              <Computer className="w-4" />
+              Register Machine Key
+            </div>
+          </MenuItem>
+          <MenuItem
+            disabled={data.disabledKeys?.includes("pre-auth")}
+            onClick={() => navigate("/settings/auth-keys")}
+          >
+            <div className="flex items-center gap-x-3">
+              <FileKey2 className="w-4" />
+              Generate Pre-auth Key
+            </div>
+          </MenuItem>
+        </MenuContent>
       </Menu>
     </>
   );
