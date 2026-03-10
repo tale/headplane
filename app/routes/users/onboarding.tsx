@@ -1,11 +1,14 @@
 import { Icon } from "@iconify/react";
-import { ArrowRight } from "lucide-react";
-import { useEffect } from "react";
-import { Form, NavLink } from "react-router";
+import { ArrowRight, Key, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { data, Form, NavLink, useFetcher } from "react-router";
 
 import Button from "~/components/Button";
 import Card from "~/components/Card";
+import Dialog from "~/components/Dialog";
+import Input from "~/components/Input";
 import Link from "~/components/link";
+import Notice from "~/components/Notice";
 import Options from "~/components/Options";
 import StatusCircle from "~/components/StatusCircle";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
@@ -54,6 +57,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
   }
 
+  const headscaleOidcEnabled = !!context.hs.c?.oidc;
+
   const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
   const api = context.hsApi.getRuntimeClient(apiKey);
 
@@ -66,11 +71,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   try {
     const [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
 
+    headscaleUsers = apiUsers.map((u) => ({
+      id: u.id,
+      name: getUserDisplayName(u),
+    }));
+
     if (hsUserId) {
       const hsUser = apiUsers.find((u) => u.id === hsUserId);
       linkedUserName = hsUser ? getUserDisplayName(hsUser) : undefined;
       firstMachine = nodes.find((n) => n.user?.id === hsUserId);
-    } else {
+    } else if (headscaleOidcEnabled) {
       const matched = findHeadscaleUserBySubject(
         apiUsers,
         principal.user.subject,
@@ -98,6 +108,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     firstMachine,
+    headscaleOidcEnabled,
     headscaleUsers,
     linkedUserName,
     needsUserLink,
@@ -112,17 +123,110 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
+export async function action({ request, context }: Route.ActionArgs) {
+  const principal = await context.auth.require(request);
+  if (principal.kind !== "oidc") {
+    throw data({ error: "Onboarding actions require OIDC authentication" }, { status: 403 });
+  }
+
+  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const api = context.hsApi.getRuntimeClient(apiKey);
+  const formData = await request.formData();
+  const intent = formData.get("intent");
+
+  if (intent === "register-node") {
+    const nodeKey = formData.get("nodeKey");
+    const userId = formData.get("userId");
+
+    if (!nodeKey || typeof nodeKey !== "string") {
+      return data({ error: "Node key is required" }, { status: 400 });
+    }
+
+    if (!userId || typeof userId !== "string") {
+      return data({ error: "User is required" }, { status: 400 });
+    }
+
+    try {
+      const machine = await api.registerNode(userId, nodeKey);
+      return { success: true, machine };
+    } catch (e) {
+      log.error("api", "Failed to register node: %o", e);
+      return data(
+        { error: "Failed to register node. Check that the node key is valid." },
+        { status: 500 },
+      );
+    }
+  }
+
+  if (intent === "create-user") {
+    const username = formData.get("username");
+
+    if (!username || typeof username !== "string") {
+      return data({ error: "Username is required" }, { status: 400 });
+    }
+
+    try {
+      const user = await api.createUser(
+        username,
+        principal.profile.email,
+        principal.profile.name,
+        principal.profile.picture,
+      );
+      return { success: true, user };
+    } catch (e) {
+      log.error("api", "Failed to create user: %o", e);
+      return data(
+        { error: "Failed to create user. The username may already exist." },
+        { status: 500 },
+      );
+    }
+  }
+
+  return data({ error: "Invalid intent" }, { status: 400 });
+}
+
 export default function Page({
-  loaderData: { user, osValue, firstMachine, needsUserLink, linkedUserName, headscaleUsers },
+  loaderData: {
+    user,
+    osValue,
+    firstMachine,
+    headscaleOidcEnabled,
+    headscaleUsers,
+    linkedUserName,
+    needsUserLink,
+  },
 }: Route.ComponentProps) {
   const { pause, resume } = useLiveData();
+  const fetcher = useFetcher();
+  const [nodeKeyDialogOpen, setNodeKeyDialogOpen] = useState(false);
+  const [createUserDialogOpen, setCreateUserDialogOpen] = useState(false);
+  const [nodeKey, setNodeKey] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+
   useEffect(() => {
     if (firstMachine) {
       pause();
-    } else {
+    } else if (headscaleOidcEnabled) {
       resume();
     }
-  }, [firstMachine]);
+  }, [firstMachine, headscaleOidcEnabled]);
+
+  useEffect(() => {
+    if (fetcher.data?.success) {
+      if (fetcher.data.machine) {
+        toast("Device registered successfully!");
+        setNodeKeyDialogOpen(false);
+        setNodeKey("");
+        setSelectedUserId("");
+      }
+      if (fetcher.data.user) {
+        toast("User created successfully!");
+        setCreateUserDialogOpen(false);
+        setNewUsername("");
+      }
+    }
+  }, [fetcher.data]);
 
   const subject = user.email ? (
     <>
@@ -131,6 +235,8 @@ export default function Page({
   ) : (
     "with your OIDC provider"
   );
+
+  const isSubmitting = fetcher.state === "submitting";
 
   return (
     <div className="fixed flex h-screen w-full items-center px-4">
@@ -192,8 +298,14 @@ export default function Page({
             Let's get set up
           </Card.Title>
           <Card.Text>
-            Install Tailscale and sign in {subject}. Once you sign in on a device, it will be
-            automatically added to your Headscale network.
+            {headscaleOidcEnabled ? (
+              <>
+                Install Tailscale and sign in {subject}. Once you sign in on a device, it will be
+                automatically added to your Headscale network.
+              </>
+            ) : (
+              "Install Tailscale and sign in with your Headscale user. Once you sign in on a device, it will be ready to connect."
+            )}
           </Card.Text>
 
           <Options className="my-4" defaultSelectedKey={osValue} label="Download Selector">
@@ -360,7 +472,7 @@ export default function Page({
                 </Button>
               </NavLink>
             </div>
-          ) : (
+          ) : headscaleOidcEnabled ? (
             <div className="flex h-full flex-col items-center justify-center gap-4">
               <span className="relative flex size-4">
                 <span
@@ -373,6 +485,45 @@ export default function Page({
                 <span className={cn("relative inline-flex size-4 rounded-full", "bg-mist-400")} />
               </span>
               <p className="font-lg">Waiting for your first device...</p>
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
+                Or use the option below
+              </p>
+              <div className="mt-4 flex w-full flex-col gap-2">
+                <Button
+                  className="flex w-full items-center justify-center gap-2"
+                  variant="light"
+                  onPress={() => setNodeKeyDialogOpen(true)}
+                >
+                  <Key className="size-4" />
+                  Register with Node Key
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex h-full flex-col items-center justify-center gap-4">
+              <Card.Title className="text-center">Connect Your Device</Card.Title>
+              <p className="text-center text-sm text-mist-600 dark:text-mist-300">
+                Since Headscale is not using OIDC, you can register devices manually or create a
+                Headscale user.
+              </p>
+              <div className="mt-4 flex w-full flex-col gap-2">
+                <Button
+                  className="flex w-full items-center justify-center gap-2"
+                  variant="heavy"
+                  onPress={() => setNodeKeyDialogOpen(true)}
+                >
+                  <Key className="size-4" />
+                  Register with Node Key
+                </Button>
+                <Button
+                  className="flex w-full items-center justify-center gap-2"
+                  variant="light"
+                  onPress={() => setCreateUserDialogOpen(true)}
+                >
+                  <UserPlus className="size-4" />
+                  Create Headscale User
+                </Button>
+              </div>
             </div>
           )}
         </Card>
@@ -383,6 +534,90 @@ export default function Page({
           </Button>
         </NavLink>
       </div>
+
+      <Dialog isOpen={nodeKeyDialogOpen} onOpenChange={setNodeKeyDialogOpen}>
+        <Dialog.Panel>
+          <Dialog.Title>Register Device with Node Key</Dialog.Title>
+          <Dialog.Text>
+            Enter the node key from your Tailscale client to register it with Headscale. You can get
+            this by running{" "}
+            <code className="rounded bg-mist-100 px-1 dark:bg-mist-800">
+              tailscale debug nodekey
+            </code>
+            .
+          </Dialog.Text>
+          <fetcher.Form method="POST" className="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="intent" value="register-node" />
+            <Input
+              label="Node Key"
+              name="nodeKey"
+              placeholder="nodekey:..."
+              value={nodeKey}
+              onChange={(v) => setNodeKey(v)}
+              isRequired
+            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium">Assign to User</label>
+              <select
+                name="userId"
+                value={selectedUserId}
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                className={cn(
+                  "rounded-lg border px-3 py-2",
+                  "border-mist-200 dark:border-mist-700",
+                  "bg-mist-50 dark:bg-mist-900",
+                )}
+                required
+              >
+                <option value="">Select a user...</option>
+                {headscaleUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {fetcher.data?.error && <Notice variant="error">{fetcher.data.error}</Notice>}
+            <div className="mt-2 flex justify-end gap-2">
+              <Button variant="light" onPress={() => setNodeKeyDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="heavy" isDisabled={isSubmitting}>
+                {isSubmitting ? "Registering..." : "Register Device"}
+              </Button>
+            </div>
+          </fetcher.Form>
+        </Dialog.Panel>
+      </Dialog>
+
+      <Dialog isOpen={createUserDialogOpen} onOpenChange={setCreateUserDialogOpen}>
+        <Dialog.Panel>
+          <Dialog.Title>Create Headscale User</Dialog.Title>
+          <Dialog.Text>
+            Create a new Headscale user that you can use to register devices.
+          </Dialog.Text>
+          <fetcher.Form method="POST" className="mt-4 flex flex-col gap-4">
+            <input type="hidden" name="intent" value="create-user" />
+            <Input
+              label="Username"
+              name="username"
+              placeholder="Enter a username"
+              value={newUsername}
+              onChange={(v) => setNewUsername(v)}
+              isRequired
+            />
+            {fetcher.data?.error && <Notice variant="error">{fetcher.data.error}</Notice>}
+            <div className="mt-2 flex justify-end gap-2">
+              <Button variant="light" onPress={() => setCreateUserDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" variant="heavy" isDisabled={isSubmitting}>
+                {isSubmitting ? "Creating..." : "Create User"}
+              </Button>
+            </div>
+          </fetcher.Form>
+        </Dialog.Panel>
+      </Dialog>
     </div>
   );
 }
