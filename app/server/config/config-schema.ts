@@ -125,14 +125,22 @@ const partialOidcConfig = type({
   strict_validation: type("unknown").narrow(deprecatedField()).optional(),
 });
 
+// Agent config with conditional validation:
+// pre_authkey is only required when enabled is true
 const agentConfig = type({
   enabled: "boolean",
   host_name: 'string = "headplane-agent"',
-  pre_authkey: "string",
+  pre_authkey: "string?",
   cache_ttl: "number.integer = 180000",
   cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
   executable_path: 'string = "/usr/libexec/headplane/agent"',
   work_dir: 'string = "/var/lib/headplane/agent"',
+}).narrow((data, ctx) => {
+  if (data.enabled && !data.pre_authkey) {
+    ctx.mustBe("pre_authkey is required when agent is enabled");
+    return false;
+  }
+  return true;
 });
 
 const partialAgentConfig = type({
