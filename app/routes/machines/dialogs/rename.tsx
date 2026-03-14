@@ -1,8 +1,10 @@
 import { useState } from "react";
 
 import Code from "~/components/Code";
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import type { Machine } from "~/types";
 
 interface RenameProps {
@@ -17,12 +19,12 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel>
-        <Dialog.Title>Edit machine name for {machine.givenName}</Dialog.Title>
-        <Dialog.Text className="mb-6">
+      <DialogPanel>
+        <Title>Edit machine name for {machine.givenName}</Title>
+        <Text className="mb-6">
           This name is shown in the admin panel, in Tailscale clients, and used when generating
           MagicDNS names.
-        </Dialog.Text>
+        </Text>
         <input name="action_id" type="hidden" value="rename" />
         <input name="node_id" type="hidden" value={machine.id} />
         <Input
@@ -79,7 +81,7 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
             </p>
           )
         ) : undefined}
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

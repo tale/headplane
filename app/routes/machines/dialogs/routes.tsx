@@ -1,10 +1,12 @@
 import { GlobeLock, RouteOff } from "lucide-react";
 import { useFetcher } from "react-router";
 
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Link from "~/components/link";
 import Switch from "~/components/Switch";
 import TableList from "~/components/TableList";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import { PopulatedNode } from "~/utils/node-info";
 
 interface RoutesProps {
@@ -24,16 +26,16 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel variant="unactionable">
-        <Dialog.Title>Edit route settings of {node.givenName}</Dialog.Title>
-        <Dialog.Text className="font-bold">Subnet routes</Dialog.Text>
-        <Dialog.Text>
+      <DialogPanel variant="unactionable">
+        <Title>Edit route settings of {node.givenName}</Title>
+        <Text className="font-bold">Subnet routes</Text>
+        <Text>
           Connect to devices you can&apos;t install Tailscale on by advertising IP ranges as subnet
           routes.{" "}
           <Link external styled to="https://tailscale.com/kb/1019/subnets">
             Learn More
           </Link>
-        </Dialog.Text>
+        </Text>
         <TableList className="mt-4">
           {subnets.length === 0 ? (
             <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
@@ -62,13 +64,13 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             </TableList.Item>
           ))}
         </TableList>
-        <Dialog.Text className="mt-8 font-bold">Exit nodes</Dialog.Text>
-        <Dialog.Text>
+        <Text className="mt-8 font-bold">Exit nodes</Text>
+        <Text>
           Allow your network to route internet traffic through this machine.{" "}
           <Link external styled to="https://tailscale.com/kb/1103/exit-nodes">
             Learn More
           </Link>
-        </Dialog.Text>
+        </Text>
         <TableList className="mt-4">
           {node.customRouting.exitRoutes.length === 0 ? (
             <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
@@ -96,7 +98,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             </TableList.Item>
           )}
         </TableList>
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

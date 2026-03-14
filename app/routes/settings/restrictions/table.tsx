@@ -2,7 +2,7 @@ import { GlobeLock, Group, User2 } from "lucide-react";
 import React from "react";
 import { Form } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import TableList from "~/components/TableList";
 import cn from "~/utils/cn";
 

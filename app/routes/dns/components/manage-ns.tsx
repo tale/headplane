@@ -1,7 +1,7 @@
 import { Info } from "lucide-react";
 import { Form, useSubmit } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Link from "~/components/link";
 import Switch from "~/components/Switch";
 import TableList from "~/components/TableList";

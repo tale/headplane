@@ -1,7 +1,9 @@
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Link from "~/components/link";
 import Notice from "~/components/Notice";
 import RadioGroup from "~/components/RadioGroup";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import { Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
@@ -22,15 +24,15 @@ export default function ReassignUser({
 }: ReassignProps) {
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel variant={role === "owner" ? "unactionable" : "normal"}>
-        <Dialog.Title>Change role for {displayName}?</Dialog.Title>
-        <Dialog.Text className="mb-6">
+      <DialogPanel variant={role === "owner" ? "unactionable" : "normal"}>
+        <Title>Change role for {displayName}?</Title>
+        <Text className="mb-6">
           Roles control what the user can access in Headplane. Each role grants a specific set of
           capabilities.{" "}
           <Link external styled to="https://tailscale.com/kb/1138/user-roles">
             Learn More
           </Link>
-        </Dialog.Text>
+        </Text>
         {role === "owner" ? (
           <Notice>The Tailnet owner cannot be reassigned.</Notice>
         ) : (
@@ -60,7 +62,7 @@ export default function ReassignUser({
             </RadioGroup>
           </>
         )}
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

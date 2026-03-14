@@ -2,11 +2,13 @@ import { Plus, TagsIcon, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import Button from "~/components/Button";
-import Dialog from "~/components/Dialog";
+import Button from "~/components/button";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Link from "~/components/link";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import type { Machine } from "~/types";
 import cn from "~/utils/cn";
 
@@ -61,7 +63,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
         setIsOpen(open);
       }}
     >
-      <Dialog.Panel
+      <DialogPanel
         onSubmit={(event) => {
           event.preventDefault();
           submittingRef.current = true;
@@ -73,14 +75,14 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
         }}
         isDisabled={fetcher.state !== "idle"}
       >
-        <Dialog.Title>Edit ACL tags for {machine.givenName}</Dialog.Title>
-        <Dialog.Text>
+        <Title>Edit ACL tags for {machine.givenName}</Title>
+        <Text>
           ACL tags can be used to reference machines in your ACL policies. See the{" "}
           <Link external styled to="https://tailscale.com/kb/1068/acl-tags">
             Tailscale documentation
           </Link>{" "}
           for more information.
-        </Dialog.Text>
+        </Text>
         {error ? (
           <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
             {error}
@@ -138,7 +140,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
           Not seeing the tags you expect? Tags need to be defined in your access control policy
           before they can be assigned to machines.
         </p>
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

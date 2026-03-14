@@ -3,7 +3,7 @@ import { ToastQueue, ToastState, useToastQueue } from "@react-stately/toast";
 import { X } from "lucide-react";
 import React, { useRef } from "react";
 
-import IconButton from "~/components/IconButton";
+import Button from "~/components/button";
 import cn from "~/utils/cn";
 
 interface ToastProps extends AriaToastProps<React.ReactNode> {
@@ -27,16 +27,17 @@ function Toast({ state, ...props }: ToastProps) {
       <div {...contentProps} className="flex flex-col gap-2">
         <div {...titleProps}>{props.toast.content}</div>
       </div>
-      <IconButton
+      <Button
         {...closeButtonProps}
-        label="Close"
+        aria-label="Close"
         className={cn(
+          "rounded-full p-1",
           "bg-transparent hover:bg-mist-700",
           "dark:bg-transparent dark:hover:bg-mist-800",
         )}
       >
-        <X className="p-1" />
-      </IconButton>
+        <X className="h-4 w-4" />
+      </Button>
     </div>
   );
 }

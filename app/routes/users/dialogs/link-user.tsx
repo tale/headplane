@@ -1,5 +1,7 @@
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Notice from "~/components/Notice";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import cn from "~/utils/cn";
 
 interface LinkUserProps {
@@ -21,12 +23,12 @@ export default function LinkUser({
 }: LinkUserProps) {
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel>
-        <Dialog.Title>Link Headscale user for {displayName}</Dialog.Title>
-        <Dialog.Text className="mb-6">
+      <DialogPanel>
+        <Title>Link Headscale user for {displayName}</Title>
+        <Text className="mb-6">
           Select which Headscale user this identity should be linked to. This controls which
           machines they can manage and enables self-service features.
-        </Dialog.Text>
+        </Text>
         {headscaleUsers.length === 0 ? (
           <Notice>All Headscale users are already linked to other accounts.</Notice>
         ) : (
@@ -53,7 +55,7 @@ export default function LinkUser({
             </select>
           </>
         )}
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

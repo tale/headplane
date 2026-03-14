@@ -1,6 +1,6 @@
 import { Form } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Card from "~/components/Card";
 import cn from "~/utils/cn";
 

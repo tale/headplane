@@ -3,7 +3,7 @@ import { useRef } from "react";
 import { type AriaNumberFieldProps, useId, useLocale, useNumberField } from "react-aria";
 import { useNumberFieldState } from "react-stately";
 
-import IconButton from "~/components/IconButton";
+import Button from "~/components/button";
 import cn from "~/utils/cn";
 
 export interface InputProps extends AriaNumberFieldProps {
@@ -57,12 +57,20 @@ export default function NumberInput(props: InputProps) {
           className="w-full rounded-l-md bg-transparent py-2 pl-3 focus:outline-hidden"
         />
         <input type="hidden" name={name} value={state.numberValue} />
-        <IconButton {...decrementButtonProps} label="Decrement" className="h-7.5 w-7.5 rounded-lg">
-          <Minus className="p-1" />
-        </IconButton>
-        <IconButton {...incrementButtonProps} label="Increment" className="h-7.5 w-7.5 rounded-lg">
-          <Plus className="p-1" />
-        </IconButton>
+        <Button
+          {...decrementButtonProps}
+          aria-label="Decrement"
+          className="h-7.5 w-7.5 rounded-lg p-1"
+        >
+          <Minus className="h-4 w-4" />
+        </Button>
+        <Button
+          {...incrementButtonProps}
+          aria-label="Increment"
+          className="h-7.5 w-7.5 rounded-lg p-1"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
       </div>
       {props.description && (
         <div

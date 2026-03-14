@@ -2,7 +2,7 @@ import { AlertCircle, Construction, Eye, FlaskConical, Pencil } from "lucide-rea
 import { useEffect, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Card from "~/components/Card";
 import Code from "~/components/Code";
 import Link from "~/components/link";

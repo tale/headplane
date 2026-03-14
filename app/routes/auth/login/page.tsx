@@ -2,7 +2,7 @@ import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Form, redirect, useSearchParams } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Card from "~/components/Card";
 import Code from "~/components/Code";
 import Input from "~/components/Input";

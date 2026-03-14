@@ -7,6 +7,7 @@ export interface ButtonProps extends AriaButtonOptions<"button"> {
   variant?: "heavy" | "light" | "danger" | "ghost";
   className?: string;
   children?: React.ReactNode;
+  "aria-label"?: string;
   ref?: React.RefObject<HTMLButtonElement | null>;
 }
 
@@ -19,8 +20,9 @@ export default function Button({ variant = "light", ...props }: ButtonProps) {
     <button
       ref={ref}
       {...buttonProps}
+      aria-label={props["aria-label"]}
       className={cn(
-        "w-fit rounded-md px-3.5 py-2 text-sm leading-tight",
+        "inline-flex w-fit items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm",
         "transition-colors duration-100",
         "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
         "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",

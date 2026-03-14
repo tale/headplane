@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import Code from "~/components/Code";
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import Select from "~/components/Select";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import type { User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
 
@@ -27,12 +29,12 @@ export default function NewMachine(data: NewMachineProps) {
   return (
     <>
       <Dialog isOpen={pushDialog} onOpenChange={setPushDialog}>
-        <Dialog.Panel isDisabled={mkey.length !== 24}>
-          <Dialog.Title>Register Machine Key</Dialog.Title>
-          <Dialog.Text className="mb-4">
+        <DialogPanel isDisabled={mkey.length !== 24}>
+          <Title>Register Machine Key</Title>
+          <Text className="mb-4">
             The machine key is given when you run{" "}
             <Code isCopyable>tailscale up --login-server={data.server}</Code> on your device.
-          </Dialog.Text>
+          </Text>
           <input name="action_id" type="hidden" value="register" />
           <Input
             errorMessage="Machine key must be exactly 24 characters"
@@ -49,7 +51,7 @@ export default function NewMachine(data: NewMachineProps) {
               <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
             ))}
           </Select>
-        </Dialog.Panel>
+        </DialogPanel>
       </Dialog>
       <Menu disabled={data.isDisabled}>
         <MenuTrigger className="rounded-md bg-indigo-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-500/90 dark:bg-indigo-500/90 dark:hover:bg-indigo-500/80">

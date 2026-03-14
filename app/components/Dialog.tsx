@@ -14,19 +14,13 @@ import {
   useOverlayTriggerState,
 } from "react-stately";
 
-import Button, { ButtonProps } from "~/components/Button";
-import IconButton, { IconButtonProps } from "~/components/IconButton";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Button, { ButtonProps } from "~/components/button";
 import cn from "~/utils/cn";
 import { useLiveData } from "~/utils/live-data";
 
 export interface DialogProps extends OverlayTriggerProps {
   children:
-    | [
-        React.ReactElement<ButtonProps> | React.ReactElement<IconButtonProps>,
-        React.ReactElement<DialogPanelProps>,
-      ]
+    | [React.ReactElement<ButtonProps>, React.ReactElement<DialogPanelProps>]
     | React.ReactElement<DialogPanelProps>;
 }
 
@@ -179,10 +173,5 @@ function DModal(props: DModalProps) {
   );
 }
 
-export default Object.assign(Dialog, {
-  Button,
-  IconButton,
-  Panel,
-  Title,
-  Text,
-});
+export { Panel as DialogPanel };
+export default Dialog;

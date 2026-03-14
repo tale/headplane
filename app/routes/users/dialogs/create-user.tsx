@@ -1,5 +1,8 @@
-import Dialog from "~/components/Dialog";
+import Button from "~/components/button";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 
 interface CreateUserProps {
   isOidc?: boolean;
@@ -9,15 +12,15 @@ interface CreateUserProps {
 export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
   return (
     <Dialog>
-      <Dialog.Button isDisabled={isDisabled}>Add user</Dialog.Button>
-      <Dialog.Panel>
-        <Dialog.Title>Create a Headscale user</Dialog.Title>
-        <Dialog.Text className="mb-6">
+      <Button isDisabled={isDisabled}>Add user</Button>
+      <DialogPanel>
+        <Title>Create a Headscale user</Title>
+        <Text className="mb-6">
           This creates a new user in Headscale. The user will appear in the &ldquo;Unlinked
           Headscale Users&rdquo; section until they sign in
           {isOidc ? " through your OIDC provider" : ""} and are automatically linked to a Headplane
           account.
-        </Dialog.Text>
+        </Text>
         <input name="action_id" type="hidden" value="create_user" />
         <div className="flex flex-col gap-4">
           <Input
@@ -54,7 +57,7 @@ export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
             validationBehavior="native"
           />
         </div>
-      </Dialog.Panel>
+      </DialogPanel>
     </Dialog>
   );
 }

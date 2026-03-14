@@ -1,7 +1,7 @@
 import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { User } from "~/types";
 import cn from "~/utils/cn";

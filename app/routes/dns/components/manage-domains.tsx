@@ -11,7 +11,7 @@ import { GripVertical, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Form } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Input from "~/components/Input";
 import TableList from "~/components/TableList";
 import cn from "~/utils/cn";

@@ -1,6 +1,6 @@
 import { Form } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Code from "~/components/Code";
 import Link from "~/components/link";
 import TableList from "~/components/TableList";

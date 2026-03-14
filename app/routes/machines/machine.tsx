@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { data } from "react-router";
 
 import Attribute from "~/components/Attribute";
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Card from "~/components/Card";
 import Chip from "~/components/Chip";
 import Link from "~/components/link";

@@ -2,14 +2,16 @@ import type { Key } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Code from "~/components/Code";
-import Dialog from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";
 import Link from "~/components/link";
 import NumberInput from "~/components/NumberInput";
 import Select from "~/components/Select";
 import Switch from "~/components/Switch";
+import Text from "~/components/Text";
+import Title from "~/components/Title";
 import type { User } from "~/types";
 import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
@@ -91,11 +93,9 @@ export default function AddAuthKey({
         Create pre-auth key
       </Button>
       {createdKey ? (
-        <Dialog.Panel variant="unactionable">
-          <Dialog.Title>Pre-auth key created</Dialog.Title>
-          <Dialog.Text>
-            Copy this key now. You will not be able to see the full key again.
-          </Dialog.Text>
+        <DialogPanel variant="unactionable">
+          <Title>Pre-auth key created</Title>
+          <Text>Copy this key now. You will not be able to see the full key again.</Text>
           <div className="mt-4 flex items-center gap-2 rounded-lg bg-mist-100 px-3 py-2 dark:bg-mist-800">
             <code className="min-w-0 flex-1 truncate font-mono text-sm">{createdKey}</code>
             <Button
@@ -109,13 +109,13 @@ export default function AddAuthKey({
               Copy
             </Button>
           </div>
-          <Dialog.Text className="mt-4 text-sm">To register a device with this key:</Dialog.Text>
+          <Text className="mt-4 text-sm">To register a device with this key:</Text>
           <Code isCopyable className="mt-1 block text-sm">
             {`tailscale up --login-server=${url} --authkey ${createdKey}`}
           </Code>
-        </Dialog.Panel>
+        </DialogPanel>
       ) : (
-        <Dialog.Panel
+        <DialogPanel
           onSubmit={(event) => {
             event.preventDefault();
             submittingRef.current = true;
@@ -129,15 +129,13 @@ export default function AddAuthKey({
           }}
           isDisabled={fetcher.state !== "idle" || !canSubmit}
         >
-          <Dialog.Title>Generate auth key</Dialog.Title>
+          <Title>Generate auth key</Title>
 
           {!selfServiceOnly && (
             <div className="mb-4 flex items-center justify-between gap-2">
               <div>
-                <Dialog.Text className="font-semibold">Tag-only key</Dialog.Text>
-                <Dialog.Text className="text-sm">
-                  Create a key owned by ACL tags instead of a user.
-                </Dialog.Text>
+                <Text className="font-semibold">Tag-only key</Text>
+                <Text className="text-sm">Create a key owned by ACL tags instead of a user.</Text>
               </div>
               <Switch
                 defaultSelected={tagOnly}
@@ -193,10 +191,8 @@ export default function AddAuthKey({
           />
           <div className="mt-6 flex items-center justify-between gap-2">
             <div>
-              <Dialog.Text className="font-semibold">Reusable</Dialog.Text>
-              <Dialog.Text className="text-sm">
-                Use this key to authenticate more than one device.
-              </Dialog.Text>
+              <Text className="font-semibold">Reusable</Text>
+              <Text className="text-sm">Use this key to authenticate more than one device.</Text>
             </div>
             <Switch
               defaultSelected={reusable}
@@ -206,14 +202,14 @@ export default function AddAuthKey({
           </div>
           <div className="mt-6 flex items-center justify-between gap-2">
             <div>
-              <Dialog.Text className="font-semibold">Ephemeral</Dialog.Text>
-              <Dialog.Text className="text-sm">
+              <Text className="font-semibold">Ephemeral</Text>
+              <Text className="text-sm">
                 Devices authenticated with this key will be automatically removed once they go
                 offline.{" "}
                 <Link external styled to="https://tailscale.com/kb/1111/ephemeral-nodes">
                   Learn more
                 </Link>
-              </Dialog.Text>
+              </Text>
             </div>
             <Switch
               defaultSelected={ephemeral}
@@ -221,7 +217,7 @@ export default function AddAuthKey({
               onChange={() => setEphemeral(!ephemeral)}
             />
           </div>
-        </Dialog.Panel>
+        </DialogPanel>
       )}
     </Dialog>
   );
