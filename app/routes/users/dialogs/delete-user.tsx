@@ -1,20 +1,21 @@
 import Dialog from "~/components/Dialog";
-import { Machine, User } from "~/types";
+import type { Machine, User } from "~/types";
 
 interface DeleteProps {
-  user: User & { machines: Machine[] };
+  user: User;
+  machines: Machine[];
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function DeleteUser({ user, isOpen, setIsOpen }: DeleteProps) {
+export default function DeleteUser({ user, machines, isOpen, setIsOpen }: DeleteProps) {
   const name = user.name || user.displayName;
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel variant={user.machines.length > 0 ? "unactionable" : "normal"}>
+      <Dialog.Panel variant={machines.length > 0 ? "unactionable" : "normal"}>
         <Dialog.Title>Delete {name}?</Dialog.Title>
-        {user.machines.length > 0 ? (
+        {machines.length > 0 ? (
           <Dialog.Text className="mb-6">
             Users cannot be deleted if they have machines. Please delete or re-assign their machines
             to other users before proceeding.

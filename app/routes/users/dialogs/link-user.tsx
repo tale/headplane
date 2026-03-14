@@ -1,10 +1,10 @@
 import Dialog from "~/components/Dialog";
 import Notice from "~/components/Notice";
-import type { User } from "~/types";
 import cn from "~/utils/cn";
 
 interface LinkUserProps {
-  user: User & { headplaneRole: string };
+  userId: string;
+  displayName: string;
   headscaleUsers: { id: string; name: string }[];
   currentLink?: string;
   isOpen: boolean;
@@ -12,7 +12,8 @@ interface LinkUserProps {
 }
 
 export default function LinkUser({
-  user,
+  userId,
+  displayName,
   headscaleUsers,
   currentLink,
   isOpen,
@@ -21,9 +22,9 @@ export default function LinkUser({
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
       <Dialog.Panel>
-        <Dialog.Title>Link Headscale user for {user.name || user.displayName}</Dialog.Title>
+        <Dialog.Title>Link Headscale user for {displayName}</Dialog.Title>
         <Dialog.Text className="mb-6">
-          Select which Headscale user this OIDC identity should be linked to. This controls which
+          Select which Headscale user this identity should be linked to. This controls which
           machines they can manage and enables self-service features.
         </Dialog.Text>
         {headscaleUsers.length === 0 ? (
@@ -31,7 +32,7 @@ export default function LinkUser({
         ) : (
           <>
             <input name="action_id" type="hidden" value="link_user" />
-            <input name="user_id" type="hidden" value={user.id} />
+            <input name="user_id" type="hidden" value={userId} />
             <select
               className={cn(
                 "w-full rounded-lg border p-2",

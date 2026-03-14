@@ -3,46 +3,53 @@ import Link from "~/components/link";
 import Notice from "~/components/Notice";
 import RadioGroup from "~/components/RadioGroup";
 import { Roles } from "~/server/web/roles";
-import { User } from "~/types";
+import type { Role } from "~/server/web/roles";
 
 interface ReassignProps {
-  user: User & { headplaneRole: string };
+  userId: string;
+  displayName: string;
+  role: Role;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
-export default function ReassignUser({ user, isOpen, setIsOpen }: ReassignProps) {
+export default function ReassignUser({
+  userId,
+  displayName,
+  role,
+  isOpen,
+  setIsOpen,
+}: ReassignProps) {
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Panel variant={user.headplaneRole === "owner" ? "unactionable" : "normal"}>
-        <Dialog.Title>Change role for {user.name || user.displayName}?</Dialog.Title>
+      <Dialog.Panel variant={role === "owner" ? "unactionable" : "normal"}>
+        <Dialog.Title>Change role for {displayName}?</Dialog.Title>
         <Dialog.Text className="mb-6">
-          Most roles are carried straight from Tailscale. However, keep in mind that I have not
-          fully implemented permissions yet and some things may be accessible to everyone. The only
-          fully completed role is Member.{" "}
+          Roles control what the user can access in Headplane. Each role grants a specific set of
+          capabilities.{" "}
           <Link external styled to="https://tailscale.com/kb/1138/user-roles">
             Learn More
           </Link>
         </Dialog.Text>
-        {user.headplaneRole === "owner" ? (
+        {role === "owner" ? (
           <Notice>The Tailnet owner cannot be reassigned.</Notice>
         ) : (
           <>
             <input name="action_id" type="hidden" value="reassign_user" />
-            <input name="user_id" type="hidden" value={user.id} />
+            <input name="user_id" type="hidden" value={userId} />
             <RadioGroup
               className="gap-4"
-              defaultValue={user.headplaneRole}
+              defaultValue={role}
               isRequired
               label="Role"
               name="new_role"
             >
               {Object.keys(Roles)
-                .filter((role) => role !== "owner")
-                .map((role) => {
-                  const { name, desc } = mapRoleToName(role);
+                .filter((r) => r !== "owner")
+                .map((r) => {
+                  const { name, desc } = mapRoleToName(r);
                   return (
-                    <RadioGroup.Radio key={role} label={name} value={role}>
+                    <RadioGroup.Radio key={r} label={name} value={r}>
                       <div className="block">
                         <p className="font-bold">{name}</p>
                         <p className="opacity-70">{desc}</p>
@@ -80,6 +87,11 @@ function mapRoleToName(role: string) {
         name: "Auditor",
         desc: "Can view the admin console.",
       };
+    case "viewer":
+      return {
+        name: "Viewer",
+        desc: "Can view machines, users, and generate their own auth keys.",
+      };
     case "member":
       return {
         name: "Member",
@@ -87,8 +99,8 @@ function mapRoleToName(role: string) {
       };
     default:
       return {
-        name: "Unknown",
-        desc: "Unknown",
+        name: role,
+        desc: "No description available.",
       };
   }
 }

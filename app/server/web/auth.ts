@@ -7,7 +7,7 @@ import { ulid } from "ulidx";
 
 import type { Machine } from "~/types";
 
-import { authSessions, users } from "../db/schema";
+import { type HeadplaneUser, authSessions, users } from "../db/schema";
 import { Capabilities, type Role, Roles, capsForRole } from "./roles";
 
 // ── Principal ────────────────────────────────────────────────────────
@@ -379,6 +379,14 @@ export class AuthService {
   }
 
   /**
+   * List all Headplane user records. Used by the users overview page
+   * to display the primary user list independently of the Headscale API.
+   */
+  async listUsers(): Promise<HeadplaneUser[]> {
+    return this.opts.db.select().from(users);
+  }
+
+  /**
    * Returns the set of Headscale user IDs that are already claimed
    * by a Headplane user. Used to filter the link picker.
    */
@@ -400,6 +408,24 @@ export class AuthService {
    */
   async roleForSubject(subject: string): Promise<Role | undefined> {
     const [user] = await this.opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
+
+    if (!user) {
+      return;
+    }
+
+    return (user.role in Roles ? user.role : "member") as Role;
+  }
+
+  /**
+   * Get the role for a Headplane user linked to a given Headscale user ID.
+   * Returns undefined if no Headplane user is linked to this Headscale user.
+   */
+  async roleForHeadscaleUser(headscaleUserId: string): Promise<Role | undefined> {
+    const [user] = await this.opts.db
+      .select()
+      .from(users)
+      .where(eq(users.headscale_user_id, headscaleUserId))
+      .limit(1);
 
     if (!user) {
       return;
