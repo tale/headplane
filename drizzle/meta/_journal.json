@@ -29,6 +29,13 @@
       "when": 1772917638504,
       "tag": "0003_thick_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1773505790202,
+      "tag": "0004_nappy_praxagora",
+      "breakpoints": true
     }
   ]
 }

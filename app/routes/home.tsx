@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { Form, redirect } from "react-router";
+import { redirect } from "react-router";
 
 import androidSvg from "~/assets/android.svg";
 import iosSvg from "~/assets/ios.svg";
@@ -9,19 +9,59 @@ import windowsSvg from "~/assets/windows.svg";
 import Button from "~/components/Button";
 import Card from "~/components/Card";
 import Link from "~/components/link";
+import LinkAccount from "~/layout/link-account";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import toast from "~/utils/toast";
+import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/home";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const principal = await context.auth.require(request);
 
+  // If the OIDC user has no linked Headscale user, check for
+  // Unclaimed users they can pick from before anything else.
+  let unlinked = false;
+  if (
+    typeof context.oidc === "object" &&
+    principal.kind === "oidc" &&
+    !principal.user.headscaleUserId
+  ) {
+    const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+    const api = context.hsApi.getRuntimeClient(apiKey);
+
+    let headscaleUsers: { id: string; name: string }[] = [];
+    try {
+      const [apiUsers, claimed] = await Promise.all([
+        api.getUsers(),
+        context.auth.claimedHeadscaleUserIds(),
+      ]);
+      headscaleUsers = apiUsers
+        .filter((u) => !claimed.has(u.id))
+        .map((u) => ({ id: u.id, name: getUserDisplayName(u) }));
+    } catch {
+      // API unavailable, skip the link picker
+    }
+
+    if (headscaleUsers.length > 0) {
+      return { headscaleUsers, status: "needs_link" as const };
+    }
+
+    // No unclaimed users, fall through to no-access page.
+    // Only warn if Headscale isn't using OIDC — if it is, the user
+    // Just needs to connect a device and Headscale will auto-create
+    // Their account, at which point auto-link will pick it up.
+    if (!context.hs.c?.oidc) {
+      unlinked = true;
+    }
+  }
+
   if (context.auth.can(principal, Capabilities.ui_access)) {
     return redirect("/machines");
   }
 
+  // No UI access — show the download/connect page
   const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
   const api = context.hsApi.getRuntimeClient(apiKey);
 
@@ -36,7 +76,23 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
   }
 
-  return { linkedUserName };
+  return { linkedUserName, status: "no_access" as const, unlinked };
+}
+
+export async function action({ request, context }: Route.ActionArgs) {
+  const principal = await context.auth.require(request);
+  if (principal.kind !== "oidc") {
+    return redirect("/");
+  }
+
+  const formData = await request.formData();
+  const headscaleUserId = formData.get("headscale_user_id")?.toString();
+
+  if (headscaleUserId) {
+    await context.auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
+  }
+
+  return redirect("/");
 }
 
 const downloads = [
@@ -67,10 +123,14 @@ const downloads = [
 ];
 
 export default function Home({ loaderData }: Route.ComponentProps) {
+  if (loaderData.status === "needs_link") {
+    return <LinkAccount headscaleUsers={loaderData.headscaleUsers} />;
+  }
+
   return (
     <div className="mx-auto mt-6 mb-24 flex max-w-2xl flex-col gap-4">
       {loaderData.linkedUserName && (
-        <Card variant="raised" className="flex max-w-2xl items-center gap-4">
+        <Card variant="flat" className="flex max-w-2xl items-center gap-4">
           <Check className="inline-flex size-4" />
           <Card.Text className="text-sm">
             Your account is linked to Headscale user <strong>{loaderData.linkedUserName}</strong>.
@@ -86,7 +146,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
         <div className="mt-4 rounded-lg border border-mist-200 p-3 dark:border-mist-700">
           <div className="flex items-center gap-2">
-            <img alt="Linux" className="w-4" src={linuxSvg} />
+            <img alt="Linux" className="w-4 dark:invert" src={linuxSvg} />
             <span className="text-sm font-medium">Linux</span>
           </div>
           <div className="mt-2 flex items-center gap-2">
@@ -138,14 +198,23 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               rel="noreferrer"
               target="_blank"
             >
-              <img alt={dl.name} className="h-6" src={dl.icon} />
+              <img alt={dl.name} className="h-6 dark:invert" src={dl.icon} />
               <span className="text-sm font-medium">{dl.name}</span>
               <span className="text-xs text-mist-500 dark:text-mist-400">{dl.note}</span>
             </a>
           ))}
         </div>
-        <Card.Text className="mt-8 text-center text-xs text-mist-600 dark:text-mist-300">
-          Need access to the dashboard? Contact your administrator to request access.
+        <Card.Text
+          className={cn(
+            "mt-8 text-center text-xs",
+            loaderData.unlinked
+              ? "text-yellow-600 dark:text-yellow-400"
+              : "text-mist-600 dark:text-mist-300",
+          )}
+        >
+          {loaderData.unlinked
+            ? "Your account isn't linked to a Headscale user. Ask your administrator to create one for you."
+            : "Need access to the dashboard? Contact your administrator to request access."}
         </Card.Text>
       </Card>
     </div>

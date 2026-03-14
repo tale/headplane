@@ -1,5 +1,5 @@
 import { CircleQuestionMark, CircleUser, Globe, Lock, Server, Settings, Users } from "lucide-react";
-import { NavLink, useLocation, useSubmit } from "react-router";
+import { NavLink, useSubmit } from "react-router";
 
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
@@ -37,9 +37,7 @@ const tabs = [
 
 export default function Header({ user, access, configAvailable }: HeaderProps) {
   const submit = useSubmit();
-  const location = useLocation();
-  const isOnboarding = location.pathname.startsWith("/onboarding");
-  const showTabs = access.ui && !isOnboarding;
+  const showTabs = access.ui;
 
   return (
     <header

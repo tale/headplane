@@ -14,15 +14,6 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
   try {
     const principal = await context.auth.require(request);
 
-    if (
-      typeof context.oidc === "object" &&
-      principal.kind === "oidc" &&
-      !principal.user.onboarded &&
-      !request.url.endsWith("/onboarding")
-    ) {
-      return redirect("/onboarding");
-    }
-
     const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
     const api = context.hsApi.getRuntimeClient(apiKey);
 
@@ -53,6 +44,19 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
               "Set-Cookie": await context.auth.destroySession(request),
             },
           });
+        }
+      }
+
+      // Self-heal: if the linked Headscale user was deleted, clear the
+      // stale link so the user gets prompted to re-link.
+      if (principal.kind === "oidc" && principal.user.headscaleUserId) {
+        try {
+          const hsUsers = await api.getUsers();
+          if (!hsUsers.some((u) => u.id === principal.user.headscaleUserId)) {
+            await context.auth.unlinkHeadscaleUser(principal.user.id);
+          }
+        } catch {
+          // API call failed, skip validation
         }
       }
     }

@@ -22,9 +22,10 @@ export type HostInfoInsert = typeof hostInfo.$inferInsert;
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   sub: text("sub").notNull().unique(),
+  name: text("name"),
+  email: text("email"),
   role: text("role").notNull().default("member"),
   headscale_user_id: text("headscale_user_id").unique(),
-  onboarded: integer("onboarded", { mode: "boolean" }).notNull().default(false),
   created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
   updated_at: integer("updated_at", { mode: "timestamp" }).$default(() => new Date()),
   last_login_at: integer("last_login_at", { mode: "timestamp" }),

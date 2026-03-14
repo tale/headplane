@@ -29,7 +29,6 @@ export type Principal =
         subject: string;
         role: Role;
         headscaleUserId: string | undefined;
-        onboarded: boolean;
       };
       profile: {
         name: string;
@@ -149,10 +148,10 @@ export class AuthService {
         subject: user.sub,
         role,
         headscaleUserId: user.headscale_user_id ?? undefined,
-        onboarded: user.onboarded,
       },
       profile: payload.profile ?? {
-        name: user.sub,
+        name: user.name ?? user.sub,
+        email: user.email ?? undefined,
       },
     };
   }
@@ -234,7 +233,6 @@ export class AuthService {
    * Get the Headscale API key for making API calls.
    * OIDC sessions use the configured oidc.headscale_api_key.
    * API key sessions use the user-provided key stored in the cookie.
-   * TODO: Get rid of this AI garbage
    */
   getHeadscaleApiKey(principal: Principal, oidcApiKey?: string): string {
     if (principal.kind === "api_key") {
@@ -275,9 +273,13 @@ export class AuthService {
   /**
    * Find or create a Headplane user by OIDC subject. Returns the
    * user ID. The first user ever created is automatically granted
-   * the owner role (bootstrap). Uses upsert to avoid race conditions.
+   * the owner role (bootstrap). Profile data (name, email) is
+   * refreshed on every login.
    */
-  async findOrCreateUser(subject: string): Promise<string> {
+  async findOrCreateUser(
+    subject: string,
+    profile?: { name?: string; email?: string },
+  ): Promise<string> {
     const [existing] = await this.opts.db
       .select()
       .from(users)
@@ -287,7 +289,12 @@ export class AuthService {
     if (existing) {
       await this.opts.db
         .update(users)
-        .set({ last_login_at: new Date(), updated_at: new Date() })
+        .set({
+          name: profile?.name,
+          email: profile?.email,
+          last_login_at: new Date(),
+          updated_at: new Date(),
+        })
         .where(eq(users.id, existing.id));
       return existing.id;
     }
@@ -296,9 +303,10 @@ export class AuthService {
     await this.opts.db.insert(users).values({
       id,
       sub: subject,
+      name: profile?.name,
+      email: profile?.email,
       role: "member",
       caps: capsForRole("member"),
-      onboarded: false,
     });
 
     // If this is the only user in the table, promote to owner.
@@ -341,6 +349,17 @@ export class AuthService {
   }
 
   /**
+   * Clear the Headscale user link for a Headplane user. Used when the
+   * linked Headscale user no longer exists.
+   */
+  async unlinkHeadscaleUser(userId: string): Promise<void> {
+    await this.opts.db
+      .update(users)
+      .set({ headscale_user_id: null, updated_at: new Date() })
+      .where(eq(users.id, userId));
+  }
+
+  /**
    * Link a Headplane user (identified by OIDC subject) to a Headscale
    * user. Used by admin UI when subjects are more accessible than
    * internal Headplane IDs. Returns false if already claimed.
@@ -361,7 +380,7 @@ export class AuthService {
 
   /**
    * Returns the set of Headscale user IDs that are already claimed
-   * by a Headplane user. Used to filter the onboarding dropdown.
+   * by a Headplane user. Used to filter the link picker.
    */
   async claimedHeadscaleUserIds(): Promise<Set<string>> {
     const rows = await this.opts.db.select({ hsId: users.headscale_user_id }).from(users);
@@ -406,7 +425,6 @@ export class AuthService {
         sub: subject,
         role,
         caps: capsForRole(role),
-        onboarded: false,
       })
       .onConflictDoUpdate({
         target: users.sub,
