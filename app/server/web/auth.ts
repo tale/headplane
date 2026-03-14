@@ -435,6 +435,46 @@ export class AuthService {
   }
 
   /**
+   * Transfer ownership from the current owner to another user.
+   * The current owner is demoted to admin and the target is promoted
+   * to owner. Both users must exist. Returns false if the caller is
+   * not actually the owner or the target doesn't exist.
+   */
+  async transferOwnership(currentOwnerSubject: string, newOwnerSubject: string): Promise<boolean> {
+    const [current] = await this.opts.db
+      .select()
+      .from(users)
+      .where(eq(users.sub, currentOwnerSubject))
+      .limit(1);
+
+    if (!current || current.role !== "owner") {
+      return false;
+    }
+
+    const [target] = await this.opts.db
+      .select()
+      .from(users)
+      .where(eq(users.sub, newOwnerSubject))
+      .limit(1);
+
+    if (!target || target.id === current.id) {
+      return false;
+    }
+
+    await this.opts.db
+      .update(users)
+      .set({ role: "admin", caps: capsForRole("admin"), updated_at: new Date() })
+      .where(eq(users.id, current.id));
+
+    await this.opts.db
+      .update(users)
+      .set({ role: "owner", caps: capsForRole("owner"), updated_at: new Date() })
+      .where(eq(users.id, target.id));
+
+    return true;
+  }
+
+  /**
    * Reassign the role of a user identified by their OIDC subject.
    * Cannot reassign the owner role.
    */

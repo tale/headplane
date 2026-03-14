@@ -6,6 +6,7 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/compo
 import Delete from "../dialogs/delete-user";
 import LinkUser from "../dialogs/link-user";
 import Reassign from "../dialogs/reassign-user";
+import TransferOwnership from "../dialogs/transfer-ownership";
 import type { HeadplaneUserData } from "../overview";
 
 interface MenuProps {
@@ -13,11 +14,18 @@ interface MenuProps {
   headscaleUsers: { id: string; name: string; claimed: boolean }[];
   currentLink?: string;
   isSelf?: boolean;
+  isOwner?: boolean;
 }
 
-type Modal = "delete" | "reassign" | "link" | null;
+type Modal = "delete" | "reassign" | "link" | "transfer" | null;
 
-export default function UserMenu({ user, headscaleUsers, currentLink, isSelf }: MenuProps) {
+export default function UserMenu({
+  user,
+  headscaleUsers,
+  currentLink,
+  isSelf,
+  isOwner,
+}: MenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
   const isLinked = currentLink !== undefined;
@@ -66,6 +74,16 @@ export default function UserMenu({ user, headscaleUsers, currentLink, isSelf }: 
           userId={user.linkedHeadscaleUser?.id ?? user.id}
         />
       )}
+      {modal === "transfer" && (
+        <TransferOwnership
+          isOpen={modal === "transfer"}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+          targetDisplayName={displayName}
+          targetUserId={user.linkedHeadscaleUser?.id ?? user.id}
+        />
+      )}
 
       <Menu>
         <MenuTrigger className="w-10 rounded-full bg-transparent p-1 py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800">
@@ -81,6 +99,14 @@ export default function UserMenu({ user, headscaleUsers, currentLink, isSelf }: 
           <MenuItem onClick={() => setModal("link")}>
             {isLinked ? "Change linked user" : "Link Headscale user"}
           </MenuItem>
+          {isOwner && !isSelf && (
+            <>
+              <MenuSeparator />
+              <MenuItem variant="danger" onClick={() => setModal("transfer")}>
+                Transfer ownership
+              </MenuItem>
+            </>
+          )}
           {user.linkedHeadscaleUser && !isSelf && (
             <>
               <MenuSeparator />

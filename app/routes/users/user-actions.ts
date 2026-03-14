@@ -104,6 +104,34 @@ export async function userAction({ request, context }: Route.ActionArgs) {
 
       return { message: "User reassigned successfully" };
     }
+    case "transfer_ownership": {
+      if (principal.kind !== "oidc" || principal.user.role !== "owner") {
+        throw data("Only the owner can transfer ownership.", { status: 403 });
+      }
+
+      const userId = formData.get("user_id")?.toString();
+      if (!userId) {
+        throw data("Missing `user_id` in the form data.", { status: 400 });
+      }
+
+      const users = await api.getUsers(userId);
+      const user = users.find((user) => user.id === userId);
+      if (!user) {
+        throw data("Specified user not found", { status: 400 });
+      }
+
+      const targetSubject = getOidcSubject(user);
+      if (!targetSubject) {
+        throw data("Target user is not an OIDC user or has no subject.", { status: 400 });
+      }
+
+      const result = await context.auth.transferOwnership(principal.user.subject, targetSubject);
+      if (!result) {
+        throw data("Failed to transfer ownership.", { status: 500 });
+      }
+
+      return { message: "Ownership transferred successfully" };
+    }
     case "link_user": {
       const userId = formData.get("user_id")?.toString();
       const headscaleUserId = formData.get("headscale_user_id")?.toString();
