@@ -128,6 +128,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     writable: writablePermission,
+    currentUserId: principal.kind === "oidc" ? principal.user.id : undefined,
     oidc: context.config.oidc ? { issuer: context.config.oidc.issuer } : undefined,
     magic,
     apiError,
@@ -186,6 +187,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               >
                 {loaderData.headplaneUsers.map((user) => (
                   <HeadplaneUserRow
+                    isSelf={user.id === loaderData.currentUserId}
                     key={user.id}
                     headscaleUsers={loaderData.headscaleUsersForLink}
                     user={user}

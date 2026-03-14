@@ -12,11 +12,12 @@ interface MenuProps {
   user: HeadplaneUserData;
   headscaleUsers: { id: string; name: string; claimed: boolean }[];
   currentLink?: string;
+  isSelf?: boolean;
 }
 
 type Modal = "delete" | "reassign" | "link" | null;
 
-export default function UserMenu({ user, headscaleUsers, currentLink }: MenuProps) {
+export default function UserMenu({ user, headscaleUsers, currentLink, isSelf }: MenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
   const isLinked = currentLink !== undefined;
@@ -80,7 +81,7 @@ export default function UserMenu({ user, headscaleUsers, currentLink }: MenuProp
           <MenuItem onClick={() => setModal("link")}>
             {isLinked ? "Change linked user" : "Link Headscale user"}
           </MenuItem>
-          {user.linkedHeadscaleUser && (
+          {user.linkedHeadscaleUser && !isSelf && (
             <>
               <MenuSeparator />
               <MenuItem variant="danger" onClick={() => setModal("delete")}>

@@ -10,9 +10,10 @@ import MenuOptions from "./menu";
 interface HeadplaneUserRowProps {
   user: HeadplaneUserData;
   headscaleUsers: { id: string; name: string; claimed: boolean }[];
+  isSelf?: boolean;
 }
 
-export default function HeadplaneUserRow({ user, headscaleUsers }: HeadplaneUserRowProps) {
+export default function HeadplaneUserRow({ user, headscaleUsers, isSelf }: HeadplaneUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
@@ -66,6 +67,7 @@ export default function HeadplaneUserRow({ user, headscaleUsers }: HeadplaneUser
         <MenuOptions
           currentLink={user.headscaleUserId ?? undefined}
           headscaleUsers={headscaleUsers}
+          isSelf={isSelf}
           user={user}
         />
       </td>
