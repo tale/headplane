@@ -1,6 +1,7 @@
 import { Outlet, redirect } from "react-router";
 
 import { ErrorBanner } from "~/components/error-banner";
+import StatusBanner from "~/components/status-banner";
 import { pruneEphemeralNodes } from "~/server/db/pruner";
 import { isDataUnauthorizedError } from "~/server/headscale/api/error-client";
 import { Capabilities } from "~/server/web/roles";
@@ -94,6 +95,17 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         user={loaderData.user}
       />
       <main className="container mt-4 mb-24 overscroll-contain">
+        {!loaderData.isHealthy && (
+          <StatusBanner
+            className="mb-4"
+            dismissable={false}
+            title="Headscale Unreachable"
+            variant="critical"
+          >
+            Unable to connect to the Headscale server. Data shown may be stale and changes cannot be
+            saved until the connection is restored.
+          </StatusBanner>
+        )}
         <Outlet />
       </main>
       <Footer isDebug={loaderData.isDebug} baseUrl={loaderData.baseUrl} />

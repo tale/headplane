@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { useEffect, useState } from "react";
 
+import PageError from "~/components/page-error";
 import { users as usersTable } from "~/server/db/schema";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
@@ -167,4 +168,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
     </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="Users" />;
 }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Code from "~/components/Code";
 import Input from "~/components/Input";
 import Link from "~/components/link";
+import PageError from "~/components/page-error";
 import Tooltip from "~/components/Tooltip";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
@@ -380,4 +381,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
     </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="Machines" />;
 }

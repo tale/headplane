@@ -7,6 +7,7 @@ import Card from "~/components/Card";
 import Code from "~/components/Code";
 import Link from "~/components/link";
 import Notice from "~/components/Notice";
+import PageError from "~/components/page-error";
 import Tabs from "~/components/Tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
 import toast from "~/utils/toast";
@@ -185,5 +186,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     );
   }
 
-  throw error;
+  return <PageError error={error} page="Access Control" />;
 }

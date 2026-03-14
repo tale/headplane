@@ -3,6 +3,7 @@ import { useLoaderData } from "react-router";
 
 import Code from "~/components/Code";
 import Notice from "~/components/Notice";
+import PageError from "~/components/page-error";
 import type { LoadContext } from "~/server";
 import { Capabilities } from "~/server/web/roles";
 
@@ -100,4 +101,8 @@ export default function Page() {
       </div>
     </div>
   );
+}
+
+export function ErrorBoundary({ error }: { error: unknown }) {
+  return <PageError error={error} page="DNS" />;
 }

@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 import Link from "~/components/link";
+import PageError from "~/components/page-error";
 
 import type { Route } from "./+types/overview";
 
@@ -63,4 +64,8 @@ export default function Page({ loaderData: { config, isOidcEnabled } }: Route.Co
       ) : undefined}
     </div>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="Settings" />;
 }
