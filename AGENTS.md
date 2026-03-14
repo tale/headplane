@@ -42,8 +42,10 @@ care to use our preferred PNPM version and Node version as defined in the
 `engines` field of `package.json`. We also use TypeScript Go and Oxfmt for
 type-checking and formatting respectively.
 
-You can also run Headscale CLI commands with
-`docker exec headscale headscale <command>` when the dev environment is running.
+When typechecking, use `pnpm run typecheck`, when linting and formatting, use
+the respective `lint` and `format` scripts, you can pass flags to them. You can
+also run Headscale CLI commands with `docker exec headscale headscale <command>`
+when the dev environment is running.
 
 ## Docs
 
