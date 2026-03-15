@@ -1,276 +1,312 @@
-import { access, constants } from 'node:fs/promises';
-import { setTimeout } from 'node:timers/promises';
-import { type } from 'arktype';
-import { Client } from 'undici';
-import type { RuntimeApiClient } from '~/server/headscale/api/endpoints';
-import log from '~/utils/log';
-import { Integration } from './abstract';
+import { access, constants } from "node:fs/promises";
+import { setTimeout } from "node:timers/promises";
+
+import { type } from "arktype";
+import { Client } from "undici";
+
+import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import log from "~/utils/log";
+
+import { Integration } from "./abstract";
 
 interface DockerContainer {
-	Id: string;
-	Names: string[];
+  Id: string;
+  Names: string[];
+}
+
+interface DockerVersionInfo {
+  ApiVersion?: string;
+}
+
+const REQUIRED_DOCKER_API_VERSION = "1.44";
+
+function compareApiVersions(current: string, required: string) {
+  const currentParts = current.split(".").map(Number);
+  const requiredParts = required.split(".").map(Number);
+
+  if (
+    currentParts.some((part) => Number.isNaN(part)) ||
+    requiredParts.some((part) => Number.isNaN(part))
+  ) {
+    throw new Error("Invalid Docker API version format");
+  }
+
+  const length = Math.max(currentParts.length, requiredParts.length);
+
+  for (let index = 0; index < length; index++) {
+    const currentPart = currentParts[index] ?? 0;
+    const requiredPart = requiredParts[index] ?? 0;
+
+    if (currentPart > requiredPart) {
+      return 1;
+    }
+
+    if (currentPart < requiredPart) {
+      return -1;
+    }
+  }
+
+  return 0;
+}
+
+function isSupportedDockerApiVersion(apiVersion: string) {
+  return compareApiVersions(apiVersion, REQUIRED_DOCKER_API_VERSION) >= 0;
 }
 
 const configSchema = {
-	full: type({
-		enabled: 'boolean',
-		container_name: 'string?',
-		container_label: 'string = "me.tale.headplane.target=headscale"',
-		socket: 'string = "unix:///var/run/docker.sock"',
-	}),
+  full: type({
+    enabled: "boolean",
+    container_name: "string?",
+    container_label: 'string = "me.tale.headplane.target=headscale"',
+    socket: 'string = "unix:///var/run/docker.sock"',
+  }),
 
-	partial: type({
-		enabled: 'boolean?',
-		container_name: 'string?',
-		container_label: 'string?',
-		socket: 'string?',
-	}).partial(),
+  partial: type({
+    enabled: "boolean?",
+    container_name: "string?",
+    container_label: "string?",
+    socket: "string?",
+  }).partial(),
 };
 
-export default class DockerIntegration extends Integration<
-	typeof configSchema.full.infer
-> {
-	private maxAttempts = 10;
-	private client: Client | undefined;
-	private containerId: string | undefined;
+export default class DockerIntegration extends Integration<typeof configSchema.full.infer> {
+  private maxAttempts = 10;
+  private client: Client | undefined;
+  private containerId: string | undefined;
 
-	get name() {
-		return 'Docker';
-	}
+  get name() {
+    return "Docker";
+  }
 
-	static get configSchema() {
-		return configSchema;
-	}
+  static get configSchema() {
+    return configSchema;
+  }
 
-	async getContainerName(label: string, value: string): Promise<string> {
-		if (!this.client) {
-			throw new Error('Docker client is not initialized');
-		}
+  async getContainerName(label: string, value: string): Promise<string> {
+    if (!this.client) {
+      throw new Error("Docker client is not initialized");
+    }
 
-		const filters = encodeURIComponent(
-			JSON.stringify({
-				label: [`${label}=${value}`],
-			}),
-		);
-		const { body } = await this.client.request({
-			method: 'GET',
-			path: `/containers/json?filters=${filters}`,
-		});
-		const containers: DockerContainer[] =
-			(await body.json()) as DockerContainer[];
-		if (containers.length > 1) {
-			throw new Error(
-				`Found multiple Docker containers matching label ${label}=${value}. Please specify a container name.`,
-			);
-		}
-		if (containers.length === 0) {
-			throw new Error(
-				`No Docker containers found matching label: ${label}=${value}`,
-			);
-		}
-		log.info(
-			'config',
-			'Found Docker container matching label: %s=%s',
-			label,
-			value,
-		);
-		return containers[0].Id;
-	}
+    const filters = encodeURIComponent(
+      JSON.stringify({
+        label: [`${label}=${value}`],
+      }),
+    );
+    const { body } = await this.client.request({
+      method: "GET",
+      path: `/containers/json?filters=${filters}`,
+    });
+    const containers: DockerContainer[] = (await body.json()) as DockerContainer[];
+    if (containers.length > 1) {
+      throw new Error(
+        `Found multiple Docker containers matching label ${label}=${value}. Please specify a container name.`,
+      );
+    }
+    if (containers.length === 0) {
+      throw new Error(`No Docker containers found matching label: ${label}=${value}`);
+    }
+    log.info("config", "Found Docker container matching label: %s=%s", label, value);
+    return containers[0].Id;
+  }
 
-	async isAvailable() {
-		// Basic configuration check, the name overrides the container_label
-		// selector because of legacy support.
-		const { container_name, container_label } = this.context;
-		if (container_name?.length === 0 && container_label.length === 0) {
-			log.error(
-				'config',
-				'Missing a Docker `container_name` or `container_label`',
-			);
-			return false;
-		}
+  async isAvailable() {
+    log.info("config", "Requiring Docker API version %s or newer", REQUIRED_DOCKER_API_VERSION);
 
-		// Verify that Docker socket is reachable
-		let url: URL | undefined;
-		try {
-			url = new URL(this.context.socket);
-		} catch {
-			log.error(
-				'config',
-				'Invalid Docker socket path: %s',
-				this.context.socket,
-			);
-			return false;
-		}
+    // Basic configuration check, the name overrides the container_label
+    // selector because of legacy support.
+    const { container_name, container_label } = this.context;
+    if (container_name?.length === 0 && container_label.length === 0) {
+      log.error("config", "Missing a Docker `container_name` or `container_label`");
+      return false;
+    }
 
-		if (url.protocol !== 'tcp:' && url.protocol !== 'unix:') {
-			log.error('config', 'Invalid Docker socket protocol: %s', url.protocol);
-			return false;
-		}
+    // Verify that Docker socket is reachable
+    let url: URL | undefined;
+    try {
+      url = new URL(this.context.socket);
+    } catch {
+      log.error("config", "Invalid Docker socket path: %s", this.context.socket);
+      return false;
+    }
 
-		// The API is available as an HTTP endpoint and this
-		// will simplify the fetching logic in undici
-		if (url.protocol === 'tcp:') {
-			// Apparently setting url.protocol doesn't work anymore?
-			const fetchU = url.href.replace(url.protocol, 'http:');
+    if (url.protocol !== "tcp:" && url.protocol !== "unix:") {
+      log.error("config", "Invalid Docker socket protocol: %s", url.protocol);
+      return false;
+    }
 
-			try {
-				log.info('config', 'Checking API: %s', fetchU);
-				await fetch(new URL('/v1.44/version', fetchU).href);
-			} catch (error) {
-				log.error('config', 'Failed to connect to Docker API: %s', error);
-				log.debug('config', 'Connection error: %o', error);
-				return false;
-			}
+    // The API is available as an HTTP endpoint and this
+    // will simplify the fetching logic in undici
+    if (url.protocol === "tcp:") {
+      // Apparently setting url.protocol doesn't work anymore?
+      const fetchU = url.href.replace(url.protocol, "http:");
 
-			this.client = new Client(fetchU);
-		}
+      try {
+        log.info("config", "Checking API: %s", fetchU);
+        await fetch(new URL("/version", fetchU).href);
+      } catch (error) {
+        log.error("config", "Failed to connect to Docker API: %s", error);
+        log.debug("config", "Connection error: %o", error);
+        return false;
+      }
 
-		// Check if the socket is accessible
-		if (url.protocol === 'unix:') {
-			try {
-				log.info('config', 'Checking socket: %s', url.pathname);
-				await access(url.pathname, constants.R_OK);
-			} catch (error) {
-				log.error('config', 'Failed to access Docker socket: %s', url.pathname);
-				log.debug('config', 'Access error: %o', error);
-				return false;
-			}
+      this.client = new Client(fetchU);
+    }
 
-			this.client = new Client('http://localhost', {
-				socketPath: url.pathname,
-			});
-		}
+    // Check if the socket is accessible
+    if (url.protocol === "unix:") {
+      try {
+        log.info("config", "Checking socket: %s", url.pathname);
+        await access(url.pathname, constants.R_OK);
+      } catch (error) {
+        log.error("config", "Failed to access Docker socket: %s", url.pathname);
+        log.debug("config", "Access error: %o", error);
+        return false;
+      }
 
-		if (this.client === undefined) {
-			log.error('config', 'Failed to create Docker client');
-			return false;
-		}
+      this.client = new Client("http://localhost", {
+        socketPath: url.pathname,
+      });
+    }
 
-		const qp = new URLSearchParams({
-			filters: JSON.stringify(
-				container_name != null && container_name.length > 0
-					? { name: [container_name] }
-					: { label: [container_label] },
-			),
-		});
+    if (this.client === undefined) {
+      log.error("config", "Failed to create Docker client");
+      return false;
+    }
 
-		log.debug(
-			'config',
-			'Requesting Docker containers with filters: %s',
-			qp.toString(),
-		);
-		const res = await this.client.request({
-			method: 'GET',
-			path: `/v1.44/containers/json?${qp.toString()}`,
-		});
+    try {
+      const versionRes = await this.client.request({
+        method: "GET",
+        path: "/version",
+      });
 
-		if (res.statusCode !== 200) {
-			log.error('config', 'Could not request available Docker containers');
-			log.debug('config', 'Error Details: %o', await res.body.json());
-			return false;
-		}
+      if (versionRes.statusCode !== 200) {
+        log.error("config", "Could not request Docker API version");
+        log.debug("config", "Error Details: %o", await versionRes.body.json());
+        return false;
+      }
 
-		const data = (await res.body.json()) as DockerContainer[];
-		if (data.length > 1) {
-			if (container_name != null && container_name.length > 0) {
-				log.error(
-					'config',
-					`Found multiple containers with name ${container_name}`,
-				);
-			} else {
-				log.error(
-					'config',
-					`Found multiple containers with label ${container_label}`,
-				);
-			}
+      const versionInfo = (await versionRes.body.json()) as DockerVersionInfo;
+      if (!versionInfo.ApiVersion) {
+        log.error("config", "Docker API version response is missing `ApiVersion`");
+        return false;
+      }
 
-			return false;
-		}
+      log.info("config", "Detected Docker API version %s", versionInfo.ApiVersion);
 
-		if (data.length === 0) {
-			if (container_name != null && container_name.length > 0) {
-				log.error(
-					'config',
-					`No container found with the name ${container_name}`,
-				);
-			} else {
-				log.error(
-					'config',
-					`No container found with the label ${container_label}`,
-				);
-			}
+      if (!isSupportedDockerApiVersion(versionInfo.ApiVersion)) {
+        log.error(
+          "config",
+          "Docker API version %s is too old, require %s or newer",
+          versionInfo.ApiVersion,
+          REQUIRED_DOCKER_API_VERSION,
+        );
+        return false;
+      }
+    } catch (error) {
+      log.error("config", "Failed to validate Docker API version: %s", error);
+      log.debug("config", "Version check error: %o", error);
+      return false;
+    }
 
-			return false;
-		}
+    const qp = new URLSearchParams({
+      filters: JSON.stringify(
+        container_name != null && container_name.length > 0
+          ? { name: [container_name] }
+          : { label: [container_label] },
+      ),
+    });
 
-		this.containerId = data[0].Id;
-		log.info(
-			'config',
-			'Using container: %s (ID: %s)',
-			data[0].Names[0],
-			this.containerId,
-		);
+    log.debug("config", "Requesting Docker containers with filters: %s", qp.toString());
+    const res = await this.client.request({
+      method: "GET",
+      path: `/v${REQUIRED_DOCKER_API_VERSION}/containers/json?${qp.toString()}`,
+    });
 
-		return this.client !== undefined && this.containerId !== undefined;
-	}
+    if (res.statusCode !== 200) {
+      log.error("config", "Could not request available Docker containers");
+      log.debug("config", "Error Details: %o", await res.body.json());
+      return false;
+    }
 
-	async onConfigChange(client: RuntimeApiClient) {
-		if (!this.client) {
-			return;
-		}
+    const data = (await res.body.json()) as DockerContainer[];
+    if (data.length > 1) {
+      if (container_name != null && container_name.length > 0) {
+        log.error("config", `Found multiple containers with name ${container_name}`);
+      } else {
+        log.error("config", `Found multiple containers with label ${container_label}`);
+      }
 
-		log.info('config', 'Restarting Headscale via Docker');
+      return false;
+    }
 
-		let attempts = 0;
-		while (attempts <= this.maxAttempts) {
-			log.debug(
-				'config',
-				'Restarting container: %s (attempt %d)',
-				this.containerId,
-				attempts,
-			);
+    if (data.length === 0) {
+      if (container_name != null && container_name.length > 0) {
+        log.error("config", `No container found with the name ${container_name}`);
+      } else {
+        log.error("config", `No container found with the label ${container_label}`);
+      }
 
-			const response = await this.client.request({
-				method: 'POST',
-				path: `/v1.44/containers/${this.containerId}/restart`,
-			});
+      return false;
+    }
 
-			if (response.statusCode !== 204) {
-				if (attempts < this.maxAttempts) {
-					attempts++;
-					await setTimeout(1000);
-					continue;
-				}
+    this.containerId = data[0].Id;
+    log.info("config", "Using container: %s (ID: %s)", data[0].Names[0], this.containerId);
 
-				const stringCode = response.statusCode.toString();
-				const body = await response.body.text();
-				throw new Error(`API request failed: ${stringCode} ${body}`);
-			}
+    return this.client !== undefined && this.containerId !== undefined;
+  }
 
-			break;
-		}
+  async onConfigChange(client: RuntimeApiClient) {
+    if (!this.client) {
+      return;
+    }
 
-		attempts = 0;
-		while (attempts <= this.maxAttempts) {
-			try {
-				log.debug('config', 'Checking Headscale status (attempt %d)', attempts);
-				const status = await client.isHealthy();
-				if (status === false) {
-					throw new Error('Headscale is not running');
-				}
+    log.info("config", "Restarting Headscale via Docker");
 
-				log.info('config', 'Headscale is up and running');
-				return;
-			} catch {
-				if (attempts < this.maxAttempts) {
-					attempts++;
-					await setTimeout(1000);
-					continue;
-				}
+    let attempts = 0;
+    while (attempts <= this.maxAttempts) {
+      log.debug("config", "Restarting container: %s (attempt %d)", this.containerId, attempts);
 
-				log.error('config', 'Missed restart deadline for %s', this.containerId);
-				return;
-			}
-		}
-	}
+      const response = await this.client.request({
+        method: "POST",
+        path: `/v${REQUIRED_DOCKER_API_VERSION}/containers/${this.containerId}/restart`,
+      });
+
+      if (response.statusCode !== 204) {
+        if (attempts < this.maxAttempts) {
+          attempts++;
+          await setTimeout(1000);
+          continue;
+        }
+
+        const stringCode = response.statusCode.toString();
+        const body = await response.body.text();
+        throw new Error(`API request failed: ${stringCode} ${body}`);
+      }
+
+      break;
+    }
+
+    attempts = 0;
+    while (attempts <= this.maxAttempts) {
+      try {
+        log.debug("config", "Checking Headscale status (attempt %d)", attempts);
+        const status = await client.isHealthy();
+        if (status === false) {
+          throw new Error("Headscale is not running");
+        }
+
+        log.info("config", "Headscale is up and running");
+        return;
+      } catch {
+        if (attempts < this.maxAttempts) {
+          attempts++;
+          await setTimeout(1000);
+          continue;
+        }
+
+        log.error("config", "Missed restart deadline for %s", this.containerId);
+        return;
+      }
+    }
+  }
 }
