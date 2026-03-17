@@ -43,7 +43,6 @@ RUN HEADPLANE_VERSION=$HEADPLANE_VERSION ./build.sh --app
 FROM gcr.io/distroless/nodejs24-debian13:latest AS final
 COPY --from=js-base /run/build /app/build
 COPY --from=js-base /run/drizzle /app/drizzle
-COPY --from=js-base /run/node_modules /app/node_modules
 
 COPY --from=go-base /bin/hp_agent /usr/libexec/headplane/agent
 COPY --from=go-base /var/lib/headplane /var/lib/headplane
@@ -64,7 +63,6 @@ RUN apk add --no-cache bash curl
 
 COPY --from=js-base /run/build /app/build
 COPY --from=js-base /run/drizzle /app/drizzle
-COPY --from=js-base /run/node_modules /app/node_modules
 
 COPY --from=go-base /bin/hp_agent /usr/libexec/headplane/agent
 COPY --from=go-base /var/lib/headplane /var/lib/headplane

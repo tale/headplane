@@ -20,8 +20,7 @@ export async function createDbClient(path: string) {
     throw new Error(`Could not create directory for database at ${realPath}`);
   }
 
-  // Turn the path into a URL with the file protocol
-  const db = drizzle(`file://${realPath}`);
+  const db = drizzle(realPath);
   migrate(db, {
     migrationsFolder: "./drizzle",
   });

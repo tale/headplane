@@ -1,7 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 
 import { eq, lt, sql } from "drizzle-orm";
-import { LibSQLDatabase } from "drizzle-orm/libsql/driver";
+import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 import { createCookie } from "react-router";
 import { ulid } from "ulidx";
 
@@ -59,7 +59,7 @@ interface CookiePayload {
 
 export interface AuthServiceOptions {
   secret: string;
-  db: LibSQLDatabase;
+  db: NodeSQLiteDatabase;
   cookie: {
     name: string;
     secure: boolean;

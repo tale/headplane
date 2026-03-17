@@ -1,10 +1,11 @@
-import { inArray } from "drizzle-orm";
-import { LibSQLDatabase } from "drizzle-orm/libsql/driver-core";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import EventEmitter from "node:events";
 import { access, constants, mkdir, open } from "node:fs/promises";
 import { getegid, geteuid } from "node:process";
 import { createInterface, Interface } from "node:readline";
+
+import { inArray } from "drizzle-orm";
+import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 
 import { HostInfo } from "~/types";
 import log from "~/utils/log";
@@ -15,7 +16,7 @@ import { hostInfo } from "./db/schema";
 export async function createHeadplaneAgent(
   config: NonNullable<HeadplaneConfig["integration"]>["agent"] | undefined,
   headscaleUrl: string,
-  db: LibSQLDatabase,
+  db: NodeSQLiteDatabase,
 ) {
   if (!config?.enabled) {
     return;

@@ -53,9 +53,8 @@ export default defineConfig(({ command, isSsrBuild }) => ({
     rolldownOptions:
       command === "build"
         ? {
-            // Exclude libsql from the server side since it's a native module
             // Exclude WASM from the client since it fetches from the server
-            external: isSsrBuild ? [/^@libsql\//] : [/\.wasm(\?url)?$/],
+            external: isSsrBuild ? [] : [/\.wasm(\?url)?$/],
             output: {
               manualChunks: undefined,
               inlineDynamicImports: isSsrBuild,
@@ -66,9 +65,6 @@ export default defineConfig(({ command, isSsrBuild }) => ({
   ssr: {
     target: "node",
     noExternal: command === "build" ? true : undefined,
-  },
-  optimizeDeps: {
-    include: ["@libsql/client"],
   },
   define: {
     __VERSION__: JSON.stringify(isNext ? `${version}-next` : version),
