@@ -1,31 +1,24 @@
 [tools]
 go = "1.25.1"
 pnpm = "10.4.0"
-node = "22.18"
+node = "24.2"
 
 [tasks.build-nixos-docs]
 alias = ["nixos-docs"]
 description = "Builds NixOS module documentation"
 run = [
-	'nix build .#headplane-nixos-docs',
-	'cp --dereference --force ./result ./docs/NixOS-options.md',
-	'sed -i "s;\[/nix.*;\[nix/options.nix\](https://github.com/tale/headplane/blob/main/nix/options.nix);" ./docs/NixOS-options.md'
+  'nix build .#headplane-nixos-docs',
+  'cp --dereference --force ./result ./docs/NixOS-options.md',
+  'sed -i "s;\[/nix.*;\[nix/options.nix\](https://github.com/tale/headplane/blob/main/nix/options.nix);" ./docs/NixOS-options.md',
 ]
 
 [tasks.generate-caddy-certs]
 alias = ["mkcert"]
 dir = "{{cwd}}/test/caddy/certs"
-run = [
-	"mkdir -p {{cwd}}/test/caddy/certs",
-	"mkcert -install",
-	"mkcert localhost"
-]
+run = ["mkdir -p {{cwd}}/test/caddy/certs", "mkcert -install", "mkcert localhost"]
 
 [tasks.ci]
 description = "Runs the CI pipeline"
 depends = ["build-go-wasm"]
 depends_post = ["build-go-agent"]
-run = [
-	"pnpm install",
-	"pnpm run build"
-]
+run = ["pnpm install", "pnpm run build"]
