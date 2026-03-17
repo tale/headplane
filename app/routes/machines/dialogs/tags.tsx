@@ -3,12 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
 import Link from "~/components/link";
-import Select from "~/components/Select";
-import TableList from "~/components/TableList";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import TableList from "~/components/table-list";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { Machine } from "~/types";
 import cn from "~/utils/cn";
 
@@ -27,11 +27,6 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
   const tagIsInvalid = useMemo(
     () => tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag),
     [tag, tags],
-  );
-
-  const validNodeTags = useMemo(
-    () => existingTags?.filter((nodeTag) => !tags.includes(nodeTag)) || [],
-    [tags],
   );
 
   const error = fetcher.data && !fetcher.data.success ? fetcher.data.error : null;
@@ -112,19 +107,16 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
         </TableList>
 
         <div className="mt-2 flex items-center gap-2">
-          <Select
-            allowsCustomValue
+          <Input
             aria-label="Add a tag"
             className="w-full"
-            inputValue={tag}
-            isInvalid={tag.length > 0 && tagIsInvalid}
-            onInputChange={setTag}
+            value={tag}
+            onChange={setTag}
+            invalid={tag.length > 0 && tagIsInvalid}
             placeholder="tag:example"
-          >
-            {validNodeTags.map((nodeTag) => (
-              <Select.Item key={nodeTag}>{nodeTag}</Select.Item>
-            ))}
-          </Select>
+            label="Tag"
+            labelHidden
+          />
           <Button
             className={cn("rounded-md p-1", tagIsInvalid && "opacity-50 cursor-not-allowed")}
             disabled={tagIsInvalid}

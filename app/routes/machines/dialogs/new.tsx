@@ -2,13 +2,13 @@ import { Computer, FileKey2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
-import Code from "~/components/Code";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
+import Code from "~/components/code";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
-import Select from "~/components/Select";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Select from "~/components/select";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
 
@@ -38,19 +38,23 @@ export default function NewMachine(data: NewMachineProps) {
           <input name="action_id" type="hidden" value="register" />
           <Input
             errorMessage="Machine key must be exactly 24 characters"
-            isInvalid={isMkeyInvalid}
-            isRequired
+            invalid={isMkeyInvalid}
+            required
             label="Machine Key"
             name="register_key"
             onChange={setMkey}
             placeholder="AbCd..."
-            validationBehavior="native"
           />
-          <Select isRequired label="Owner" name="user" placeholder="Select a user">
-            {data.users.map((user) => (
-              <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
-            ))}
-          </Select>
+          <Select
+            required
+            label="Owner"
+            name="user"
+            placeholder="Select a user"
+            items={data.users.map((user) => ({
+              value: user.id,
+              label: getUserDisplayName(user),
+            }))}
+          />
         </DialogPanel>
       </Dialog>
       <Menu disabled={data.isDisabled}>

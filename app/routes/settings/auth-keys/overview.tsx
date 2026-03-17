@@ -1,11 +1,11 @@
 import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import Code from "~/components/Code";
+import Code from "~/components/code";
 import Link from "~/components/link";
-import Notice from "~/components/Notice";
-import Select from "~/components/Select";
-import TableList from "~/components/TableList";
+import Notice from "~/components/notice";
+import Select from "~/components/select";
+import TableList from "~/components/table-list";
 import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
@@ -207,38 +207,36 @@ export default function Page({
       <div className="mt-4 flex items-center gap-4">
         <Select
           className="w-full"
-          defaultSelectedKey="__headplane_all"
-          isDisabled={isDisabled}
+          defaultValue="__headplane_all"
+          disabled={isDisabled}
           label="User"
-          onSelectionChange={(value) => setSelectedUser(value?.toString() ?? "")}
+          onValueChange={(value) => setSelectedUser(value ?? "")}
           placeholder="Select a user"
-        >
-          {[
-            <Select.Item key="__headplane_all">All</Select.Item>,
+          items={[
+            { value: "__headplane_all", label: "All" },
             ...keys
               .filter((k): k is { user: User; preAuthKeys: PreAuthKey[] } => k.user !== null)
-              .map(({ user }) => (
-                <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
-              )),
+              .map(({ user }) => ({ value: user.id, label: getUserDisplayName(user) })),
             ...(keys.some(({ user }) => user === null)
-              ? [<Select.Item key="__headplane_tag_only">Tag Only</Select.Item>]
+              ? [{ value: "__headplane_tag_only", label: "Tag Only" }]
               : []),
           ]}
-        </Select>
+        />
         <Select
           className="w-full"
-          defaultSelectedKey="active"
-          isDisabled={isDisabled}
+          defaultValue="active"
+          disabled={isDisabled}
           label="Status"
-          onSelectionChange={(value) => setStatus((value?.toString() ?? "active") as Status)}
+          onValueChange={(value) => setStatus((value ?? "active") as Status)}
           placeholder="Select a status"
-        >
-          <Select.Item key="all">All</Select.Item>
-          <Select.Item key="active">Active</Select.Item>
-          <Select.Item key="expired">Used/Expired</Select.Item>
-          <Select.Item key="reusable">Reusable</Select.Item>
-          <Select.Item key="ephemeral">Ephemeral</Select.Item>
-        </Select>
+          items={[
+            { value: "all", label: "All" },
+            { value: "active", label: "Active" },
+            { value: "expired", label: "Used/Expired" },
+            { value: "reusable", label: "Reusable" },
+            { value: "ephemeral", label: "Ephemeral" },
+          ]}
+        />
       </div>
       <TableList className="mt-4">
         {keys.flatMap(({ preAuthKeys }) => preAuthKeys).length === 0 ? (

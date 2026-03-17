@@ -1,9 +1,9 @@
 import { Form } from "react-router";
 
 import Button from "~/components/button";
-import Code from "~/components/Code";
+import Code from "~/components/code";
 import Link from "~/components/link";
-import TableList from "~/components/TableList";
+import TableList from "~/components/table-list";
 import cn from "~/utils/cn";
 
 import AddRecord from "../dialogs/add-record";

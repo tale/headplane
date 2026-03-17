@@ -1,7 +1,7 @@
 import { AlertCircle, CloudOff } from "lucide-react";
 
-import Card from "~/components/Card";
-import Code from "~/components/Code";
+import Card from "~/components/card";
+import Code from "~/components/code";
 import Link from "~/components/link";
 import type { OidcConnectorError } from "~/server/web/oidc-connector";
 

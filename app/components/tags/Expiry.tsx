@@ -1,5 +1,5 @@
-import Chip from "../Chip";
-import Tooltip from "../Tooltip";
+import Chip from "../chip";
+import Tooltip from "../tooltip";
 
 export interface ExpiryTagProps {
   variant: "expired" | "no-expiry";

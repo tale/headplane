@@ -1,12 +1,12 @@
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
-import Code from "~/components/Code";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Select from "~/components/Select";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Code from "~/components/code";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Select from "~/components/select";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface Props {
   records: { name: string; type: "A" | "AAAA" | string; value: string }[];
@@ -39,32 +39,33 @@ export default function AddRecord({ records }: Props) {
         <div className="mt-4 flex flex-col gap-2">
           <input type="hidden" name="action_id" value="add_record" />
           <Select
-            isRequired
+            required
             label="Record Type"
             name="record_type"
-            defaultInputValue={type}
-            onSelectionChange={(v) => {
-              if (v) setType(v.toString() as "A" | "AAAA");
+            defaultValue={type}
+            onValueChange={(v) => {
+              if (v) setType(v as "A" | "AAAA");
             }}
-          >
-            <Select.Item key="A">A</Select.Item>
-            <Select.Item key="AAAA">AAAA</Select.Item>
-          </Select>
+            items={[
+              { value: "A", label: "A" },
+              { value: "AAAA", label: "AAAA" },
+            ]}
+          />
           <Input
-            isRequired
+            required
             label="Domain"
             placeholder="test.example.com"
             name="record_name"
             onChange={setName}
-            isInvalid={isDuplicate}
+            invalid={isDuplicate}
           />
           <Input
-            isRequired
+            required
             label="IP Address"
             placeholder={type === "AAAA" ? "2001:db8::ff00:42:8329" : "101.101.101.101"}
             name="record_value"
             onChange={setIp}
-            isInvalid={isDuplicate}
+            invalid={isDuplicate}
           />
           {isDuplicate ? (
             <p className="text-sm opacity-50">

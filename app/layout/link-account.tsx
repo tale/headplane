@@ -1,7 +1,7 @@
 import { Form } from "react-router";
 
 import Button from "~/components/button";
-import Card from "~/components/Card";
+import Card from "~/components/card";
 import cn from "~/utils/cn";
 
 interface LinkAccountProps {

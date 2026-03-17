@@ -1,9 +1,9 @@
 import Button from "~/components/button";
-import Code from "~/components/Code";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Code from "~/components/code";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface Props {
   name: string;
@@ -20,11 +20,11 @@ export default function RenameTailnet({ name, isDisabled }: Props) {
       </p>
       <Input
         className="w-3/5 text-sm font-medium"
-        isReadOnly
+        readOnly
         label="Tailnet name"
         labelHidden
         onFocus={(event) => {
-          event.target.select();
+          (event.target as HTMLInputElement).select();
         }}
         value={name}
       />
@@ -39,7 +39,7 @@ export default function RenameTailnet({ name, isDisabled }: Props) {
           <input name="action_id" type="hidden" value="rename_tailnet" />
           <Input
             defaultValue={name}
-            isRequired
+            required
             label="Tailnet name"
             name="new_name"
             placeholder="ts.net"

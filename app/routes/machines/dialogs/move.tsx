@@ -1,9 +1,9 @@
-import { Key, useState } from "react";
+import { useState } from "react";
 
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Select from "~/components/Select";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Select from "~/components/select";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { Machine, User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
 
@@ -15,7 +15,7 @@ interface MoveProps {
 }
 
 export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
-  const [userId, setUserId] = useState<Key | null>(machine.user?.id ?? null);
+  const [userId, setUserId] = useState<string | null>(machine.user?.id ?? null);
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -26,19 +26,19 @@ export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
         <input name="node_id" type="hidden" value={machine.id} />
         <input name="user_id" type="hidden" value={userId?.toString()} />
         <Select
-          defaultSelectedKey={machine.user?.id}
-          isRequired
+          defaultValue={machine.user?.id}
+          required
           label="Owner"
           name="user"
-          onSelectionChange={(key) => {
+          onValueChange={(key) => {
             setUserId(key);
           }}
           placeholder="Select a user"
-        >
-          {users.map((user) => (
-            <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
-          ))}
-        </Select>
+          items={users.map((user) => ({
+            value: user.id,
+            label: getUserDisplayName(user),
+          }))}
+        />
       </DialogPanel>
     </Dialog>
   );

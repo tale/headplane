@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
-import Code from "~/components/Code";
-import Notice from "~/components/Notice";
+import Code from "~/components/code";
+import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
 import type { LoadContext } from "~/server";
 import { Capabilities } from "~/server/web/roles";

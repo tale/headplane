@@ -1,12 +1,12 @@
 import { GlobeLock, RouteOff } from "lucide-react";
 import { useFetcher } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/dialog";
 import Link from "~/components/link";
-import Switch from "~/components/Switch";
-import TableList from "~/components/TableList";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Switch from "~/components/switch";
+import TableList from "~/components/table-list";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import { PopulatedNode } from "~/utils/node-info";
 
 interface RoutesProps {
@@ -47,9 +47,9 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             <TableList.Item key={route}>
               <p>{route}</p>
               <Switch
-                defaultSelected={node.approvedRoutes.includes(route)}
+                defaultChecked={node.approvedRoutes.includes(route)}
                 label="Enabled"
-                onChange={(checked) => {
+                onCheckedChange={(checked) => {
                   const form = new FormData();
                   form.set("action_id", "update_routes");
                   form.set("node_id", node.id);
@@ -81,9 +81,9 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             <TableList.Item>
               <p>Use as exit node</p>
               <Switch
-                defaultSelected={node.customRouting.exitApproved}
+                defaultChecked={node.customRouting.exitApproved}
                 label="Enabled"
-                onChange={(checked) => {
+                onCheckedChange={(checked) => {
                   const form = new FormData();
                   form.set("action_id", "update_routes");
                   form.set("node_id", node.id);

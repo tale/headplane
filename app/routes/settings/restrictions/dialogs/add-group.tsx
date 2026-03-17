@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface AddGroupProps {
   groups: string[];
@@ -36,8 +36,8 @@ export default function AddGroup({ groups, isDisabled }: AddGroupProps) {
         <input name="action_id" type="hidden" value="add_group" />
         <Input
           description="The group to allow for OIDC authentication."
-          isInvalid={group.trim().length === 0 || isInvalid}
-          isRequired
+          invalid={group.trim().length === 0 || isInvalid}
+          required
           label="Group"
           name="group"
           onChange={setGroup}

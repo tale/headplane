@@ -1,6 +1,6 @@
 import { CircleUser } from "lucide-react";
 
-import StatusCircle from "~/components/StatusCircle";
+import StatusCircle from "~/components/status-circle";
 import cn from "~/utils/cn";
 
 import type { UnlinkedHeadscaleUser } from "../overview";

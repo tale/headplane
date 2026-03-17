@@ -4,8 +4,8 @@ import { isRouteErrorResponse } from "react-router";
 import { isApiError, isConnectionError } from "~/server/headscale/api/error-client";
 import cn from "~/utils/cn";
 
-import Card from "./Card";
-import Code from "./Code";
+import Card from "./card";
+import Code from "./code";
 import Link from "./link";
 
 export function getErrorMessage(error: Error | unknown): {

@@ -1,7 +1,7 @@
 import React from "react";
 
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import cn from "~/utils/cn";
 
 interface Props extends React.HTMLProps<HTMLDivElement> {

@@ -1,10 +1,10 @@
 import { ChevronDown, Copy } from "lucide-react";
 import { useMemo } from "react";
 
-import Chip from "~/components/Chip";
+import Chip from "~/components/chip";
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
-import StatusCircle from "~/components/StatusCircle";
+import StatusCircle from "~/components/status-circle";
 import { ExitNodeTag } from "~/components/tags/ExitNode";
 import { ExpiryTag } from "~/components/tags/Expiry";
 import { HeadplaneAgentTag } from "~/components/tags/HeadplaneAgent";

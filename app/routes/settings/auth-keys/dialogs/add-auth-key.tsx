@@ -1,17 +1,16 @@
-import type { Key } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
-import Code from "~/components/Code";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
+import Code from "~/components/code";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
 import Link from "~/components/link";
-import NumberInput from "~/components/NumberInput";
-import Select from "~/components/Select";
-import Switch from "~/components/Switch";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import NumberInput from "~/components/number-input";
+import Select from "~/components/select";
+import Switch from "~/components/switch";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { User } from "~/types";
 import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
@@ -49,7 +48,7 @@ export default function AddAuthKey({
   const [tagOnly, setTagOnly] = useState(false);
   const currentUser = selfServiceOnly ? findCurrentUser(users, currentSubject) : null;
   const availableUsers = selfServiceOnly && currentUser ? [currentUser] : users;
-  const [userId, setUserId] = useState<Key | null>(availableUsers[0]?.id);
+  const [userId, setUserId] = useState<string | null>(availableUsers[0]?.id);
   const [tags, setTags] = useState("");
 
   const createdKey = fetcher.data?.success ? fetcher.data.key : null;
@@ -138,9 +137,9 @@ export default function AddAuthKey({
                 <Text className="text-sm">Create a key owned by ACL tags instead of a user.</Text>
               </div>
               <Switch
-                defaultSelected={tagOnly}
+                defaultChecked={tagOnly}
                 label="Tag-only"
-                onChange={() => setTagOnly(!tagOnly)}
+                onCheckedChange={() => setTagOnly(!tagOnly)}
               />
             </div>
           )}
@@ -153,23 +152,23 @@ export default function AddAuthKey({
                   ? "You can only create keys for your own user."
                   : "Machines will belong to this user when they authenticate."
               }
-              isDisabled={selfServiceOnly}
-              isRequired
+              disabled={selfServiceOnly}
+              required
               label="User"
-              onSelectionChange={(value) => setUserId(value)}
+              onValueChange={(value) => setUserId(value)}
               placeholder="Select a user"
-              selectedKey={userId}
-            >
-              {availableUsers.map((user) => (
-                <Select.Item key={user.id}>{getUserDisplayName(user)}</Select.Item>
-              ))}
-            </Select>
+              value={userId}
+              items={availableUsers.map((user) => ({
+                value: user.id,
+                label: getUserDisplayName(user),
+              }))}
+            />
           )}
 
           <Input
             className="mb-2"
             description="Comma-separated tags (e.g. server, prod). The tag: prefix is added automatically."
-            isRequired={tagOnly}
+            required={tagOnly}
             label="ACL Tags"
             onChange={(value) => setTags(value)}
             placeholder="server, prod"
@@ -178,15 +177,10 @@ export default function AddAuthKey({
           <NumberInput
             defaultValue={90}
             description="Set this key to expire after a certain number of days."
-            formatOptions={{
-              style: "unit",
-              unit: "day",
-              unitDisplay: "short",
-            }}
-            isRequired
+            required
             label="Key Expiration"
-            maxValue={365_000}
-            minValue={1}
+            max={365_000}
+            min={1}
             name="expiry"
           />
           <div className="mt-6 flex items-center justify-between gap-2">
@@ -195,9 +189,9 @@ export default function AddAuthKey({
               <Text className="text-sm">Use this key to authenticate more than one device.</Text>
             </div>
             <Switch
-              defaultSelected={reusable}
+              defaultChecked={reusable}
               label="Reusable"
-              onChange={() => setReusable(!reusable)}
+              onCheckedChange={() => setReusable(!reusable)}
             />
           </div>
           <div className="mt-6 flex items-center justify-between gap-2">
@@ -212,9 +206,9 @@ export default function AddAuthKey({
               </Text>
             </div>
             <Switch
-              defaultSelected={ephemeral}
+              defaultChecked={ephemeral}
               label="Ephemeral"
-              onChange={() => setEphemeral(!ephemeral)}
+              onCheckedChange={() => setEphemeral(!ephemeral)}
             />
           </div>
         </DialogPanel>

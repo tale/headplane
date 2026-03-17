@@ -1,4 +1,4 @@
-import Attribute from "~/components/Attribute";
+import Attribute from "~/components/attribute";
 import type { PreAuthKey, User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
 

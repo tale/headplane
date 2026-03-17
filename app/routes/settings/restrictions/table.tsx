@@ -3,7 +3,7 @@ import React from "react";
 import { Form } from "react-router";
 
 import Button from "~/components/button";
-import TableList from "~/components/TableList";
+import TableList from "~/components/table-list";
 import cn from "~/utils/cn";
 
 interface RestrictionProps {

@@ -1,11 +1,11 @@
 import { ChevronDown, ChevronUp, Info, X } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import Code from "~/components/Code";
-import Input from "~/components/Input";
+import Code from "~/components/code";
+import Input from "~/components/input";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
-import Tooltip from "~/components/Tooltip";
+import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";

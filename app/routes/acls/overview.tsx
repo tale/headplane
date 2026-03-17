@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
 import Button from "~/components/button";
-import Card from "~/components/Card";
-import Code from "~/components/Code";
+import Card from "~/components/card";
+import Code from "~/components/code";
 import Link from "~/components/link";
-import Notice from "~/components/Notice";
+import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
-import Tabs from "~/components/Tabs";
+import Tabs from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
 import toast from "~/utils/toast";
 

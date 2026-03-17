@@ -1,6 +1,6 @@
 import { CircleUser } from "lucide-react";
 
-import StatusCircle from "~/components/StatusCircle";
+import StatusCircle from "~/components/status-circle";
 import type { Role } from "~/server/web/roles";
 import cn from "~/utils/cn";
 

@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { Machine } from "~/types";
 
 interface DeleteProps {

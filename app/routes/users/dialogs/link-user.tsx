@@ -1,7 +1,7 @@
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Notice from "~/components/Notice";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Notice from "~/components/notice";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import cn from "~/utils/cn";
 
 interface LinkUserProps {

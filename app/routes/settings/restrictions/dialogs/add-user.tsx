@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface AddUserProps {
   users: string[];
@@ -36,8 +36,8 @@ export default function AddUser({ users, isDisabled }: AddUserProps) {
         <input name="action_id" type="hidden" value="add_user" />
         <Input
           description="The user to allow for OIDC authentication."
-          isInvalid={user.trim().length === 0 || isInvalid}
-          isRequired
+          invalid={user.trim().length === 0 || isInvalid}
+          required
           label="User"
           name="user"
           onChange={setUser}

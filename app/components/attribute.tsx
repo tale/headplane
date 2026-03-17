@@ -3,7 +3,7 @@ import { Check, Copy, Info } from "lucide-react";
 import cn from "~/utils/cn";
 import toast from "~/utils/toast";
 
-import Tooltip from "./Tooltip";
+import Tooltip from "./tooltip";
 
 export interface AttributeProps {
   name: string;

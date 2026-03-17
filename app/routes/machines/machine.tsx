@@ -2,13 +2,13 @@ import { CheckCircle, CircleSlash, Info, UserCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { data } from "react-router";
 
-import Attribute from "~/components/Attribute";
+import Attribute from "~/components/attribute";
 import Button from "~/components/button";
-import Card from "~/components/Card";
-import Chip from "~/components/Chip";
+import Card from "~/components/card";
+import Chip from "~/components/chip";
 import Link from "~/components/link";
-import StatusCircle from "~/components/StatusCircle";
-import Tooltip from "~/components/Tooltip";
+import StatusCircle from "~/components/status-circle";
+import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";

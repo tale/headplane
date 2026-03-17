@@ -1,8 +1,8 @@
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface CreateUserProps {
   isOidc?: boolean;
@@ -23,39 +23,9 @@ export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
         </Text>
         <input name="action_id" type="hidden" value="create_user" />
         <div className="flex flex-col gap-4">
-          <Input
-            isRequired
-            label="Username"
-            name="username"
-            placeholder="my-new-user"
-            type="text"
-            validate={(value) => {
-              if (value.trim().length === 0) {
-                return "Username is required";
-              }
-
-              if (value.includes(" ")) {
-                return "Usernames cannot contain spaces";
-              }
-
-              return true;
-            }}
-            validationBehavior="native"
-          />
-          <Input
-            label="Display Name"
-            name="display_name"
-            placeholder="John Doe"
-            type="text"
-            validationBehavior="native"
-          />
-          <Input
-            label="Email"
-            name="email"
-            placeholder="name@example.com"
-            type="email"
-            validationBehavior="native"
-          />
+          <Input required label="Username" name="username" placeholder="my-new-user" type="text" />
+          <Input label="Display Name" name="display_name" placeholder="John Doe" type="text" />
+          <Input label="Email" name="email" placeholder="name@example.com" type="email" />
         </div>
       </DialogPanel>
     </Dialog>

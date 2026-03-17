@@ -1,7 +1,7 @@
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import { User } from "~/types";
 
 interface RenameProps {
@@ -24,7 +24,7 @@ export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
         <input name="user_id" type="hidden" value={user.id} />
         <Input
           defaultValue={user.name}
-          isRequired
+          required
           label="Username"
           name="new_name"
           placeholder="my-new-name"

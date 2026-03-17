@@ -1,10 +1,10 @@
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 
 interface AddDomainProps {
   domains: string[];
@@ -50,8 +50,8 @@ export default function AddDomain({ domains, isDisabled }: AddDomainProps) {
               ? `Matches users with <user>@${domain.trim()}`
               : "Enter a domain to match users with their email addresses."
           }
-          isInvalid={domain.trim().length === 0 || isInvalid}
-          isRequired
+          invalid={domain.trim().length === 0 || isInvalid}
+          required
           label="Domain"
           name="domain"
           onChange={setDomain}

@@ -1,9 +1,9 @@
 import { useState } from "react";
 
 import Button from "~/components/button";
-import Card from "~/components/Card";
-import Code from "~/components/Code";
-import Input from "~/components/Input";
+import Card from "~/components/card";
+import Code from "~/components/code";
+import Input from "~/components/input";
 
 interface UserPromptProps {
   hostname: string;

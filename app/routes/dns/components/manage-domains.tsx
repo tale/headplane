@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import { Form } from "react-router";
 
 import Button from "~/components/button";
-import Input from "~/components/Input";
-import TableList from "~/components/TableList";
+import Input from "~/components/input";
+import TableList from "~/components/table-list";
 import cn from "~/utils/cn";
 
 interface Props {
@@ -103,7 +103,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                     "border-none font-mono p-0 text-sm",
                     "rounded-none focus:ring-0 w-full ml-1",
                   )}
-                  isRequired
+                  required
                   label="Search Domain"
                   labelHidden
                   name="domain"

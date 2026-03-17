@@ -1,9 +1,9 @@
-import Dialog, { DialogPanel } from "~/components/Dialog";
+import Dialog, { DialogPanel } from "~/components/dialog";
 import Link from "~/components/link";
-import Notice from "~/components/Notice";
-import RadioGroup from "~/components/RadioGroup";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Notice from "~/components/notice";
+import RadioGroup from "~/components/radio-group";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import { Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
@@ -39,13 +39,7 @@ export default function ReassignUser({
           <>
             <input name="action_id" type="hidden" value="reassign_user" />
             <input name="user_id" type="hidden" value={userId} />
-            <RadioGroup
-              className="gap-4"
-              defaultValue={role}
-              isRequired
-              label="Role"
-              name="new_role"
-            >
+            <RadioGroup className="gap-4" defaultValue={role} label="Role" name="new_role">
               {Object.keys(Roles)
                 .filter((r) => r !== "owner")
                 .map((r) => {

@@ -1,7 +1,7 @@
 import { data } from "react-router";
 
 import Link from "~/components/link";
-import Notice from "~/components/Notice";
+import Notice from "~/components/notice";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/overview";

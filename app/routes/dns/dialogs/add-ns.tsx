@@ -2,13 +2,13 @@ import { Split } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
-import Chip from "~/components/Chip";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Switch from "~/components/Switch";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
-import Tooltip from "~/components/Tooltip";
+import Chip from "~/components/chip";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Switch from "~/components/switch";
+import Text from "~/components/text";
+import Title from "~/components/title";
+import Tooltip from "~/components/tooltip";
 import cn from "~/utils/cn";
 
 interface Props {
@@ -42,8 +42,8 @@ export default function AddNameserver({ nameservers }: Props) {
         <input name="action_id" type="hidden" value="add_ns" />
         <Input
           description="Use this IPv4 or IPv6 address to resolve names."
-          isInvalid={isInvalid}
-          isRequired
+          invalid={isInvalid}
+          required
           label="Nameserver"
           name="ns"
           onChange={setNs}
@@ -67,13 +67,13 @@ export default function AddNameserver({ nameservers }: Props) {
             </div>
             <Text className="text-sm">This nameserver will only be used for some domains.</Text>
           </div>
-          <Switch label="Split DNS" onChange={setSplit} />
+          <Switch label="Split DNS" onCheckedChange={setSplit} />
         </div>
         {split ? (
           <>
             <Text className="mt-8 font-semibold">Domain</Text>
             <Input
-              isRequired={split === true}
+              required={split === true}
               label="Domain"
               name="split_name"
               onChange={setDomain}

@@ -3,9 +3,9 @@ import { Form, useSubmit } from "react-router";
 
 import Button from "~/components/button";
 import Link from "~/components/link";
-import Switch from "~/components/Switch";
-import TableList from "~/components/TableList";
-import Tooltip from "~/components/Tooltip";
+import Switch from "~/components/switch";
+import TableList from "~/components/table-list";
+import Tooltip from "~/components/tooltip";
 import cn from "~/utils/cn";
 
 import AddNS from "../dialogs/add-ns";
@@ -81,10 +81,10 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
               <p>Override DNS servers</p>
               <Switch
                 className="h-[15px] w-[23px] p-0.5"
-                defaultSelected={overrideLocalDns}
+                defaultChecked={overrideLocalDns}
                 label="Override local DNS settings"
                 name="override_dns"
-                onChange={(v) => {
+                onCheckedChange={(v) => {
                   submit(
                     {
                       action_id: "override_dns",

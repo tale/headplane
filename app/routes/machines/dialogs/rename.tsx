@@ -1,10 +1,10 @@
 import { useState } from "react";
 
-import Code from "~/components/Code";
-import Dialog, { DialogPanel } from "~/components/Dialog";
-import Input from "~/components/Input";
-import Text from "~/components/Text";
-import Title from "~/components/Title";
+import Code from "~/components/code";
+import Dialog, { DialogPanel } from "~/components/dialog";
+import Input from "~/components/input";
+import Text from "~/components/text";
+import Title from "~/components/title";
 import type { Machine } from "~/types";
 
 interface RenameProps {
@@ -29,41 +29,11 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
         <input name="node_id" type="hidden" value={machine.id} />
         <Input
           defaultValue={machine.givenName}
-          isRequired
+          required
           label="Machine name"
           name="name"
           onChange={setName}
           placeholder="Machine name"
-          validate={(value) => {
-            if (value.length === 0) {
-              return "Cannot be empty";
-            }
-
-            // DNS hostname validation
-            if (value.toLowerCase() !== value) {
-              return "Cannot contain uppercase letters";
-            }
-
-            if (value.length > 63) {
-              return "DNS hostnames cannot be 64+ characters";
-            }
-
-            // Test for invalid characters
-            if (!/^[a-z0-9-]+$/.test(value)) {
-              return "Cannot contain special characters";
-            }
-
-            // Test for leading/trailing hyphens
-            if (value.startsWith("-") || value.endsWith("-")) {
-              return "Cannot start or end with a hyphen";
-            }
-
-            // Test for consecutive hyphens
-            if (value.includes("--")) {
-              return "Cannot contain consecutive hyphens";
-            }
-          }}
-          validationBehavior="native"
         />
         {magic ? (
           name.length > 0 && name !== machine.givenName ? (

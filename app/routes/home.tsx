@@ -7,7 +7,7 @@ import linuxSvg from "~/assets/linux.svg";
 import macosSvg from "~/assets/macos.svg";
 import windowsSvg from "~/assets/windows.svg";
 import Button from "~/components/button";
-import Card from "~/components/Card";
+import Card from "~/components/card";
 import Link from "~/components/link";
 import LinkAccount from "~/layout/link-account";
 import { usersResource } from "~/server/headscale/live-store";
