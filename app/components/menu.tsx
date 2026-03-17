@@ -1,4 +1,3 @@
-// oxlint-disable react/no-multi-comp
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import type { ComponentProps, JSX, ReactNode } from "react";
 

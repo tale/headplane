@@ -1,6 +1,7 @@
 import { data, redirect } from "react-router";
 
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { nodesResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/machine";
@@ -43,6 +44,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
     }
 
     const node = await api.registerNode(user, registrationKey);
+    await context.hsLive.refresh(nodesResource, api);
     return redirect(`/machines/${node.id}`);
   }
 
@@ -78,16 +80,19 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
 
       const name = String(formData.get("name"));
       await api.renameNode(nodeId, name);
+      await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine renamed" };
     }
 
     case "delete": {
       await api.deleteNode(nodeId);
+      await context.hsLive.refresh(nodesResource, api);
       return redirect("/machines");
     }
 
     case "expire": {
       await api.expireNode(nodeId);
+      await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine expired" };
     }
 
@@ -105,6 +110,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
           tags.map((tag) => tag.trim()).filter((tag) => tag !== ""),
         );
 
+        await context.hsLive.refresh(nodesResource, api);
         return { success: true as const, message: "Tags updated" };
       } catch (error) {
         if (isDataWithApiError(error) && error.data.statusCode === 400) {
@@ -169,6 +175,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.approveNodeRoutes(nodeId, newApproved);
+      await context.hsLive.refresh(nodesResource, api);
       return { message: "Routes updated" };
     }
 
@@ -181,6 +188,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.setNodeUser(nodeId, user);
+      await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine reassigned" };
     }
 

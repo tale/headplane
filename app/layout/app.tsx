@@ -1,15 +1,34 @@
-import { Outlet, redirect } from "react-router";
+import { Outlet, redirect, type ShouldRevalidateFunction } from "react-router";
 
 import { ErrorBanner } from "~/components/error-banner";
 import StatusBanner from "~/components/status-banner";
 import { pruneEphemeralNodes } from "~/server/db/pruner";
 import { isDataUnauthorizedError } from "~/server/headscale/api/error-client";
+import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import log from "~/utils/log";
 
 import type { Route } from "./+types/app";
 import Footer from "./footer";
 import Header from "./header";
+
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  currentUrl,
+  nextUrl,
+  formAction,
+  defaultShouldRevalidate,
+}) => {
+  if (formAction) {
+    return defaultShouldRevalidate;
+  }
+
+  // Allow programmatic revalidations (e.g. SSE-triggered) where the URL hasn't changed
+  if (currentUrl.href === nextUrl.href) {
+    return defaultShouldRevalidate;
+  }
+
+  return false;
+};
 
 export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
   try {
@@ -52,8 +71,8 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
       // stale link so the user gets prompted to re-link.
       if (principal.kind === "oidc" && principal.user.headscaleUserId) {
         try {
-          const hsUsers = await api.getUsers();
-          if (!hsUsers.some((u) => u.id === principal.user.headscaleUserId)) {
+          const usersSnap = await context.hsLive.get(usersResource, api);
+          if (!usersSnap.data.some((u) => u.id === principal.user.headscaleUserId)) {
             await context.auth.unlinkHeadscaleUser(principal.user.id);
           }
         } catch {

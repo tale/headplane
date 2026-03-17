@@ -42,7 +42,7 @@ export default function Link(props: LinkProps): JSX.Element {
   }
 
   return (
-    <RouterLink to={props.to} className={props.className}>
+    <RouterLink to={props.to} prefetch="intent" className={props.className}>
       {props.children}
     </RouterLink>
   );

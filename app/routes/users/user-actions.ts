@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { usersResource } from "~/server/headscale/live-store";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
@@ -38,6 +39,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.createUser(name, email, displayName);
+      await context.hsLive.refresh(usersResource, api);
       return { message: "User created successfully" };
     }
     case "delete_user": {
@@ -49,6 +51,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.deleteUser(userId);
+      await context.hsLive.refresh(usersResource, api);
       return { message: "User deleted successfully" };
     }
     case "rename_user": {
@@ -72,6 +75,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.renameUser(userId, newName);
+      await context.hsLive.refresh(usersResource, api);
       return { message: "User renamed successfully" };
     }
     case "reassign_user": {

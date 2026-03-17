@@ -9,6 +9,7 @@ import Chip from "~/components/Chip";
 import Link from "~/components/link";
 import StatusCircle from "~/components/StatusCircle";
 import Tooltip from "~/components/Tooltip";
+import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { mapNodes, sortNodeTags } from "~/utils/node-info";
@@ -40,7 +41,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const api = context.hsApi.getRuntimeClient(
     context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
   );
-  const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
+  const [nodesSnap, usersSnap] = await Promise.all([
+    context.hsLive.get(nodesResource, api),
+    context.hsLive.get(usersResource, api),
+  ]);
+  const nodes = nodesSnap.data;
+  const users = usersSnap.data;
   const node = nodes.find((node) => node.id === params.id);
 
   const lookup = await context.agents?.lookup([node.nodeKey]);

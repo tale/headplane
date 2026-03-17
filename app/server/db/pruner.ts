@@ -1,5 +1,6 @@
 import { eq, isNotNull } from "drizzle-orm";
 
+import { nodesResource } from "~/server/headscale/live-store";
 import log from "~/utils/log";
 
 import type { Route } from "../../layout/+types/app";
@@ -45,4 +46,8 @@ export async function pruneEphemeralNodes({ context, request }: Route.LoaderArgs
   });
 
   await Promise.all(promises.map((p) => p()));
+
+  if (toPrune.length > 0) {
+    await context.hsLive.refresh(nodesResource, api);
+  }
 }

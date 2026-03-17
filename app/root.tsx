@@ -1,9 +1,8 @@
 import type { LinksFunction, MetaFunction } from "react-router";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "@fontsource-variable/inter";
 import { ExternalScripts } from "remix-utils/external-scripts";
 
-import ProgressBar from "~/components/ProgressBar";
 import ToastProvider from "~/components/ToastProvider";
 import { LiveDataProvider } from "~/utils/live-data";
 import { useToastQueue } from "~/utils/toast";
@@ -60,12 +59,5 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
 }
 
 export default function App() {
-  const nav = useNavigation();
-
-  return (
-    <>
-      <ProgressBar isVisible={nav.state === "loading"} />
-      <Outlet />
-    </>
-  );
+  return <Outlet />;
 }

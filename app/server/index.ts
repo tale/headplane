@@ -10,6 +10,7 @@ import { loadConfig } from "./config/load";
 import { createDbClient } from "./db/client.server";
 import { createHeadscaleInterface } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
+import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
 import { createHeadplaneAgent } from "./hp-agent";
 import { createAuthService } from "./web/auth";
 
@@ -53,8 +54,11 @@ declare module "react-router" {
   interface AppLoadContext extends LoadContext {}
 }
 
+const hsLive = createLiveStore([nodesResource, usersResource]);
+
 const appLoadContext = {
   config,
+  hsLive,
   hs: await loadHeadscaleConfig(
     config.headscale.config_path,
     config.headscale.config_strict,

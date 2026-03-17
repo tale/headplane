@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import PageError from "~/components/page-error";
+import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities, Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
@@ -55,7 +56,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   try {
     const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
     const api = context.hsApi.getRuntimeClient(apiKey);
-    [nodes, apiUsers] = await Promise.all([api.getNodes(), api.getUsers()]);
+    const [nodesSnap, usersSnap] = await Promise.all([
+      context.hsLive.get(nodesResource, api),
+      context.hsLive.get(usersResource, api),
+    ]);
+    nodes = nodesSnap.data;
+    apiUsers = usersSnap.data;
   } catch (error) {
     log.warn("api", "Failed to fetch Headscale API data: %s", String(error));
     apiError =

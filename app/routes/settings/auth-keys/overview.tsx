@@ -6,6 +6,7 @@ import Link from "~/components/link";
 import Notice from "~/components/Notice";
 import Select from "~/components/Select";
 import TableList from "~/components/TableList";
+import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import type { User } from "~/types/User";
@@ -22,7 +23,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
   const api = context.hsApi.getRuntimeClient(apiKey);
 
-  const users = await api.getUsers();
+  const usersSnap = await context.hsLive.get(usersResource, api);
+  const users = usersSnap.data;
 
   let keys: { user: User | null; preAuthKeys: PreAuthKey[] }[];
   let missing: { user: User; error: unknown }[] = [];

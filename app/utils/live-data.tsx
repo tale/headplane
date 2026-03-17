@@ -1,67 +1,142 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useRevalidator } from 'react-router';
-import { useInterval } from 'usehooks-ts';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { useRevalidator } from "react-router";
 
-const LiveDataPausedContext = createContext({
-	paused: false,
-	setPaused: (_: boolean) => {},
+const LiveDataContext = createContext({
+  paused: false,
+  setPaused: (_: boolean) => {},
 });
 
 interface LiveDataProps {
-	children: React.ReactNode;
+  children: React.ReactNode;
+}
+
+type Versions = Record<string, string>;
+interface ChangedEvent {
+  resource: string;
+  version: string;
 }
 
 export function LiveDataProvider({ children }: LiveDataProps) {
-	const [paused, setPaused] = useState(false);
-	const revalidator = useRevalidator();
+  const revalidator = useRevalidator();
+  const [paused, setPaused] = useState(false);
 
-	// Document is marked as optional here because it's not available in SSR
-	// The optional chain means if document is not defined, visible is false
-	const [visible, setVisible] = useState(
-		() =>
-			typeof document !== 'undefined' && document.visibilityState === 'visible',
-	);
+  // This ref is a bit sus but it's needed to ensure the SSE handshake does
+  // not re-establish on every revalidation. The SSE stream is always stable
+  const revalidatorRef = useRef(revalidator);
+  revalidatorRef.current = revalidator;
 
-	// Function to revalidate safely
-	const revalidateIfIdle = () => {
-		if (revalidator.state === 'idle') {
-			revalidator.revalidate();
-		}
-	};
+  const versionsRef = useRef<Versions>({});
+  const isTabDirtyRef = useRef(false);
 
-	useEffect(() => {
-		const handleVisibilityChange = () => {
-			setVisible(document.visibilityState === 'visible');
-			if (!paused && document.visibilityState === 'visible') {
-				revalidateIfIdle();
-			}
-		};
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const backoffRef = useRef(1000);
 
-		window.addEventListener('online', revalidateIfIdle);
-		document.addEventListener('focus', revalidateIfIdle);
-		document.addEventListener('visibilitychange', handleVisibilityChange);
+  const revalidateIfIdle = useCallback(() => {
+    if (revalidatorRef.current.state === "idle") {
+      revalidatorRef.current.revalidate();
+    }
+  }, []);
 
-		return () => {
-			window.removeEventListener('online', revalidateIfIdle);
-			document.removeEventListener('focus', revalidateIfIdle);
-			document.removeEventListener('visibilitychange', handleVisibilityChange);
-		};
-	}, [paused, revalidator]);
+  // SSE connection
+  useEffect(() => {
+    if (paused) {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
 
-	// Poll only when visible and not paused
-	useInterval(revalidateIfIdle, visible && !paused ? 3000 : null);
+      return;
+    }
 
-	return (
-		<LiveDataPausedContext.Provider value={{ paused, setPaused }}>
-			{children}
-		</LiveDataPausedContext.Provider>
-	);
+    function connect() {
+      const sse = new EventSource(`${__PREFIX__}/events/live`);
+      eventSourceRef.current = sse;
+
+      sse.addEventListener("hello", (e) => {
+        backoffRef.current = 1000;
+        try {
+          versionsRef.current = JSON.parse(e.data) as Versions;
+        } catch {}
+      });
+
+      sse.addEventListener("changed", (e) => {
+        try {
+          const data = JSON.parse(e.data) as ChangedEvent;
+          const current = versionsRef.current[data.resource];
+          if (current !== undefined && data.version === current) {
+            return;
+          }
+
+          versionsRef.current = {
+            ...versionsRef.current,
+            [data.resource]: data.version,
+          };
+
+          if (document.visibilityState !== "visible") {
+            isTabDirtyRef.current = true;
+            return;
+          }
+
+          revalidateIfIdle();
+        } catch {}
+      });
+
+      sse.onerror = () => {
+        sse.close();
+        eventSourceRef.current = null;
+        const delay = backoffRef.current;
+        backoffRef.current = Math.min(delay * 2, 30_000);
+        reconnectTimer.current = setTimeout(connect, delay);
+      };
+    }
+
+    connect();
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
+    };
+  }, [paused, revalidateIfIdle]);
+
+  // If the tab becomes visible and is marked dirty, revalidate
+  useEffect(() => {
+    const visibilityCallback = () => {
+      if (document.visibilityState === "visible" && isTabDirtyRef.current) {
+        isTabDirtyRef.current = false;
+        revalidateIfIdle();
+      }
+    };
+
+    document.addEventListener("visibilitychange", visibilityCallback);
+    return () => {
+      document.removeEventListener("visibilitychange", visibilityCallback);
+    };
+  }, [revalidateIfIdle]);
+
+  // Force a revalidation when the app comes back online
+  useEffect(() => {
+    window.addEventListener("online", revalidateIfIdle);
+    return () => {
+      window.removeEventListener("online", revalidateIfIdle);
+    };
+  }, [revalidateIfIdle]);
+
+  return (
+    <LiveDataContext.Provider value={{ paused, setPaused }}>{children}</LiveDataContext.Provider>
+  );
 }
 
 export function useLiveData() {
-	const context = useContext(LiveDataPausedContext);
-	return {
-		pause: () => context.setPaused(true),
-		resume: () => context.setPaused(false),
-	};
+  const context = useContext(LiveDataContext);
+  return {
+    pause: () => context.setPaused(true),
+    resume: () => context.setPaused(false),
+  };
 }

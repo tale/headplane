@@ -6,6 +6,7 @@ import Input from "~/components/Input";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import Tooltip from "~/components/Tooltip";
+import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import { mapNodes, sortNodeTags } from "~/utils/node-info";
@@ -29,7 +30,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const api = context.hsApi.getRuntimeClient(
     context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
   );
-  const [nodes, users] = await Promise.all([api.getNodes(), api.getUsers()]);
+  const [nodesSnap, usersSnap] = await Promise.all([
+    context.hsLive.get(nodesResource, api),
+    context.hsLive.get(usersResource, api),
+  ]);
+  const nodes = nodesSnap.data;
+  const users = usersSnap.data;
 
   let magic: string | undefined;
   if (context.hs.readable()) {

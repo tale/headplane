@@ -10,6 +10,7 @@ import Button from "~/components/button";
 import Card from "~/components/Card";
 import Link from "~/components/link";
 import LinkAccount from "~/layout/link-account";
+import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import toast from "~/utils/toast";
@@ -33,10 +34,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
     let headscaleUsers: { id: string; name: string }[] = [];
     try {
-      const [apiUsers, claimed] = await Promise.all([
-        api.getUsers(),
+      const [usersSnap, claimed] = await Promise.all([
+        context.hsLive.get(usersResource, api),
         context.auth.claimedHeadscaleUserIds(),
       ]);
+
+      const apiUsers = usersSnap.data;
       headscaleUsers = apiUsers
         .filter((u) => !claimed.has(u.id))
         .map((u) => ({ id: u.id, name: getUserDisplayName(u) }));
@@ -68,8 +71,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let linkedUserName: string | undefined;
   if (principal.kind === "oidc" && principal.user.headscaleUserId) {
     try {
-      const users = await api.getUsers();
-      const hsUser = users.find((u) => u.id === principal.user.headscaleUserId);
+      const usersSnap = await context.hsLive.get(usersResource, api);
+      const hsUser = usersSnap.data.find((u) => u.id === principal.user.headscaleUserId);
       linkedUserName = hsUser?.name;
     } catch {
       // API unavailable, skip linked user resolution

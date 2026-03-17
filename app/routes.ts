@@ -6,6 +6,7 @@ export default [
 
   // API Routes
   ...prefix("/api", [route("/info", "routes/util/info.ts")]),
+  ...prefix("/events", [route("/live", "routes/util/live.ts")]),
 
   // Authentication Routes
   route("/login", "routes/auth/login/page.tsx"),
