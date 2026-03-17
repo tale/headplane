@@ -54,7 +54,7 @@ rec {
         '';
         packages = [
           pkgs.go
-          pkgs.nodejs-slim_22
+          pkgs.nodejs-slim_24
           pkgs.pnpm_10
           pkgs.typescript-language-server
           pkgs.mise

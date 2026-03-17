@@ -25,7 +25,7 @@ RUN chmod +x /bin/hp_healthcheck
 # Folder needs to exist for later stages
 RUN mkdir -p /var/lib/headplane/agent
 
-FROM --platform=$BUILDPLATFORM node:22.16-slim AS js-base
+FROM --platform=$BUILDPLATFORM node:24-slim AS js-base
 WORKDIR /run
 
 RUN corepack enable
@@ -40,7 +40,7 @@ COPY . .
 ARG HEADPLANE_VERSION
 RUN HEADPLANE_VERSION=$HEADPLANE_VERSION ./build.sh --app
 
-FROM gcr.io/distroless/nodejs22-debian12:latest AS final
+FROM gcr.io/distroless/nodejs24-debian13:latest AS final
 COPY --from=js-base /run/build /app/build
 COPY --from=js-base /run/drizzle /app/drizzle
 COPY --from=js-base /run/node_modules /app/node_modules
@@ -59,7 +59,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 WORKDIR /app
 CMD [ "/app/build/server/index.js" ]
 
-FROM node:22-alpine AS debug-shell
+FROM node:24-alpine AS debug-shell
 RUN apk add --no-cache bash curl
 
 COPY --from=js-base /run/build /app/build
