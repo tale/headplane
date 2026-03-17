@@ -1,5 +1,11 @@
 name: Automated
 on:
+  push:
+    paths:
+      - "pnpm-lock.yaml"
+      - "package.json"
+    branches:
+      - "main"
   schedule:
     - cron: "0 8 * * 0"
   workflow_dispatch:
@@ -9,13 +15,14 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  actions: write # Allow canceling in-progress runs
-  contents: write # Read/write access to the repository
-  pull-requests: write # Allow creating pull requests
+  actions: write
+  contents: write
+  pull-requests: write
 
 jobs:
-  flake-inputs:
-    name: flake-inputs
+  nix-pnpm-hash:
+    name: Update Nix PNPM Hash
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -26,7 +33,57 @@ jobs:
         with:
           determinate: true
 
-      - uses: DeterminateSystems/update-flake-lock@main
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Compute correct PNPM dependencies hash
+        id: hash
+        run: |
+          CURRENT_HASH=$(grep -oP "hash = \"\K[^\"]*" nix/package.nix)
+          sed -i "s|hash = \"$CURRENT_HASH\"|hash = \"\"|" nix/package.nix
+
+          NEW_HASH=$(nix build .#headplane.pnpmDeps --no-link 2>&1 \
+            | grep 'got:' \
+            | awk '{print $2}')
+
+          if [ -z "$NEW_HASH" ]; then
+            echo "Hash is already up to date"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "new_hash=$NEW_HASH" >> "$GITHUB_OUTPUT"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Update hash in package.nix
+        if: steps.hash.outputs.changed == 'true'
+        run: |
+          sed -i "s|hash = \"\"|hash = \"${{ steps.hash.outputs.new_hash }}\"|" nix/package.nix
+
+      - name: Commit and push
+        if: steps.hash.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add nix/package.nix
+          git commit -m "chore: update nix pnpm deps hash"
+          git push
+
+  flake-inputs:
+    name: Update Flake Inputs
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+
+      - name: Update flake.lock
+        uses: DeterminateSystems/update-flake-lock@main
         with:
           pr-title: "chore: update flake.lock"
           pr-labels: |

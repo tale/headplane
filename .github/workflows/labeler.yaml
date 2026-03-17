@@ -9,9 +9,10 @@ permissions:
 
 jobs:
   label:
-    name: Label PR
+    name: Label Pull Request
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/labeler@v6
+      - name: Apply labels based on changed files
+        uses: actions/labeler@v6
         with:
           sync-labels: true

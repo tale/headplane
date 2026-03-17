@@ -9,15 +9,15 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  actions: write # Allow canceling in-progress runs
-  contents: read # Read access to the repository
-  packages: write # Write access to the container registry
-  id-token: write # For the attest action to push
-  attestations: write # For the attest action to push
+  actions: write
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
 
 jobs:
   docker:
-    name: Docker Release
+    name: Docker Release (${{ matrix.target }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,12 +26,11 @@ jobs:
             tag_suffix: ""
           - target: debug-shell
             tag_suffix: "-shell"
-
     steps:
       - name: Check out the repo
         uses: actions/checkout@v6
 
-      - name: Docker Metadata
+      - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -55,9 +54,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-        uses: docker/build-push-action@v6
+      - name: Build and push
         id: push
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
@@ -71,9 +70,9 @@ jobs:
           build-args: |
             IMAGE_TAG=ghcr.io/${{ github.repository }}:${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
             HEADPLANE_VERSION=${{ fromJSON(steps.meta.outputs.json).labels['org.opencontainers.image.version'] }}
-      - name: Attestation Provenance for ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+
+      - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
-        id: attest
         with:
           subject-name: ghcr.io/${{ github.repository }}
           subject-digest: ${{ steps.push.outputs.digest }}

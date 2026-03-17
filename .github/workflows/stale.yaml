@@ -10,10 +10,11 @@ permissions:
 
 jobs:
   stale:
-    name: Close stale issues
+    name: Close Stale Issues
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@v10
+      - name: Mark and close stale issues
+        uses: actions/stale@v10
         with:
           stale-issue-label: Stale
           only-labels: "Needs Info"

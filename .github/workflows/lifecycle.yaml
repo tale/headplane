@@ -9,11 +9,12 @@ permissions:
 
 jobs:
   beta:
-    name: Beta Release
+    name: Beta Release Lifecycle
     if: contains(github.ref_name, '-')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - name: Check out the repo
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -48,7 +49,7 @@ jobs:
           done
 
   stable:
-    name: Stable Release
+    name: Stable Release Lifecycle
     if: ${{ !contains(github.ref_name, '-') }}
     runs-on: ubuntu-latest
     steps:

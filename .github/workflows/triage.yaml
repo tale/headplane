@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   remove-triage:
-    name: Remove Needs Triage
+    name: Remove Needs Triage Label
     runs-on: ubuntu-latest
     steps:
       - name: Remove Needs Triage label
