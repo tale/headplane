@@ -4,7 +4,6 @@ import log from "~/utils/log";
 
 import type { HeadplaneConfig } from "../config/config-schema";
 import type { RuntimeApiClient } from "../headscale/api/endpoints";
-
 import { isDataUnauthorizedError } from "../headscale/api/error-client";
 
 export type OidcConfig = NonNullable<HeadplaneConfig["oidc"]>;
@@ -228,7 +227,7 @@ async function discoveryCoalesce(
       }
     }
   } catch {
-    log.warn("oidc", "Failed to reach OIDC provider for discovery, will retry on next request");
+    log.warn("auth", "Failed to reach OIDC provider for discovery, will retry on next request");
     discoveryFailed = true;
     metadata = {
       issuer: config.issuer,

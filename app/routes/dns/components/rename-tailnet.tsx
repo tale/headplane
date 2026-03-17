@@ -1,4 +1,4 @@
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Code from "~/components/Code";
 import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";

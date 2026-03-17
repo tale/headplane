@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";
 import Text from "~/components/Text";

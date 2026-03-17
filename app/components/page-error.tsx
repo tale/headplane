@@ -4,7 +4,7 @@ import { isRouteErrorResponse, useRevalidator } from "react-router";
 import { isConnectionError } from "~/server/headscale/api/error-client";
 import cn from "~/utils/cn";
 
-import Button from "./Button";
+import Button from "./button";
 import { ErrorBanner } from "./error-banner";
 
 interface PageErrorProps {

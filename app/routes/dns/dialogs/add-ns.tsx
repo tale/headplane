@@ -1,7 +1,7 @@
 import { Split } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import Button from "~/components/Button";
+import Button from "~/components/button";
 import Chip from "~/components/Chip";
 import Dialog, { DialogPanel } from "~/components/Dialog";
 import Input from "~/components/Input";

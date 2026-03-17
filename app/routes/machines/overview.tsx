@@ -46,7 +46,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
   const populatedNodes = mapNodes(nodes, stats);
-  const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0-beta.1");
+  const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
 
   return {
     agent: context.agents?.agentID(),

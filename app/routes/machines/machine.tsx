@@ -48,11 +48,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const nodes = nodesSnap.data;
   const users = usersSnap.data;
   const node = nodes.find((node) => node.id === params.id);
+  if (node == null) {
+    throw data(null, { status: 404 });
+  }
 
   const lookup = await context.agents?.lookup([node.nodeKey]);
   const [enhancedNode] = mapNodes([node], lookup);
   const tags = [...node.tags].toSorted();
-  const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0-beta.1");
+  const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
 
   return {
     agent: context.agents?.agentID(),
