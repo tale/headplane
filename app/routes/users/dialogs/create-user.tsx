@@ -12,7 +12,7 @@ interface CreateUserProps {
 export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
   return (
     <Dialog>
-      <Button isDisabled={isDisabled}>Add user</Button>
+      <Button disabled={isDisabled}>Add user</Button>
       <DialogPanel>
         <Title>Create a Headscale user</Title>
         <Text className="mb-6">

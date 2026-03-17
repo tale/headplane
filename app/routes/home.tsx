@@ -164,7 +164,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <Button
               className="h-8 p-1 px-2"
               variant="ghost"
-              onPress={async () => {
+              onClick={async () => {
                 await navigator.clipboard.writeText(
                   "curl -fsSL https://tailscale.com/install.sh | sh",
                 );

@@ -1,14 +1,7 @@
-import { ToastQueue } from '@react-stately/toast';
-import React from 'react';
+import { Toast } from "@base-ui/react/toast";
 
-const toastQueue = new ToastQueue<React.ReactNode>({
-	maxVisibleToasts: 7,
-});
+export const toastManager = Toast.createToastManager();
 
-export function useToastQueue() {
-	return toastQueue;
-}
-
-export default function toast(content: React.ReactNode, duration = 3000) {
-	return toastQueue.add(content, { timeout: duration });
+export default function toast(content: string, duration = 3000) {
+  return toastManager.add({ description: content, timeout: duration });
 }

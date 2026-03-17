@@ -102,7 +102,7 @@ export default function MachineMenu({
         isFullButton ? (
           <Button
             className="flex items-center gap-x-2"
-            onPress={() => {
+            onClick={() => {
               // We need to use JS to open the SSH URL
               // in a new WINDOW since href can only
               // do a new TAB.
@@ -125,7 +125,7 @@ export default function MachineMenu({
               "group-hover:pointer-events-auto",
             )}
             variant="ghost"
-            onPress={() => {
+            onClick={() => {
               // We need to use JS to open the SSH URL
               // in a new WINDOW since href can only
               // do a new TAB.

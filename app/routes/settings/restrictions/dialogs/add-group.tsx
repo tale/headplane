@@ -27,7 +27,7 @@ export default function AddGroup({ groups, isDisabled }: AddGroupProps) {
 
   return (
     <Dialog>
-      <Button isDisabled={isDisabled}>Add group</Button>
+      <Button disabled={isDisabled}>Add group</Button>
       <DialogPanel>
         <Title>Add group</Title>
         <Text className="mb-4">

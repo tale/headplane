@@ -29,7 +29,7 @@ export default function RenameTailnet({ name, isDisabled }: Props) {
         value={name}
       />
       <Dialog>
-        <Button isDisabled={isDisabled}>Rename Tailnet</Button>
+        <Button disabled={isDisabled}>Rename Tailnet</Button>
         <DialogPanel isDisabled={isDisabled}>
           <Title>Rename Tailnet</Title>
           <Text className="mb-8">

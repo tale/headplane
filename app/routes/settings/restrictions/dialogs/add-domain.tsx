@@ -36,7 +36,7 @@ export default function AddDomain({ domains, isDisabled }: AddDomainProps) {
 
   return (
     <Dialog>
-      <Button isDisabled={isDisabled}>Add domain</Button>
+      <Button disabled={isDisabled}>Add domain</Button>
       <DialogPanel>
         <Title>Add domain</Title>
         <Text className="mb-4">

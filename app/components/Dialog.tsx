@@ -44,9 +44,10 @@ function Dialog(props: DialogProps) {
 
   if (Array.isArray(props.children)) {
     const [button, panel] = props.children;
+    const buttonTriggerProps = { onClick: triggerProps.onPress } as Record<string, unknown>;
     return (
       <>
-        {cloneElement(button, triggerProps)}
+        {cloneElement(button, buttonTriggerProps)}
         {state.isOpen && (
           <DModal state={state}>
             {cloneElement(panel, {
@@ -114,12 +115,12 @@ function Panel(props: DialogPanelProps) {
       <div className="flex flex-col gap-4">{children}</div>
       <div className="mt-5 flex justify-end gap-3">
         {variant === "unactionable" ? (
-          <Button onPress={close}>Close</Button>
+          <Button onClick={close}>Close</Button>
         ) : (
           <>
-            <Button onPress={close}>Cancel</Button>
+            <Button onClick={close}>Cancel</Button>
             <Button
-              isDisabled={isDisabled}
+              disabled={isDisabled}
               type="submit"
               variant={variant === "destructive" ? "danger" : "heavy"}
             >

@@ -32,7 +32,7 @@ export default function UserPrompt({ hostname }: UserPromptProps) {
         <Button
           variant="heavy"
           className="w-full"
-          onPress={() => {
+          onClick={() => {
             // We can't use the navigate hook here as we need to do a
             // full page reload to ensure the SSH connection is established
             window.location.href = `${__PREFIX__}/ssh?hostname=${hostname}&username=${username}`;

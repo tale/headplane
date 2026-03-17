@@ -140,11 +140,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
           </Form>
           {isOidcConnectorEnabled ? (
             <Link to="/oidc/start">
-              <Button
-                className="mt-2 w-full"
-                isDisabled={oidcErrorCodes.length > 0}
-                variant="light"
-              >
+              <Button className="mt-2 w-full" disabled={oidcErrorCodes.length > 0} variant="light">
                 Single Sign-On
               </Button>
             </Link>

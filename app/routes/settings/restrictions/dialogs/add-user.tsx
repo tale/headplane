@@ -27,7 +27,7 @@ export default function AddUser({ users, isDisabled }: AddUserProps) {
 
   return (
     <Dialog>
-      <Button isDisabled={isDisabled}>Add user</Button>
+      <Button disabled={isDisabled}>Add user</Button>
       <DialogPanel>
         <Title>Add user</Title>
         <Text className="mb-4">

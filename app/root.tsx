@@ -3,9 +3,8 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import "@fontsource-variable/inter";
 import { ExternalScripts } from "remix-utils/external-scripts";
 
-import ToastProvider from "~/components/ToastProvider";
 import { LiveDataProvider } from "~/utils/live-data";
-import { useToastQueue } from "~/utils/toast";
+import ToastProvider from "~/utils/toast-provider";
 
 import type { Route } from "./+types/root";
 import { ErrorBanner } from "./components/error-banner";
@@ -23,8 +22,6 @@ export const meta: MetaFunction = () => [
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export function Layout({ children }: { readonly children: React.ReactNode }) {
-  const toastQueue = useToastQueue();
-
   // LiveDataProvider is wrapped at the top level since dialogs and things
   // that control its state are usually open in portal containers which
   // are not a part of the normal React tree.
@@ -40,7 +37,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
         </head>
         <body className="overflow-x-hidden overscroll-none dark:bg-mist-900 dark:text-mist-50">
           {children}
-          <ToastProvider queue={toastQueue} />
+          <ToastProvider />
           <ScrollRestoration />
           <Scripts />
           <ExternalScripts />

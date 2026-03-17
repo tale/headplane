@@ -100,7 +100,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
                 {item}
                 <Button
                   className="rounded-md p-0.5"
-                  onPress={() => {
+                  onClick={() => {
                     setTags(tags.filter((tag) => tag !== item));
                   }}
                 >
@@ -127,8 +127,8 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
           </Select>
           <Button
             className={cn("rounded-md p-1", tagIsInvalid && "opacity-50 cursor-not-allowed")}
-            isDisabled={tagIsInvalid}
-            onPress={() => {
+            disabled={tagIsInvalid}
+            onClick={() => {
               setTags([...tags, tag]);
               setTag("tag:");
             }}

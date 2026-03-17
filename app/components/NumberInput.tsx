@@ -1,9 +1,8 @@
 import { Minus, Plus } from "lucide-react";
 import { useRef } from "react";
-import { type AriaNumberFieldProps, useId, useLocale, useNumberField } from "react-aria";
+import { type AriaNumberFieldProps, useButton, useId, useLocale, useNumberField } from "react-aria";
 import { useNumberFieldState } from "react-stately";
 
-import Button from "~/components/button";
 import cn from "~/utils/cn";
 
 export interface InputProps extends AriaNumberFieldProps {
@@ -29,6 +28,11 @@ export default function NumberInput(props: InputProps) {
     isInvalid,
     validationErrors,
   } = useNumberField(props, state, ref);
+
+  const decrRef = useRef<HTMLButtonElement | null>(null);
+  const incrRef = useRef<HTMLButtonElement | null>(null);
+  const { buttonProps: decrProps } = useButton(decrementButtonProps, decrRef);
+  const { buttonProps: incrProps } = useButton(incrementButtonProps, incrRef);
 
   return (
     <div className="flex flex-col">
@@ -57,20 +61,22 @@ export default function NumberInput(props: InputProps) {
           className="w-full rounded-l-md bg-transparent py-2 pl-3 focus:outline-hidden"
         />
         <input type="hidden" name={name} value={state.numberValue} />
-        <Button
-          {...decrementButtonProps}
+        <button
+          {...decrProps}
+          ref={decrRef}
           aria-label="Decrement"
           className="h-7.5 w-7.5 rounded-lg p-1"
         >
           <Minus className="h-4 w-4" />
-        </Button>
-        <Button
-          {...incrementButtonProps}
+        </button>
+        <button
+          {...incrProps}
+          ref={incrRef}
           aria-label="Increment"
           className="h-7.5 w-7.5 rounded-lg p-1"
         >
           <Plus className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
       {props.description && (
         <div

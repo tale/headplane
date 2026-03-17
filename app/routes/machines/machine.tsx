@@ -142,7 +142,7 @@ export default function Page({
             Learn More
           </Link>
         </p>
-        <Button onPress={() => setShowRouting(true)}>Review</Button>
+        <Button onClick={() => setShowRouting(true)}>Review</Button>
       </div>
       <Card
         className={cn(
@@ -174,7 +174,7 @@ export default function Page({
           </div>
           <Button
             className="mt-1.5 px-1.5 py-0.5"
-            onPress={() => setShowRouting(true)}
+            onClick={() => setShowRouting(true)}
             variant="ghost"
           >
             Edit
@@ -204,7 +204,7 @@ export default function Page({
           </div>
           <Button
             className="mt-1.5 px-1.5 py-0.5"
-            onPress={() => setShowRouting(true)}
+            onClick={() => setShowRouting(true)}
             variant="ghost"
           >
             Edit
@@ -237,7 +237,7 @@ export default function Page({
           </div>
           <Button
             className="mt-1.5 px-1.5 py-0.5"
-            onPress={() => setShowRouting(true)}
+            onClick={() => setShowRouting(true)}
             variant="ghost"
           >
             Edit

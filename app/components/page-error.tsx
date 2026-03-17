@@ -27,8 +27,8 @@ export default function PageError({ error, page }: PageErrorProps) {
         <Button
           className="mt-6"
           variant="light"
-          onPress={() => revalidate()}
-          isDisabled={state === "loading"}
+          onClick={() => revalidate()}
+          disabled={state === "loading"}
         >
           <RefreshCw
             className={cn("mr-2 inline-block h-4 w-4", state === "loading" && "animate-spin")}

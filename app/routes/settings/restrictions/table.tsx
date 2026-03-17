@@ -37,7 +37,7 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
                 <input name={type} type="hidden" value={value} />
                 <Button
                   className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
-                  isDisabled={isDisabled}
+                  disabled={isDisabled}
                   type="submit"
                 >
                   Remove

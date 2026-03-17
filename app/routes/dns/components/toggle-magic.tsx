@@ -11,7 +11,7 @@ interface Props {
 export default function Modal({ isEnabled, isDisabled }: Props) {
   return (
     <Dialog>
-      <Button isDisabled={isDisabled}>{isEnabled ? "Disable" : "Enable"} Magic DNS</Button>
+      <Button disabled={isDisabled}>{isEnabled ? "Disable" : "Enable"} Magic DNS</Button>
       <DialogPanel isDisabled={isDisabled}>
         <Title>{isEnabled ? "Disable" : "Enable"} Magic DNS</Title>
         <Text>

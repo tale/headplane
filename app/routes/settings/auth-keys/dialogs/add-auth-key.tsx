@@ -89,7 +89,7 @@ export default function AddAuthKey({
         setIsOpen(open);
       }}
     >
-      <Button className="my-4" onPress={() => setIsOpen(true)}>
+      <Button className="my-4" onClick={() => setIsOpen(true)}>
         Create pre-auth key
       </Button>
       {createdKey ? (
@@ -100,7 +100,7 @@ export default function AddAuthKey({
             <code className="min-w-0 flex-1 truncate font-mono text-sm">{createdKey}</code>
             <Button
               className="shrink-0"
-              onPress={async () => {
+              onClick={async () => {
                 await navigator.clipboard.writeText(createdKey);
                 toast("Copied key to clipboard");
               }}

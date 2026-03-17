@@ -1,32 +1,22 @@
-import React, { useRef } from "react";
-import { type AriaButtonOptions, useButton } from "react-aria";
+import { Button as BaseButton } from "@base-ui/react/button";
+import React from "react";
 
 import cn from "~/utils/cn";
 
-export interface ButtonProps extends AriaButtonOptions<"button"> {
+export interface ButtonProps extends React.ComponentProps<typeof BaseButton> {
   variant?: "heavy" | "light" | "danger" | "ghost";
-  className?: string;
-  children?: React.ReactNode;
-  "aria-label"?: string;
-  ref?: React.RefObject<HTMLButtonElement | null>;
 }
 
-export default function Button({ variant = "light", ...props }: ButtonProps) {
-  // In case the button is used as a trigger ref
-  const ref = props.ref ?? useRef<HTMLButtonElement | null>(null);
-  const { buttonProps } = useButton(props, ref);
-
+export default function Button({ variant = "light", className, ...props }: ButtonProps) {
   return (
-    <button
-      ref={ref}
-      {...buttonProps}
-      aria-label={props["aria-label"]}
+    <BaseButton
+      {...props}
       className={cn(
         "inline-flex w-fit items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm",
         "transition-colors duration-100",
         "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
         "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-        props.isDisabled && "pointer-events-none opacity-50",
+        props.disabled && "pointer-events-none opacity-50",
         ...(variant === "heavy"
           ? [
               "bg-indigo-500 font-semibold text-white",
@@ -50,10 +40,8 @@ export default function Button({ variant = "light", ...props }: ButtonProps) {
                   "dark:border-mist-700 dark:bg-mist-800/50",
                   "dark:hover:bg-mist-700/50",
                 ]),
-        props.className,
+        className,
       )}
-    >
-      {props.children}
-    </button>
+    />
   );
 }

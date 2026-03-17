@@ -122,10 +122,10 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
       </Tabs>
       <Button
         className="mr-2"
-        isDisabled={
+        disabled={
           disabled || fetcher.state !== "idle" || codePolicy.length === 0 || codePolicy === policy
         }
-        onPress={() => {
+        onClick={() => {
           const formData = new FormData();
           formData.append("policy", codePolicy);
           fetcher.submit(formData, { method: "PATCH" });
@@ -135,8 +135,8 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
         Save
       </Button>
       <Button
-        isDisabled={disabled || fetcher.state !== "idle" || codePolicy === policy}
-        onPress={() => {
+        disabled={disabled || fetcher.state !== "idle" || codePolicy === policy}
+        onClick={() => {
           // Reset the editor to the original policy
           setCodePolicy(policy);
         }}

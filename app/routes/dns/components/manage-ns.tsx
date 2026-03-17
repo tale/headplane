@@ -114,7 +114,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
                   <input name="split_name" type="hidden" value={isGlobal ? "global" : name} />
                   <Button
                     className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
-                    isDisabled={isDisabled}
+                    disabled={isDisabled}
                     type="submit"
                   >
                     Remove
