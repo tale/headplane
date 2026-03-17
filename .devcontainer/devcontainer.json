@@ -1,0 +1,44 @@
+{
+  "name": "headplane",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "upgradePackages": true,
+      "username": "vscode"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "nodeGypDependencies": true,
+      "version": "22.18"
+    },
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.25.1"
+    },
+    "ghcr.io/devcontainers/features/nix:1": {
+      "extraNixConfig": "experimental-features = nix-command flakes,accept-flake-config = true"
+    }
+  },
+  "containerEnv": {
+    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "golang.go",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.vscode-typescript-next"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "go.useLanguageServer": true
+      }
+    }
+  },
+  "forwardPorts": [3000, 5173],
+  "postCreateCommand": "pnpm config set store-dir $HOME/.pnpm-store --global && pnpm install",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true
+}

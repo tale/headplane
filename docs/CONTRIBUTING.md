@@ -55,3 +55,20 @@ If you plan to work with the WASM SSH agent, you will need to install
 `mkcert` or an equivalent to create certificates in `./test/caddy/certs`.
 It expects a `localhost.pem` and `localhost-key.pem` file to be present in that
 directory. PNPM has a script to do it with `pnpm mkcert` already already.
+
+### Development Container
+
+This repository includes a Dev Container setup in `./.devcontainer` with:
+
+- Node.js
+- PNPM
+- Go
+- Nix
+- `mkcert` and related local certificate tooling
+
+Open the repository in VS Code (or any Dev Container compatible editor) and
+start the container. On first creation, dependencies are installed automatically
+with `pnpm install`.
+
+The base image is Debian (instead of Alpine) to keep compatibility with common
+official Dev Container features used by this project (Node, Go, and Docker).
