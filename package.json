@@ -87,8 +87,7 @@
     "testcontainers": "^11.12.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "8.0.0-beta.0",
-    "vite-tsconfig-paths": "^6.0.4",
+    "vite": "^8.0.0",
     "vitepress": "next",
     "vitest": "^4.0.18"
   },
@@ -110,11 +109,19 @@
     },
     "onlyBuiltDependencies": [
       "@tailwindcss/oxide",
+      "bufferutil",
+      "cpu-features",
       "esbuild",
-      "lefthook"
+      "lefthook",
+      "protobufjs",
+      "ssh2",
+      "utf-8-validate"
     ],
     "patchedDependencies": {
       "react-router-hono-server": "patches/react-router-hono-server.patch"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "better-sqlite3"
+    ]
   }
 }
