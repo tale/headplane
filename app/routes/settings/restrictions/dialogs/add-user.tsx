@@ -1,10 +1,15 @@
-import { useMemo, useState } from "react";
+import { type } from "arktype";
 
 import Button from "~/components/button";
 import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import { useForm } from "~/hooks/use-form";
+
+const userSchema = type({
+  user: "string > 0",
+});
 
 interface AddUserProps {
   users: string[];
@@ -12,18 +17,19 @@ interface AddUserProps {
 }
 
 export default function AddUser({ users, isDisabled }: AddUserProps) {
-  const [user, setUser] = useState("");
+  const form = useForm({
+    schema: userSchema,
+    validate: (values) => {
+      const user = (values.user as string).trim();
+      if (user.length === 0) return undefined;
 
-  const isInvalid = useMemo(() => {
-    if (!user || user.trim().length === 0) {
-      // Empty user is invalid, but no error shown
-      return false;
-    }
+      if (users.includes(user)) {
+        return { user: "This user already exists in the list." };
+      }
 
-    if (users.includes(user.trim())) {
-      return true;
-    }
-  }, [user, users]);
+      return undefined;
+    },
+  });
 
   return (
     <Dialog>
@@ -35,19 +41,12 @@ export default function AddUser({ users, isDisabled }: AddUserProps) {
         </Text>
         <input name="action_id" type="hidden" value="add_user" />
         <Input
+          {...form.field("user")}
           description="The user to allow for OIDC authentication."
-          invalid={user.trim().length === 0 || isInvalid}
           required
           label="User"
-          name="user"
-          onChange={setUser}
           placeholder="john_doe"
         />
-        {isInvalid && (
-          <p className="mt-2 text-sm text-red-500">
-            The user you entered already exists in the list of allowed users.
-          </p>
-        )}
       </DialogPanel>
     </Dialog>
   );

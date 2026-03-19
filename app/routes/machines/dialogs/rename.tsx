@@ -1,11 +1,16 @@
-import { useState } from "react";
+import { type } from "arktype";
 
 import Code from "~/components/code";
 import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import { useForm } from "~/hooks/use-form";
 import type { Machine } from "~/types";
+
+const renameSchema = type({
+  name: "string > 0",
+});
 
 interface RenameProps {
   machine: Machine;
@@ -15,7 +20,11 @@ interface RenameProps {
 }
 
 export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProps) {
-  const [name, setName] = useState(machine.givenName);
+  const form = useForm({
+    schema: renameSchema,
+    defaultValues: { name: machine.givenName },
+  });
+  const name = form.values.name as string;
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -27,14 +36,7 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
         </Text>
         <input name="action_id" type="hidden" value="rename" />
         <input name="node_id" type="hidden" value={machine.id} />
-        <Input
-          defaultValue={machine.givenName}
-          required
-          label="Machine name"
-          name="name"
-          onChange={setName}
-          placeholder="Machine name"
-        />
+        <Input {...form.field("name")} required label="Machine name" placeholder="Machine name" />
         {magic ? (
           name.length > 0 && name !== machine.givenName ? (
             <p className="mt-2 text-sm leading-tight text-mist-600 dark:text-mist-300">

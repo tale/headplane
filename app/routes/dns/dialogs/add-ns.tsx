@@ -1,5 +1,5 @@
+import { type } from "arktype";
 import { Split } from "lucide-react";
-import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
 import Chip from "~/components/chip";
@@ -9,30 +9,40 @@ import Switch from "~/components/switch";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import Tooltip from "~/components/tooltip";
+import { useForm } from "~/hooks/use-form";
 import cn from "~/utils/cn";
+
+const nsSchema = type({
+  ns: "string.ip",
+  split_name: "string > 0",
+});
 
 interface Props {
   nameservers: Record<string, string[]>;
 }
 
 export default function AddNameserver({ nameservers }: Props) {
-  const [split, setSplit] = useState(false);
-  const [ns, setNs] = useState("");
-  const [domain, setDomain] = useState("");
+  const form = useForm({
+    schema: nsSchema,
+    defaultValues: { split_name: "global" },
+    validate: (values) => {
+      const ns = values.ns as string;
+      const domain = values.split_name as string;
+      if (!ns) return undefined;
 
-  const isInvalid = useMemo(() => {
-    if (ns === "") return false;
-    // Test if it's a valid IPv4 or IPv6 address
-    const ipv4 = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
-    const ipv6 = /^([0-9a-fA-F:]+:+)+[0-9a-fA-F]+$/;
-    if (!ipv4.test(ns) && !ipv6.test(ns)) return true;
+      const isSplit = domain !== "global";
+      const isDuplicate = isSplit
+        ? nameservers[domain]?.includes(ns)
+        : Object.values(nameservers).some((nsList) => nsList.includes(ns));
 
-    if (split) {
-      return nameservers[domain]?.includes(ns);
-    }
+      if (isDuplicate) {
+        return { ns: "This nameserver already exists." };
+      }
 
-    return Object.values(nameservers).some((nsList) => nsList.includes(ns));
-  }, [nameservers, ns]);
+      return undefined;
+    },
+  });
+  const split = (form.values.split_name as string) !== "global";
 
   return (
     <Dialog>
@@ -41,12 +51,10 @@ export default function AddNameserver({ nameservers }: Props) {
         <Title className="mb-4">Add nameserver</Title>
         <input name="action_id" type="hidden" value="add_ns" />
         <Input
+          {...form.field("ns")}
           description="Use this IPv4 or IPv6 address to resolve names."
-          invalid={isInvalid}
           required
           label="Nameserver"
-          name="ns"
-          onChange={setNs}
           placeholder="1.2.3.4"
         />
         <div className="mt-8 flex items-center justify-between">
@@ -67,16 +75,20 @@ export default function AddNameserver({ nameservers }: Props) {
             </div>
             <Text className="text-sm">This nameserver will only be used for some domains.</Text>
           </div>
-          <Switch label="Split DNS" onCheckedChange={setSplit} />
+          <Switch
+            label="Split DNS"
+            onCheckedChange={(checked) => {
+              form.setValue("split_name", checked ? "" : "global");
+            }}
+          />
         </div>
         {split ? (
           <>
             <Text className="mt-8 font-semibold">Domain</Text>
             <Input
-              required={split === true}
+              {...form.field("split_name")}
+              required
               label="Domain"
-              name="split_name"
-              onChange={setDomain}
               placeholder="example.com"
             />
             <Text className="text-sm">

@@ -1,3 +1,4 @@
+import { type } from "arktype";
 import { Computer, FileKey2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
@@ -9,8 +10,14 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import Select from "~/components/select";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import { useForm } from "~/hooks/use-form";
 import type { User } from "~/types";
 import { getUserDisplayName } from "~/utils/user";
+
+const registerSchema = type({
+  register_key: "string == 24",
+  user: "string > 0",
+});
 
 export interface NewMachineProps {
   server: string;
@@ -21,15 +28,13 @@ export interface NewMachineProps {
 
 export default function NewMachine(data: NewMachineProps) {
   const [pushDialog, setPushDialog] = useState(false);
-  const [mkey, setMkey] = useState("");
+  const form = useForm({ schema: registerSchema });
   const navigate = useNavigate();
-
-  const isMkeyInvalid = mkey.length > 0 && mkey.length !== 24;
 
   return (
     <>
       <Dialog isOpen={pushDialog} onOpenChange={setPushDialog}>
-        <DialogPanel isDisabled={mkey.length !== 24}>
+        <DialogPanel isDisabled={!form.canSubmit}>
           <Title>Register Machine Key</Title>
           <Text className="mb-4">
             The machine key is given when you run{" "}
@@ -37,18 +42,16 @@ export default function NewMachine(data: NewMachineProps) {
           </Text>
           <input name="action_id" type="hidden" value="register" />
           <Input
-            errorMessage="Machine key must be exactly 24 characters"
-            invalid={isMkeyInvalid}
+            {...form.field("register_key")}
             required
             label="Machine Key"
-            name="register_key"
-            onChange={setMkey}
             placeholder="AbCd..."
           />
           <Select
             required
             label="Owner"
             name="user"
+            onValueChange={(v) => form.setValue("user", v)}
             placeholder="Select a user"
             items={data.users.map((user) => ({
               value: user.id,

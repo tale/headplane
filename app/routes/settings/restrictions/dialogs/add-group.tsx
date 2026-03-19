@@ -1,10 +1,15 @@
-import { useMemo, useState } from "react";
+import { type } from "arktype";
 
 import Button from "~/components/button";
 import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import { useForm } from "~/hooks/use-form";
+
+const groupSchema = type({
+  group: "string > 0",
+});
 
 interface AddGroupProps {
   groups: string[];
@@ -12,18 +17,19 @@ interface AddGroupProps {
 }
 
 export default function AddGroup({ groups, isDisabled }: AddGroupProps) {
-  const [group, setGroup] = useState("");
+  const form = useForm({
+    schema: groupSchema,
+    validate: (values) => {
+      const group = (values.group as string).trim();
+      if (group.length === 0) return undefined;
 
-  const isInvalid = useMemo(() => {
-    if (!group || group.trim().length === 0) {
-      // Empty group is invalid, but no error shown
-      return false;
-    }
+      if (groups.includes(group)) {
+        return { group: "This group already exists in the list." };
+      }
 
-    if (groups.includes(group.trim())) {
-      return true;
-    }
-  }, [group, groups]);
+      return undefined;
+    },
+  });
 
   return (
     <Dialog>
@@ -35,19 +41,12 @@ export default function AddGroup({ groups, isDisabled }: AddGroupProps) {
         </Text>
         <input name="action_id" type="hidden" value="add_group" />
         <Input
+          {...form.field("group")}
           description="The group to allow for OIDC authentication."
-          invalid={group.trim().length === 0 || isInvalid}
           required
           label="Group"
-          name="group"
-          onChange={setGroup}
           placeholder="admin"
         />
-        {isInvalid && (
-          <p className="mt-2 text-sm text-red-500">
-            The group you entered already exists in the list of allowed groups.
-          </p>
-        )}
       </DialogPanel>
     </Dialog>
   );
