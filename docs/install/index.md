@@ -19,7 +19,7 @@ is available to use as a starting point. Some of the important fields include:
 | Field               | Description                                            |
 |---------------------|--------------------------------------------------------|
 | **`headscale.url`** | Point to your Headscale server (e.g., `http://headscale.example.com` or `http://headscale:8080` in Docker). |
-| **`server.cookie_secret`** | Used to encrypt cookies. You can generate a random string using a command like `openssl rand -base64 32`. |
+| **`server.cookie_secret`** | Used to encrypt cookies. You can generate a random string using a command like `openssl rand -base64 24`. |
 | **`server.data_path`** | Just a path to keep in mind, especially if you're using Docker. |
 
 The configuration file is rather complicated and has many more options. Refer to
