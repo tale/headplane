@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { getBootstrapClient, getIsAtLeast, getRuntimeClient, HS_VERSIONS } from "./setup/env";
+import { getBootstrapClient, getIsAtLeast, getRuntimeClient, HS_VERSIONS } from "../setup/env";
 
 describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) => {
   test("pre-auth keys can be created", async () => {

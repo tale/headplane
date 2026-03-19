@@ -11,7 +11,7 @@
     "start": "node build/server/index.js",
     "typecheck": "react-router typegen && tsgo",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration",
+    "test:integration": "vitest run --project integration:*",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -87,7 +87,7 @@
     "typescript": "^5.9.3",
     "vite": "^8.0.0",
     "vitepress": "next",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "engines": {
     "node": ">=24.2 <25",

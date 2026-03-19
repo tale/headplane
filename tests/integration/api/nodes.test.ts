@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { getBootstrapClient, getNode, getRuntimeClient, HS_VERSIONS } from "./setup/env";
+import { getBootstrapClient, getNode, getRuntimeClient, HS_VERSIONS } from "../setup/env";
 
 describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
   let workingNodeId: string;
