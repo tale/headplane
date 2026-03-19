@@ -29,7 +29,7 @@ in
   pnpmDeps = pnpm_10.fetchDeps {
     inherit (finalAttrs) pname version src;
 		fetcherVersion = 3;
-		hash = "sha256-PfpSq/WLeFk4cw2NCtbzzfsOcCSp3VknFc+cPWGNxn0=";
+		hash = "sha256-1wOEuqhZY6SAEsAiassawyu695ltUr72sUZunmf8oyg=";
   };
 
     buildPhase = ''
