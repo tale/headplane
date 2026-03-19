@@ -14,23 +14,24 @@ export function ExpiryTag({ variant, expiry }: ExpiryTagProps) {
   });
 
   return (
-    <Tooltip>
-      <Chip
-        text={
-          variant === "expired" ? `Expired ${formatter.format(new Date(expiry!))}` : "No expiry"
-        }
-        className="bg-mist-200 text-mist-800 dark:bg-mist-800 dark:text-mist-200"
-      />
-      <Tooltip.Body>
-        {variant === "expired" ? (
+    <Tooltip
+      content={
+        variant === "expired" ? (
           <>
             This machine is expired and will not be able to connect to the network. Re-authenticate
             with Tailscale on the machine to re-enable it.
           </>
         ) : (
           <>This machine has key expiry disabled and will never need to re-authenticate.</>
-        )}
-      </Tooltip.Body>
+        )
+      }
+    >
+      <Chip
+        text={
+          variant === "expired" ? `Expired ${formatter.format(new Date(expiry!))}` : "No expiry"
+        }
+        className="bg-mist-200 text-mist-800 dark:bg-mist-800 dark:text-mist-200"
+      />
     </Tooltip>
   );
 }

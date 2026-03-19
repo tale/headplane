@@ -113,9 +113,8 @@ export default function Page({
         <div className="border-r border-mist-100 p-2 pr-4 dark:border-mist-800">
           <span className="flex items-center gap-x-1 text-sm text-mist-600 dark:text-mist-300">
             Managed by
-            <Tooltip>
+            <Tooltip content="By default, a machine’s permissions match its creator’s.">
               <Info className="p-1" />
-              <Tooltip.Body>By default, a machine’s permissions match its creator’s.</Tooltip.Body>
             </Tooltip>
           </span>
           <div className="mt-1 flex items-center gap-x-2.5">
@@ -154,11 +153,8 @@ export default function Page({
         <div>
           <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Approved
-            <Tooltip>
+            <Tooltip content="Traffic to these routes are being routed through this machine.">
               <Info className="h-3.5 w-3.5" />
-              <Tooltip.Body>
-                Traffic to these routes are being routed through this machine.
-              </Tooltip.Body>
             </Tooltip>
           </span>
           <div className="mt-1">
@@ -183,12 +179,8 @@ export default function Page({
         <div>
           <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Awaiting Approval
-            <Tooltip>
+            <Tooltip content="This machine is advertising these routes, but they must be approved before traffic will be routed to them.">
               <Info className="h-3.5 w-3.5" />
-              <Tooltip.Body>
-                This machine is advertising these routes, but they must be approved before traffic
-                will be routed to them.
-              </Tooltip.Body>
             </Tooltip>
           </span>
           <div className="mt-1">
@@ -213,11 +205,8 @@ export default function Page({
         <div>
           <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
             Exit Node
-            <Tooltip>
+            <Tooltip content="Whether this machine can act as an exit node for your tailnet.">
               <Info className="h-3.5 w-3.5" />
-              <Tooltip.Body>
-                Whether this machine can act as an exit node for your tailnet.
-              </Tooltip.Body>
             </Tooltip>
           </span>
           <div className="mt-1">
