@@ -32,8 +32,8 @@ RUN corepack enable
 COPY patches ./patches
 COPY package.json pnpm-lock.yaml build.sh ./
 
-COPY --from=go-base /bin/hp_ssh.wasm /run/app/hp_ssh.wasm
-COPY --from=go-base /bin/wasm_exec.js /run/app/wasm_exec.js
+COPY --from=go-base /bin/hp_ssh.wasm /run/public/hp_ssh.wasm
+COPY --from=go-base /bin/wasm_exec.js /run/public/wasm_exec.js
 RUN ./build.sh --app --app-install-only
 
 COPY . .
