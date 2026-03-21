@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Info, X } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router";
 
 import Code from "~/components/code";
 import Input from "~/components/input";
@@ -9,11 +10,13 @@ import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
-import { mapNodes, sortNodeTags } from "~/utils/node-info";
+import { mapNodes, sortNodeTags, type PopulatedNode } from "~/utils/node-info";
 
 import type { Route } from "./+types/overview";
+import { MachineFilters } from "./components/machine-filters";
 import MachineRow from "./components/machine-row";
 import NewMachine from "./dialogs/new";
+import { useMachineFilterParams } from "./hooks/use-machine-filter-params";
 import { machineAction } from "./machine-actions";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -67,26 +70,60 @@ export const action = machineAction;
 
 type SortField = "name" | "ip" | "version" | "lastSeen";
 
+const STATUS_MATCH: Record<string, (n: PopulatedNode) => boolean> = {
+  online: (n) => n.online && !n.expired,
+  offline: (n) => !n.online && !n.expired,
+  expired: (n) => n.expired,
+};
+
+const ROUTE_MATCH: Record<string, (n: PopulatedNode) => boolean> = {
+  "exit-node": (n) => n.customRouting.exitRoutes.length > 0,
+  subnet: (n) =>
+    n.customRouting.subnetApprovedRoutes.length > 0 ||
+    n.customRouting.subnetWaitingRoutes.length > 0,
+};
+
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  const searchQuery = searchParams.get("q") ?? "";
+  const { filterUser, filterTag, filterStatus, filterRoute, hasActiveFilters } =
+    useMachineFilterParams();
+
+  const setSearchQuery = (value: string) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      const v = value.slice(0, 100);
+      if (v) next.set("q", v);
+      else next.delete("q");
+      return next;
+    });
+  };
+
+  const clearSearch = () => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("q");
+      return next;
+    });
+  };
 
   const filteredAndSortedNodes = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
 
-    let nodes = loaderData.populatedNodes.filter((node) => {
-      if (!query) {
-        return true;
-      }
-      if (node.givenName.toLowerCase().includes(query)) {
-        return true;
-      }
-      if (node.ipAddresses.some((ip) => ip.toLowerCase().includes(query))) {
-        return true;
-      }
-      return false;
-    });
+    let nodes = loaderData.populatedNodes.filter(
+      (node) =>
+        (!query ||
+          node.givenName.toLowerCase().includes(query) ||
+          node.ipAddresses.some((ip) => ip.toLowerCase().includes(query))) &&
+        (filterUser === null ||
+          (filterUser === "tag-owned" ? !node.user : node.user?.id === filterUser)) &&
+        (filterTag === null || (node.tags?.includes(filterTag) ?? false)) &&
+        (filterStatus === null || STATUS_MATCH[filterStatus](node)) &&
+        (filterRoute === null || ROUTE_MATCH[filterRoute](node)),
+    );
 
     nodes = [...nodes].toSorted((a, b) => {
       let comparison = 0;
@@ -147,7 +184,16 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     });
 
     return nodes;
-  }, [loaderData.populatedNodes, searchQuery, sortField, sortDirection]);
+  }, [
+    loaderData.populatedNodes,
+    searchQuery,
+    filterUser,
+    filterTag,
+    filterStatus,
+    filterRoute,
+    sortField,
+    sortDirection,
+  ]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -177,13 +223,13 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           users={loaderData.users}
         />
       </div>
-      <div className="mb-4 flex items-center gap-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative w-64">
           <Input
             label="Search machines"
             labelHidden
             maxLength={100}
-            onChange={(value) => setSearchQuery(value.slice(0, 100))}
+            onChange={setSearchQuery}
             placeholder="Search by name or IP address..."
             value={searchQuery}
           />
@@ -197,15 +243,16 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 "dark:text-mist-500 dark:hover:text-mist-300",
                 "hover:bg-mist-100 dark:hover:bg-mist-800",
               )}
-              onClick={() => setSearchQuery("")}
+              onClick={clearSearch}
               type="button"
             >
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
-        <span className="text-sm whitespace-nowrap text-mist-500">
-          {searchQuery
+        <MachineFilters users={loaderData.users} populatedNodes={loaderData.populatedNodes} />
+        <span className="ml-auto text-sm whitespace-nowrap text-mist-500">
+          {searchQuery || hasActiveFilters
             ? `Showing ${filteredAndSortedNodes.length} of ${loaderData.populatedNodes.length} machines`
             : `${loaderData.populatedNodes.length} machines`}
         </span>
@@ -361,7 +408,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                   className="py-8 text-center text-mist-500"
                   colSpan={loaderData.agent !== undefined ? 6 : 5}
                 >
-                  No machines found matching "{searchQuery}"
+                  No machines match the current filters
                 </td>
               </tr>
             ) : (
