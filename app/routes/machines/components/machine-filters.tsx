@@ -1,12 +1,13 @@
 import { ChevronDown, X } from "lucide-react";
 import type { JSX } from "react";
-import { useSearchParams } from "react-router";
 
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { User } from "~/types/User";
 import cn from "~/utils/cn";
 import type { PopulatedNode } from "~/utils/node-info";
 import { getUserDisplayName } from "~/utils/user";
+
+import { useMachineFilterParams } from "../hooks/use-machine-filter-params";
 
 const STATUS_OPTIONS = [
   { value: "online", label: "Online" },
@@ -30,7 +31,7 @@ function FilterDropdown({
   options: readonly { value: string; label: string }[];
   onChange: (value: string | null) => void;
 }): JSX.Element {
-  const activeOption = value !== null ? options.find((o) => o.value === value) : null;
+  const activeOption = options.find((o) => o.value === value) ?? null;
   const isActive = activeOption !== null;
 
   return (
@@ -45,7 +46,7 @@ function FilterDropdown({
             : "border-mist-200 dark:border-mist-700 text-mist-700 dark:text-mist-300 hover:border-mist-300 dark:hover:border-mist-600",
         )}
       >
-        {isActive ? activeOption!.label : label}
+        {activeOption?.label ?? label}
         <ChevronDown className="h-3.5 w-3.5" />
       </MenuTrigger>
       <MenuContent>
@@ -79,42 +80,16 @@ interface MachineFiltersProps {
   populatedNodes: PopulatedNode[];
 }
 
-/**
- * Renders the filter dropdowns (User, Tag, Status, Route) and a "Clear filters"
- * button as a React Fragment so they slot directly into the parent flex row.
- * Filter state is stored in URL search params for bookmarkability.
- */
 export function MachineFilters({ users, populatedNodes }: MachineFiltersProps): JSX.Element {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const filterUser = searchParams.get("user");
-  const filterTag = searchParams.get("tag");
-  const filterStatus = searchParams.get("status");
-  const filterRoute = searchParams.get("route");
-
-  const hasActiveFilters =
-    filterUser !== null || filterTag !== null || filterStatus !== null || filterRoute !== null;
-
-  const setParam = (key: string, value: string | null) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value === null) {
-        next.delete(key);
-      } else {
-        next.set(key, value);
-      }
-      return next;
-    });
-  };
-
-  const clearFilters = () => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams();
-      const q = prev.get("q");
-      if (q) next.set("q", q);
-      return next;
-    });
-  };
+  const {
+    filterUser,
+    filterTag,
+    filterStatus,
+    filterRoute,
+    hasActiveFilters,
+    setParam,
+    clearFilters,
+  } = useMachineFilterParams();
 
   const tagOwnedExists = populatedNodes.some((n) => !n.user);
   const userOptions = [

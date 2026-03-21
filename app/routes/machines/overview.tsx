@@ -10,13 +10,13 @@ import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
-import { mapNodes, sortNodeTags } from "~/utils/node-info";
-import type { PopulatedNode } from "~/utils/node-info";
+import { mapNodes, sortNodeTags, type PopulatedNode } from "~/utils/node-info";
 
 import type { Route } from "./+types/overview";
 import { MachineFilters } from "./components/machine-filters";
 import MachineRow from "./components/machine-row";
 import NewMachine from "./dialogs/new";
+import { useMachineFilterParams } from "./hooks/use-machine-filter-params";
 import { machineAction } from "./machine-actions";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -89,13 +89,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   const searchQuery = searchParams.get("q") ?? "";
-  const filterUser = searchParams.get("user");
-  const filterTag = searchParams.get("tag");
-  const filterStatus = searchParams.get("status") as "online" | "offline" | "expired" | null;
-  const filterRoute = searchParams.get("route") as "exit-node" | "subnet" | null;
-
-  const hasActiveFilters =
-    filterUser !== null || filterTag !== null || filterStatus !== null || filterRoute !== null;
+  const { filterUser, filterTag, filterStatus, filterRoute, hasActiveFilters } =
+    useMachineFilterParams();
 
   const setSearchQuery = (value: string) => {
     setSearchParams((prev) => {
