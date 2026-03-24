@@ -67,18 +67,38 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         ? `${userInfo.given_name} ${userInfo.family_name}`
         : (userInfo.preferred_username ?? "SSO User"));
 
-    const picture =
-      context.config.oidc?.profile_picture_source === "gravatar"
-        ? (() => {
-            if (!userInfo.email) {
-              return undefined;
-            }
+    const picture = await (async () => {
+      if (context.config.oidc?.profile_picture_source === "gravatar") {
+        if (!userInfo.email) {
+          return undefined;
+        }
 
-            const emailHash = userInfo.email.trim().toLowerCase();
-            const hash = createHash("sha256").update(emailHash).digest("hex");
-            return `https://www.gravatar.com/avatar/${hash}?s=200&d=identicon&r=x`;
-          })()
-        : userInfo.picture;
+        const emailHash = userInfo.email.trim().toLowerCase();
+        const hash = createHash("sha256").update(emailHash).digest("hex");
+        return `https://www.gravatar.com/avatar/${hash}?s=200&d=identicon&r=x`;
+      }
+
+      if (!userInfo.picture) {
+        return undefined;
+      }
+
+      try {
+        const response = await fetch(userInfo.picture, {
+          headers: { Authorization: `Bearer ${tokens.access_token}` },
+        });
+
+        if (response.ok) {
+          const contentType = response.headers.get("content-type");
+          if (contentType?.startsWith("image/")) {
+            const buffer = await response.arrayBuffer();
+            const base64 = Buffer.from(buffer).toString("base64");
+            return `data:${contentType};base64,${base64}`;
+          }
+        }
+      } catch {}
+
+      return userInfo.picture;
+    })();
 
     const userId = await context.auth.findOrCreateUser(claims.sub, {
       name,
