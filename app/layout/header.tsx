@@ -1,4 +1,13 @@
-import { CircleQuestionMark, CircleUser, Globe, Lock, Server, Settings, Users } from "lucide-react";
+import {
+  CircleQuestionMark,
+  CircleUser,
+  Globe,
+  Lock,
+  Menu as MenuIcon,
+  Server,
+  Settings,
+  Users,
+} from "lucide-react";
 import { NavLink, useSubmit } from "react-router";
 
 import Link from "~/components/link";
@@ -57,34 +66,67 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             <h1 className="text-2xl font-semibold">headplane</h1>
           </div>
           {showTabs && (
-            <nav className="hidden items-center gap-x-2 text-sm font-medium md:flex">
-              {tabs.map((tab) => {
-                if (!access[tab.key]) return null;
-                if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
+            <>
+              <nav className="hidden items-center gap-x-2 text-sm font-medium md:flex">
+                {tabs.map((tab) => {
+                  if (!access[tab.key]) return null;
+                  if ((tab.key === "dns" || tab.key === "settings") && !configAvailable)
+                    return null;
 
-                return (
-                  <NavLink
-                    key={tab.to}
-                    className={({ isActive }) =>
-                      cn(
-                        "px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                        "hover:bg-mist-300/50 dark:hover:bg-mist-800",
-                        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-                        isActive
-                          ? "bg-mist-300/70 dark:bg-mist-800 text-mist-900 dark:text-mist-50"
-                          : "text-mist-600 dark:text-mist-300",
-                      )
-                    }
-                    prefetch="intent"
-                    to={tab.to}
-                  >
-                    <tab.icon className="w-4" />
-                    {tab.label}
-                  </NavLink>
-                );
-              })}
-            </nav>
+                  return (
+                    <NavLink
+                      key={tab.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
+                          "hover:bg-mist-300/50 dark:hover:bg-mist-800",
+                          "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
+                          "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
+                          isActive
+                            ? "bg-mist-300/70 dark:bg-mist-800 text-mist-900 dark:text-mist-50"
+                            : "text-mist-600 dark:text-mist-300",
+                        )
+                      }
+                      prefetch="intent"
+                      to={tab.to}
+                    >
+                      <tab.icon className="w-4" />
+                      {tab.label}
+                    </NavLink>
+                  );
+                })}
+              </nav>
+              <Menu>
+                <MenuTrigger className="size-8 rounded-full p-1 md:hidden">
+                  <MenuIcon className="w-5" />
+                </MenuTrigger>
+                <MenuContent align="start">
+                  {tabs.map((tab) => {
+                    if (!access[tab.key]) return null;
+                    if ((tab.key === "dns" || tab.key === "settings") && !configAvailable)
+                      return null;
+
+                    return (
+                      <MenuItem key={tab.to}>
+                        <NavLink
+                          className={({ isActive }) =>
+                            cn(
+                              "flex items-center gap-x-2",
+                              isActive ? "text-mist-900 dark:text-mist-50 font-medium" : "",
+                            )
+                          }
+                          prefetch="intent"
+                          to={tab.to}
+                        >
+                          <tab.icon className="w-4" />
+                          {tab.label}
+                        </NavLink>
+                      </MenuItem>
+                    );
+                  })}
+                </MenuContent>
+              </Menu>
+            </>
           )}
         </div>
         <div className="grid grid-cols-2 gap-x-4">
