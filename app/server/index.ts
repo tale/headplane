@@ -11,7 +11,7 @@ import { createDbClient } from "./db/client.server";
 import { createHeadscaleInterface } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
-import { createHeadplaneAgent } from "./hp-agent";
+import { createAgentManager } from "./hp-agent";
 import { createAuthService } from "./web/auth";
 
 declare global {
@@ -36,9 +36,30 @@ try {
 }
 
 const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
-const agents = await createHeadplaneAgent(config.integration?.agent, config.headscale.url, db);
-
 const hsApi = await createHeadscaleInterface(config.headscale.url, config.headscale.tls_cert_path);
+
+// Resolve the Headscale API key: headscale.api_key takes precedence,
+// falling back to the deprecated oidc.headscale_api_key for compatibility.
+const headscaleApiKey = config.headscale.api_key ?? config.oidc?.headscale_api_key;
+
+const agents = headscaleApiKey
+  ? await createAgentManager(
+      config.integration?.agent,
+      config.headscale.url,
+      headscaleApiKey,
+      (user, ephemeral, reusable, expiration, aclTags) =>
+        hsApi
+          .getRuntimeClient(headscaleApiKey)
+          .createPreAuthKey(user, ephemeral, reusable, expiration, aclTags),
+      () => hsApi.getRuntimeClient(headscaleApiKey).getUsers(),
+      db,
+    )
+  : (() => {
+      if (config.integration?.agent?.enabled) {
+        log.warn("agent", "Agent is enabled but no headscale.api_key is configured");
+      }
+      return undefined;
+    })();
 
 // We also use this file to load anything needed by the react router code.
 // These are usually per-request things that we need access to, like the
@@ -80,13 +101,13 @@ const appLoadContext = {
   agents,
   integration: await loadIntegration(config.integration),
   oidc:
-    config.oidc && config.oidc.enabled !== false
+    config.oidc && config.oidc.enabled !== false && headscaleApiKey
       ? {
-          apiKey: config.oidc.headscale_api_key,
+          apiKey: headscaleApiKey,
           connector: createLazyOidcConnector(
             config.server.base_url,
             config.oidc,
-            hsApi.getRuntimeClient(config.oidc.headscale_api_key),
+            hsApi.getRuntimeClient(headscaleApiKey),
           ),
         }
       : undefined,

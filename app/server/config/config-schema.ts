@@ -9,9 +9,9 @@ import { deprecatedField } from "./utils";
 
 export const pathSupportedKeys = [
   "server.cookie_secret",
+  "headscale.api_key",
   "oidc.client_secret",
   "oidc.headscale_api_key",
-  "integration.agent.pre_authkey",
 ] as const;
 
 const serverConfig = type({
@@ -45,6 +45,7 @@ const headscaleConfig = type({
   public_url: type("string.url")
     .pipe((v) => (v.endsWith("/") ? v.slice(0, -1) : v))
     .optional(),
+  api_key: "string?",
   config_path: "string.lower?",
   config_strict: "boolean = true",
   dns_records_path: "string.lower?",
@@ -58,6 +59,7 @@ const partialHeadscaleConfig = type({
   public_url: type("string.url")
     .pipe((v) => (v.endsWith("/") ? v.slice(0, -1) : v))
     .optional(),
+  api_key: "string?",
   config_path: "string.lower?",
   config_strict: "boolean?",
   dns_records_path: "string.lower?",
@@ -69,7 +71,12 @@ const oidcConfig = type({
   issuer: "string.url",
   client_id: "string",
   client_secret: "string",
-  headscale_api_key: "string",
+  headscale_api_key: type("string")
+    .pipe((value, ctx) => {
+      log.warn("config", "%s is deprecated, use headscale.api_key instead", ctx.propString);
+      return value;
+    })
+    .optional(),
   use_pkce: "boolean = false",
   redirect_uri: type("string.url")
     .pipe((value, ctx) => {
@@ -128,21 +135,21 @@ const partialOidcConfig = type({
 const agentConfig = type({
   enabled: "boolean",
   host_name: 'string = "headplane-agent"',
-  pre_authkey: "string",
   cache_ttl: "number.integer = 180000",
-  cache_path: 'string = "/var/lib/headplane/agent_cache.json"',
   executable_path: 'string = "/usr/libexec/headplane/agent"',
   work_dir: 'string = "/var/lib/headplane/agent"',
+  pre_authkey: type("unknown").narrow(deprecatedField()).optional(),
+  cache_path: type("unknown").narrow(deprecatedField()).optional(),
 });
 
 const partialAgentConfig = type({
   enabled: "boolean?",
   host_name: "string?",
-  pre_authkey: "string?",
   cache_ttl: "number.integer?",
-  cache_path: "string?",
   executable_path: "string?",
   work_dir: "string?",
+  pre_authkey: type("unknown").narrow(deprecatedField()).optional(),
+  cache_path: type("unknown").narrow(deprecatedField()).optional(),
 });
 
 const integrationConfig = type({

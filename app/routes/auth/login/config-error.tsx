@@ -56,7 +56,7 @@ function mapOidcErrorsToMessages(errors: OidcConnectorError[]) {
           node: (
             <Card.Text className="inline">
               The provided API key for OIDC authentication is invalid. Ensure that{" "}
-              <Code>oidc.headscale_api_key</Code> is a valid API key.
+              <Code>headscale.api_key</Code> is a valid API key.
             </Card.Text>
           ),
         });

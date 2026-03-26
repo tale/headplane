@@ -70,6 +70,11 @@ headscale:
   # in the Web UI, but they cannot be changed.
   config_path: "/etc/headscale/config.yaml"
 
+  # The API key used by Headplane for server-side operations.
+  # This is required for OIDC authentication and the Headplane agent.
+  # Generate one with: headscale apikeys create
+  # api_key: "<your-api-key>"
+
   # Whether the Headscale configuration should be strictly validated
   # when reading from `config_path`. If true, Headplane will not interact
   # with Headscale if there are any issues with the configuration file.
@@ -91,26 +96,19 @@ headscale:
 
 # Integration configurations for Headplane to interact with Headscale
 integration:
-  # The Headplane agent allows retrieving information about nodes
-  # This allows the UI to display version, OS, and connectivity data
-  # You will see the Headplane agent in your Tailnet as a node when
-  # it connects.
+  # The Headplane agent periodically syncs node information (version, OS, etc.)
+  # from your Tailnet. It auto-generates ephemeral pre-auth keys using the
+  # OIDC headscale_api_key, so no manual key configuration is needed.
   agent:
     enabled: false
 
-    # To connect to your Tailnet, you need to generate a pre-auth key
-    # This can be done via the web UI or through the `headscale` CLI.
-    pre_authkey: "<your-preauth-key>"
-
-    # Optionally change the name of the agent in the Tailnet.
+    # The name of the Headscale user to create pre-auth keys under.
+    # A user with this name must exist in Headscale.
     # host_name: "headplane-agent"
 
-    # Configure different caching settings. By default, the agent will store
-    # caches in the path below for a maximum of 1 minute. If you want data
-    # to update faster, reduce the TTL, but this will increase the frequency
-    # of requests to Headscale.
-    # cache_ttl: 60
-    # cache_path: /var/lib/headplane/agent_cache.json
+    # How often to sync node information (in milliseconds).
+    # Default: 180000 (3 minutes)
+    # cache_ttl: 180000
 
     # The work_dir represents where the agent will store its data to be able
     # to automatically reauthenticate with your Tailnet. It needs to be
@@ -174,10 +172,8 @@ integration:
 # The OIDC issuer URL
 # issuer: "https://accounts.google.com"
 
-# If you are using OIDC, you need to generate an API key
-# that can be used to authenticate other sessions when signing in.
-#
-# This can be done with `headscale apikeys create --expiration 999d`
+# DEPRECATED: Use headscale.api_key instead.
+# If set, this will be used as a fallback for headscale.api_key.
 # headscale_api_key: "<your-headscale-api-key>"
 
 # If your OIDC provider does not support discovery (does not have the URL at
