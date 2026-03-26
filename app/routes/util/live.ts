@@ -16,9 +16,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const stream = new ReadableStream({
     start(controller) {
+      let closed = false;
       const encoder = new TextEncoder();
       const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        if (!closed) {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        }
       };
 
       const versions = context.hsLive.getVersions();
@@ -40,6 +43,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
       request.signal.addEventListener("abort", () => {
         log.debug("sse", "Client disconnected");
+        closed = true;
         unsubscribe();
         clearInterval(heartbeat);
         try {
