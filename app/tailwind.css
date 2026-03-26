@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 @plugin "tailwindcss-animate";
-@plugin "tailwindcss-react-aria-components";
 
 @theme {
   --blur-xs: 2px;
