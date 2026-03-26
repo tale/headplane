@@ -120,6 +120,9 @@
     },
     "ignoredBuiltDependencies": [
       "better-sqlite3"
-    ]
+    ],
+    "overrides": {
+      "@codemirror/state": "6.6.0"
+    }
   }
 }
