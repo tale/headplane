@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
-import Code from "~/components/code";
+import CodeBlock from "~/components/code-block";
 import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
 import Link from "~/components/link";
@@ -12,7 +12,6 @@ import Switch from "~/components/switch";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import type { User } from "~/types";
-import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 interface AddAuthKeyProps {
@@ -95,23 +94,11 @@ export default function AddAuthKey({
         <DialogPanel variant="unactionable">
           <Title>Pre-auth key created</Title>
           <Text>Copy this key now. You will not be able to see the full key again.</Text>
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-mist-100 px-3 py-2 dark:bg-mist-800">
-            <code className="min-w-0 flex-1 truncate font-mono text-sm">{createdKey}</code>
-            <Button
-              className="shrink-0"
-              onClick={async () => {
-                await navigator.clipboard.writeText(createdKey);
-                toast("Copied key to clipboard");
-              }}
-              variant="light"
-            >
-              Copy
-            </Button>
-          </div>
+          <CodeBlock className="mt-4">{createdKey}</CodeBlock>
           <Text className="mt-4 text-sm">To register a device with this key:</Text>
-          <Code isCopyable className="mt-1 block text-sm">
+          <CodeBlock className="mt-1">
             {`tailscale up --login-server=${url} --authkey ${createdKey}`}
-          </Code>
+          </CodeBlock>
         </DialogPanel>
       ) : (
         <DialogPanel
