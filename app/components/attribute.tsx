@@ -24,9 +24,8 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
       >
         {name}
         {tooltip ? (
-          <Tooltip>
+          <Tooltip content={tooltip}>
             <Info className="size-4" />
-            <Tooltip.Body>{tooltip}</Tooltip.Body>
           </Tooltip>
         ) : undefined}
       </dt>

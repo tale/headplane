@@ -67,16 +67,19 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-md font-medium opacity-80">Global Nameservers</h2>
             <div className="flex items-center gap-2 text-sm">
-              <Tooltip>
+              <Tooltip
+                content={
+                  <>
+                    When enabled, use the DNS servers listed below to resolve names outside the
+                    tailnet. When disabled (default), devices will prefer their local DNS
+                    configuration.{" "}
+                    <Link external styled to="https://tailscale.com/kb/1054/dns#global-nameservers">
+                      Learn More
+                    </Link>
+                  </>
+                }
+              >
                 <Info className="size-4" />
-                <Tooltip.Body>
-                  When enabled, use the DNS servers listed below to resolve names outside the
-                  tailnet. When disabled (default), devices will prefer their local DNS
-                  configuration.
-                  <Link external styled to="https://tailscale.com/kb/1054/dns#global-nameservers">
-                    Learn More
-                  </Link>
-                </Tooltip.Body>
               </Tooltip>
               <p>Override DNS servers</p>
               <Switch

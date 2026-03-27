@@ -11,22 +11,23 @@ export interface SubnetTagProps {
 
 export function SubnetTag({ isEnabled }: SubnetTagProps) {
   return (
-    <Tooltip>
-      <Chip
-        text="Subnets"
-        className={cn("bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-300")}
-        rightIcon={isEnabled ? undefined : <Info className="h-full w-fit" />}
-      />
-      <Tooltip.Body>
-        {isEnabled ? (
+    <Tooltip
+      content={
+        isEnabled ? (
           <>This machine advertises subnet routes.</>
         ) : (
           <>
             This machine has unadvertised subnet routes. Review this from the "Edit route
             settings..." option in the machine's menu.
           </>
-        )}
-      </Tooltip.Body>
+        )
+      }
+    >
+      <Chip
+        text="Subnets"
+        className={cn("bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-300")}
+        rightIcon={isEnabled ? undefined : <Info className="h-full w-fit" />}
+      />
     </Tooltip>
   );
 }

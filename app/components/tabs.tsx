@@ -1,86 +1,89 @@
-import { useRef } from "react";
-import { AriaTabListProps, AriaTabPanelProps, useTab, useTabList, useTabPanel } from "react-aria";
-import { Item, Node, TabListState, useTabListState } from "react-stately";
+import { Tabs as BaseTabs } from "@base-ui/react/tabs";
+import type { ComponentProps, ReactNode } from "react";
 
 import cn from "~/utils/cn";
 
-export interface TabsProps extends AriaTabListProps<object> {
+export interface TabsProps {
   label: string;
   className?: string;
+  defaultValue?: string | number;
+  value?: string | number;
+  onValueChange?: (value: string | number) => void;
+  children: ReactNode;
 }
 
-function Tabs({ label, className, ...props }: TabsProps) {
-  const state = useTabListState(props);
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  const { tabListProps } = useTabList(props, state, ref);
+function Tabs({ label, className, children, ...props }: TabsProps) {
   return (
-    <div className={cn("flex flex-col", className)}>
-      <div
-        {...tabListProps}
-        className={cn(
-          "flex items-center rounded-t-lg w-fit max-w-full overflow-x-auto",
-          "border-mist-100 dark:border-mist-800",
-          "border-t border-x",
-        )}
-        ref={ref}
-      >
-        {[...state.collection].map((item) => (
-          <Tab item={item} key={item.key} state={state} />
-        ))}
-      </div>
-      <TabsPanel key={state.selectedItem?.key} state={state} />
-    </div>
+    <BaseTabs.Root
+      {...props}
+      defaultValue={props.defaultValue ?? 0}
+      aria-label={label}
+      className={cn("flex flex-col", className)}
+    >
+      {children}
+    </BaseTabs.Root>
   );
 }
 
-export interface TabsTabProps {
-  item: Node<object>;
-  state: TabListState<object>;
+function TabList({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <BaseTabs.List
+      className={cn(
+        "flex items-center rounded-t-lg w-fit max-w-full",
+        "border-mist-200 dark:border-mist-800",
+        "border-t border-x",
+        className,
+      )}
+    >
+      {children}
+    </BaseTabs.List>
+  );
 }
 
-function Tab({ item, state }: TabsTabProps) {
-  const { key, rendered } = item;
-  const ref = useRef<HTMLDivElement | null>(null);
-
-  const { tabProps } = useTab({ key }, state, ref);
+function Tab({
+  value,
+  children,
+  className,
+  ...props
+}: ComponentProps<typeof BaseTabs.Tab> & { className?: string }) {
   return (
-    <div
-      {...tabProps}
+    <BaseTabs.Tab
+      value={value}
+      {...props}
       className={cn(
         "pl-2 pr-3 py-2.5",
-        "aria-selected:bg-mist-100 dark:aria-selected:bg-mist-950",
+        "data-[selected]:bg-mist-50 dark:data-[selected]:bg-mist-950",
         "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1 z-10",
         "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-        "border-r border-mist-100 dark:border-mist-800",
+        "border-r border-mist-200 dark:border-mist-800",
         "first:rounded-tl-lg last:rounded-tr-lg last:border-r-0",
+        className,
       )}
-      ref={ref}
     >
-      {rendered}
-    </div>
+      {children}
+    </BaseTabs.Tab>
   );
 }
 
-export interface TabsPanelProps extends AriaTabPanelProps {
-  state: TabListState<object>;
-}
-
-function TabsPanel({ state, ...props }: TabsPanelProps) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const { tabPanelProps } = useTabPanel(props, state, ref);
+function Panel({
+  value,
+  children,
+  className,
+  ...props
+}: ComponentProps<typeof BaseTabs.Panel> & { className?: string }) {
   return (
-    <div
-      {...tabPanelProps}
+    <BaseTabs.Panel
+      value={value}
+      {...props}
       className={cn(
         "w-full overflow-clip rounded-b-lg rounded-r-lg",
-        "border border-mist-100 dark:border-mist-800",
+        "border border-mist-200 dark:border-mist-800",
+        className,
       )}
-      ref={ref}
     >
-      {state.selectedItem?.props.children}
-    </div>
+      {children}
+    </BaseTabs.Panel>
   );
 }
 
-export default Object.assign(Tabs, { Item });
+export { Tabs, TabList as TabsList, Tab as TabsTab, Panel as TabsPanel };

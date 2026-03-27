@@ -15,7 +15,7 @@ export default function Footer({ isDebug, baseUrl }: FooterProps) {
   return (
     <footer
       className={cn(
-        "fixed w-full bottom-0 left-0 z-50",
+        "fixed w-full bottom-0 left-0 z-20",
         "bg-mist-50 dark:bg-mist-950",
         "dark:border-t dark:border-mist-800",
       )}

@@ -61,16 +61,12 @@ export default function AddNameserver({ nameservers }: Props) {
           <div className="block">
             <div className="inline-flex items-center gap-2">
               <Text className="font-semibold">Restrict to domain</Text>
-              <Tooltip>
+              <Tooltip content="Only clients that support split DNS (Tailscale v1.8 or later for most platforms) will use this nameserver. Older clients will ignore it.">
                 <Chip
                   className={cn("inline-flex items-center")}
                   leftIcon={<Split className="mr-0.5 h-3 w-3" />}
                   text="Split DNS"
                 />
-                <Tooltip.Body>
-                  Only clients that support split DNS (Tailscale v1.8 or later for most platforms)
-                  will use this nameserver. Older clients will ignore it.
-                </Tooltip.Body>
               </Tooltip>
             </div>
             <Text className="text-sm">This nameserver will only be used for some domains.</Text>

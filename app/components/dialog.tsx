@@ -1,100 +1,62 @@
+import { AlertDialog } from "@base-ui/react/alert-dialog";
 import React, { cloneElement, useEffect, useRef } from "react";
-import {
-  type AriaDialogProps,
-  type AriaModalOverlayProps,
-  Overlay,
-  useDialog,
-  useModalOverlay,
-  useOverlayTrigger,
-} from "react-aria";
 import { Form, type HTMLFormMethod } from "react-router";
-import {
-  type OverlayTriggerProps,
-  type OverlayTriggerState,
-  useOverlayTriggerState,
-} from "react-stately";
 
-import Button, { ButtonProps } from "~/components/button";
+import Button, { type ButtonProps } from "~/components/button";
 import cn from "~/utils/cn";
 import { useLiveData } from "~/utils/live-data";
 
-export interface DialogProps extends OverlayTriggerProps {
+export interface DialogProps {
   children:
     | [React.ReactElement<ButtonProps>, React.ReactElement<DialogPanelProps>]
     | React.ReactElement<DialogPanelProps>;
+  isOpen?: boolean;
+  onOpenChange?: (isOpen: boolean) => void;
 }
 
 function Dialog(props: DialogProps) {
   const { pause, resume } = useLiveData();
-  const state = useOverlayTriggerState(props);
-  const { triggerProps, overlayProps } = useOverlayTrigger(
-    {
-      type: "dialog",
-    },
-    state,
-  );
+  const { isOpen, onOpenChange } = props;
 
   useEffect(() => {
-    if (state.isOpen) {
+    if (isOpen) {
       pause();
     } else {
       resume();
     }
-  }, [state.isOpen]);
+  }, [isOpen]);
 
   if (Array.isArray(props.children)) {
     const [button, panel] = props.children;
-    const buttonTriggerProps = { onClick: triggerProps.onPress } as Record<string, unknown>;
     return (
-      <>
-        {cloneElement(button, buttonTriggerProps)}
-        {state.isOpen && (
-          <DModal state={state}>
-            {cloneElement(panel, {
-              ...overlayProps,
-              close: () => state.close(),
-            })}
-          </DModal>
-        )}
-      </>
+      <AlertDialog.Root open={isOpen} onOpenChange={(open) => onOpenChange?.(open)}>
+        <AlertDialog.Trigger render={cloneElement(button)} />
+        <DialogOverlay>{panel}</DialogOverlay>
+      </AlertDialog.Root>
     );
   }
 
   return (
-    <DModal state={state}>
-      {cloneElement(props.children, {
-        ...overlayProps,
-        close: () => state.close(),
-      })}
-    </DModal>
+    <AlertDialog.Root open={isOpen} onOpenChange={(open) => onOpenChange?.(open)}>
+      <DialogOverlay>{props.children}</DialogOverlay>
+    </AlertDialog.Root>
   );
 }
 
-export interface DialogPanelProps extends AriaDialogProps {
+export interface DialogPanelProps {
   children: React.ReactNode;
   variant?: "normal" | "destructive" | "unactionable";
   onSubmit?: React.FormEventHandler<HTMLFormElement>;
   method?: HTMLFormMethod;
   isDisabled?: boolean;
-
-  // Anonymous (passed by parent)
-  close?: () => void;
 }
 
 function Panel(props: DialogPanelProps) {
-  const { children, onSubmit, isDisabled, close, variant, method = "POST" } = props;
-  const ref = useRef<HTMLFormElement | null>(null);
-  const { dialogProps } = useDialog(
-    {
-      ...props,
-      role: "alertdialog",
-    },
-    ref,
-  );
+  const { children, onSubmit, isDisabled, variant, method = "POST" } = props;
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   return (
-    <Form
-      {...dialogProps}
+    <AlertDialog.Popup
       className={cn(
         "w-full max-w-lg rounded-xl p-4",
         "outline-hidden",
@@ -102,67 +64,53 @@ function Panel(props: DialogPanelProps) {
         "border border-mist-200 dark:border-mist-800",
         "shadow-overlay",
       )}
-      method={method ?? "POST"}
-      onSubmit={(event) => {
-        if (onSubmit) {
-          onSubmit(event);
-        }
-
-        close?.();
-      }}
-      ref={ref}
     >
-      <div className="flex flex-col gap-4">{children}</div>
-      <div className="mt-5 flex justify-end gap-3">
-        {variant === "unactionable" ? (
-          <Button onClick={close}>Close</Button>
-        ) : (
-          <>
-            <Button onClick={close}>Cancel</Button>
-            <Button
-              disabled={isDisabled}
-              type="submit"
-              variant={variant === "destructive" ? "danger" : "heavy"}
-            >
-              Confirm
-            </Button>
-          </>
-        )}
-      </div>
-    </Form>
+      <Form
+        method={method ?? "POST"}
+        onSubmit={(event) => {
+          if (onSubmit) {
+            onSubmit(event);
+          }
+
+          if (!event.defaultPrevented) {
+            closeRef.current?.click();
+          }
+        }}
+      >
+        <div className="flex flex-col gap-4">{children}</div>
+        <div className="mt-5 flex justify-end gap-3">
+          {variant === "unactionable" ? (
+            <AlertDialog.Close render={<Button>Close</Button>} />
+          ) : (
+            <>
+              <AlertDialog.Close render={<Button>Cancel</Button>} />
+              <AlertDialog.Close ref={closeRef} className="hidden" aria-hidden tabIndex={-1} />
+              <Button
+                disabled={isDisabled}
+                type="submit"
+                variant={variant === "destructive" ? "danger" : "heavy"}
+              >
+                Confirm
+              </Button>
+            </>
+          )}
+        </div>
+      </Form>
+    </AlertDialog.Popup>
   );
 }
 
-interface DModalProps extends AriaModalOverlayProps {
-  children: React.ReactNode;
-  state: OverlayTriggerState;
-}
-
-function DModal(props: DModalProps) {
-  const { children, state } = props;
-  const ref = useRef<HTMLDivElement>(null);
-  const { modalProps, underlayProps } = useModalOverlay(props, state, ref);
-
-  if (!state.isOpen) {
-    return null;
-  }
-
+function DialogOverlay({ children }: { children: React.ReactNode }) {
   return (
-    <Overlay>
-      <div
-        {...underlayProps}
-        aria-hidden="true"
+    <AlertDialog.Portal>
+      <AlertDialog.Backdrop
         className={cn(
           "fixed inset-0 z-20 h-screen w-screen",
-          "flex items-center justify-center",
           "bg-mist-900/30 dark:bg-mist-950/60",
-          "entering:animate-in exiting:animate-out",
-          "entering:fade-in entering:duration-100 entering:ease-out",
-          "exiting:fade-out exiting:duration-50 exiting:ease-in",
+          "transition-opacity duration-100",
         )}
       />
       <div
-        {...modalProps}
         className={cn(
           "fixed inset-0 z-20 h-screen w-screen",
           "flex items-center justify-center p-4",
@@ -170,7 +118,7 @@ function DModal(props: DModalProps) {
       >
         {children}
       </div>
-    </Overlay>
+    </AlertDialog.Portal>
   );
 }
 

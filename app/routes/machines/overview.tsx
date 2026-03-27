@@ -271,16 +271,19 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                       ))}
                   </button>
                   {loaderData.magic ? (
-                    <Tooltip>
+                    <Tooltip
+                      content={
+                        <span className="font-normal">
+                          Since MagicDNS is enabled, you can access devices based on their name and
+                          also at{" "}
+                          <Code>
+                            [name].
+                            {loaderData.magic}
+                          </Code>
+                        </span>
+                      }
+                    >
                       <Info className="h-4 w-4" />
-                      <Tooltip.Body className="font-normal">
-                        Since MagicDNS is enabled, you can access devices based on their name and
-                        also at{" "}
-                        <Code>
-                          [name].
-                          {loaderData.magic}
-                        </Code>
-                      </Tooltip.Body>
                     </Tooltip>
                   ) : undefined}
                 </div>

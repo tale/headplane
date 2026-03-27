@@ -1,4 +1,4 @@
-import { Check, Copy } from "lucide-react";
+import { Check } from "lucide-react";
 import { redirect } from "react-router";
 
 import androidSvg from "~/assets/android.svg";
@@ -6,14 +6,13 @@ import iosSvg from "~/assets/ios.svg";
 import linuxSvg from "~/assets/linux.svg";
 import macosSvg from "~/assets/macos.svg";
 import windowsSvg from "~/assets/windows.svg";
-import Button from "~/components/button";
 import Card from "~/components/card";
+import CodeBlock from "~/components/code-block";
 import Link from "~/components/link";
 import LinkAccount from "~/layout/link-account";
 import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
-import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/home";
@@ -152,28 +151,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             <img alt="Linux" className="w-4 dark:invert" src={linuxSvg} />
             <span className="text-sm font-medium">Linux</span>
           </div>
-          <div className="mt-2 flex items-center gap-2">
-            <code
-              className={cn(
-                "flex-1 rounded-md px-3 py-2 text-xs h-8",
-                "bg-mist-100 dark:bg-mist-800",
-              )}
-            >
-              curl -fsSL https://tailscale.com/install.sh | sh
-            </code>
-            <Button
-              className="h-8 p-1 px-2"
-              variant="ghost"
-              onClick={async () => {
-                await navigator.clipboard.writeText(
-                  "curl -fsSL https://tailscale.com/install.sh | sh",
-                );
-                toast("Copied to clipboard");
-              }}
-            >
-              <Copy className="size-4" />
-            </Button>
-          </div>
+          <CodeBlock className="mt-2">curl -fsSL https://tailscale.com/install.sh | sh</CodeBlock>
           <p className="mt-1 text-xs text-mist-500 dark:text-mist-400">
             <Link
               external

@@ -19,7 +19,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const origin = new URL(request.url).origin;
-  const assets = ["/wasm_exec.js", "/hp_ssh.wasm"];
+  const assets = [`${__PREFIX__}/wasm_exec.js`, `${__PREFIX__}/hp_ssh.wasm`];
   const missing: string[] = [];
 
   for (const file of assets) {
@@ -180,7 +180,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 export const links: Route.LinksFunction = () => [
   {
     rel: "preload",
-    href: "/hp_ssh.wasm",
+    href: `${__PREFIX__}/hp_ssh.wasm`,
     as: "fetch",
     type: "application/wasm",
     crossOrigin: "anonymous",
@@ -190,7 +190,7 @@ export const links: Route.LinksFunction = () => [
 export const handle: ExternalScriptsHandle = {
   scripts: [
     {
-      src: "/wasm_exec.js",
+      src: `${__PREFIX__}/wasm_exec.js`,
       crossOrigin: "anonymous",
       preload: true,
     },
@@ -211,44 +211,46 @@ export default function Page({ loaderData: { ipnDetails, sshDetails } }: Route.C
 
     pause();
     const go = new Go(); // Go is defined by wasm_exec.js
-    WebAssembly.instantiateStreaming(fetch("/hp_ssh.wasm"), go.importObject).then((value) => {
-      go.run(value.instance);
-      const handle = TsWasmNet(ipnDetails, {
-        NotifyState: (state) => {
-          console.log("State changed:", state);
-          if (state === "Running") {
-            setIpn(handle);
-          }
-        },
-        NotifyNetMap: (netmap) => {
-          // Only set NodeKey if it is not already set and then
-          // also dispatch that to the backend to track the
-          // ephemeral node.
-          //
-          // We open an SSE connection to the backend
-          // so that when the connection is closed,
-          // the backend can delete the ephemeral node.
-          if (nodeKey === null) {
-            setNodeKey(netmap.NodeKey);
-            submit(
-              {
-                node_key: netmap.NodeKey,
-                auth_key: ipnDetails.PreAuthKey,
-              },
-              { method: "POST" },
-            );
-          }
-        },
-        NotifyBrowseToURL: (url) => {
-          console.log("Browse to URL:", url);
-        },
-        NotifyPanicRecover: (message) => {
-          console.error("Panic recover:", message);
-        },
-      });
+    WebAssembly.instantiateStreaming(fetch(`${__PREFIX__}/hp_ssh.wasm`), go.importObject).then(
+      (value) => {
+        go.run(value.instance);
+        const handle = TsWasmNet(ipnDetails, {
+          NotifyState: (state) => {
+            console.log("State changed:", state);
+            if (state === "Running") {
+              setIpn(handle);
+            }
+          },
+          NotifyNetMap: (netmap) => {
+            // Only set NodeKey if it is not already set and then
+            // also dispatch that to the backend to track the
+            // ephemeral node.
+            //
+            // We open an SSE connection to the backend
+            // so that when the connection is closed,
+            // the backend can delete the ephemeral node.
+            if (nodeKey === null) {
+              setNodeKey(netmap.NodeKey);
+              submit(
+                {
+                  node_key: netmap.NodeKey,
+                  auth_key: ipnDetails.PreAuthKey,
+                },
+                { method: "POST" },
+              );
+            }
+          },
+          NotifyBrowseToURL: (url) => {
+            console.log("Browse to URL:", url);
+          },
+          NotifyPanicRecover: (message) => {
+            console.error("Panic recover:", message);
+          },
+        });
 
-      handle.Start();
-    });
+        handle.Start();
+      },
+    );
   }, []);
 
   if (!sshDetails.username) {

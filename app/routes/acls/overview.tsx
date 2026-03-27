@@ -8,7 +8,7 @@ import Code from "~/components/code";
 import Link from "~/components/link";
 import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
-import Tabs from "~/components/tabs";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
 import toast from "~/utils/toast";
 
@@ -79,38 +79,34 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
             "An unknown error occurred while trying to update the ACL policy."}
         </Notice>
       ) : undefined}
-      <Tabs className="mb-4" label="ACL Editor">
-        <Tabs.Item
-          key="edit"
-          title={
+      <Tabs className="mb-4" label="ACL Editor" defaultValue="edit">
+        <TabsList>
+          <TabsTab value="edit">
             <div className="flex items-center gap-2">
               <Pencil className="p-1" />
               <span>Edit file</span>
             </div>
-          }
-        >
-          <Editor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
-        </Tabs.Item>
-        <Tabs.Item
-          key="diff"
-          title={
+          </TabsTab>
+          <TabsTab value="diff">
             <div className="flex items-center gap-2">
               <Eye className="p-1" />
               <span>Preview changes</span>
             </div>
-          }
-        >
-          <Differ left={policy} right={codePolicy} />
-        </Tabs.Item>
-        <Tabs.Item
-          key="preview"
-          title={
+          </TabsTab>
+          <TabsTab value="preview">
             <div className="flex items-center gap-2">
               <FlaskConical className="p-1" />
               <span>Preview rules</span>
             </div>
-          }
-        >
+          </TabsTab>
+        </TabsList>
+        <TabsPanel value="edit">
+          <Editor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
+        </TabsPanel>
+        <TabsPanel value="diff">
+          <Differ left={policy} right={codePolicy} />
+        </TabsPanel>
+        <TabsPanel value="preview">
           <div className="flex flex-col items-center py-8">
             <Construction />
             <p className="mt-4 w-1/2 text-center">
@@ -118,7 +114,7 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
               pretty complicated to implement. Hopefully I will be able to get to it soon.
             </p>
           </div>
-        </Tabs.Item>
+        </TabsPanel>
       </Tabs>
       <Button
         className="mr-2"
