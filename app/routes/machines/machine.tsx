@@ -56,9 +56,16 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const [enhancedNode] = mapNodes([node], lookup);
   const tags = [...node.tags].toSorted();
   const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
+  const agentSync = context.agents?.lastSync();
 
   return {
-    agent: context.agents?.agentID(),
+    agent: agentSync
+      ? {
+          syncedAt: agentSync.syncedAt?.toISOString() ?? null,
+          nodeCount: agentSync.nodeCount,
+          nodeKey: context.agents?.agentNodeKey(),
+        }
+      : undefined,
     existingTags: sortNodeTags(nodes),
     magic,
     node: enhancedNode,
@@ -77,7 +84,7 @@ export default function Page({
   const [showRouting, setShowRouting] = useState(false);
 
   const uiTags = useMemo(() => {
-    const tags = uiTagsForNode(node, agent === node.nodeKey);
+    const tags = uiTagsForNode(node, agent?.nodeKey === node.nodeKey);
     return tags;
   }, [node, agent]);
 

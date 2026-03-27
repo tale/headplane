@@ -46,12 +46,8 @@ const agents = headscaleApiKey
   ? await createAgentManager(
       config.integration?.agent,
       config.headscale.url,
-      headscaleApiKey,
-      (user, ephemeral, reusable, expiration, aclTags) =>
-        hsApi
-          .getRuntimeClient(headscaleApiKey)
-          .createPreAuthKey(user, ephemeral, reusable, expiration, aclTags),
-      () => hsApi.getRuntimeClient(headscaleApiKey).getUsers(),
+      hsApi.getRuntimeClient(headscaleApiKey),
+      hsApi.clientHelpers.isAtleast("0.28.0"),
       db,
     )
   : (() => {

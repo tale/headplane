@@ -69,17 +69,17 @@ func (s *TSAgent) GetStatusForPeer(id string) (*tailcfg.HostinfoView, error) {
 	return &whois.Node.Hostinfo, nil
 }
 
-// Dispatches ALL the HostInfo entries in our Tailnet to the master
-func (s *TSAgent) DispatchHostInfo(ctx context.Context) error {
+// FetchAllHostInfo fetches hostinfo for all peers and returns them as a map
+// keyed by node public key (e.g., "nodekey:abc123...").
+func (s *TSAgent) FetchAllHostInfo(ctx context.Context) (map[string]json.RawMessage, error) {
 	log := util.GetLogger()
 
 	stat, err := s.Lc.Status(ctx)
 	if err != nil {
 		log.Debug("Failed to get status: %s", err)
-		return fmt.Errorf("failed to get status: %w", err)
+		return nil, fmt.Errorf("failed to get status: %w", err)
 	}
 
-	// Do lookups for all peers with a hint of parallelism for speed!
 	const maxParallel = 8
 	sema := make(chan struct{}, maxParallel)
 	var wg sync.WaitGroup
@@ -95,6 +95,8 @@ func (s *TSAgent) DispatchHostInfo(ctx context.Context) error {
 
 		nodeMap[nodeKey] = peer
 	}
+
+	result := make(map[string]json.RawMessage)
 
 	for nodeKey, peer := range nodeMap {
 		idBytes, err := nodeKey.MarshalText()
@@ -138,11 +140,11 @@ func (s *TSAgent) DispatchHostInfo(ctx context.Context) error {
 			}
 
 			mu.Lock()
-			fmt.Println("HOSTINFO " + nodeID + " " + string(data))
+			result[nodeID] = json.RawMessage(data)
 			mu.Unlock()
 		}()
 	}
 
 	wg.Wait()
-	return nil
+	return result, nil
 }

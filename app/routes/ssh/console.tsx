@@ -8,6 +8,7 @@ import { ExternalScriptsHandle } from "remix-utils/external-scripts";
 import { EphemeralNodeInsert, ephemeralNodes } from "~/server/db/schema";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { useLiveData } from "~/utils/live-data";
+import log from "~/utils/log";
 
 import type { Route } from "./+types/console";
 import UserPrompt from "./user-prompt";
@@ -31,7 +32,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw data("WebSSH is not configured in this build.", 405);
   }
 
-  if (!context.agents?.agentID()) {
+  if (!context.agents) {
     throw data("WebSSH is only available with the Headplane agent integration", 400);
   }
 
@@ -153,7 +154,7 @@ function generateHostname(username: string) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   await context.auth.require(request);
-  if (!context.agents?.agentID()) {
+  if (!context.agents) {
     throw data("WebSSH is only available with the Headplane agent integration", 400);
   }
 
@@ -175,6 +176,10 @@ export async function action({ request, context }: Route.ActionArgs) {
       node_key: nodeKey,
     })
     .where(eq(ephemeralNodes.auth_key, authKey));
+
+  context.agents?.triggerSync().catch((err) => {
+    log.debug("agent", "Background agent sync failed: %s", err);
+  });
 }
 
 export const links: Route.LinksFunction = () => [

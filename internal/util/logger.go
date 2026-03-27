@@ -59,7 +59,7 @@ func (l *Logger) SetDebug(enabled bool) {
 func (l *Logger) log(level LogLevel, format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
 
-	fmt.Printf("LOG %s %s\n", level, msg)
+	fmt.Fprintf(os.Stderr, "LOG %s %s\n", level, msg)
 	if level == LevelFatal {
 		os.Exit(1)
 	}

@@ -54,8 +54,11 @@ To enable OIDC authentication in Headplane, add the following to your
 configuration file:
 
 ```yaml
+headscale:
+  url: "http://headscale:8080"
+  api_key: "<generated-api-key>"
+
 oidc:
-  headscale_api_key: "<generated-api-key>"
   issuer: "https://your-idp.com"
   client_id: "your-client-id"
   client_secret: "your-client-secret"
@@ -211,7 +214,7 @@ flow can be skipped. Once completed, users are taken to the main dashboard.
   setting. If Headplane is behind a reverse proxy with HTTPS, set it to `true`.
   If running without HTTPS (eg. local development), set it to `false`.
 
-- **Invalid API Key**: The `oidc.headscale_api_key` may have expired. Generate
+- **Invalid API Key**: The `headscale.api_key` may have expired. Generate
   a new one with `headscale apikeys create --expiration 999d`.
 
 - **Missing the `sub` claim**: Ensure your IdP includes the `sub` claim in the

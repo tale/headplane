@@ -1,393 +1,297 @@
-import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import EventEmitter from "node:events";
-import { access, constants, mkdir, open } from "node:fs/promises";
-import { getegid, geteuid } from "node:process";
-import { createInterface, Interface } from "node:readline";
+import { execFile } from "node:child_process";
+import { access, constants, mkdir, rm, stat } from "node:fs/promises";
+import { join } from "node:path";
+import { promisify } from "node:util";
 
-import { inArray } from "drizzle-orm";
+import { inArray, notInArray } from "drizzle-orm";
 import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 
 import { HostInfo } from "~/types";
 import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
-import { hostInfo } from "./db/schema";
+import { ephemeralNodes, hostInfo } from "./db/schema";
+import { RuntimeApiClient } from "./headscale/api/endpoints";
 
-export async function createHeadplaneAgent(
-  config: NonNullable<HeadplaneConfig["integration"]>["agent"] | undefined,
+const execFileAsync = promisify(execFile);
+
+export interface AgentManager {
+  lookup(nodeKeys: string[]): Promise<Record<string, HostInfo>>;
+  lastSync(): { syncedAt: Date | null; nodeCount: number; error?: string };
+  agentNodeKey(): string | undefined;
+  triggerSync(): Promise<void>;
+  dispose(): void;
+}
+
+interface AgentOutput {
+  self: string;
+  hosts: Record<string, HostInfo>;
+}
+
+interface SyncState {
+  syncedAt: Date | null;
+  nodeCount: number;
+  selfKey?: string;
+  error?: string;
+  isSyncing: boolean;
+  pendingResync: boolean;
+}
+
+async function hasExistingState(workDir: string): Promise<boolean> {
+  try {
+    await stat(join(workDir, "tailscaled.state"));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function createAgentManager(
+  agentConfig: NonNullable<NonNullable<HeadplaneConfig["integration"]>["agent"]> | undefined,
   headscaleUrl: string,
+  apiClient: RuntimeApiClient,
+  supportsTagOnlyKeys: boolean,
   db: NodeSQLiteDatabase,
-) {
-  if (!config?.enabled) {
+): Promise<AgentManager | undefined> {
+  if (!agentConfig?.enabled) {
     return;
   }
 
-  if (!config.pre_authkey) {
-    log.error("agent", "Agent `pre_authkey` is not set");
-    log.warn("agent", "The agent will not run until resolved");
+  if (!supportsTagOnlyKeys) {
+    log.error("agent", "The Headplane agent requires Headscale 0.28 or newer");
+    log.error("agent", "The agent will not run without support for tag-only keys");
     return;
   }
 
   try {
-    await access(config.work_dir, constants.R_OK | constants.W_OK);
-    log.debug("config", "Using agent work dir at %s", config.work_dir);
-  } catch (error) {
-    // Try to create the directory just in case
-    try {
-      await mkdir(config.work_dir, { recursive: true });
-      log.debug("config", "Created agent work dir at %s", config.work_dir);
-      log.info("config", "Created missing agent work dir at %s", config.work_dir);
+    await access(agentConfig.executable_path, constants.X_OK);
+  } catch {
+    log.error("agent", "Agent executable not accessible at %s", agentConfig.executable_path);
+    return;
+  }
 
-      return;
+  try {
+    await access(agentConfig.work_dir, constants.R_OK | constants.W_OK);
+  } catch {
+    try {
+      await mkdir(agentConfig.work_dir, { recursive: true });
+      log.info("agent", "Created agent work dir at %s", agentConfig.work_dir);
     } catch (innerError) {
-      log.error("config", "Failed to create agent work dir at %s", config.work_dir);
-      log.info("config", "Agent work dir not accessible at %s", config.work_dir);
-      log.debug("config", "Error details: %s", error);
-      log.debug("config", "Create error details: %s", innerError);
-      return;
-    }
-  }
-
-  try {
-    const handle = await open(config.cache_path, "a+");
-    log.info("agent", "Using agent cache file at %s", config.cache_path);
-    await handle.close();
-  } catch (error) {
-    log.info("agent", "Agent cache file not accessible at %s", config.cache_path);
-    log.debug("agent", "Error details: %s", error);
-    return;
-  }
-
-  const agent = new HeadplaneAgent({
-    ...config,
-    headscaleUrl,
-  });
-
-  agent.on("spawn", () => {
-    log.info("agent", "Headplane agent started");
-  });
-
-  agent.on("ready", () => {
-    log.info("agent", "Headplane agent is ready and serving queries");
-  });
-
-  agent.on("error", (err) => {
-    log.warn("agent", "Headplane agent experienced an error: %s", err.message);
-    log.debug("agent", "Error details: %o", err);
-  });
-
-  agent.on("exit", ({ code, signal }) => {
-    log.warn("agent", "Headplane agent exited with code %s and signal %s", code, signal);
-  });
-
-  agent.on("restart", ({ delay, attempt }) => {
-    log.warn(
-      "agent",
-      "Headplane agent will restart in %f seconds (attempt %d)",
-      delay / 1000,
-      attempt,
-    );
-  });
-
-  agent.on("stderr", (data) => {
-    log.error("agent", "Headplane agent stderr:", data);
-  });
-
-  agent.on("info", async ({ id, info }) => {
-    log.debug("agent", "Received HostInfo for %s", id);
-    try {
-      const parsedInfo = JSON.parse(info) as HostInfo;
-      await db
-        .insert(hostInfo)
-        .values({
-          host_id: id,
-          payload: parsedInfo,
-          updated_at: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: hostInfo.host_id,
-          set: {
-            payload: parsedInfo,
-            updated_at: new Date(),
-          },
-        });
-    } catch (error) {
       log.error(
         "agent",
-        "Failed to parse HostInfo for %s: %s",
-        id,
-        error instanceof Error ? error.message : String(error),
+        "Failed to create agent work dir at %s: %s",
+        agentConfig.work_dir,
+        innerError instanceof Error ? innerError.message : String(innerError),
       );
       return;
     }
-  });
+  }
 
-  agent.start();
+  const hostName = agentConfig.host_name ?? "headplane-agent";
+  const cacheTtl = agentConfig.cache_ttl ?? 180_000;
+  const executablePath = agentConfig.executable_path;
+  const workDir = agentConfig.work_dir;
 
-  process.on("SIGTERM", () => agent.shutdown());
-  process.on("SIGINT", () => agent.shutdown());
+  const state: SyncState = {
+    syncedAt: null,
+    nodeCount: 0,
+    isSyncing: false,
+    pendingResync: false,
+  };
+
+  async function generateAuthKey(): Promise<string> {
+    const expiration = new Date(Date.now() + 5 * 60_000);
+    const pak = await apiClient.createPreAuthKey(null, false, false, expiration, [
+      `tag:${hostName}`,
+    ]);
+    return pak.key;
+  }
+
+  async function runAgent(authKey: string): Promise<string> {
+    const env: Record<string, string> = {
+      HOME: process.env.HOME ?? "",
+      HEADPLANE_AGENT_WORK_DIR: workDir,
+      HEADPLANE_AGENT_TS_SERVER: headscaleUrl,
+      HEADPLANE_AGENT_HOSTNAME: hostName,
+      HEADPLANE_AGENT_DEBUG: log.debugEnabled ? "true" : "false",
+    };
+
+    if (authKey) {
+      env.HEADPLANE_AGENT_TS_AUTHKEY = authKey;
+    }
+
+    const { stdout } = await execFileAsync(executablePath, [], {
+      timeout: 60_000,
+      env,
+    });
+
+    return stdout;
+  }
+
+  async function sync() {
+    if (state.isSyncing) {
+      state.pendingResync = true;
+      log.debug("agent", "Sync already in progress, queued resync");
+      return;
+    }
+
+    state.isSyncing = true;
+    try {
+      const stateExists = await hasExistingState(workDir);
+      const authKey = stateExists ? "" : await generateAuthKey();
+
+      if (stateExists) {
+        log.debug("agent", "Reusing existing tsnet identity");
+      }
+
+      let stdout: string;
+      try {
+        stdout = await runAgent(authKey);
+      } catch (err) {
+        if (stateExists) {
+          log.info("agent", "Agent failed with existing state, clearing and retrying");
+          await rm(join(workDir, "tailscaled.state"), { force: true });
+          const freshKey = await generateAuthKey();
+          stdout = await runAgent(freshKey);
+        } else {
+          throw err;
+        }
+      }
+
+      const output = JSON.parse(stdout) as AgentOutput;
+      const keys = Object.keys(output.hosts);
+
+      for (const [nodeKey, payload] of Object.entries(output.hosts)) {
+        await db
+          .insert(hostInfo)
+          .values({
+            host_id: nodeKey,
+            payload,
+            updated_at: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: hostInfo.host_id,
+            set: {
+              payload,
+              updated_at: new Date(),
+            },
+          });
+      }
+
+      await pruneStaleHostInfo();
+      await pruneEphemeralNodes();
+
+      state.syncedAt = new Date();
+      state.nodeCount = keys.length;
+      state.selfKey = output.self || undefined;
+      state.error = undefined;
+
+      log.info("agent", "Sync complete: %d nodes updated", keys.length);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      state.error = message;
+      log.error("agent", "Sync failed: %s", message);
+    } finally {
+      state.isSyncing = false;
+      if (state.pendingResync) {
+        state.pendingResync = false;
+        sync();
+      }
+    }
+  }
+
+  async function pruneStaleHostInfo() {
+    try {
+      const nodes = await apiClient.getNodes();
+      const activeKeys = nodes.map((n) => n.nodeKey);
+
+      if (activeKeys.length === 0) {
+        return;
+      }
+
+      const deleted = await db
+        .delete(hostInfo)
+        .where(notInArray(hostInfo.host_id, activeKeys))
+        .returning();
+
+      if (deleted.length > 0) {
+        log.info("agent", "Pruned %d stale hostinfo entries", deleted.length);
+      }
+    } catch (error) {
+      log.debug(
+        "agent",
+        "Failed to prune stale hostinfo: %s",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  async function pruneEphemeralNodes() {
+    try {
+      const rows = await db.select().from(ephemeralNodes);
+      if (rows.length === 0) {
+        return;
+      }
+
+      const nodes = await apiClient.getNodes();
+      const activeKeys = new Set(nodes.map((n) => n.nodeKey));
+
+      for (const row of rows) {
+        if (!row.node_key) {
+          continue;
+        }
+
+        if (!activeKeys.has(row.node_key)) {
+          await db.delete(ephemeralNodes).where(inArray(ephemeralNodes.auth_key, [row.auth_key]));
+          log.info("agent", "Pruned ephemeral SSH node %s", row.node_key);
+        }
+      }
+    } catch (error) {
+      log.debug(
+        "agent",
+        "Failed to prune ephemeral nodes: %s",
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  sync();
+
+  const interval = setInterval(() => {
+    sync();
+  }, cacheTtl);
 
   return {
-    agentID: () => agent.agentID(),
-    lookup: async (nodes: string[]) => {
-      const results = await db.select().from(hostInfo).where(inArray(hostInfo.host_id, nodes));
+    async lookup(nodeKeys) {
+      if (nodeKeys.length === 0) {
+        return {};
+      }
+
+      const results = await db.select().from(hostInfo).where(inArray(hostInfo.host_id, nodeKeys));
 
       return Object.fromEntries(
         results.filter((r) => r.payload).map((r) => [r.host_id, r.payload]),
       ) as Record<string, HostInfo>;
     },
+
+    lastSync() {
+      return {
+        syncedAt: state.syncedAt,
+        nodeCount: state.nodeCount,
+        error: state.error,
+      };
+    },
+
+    agentNodeKey() {
+      return state.selfKey;
+    },
+
+    async triggerSync() {
+      await sync();
+    },
+
+    dispose() {
+      clearInterval(interval);
+    },
   };
-}
-
-type AgentOptions = NonNullable<NonNullable<HeadplaneConfig["integration"]>["agent"]> & {
-  headscaleUrl: string;
-};
-
-interface AgentEvents {
-  ready: [];
-  spawn: [];
-  error: [Error];
-  exit: [{ code?: number; signal?: NodeJS.Signals }];
-  restart: [{ delay: number; attempt: number }];
-  stderr: [string];
-  info: [{ id: string; info: string }];
-}
-
-/**
- * A custom class that turns the lifecycle of the agent into an event emitter.
- * It has many different responsibilities ensuring that:
- * - The agent is spawned with the correct configuration
- * - The agent is ready and still running (ping/heartbeat)
- * - The agent is restarted on a backoff strategy
- */
-class HeadplaneAgent extends EventEmitter<AgentEvents> {
-  private child?: ChildProcessWithoutNullStreams;
-  private readline?: Interface;
-
-  private options: AgentOptions;
-
-  private hbInterval?: NodeJS.Timeout;
-  private hbDeadline?: NodeJS.Timeout;
-  private restartTimer?: NodeJS.Timeout;
-  private refreshInterval?: NodeJS.Timeout;
-  private isWaitingForAck = false;
-  private isShuttingDown = false;
-  private backoffAttempt = 0;
-  private agentId?: string;
-
-  private BASE_BACKOFF_MS = 1.5 * 1000; // 1.5 seconds
-  private MAX_BACKOFF_MS = 30 * 1000; // 30 seconds
-  private PROBE_COOLDOWN_MS = 5 * 60_000; // 5 minutes
-  private PROBE_ATTEMPT_INTERVAL = 10; // Every 10th attempt
-
-  private HEARTBEAT_INTERVAL_MS = 5 * 1000; // 5 seconds
-  private HEARTBEAT_TIMEOUT_MS = 3 * 1000; // 3 seconds
-
-  constructor(options: AgentOptions) {
-    super();
-    this.options = options;
-  }
-
-  agentID() {
-    return this.agentId;
-  }
-
-  start() {
-    this.isShuttingDown = false;
-    this.spawnInternalChild();
-  }
-
-  shutdown() {
-    this.isShuttingDown = true;
-    this.agentId = undefined;
-
-    clearTimeout(this.restartTimer);
-    clearInterval(this.hbInterval);
-    clearInterval(this.refreshInterval);
-    clearTimeout(this.hbDeadline);
-    this.isWaitingForAck = false;
-
-    this.send("SHUTDOWN");
-    this.child?.kill("SIGTERM");
-    this.readline?.close();
-  }
-
-  private spawnInternalChild() {
-    this.child = spawn(this.options.executable_path, {
-      stdio: ["pipe", "pipe", "pipe"],
-      uid: geteuid?.() ?? undefined,
-      gid: getegid?.() ?? undefined,
-      env: {
-        HOME: process.env.HOME,
-        HEADPLANE_AGENT_WORK_DIR: this.options.work_dir,
-        HEADPLANE_AGENT_DEBUG: log.debugEnabled ? "true" : "false",
-        HEADPLANE_AGENT_HOSTNAME: this.options.host_name,
-        HEADPLANE_AGENT_TS_SERVER: this.options.headscaleUrl,
-        HEADPLANE_AGENT_TS_AUTHKEY: this.options.pre_authkey,
-      },
-    });
-
-    this.emit("spawn");
-    this.child.on("error", (err) => this.emit("error", err));
-    this.child.stderr.on("data", (data) => this.emit("stderr", data.toString()));
-
-    this.child.on("exit", (code, signal) => {
-      this.agentId = undefined;
-      this.emit("exit", {
-        code: code ?? undefined,
-        signal: signal ?? undefined,
-      });
-
-      this.readline?.close();
-      clearInterval(this.hbInterval);
-      clearInterval(this.refreshInterval);
-      clearTimeout(this.hbDeadline);
-      this.isWaitingForAck = false;
-
-      if (this.isShuttingDown) {
-        log.info("agent", "Child process exited gracefully");
-        return;
-      }
-
-      this.backoffAttempt++;
-      const delay = this.calculateBackoff();
-      this.emit("restart", { delay, attempt: this.backoffAttempt });
-      this.restartTimer = setTimeout(() => this.spawnInternalChild(), delay);
-    });
-
-    this.readline = createInterface({ input: this.child.stdout });
-    this.readline.on("line", (line) => this.readlineHandler(line));
-    this.send("START");
-
-    // Start the heartbeat loop with our custom interval
-    this.hbInterval = setInterval(() => {
-      if (!this.child || this.child.killed) return;
-
-      // If we get here, we missed the last PONG response and can die
-      if (this.isWaitingForAck) {
-        this.agentId = undefined;
-        this.emit("error", new Error("Agent heartbeat missed"));
-        this.child.kill("SIGTERM");
-        return;
-      }
-
-      this.isWaitingForAck = true;
-      this.send("PING");
-
-      clearTimeout(this.hbDeadline);
-      this.hbDeadline = setTimeout(() => {
-        if (this.isWaitingForAck) {
-          this.agentId = undefined;
-          this.emit("error", new Error("Agent heartbeat timeout"));
-          this.child?.kill("SIGTERM");
-        }
-      }, this.HEARTBEAT_TIMEOUT_MS);
-    }, this.HEARTBEAT_INTERVAL_MS);
-  }
-
-  private send(s: string) {
-    if (!this.child || this.child.killed) return;
-    const ok = this.child.stdin.write(`${s}\n`);
-    if (!ok) this.child.stdin.once("drain", () => {});
-  }
-
-  /**
-   * Calculates a backoff time based on the current attempt.
-   * Supports a randomized jitter to avoid thundering herd problems.
-   *
-   * @param min The minimum backoff time in milliseconds.
-   * @param max The maximum backoff time in milliseconds.
-   * @returns The calculated backoff time in milliseconds.
-   */
-  private calculateBackoff() {
-    const attempt = this.backoffAttempt;
-    if (attempt > 0 && attempt % this.PROBE_ATTEMPT_INTERVAL === 0) {
-      const jitter = Math.floor(Math.random() * (this.MAX_BACKOFF_MS + 1));
-      const sign = Math.random() < 0.5 ? -1 : 1;
-
-      return Math.max(0, this.PROBE_COOLDOWN_MS + jitter * sign);
-    }
-
-    const cap = Math.min(this.MAX_BACKOFF_MS, this.BASE_BACKOFF_MS * 2 ** attempt);
-
-    return Math.floor(Math.random() * (cap + 1));
-  }
-
-  /**
-   * Processes and dispatches the appropriate response based on the message.
-   * @param line The message to process (piped straight from readline)
-   */
-  private readlineHandler(line: string) {
-    // When we are ready we force a refresh so that the UI has the most
-    // up-to-date information and will gracefully handle new info being sent
-    if (line.startsWith("READY")) {
-      this.backoffAttempt = 0;
-      this.send("REFRESH");
-      this.emit("ready");
-
-      // Start periodic refresh using cache_ttl
-      clearInterval(this.refreshInterval);
-      this.refreshInterval = setInterval(() => {
-        if (!this.child || this.child.killed) return;
-        log.debug("agent", "Sending periodic REFRESH");
-        this.send("REFRESH");
-      }, this.options.cache_ttl);
-
-      const agentId = line.slice(5).trim();
-      if (this.agentId && this.agentId !== agentId) {
-        log.warn("agent", "Agent ID changed from %s to %s", this.agentId, agentId);
-      }
-
-      this.agentId = agentId;
-      return;
-    }
-
-    if (line.startsWith("PONG")) {
-      this.isWaitingForAck = false;
-      clearTimeout(this.hbDeadline);
-
-      const agentId = line.slice(5).trim();
-      if (this.agentId && this.agentId !== agentId) {
-        log.warn("agent", "Agent ID changed from %s to %s", this.agentId, agentId);
-      }
-
-      this.agentId = agentId;
-      return;
-    }
-
-    if (line.startsWith("HOSTINFO")) {
-      const data = line.slice(9).trim();
-      const [id, ...infoParts] = data.split(" ");
-      const info = infoParts.join(" ");
-      this.emit("info", { id, info });
-      return;
-    }
-
-    if (line.startsWith("ERROR")) {
-      const error = line.slice(6).trim();
-      this.emit("error", new Error(error));
-      return;
-    }
-
-    if (line.startsWith("LOG")) {
-      const logSnippet = line.slice(4).trim();
-      const [level, ...messageParts] = logSnippet.split(" ");
-      const message = messageParts.join(" ");
-      switch (level) {
-        case "INFO":
-          log.info("agent", message);
-          break;
-        case "WARN":
-          log.warn("agent", message);
-          break;
-        case "ERROR":
-          log.error("agent", message);
-          break;
-        default:
-          log.debug("agent", message);
-      }
-
-      return;
-    }
-  }
 }

@@ -31,7 +31,7 @@ export default [
       index("routes/settings/overview.tsx"),
       route("/auth-keys", "routes/settings/auth-keys/overview.tsx"),
       route("/restrictions", "routes/settings/restrictions/overview.tsx"),
-      // route('/local-agent', 'routes/settings/local-agent.tsx'),
+      route("/agent", "routes/settings/agent.tsx"),
     ]),
   ]),
 ];

@@ -40,6 +40,19 @@ export default function Page({ loaderData: { config, isOidcEnabled } }: Route.Co
           <ArrowRight className="ml-2 h-5 w-5" />
         </div>
       </Link>
+      <div className="flex w-full flex-col sm:w-2/3">
+        <h1 className="mb-4 text-2xl font-medium">Headplane Agent</h1>
+        <p>
+          The Headplane Agent syncs node information like OS version and connectivity details from
+          your Tailnet.
+        </p>
+      </div>
+      <Link to="/settings/agent">
+        <div className="flex items-center text-lg font-medium">
+          Agent Settings
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </div>
+      </Link>
       {config && isOidcEnabled ? (
         <>
           <div className="flex w-full flex-col sm:w-2/3">

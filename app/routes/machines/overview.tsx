@@ -47,9 +47,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
   const populatedNodes = mapNodes(nodes, stats);
   const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
+  const agentSync = context.agents?.lastSync();
 
   return {
-    agent: context.agents?.agentID(),
+    agent: agentSync
+      ? {
+          syncedAt: agentSync.syncedAt?.toISOString() ?? null,
+          nodeCount: agentSync.nodeCount,
+          nodeKey: context.agents?.agentNodeKey(),
+        }
+      : undefined,
     headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,
     magic,
     nodes,
@@ -211,7 +218,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         </span>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] table-auto rounded-lg">
+        <table className="w-full min-w-160 table-auto rounded-lg">
           <thead className="text-mist-600 dark:text-mist-300">
             <tr className="px-0.5 text-left">
               <th
@@ -371,7 +378,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               filteredAndSortedNodes.map((node) => (
                 <MachineRow
                   existingTags={sortNodeTags(loaderData.nodes)}
-                  isAgent={loaderData.agent ? loaderData.agent === node.nodeKey : undefined}
+                  isAgent={
+                    loaderData.agent !== undefined
+                      ? node.nodeKey === loaderData.agent.nodeKey
+                      : undefined
+                  }
                   isDisabled={
                     loaderData.writable
                       ? false // If the user has write permissions, they can edit all machines

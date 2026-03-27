@@ -19,8 +19,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       let closed = false;
       const encoder = new TextEncoder();
       const send = (event: string, data: unknown) => {
-        if (!closed) {
+        if (closed) return;
+        try {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+        } catch {
+          closed = true;
         }
       };
 
