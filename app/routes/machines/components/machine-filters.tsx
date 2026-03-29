@@ -94,7 +94,7 @@ export function MachineFilters({ users, populatedNodes }: MachineFiltersProps): 
   const tagOwnedExists = populatedNodes.some((n) => !n.user);
   const userOptions = [
     ...(tagOwnedExists ? [{ value: "tag-owned", label: "Tag-owned" }] : []),
-    ...users.map((u) => ({ value: u.id, label: getUserDisplayName(u) })),
+    ...users.map((u) => ({ value: u.name, label: getUserDisplayName(u) })),
   ];
 
   const tagOptions = Array.from(new Set(populatedNodes.flatMap((n) => n.tags)))

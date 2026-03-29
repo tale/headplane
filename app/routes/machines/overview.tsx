@@ -119,7 +119,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           node.givenName.toLowerCase().includes(query) ||
           node.ipAddresses.some((ip) => ip.toLowerCase().includes(query))) &&
         (filterUser === null ||
-          (filterUser === "tag-owned" ? !node.user : node.user?.id === filterUser)) &&
+          (filterUser === "tag-owned" ? !node.user : node.user?.name === filterUser)) &&
         (filterTag === null || (node.tags?.includes(filterTag) ?? false)) &&
         (filterStatus === null || STATUS_MATCH[filterStatus](node)) &&
         (filterRoute === null || ROUTE_MATCH[filterRoute](node)),
