@@ -148,13 +148,21 @@ export async function createAgentManager(
       try {
         stdout = await runAgent(authKey);
       } catch (err) {
-        if (stateExists) {
-          log.info("agent", "Agent failed with existing state, clearing and retrying");
+        if (!stateExists) {
+          throw err;
+        }
+
+        // Retry once with existing state (e.g. stale lock from a previous run)
+        log.info("agent", "Agent failed with existing state, retrying");
+        try {
+          const retryKey = await generateAuthKey();
+          stdout = await runAgent(retryKey);
+        } catch {
+          // Only clear identity as a last resort
+          log.warn("agent", "Retry failed, clearing state and starting fresh");
           await rm(join(workDir, "tailscaled.state"), { force: true });
           const freshKey = await generateAuthKey();
           stdout = await runAgent(freshKey);
-        } else {
-          throw err;
         }
       }
 
