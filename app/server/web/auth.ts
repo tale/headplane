@@ -51,7 +51,6 @@ interface CookiePayload {
     name: string;
     email?: string;
     username?: string;
-    picture?: string;
   };
 }
 
@@ -149,9 +148,11 @@ export class AuthService {
         role,
         headscaleUserId: user.headscale_user_id ?? undefined,
       },
-      profile: payload.profile ?? {
-        name: user.name ?? user.sub,
-        email: user.email ?? undefined,
+      profile: {
+        name: payload.profile?.name ?? user.name ?? user.sub,
+        email: payload.profile?.email ?? user.email ?? undefined,
+        username: payload.profile?.username,
+        picture: user.picture ?? undefined,
       },
     };
   }
@@ -278,7 +279,7 @@ export class AuthService {
    */
   async findOrCreateUser(
     subject: string,
-    profile?: { name?: string; email?: string },
+    profile?: { name?: string; email?: string; picture?: string },
   ): Promise<string> {
     const [existing] = await this.opts.db
       .select()
@@ -292,6 +293,7 @@ export class AuthService {
         .set({
           name: profile?.name,
           email: profile?.email,
+          picture: profile?.picture,
           last_login_at: new Date(),
           updated_at: new Date(),
         })
@@ -305,6 +307,7 @@ export class AuthService {
       sub: subject,
       name: profile?.name,
       email: profile?.email,
+      picture: profile?.picture,
       role: "member",
       caps: capsForRole("member"),
     });

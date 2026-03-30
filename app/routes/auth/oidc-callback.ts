@@ -103,6 +103,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const userId = await context.auth.findOrCreateUser(claims.sub, {
       name,
       email: userInfo.email,
+      picture,
     });
 
     try {
@@ -122,7 +123,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           name,
           email: userInfo.email,
           username,
-          picture,
         }),
       },
     });

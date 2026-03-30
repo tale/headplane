@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Form, redirect, useSearchParams } from "react-router";
+import { Form, Link as RouterLink, redirect, useSearchParams } from "react-router";
 
 import Button from "~/components/button";
 import Card from "~/components/card";
@@ -139,11 +139,11 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
             </Button>
           </Form>
           {isOidcConnectorEnabled ? (
-            <Link to="/oidc/start">
+            <RouterLink to="/oidc/start" prefetch="none" reloadDocument>
               <Button className="mt-2 w-full" disabled={oidcErrorCodes.length > 0} variant="light">
                 Single Sign-On
               </Button>
-            </Link>
+            </RouterLink>
           ) : undefined}
         </Card>
       </div>

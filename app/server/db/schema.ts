@@ -24,6 +24,7 @@ export const users = sqliteTable("users", {
   sub: text("sub").notNull().unique(),
   name: text("name"),
   email: text("email"),
+  picture: text("picture"),
   role: text("role").notNull().default("member"),
   headscale_user_id: text("headscale_user_id").unique(),
   created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
