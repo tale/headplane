@@ -47,6 +47,17 @@ _Type:_ submodule
 
 _Default:_ `{ }`
 
+## settings.headscale.api_key_path
+
+_Description:_ Path to a file containing the Headscale API key.
+Required for OIDC authentication and the Headplane agent.
+
+_Type:_ null or absolute path
+
+_Default:_ `null`
+
+_Example:_ `"config.sops.secrets.headscale_api_key.path"`
+
 ## settings.headscale.config_path
 
 _Description:_ Path to the Headscale configuration file.
@@ -131,14 +142,6 @@ _Type:_ submodule
 
 _Default:_ `{ }`
 
-## settings.integration.agent.cache_path
-
-_Description:_ Where to store the agent cache.
-
-_Type:_ absolute path
-
-_Default:_ `"/var/lib/headplane/agent_cache.json"`
-
 ## settings.integration.agent.cache_ttl
 
 _Description:_ How long to cache agent information (in milliseconds).
@@ -150,13 +153,23 @@ _Default:_ `180000`
 
 ## settings.integration.agent.enabled
 
-_Description:_ The Headplane agent allows retrieving information about nodes.
-This allows the UI to display version, OS, and connectivity data.
-You will see the Headplane agent in your Tailnet as a node when it connects.
+_Description:_ The Headplane agent periodically syncs node information (version, OS, etc.)
+from your Tailnet. It auto-generates ephemeral pre-auth keys using
+headscale.api_key, so no manual key configuration is needed.
+Requires Headscale 0.28 or newer.
 
 _Type:_ boolean
 
 _Default:_ `false`
+
+## settings.integration.agent.executable_path
+
+_Description:_ Path to the Headplane agent binary.
+The default is correct if using the NixOS module package.
+
+_Type:_ absolute path
+
+_Default:_ `"/usr/libexec/headplane/agent"`
 
 ## settings.integration.agent.host_name
 
@@ -173,18 +186,6 @@ _Description:_ The headplane-agent package to use.
 _Type:_ package
 
 _Default:_ `pkgs.headplane-agent`
-
-## settings.integration.agent.pre_authkey_path
-
-_Description:_ Path to a file containing the agent preauth key.
-To connect to your Tailnet, you need to generate a pre-auth key.
-This can be done via the web UI or through the `headscale` CLI.
-
-_Type:_ null or absolute path
-
-_Default:_ `null`
-
-_Example:_ `"config.sops.secrets.agent_pre_authkey.path"`
 
 ## settings.integration.agent.work_dir
 
@@ -253,7 +254,8 @@ _Default:_ `false`
 
 ## settings.oidc.headscale_api_key_path
 
-_Description:_ Path to a file containing the Headscale API key.
+_Description:_ DEPRECATED: Use `headscale.api_key_path` instead.
+Path to a file containing the Headscale API key.
 
 _Type:_ null or absolute path
 

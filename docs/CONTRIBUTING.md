@@ -42,7 +42,7 @@ for me to review and merge your contributions.
 
 This is very easy and self-explanatory. [oxlint/oxfmt](https://oxc.rs) is used
 as a linter and formatter for the TypeScript, while Go's default formatting and
-lint tooling are used within `agent/` code. I've setup a git hook to run
+lint tooling are used within `cmd/` code. I've setup a git hook to run
 before commit to make these changes automatically.
 
 > All of these guidelines are fairly simple to follow and are flexible if needed.

@@ -166,6 +166,16 @@ in {
                   '';
                 };
 
+                api_key_path = mkOption {
+                  type = types.nullOr types.path;
+                  default = null;
+                  description = ''
+                    Path to a file containing the Headscale API key.
+                    Required for OIDC authentication and the Headplane agent.
+                  '';
+                  example = "config.sops.secrets.headscale_api_key.path";
+                };
+
                 dns_records_path = mkOption {
                   type = types.nullOr types.path;
                   default = null;
@@ -192,21 +202,11 @@ in {
                         type = types.bool;
                         default = false;
                         description = ''
-                          The Headplane agent allows retrieving information about nodes.
-                          This allows the UI to display version, OS, and connectivity data.
-                          You will see the Headplane agent in your Tailnet as a node when it connects.
+                          The Headplane agent periodically syncs node information (version, OS, etc.)
+                          from your Tailnet. It auto-generates ephemeral pre-auth keys using
+                          headscale.api_key, so no manual key configuration is needed.
+                          Requires Headscale 0.28 or newer.
                         '';
-                      };
-
-                      pre_authkey_path = mkOption {
-                        type = types.nullOr types.path;
-                        default = null;
-                        description = ''
-                          Path to a file containing the agent preauth key.
-                          To connect to your Tailnet, you need to generate a pre-auth key.
-                          This can be done via the web UI or through the `headscale` CLI.
-                        '';
-                        example = "config.sops.secrets.agent_pre_authkey.path";
                       };
 
                       host_name = mkOption {
@@ -224,10 +224,13 @@ in {
                         '';
                       };
 
-                      cache_path = mkOption {
+                      executable_path = mkOption {
                         type = types.path;
-                        default = "/var/lib/headplane/agent_cache.json";
-                        description = "Where to store the agent cache.";
+                        default = "/usr/libexec/headplane/agent";
+                        description = ''
+                          Path to the Headplane agent binary.
+                          The default is correct if using the NixOS module package.
+                        '';
                       };
 
                       work_dir = mkOption {
@@ -338,6 +341,7 @@ in {
                   type = types.nullOr types.path;
                   default = null;
                   description = ''
+                    DEPRECATED: Use headscale.api_key_path instead.
                     Path to a file containing the Headscale API key.
                   '';
                   example = "config.sops.secrets.headscale_api_key.path";
