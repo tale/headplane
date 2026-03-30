@@ -37,7 +37,6 @@ jobs:
         uses: DeterminateSystems/magic-nix-cache-action@main
 
       - name: Compute correct PNPM dependencies hash
-        id: hash
         run: |
           CURRENT_HASH=$(grep -oP "hash = \"\K[^\"]*" nix/package.nix)
           sed -i "s|hash = \"$CURRENT_HASH\"|hash = \"\"|" nix/package.nix
@@ -46,23 +45,19 @@ jobs:
             | grep 'got:' \
             | awk '{print $2}')
 
-          if [ -z "$NEW_HASH" ]; then
-            echo "Hash is already up to date"
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+          if [ -n "$NEW_HASH" ]; then
+            sed -i "s|hash = \"\"|hash = \"$NEW_HASH\"|" nix/package.nix
+          else
+            git checkout nix/package.nix
+          fi
+
+      - name: Commit and push
+        run: |
+          if git diff --quiet nix/package.nix; then
+            echo "Hash is already up to date, skipping"
             exit 0
           fi
 
-          echo "new_hash=$NEW_HASH" >> "$GITHUB_OUTPUT"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Update hash in package.nix
-        if: steps.hash.outputs.changed == 'true'
-        run: |
-          sed -i "s|hash = \"\"|hash = \"${{ steps.hash.outputs.new_hash }}\"|" nix/package.nix
-
-      - name: Commit and push
-        if: steps.hash.outputs.changed == 'true'
-        run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add nix/package.nix
