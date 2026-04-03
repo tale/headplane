@@ -58,6 +58,7 @@ interface CookiePayload {
 
 export interface AuthServiceOptions {
   secret: string;
+  headscaleApiKey?: string;
   db: NodeSQLiteDatabase;
   cookie: {
     name: string;
@@ -230,21 +231,16 @@ export class AuthService {
     return this.encodeCookie({ sid, api_key: apiKey }, Math.floor(maxAge / 1000));
   }
 
-  /**
-   * Get the Headscale API key for making API calls.
-   * OIDC sessions use the configured oidc.headscale_api_key.
-   * API key sessions use the user-provided key stored in the cookie.
-   */
-  getHeadscaleApiKey(principal: Principal, oidcApiKey?: string): string {
+  getHeadscaleApiKey(principal: Principal): string {
     if (principal.kind === "api_key") {
       return principal.apiKey;
     }
 
-    if (!oidcApiKey) {
-      throw new Error("OIDC sessions require oidc.headscale_api_key");
+    if (!this.opts.headscaleApiKey) {
+      throw new Error("OIDC sessions require headscale.api_key to be configured");
     }
 
-    return oidcApiKey;
+    return this.opts.headscaleApiKey;
   }
 
   /**

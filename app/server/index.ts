@@ -84,6 +84,7 @@ const appLoadContext = {
 
   auth: createAuthService({
     secret: config.server.cookie_secret,
+    headscaleApiKey,
     db,
     cookie: {
       name: "_hp_auth",
@@ -93,13 +94,13 @@ const appLoadContext = {
     },
   }),
 
+  headscaleApiKey,
   hsApi,
   agents,
   integration: await loadIntegration(config.integration),
   oidc:
     config.oidc && config.oidc.enabled !== false && headscaleApiKey
       ? {
-          apiKey: headscaleApiKey,
           connector: createLazyOidcConnector(
             config.server.base_url,
             config.oidc,

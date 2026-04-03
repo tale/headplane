@@ -26,7 +26,7 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
   try {
     const { policy, updatedAt } = await api.setPolicy(policyData);

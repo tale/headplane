@@ -24,7 +24,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
   switch (action) {
     case "create_user": {

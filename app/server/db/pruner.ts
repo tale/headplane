@@ -18,7 +18,7 @@ export async function pruneEphemeralNodes({ context, request }: Route.LoaderArgs
     return;
   }
 
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
   const nodes = await api.getNodes();
   const toPrune = nodes.filter((node) => {

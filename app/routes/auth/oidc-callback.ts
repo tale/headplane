@@ -107,7 +107,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
 
     try {
-      const hsApi = context.hsApi.getRuntimeClient(context.oidc!.apiKey);
+      const hsApi = context.hsApi.getRuntimeClient(context.headscaleApiKey!);
       const hsUsers = await hsApi.getUsers();
       const hsUser = findHeadscaleUserBySubject(hsUsers, claims.sub, userInfo.email);
       if (hsUser) {

@@ -38,9 +38,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     }
   }
 
-  const api = context.hsApi.getRuntimeClient(
-    context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
-  );
+  const api = context.hsApi.getRuntimeClient(context.auth.getHeadscaleApiKey(principal));
   const [nodesSnap, usersSnap] = await Promise.all([
     context.hsLive.get(nodesResource, api),
     context.hsLive.get(usersResource, api),

@@ -20,7 +20,7 @@ import AddAuthKey from "./dialogs/add-auth-key";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const principal = await context.auth.require(request);
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
 
   const usersSnap = await context.hsLive.get(usersResource, api);

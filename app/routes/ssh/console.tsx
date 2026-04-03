@@ -41,7 +41,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw data("Only OAuth users are allowed to use WebSSH", 403);
   }
 
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
   const users = await api.getUsers();
 

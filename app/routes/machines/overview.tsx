@@ -30,9 +30,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const writablePermission = context.auth.can(principal, Capabilities.write_machines);
 
-  const api = context.hsApi.getRuntimeClient(
-    context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey),
-  );
+  const api = context.hsApi.getRuntimeClient(context.auth.getHeadscaleApiKey(principal));
   const [nodesSnap, usersSnap] = await Promise.all([
     context.hsLive.get(nodesResource, api),
     context.hsLive.get(usersResource, api),

@@ -28,7 +28,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     principal.kind === "oidc" &&
     !principal.user.headscaleUserId
   ) {
-    const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+    const apiKey = context.auth.getHeadscaleApiKey(principal);
     const api = context.hsApi.getRuntimeClient(apiKey);
 
     let headscaleUsers: { id: string; name: string }[] = [];
@@ -64,7 +64,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   // No UI access — show the download/connect page
-  const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+  const apiKey = context.auth.getHeadscaleApiKey(principal);
   const api = context.hsApi.getRuntimeClient(apiKey);
 
   let linkedUserName: string | undefined;

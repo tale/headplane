@@ -34,7 +34,7 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
   try {
     const principal = await context.auth.require(request);
 
-    const apiKey = context.auth.getHeadscaleApiKey(principal, context.oidc?.apiKey);
+    const apiKey = context.auth.getHeadscaleApiKey(principal);
     const api = context.hsApi.getRuntimeClient(apiKey);
 
     const user =
