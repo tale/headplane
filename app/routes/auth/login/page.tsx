@@ -24,16 +24,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const qp = new URL(request.url).searchParams;
   const urlState = qp.get("s") ?? undefined;
 
-  const oidcConnector = await context.oidc?.connector.get();
+  const oidcService = context.oidc?.service;
+  const oidcStatus = oidcService
+    ? await oidcService.discover().then(
+        (r) => (r.ok ? oidcService.status() : oidcService.status()),
+        () => oidcService.status(),
+      )
+    : undefined;
 
-  // MARK: This works because the OIDC connector will always return false
-  // For `isExclusive` if the OIDC config isn't usable.
-  if (oidcConnector?.isExclusive && urlState !== "logout") {
+  if (context.oidc?.disableApiKeyLogin && oidcStatus?.state === "ready" && urlState !== "logout") {
     return redirect("/oidc/start");
   }
 
-  const isOidcConnectorEnabled = oidcConnector?.isValid;
-  const oidcErrorCodes = !isOidcConnectorEnabled ? (oidcConnector?.errors ?? []) : [];
+  const isOidcConnectorEnabled = oidcStatus?.state === "ready";
+  const oidcErrorCodes = oidcStatus?.state === "error" ? [oidcStatus.error.code] : [];
 
   return {
     isCookieSecureEnabled: context.config.server.cookie_secure,
@@ -88,7 +92,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
       <div>
         {urlState?.startsWith("error_") ? (
           <OidcErrorNotice code={urlState} />
-        ) : oidcErrorCodes.includes("DISCOVERY_FAILED") ? (
+        ) : oidcErrorCodes.includes("discovery_failed") ? (
           <OidcDiscoveryFailedNotice />
         ) : oidcErrorCodes.length > 0 ? (
           <OidcConfigErrorNotice errors={oidcErrorCodes} />

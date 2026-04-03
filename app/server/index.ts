@@ -65,7 +65,7 @@ export type LoadContext = typeof appLoadContext;
 import "react-router";
 import { HeadplaneConfig } from "./config/config-schema";
 import { ConfigError } from "./config/error";
-import { createLazyOidcConnector } from "./web/oidc-connector";
+import { createOidcService } from "./oidc/provider";
 
 declare module "react-router" {
   interface AppLoadContext extends LoadContext {}
@@ -101,11 +101,24 @@ const appLoadContext = {
   oidc:
     config.oidc && config.oidc.enabled !== false && headscaleApiKey
       ? {
-          connector: createLazyOidcConnector(
-            config.server.base_url,
-            config.oidc,
-            hsApi.getRuntimeClient(headscaleApiKey),
-          ),
+          service: createOidcService({
+            issuer: config.oidc.issuer,
+            clientId: config.oidc.client_id,
+            clientSecret: config.oidc.client_secret,
+            baseUrl: config.server.base_url ?? "",
+            authorizationEndpoint: config.oidc.authorization_endpoint,
+            tokenEndpoint: config.oidc.token_endpoint,
+            userinfoEndpoint: config.oidc.userinfo_endpoint,
+            tokenEndpointAuthMethod:
+              config.oidc.token_endpoint_auth_method === "client_secret_jwt"
+                ? undefined
+                : config.oidc.token_endpoint_auth_method,
+            usePkce: config.oidc.use_pkce,
+            scope: config.oidc.scope,
+            extraParams: config.oidc.extra_params,
+            profilePictureSource: config.oidc.profile_picture_source,
+          }),
+          disableApiKeyLogin: config.oidc.disable_api_key_login,
         }
       : undefined,
   db,

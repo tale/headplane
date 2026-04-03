@@ -44,6 +44,14 @@ export default defineConfig({
           testTimeout: 60_000,
         },
       },
+      {
+        extends: true,
+        test: {
+          name: "integration:oidc",
+          include: ["tests/integration/oidc/**/*.test.ts"],
+          testTimeout: 60_000,
+        },
+      },
     ],
     env: {
       HEADPLANE_DEBUG_LOG: "true",

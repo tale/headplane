@@ -6,10 +6,9 @@ import PageError from "~/components/page-error";
 import type { Route } from "./+types/overview";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  const oidcConnector = await context.oidc?.connector.get();
   return {
     config: context.hs.writable(),
-    isOidcEnabled: oidcConnector?.isValid ?? false,
+    isOidcEnabled: context.oidc?.service.status().state === "ready",
   };
 }
 

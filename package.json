@@ -47,7 +47,6 @@
     "lucide-react": "^0.575.0",
     "mime": "^4.1.0",
     "openapi-types": "^12.1.3",
-    "openid-client": "6.8.2",
     "react": "19.2.4",
     "react-codemirror-merge": "4.25.5",
     "react-dom": "19.2.4",
