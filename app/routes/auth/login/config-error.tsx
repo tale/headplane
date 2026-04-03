@@ -34,7 +34,7 @@ export function OidcConfigErrorNotice({ errors }: { errors: OidcErrorCode[] }) {
             <li key={code.key}>{code.node}</li>
           ))}
         </ul>{" "}
-        <Link external styled to="https://headplane.net/configuration/sso#troubleshooting">
+        <Link external styled to="https://headplane.net/features/sso#troubleshooting">
           Learn more
         </Link>
       </Card.Text>
