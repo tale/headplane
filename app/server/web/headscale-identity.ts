@@ -12,7 +12,8 @@ export function getOidcSubject(user: User): string | undefined {
     return;
   }
 
-  return user.providerId.split("/").pop();
+  const segment = user.providerId.split("/").pop();
+  return segment ? decodeURIComponent(segment) : segment;
 }
 
 /**

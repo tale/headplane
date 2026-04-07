@@ -29,7 +29,8 @@ function findCurrentUser(users: User[], subject: string | undefined): User | und
     if (u.provider !== "oidc" || !u.providerId) {
       return false;
     }
-    return u.providerId.split("/").pop() === subject;
+    const segment = u.providerId.split("/").pop();
+    return segment ? decodeURIComponent(segment) === subject : false;
   });
 }
 
