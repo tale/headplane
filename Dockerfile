@@ -2,6 +2,7 @@ FROM --platform=$BUILDPLATFORM golang:1.25.1 AS go-base
 WORKDIR /run
 
 COPY go.mod go.sum build.sh ./
+COPY patches/ ./patches/
 RUN go mod download
 
 COPY cmd/ ./cmd/

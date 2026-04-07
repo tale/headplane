@@ -137,7 +137,21 @@ build_wasm() {
 	cat "$(go env GOROOT)/lib/wasm/wasm_exec.js" >> \
 		"$(dirname "$WASM_OUTPUT")/wasm_exec.js"
 
-	GOOS=js GOARCH=wasm go build -o "$WASM_OUTPUT" ./cmd/hp_ssh
+	# Vendor dependencies and apply the DERP port patch.
+	# Tailscale's derphttp WebSocket URL builder ignores DERPPort,
+	# which breaks WASM connections to non-443 DERP servers.
+	echo "==> Vendoring Go dependencies for WASM patch"
+	go mod vendor
+
+	DERP_PATCH="$ROOT_DIR/patches/tailscale-derp-port.patch"
+	if [ -f "$DERP_PATCH" ]; then
+		echo "==> Applying DERP port patch"
+		patch -d vendor/tailscale.com -p1 < "$DERP_PATCH" || \
+			die "failed to apply DERP port patch"
+	fi
+
+	GOOS=js GOARCH=wasm go build -mod=vendor -o "$WASM_OUTPUT" ./cmd/hp_ssh
+	rm -rf vendor
 }
 
 build_app() {

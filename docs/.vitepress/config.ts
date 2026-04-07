@@ -45,7 +45,8 @@ export default defineConfig({
             text: "Features",
             items: [
               { text: "Single Sign-On (SSO)", link: "/features/sso" },
-              { text: "Headplane Agent / SSH", link: "/features/agent" },
+              { text: "Headplane Agent", link: "/features/agent" },
+              { text: "WebSSH", link: "/features/ssh" },
             ],
           },
           {

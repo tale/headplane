@@ -1,11 +1,15 @@
-# 0.7.0-beta.1 (March 27, 2026)
+# 0.7.0-beta.2 (April 7, 2026)
 
 > This is a beta release. Please report any issues you encounter.
 
 - **Migrated all UI components from react-aria/react-stately to @base-ui-components/react.**
   - Removed `react-aria`, `react-stately`, and `tailwindcss-react-aria-components` as dependencies.
-- **Rearchitected the Headplane Agent** from a long-running stdin/stdout daemon to a one-shot sync model (closes [#350](https://github.com/tale/headplane/issues/350), closes [#455](https://github.com/tale/headplane/issues/455)).
-  - The Go binary connects to the Tailnet, fetches all peer hostinfo as JSON, and exits.
+- **Replaced `openid-client` with a clean-room OIDC implementation.**
+  - Removed the `openid-client` dependency entirely.
+  - Fixed `client_secret_basic` auth method not working with Google SSO and other providers (closes [#493](https://github.com/tale/headplane/issues/493)).
+  - Fixed OIDC connector initialization failures on beta.1 (closes [#516](https://github.com/tale/headplane/issues/516)).
+- **Rearchitected the Headplane Agent** with a new sync model (closes [#350](https://github.com/tale/headplane/issues/350), closes [#455](https://github.com/tale/headplane/issues/455)).
+  - The Go binary connects to the Tailnet and fetches all peer hostinfo as JSON.
   - The Node.js manager auto-generates ephemeral tag-only pre-auth keys (requires Headscale 0.28+).
   - Deprecated `integration.agent.pre_authkey` and `integration.agent.cache_path` config fields.
   - Added `integration.agent.executable_path` config field.
@@ -16,15 +20,23 @@
 - Added an agent status page at `/settings/agent` showing sync status, node count, errors, and a "Sync Now" button.
 - Added additional machine list filters for user, tag, status, and route (via [#507](https://github.com/tale/headplane/pull/507), closes [#506](https://github.com/tale/headplane/issues/506)).
 - Added self-service pre-auth key creation for auditor role users (via [#478](https://github.com/tale/headplane/pull/478), closes [#453](https://github.com/tale/headplane/issues/453)).
-- Fetch OIDC profile pictures server-side when the URL requires authentication (via [#510](https://github.com/tale/headplane/pull/510), closes [#326](https://github.com/tale/headplane/issues/326)).
+- Store OIDC profile pictures in the database to prevent cookie header overload (closes [#326](https://github.com/tale/headplane/issues/326), via [#510](https://github.com/tale/headplane/pull/510)).
+- Fixed pre-auth key expiration on Headscale 0.28+ (closes [#519](https://github.com/tale/headplane/issues/519)).
+- Fixed OIDC subject matching for providers that use special characters in user IDs (e.g. Auth0 `github|12345`) (closes [#428](https://github.com/tale/headplane/issues/428)).
+- Fixed `headscale.api_key` not being used consistently across all code paths.
+- Fixed intermittent SSR crash on the Access Control page caused by client-only CodeMirror imports.
 - Fixed first user not being assigned the owner role on OIDC login (via [#480](https://github.com/tale/headplane/pull/480), closes [#266](https://github.com/tale/headplane/issues/266)).
 - Fixed login errors throwing an unexpected server error instead of showing form validation (via [#475](https://github.com/tale/headplane/pull/475), closes [#474](https://github.com/tale/headplane/issues/474)).
 - Fixed agent HostInfo not refreshing periodically using `cache_ttl` (via [#477](https://github.com/tale/headplane/pull/477), closes [#427](https://github.com/tale/headplane/issues/427)).
+- Fixed agent working directory being wiped on restart.
 - Fixed a race condition where the SSE controller could be used after being closed.
+- Fixed WebSSH dropping DERP port information on non-standard ports (e.g. `:8443`), which caused connections to fail (closes [#515](https://github.com/tale/headplane/issues/515)).
 - Fixed WebSSH WASM prefix paths for correct asset loading (closes [#386](https://github.com/tale/headplane/issues/386)).
 - Fixed Dockerfile WASM copy paths.
 - Fixed CodeMirror version mismatch override in the ACL editor.
 - Fixed cookie secret generation using incorrect byte length (via [#501](https://github.com/tale/headplane/pull/501)).
+- Fixed OIDC configuration error troubleshooting link (via [#518](https://github.com/tale/headplane/pull/518), closes [#517](https://github.com/tale/headplane/issues/517)).
+- Fixed deprecated Nix package attributes (via [#521](https://github.com/tale/headplane/pull/521)).
 - Detect unsupported Docker API versions early with a clear error message (via [#497](https://github.com/tale/headplane/pull/497)).
 - Updated NixOS module options: removed deprecated agent fields, added `headscale.api_key_path` and `integration.agent.executable_path`.
 

@@ -1,0 +1,30 @@
+Fix DERP WebSocket URL to include non-standard ports.
+
+Tailscale's derphttp client ignores DERPPort when building WebSocket
+URLs, causing connections to fail when DERP servers run on non-443
+ports (e.g. :8443). The TCP dial path correctly handles DERPPort
+but the WebSocket path (used in WASM/browser builds) does not.
+
+--- a/derp/derphttp/derphttp_client.go
++++ b/derp/derphttp/derphttp_client.go
+@@ -279,10 +279,19 @@
+ 		return c.url.String()
+ 	}
+ 	proto := "https"
++	var port string
+ 	if debugUseDERPHTTP() {
+ 		proto = "http"
++		port = "3340"
+ 	}
+-	return fmt.Sprintf("%s://%s/derp", proto, node.HostName)
++	if node != nil && node.DERPPort != 0 {
++		port = fmt.Sprint(node.DERPPort)
++	}
++	host := node.HostName
++	if port != "" {
++		host = net.JoinHostPort(node.HostName, port)
++	}
++	return fmt.Sprintf("%s://%s/derp", proto, host)
+ }
+ 
+ // AddressFamilySelector decides whether IPv6 is preferred for
