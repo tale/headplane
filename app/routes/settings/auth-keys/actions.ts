@@ -2,6 +2,7 @@ import { data } from "react-router";
 
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
+import type { PreAuthKey } from "~/types";
 
 import type { Route } from "./+types/overview";
 
@@ -95,10 +96,12 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
 
       return data({ success: true as const, key: key.key });
     }
+
     case "expire_preauthkey": {
+      const keyId = formData.get("key_id")?.toString();
       const key = formData.get("key")?.toString();
-      if (!key) {
-        return data("Missing `key` in the form data.", {
+      if (!keyId || !key) {
+        return data("Missing `key_id` or `key` in the form data.", {
           status: 400,
         });
       }
@@ -111,10 +114,10 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
       }
 
       await checkSelfServiceOwnership(user);
-
-      await api.expirePreAuthKey(user, key);
+      await api.expirePreAuthKey(user, { id: keyId, key } as unknown as PreAuthKey);
       return data("Pre-auth key expired");
     }
+
     default:
       return data("Invalid action", {
         status: 400,

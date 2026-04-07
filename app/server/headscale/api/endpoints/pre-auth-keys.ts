@@ -34,7 +34,7 @@ export interface PreAuthKeyEndpoints {
    * @param user The user associated with the pre-authentication key.
    * @param key The pre-authentication key to expire.
    */
-  expirePreAuthKey(user: string, key: string): Promise<void>;
+  expirePreAuthKey(user: string, key: PreAuthKey): Promise<void>;
 }
 
 export default defineApiEndpoints<PreAuthKeyEndpoints>((client, apiKey) => ({
@@ -77,9 +77,17 @@ export default defineApiEndpoints<PreAuthKeyEndpoints>((client, apiKey) => ({
   },
 
   expirePreAuthKey: async (user, key) => {
+    if (client.isAtleast("0.28.0")) {
+      await client.apiFetch<void>("POST", "v1/preauthkey/expire", apiKey, {
+        id: key.id,
+      });
+
+      return;
+    }
+
     await client.apiFetch<void>("POST", "v1/preauthkey/expire", apiKey, {
       user,
-      key,
+      key: key.key,
     });
   },
 }));

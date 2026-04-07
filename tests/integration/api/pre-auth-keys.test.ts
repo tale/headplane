@@ -114,8 +114,7 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) =>
     const preAuthKeys = await client.getPreAuthKeys(preAuthKeyUser.id);
     expect(preAuthKeys.length).toBeGreaterThanOrEqual(2);
     const preAuthKeyToExpire = preAuthKeys[0];
-
-    await client.expirePreAuthKey(preAuthKeyUser.id, preAuthKeyToExpire.key);
+    await client.expirePreAuthKey(preAuthKeyUser.id, preAuthKeyToExpire);
 
     const preAuthKeysAfterExpire = await client.getPreAuthKeys(preAuthKeyUser.id);
     const expiredKey = preAuthKeysAfterExpire.find((key) => key.key === preAuthKeyToExpire.key);
