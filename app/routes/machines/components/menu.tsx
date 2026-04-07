@@ -120,15 +120,12 @@ export default function MachineMenu({
         ) : (
           <Button
             className={cn(
-              "py-0.5",
+              "py-0.5 rounded-lg",
               "opacity-0 pointer-events-none group-hover:opacity-100",
               "group-hover:pointer-events-auto",
             )}
-            variant="ghost"
+            variant="light"
             onClick={() => {
-              // We need to use JS to open the SSH URL
-              // in a new WINDOW since href can only
-              // do a new TAB.
               window.open(
                 `${__PREFIX__}/ssh?hostname=${node.givenName}`,
                 "_blank",
