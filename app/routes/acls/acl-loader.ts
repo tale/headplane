@@ -38,8 +38,11 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
     return flags;
   } catch (error) {
     if (isDataWithApiError(error)) {
+      // Headscale returns "acl policy not found" when the policy mode is
+      // set to file but no file exists, and returns a 500 when database
+      // mode is used but the policies table is empty.
       // https://github.com/juanfont/headscale/blob/c4600346f9c29b514dc9725ac103efb9d0381f23/hscontrol/types/policy.go#L10
-      if (error.data.rawData.includes("acl policy not found")) {
+      if (error.data.rawData.includes("acl policy not found") || error.data.statusCode === 500) {
         flags.policy = "";
         flags.writable = true;
         return flags;

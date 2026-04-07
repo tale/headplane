@@ -1,5 +1,5 @@
 import { AlertCircle, Construction, Eye, FlaskConical, Pencil } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
 import Button from "~/components/button";
@@ -15,7 +15,14 @@ import toast from "~/utils/toast";
 import type { Route } from "./+types/overview";
 import { aclAction } from "./acl-action";
 import { aclLoader } from "./acl-loader";
-import { Differ, Editor } from "./components/cm.client";
+import Fallback from "./components/fallback";
+
+const LazyEditor = lazy(() =>
+  import("./components/cm.client").then((m) => ({ default: m.Editor })),
+);
+const LazyDiffer = lazy(() =>
+  import("./components/cm.client").then((m) => ({ default: m.Differ })),
+);
 
 export const loader = aclLoader;
 export const action = aclAction;
@@ -101,10 +108,14 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
           </TabsTab>
         </TabsList>
         <TabsPanel value="edit">
-          <Editor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
+          <Suspense fallback={<Fallback acl={codePolicy} />}>
+            <LazyEditor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
+          </Suspense>
         </TabsPanel>
         <TabsPanel value="diff">
-          <Differ left={policy} right={codePolicy} />
+          <Suspense fallback={<Fallback acl={codePolicy} />}>
+            <LazyDiffer left={policy} right={codePolicy} />
+          </Suspense>
         </TabsPanel>
         <TabsPanel value="preview">
           <div className="flex flex-col items-center py-8">
