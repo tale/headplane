@@ -1,7 +1,7 @@
-import { execFile } from "node:child_process";
+import { type ChildProcess, spawn } from "node:child_process";
 import { access, constants, mkdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { promisify } from "node:util";
+import { createInterface } from "node:readline";
 
 import { inArray, notInArray } from "drizzle-orm";
 import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
@@ -12,8 +12,6 @@ import log from "~/utils/log";
 import { HeadplaneConfig } from "./config/config-schema";
 import { ephemeralNodes, hostInfo } from "./db/schema";
 import { RuntimeApiClient } from "./headscale/api/endpoints";
-
-const execFileAsync = promisify(execFile);
 
 export interface AgentManager {
   lookup(nodeKeys: string[]): Promise<Record<string, HostInfo>>;
@@ -26,6 +24,7 @@ export interface AgentManager {
 interface AgentOutput {
   self: string;
   hosts: Record<string, HostInfo>;
+  error?: string;
 }
 
 interface SyncState {
@@ -33,8 +32,6 @@ interface SyncState {
   nodeCount: number;
   selfKey?: string;
   error?: string;
-  isSyncing: boolean;
-  pendingResync: boolean;
 }
 
 async function hasExistingState(workDir: string): Promise<boolean> {
@@ -95,9 +92,12 @@ export async function createAgentManager(
   const state: SyncState = {
     syncedAt: null,
     nodeCount: 0,
-    isSyncing: false,
-    pendingResync: false,
   };
+
+  let proc: ChildProcess | null = null;
+  let responseHandler: ((line: string) => void) | null = null;
+  let disposed = false;
+  let consecutiveErrors = 0;
 
   async function generateAuthKey(): Promise<string> {
     const expiration = new Date(Date.now() + 5 * 60_000);
@@ -107,7 +107,7 @@ export async function createAgentManager(
     return pak.key;
   }
 
-  async function runAgent(authKey: string): Promise<string> {
+  function spawnAgent(authKey: string): ChildProcess {
     const env: Record<string, string> = {
       HOME: process.env.HOME ?? "",
       HEADPLANE_AGENT_WORK_DIR: workDir,
@@ -120,53 +120,105 @@ export async function createAgentManager(
       env.HEADPLANE_AGENT_TS_AUTHKEY = authKey;
     }
 
-    const { stdout } = await execFileAsync(executablePath, [], {
-      timeout: 60_000,
+    const child = spawn(executablePath, [], {
       env,
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
-    return stdout;
+    child.stderr?.on("data", (chunk: Buffer) => {
+      const text = chunk.toString().trim();
+      if (text) {
+        log.debug("agent", "%s", text);
+      }
+    });
+
+    const rl = createInterface({ input: child.stdout! });
+    rl.on("line", (line) => {
+      if (responseHandler) {
+        const handler = responseHandler;
+        responseHandler = null;
+        handler(line);
+      }
+    });
+
+    child.on("exit", (code, signal) => {
+      if (!disposed) {
+        log.warn("agent", "Agent process exited (code=%s, signal=%s)", code, signal);
+      }
+      proc = null;
+
+      // Reject any pending sync request
+      if (responseHandler) {
+        const handler = responseHandler;
+        responseHandler = null;
+        handler("");
+      }
+    });
+
+    proc = child;
+    return child;
   }
 
+  async function ensureProcess(): Promise<ChildProcess> {
+    if (proc && proc.exitCode === null) {
+      return proc;
+    }
+
+    const stateExists = await hasExistingState(workDir);
+    if (stateExists) {
+      log.debug("agent", "Reusing existing tsnet identity");
+      return spawnAgent("");
+    }
+
+    log.info("agent", "No tsnet state found, generating pre-auth key");
+    return spawnAgent(await generateAuthKey());
+  }
+
+  function sendSync(child: ChildProcess): Promise<string> {
+    return new Promise((resolve) => {
+      responseHandler = resolve;
+      child.stdin?.write("sync\n");
+    });
+  }
+
+  async function requestSync(child: ChildProcess): Promise<AgentOutput> {
+    const line = await sendSync(child);
+    if (!line) {
+      throw new Error("Agent process closed unexpectedly");
+    }
+    return JSON.parse(line) as AgentOutput;
+  }
+
+  let isSyncing = false;
+  let pendingResync = false;
+
   async function sync() {
-    if (state.isSyncing) {
-      state.pendingResync = true;
+    if (isSyncing) {
+      pendingResync = true;
       log.debug("agent", "Sync already in progress, queued resync");
       return;
     }
 
-    state.isSyncing = true;
+    isSyncing = true;
     try {
-      const stateExists = await hasExistingState(workDir);
-      const authKey = stateExists ? "" : await generateAuthKey();
+      const child = await ensureProcess();
+      const output = await requestSync(child);
 
-      if (stateExists) {
-        log.debug("agent", "Reusing existing tsnet identity");
-      }
+      if (output.error) {
+        consecutiveErrors++;
+        state.error = output.error;
+        log.error("agent", "Sync error from agent (%d/5): %s", consecutiveErrors, output.error);
 
-      let stdout: string;
-      try {
-        stdout = await runAgent(authKey);
-      } catch (err) {
-        if (!stateExists) {
-          throw err;
-        }
-
-        // Retry once with existing state (e.g. stale lock from a previous run)
-        log.info("agent", "Agent failed with existing state, retrying");
-        try {
-          const retryKey = await generateAuthKey();
-          stdout = await runAgent(retryKey);
-        } catch {
-          // Only clear identity as a last resort
-          log.warn("agent", "Retry failed, clearing state and starting fresh");
+        if (consecutiveErrors >= 5 && proc) {
+          log.warn("agent", "Too many consecutive errors, killing agent and clearing state");
+          proc.kill("SIGTERM");
+          proc = null;
           await rm(join(workDir, "tailscaled.state"), { force: true });
-          const freshKey = await generateAuthKey();
-          stdout = await runAgent(freshKey);
         }
+        return;
       }
 
-      const output = JSON.parse(stdout) as AgentOutput;
+      consecutiveErrors = 0;
       const keys = Object.keys(output.hosts);
 
       for (const [nodeKey, payload] of Object.entries(output.hosts)) {
@@ -196,13 +248,19 @@ export async function createAgentManager(
 
       log.info("agent", "Sync complete: %d nodes updated", keys.length);
     } catch (error) {
+      consecutiveErrors++;
       const message = error instanceof Error ? error.message : String(error);
       state.error = message;
-      log.error("agent", "Sync failed: %s", message);
+      log.error("agent", "Sync failed (%d/5): %s", consecutiveErrors, message);
+
+      if (consecutiveErrors >= 5) {
+        log.warn("agent", "Too many consecutive failures, clearing state for next attempt");
+        await rm(join(workDir, "tailscaled.state"), { force: true });
+      }
     } finally {
-      state.isSyncing = false;
-      if (state.pendingResync) {
-        state.pendingResync = false;
+      isSyncing = false;
+      if (pendingResync) {
+        pendingResync = false;
         sync();
       }
     }
@@ -299,7 +357,12 @@ export async function createAgentManager(
     },
 
     dispose() {
+      disposed = true;
       clearInterval(interval);
+      if (proc) {
+        proc.kill("SIGTERM");
+        proc = null;
+      }
     },
   };
 }
