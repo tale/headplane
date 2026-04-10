@@ -26,7 +26,7 @@ in
       # Patch Tailscale's derphttp to include DERPPort in WebSocket URLs.
       # Without this, DERP servers on non-443 ports fail in WASM builds.
       if [ -f patches/tailscale-derp-port.patch ]; then
-        patch -d vendor -p1 < patches/tailscale-derp-port.patch
+        patch -d vendor/tailscale.com -p1 < patches/tailscale-derp-port.patch
       fi
 
       go build -mod=vendor -o hp_ssh.wasm ./cmd/hp_ssh

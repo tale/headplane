@@ -12,96 +12,82 @@ import (
 
 func main() {
 	log.Printf("Loading WASM Headplane SSH module")
-	js.Global().Set("TsWasmNet", js.FuncOf(func(this js.Value, args []js.Value) any {
-		if len(args) != 2 {
-			log.Fatal("Usage: TsWasmNet(config, callbacks)")
+
+	factory := js.FuncOf(func(this js.Value, args []js.Value) any {
+		if len(args) != 1 {
+			log.Printf("Usage: create(config)")
 			return nil
 		}
 
-		options, err := hp_ipn.ParseTsWasmNetOptions(args[0])
+		config, err := hp_ipn.ParseIPNConfig(args[0])
 		if err != nil {
-			log.Fatal("Error parsing options:", err)
+			log.Printf("Error parsing config: %v", err)
 			return nil
 		}
 
-		callbacks, err := hp_ipn.ParseTsWasmNetCallbacks(args[1])
+		callbacks := hp_ipn.ParseIPNCallbacks(args[0])
+
+		ipn, err := hp_ipn.NewTsWasmIpn(config, callbacks)
 		if err != nil {
-			log.Fatal("Error parsing callbacks:", err)
+			callbacks.OnError(err.Error())
 			return nil
 		}
 
-		ipn, err := hp_ipn.NewTsWasmIpn(options, callbacks)
-		if err != nil {
-			log.Fatal("Error creating TsWasmIpn:", err)
-			return nil
-		}
+		go func() {
+			if err := ipn.Start(context.Background()); err != nil {
+				callbacks.OnError(err.Error())
+			}
+		}()
 
 		return map[string]any{
-			"Start": js.FuncOf(func(this js.Value, args []js.Value) any {
-				ipn.Start(context.Background())
-				return nil
-			}),
-			"OpenSSH": js.FuncOf(func(this js.Value, args []js.Value) any {
-				if len(args) != 3 {
-					log.Fatal("Usage: OpenSSH(host, user, options)")
+			"openTunnel": js.FuncOf(func(this js.Value, args []js.Value) any {
+				if len(args) != 1 {
+					log.Printf("Usage: openTunnel(config)")
 					return nil
 				}
 
-				hostname := args[0]
-				if hostname.IsNull() || hostname.IsUndefined() {
-					log.Fatal("Hostname must be a non-null, non-undefined string")
-					return nil
-				}
-
-				if hostname.Type() != js.TypeString {
-					log.Fatal("Hostname must be a string")
-					return nil
-				}
-
-				username := args[1]
-				if username.IsNull() || username.IsUndefined() {
-					log.Fatal("Username must be a non-null, non-undefined string")
-					return nil
-				}
-
-				if username.Type() != js.TypeString {
-					log.Fatal("Username must be a string")
-					return nil
-				}
-
-				sshOptions, err := hp_ipn.ParseSSHXtermConfig(args[2])
+				tunnelConfig, err := hp_ipn.ParseTunnelConfig(args[0])
 				if err != nil {
-					log.Fatal("Error parsing SSH options:", err)
+					log.Printf("Error parsing tunnel config: %v", err)
 					return nil
 				}
 
-				session := ipn.NewSSHSession(hostname.String(), username.String(), sshOptions)
+				session := ipn.NewSSHSession(tunnelConfig)
 				go session.ConnectAndRun()
 
 				return map[string]any{
-					"Close": js.FuncOf(func(this js.Value, args []js.Value) any {
-						return session.Close() != nil
+					"writeInput": js.FuncOf(func(this js.Value, args []js.Value) any {
+						if len(args) == 1 {
+							session.WriteInput(args[0].String())
+						}
+						return nil
 					}),
 
-					"Resize": js.FuncOf(func(this js.Value, args []js.Value) any {
+					"resize": js.FuncOf(func(this js.Value, args []js.Value) any {
 						if len(args) != 2 {
-							log.Fatal("Usage: Resize(cols, rows)")
 							return nil
 						}
+						session.Resize(args[0].Int(), args[1].Int())
+						return nil
+					}),
 
-						rows := args[0].Int()
-						cols := args[1].Int()
-						if cols <= 0 || rows <= 0 {
-							log.Fatal("Columns and rows must be positive integers")
-							return nil
-						}
-
-						return session.Resize(cols, rows) == nil
+					"close": js.FuncOf(func(this js.Value, args []js.Value) any {
+						session.Close()
+						return nil
 					}),
 				}
 			}),
 		}
-	}))
+	})
+
+	resolve := js.Global().Get("__hp_ssh_resolve")
+	if resolve.Type() != js.TypeFunction {
+		log.Printf("__hp_ssh_resolve is not set, cannot initialize")
+		return
+	}
+
+	resolve.Invoke(factory)
+	js.Global().Delete("__hp_ssh_resolve")
 
 	log.Printf("WASM Headplane SSH module loaded successfully")
 	<-make(chan bool)

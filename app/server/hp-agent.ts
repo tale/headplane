@@ -10,7 +10,7 @@ import { HostInfo } from "~/types";
 import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
-import { ephemeralNodes, hostInfo } from "./db/schema";
+import { hostInfo } from "./db/schema";
 import { RuntimeApiClient } from "./headscale/api/endpoints";
 
 export interface AgentManager {
@@ -266,6 +266,10 @@ export async function createAgentManager(
     }
   }
 
+  /**
+   * Prunes any offline nodes marked as ephemeral. This is due to a Headscale
+   * bug where ephemeral nodes wouldn't be automatically removed on disconnect.
+   */
   async function pruneStaleHostInfo() {
     try {
       const nodes = await apiClient.getNodes();
@@ -294,23 +298,12 @@ export async function createAgentManager(
 
   async function pruneEphemeralNodes() {
     try {
-      const rows = await db.select().from(ephemeralNodes);
-      if (rows.length === 0) {
-        return;
-      }
-
       const nodes = await apiClient.getNodes();
-      const activeKeys = new Set(nodes.map((n) => n.nodeKey));
+      const toPrune = nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online);
 
-      for (const row of rows) {
-        if (!row.node_key) {
-          continue;
-        }
-
-        if (!activeKeys.has(row.node_key)) {
-          await db.delete(ephemeralNodes).where(inArray(ephemeralNodes.auth_key, [row.auth_key]));
-          log.info("agent", "Pruned ephemeral SSH node %s", row.node_key);
-        }
+      for (const node of toPrune) {
+        await apiClient.deleteNode(node.id);
+        log.info("agent", "Pruned offline ephemeral node %s", node.givenName);
       }
     } catch (error) {
       log.debug(

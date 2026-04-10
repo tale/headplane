@@ -1,7 +1,11 @@
-# 0.7.0-beta.2 (April 7, 2026)
+# 0.7.0-beta.2 (April 9, 2026)
 
 > This is a beta release. Please report any issues you encounter.
 
+- **Rebuilt the Browser SSH feature**
+  - Should now work with custom DERP ports and properly handle sessions.
+  - Switched to using `libghostty` for a proper, modern terminal experience (closes [#515](https://github.com/tale/headplane/issues/515)).
+  - Added more resilient error handling and state handling when initiating connections.
 - **Migrated all UI components from react-aria/react-stately to @base-ui-components/react.**
   - Removed `react-aria`, `react-stately`, and `tailwindcss-react-aria-components` as dependencies.
 - **Replaced `openid-client` with a clean-room OIDC implementation.**
@@ -30,8 +34,19 @@
 - Fixed agent HostInfo not refreshing periodically using `cache_ttl` (via [#477](https://github.com/tale/headplane/pull/477), closes [#427](https://github.com/tale/headplane/issues/427)).
 - Fixed agent working directory being wiped on restart.
 - Fixed a race condition where the SSE controller could be used after being closed.
+- **Rewrote the WebSSH WASM module** to match Tailscale's proven `tsconnect` init sequence.
+  - Switched the terminal renderer from xterm.js to [restty](https://restty.dev) (Ghostty WASM).
+  - Bundled self-hosted JetBrains Mono Nerd Font with Nerd Fonts symbol fallback — no CDN dependency.
+  - Fixed SSH sessions failing with EOF: the SSH channel multiplexer was not receiving server traffic.
+  - Fixed terminal resize sending swapped rows/cols, causing garbled output on window resize.
+  - Fixed `log.Fatal()` calls in the WASM bridge killing the entire runtime on recoverable errors.
+  - Fixed `Close()` returning `true` on error and `false` on success.
+  - Fixed stale closure bug in the NodeKey tracking callback.
+  - Removed unnecessary `LoginDefault` and `LocalBackendStartKeyOSNeutral` control flags.
+  - Added cancellation support for in-flight SSH connections on close.
 - Fixed WebSSH dropping DERP port information on non-standard ports (e.g. `:8443`), which caused connections to fail (closes [#515](https://github.com/tale/headplane/issues/515)).
 - Fixed WebSSH WASM prefix paths for correct asset loading (closes [#386](https://github.com/tale/headplane/issues/386)).
+- Fixed Nix WASM build applying DERP patch to wrong vendor directory.
 - Fixed Dockerfile WASM copy paths.
 - Fixed CodeMirror version mismatch override in the ACL editor.
 - Fixed cookie secret generation using incorrect byte length (via [#501](https://github.com/tale/headplane/pull/501)).

@@ -2,7 +2,6 @@ import { Outlet, redirect, type ShouldRevalidateFunction } from "react-router";
 
 import { ErrorBanner } from "~/components/error-banner";
 import StatusBanner from "~/components/status-banner";
-import { pruneEphemeralNodes } from "~/server/db/pruner";
 import { isDataUnauthorizedError } from "~/server/headscale/api/error-client";
 import { usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
@@ -30,7 +29,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   return false;
 };
 
-export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   try {
     const principal = await context.auth.require(request);
 
@@ -53,7 +52,6 @@ export async function loader({ request, context, ...rest }: Route.LoaderArgs) {
     if (isHealthy) {
       try {
         await api.getApiKeys();
-        await pruneEphemeralNodes({ context, request, ...rest });
       } catch (error) {
         if (isDataUnauthorizedError(error)) {
           const displayName =

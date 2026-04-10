@@ -30,8 +30,8 @@ export default function HeadplaneUserRow({
   const displayEmail = user.linkedHeadscaleUser?.email ?? user.email;
 
   return (
-    <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={user.id}>
-      <td className="py-2 pl-0.5">
+    <tr className="group hover:bg-mist-100 dark:hover:bg-mist-800" key={user.id}>
+      <td className="py-2 pl-2">
         <div className="flex items-center">
           {user.profilePicUrl ? (
             <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />

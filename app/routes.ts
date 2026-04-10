@@ -13,7 +13,7 @@ export default [
   route("/logout", "routes/auth/logout.ts"),
   route("/oidc/callback", "routes/auth/oidc-callback.ts"),
   route("/oidc/start", "routes/auth/oidc-start.ts"),
-  route("/ssh", "routes/ssh/console.tsx"),
+  route("/ssh/:id", "routes/ssh/page.tsx"),
 
   // All the main logged-in routes
   layout("layout/app.tsx", [

@@ -8,83 +8,71 @@ import (
 	"io"
 	"log"
 	"net"
-	"syscall/js"
 	"time"
 
 	"golang.org/x/crypto/ssh"
 )
 
-// Represents an SSH session over the Tailnet.
 type SSHSession struct {
-	// Hostname on the Tailnet.
-	Hostname string
+	IPAddress string
+	Username  string
+	Config    *TunnelConfig
+	Ipn       *TsWasmIpn
+	Pty       *ssh.Session
 
-	// Username for the SSH connection.
-	Username string
-
-	// Xterm configuration for the SSH session.
-	TermConfig *SSHXtermConfig
-
-	// Handle to the current IPN connection.
-	Ipn *TsWasmIpn
-
-	// Handle to the current SSH session.
-	Pty *ssh.Session
-
-	// Tracks resize notifications for rows.
-	ResizeRows int
-
-	// Tracks resize notifications for columns.
-	ResizeCols int
-
-	// Reference to our stdin handler, released on close.
-	stdinHandler *js.Func
+	stdin      io.Writer
+	resizeCols int
+	resizeRows int
+	cancel     context.CancelFunc
 }
 
-// Creates a new SSH session given a hostname and username.
-func (i *TsWasmIpn) NewSSHSession(hostname, username string, termConfig *SSHXtermConfig) *SSHSession {
+func (i *TsWasmIpn) NewSSHSession(config *TunnelConfig) *SSHSession {
 	return &SSHSession{
-		Hostname:   hostname,
-		Username:   username,
-		TermConfig: termConfig,
-		Ipn:        i,
+		IPAddress: config.IPAddress,
+		Username:  config.Username,
+		Config:    config,
+		Ipn:       i,
 	}
 }
 
 func (s *SSHSession) ConnectAndRun() {
-	defer s.TermConfig.OnDisconnect()
+	defer s.Config.OnDisconnect()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.TermConfig.Timeout)*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(s.Config.Timeout)*time.Second)
+	s.cancel = cancel
 	defer cancel()
 
-	// TODO: Log here
-	log.Printf("Attempting SSH dial to host: %s", net.JoinHostPort(s.Hostname, "22"))
-	conn, err := s.Ipn.dialer.UserDial(ctx, "tcp", net.JoinHostPort(s.Hostname, "22"))
+	conn, err := s.Ipn.dialer.UserDial(ctx, "tcp", net.JoinHostPort(s.IPAddress, "22"))
 	if err != nil {
-		log.Printf("SSH dial error: %v", err)
 		s.writeError("Dial", err)
 		return
 	}
-
 	defer conn.Close()
+
+	// In Go WASM, gVisor's netstack conn.Read blocks indefinitely without
+	// a deadline because the single-threaded goroutine scheduler needs the
+	// deadline machinery to yield to the browser event loop and process
+	// inbound WireGuard packets. We set a deadline that covers the entire
+	// SSH handshake and clear it once the session is established.
+	conn.SetReadDeadline(time.Now().Add(30 * time.Second))
+
 	sshConf := &ssh.ClientConfig{
 		User: s.Username,
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			// Tailscale SSH doesn't use host keys
-			// TODO: Log that the connection was established
 			return nil
 		},
 	}
 
-	// TODO: LOG: Starting SSH Client
-	sshConn, _, _, err := ssh.NewClientConn(conn, s.Hostname, sshConf)
+	sshConn, chans, reqs, err := ssh.NewClientConn(conn, s.IPAddress, sshConf)
 	if err != nil {
 		s.writeError("SSH", err)
 		return
 	}
-
 	defer sshConn.Close()
-	sshClient := ssh.NewClient(sshConn, nil, nil)
+
+	conn.SetReadDeadline(time.Time{})
+
+	sshClient := ssh.NewClient(sshConn, chans, reqs)
 	defer sshClient.Close()
 
 	pty, err := sshClient.NewSession()
@@ -92,30 +80,28 @@ func (s *SSHSession) ConnectAndRun() {
 		s.writeError("SSH", err)
 		return
 	}
-
 	defer pty.Close()
 	s.Pty = pty
 
-	rows := s.TermConfig.Rows
-	if s.ResizeRows != 0 {
-		rows = s.ResizeRows
+	rows := 24
+	if s.resizeRows != 0 {
+		rows = s.resizeRows
 	}
 
-	cols := s.TermConfig.Cols
-	if s.ResizeCols != 0 {
-		cols = s.ResizeCols
+	cols := 80
+	if s.resizeCols != 0 {
+		cols = s.resizeCols
 	}
 
-	err = pty.RequestPty("xterm", rows, cols, ssh.TerminalModes{
-		ssh.ECHO:          1,     // enable echoing
-		ssh.ICANON:        1,     // canonical mode
-		ssh.ISIG:          1,     // enable signals
-		ssh.ICRNL:         1,     // map CR to NL on input
-		ssh.IUTF8:         1,     // input is UTF-8
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	err = pty.RequestPty("xterm-256color", rows, cols, ssh.TerminalModes{
+		ssh.ECHO:          1,
+		ssh.ICANON:        1,
+		ssh.ISIG:          1,
+		ssh.ICRNL:         1,
+		ssh.IUTF8:         1,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
 	})
-
 	if err != nil {
 		s.writeError("SSH", err)
 		return
@@ -126,8 +112,7 @@ func (s *SSHSession) ConnectAndRun() {
 		s.writeError("SSH", err)
 		return
 	}
-
-	s.wireStdinHandler(stdin)
+	s.stdin = stdin
 
 	stdout, err := pty.StdoutPipe()
 	if err != nil {
@@ -141,100 +126,61 @@ func (s *SSHSession) ConnectAndRun() {
 		return
 	}
 
-	go io.Copy(XtermPipe{s.TermConfig.OnStdout}, stdout)
-	go io.Copy(XtermPipe{s.TermConfig.OnStderr}, stderr)
+	go io.Copy(DataPipe{s.Config.OnData}, stdout)
+	go io.Copy(DataPipe{s.Config.OnData}, stderr)
 
-	// Create our shell
 	err = pty.Shell()
 	if err != nil {
 		s.writeError("SSH", err)
 		return
 	}
 
-	s.TermConfig.OnConnect()
-	err = pty.Wait()
-	if err != nil {
-		s.writeError("SSH", err)
-		return
+	s.Config.OnConnect()
+	if err := pty.Wait(); err != nil {
+		log.Printf("SSH session ended: %v", err)
 	}
 }
 
-// Resize resizes the terminal for the SSH session.
-// TODO: This does NOT work correctly from Xterm.js
-func (s *SSHSession) Resize(rows, cols int) error {
-	// Used to handle resizes while still connecting.
+func (s *SSHSession) WriteInput(data string) {
+	if s.stdin != nil {
+		s.stdin.Write([]byte(data))
+	}
+}
+
+// Resize takes cols and rows (JS convention: cols first, rows second)
+// and translates to SSH's WindowChange(rows, cols) order.
+func (s *SSHSession) Resize(cols, rows int) error {
 	if s.Pty == nil {
-		s.ResizeRows = rows
-		s.ResizeCols = cols
+		s.resizeCols = cols
+		s.resizeRows = rows
 		return nil
 	}
 
-	return s.Pty.WindowChange(cols, rows)
+	return s.Pty.WindowChange(rows, cols)
 }
 
-// Closes the SSH session.
 func (s *SSHSession) Close() error {
-	if s.stdinHandler != nil {
-		s.stdinHandler.Release()
-		s.stdinHandler = nil
+	if s.cancel != nil {
+		s.cancel()
+		s.cancel = nil
 	}
 
 	if s.Pty != nil {
-		err := s.Pty.Close()
-		if err != nil {
-			return err
-		}
+		return s.Pty.Close()
 	}
 
 	return nil
 }
 
-// Wires up the stdin handler to pass data from JS to the SSH session.
-func (s *SSHSession) wireStdinHandler(w io.Writer) {
-	if s.stdinHandler != nil {
-		s.stdinHandler.Release()
-		s.stdinHandler = nil
-	}
-
-	cb := js.FuncOf(func(this js.Value, args []js.Value) any {
-		v := args[0] // This is ALWAYS a Uint8Array technically
-		len := v.Get("byteLength").Int()
-		buf := make([]byte, len)
-		js.CopyBytesToGo(buf, v)
-
-		if _, err := w.Write(buf); err != nil {
-			s.writeError("SSH Stdin", err)
-			return nil
-		}
-
-		// TODO: Remove debug log
-		log.Printf("SSH wrote %d bytes: %v (%q)", len, buf, string(buf))
-		return nil
-	})
-
-	s.stdinHandler = &cb
-	s.TermConfig.OnStdin.Invoke(cb)
-}
-
-// Quick easy formatter for writing errors to the terminal.
 func (s *SSHSession) writeError(label string, err error) {
-	o := fmt.Sprintf("%s error: %v\r\n", label, err)
-	uint8Array := js.Global().Get("Uint8Array").New(len(o))
-
-	js.CopyBytesToJS(uint8Array, []byte(o))
-	s.TermConfig.OnStderr(uint8Array)
+	s.Config.OnData(fmt.Sprintf("%s error: %v\r\n", label, err))
 }
 
-// io.Writer "emulator" to pass to the ssh module.
-type XtermPipe struct {
-	// Function to call when data is written.
-	Send func(data js.Value)
+type DataPipe struct {
+	Send func(data string)
 }
 
-// Write implements the io.Writer interface for XtermPipe.
-func (x XtermPipe) Write(data []byte) (int, error) {
-	uint8Array := js.Global().Get("Uint8Array").New(len(data))
-	js.CopyBytesToJS(uint8Array, data)
-	x.Send(uint8Array)
+func (p DataPipe) Write(data []byte) (int, error) {
+	p.Send(string(data))
 	return len(data), nil
 }

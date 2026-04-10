@@ -50,8 +50,8 @@ export default function MachineRow({
   }, [magic, node.ipAddresses]);
 
   return (
-    <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={node.id}>
-      <td className="py-2 pl-0.5 focus-within:ring-3">
+    <tr className="group hover:bg-mist-100 dark:hover:bg-mist-800" key={node.id}>
+      <td className="py-2 pl-2 focus-within:ring-3">
         <Link className={cn("group/link h-full focus:outline-hidden")} to={`/machines/${node.id}`}>
           <p
             className={cn(
