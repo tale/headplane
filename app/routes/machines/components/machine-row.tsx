@@ -13,7 +13,7 @@ import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
 import type { User } from "~/types";
 import cn from "~/utils/cn";
 import * as hinfo from "~/utils/host-info";
-import type { PopulatedNode } from "~/utils/node-info";
+import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
 import { formatTimeDelta } from "~/utils/time";
 import toast from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
@@ -156,7 +156,7 @@ export function uiTagsForNode(node: PopulatedNode, isAgent?: boolean) {
     uiTags.push("expired");
   }
 
-  if (node.expiry === null) {
+  if (!node.expired && isNoExpiry(node.expiry)) {
     uiTags.push("no-expiry");
   }
 
