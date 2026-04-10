@@ -1,5 +1,6 @@
 FROM --platform=$BUILDPLATFORM golang:1.25.1 AS go-base
 WORKDIR /run
+RUN apt-get update && apt-get install -y --no-install-recommends patch && rm -rf /var/lib/apt/lists/*
 
 COPY go.mod go.sum build.sh ./
 COPY patches/ ./patches/
