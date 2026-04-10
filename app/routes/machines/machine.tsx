@@ -12,7 +12,7 @@ import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
-import { mapNodes, sortNodeTags } from "~/utils/node-info";
+import { isNoExpiry, mapNodes, sortNodeTags } from "~/utils/node-info";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
@@ -281,7 +281,7 @@ export default function Page({
           />
           <Attribute
             name="Key expiry"
-            value={node.expiry !== null ? new Date(node.expiry).toLocaleString() : "Never"}
+            value={!isNoExpiry(node.expiry) ? new Date(node.expiry!).toLocaleString() : "Never"}
           />
           {magic ? (
             <Attribute isCopyable name="Domain" value={`${node.givenName}.${magic}`} />
