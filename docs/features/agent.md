@@ -5,11 +5,6 @@ description: Configure the Headplane Agent for enhanced functionality.
 
 # Headplane Agent
 
-<figure>
-    <img src="../assets/ssh.png" />
-    <figcaption>SSH access via the browser</figcaption>
-</figure>
-
 The Headplane Agent is an optional component that periodically syncs node
 information (such as version and OS details) from the Tailnet. Unlike previous
 versions, the agent no longer runs as a persistent Tailnet node — it
