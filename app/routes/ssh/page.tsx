@@ -1,4 +1,3 @@
-import { faker } from "@faker-js/faker";
 import { Loader2, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
@@ -99,9 +98,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 function generateHostname(username: string) {
-  const adjective = faker.word.adjective({ length: { min: 3, max: 6 } });
-  const noun = faker.word.noun({ length: { min: 3, max: 6 } });
-  return `ssh-${adjective}-${noun}-${username}`;
+  const hex = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  return `ssh-${hex}-${username}`;
 }
 
 export const links: Route.LinksFunction = () => [
