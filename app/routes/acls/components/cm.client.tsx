@@ -1,112 +1,73 @@
-import * as shopify from '@shopify/lang-jsonc';
-import { xcodeDark, xcodeLight } from '@uiw/codemirror-theme-xcode';
-import CodeMirror from '@uiw/react-codemirror';
-import { BookCopy, CircleX } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import Merge from 'react-codemirror-merge';
-import { ErrorBoundary } from 'react-error-boundary';
-import { ClientOnly } from 'remix-utils/client-only';
-import Fallback from './fallback';
+import * as shopify from "@shopify/lang-jsonc";
+import CodeMirror from "@uiw/react-codemirror";
+import { BookCopy, CircleX } from "lucide-react";
+import Merge from "react-codemirror-merge";
+import { ErrorBoundary } from "react-error-boundary";
+
+import { headplaneTheme } from "./theme";
 
 interface EditorProps {
-	isDisabled?: boolean;
-	value: string;
-	onChange: (value: string) => void;
+  isDisabled?: boolean;
+  value: string;
+  onChange: (value: string) => void;
 }
 
-// TODO: Remove ClientOnly
 export function Editor(props: EditorProps) {
-	const [light, setLight] = useState(false);
-	useEffect(() => {
-		const theme = window.matchMedia('(prefers-color-scheme: light)');
-		setLight(theme.matches);
-		theme.addEventListener('change', (theme) => {
-			setLight(theme.matches);
-		});
-	});
-
-	return (
-		<div className="overflow-y-scroll h-editor text-sm">
-			<ErrorBoundary
-				fallback={
-					<div className="flex flex-col items-center gap-2.5 py-8">
-						<CircleX />
-						<p className="text-lg font-semibold">Failed to load the editor.</p>
-					</div>
-				}
-			>
-				<ClientOnly fallback={<Fallback acl={props.value} />}>
-					{() => (
-						<CodeMirror
-							editable={!props.isDisabled}
-							extensions={[shopify.jsonc()]} // Allow editing unless disabled
-							height="100%" // Use readOnly if disabled
-							onChange={(value) => props.onChange(value)}
-							readOnly={props.isDisabled}
-							style={{ height: '100%' }}
-							theme={light ? xcodeLight : xcodeDark}
-							value={props.value}
-						/>
-					)}
-				</ClientOnly>
-			</ErrorBoundary>
-		</div>
-	);
+  return (
+    <div className="text-sm">
+      <ErrorBoundary
+        fallback={
+          <div className="flex flex-col items-center gap-2.5 py-8">
+            <CircleX />
+            <p className="text-lg font-semibold">Failed to load the editor.</p>
+          </div>
+        }
+      >
+        <CodeMirror
+          editable={!props.isDisabled}
+          extensions={[shopify.jsonc()]}
+          minHeight="24rem"
+          maxHeight="var(--height-editor)"
+          onChange={(value) => props.onChange(value)}
+          readOnly={props.isDisabled}
+          theme={headplaneTheme}
+          value={props.value}
+        />
+      </ErrorBoundary>
+    </div>
+  );
 }
 
 interface DifferProps {
-	left: string;
-	right: string;
+  left: string;
+  right: string;
 }
 
 export function Differ(props: DifferProps) {
-	const [light, setLight] = useState(false);
-	useEffect(() => {
-		const theme = window.matchMedia('(prefers-color-scheme: light)');
-		setLight(theme.matches);
-		theme.addEventListener('change', (theme) => {
-			setLight(theme.matches);
-		});
-	});
-
-	return (
-		<div className="text-sm">
-			{props.left === props.right ? (
-				<div className="flex flex-col items-center gap-2.5 py-8">
-					<BookCopy />
-					<p className="text-lg font-semibold">No changes</p>
-				</div>
-			) : (
-				<div className="h-editor overflow-y-scroll">
-					<ErrorBoundary
-						fallback={
-							<div className="flex flex-col items-center gap-2.5 py-8">
-								<CircleX />
-								<p className="text-lg font-semibold">
-									Failed to load the editor.
-								</p>
-							</div>
-						}
-					>
-						<ClientOnly fallback={<Fallback acl={props.right} />}>
-							{() => (
-								<Merge orientation="a-b" theme={light ? xcodeLight : xcodeDark}>
-									<Merge.Original
-										extensions={[shopify.jsonc()]}
-										readOnly
-										value={props.left}
-									/>
-									<Merge.Modified
-										extensions={[shopify.jsonc()]}
-										readOnly
-										value={props.right}
-									/>
-								</Merge>
-							)}
-						</ClientOnly>
-					</ErrorBoundary>
-				</div>
-			)}
-		</div>
-	);
+  return (
+    <div className="text-sm">
+      {props.left === props.right ? (
+        <div className="flex flex-col items-center gap-2.5 py-8">
+          <BookCopy />
+          <p className="text-lg font-semibold">No changes</p>
+        </div>
+      ) : (
+        <div className="h-editor">
+          <ErrorBoundary
+            fallback={
+              <div className="flex flex-col items-center gap-2.5 py-8">
+                <CircleX />
+                <p className="text-lg font-semibold">Failed to load the editor.</p>
+              </div>
+            }
+          >
+            <Merge orientation="a-b" theme={headplaneTheme}>
+              <Merge.Original extensions={[shopify.jsonc()]} readOnly value={props.left} />
+              <Merge.Modified extensions={[shopify.jsonc()]} readOnly value={props.right} />
+            </Merge>
+          </ErrorBoundary>
+        </div>
+      )}
+    </div>
+  );
 }

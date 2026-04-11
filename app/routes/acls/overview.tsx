@@ -108,12 +108,12 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
           </TabsTab>
         </TabsList>
         <TabsPanel value="edit">
-          <Suspense fallback={<Fallback acl={codePolicy} />}>
+          <Suspense fallback={<Fallback />}>
             <LazyEditor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
           </Suspense>
         </TabsPanel>
         <TabsPanel value="diff">
-          <Suspense fallback={<Fallback acl={codePolicy} />}>
+          <Suspense fallback={<Fallback />}>
             <LazyDiffer left={policy} right={codePolicy} />
           </Suspense>
         </TabsPanel>

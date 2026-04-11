@@ -1,36 +1,18 @@
+import { Loader2 } from "lucide-react";
+
 import cn from "~/utils/cn";
 
-interface Props {
-  readonly acl: string;
-}
-
-export default function Fallback({ acl }: Props) {
+export default function Fallback() {
   return (
-    <div className="h-editor relative flex w-full">
-      <div
-        className={cn(
-          "h-full w-8 flex justify-center p-1",
-          "border-r border-mist-400 dark:border-mist-800",
-        )}
-      >
-        <div
-          aria-hidden
-          className={cn(
-            "h-5 w-5 animate-spin rounded-full",
-            "border-mist-900 dark:border-mist-100",
-            "border-2 border-t-transparent dark:border-t-transparent",
-          )}
-        />
+    <div
+      className={cn("h-editor overflow-hidden rounded-md", "bg-[var(--cm-bg)] text-[var(--cm-fg)]")}
+    >
+      <div className="flex h-full items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-[var(--cm-gutter-fg)]">
+          <Loader2 className="size-5 animate-spin" />
+          <p className="text-sm">Loading editor…</p>
+        </div>
       </div>
-      <textarea
-        className={cn(
-          "w-full h-editor font-mono resize-none text-sm",
-          "bg-mist-50 dark:bg-mist-950 opacity-60",
-          "pl-1 pt-1 leading-snug",
-        )}
-        readOnly
-        value={acl}
-      />
     </div>
   );
 }
