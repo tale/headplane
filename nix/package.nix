@@ -33,7 +33,7 @@ in
     inherit (finalAttrs) pname version src;
 		fetcherVersion = 3;
 		pnpm = pnpm_10;
-		hash = "sha256-tbv+n3lWLjv0mZDdAXYM2R8dYE2n950/tluDaVUNiuk=";
+		hash = "sha256-hg+gT72yRapMszje2P9EEWA92PJ2RcT01x9RX0Zg4yg=";
   };
 
     buildPhase = ''
