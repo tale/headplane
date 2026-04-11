@@ -1,6 +1,5 @@
 import type { MetaFunction } from "react-router";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import { ExternalScripts } from "remix-utils/external-scripts";
 
 import { LiveDataProvider } from "~/utils/live-data";
 import ToastProvider from "~/utils/toast-provider";
@@ -38,7 +37,6 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
           <ToastProvider />
           <ScrollRestoration />
           <Scripts />
-          <ExternalScripts />
         </body>
       </html>
     </LiveDataProvider>

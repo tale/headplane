@@ -1,7 +1,6 @@
 import { Loader2, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
-import { ExternalScriptsHandle } from "remix-utils/external-scripts";
 
 import Button from "~/components/button";
 import Card from "~/components/card";
@@ -111,16 +110,6 @@ export const links: Route.LinksFunction = () => [
     crossOrigin: "anonymous",
   },
 ];
-
-export const handle: ExternalScriptsHandle = {
-  scripts: [
-    {
-      src: WASM_HELPER_URL,
-      crossOrigin: "anonymous",
-      preload: true,
-    },
-  ],
-};
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { hostname, username, offline, node } = loaderData;

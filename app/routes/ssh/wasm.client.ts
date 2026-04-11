@@ -1,4 +1,5 @@
 const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
+const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
 
 declare global {
   type HeadplaneSSHFactory = (config: HeadplaneSSHConfig) => HeadplaneSSH;
@@ -44,12 +45,29 @@ export interface TunnelSession {
 
 let resolvedFactory: Promise<HeadplaneSSHFactory> | null = null;
 
+function loadGoHelper(): Promise<void> {
+  if (typeof globalThis.Go !== "undefined") {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = WASM_HELPER_URL;
+    script.crossOrigin = "anonymous";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Failed to load Go WASM helper"));
+    document.head.appendChild(script);
+  });
+}
+
 /**
  * One-shot function that loads the Go WASM binary and returns the SSH factory.
- * It expects the Go WASM helper to be loaded, and will error if called before.
+ * Automatically loads the Go JS helper if it hasn't been loaded yet.
  */
 export async function loadHeadplaneWASM(): Promise<HeadplaneSSHFactory> {
   if (!resolvedFactory) {
+    await loadGoHelper();
+
     const go = new Go();
     const result = await WebAssembly.instantiateStreaming(fetch(WASM_MODULE_URL), go.importObject);
 
