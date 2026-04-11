@@ -1,6 +1,11 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
+  vite: {
+    define: {
+      __HEADPLANE_BETA_DOCS__: JSON.stringify(process.env.HEADPLANE_BETA_DOCS === "true"),
+    },
+  },
   title: "Headplane",
   description: "The missing dashboard for Headscale",
   cleanUrls: true,

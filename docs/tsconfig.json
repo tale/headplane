@@ -1,0 +1,12 @@
+{
+  "include": [".vitepress/**/*"],
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "noEmit": true,
+    "strict": true,
+    "skipLibCheck": true
+  }
+}

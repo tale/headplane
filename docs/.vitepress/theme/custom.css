@@ -1,17 +1,42 @@
 html.dark .light-only {
-	display: none !important;
+  display: none !important;
 }
 
 html:not(.dark) .dark-only {
-	display: none !important;
+  display: none !important;
 }
 
 figure {
-	padding: 1em;
+  padding: 1em;
 }
 
 figcaption {
-	text-align: center;
-	font-size: 0.9em;
-	margin-top: 0.5em;
+  text-align: center;
+  font-size: 0.9em;
+  margin-top: 0.5em;
+}
+
+:root {
+  --vp-layout-top-height: 36px;
+}
+
+.beta-banner {
+  background-color: var(--vp-c-bg);
+  background-image: linear-gradient(var(--vp-c-warning-soft), var(--vp-c-warning-soft));
+  color: var(--vp-c-warning-1);
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.beta-banner a {
+  color: var(--vp-c-warning-1);
+  text-decoration: underline;
+  margin-left: 8px;
 }
