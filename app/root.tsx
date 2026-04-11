@@ -1,6 +1,5 @@
-import type { LinksFunction, MetaFunction } from "react-router";
+import type { MetaFunction } from "react-router";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
-import "@fontsource-variable/inter";
 import { ExternalScripts } from "remix-utils/external-scripts";
 
 import { LiveDataProvider } from "~/utils/live-data";
@@ -9,7 +8,8 @@ import ToastProvider from "~/utils/toast-provider";
 import type { Route } from "./+types/root";
 import { ErrorBanner } from "./components/error-banner";
 
-import stylesheet from "~/tailwind.css?url";
+import "@fontsource-variable/inter/wght.css";
+import "./tailwind.css";
 
 export const meta: MetaFunction = () => [
   { title: "Headplane" },
@@ -18,8 +18,6 @@ export const meta: MetaFunction = () => [
     content: "A frontend for the headscale coordination server",
   },
 ];
-
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: stylesheet }];
 
 export function Layout({ children }: { readonly children: React.ReactNode }) {
   // LiveDataProvider is wrapped at the top level since dialogs and things

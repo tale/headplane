@@ -7,7 +7,7 @@
 
   --height-editor: calc(100vh - 20rem);
 
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, sans-serif;
 
   --transition-duration-25: 25ms;
   --transition-duration-50: 50ms;
