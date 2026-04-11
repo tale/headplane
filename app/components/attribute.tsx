@@ -14,18 +14,18 @@ export interface AttributeProps {
 
 export default function Attribute({ name, value, tooltip, isCopyable }: AttributeProps) {
   return (
-    <dl className="flex items-center gap-1 text-sm">
+    <dl className="group/attr flex items-baseline gap-1 text-sm">
       <dt
         className={cn(
           "w-1/3 sm:w-1/4 lg:w-1/3 shrink-0 min-w-0",
-          "text-mist-500 dark:text-mist-400",
-          tooltip ? "flex items-center gap-1" : undefined,
+          "text-mist-600 dark:text-mist-300",
+          tooltip ? "flex items-baseline gap-1" : undefined,
         )}
       >
         {name}
         {tooltip ? (
           <Tooltip content={tooltip}>
-            <Info className="size-4" />
+            <Info className="size-3.5 translate-y-0.5 opacity-40 transition-opacity hover:opacity-100" />
           </Tooltip>
         ) : undefined}
       </dt>
@@ -64,16 +64,22 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
             <div suppressHydrationWarning className="truncate">
               {value}
             </div>
-            {isCopyable ? (
-              <div>
-                <Check className="hidden size-4 data-copied:block" />
-                <Copy className="block size-4 data-copied:hidden" />
-              </div>
-            ) : undefined}
+            <div className="opacity-0 transition-opacity group-hover/attr:opacity-100">
+              <Check className="hidden size-3.5 data-copied:block" />
+              <Copy className="block size-3.5 data-copied:hidden" />
+            </div>
           </button>
         ) : (
-          <div className="relative min-w-0 truncate" suppressHydrationWarning>
-            {value}
+          <div className="relative min-w-0" suppressHydrationWarning>
+            {value.includes("\n") ? (
+              value.split("\n").map((line) => (
+                <div key={line} className="truncate">
+                  {line}
+                </div>
+              ))
+            ) : (
+              <div className="truncate">{value}</div>
+            )}
           </div>
         )}
       </dd>

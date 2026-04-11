@@ -7,7 +7,7 @@ import ToastProvider from "~/utils/toast-provider";
 import type { Route } from "./+types/root";
 import { ErrorBanner } from "./components/error-banner";
 
-import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/inter/opsz.css";
 import "./tailwind.css";
 
 export const meta: MetaFunction = () => [

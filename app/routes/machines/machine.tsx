@@ -288,7 +288,9 @@ export default function Page({
           ) : undefined}
         </div>
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold uppercase opacity-75">Addresses</p>
+          <p className="text-sm font-semibold text-mist-600 uppercase dark:text-mist-300">
+            Addresses
+          </p>
           <Attribute
             isCopyable
             name="Tailscale IPv4"
@@ -315,9 +317,14 @@ export default function Page({
               value={`${node.givenName}.${magic}`}
             />
           ) : undefined}
+          {stats?.Endpoints ? (
+            <Attribute name="Endpoints" value={stats?.Endpoints?.join("\n") ?? "—"} />
+          ) : undefined}
           {stats ? (
             <>
-              <p className="mt-4 text-sm font-semibold uppercase opacity-75">Client Connectivity</p>
+              <p className="mt-4 text-sm font-semibold text-mist-600 uppercase dark:text-mist-300">
+                Client Connectivity
+              </p>
               <Attribute
                 name="Varies"
                 tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."

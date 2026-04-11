@@ -55,6 +55,12 @@
   }
 }
 
+body {
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 @supports (scrollbar-gutter: stable) {
   html {
     scrollbar-gutter: stable;

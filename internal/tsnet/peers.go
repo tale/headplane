@@ -133,9 +133,28 @@ func (s *TSAgent) FetchAllHostInfo(ctx context.Context) (map[string]json.RawMess
 				return
 			}
 
-			data, err := json.Marshal(whois.Node.Hostinfo)
+			// Merge hostinfo with connection status from PeerStatus
+			var merged map[string]any
+			raw, err := json.Marshal(whois.Node.Hostinfo)
 			if err != nil {
 				log.Debug("Failed to marshal hostinfo for %s (%s): %s", nodeID, ip, err)
+				return
+			}
+			if err := json.Unmarshal(raw, &merged); err != nil {
+				log.Debug("Failed to unmarshal hostinfo for %s (%s): %s", nodeID, ip, err)
+				return
+			}
+
+			endpoints := make([]string, len(whois.Node.Endpoints))
+			for i, ep := range whois.Node.Endpoints {
+				endpoints[i] = ep.String()
+			}
+			merged["Endpoints"] = endpoints
+			merged["HomeDERP"] = whois.Node.HomeDERP
+
+			data, err := json.Marshal(merged)
+			if err != nil {
+				log.Debug("Failed to marshal merged info for %s (%s): %s", nodeID, ip, err)
 				return
 			}
 
