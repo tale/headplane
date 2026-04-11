@@ -12,6 +12,11 @@ export interface PopulatedNode extends Machine {
   };
 }
 
+const GO_ZERO_TIMES = new Set(["0001-01-01 00:00:00", "0001-01-01T00:00:00Z"]);
+export function isNoExpiry(expiry: string | null | undefined): boolean {
+  return expiry == null || GO_ZERO_TIMES.has(expiry);
+}
+
 export function mapNodes(
   nodes: Machine[],
   stats?: Record<string, HostInfo> | undefined,
@@ -35,12 +40,7 @@ export function mapNodes(
       routes: Array.from(new Set(node.availableRoutes)),
       hostInfo: stats?.[node.nodeKey],
       customRouting,
-      expired:
-        node.expiry === "0001-01-01 00:00:00" ||
-        node.expiry === "0001-01-01T00:00:00Z" ||
-        node.expiry === null
-          ? false
-          : new Date(node.expiry).getTime() < Date.now(),
+      expired: isNoExpiry(node.expiry) ? false : new Date(node.expiry!).getTime() < Date.now(),
     };
   });
 }
