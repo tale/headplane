@@ -70,6 +70,7 @@ oidc:
   # token_endpoint: ""
   # userinfo_endpoint: ""
   # scope: "openid email profile"
+  # subject_claims: ["open_id", "email"]
   # extra_params:
   #  foo: "bar"
 ```
@@ -77,6 +78,22 @@ oidc:
 Headplane automatically discovers OIDC endpoints from your issuer's
 `/.well-known/openid-configuration`. If your IdP does not support discovery,
 you'll need to set the endpoints manually.
+
+### Non-standard Subject Claims
+
+Some providers do not return the standard OIDC `sub` claim in the ID token.
+Headplane always uses `sub` first, but you can configure fallback claims with
+`oidc.subject_claims`.
+
+For Feishu/Lark, the recommended configuration is:
+
+```yaml
+oidc:
+  subject_claims: ["open_id", "email"]
+```
+
+This keeps identity matching stable by preferring `open_id` and only falling
+back to `email` if needed.
 
 ### PKCE
 

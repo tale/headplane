@@ -98,6 +98,7 @@ const oidcConfig = type({
     .optional(),
   disable_api_key_login: "boolean = false",
   scope: 'string = "openid email profile"',
+  subject_claims: "string[]?",
   profile_picture_source: '"oidc" | "gravatar" = "oidc"',
   extra_params: "Record<string, string>?",
 
@@ -120,6 +121,7 @@ const partialOidcConfig = type({
   redirect_uri: "string.url?",
   disable_api_key_login: "boolean?",
   scope: "string?",
+  subject_claims: "string[]?",
   extra_params: "Record<string, string>?",
   profile_picture_source: '"oidc" | "gravatar"?',
 

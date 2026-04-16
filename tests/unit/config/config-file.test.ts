@@ -112,6 +112,24 @@ describe("Configuration YAML file loading", () => {
     expect(config.oidc?.enabled).toBe(false);
   });
 
+  test("oidc.subject_claims can be configured from YAML", async () => {
+    const filePath = "/config/oidc-subject-claims.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+        subject_claims: ["open_id", "email"],
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
+  });
+
   test("partial oidc config with enabled field can be parsed", async () => {
     const filePath = "/config/oidc-partial.yaml";
     writeYaml(filePath, {

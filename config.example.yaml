@@ -217,6 +217,13 @@ integration:
 # The scopes to request when authenticating users. The default is below.
 # scope: "openid email profile"
 
+# Optional fallback claims to use when your provider does not return a standard
+# OIDC `sub` claim. Headplane always checks `sub` first, then each claim here
+# in order. For Feishu/Lark, `["open_id", "email"]` is a reasonable fallback.
+# subject_claims:
+#   - "open_id"
+#   - "email"
+
 # Extra query parameters can be passed to the authorization endpoint
 # by setting them here. This is useful for providers that require any kind
 # of custom hinting.
