@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, createPublicKey, randomBytes, verify } from "node:crypto";
 
 import { createRemoteJWKSet, errors as joseErrors, jwtVerify } from "jose";
 import type { JWSHeaderParameters, JWTPayload, FlattenedJWSInput } from "jose";
@@ -21,6 +21,7 @@ export interface OidcConfig {
 
   usePkce?: boolean;
   scope?: string;
+  subjectClaims?: string[];
   extraParams?: Record<string, string>;
   profilePictureSource?: "oidc" | "gravatar";
 }
@@ -112,6 +113,10 @@ interface TokenResponse {
 interface TokenErrorResponse {
   error: string;
   error_description?: string;
+}
+
+interface JwksResponse {
+  keys?: Array<JsonWebKey & { kid?: string }>;
 }
 
 export function createOidcService(initialConfig: OidcConfig): OidcService {
@@ -355,6 +360,15 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
     const claims = verifyResult.value;
     const enriched = await enrichWithUserInfo(resolved.value, tokens.access_token, claims);
+
+    if (!resolveSubject(enriched)) {
+      return err({
+        code: "missing_sub",
+        message: "ID token and userinfo response are missing all configured subject claims",
+        hint: `Your identity provider did not return a stable user identifier. Configure oidc.subject_claims or ensure one of these claims is present: ${getSubjectClaimOrder().join(", ")}.`,
+      });
+    }
+
     return ok(buildIdentity(enriched));
   }
 
@@ -523,14 +537,6 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
         clockTolerance: 60,
       });
 
-      if (!payload.sub) {
-        return err({
-          code: "missing_sub",
-          message: "ID token is missing the 'sub' claim",
-          hint: "Your identity provider did not return a user identifier. Check that your OIDC client is configured to include the 'sub' claim.",
-        });
-      }
-
       if (payload.nonce !== expectedNonce) {
         return err({
           code: "nonce_mismatch",
@@ -541,6 +547,10 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
       return ok(payload);
     } catch (cause) {
+      if (isWeakRsaJoseError(cause)) {
+        return verifyIdTokenWithWeakRsa(idToken, expectedNonce);
+      }
+
       if (cause instanceof joseErrors.JWTClaimValidationFailed) {
         return err({
           code: "invalid_id_token",
@@ -570,13 +580,93 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     }
   }
 
+  async function verifyIdTokenWithWeakRsa(
+    idToken: string,
+    expectedNonce: string,
+  ): Promise<Result<OidcClaims, OidcError>> {
+    if (!endpoints?.jwksUri) {
+      return err({
+        code: "invalid_id_token",
+        message: "JWKS URI is not available for weak RSA verification fallback",
+      });
+    }
+
+    let decoded: ReturnType<typeof decodeJwtParts>;
+    try {
+      decoded = decodeJwtParts(idToken);
+    } catch (cause) {
+      return err({
+        code: "invalid_id_token",
+        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      });
+    }
+
+    const alg = typeof decoded.header.alg === "string" ? decoded.header.alg : undefined;
+    if (!alg || !["RS256", "RS384", "RS512"].includes(alg)) {
+      return err({
+        code: "invalid_id_token",
+        message: `ID token verification failed: unsupported weak RSA fallback algorithm ${alg ?? "unknown"}`,
+      });
+    }
+
+    let jwk: JsonWebKey;
+    try {
+      jwk = await fetchSigningJwk(endpoints.jwksUri, decoded.header.kid);
+    } catch (cause) {
+      return err({
+        code: "invalid_id_token",
+        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      });
+    }
+
+    try {
+      const key = createPublicKey({ key: jwk, format: "jwk" });
+      const isValid = verify(
+        getNodeVerifyAlgorithm(alg),
+        Buffer.from(decoded.signingInput),
+        key,
+        decoded.signature,
+      );
+
+      if (!isValid) {
+        return err({
+          code: "invalid_id_token",
+          message: "ID token signature verification failed",
+          hint: "The identity provider's signing keys may have changed. Try restarting Headplane to refresh the key cache.",
+        });
+      }
+    } catch (cause) {
+      return err({
+        code: "invalid_id_token",
+        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
+      });
+    }
+
+    const claimError = validateOidcClaims(decoded.payload, config.issuer, config.clientId, 60);
+    if (claimError) {
+      return err(claimError);
+    }
+
+    if (decoded.payload.nonce !== expectedNonce) {
+      return err({
+        code: "nonce_mismatch",
+        message: `Nonce mismatch: expected ${expectedNonce}, got ${decoded.payload.nonce}`,
+        hint: "Please try signing in again. This can happen with stale browser sessions.",
+      });
+    }
+
+    return ok(decoded.payload);
+  }
+
   async function enrichWithUserInfo(
     ep: ResolvedEndpoints,
     accessToken: string,
     claims: OidcClaims,
   ): Promise<OidcClaims> {
-    const needsEnrichment = !claims.name && !claims.email && !claims.picture;
-    if (!needsEnrichment || !ep.userinfoEndpoint) {
+    const needsEnrichment =
+      !claims.name && !claims.email && !claims.picture && !!resolveSubject(claims);
+    const needsSubjectEnrichment = !resolveSubject(claims);
+    if ((!needsEnrichment && !needsSubjectEnrichment) || !ep.userinfoEndpoint) {
       return claims;
     }
 
@@ -595,8 +685,17 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       }
 
       const userInfo = (await response.json()) as Record<string, unknown>;
+      const subjectClaimValues = Object.fromEntries(
+        getSubjectClaimOrder()
+          .filter((claim) => claim !== "sub")
+          .map((claim) => [
+            claim,
+            readClaimAsString(claims, claim) ?? readClaimAsString(userInfo, claim),
+          ]),
+      );
       return {
         ...claims,
+        ...subjectClaimValues,
         name: claims.name ?? (userInfo.name as string | undefined),
         given_name: claims.given_name ?? (userInfo.given_name as string | undefined),
         family_name: claims.family_name ?? (userInfo.family_name as string | undefined),
@@ -604,6 +703,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
           claims.preferred_username ?? (userInfo.preferred_username as string | undefined),
         email: claims.email ?? (userInfo.email as string | undefined),
         picture: claims.picture ?? (userInfo.picture as string | undefined),
+        sub: claims.sub ?? readClaimAsString(userInfo, "sub"),
       };
     } catch (cause) {
       log.debug(
@@ -617,6 +717,11 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   }
 
   function buildIdentity(claims: OidcClaims): OidcIdentity {
+    const subject = resolveSubject(claims);
+    if (!subject) {
+      throw new Error("OIDC subject was resolved before identity construction");
+    }
+
     const name =
       claims.name ??
       (claims.given_name && claims.family_name
@@ -637,7 +742,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
     return {
       issuer: config.issuer,
-      subject: claims.sub!,
+      subject,
       name,
       username,
       email: claims.email,
@@ -657,7 +762,32 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     invalidate();
   }
 
+  function getSubjectClaimOrder(): string[] {
+    return ["sub", ...(config.subjectClaims ?? []).filter((claim) => claim !== "sub")];
+  }
+
+  function resolveSubject(claims: OidcClaims): string | undefined {
+    for (const claim of getSubjectClaimOrder()) {
+      const value = readClaimAsString(claims, claim);
+      if (value) {
+        return value;
+      }
+    }
+
+    return undefined;
+  }
+
   return { status, discover, startFlow, handleCallback, invalidate, reload };
+}
+
+function readClaimAsString(claims: Record<string, unknown>, claimName: string): string | undefined {
+  const value = claims[claimName];
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function generateRandom(bytes = 32): string {
@@ -666,4 +796,127 @@ function generateRandom(bytes = 32): string {
 
 function computeS256Challenge(verifier: string): string {
   return createHash("sha256").update(verifier).digest("base64url");
+}
+
+function isWeakRsaJoseError(cause: unknown): cause is Error {
+  return (
+    cause instanceof Error &&
+    cause.message.includes("requires key modulusLength to be 2048 bits or larger")
+  );
+}
+
+function decodeJwtParts(token: string): {
+  header: Record<string, unknown>;
+  payload: OidcClaims;
+  signature: Buffer;
+  signingInput: string;
+} {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    throw new Error("JWT must have exactly 3 parts");
+  }
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const header = JSON.parse(Buffer.from(encodedHeader, "base64url").toString("utf8")) as Record<
+    string,
+    unknown
+  >;
+  const payload = JSON.parse(
+    Buffer.from(encodedPayload, "base64url").toString("utf8"),
+  ) as OidcClaims;
+  const signature = Buffer.from(encodedSignature, "base64url");
+
+  return {
+    header,
+    payload,
+    signature,
+    signingInput: `${encodedHeader}.${encodedPayload}`,
+  };
+}
+
+async function fetchSigningJwk(
+  jwksUri: string,
+  expectedKid: unknown,
+): Promise<JsonWebKey & { kid?: string }> {
+  const response = await fetch(jwksUri, {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(10_000),
+  });
+
+  if (!response.ok) {
+    throw new Error(`JWKS endpoint returned ${response.status}: ${jwksUri}`);
+  }
+
+  const json = (await response.json()) as JwksResponse;
+  const keys = Array.isArray(json.keys) ? json.keys : [];
+  if (keys.length === 0) {
+    throw new Error("JWKS response did not contain any keys");
+  }
+
+  const kid = typeof expectedKid === "string" ? expectedKid : undefined;
+  const jwk =
+    (kid ? keys.find((key) => key.kid === kid) : undefined) ??
+    (keys.length === 1 ? keys[0] : undefined);
+
+  if (!jwk) {
+    throw new Error(`No matching JWK found for kid ${kid ?? "(missing)"}`);
+  }
+
+  if (jwk.kty !== "RSA") {
+    throw new Error(`Expected RSA signing key but received ${jwk.kty ?? "unknown"}`);
+  }
+
+  return jwk;
+}
+
+function getNodeVerifyAlgorithm(alg: string): "RSA-SHA256" | "RSA-SHA384" | "RSA-SHA512" {
+  switch (alg) {
+    case "RS256":
+      return "RSA-SHA256";
+    case "RS384":
+      return "RSA-SHA384";
+    case "RS512":
+      return "RSA-SHA512";
+    default:
+      throw new Error(`Unsupported RSA verification algorithm: ${alg}`);
+  }
+}
+
+function validateOidcClaims(
+  payload: OidcClaims,
+  expectedIssuer: string,
+  expectedAudience: string,
+  clockToleranceSeconds: number,
+): OidcError | undefined {
+  if (payload.iss !== expectedIssuer) {
+    return {
+      code: "invalid_id_token",
+      message: 'JWT claim validation failed: iss — unexpected "iss" claim value',
+    };
+  }
+
+  const audiences = Array.isArray(payload.aud) ? payload.aud : [payload.aud];
+  if (!audiences.includes(expectedAudience)) {
+    return {
+      code: "invalid_id_token",
+      message: 'JWT claim validation failed: aud — unexpected "aud" claim value',
+    };
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (typeof payload.exp === "number" && now - clockToleranceSeconds >= payload.exp) {
+    return {
+      code: "invalid_id_token",
+      message: "ID token is expired",
+    };
+  }
+
+  if (typeof payload.nbf === "number" && now + clockToleranceSeconds < payload.nbf) {
+    return {
+      code: "invalid_id_token",
+      message: "JWT claim validation failed: nbf — token is not active yet",
+    };
+  }
+
+  return undefined;
 }
