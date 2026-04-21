@@ -32,7 +32,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
           <Links />
           <link href={`${__PREFIX__}/favicon.ico`} rel="icon" />
         </head>
-        <body className="overflow-x-hidden overscroll-none dark:bg-mist-900 dark:text-mist-50">
+        <body className="w-full overflow-x-hidden overscroll-none dark:bg-mist-900 dark:text-mist-50">
           {children}
           <ToastProvider />
           <ScrollRestoration />

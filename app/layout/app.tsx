@@ -111,7 +111,7 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         configAvailable={loaderData.configAvailable}
         user={loaderData.user}
       />
-      <main className="container mt-4 mb-24 overscroll-contain">
+      <main className="container mt-4 mb-24 overflow-x-hidden overscroll-contain">
         {!loaderData.isHealthy && (
           <StatusBanner
             className="mb-4"

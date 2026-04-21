@@ -46,10 +46,10 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
         "dark:border-b dark:border-mist-800 shadow-inner",
       )}
     >
-      <div className="container flex items-center justify-between py-4">
-        <div className="flex items-center gap-x-8">
+      <div className="container flex items-center gap-x-4 py-4">
+        <div className="flex min-w-0 items-center gap-x-4">
           <div className="flex items-center gap-x-2">
-            <picture>
+            <picture className="min-w-8">
               <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
               <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
               <img src={logoBg} alt="Headplane logo" />
@@ -57,7 +57,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             <h1 className="text-2xl font-semibold">headplane</h1>
           </div>
           {showTabs && (
-            <nav className="hidden items-center gap-x-2 text-sm font-medium md:flex">
+            <nav className="hidden items-center gap-x-2 overflow-x-auto p-1 text-sm font-medium md:flex">
               {tabs.map((tab) => {
                 if (!access[tab.key]) return null;
                 if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
@@ -87,7 +87,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             </nav>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-x-4">
+        <div className="ml-auto grid shrink-0 grid-cols-2 gap-x-4">
           <Menu>
             <MenuTrigger className="size-8 rounded-full p-1">
               <CircleQuestionMark className="w-5" />
@@ -145,6 +145,38 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
           </Menu>
         </div>
       </div>
+      {showTabs && (
+        <div className="block overflow-x-auto p-2 md:hidden">
+          <nav className="flex items-center gap-x-2 text-sm font-medium">
+            {tabs.map((tab) => {
+              if (!access[tab.key]) return null;
+              if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
+
+              return (
+                <NavLink
+                  key={tab.to}
+                  className={({ isActive }) =>
+                    cn(
+                      "relative px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
+                      "hover:bg-mist-300/50 dark:hover:bg-mist-800",
+                      "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
+                      "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
+                      "text-mist-600 dark:text-mist-300",
+                      isActive &&
+                        "text-mist-900 dark:text-mist-50 after:content-[''] after:absolute after:-bottom-2 after:inset-x-1 after:h-0.5 after:rounded-full after:bg-indigo-500",
+                    )
+                  }
+                  prefetch="intent"
+                  to={tab.to}
+                >
+                  <tab.icon className="w-4" />
+                  {tab.label}
+                </NavLink>
+              );
+            })}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }
