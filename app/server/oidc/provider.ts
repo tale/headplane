@@ -22,6 +22,7 @@ export interface OidcConfig {
   usePkce?: boolean;
   scope?: string;
   subjectClaims?: string[];
+  allowWeakRsaKeys?: boolean;
   extraParams?: Record<string, string>;
   profilePictureSource?: "oidc" | "gravatar";
 }
@@ -119,6 +120,19 @@ interface JwksResponse {
   keys?: Array<JsonWebKey & { kid?: string }>;
 }
 
+interface DecodedJwtParts {
+  header: Record<string, unknown>;
+  payload: OidcClaims;
+  signature: Buffer;
+  signingInput: string;
+}
+
+interface WeakRsaContext {
+  alg: "RS256" | "RS384" | "RS512";
+  decoded: DecodedJwtParts;
+  candidateKeys: Array<JsonWebKey & { kid?: string }>;
+}
+
 export function createOidcService(initialConfig: OidcConfig): OidcService {
   let config = Object.freeze({ ...initialConfig });
 
@@ -127,6 +141,13 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   let jwks: JwksResolver | undefined;
   let resolvedAuthMethod: "client_secret_basic" | "client_secret_post" | undefined =
     initialConfig.tokenEndpointAuthMethod;
+  const weakJwksCache = new Map<
+    string,
+    { expiresAt: number; keys: Array<JsonWebKey & { kid?: string }> }
+  >();
+  let hasWarnedWeakKeyMode = false;
+
+  maybeWarnWeakRsaMode(config);
 
   function status(): ReturnType<OidcService["status"]> {
     if (lastError) {
@@ -547,10 +568,6 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
       return ok(payload);
     } catch (cause) {
-      if (isWeakRsaJoseError(cause)) {
-        return verifyIdTokenWithWeakRsa(idToken, expectedNonce);
-      }
-
       if (cause instanceof joseErrors.JWTClaimValidationFailed) {
         return err({
           code: "invalid_id_token",
@@ -563,6 +580,28 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
           code: "invalid_id_token",
           message: "ID token is expired",
         });
+      }
+
+      let weakRsaContext: WeakRsaContext | undefined;
+      try {
+        weakRsaContext = await getWeakRsaContext(idToken);
+      } catch (weakRsaCause) {
+        return err({
+          code: "invalid_id_token",
+          message: `ID token verification failed: ${weakRsaCause instanceof Error ? weakRsaCause.message : String(weakRsaCause)}`,
+        });
+      }
+
+      if (weakRsaContext) {
+        if (!config.allowWeakRsaKeys) {
+          return err({
+            code: "invalid_id_token",
+            message: "ID token was signed with a weak RSA key that Headplane rejects by default",
+            hint: "If your provider cannot rotate to a 2048-bit-or-larger RSA signing key, set oidc.allow_weak_rsa_keys to true as a temporary compatibility fallback.",
+          });
+        }
+
+        return verifyIdTokenWithWeakRsa(weakRsaContext, expectedNonce);
       }
 
       if (cause instanceof joseErrors.JWSSignatureVerificationFailed) {
@@ -581,81 +620,64 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   }
 
   async function verifyIdTokenWithWeakRsa(
-    idToken: string,
+    weakRsaContext: WeakRsaContext,
     expectedNonce: string,
   ): Promise<Result<OidcClaims, OidcError>> {
-    if (!endpoints?.jwksUri) {
-      return err({
-        code: "invalid_id_token",
-        message: "JWKS URI is not available for weak RSA verification fallback",
-      });
-    }
+    for (const jwk of weakRsaContext.candidateKeys) {
+      try {
+        const key = createPublicKey({ key: jwk, format: "jwk" });
+        const isValid = verify(
+          getNodeVerifyAlgorithm(weakRsaContext.alg),
+          Buffer.from(weakRsaContext.decoded.signingInput),
+          key,
+          weakRsaContext.decoded.signature,
+        );
 
-    let decoded: ReturnType<typeof decodeJwtParts>;
-    try {
-      decoded = decodeJwtParts(idToken);
-    } catch (cause) {
-      return err({
-        code: "invalid_id_token",
-        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
-      });
-    }
-
-    const alg = typeof decoded.header.alg === "string" ? decoded.header.alg : undefined;
-    if (!alg || !["RS256", "RS384", "RS512"].includes(alg)) {
-      return err({
-        code: "invalid_id_token",
-        message: `ID token verification failed: unsupported weak RSA fallback algorithm ${alg ?? "unknown"}`,
-      });
-    }
-
-    let jwk: JsonWebKey;
-    try {
-      jwk = await fetchSigningJwk(endpoints.jwksUri, decoded.header.kid);
-    } catch (cause) {
-      return err({
-        code: "invalid_id_token",
-        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
-      });
-    }
-
-    try {
-      const key = createPublicKey({ key: jwk, format: "jwk" });
-      const isValid = verify(
-        getNodeVerifyAlgorithm(alg),
-        Buffer.from(decoded.signingInput),
-        key,
-        decoded.signature,
-      );
-
-      if (!isValid) {
+        if (!isValid) {
+          continue;
+        }
+      } catch (cause) {
         return err({
           code: "invalid_id_token",
-          message: "ID token signature verification failed",
-          hint: "The identity provider's signing keys may have changed. Try restarting Headplane to refresh the key cache.",
+          message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
         });
       }
-    } catch (cause) {
-      return err({
-        code: "invalid_id_token",
-        message: `ID token verification failed: ${cause instanceof Error ? cause.message : String(cause)}`,
-      });
+
+      if (!hasWarnedWeakKeyMode) {
+        hasWarnedWeakKeyMode = true;
+        log.warn(
+          "auth",
+          "OIDC issuer %s is using a weak RSA signing key. Accepting it only because oidc.allow_weak_rsa_keys=true.",
+          config.issuer,
+        );
+      }
+
+      const claimError = validateOidcClaims(
+        weakRsaContext.decoded.payload,
+        config.issuer,
+        config.clientId,
+        60,
+      );
+      if (claimError) {
+        return err(claimError);
+      }
+
+      if (weakRsaContext.decoded.payload.nonce !== expectedNonce) {
+        return err({
+          code: "nonce_mismatch",
+          message: `Nonce mismatch: expected ${expectedNonce}, got ${weakRsaContext.decoded.payload.nonce}`,
+          hint: "Please try signing in again. This can happen with stale browser sessions.",
+        });
+      }
+
+      return ok(weakRsaContext.decoded.payload);
     }
 
-    const claimError = validateOidcClaims(decoded.payload, config.issuer, config.clientId, 60);
-    if (claimError) {
-      return err(claimError);
-    }
-
-    if (decoded.payload.nonce !== expectedNonce) {
-      return err({
-        code: "nonce_mismatch",
-        message: `Nonce mismatch: expected ${expectedNonce}, got ${decoded.payload.nonce}`,
-        hint: "Please try signing in again. This can happen with stale browser sessions.",
-      });
-    }
-
-    return ok(decoded.payload);
+    return err({
+      code: "invalid_id_token",
+      message: "ID token signature verification failed",
+      hint: "The identity provider's signing keys may have changed. Try restarting Headplane to refresh the key cache.",
+    });
   }
 
   async function enrichWithUserInfo(
@@ -719,7 +741,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   function buildIdentity(claims: OidcClaims): OidcIdentity {
     const subject = resolveSubject(claims);
     if (!subject) {
-      throw new Error("OIDC subject was resolved before identity construction");
+      throw new Error("OIDC subject was not resolved before identity construction");
     }
 
     const name =
@@ -759,11 +781,15 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
   function reload(newConfig: OidcConfig): void {
     config = Object.freeze({ ...newConfig });
+    maybeWarnWeakRsaMode(config);
     invalidate();
   }
 
   function getSubjectClaimOrder(): string[] {
-    return ["sub", ...(config.subjectClaims ?? []).filter((claim) => claim !== "sub")];
+    return [
+      "sub",
+      ...normalizeSubjectClaims(config.subjectClaims).filter((claim) => claim !== "sub"),
+    ];
   }
 
   function resolveSubject(claims: OidcClaims): string | undefined {
@@ -778,6 +804,71 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   }
 
   return { status, discover, startFlow, handleCallback, invalidate, reload };
+
+  function maybeWarnWeakRsaMode(currentConfig: OidcConfig): void {
+    if (!currentConfig.allowWeakRsaKeys) {
+      return;
+    }
+
+    log.warn(
+      "auth",
+      "OIDC weak RSA compatibility mode is enabled for issuer %s. This lowers token verification security and should only be used as a temporary workaround.",
+      currentConfig.issuer,
+    );
+  }
+
+  async function getWeakRsaContext(idToken: string): Promise<WeakRsaContext | undefined> {
+    if (!endpoints?.jwksUri) {
+      return undefined;
+    }
+
+    const decoded = decodeJwtParts(idToken);
+    const alg = decoded.header.alg;
+    if (alg !== "RS256" && alg !== "RS384" && alg !== "RS512") {
+      return undefined;
+    }
+
+    const keys = await fetchSigningJwks(endpoints.jwksUri);
+    const candidateKeys = selectCandidateSigningKeys(keys, decoded.header.kid).filter((jwk) =>
+      isWeakRsaKey(jwk),
+    );
+
+    if (candidateKeys.length === 0) {
+      return undefined;
+    }
+
+    return { alg, decoded, candidateKeys };
+  }
+
+  async function fetchSigningJwks(jwksUri: string): Promise<Array<JsonWebKey & { kid?: string }>> {
+    const cached = weakJwksCache.get(jwksUri);
+    const now = Date.now();
+    if (cached && cached.expiresAt > now) {
+      return cached.keys;
+    }
+
+    const response = await fetch(jwksUri, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(10_000),
+    });
+
+    if (!response.ok) {
+      throw new Error(`JWKS endpoint returned ${response.status}: ${jwksUri}`);
+    }
+
+    const json = (await response.json()) as JwksResponse;
+    const keys = Array.isArray(json.keys) ? json.keys : [];
+    if (keys.length === 0) {
+      throw new Error("JWKS response did not contain any keys");
+    }
+
+    weakJwksCache.set(jwksUri, {
+      expiresAt: now + 60_000,
+      keys,
+    });
+
+    return keys;
+  }
 }
 
 function readClaimAsString(claims: Record<string, unknown>, claimName: string): string | undefined {
@@ -798,19 +889,7 @@ function computeS256Challenge(verifier: string): string {
   return createHash("sha256").update(verifier).digest("base64url");
 }
 
-function isWeakRsaJoseError(cause: unknown): cause is Error {
-  return (
-    cause instanceof Error &&
-    cause.message.includes("requires key modulusLength to be 2048 bits or larger")
-  );
-}
-
-function decodeJwtParts(token: string): {
-  header: Record<string, unknown>;
-  payload: OidcClaims;
-  signature: Buffer;
-  signingInput: string;
-} {
+function decodeJwtParts(token: string): DecodedJwtParts {
   const parts = token.split(".");
   if (parts.length !== 3) {
     throw new Error("JWT must have exactly 3 parts");
@@ -834,39 +913,22 @@ function decodeJwtParts(token: string): {
   };
 }
 
-async function fetchSigningJwk(
-  jwksUri: string,
+function selectCandidateSigningKeys(
+  keys: Array<JsonWebKey & { kid?: string }>,
   expectedKid: unknown,
-): Promise<JsonWebKey & { kid?: string }> {
-  const response = await fetch(jwksUri, {
-    headers: { Accept: "application/json" },
-    signal: AbortSignal.timeout(10_000),
-  });
-
-  if (!response.ok) {
-    throw new Error(`JWKS endpoint returned ${response.status}: ${jwksUri}`);
-  }
-
-  const json = (await response.json()) as JwksResponse;
-  const keys = Array.isArray(json.keys) ? json.keys : [];
-  if (keys.length === 0) {
-    throw new Error("JWKS response did not contain any keys");
-  }
-
+): Array<JsonWebKey & { kid?: string }> {
   const kid = typeof expectedKid === "string" ? expectedKid : undefined;
-  const jwk =
-    (kid ? keys.find((key) => key.kid === kid) : undefined) ??
-    (keys.length === 1 ? keys[0] : undefined);
+  const rsaKeys = keys.filter((key) => key.kty === "RSA");
+  if (kid) {
+    const matchingKey = rsaKeys.find((key) => key.kid === kid);
+    if (matchingKey) {
+      return [matchingKey];
+    }
 
-  if (!jwk) {
-    throw new Error(`No matching JWK found for kid ${kid ?? "(missing)"}`);
+    return [];
   }
 
-  if (jwk.kty !== "RSA") {
-    throw new Error(`Expected RSA signing key but received ${jwk.kty ?? "unknown"}`);
-  }
-
-  return jwk;
+  return rsaKeys;
 }
 
 function getNodeVerifyAlgorithm(alg: string): "RSA-SHA256" | "RSA-SHA384" | "RSA-SHA512" {
@@ -880,6 +942,47 @@ function getNodeVerifyAlgorithm(alg: string): "RSA-SHA256" | "RSA-SHA384" | "RSA
     default:
       throw new Error(`Unsupported RSA verification algorithm: ${alg}`);
   }
+}
+
+function isWeakRsaKey(jwk: JsonWebKey): boolean {
+  if (jwk.kty !== "RSA" || typeof jwk.n !== "string") {
+    return false;
+  }
+
+  return getRsaModulusBitLength(jwk.n) < 2048;
+}
+
+function getRsaModulusBitLength(base64UrlModulus: string): number {
+  const modulus = Buffer.from(base64UrlModulus, "base64url");
+  if (modulus.length === 0) {
+    return 0;
+  }
+
+  let leadingZeroBits = 0;
+  let currentByte = modulus[0];
+  while ((currentByte & 0x80) === 0 && leadingZeroBits < 8) {
+    leadingZeroBits++;
+    currentByte <<= 1;
+  }
+
+  return modulus.length * 8 - leadingZeroBits;
+}
+
+function normalizeSubjectClaims(subjectClaims?: string[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const claim of subjectClaims ?? []) {
+    const trimmed = claim.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return normalized;
 }
 
 function validateOidcClaims(

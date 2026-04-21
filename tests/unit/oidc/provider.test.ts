@@ -42,8 +42,12 @@ function encodeBase64Url(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
 }
 
-function signWeakRs256IdToken(claims: Record<string, unknown>, nonce?: string) {
-  const header = { alg: "RS256", kid: "test-key", typ: "JWT" };
+function signWeakRs256IdToken(
+  claims: Record<string, unknown>,
+  nonce?: string,
+  options?: { kid?: string },
+) {
+  const header = { alg: "RS256", kid: options?.kid ?? "test-key", typ: "JWT" };
   const payload = {
     nonce,
     ...claims,
@@ -544,12 +548,53 @@ describe("handleCallback", () => {
     expect(result.error.code).toBe("missing_sub");
   });
 
-  test("accepts RS256 id tokens signed with 1024-bit RSA keys", async () => {
+  test("rejects RS256 id tokens signed with 1024-bit RSA keys by default", async () => {
     const originalPublicJwk = publicJwk;
     publicJwk = weakPublicJwk;
 
     try {
       const svc = createOidcService(testConfig({ usePkce: false }));
+      const flowResult = await svc.startFlow();
+      if (!flowResult.ok) {
+        throw new Error("startFlow failed");
+      }
+
+      const { flowState } = flowResult.value;
+      const idToken = signWeakRs256IdToken({ sub: "weak-key-user" }, flowState.nonce);
+
+      tokenHandler = async (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            access_token: "mock-access-token",
+            id_token: idToken,
+            token_type: "Bearer",
+          }),
+        );
+      };
+
+      userinfoHandler = undefined;
+      const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+      const result = await svc.handleCallback(params, flowState);
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+
+      expect(result.error.code).toBe("invalid_id_token");
+      expect(result.error.hint).toContain("allow_weak_rsa_keys");
+    } finally {
+      publicJwk = originalPublicJwk;
+    }
+  });
+
+  test("accepts RS256 id tokens signed with 1024-bit RSA keys when explicitly enabled", async () => {
+    const originalPublicJwk = publicJwk;
+    publicJwk = weakPublicJwk;
+
+    try {
+      const svc = createOidcService(testConfig({ usePkce: false, allowWeakRsaKeys: true }));
       const flowResult = await svc.startFlow();
       if (!flowResult.ok) {
         throw new Error("startFlow failed");
@@ -579,6 +624,59 @@ describe("handleCallback", () => {
       }
 
       expect(result.value.subject).toBe("weak-key-user");
+    } finally {
+      publicJwk = originalPublicJwk;
+    }
+  });
+
+  test("rejects weak RSA fallback when token kid does not match any JWKS key", async () => {
+    const originalPublicJwk = publicJwk;
+    publicJwk = weakPublicJwk;
+
+    try {
+      const svc = createOidcService(testConfig({ usePkce: false, allowWeakRsaKeys: true }));
+      await svc.discover();
+      svc.reload({
+        ...testConfig({
+          usePkce: false,
+          allowWeakRsaKeys: true,
+          authorizationEndpoint: `${baseUrl}/authorize`,
+          tokenEndpoint: `${baseUrl}/token`,
+          jwksUri: `${baseUrl}/jwks`,
+        }),
+      });
+      const flowResult = await svc.startFlow();
+      if (!flowResult.ok) {
+        throw new Error("startFlow failed");
+      }
+
+      const { flowState } = flowResult.value;
+      const idToken = signWeakRs256IdToken({ sub: "weak-key-user" }, flowState.nonce, {
+        kid: "missing-key",
+      });
+
+      tokenHandler = async (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            access_token: "mock-access-token",
+            id_token: idToken,
+            token_type: "Bearer",
+          }),
+        );
+      };
+
+      userinfoHandler = undefined;
+      const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+      const result = await svc.handleCallback(params, flowState);
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+
+      expect(result.error.code).toBe("invalid_id_token");
+      expect(result.error.message).toContain("no applicable key found");
     } finally {
       publicJwk = originalPublicJwk;
     }

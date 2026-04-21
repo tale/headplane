@@ -14,6 +14,23 @@ export const pathSupportedKeys = [
   "oidc.headscale_api_key",
 ] as const;
 
+function normalizeStringArray(values: string[]): string[] {
+  const seen = new Set<string>();
+  const normalized: string[] = [];
+
+  for (const value of values) {
+    const trimmed = value.trim();
+    if (trimmed.length === 0 || seen.has(trimmed)) {
+      continue;
+    }
+
+    seen.add(trimmed);
+    normalized.push(trimmed);
+  }
+
+  return normalized;
+}
+
 const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
@@ -98,7 +115,8 @@ const oidcConfig = type({
     .optional(),
   disable_api_key_login: "boolean = false",
   scope: 'string = "openid email profile"',
-  subject_claims: "string[]?",
+  subject_claims: type("string[]").pipe(normalizeStringArray).optional(),
+  allow_weak_rsa_keys: "boolean = false",
   profile_picture_source: '"oidc" | "gravatar" = "oidc"',
   extra_params: "Record<string, string>?",
 
@@ -121,7 +139,8 @@ const partialOidcConfig = type({
   redirect_uri: "string.url?",
   disable_api_key_login: "boolean?",
   scope: "string?",
-  subject_claims: "string[]?",
+  subject_claims: type("string[]").pipe(normalizeStringArray).optional(),
+  allow_weak_rsa_keys: "boolean?",
   extra_params: "Record<string, string>?",
   profile_picture_source: '"oidc" | "gravatar"?',
 
