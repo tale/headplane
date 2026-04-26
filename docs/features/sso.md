@@ -70,6 +70,8 @@ oidc:
   # token_endpoint: ""
   # userinfo_endpoint: ""
   # scope: "openid email profile"
+  # subject_claims: ["open_id", "email"]
+  # allow_weak_rsa_keys: false
   # extra_params:
   #  foo: "bar"
 ```
@@ -77,6 +79,40 @@ oidc:
 Headplane automatically discovers OIDC endpoints from your issuer's
 `/.well-known/openid-configuration`. If your IdP does not support discovery,
 you'll need to set the endpoints manually.
+
+### Non-standard Subject Claims
+
+Some providers do not return the standard OIDC `sub` claim in the ID token.
+Headplane always uses `sub` first, but you can configure fallback claims with
+`oidc.subject_claims`.
+
+For Feishu/Lark, the recommended configuration is:
+
+```yaml
+oidc:
+  subject_claims: ["open_id", "email"]
+```
+
+This keeps identity matching stable by preferring `open_id` and only falling
+back to `email` if needed.
+
+### Legacy Weak RSA Signing Keys
+
+Some legacy providers still sign ID tokens with RSA keys smaller than 2048
+bits. Headplane rejects those keys by default.
+
+If your provider cannot rotate to a stronger signing key yet, you can
+explicitly enable the compatibility fallback:
+
+```yaml
+oidc:
+  allow_weak_rsa_keys: true
+```
+
+::: warning
+This weakens ID token verification security and should only be used as a
+temporary workaround while your provider rotates to a 2048-bit-or-larger key.
+:::
 
 ### PKCE
 
@@ -107,8 +143,9 @@ Headplane uses a two-step matching strategy:
 
 1. **Subject match (primary)**: Headscale stores the IdP's `provider_id` for
    each OIDC user (e.g. `https://idp.example.com/3d6f6e3f-...`). Headplane
-   extracts the last path segment and compares it to the `sub` claim from the
-   OIDC token. If they match, the user is linked.
+   extracts the last path segment and compares it to the resolved OIDC subject.
+   The resolved subject uses `sub` first, then falls back to any configured
+   `oidc.subject_claims`. If they match, the user is linked.
 
 2. **Email match (fallback)**: If the subject doesn't match, Headplane falls
    back to comparing the user's email address from the OIDC `userinfo` endpoint
@@ -217,9 +254,9 @@ flow can be skipped. Once completed, users are taken to the main dashboard.
 - **Invalid API Key**: The `headscale.api_key` may have expired. Generate
   a new one with `headscale apikeys create --expiration 999d`.
 
-- **Missing the `sub` claim**: Ensure your IdP includes the `sub` claim in the
-  ID token. This is required by the OIDC spec but some providers need explicit
-  configuration.
+- **Missing the `sub` claim**: If your IdP omits `sub`, configure
+  `oidc.subject_claims` with a stable fallback such as `open_id`. Only use
+  `email` as a fallback when it is stable for your users.
 
 - **Redirect URI Mismatch**: Ensure the redirect URI registered in your IdP
   matches `{server.base_url}/admin/oidc/callback` exactly.

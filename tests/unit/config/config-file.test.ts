@@ -112,6 +112,77 @@ describe("Configuration YAML file loading", () => {
     expect(config.oidc?.enabled).toBe(false);
   });
 
+  test("oidc.subject_claims can be configured from YAML", async () => {
+    const filePath = "/config/oidc-subject-claims.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+        subject_claims: ["open_id", "email"],
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
+  });
+
+  test("oidc.subject_claims are trimmed, deduplicated, and drop empty values", async () => {
+    const filePath = "/config/oidc-subject-claims-normalized.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+        subject_claims: [" open_id ", "", "email", "open_id", "  "],
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
+  });
+
+  test("oidc.allow_weak_rsa_keys defaults to false", async () => {
+    const filePath = "/config/oidc-weak-rsa-default.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.allow_weak_rsa_keys).toBe(false);
+  });
+
+  test("oidc.allow_weak_rsa_keys can be enabled from YAML", async () => {
+    const filePath = "/config/oidc-weak-rsa-enabled.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+        allow_weak_rsa_keys: true,
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.allow_weak_rsa_keys).toBe(true);
+  });
+
   test("partial oidc config with enabled field can be parsed", async () => {
     const filePath = "/config/oidc-partial.yaml";
     writeYaml(filePath, {

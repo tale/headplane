@@ -1,3 +1,4 @@
+import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
 import { SignJWT, exportJWK, generateKeyPair } from "jose";
@@ -13,6 +14,8 @@ let server: Server;
 let baseUrl: string;
 let privateKey: CryptoKey;
 let publicJwk: Record<string, unknown>;
+let weakPrivateKey: KeyObject;
+let weakPublicJwk: Record<string, unknown>;
 
 const CLIENT_ID = "test-client";
 const CLIENT_SECRET = "test-secret";
@@ -20,7 +23,11 @@ const CLIENT_SECRET = "test-secret";
 let tokenHandler: (req: IncomingMessage, res: ServerResponse) => void;
 let userinfoHandler: ((req: IncomingMessage, res: ServerResponse) => void) | undefined;
 
-async function signIdToken(claims: Record<string, unknown>, nonce?: string) {
+async function signIdToken(
+  claims: Record<string, unknown>,
+  nonce?: string,
+  signingKey: CryptoKey | KeyObject = privateKey,
+) {
   const jwt = new SignJWT({ nonce, ...claims })
     .setProtectedHeader({ alg: "RS256", kid: "test-key" })
     .setIssuer(baseUrl)
@@ -28,7 +35,31 @@ async function signIdToken(claims: Record<string, unknown>, nonce?: string) {
     .setIssuedAt()
     .setExpirationTime("5m");
 
-  return jwt.sign(privateKey);
+  return jwt.sign(signingKey);
+}
+
+function encodeBase64Url(value: string | Buffer) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function signWeakRs256IdToken(
+  claims: Record<string, unknown>,
+  nonce?: string,
+  options?: { kid?: string },
+) {
+  const header = { alg: "RS256", kid: options?.kid ?? "test-key", typ: "JWT" };
+  const payload = {
+    nonce,
+    ...claims,
+    iss: baseUrl,
+    aud: CLIENT_ID,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + 300,
+  };
+
+  const signingInput = `${encodeBase64Url(JSON.stringify(header))}.${encodeBase64Url(JSON.stringify(payload))}`;
+  const signature = sign("RSA-SHA256", Buffer.from(signingInput), weakPrivateKey);
+  return `${signingInput}.${encodeBase64Url(signature)}`;
 }
 
 // You would think this is a lot better in 2026, but no
@@ -48,6 +79,14 @@ beforeAll(async () => {
   privateKey = keyPair.privateKey as CryptoKey;
   const exported = await exportJWK(keyPair.publicKey);
   publicJwk = { ...exported, kid: "test-key", use: "sig", alg: "RS256" };
+
+  const weakKeyPair = generateKeyPairSync("rsa", {
+    modulusLength: 1024,
+    publicExponent: 0x10001,
+  });
+  weakPrivateKey = weakKeyPair.privateKey;
+  const weakExported = await exportJWK(weakKeyPair.publicKey);
+  weakPublicJwk = { ...weakExported, kid: "test-key", use: "sig", alg: "RS256" };
 
   server = createServer(async (req, res) => {
     const url = new URL(req.url!, "http://localhost");
@@ -507,6 +546,217 @@ describe("handleCallback", () => {
     }
 
     expect(result.error.code).toBe("missing_sub");
+  });
+
+  test("rejects RS256 id tokens signed with 1024-bit RSA keys by default", async () => {
+    const originalPublicJwk = publicJwk;
+    publicJwk = weakPublicJwk;
+
+    try {
+      const svc = createOidcService(testConfig({ usePkce: false }));
+      const flowResult = await svc.startFlow();
+      if (!flowResult.ok) {
+        throw new Error("startFlow failed");
+      }
+
+      const { flowState } = flowResult.value;
+      const idToken = signWeakRs256IdToken({ sub: "weak-key-user" }, flowState.nonce);
+
+      tokenHandler = async (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            access_token: "mock-access-token",
+            id_token: idToken,
+            token_type: "Bearer",
+          }),
+        );
+      };
+
+      userinfoHandler = undefined;
+      const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+      const result = await svc.handleCallback(params, flowState);
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+
+      expect(result.error.code).toBe("invalid_id_token");
+      expect(result.error.hint).toContain("allow_weak_rsa_keys");
+    } finally {
+      publicJwk = originalPublicJwk;
+    }
+  });
+
+  test("accepts RS256 id tokens signed with 1024-bit RSA keys when explicitly enabled", async () => {
+    const originalPublicJwk = publicJwk;
+    publicJwk = weakPublicJwk;
+
+    try {
+      const svc = createOidcService(testConfig({ usePkce: false, allowWeakRsaKeys: true }));
+      const flowResult = await svc.startFlow();
+      if (!flowResult.ok) {
+        throw new Error("startFlow failed");
+      }
+
+      const { flowState } = flowResult.value;
+      const idToken = signWeakRs256IdToken({ sub: "weak-key-user" }, flowState.nonce);
+
+      tokenHandler = async (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            access_token: "mock-access-token",
+            id_token: idToken,
+            token_type: "Bearer",
+          }),
+        );
+      };
+
+      userinfoHandler = undefined;
+      const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+      const result = await svc.handleCallback(params, flowState);
+
+      expect(result.ok).toBe(true);
+      if (!result.ok) {
+        return;
+      }
+
+      expect(result.value.subject).toBe("weak-key-user");
+    } finally {
+      publicJwk = originalPublicJwk;
+    }
+  });
+
+  test("rejects weak RSA fallback when token kid does not match any JWKS key", async () => {
+    const originalPublicJwk = publicJwk;
+    publicJwk = weakPublicJwk;
+
+    try {
+      const svc = createOidcService(testConfig({ usePkce: false, allowWeakRsaKeys: true }));
+      await svc.discover();
+      svc.reload({
+        ...testConfig({
+          usePkce: false,
+          allowWeakRsaKeys: true,
+          authorizationEndpoint: `${baseUrl}/authorize`,
+          tokenEndpoint: `${baseUrl}/token`,
+          jwksUri: `${baseUrl}/jwks`,
+        }),
+      });
+      const flowResult = await svc.startFlow();
+      if (!flowResult.ok) {
+        throw new Error("startFlow failed");
+      }
+
+      const { flowState } = flowResult.value;
+      const idToken = signWeakRs256IdToken({ sub: "weak-key-user" }, flowState.nonce, {
+        kid: "missing-key",
+      });
+
+      tokenHandler = async (_req, res) => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(
+          JSON.stringify({
+            access_token: "mock-access-token",
+            id_token: idToken,
+            token_type: "Bearer",
+          }),
+        );
+      };
+
+      userinfoHandler = undefined;
+      const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+      const result = await svc.handleCallback(params, flowState);
+
+      expect(result.ok).toBe(false);
+      if (result.ok) {
+        return;
+      }
+
+      expect(result.error.code).toBe("invalid_id_token");
+      expect(result.error.message).toContain("no applicable key found");
+    } finally {
+      publicJwk = originalPublicJwk;
+    }
+  });
+
+  test("uses configured open_id fallback when sub claim is missing", async () => {
+    const svc = createOidcService(
+      testConfig({ usePkce: false, subjectClaims: ["open_id", "email"] }),
+    );
+    const flowResult = await svc.startFlow();
+    if (!flowResult.ok) {
+      throw new Error("startFlow failed");
+    }
+
+    const { flowState } = flowResult.value;
+    const idToken = await signIdToken(
+      { open_id: "feishu-open-id", name: "Feishu User" },
+      flowState.nonce,
+    );
+
+    tokenHandler = async (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          access_token: "mock-access-token",
+          id_token: idToken,
+          token_type: "Bearer",
+        }),
+      );
+    };
+
+    userinfoHandler = undefined;
+    const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+    const result = await svc.handleCallback(params, flowState);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.value.subject).toBe("feishu-open-id");
+  });
+
+  test("uses configured fallback claim from userinfo when id token is missing subject", async () => {
+    const svc = createOidcService(
+      testConfig({ usePkce: false, subjectClaims: ["open_id", "email"] }),
+    );
+    const flowResult = await svc.startFlow();
+    if (!flowResult.ok) {
+      throw new Error("startFlow failed");
+    }
+
+    const { flowState } = flowResult.value;
+    const idToken = await signIdToken({ name: "Feishu User" }, flowState.nonce);
+
+    tokenHandler = async (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          access_token: "mock-access-token",
+          id_token: idToken,
+          token_type: "Bearer",
+        }),
+      );
+    };
+
+    userinfoHandler = (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ open_id: "userinfo-open-id", email: "user@example.com" }));
+    };
+
+    const params = new URLSearchParams({ code: "test-code", state: flowState.state });
+    const result = await svc.handleCallback(params, flowState);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.value.subject).toBe("userinfo-open-id");
   });
 
   test("invalid_client triggers auth method retry", async () => {
