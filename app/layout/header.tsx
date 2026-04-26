@@ -1,5 +1,17 @@
-import { CircleQuestionMark, CircleUser, Globe, Lock, Server, Settings, Users } from "lucide-react";
-import { NavLink, useSubmit } from "react-router";
+import {
+  Check,
+  CircleQuestionMark,
+  CircleUser,
+  Globe,
+  Lock,
+  Monitor,
+  Moon,
+  Server,
+  Settings,
+  Sun,
+  Users,
+} from "lucide-react";
+import { NavLink, unstable_useRoute as useRoute, useLocation, useSubmit } from "react-router";
 
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
@@ -7,6 +19,7 @@ import logoBg from "~/logo/dark-bg.svg";
 import logoDark from "~/logo/dark.svg";
 import logoLight from "~/logo/light.svg";
 import cn from "~/utils/cn";
+import type { ColorScheme } from "~/utils/color-scheme";
 
 export interface HeaderProps {
   user: {
@@ -35,9 +48,26 @@ const tabs = [
   { to: "/settings", icon: Settings, label: "Settings", key: "settings" },
 ] as const;
 
+const colorSchemes = [
+  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+] as const satisfies ReadonlyArray<{
+  value: ColorScheme;
+  label: string;
+  icon: typeof Monitor;
+}>;
+
 export default function Header({ user, access, configAvailable }: HeaderProps) {
   const submit = useSubmit();
   const showTabs = access.ui;
+  const rootRoute = useRoute("root");
+  const currentColorScheme: ColorScheme = rootRoute?.loaderData?.colorScheme ?? "system";
+  // useLocation returns the path with the basename already stripped, which is
+  // what `redirect()` expects — react-router re-applies the basename when
+  // following the redirect on the client.
+  const location = useLocation();
+  const returnTo = location.pathname + location.search;
 
   return (
     <header
@@ -134,6 +164,24 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
                   )}
                 </div>
               </MenuItem>
+              <MenuSeparator />
+              {colorSchemes.map(({ value, label, icon: Icon }) => (
+                <MenuItem
+                  key={value}
+                  onClick={() =>
+                    submit(
+                      { colorScheme: value, returnTo },
+                      { action: "/api/color-scheme", method: "POST" },
+                    )
+                  }
+                >
+                  <div className="flex items-center gap-x-2">
+                    <Icon className="size-4" />
+                    <span className="flex-1">{label}</span>
+                    {currentColorScheme === value && <Check className="size-4" />}
+                  </div>
+                </MenuItem>
+              ))}
               <MenuSeparator />
               <MenuItem
                 variant="danger"

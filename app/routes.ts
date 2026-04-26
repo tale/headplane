@@ -5,7 +5,10 @@ export default [
   route("/healthz", "routes/util/healthz.ts"),
 
   // API Routes
-  ...prefix("/api", [route("/info", "routes/util/info.ts")]),
+  ...prefix("/api", [
+    route("/info", "routes/util/info.ts"),
+    route("/color-scheme", "routes/util/color-scheme.ts"),
+  ]),
   ...prefix("/events", [route("/live", "routes/util/live.ts")]),
 
   // Authentication Routes

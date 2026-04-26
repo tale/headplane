@@ -2,6 +2,20 @@
 
 @plugin "tailwindcss-animate";
 
+/* Dark mode: respect an explicit `.dark` / `.light` class on <html>, and fall
+ * back to the user's OS preference when neither is set (i.e. "system"). */
+@custom-variant dark {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(html:not(.light):not(.dark)),
+    &:where(html:not(.light):not(.dark) *) {
+      @slot;
+    }
+  }
+}
+
 @theme {
   --blur-xs: 2px;
 
@@ -106,8 +120,35 @@ body {
   --cm-bracket: var(--color-mist-500);
 }
 
+/* CodeMirror dark token vars — applied for explicit .dark or system preference
+ * when no explicit class is set. Mirrors the dark variant above. */
+.dark {
+  --cm-bg: var(--color-mist-950);
+  --cm-fg: var(--color-mist-100);
+  --cm-caret: var(--color-mist-100);
+  --cm-selection: var(--color-indigo-900);
+  --cm-selection-match: var(--color-indigo-950);
+  --cm-line-highlight: oklch(18% 0.006 224 / 0.5);
+  --cm-gutter-bg: var(--color-mist-950);
+  --cm-gutter-fg: var(--color-mist-500);
+  --cm-gutter-fg-active: var(--color-mist-300);
+  --cm-gutter-border: var(--color-mist-800);
+  --cm-comment: var(--color-mist-400);
+  --cm-keyword: var(--color-purple-400);
+  --cm-string: var(--color-emerald-400);
+  --cm-type: var(--color-indigo-400);
+  --cm-definition: var(--color-blue-400);
+  --cm-name: var(--color-mist-200);
+  --cm-variable: var(--color-cyan-400);
+  --cm-property: var(--color-violet-400);
+  --cm-atom: var(--color-orange-400);
+  --cm-number: var(--color-orange-400);
+  --cm-link: var(--color-blue-400);
+  --cm-bracket: var(--color-mist-400);
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not(.light):not(.dark) {
     --cm-bg: var(--color-mist-950);
     --cm-fg: var(--color-mist-100);
     --cm-caret: var(--color-mist-100);
