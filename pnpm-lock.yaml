@@ -7,11 +7,6 @@ settings:
 overrides:
   '@codemirror/state': 6.6.0
 
-patchedDependencies:
-  react-router-hono-server:
-    hash: e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77
-    path: patches/react-router-hono-server.patch
-
 importers:
 
   .:
@@ -103,9 +98,6 @@ importers:
       react-router-dom:
         specifier: ^7.14.0
         version: 7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      react-router-hono-server:
-        specifier: 2.25.2
-        version: 2.25.2(patch_hash=e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77)(@hono/node-server@1.19.13(hono@4.11.5))(@react-router/dev@7.14.0(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(terser@5.39.0)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3))(yaml@2.8.3))(@types/react@19.2.14)(bufferutil@4.0.9)(hono@4.11.5)(react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(utf-8-validate@5.0.10)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3))
       restty:
         specifier: ^0.1.35
         version: 0.1.35(typescript@6.0.2)
@@ -1005,32 +997,6 @@ packages:
     resolution: {integrity: sha512-rc1hOQtjIWGxcxpb9aHAfLpIctjEnsDehj0DAiVfBlmT84uvR0uUtN2hEi/ecvWVjXUGf5qPF4qEgiLOx1YIMQ==}
     engines: {node: '>=6'}
     hasBin: true
-
-  '@hono/node-server@1.19.13':
-    resolution: {integrity: sha512-TsQLe4i2gvoTtrHje625ngThGBySOgSK3Xo2XRYOdqGN1teR8+I7vchQC46uLJi8OF62YTYA3AhSpumtkhsaKQ==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: ^4
-
-  '@hono/node-ws@1.3.0':
-    resolution: {integrity: sha512-ju25YbbvLuXdqBCmLZLqnNYu1nbHIQjoyUqA8ApZOeL1k4skuiTcw5SW77/5SUYo2Xi2NVBJoVlfQurnKEp03Q==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      '@hono/node-server': ^1.19.2
-      hono: ^4.6.0
-
-  '@hono/vite-dev-server@0.25.1':
-    resolution: {integrity: sha512-H6EqoPtCV+uH1fu8nKyRy5Wh3LU012QxloEYMlUcyMjjEfVFiRXPjHx/0TQiiRi140Vu8San5A4XQWyElKFKaw==}
-    engines: {node: '>=18.14.1'}
-    peerDependencies:
-      hono: '*'
-      miniflare: '*'
-      wrangler: '*'
-    peerDependenciesMeta:
-      miniflare:
-        optional: true
-      wrangler:
-        optional: true
 
   '@humanwhocodes/momoa@2.0.4':
     resolution: {integrity: sha512-RE815I4arJFtt+FVeU1Tgp9/Xvecacji8w/V6XtXsWWH/wz/eNkNbhb+ny/+PlVZjV0rxQpRSQKNKE3lcktHEA==}
@@ -2882,10 +2848,6 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
-  hono@4.11.5:
-    resolution: {integrity: sha512-WemPi9/WfyMwZs+ZUXdiwcCh9Y+m7L+8vki9MzDw3jJ+W9Lc+12HGsd368Qc1vZi1xwW8BWMMsnK5efYKPdt4g==}
-    engines: {node: '>=16.9.0'}
-
   hookable@5.5.3:
     resolution: {integrity: sha512-Yc+BQe8SvoXH1643Qez1zqLRmbA5rCL+sSmk6TVos0LWVfNIB7PGncdlId77WzLGSIB5KaWgTaNTs2lNVEI6VQ==}
 
@@ -3499,28 +3461,6 @@ packages:
     peerDependencies:
       react: '>=18'
       react-dom: '>=18'
-
-  react-router-hono-server@2.25.2:
-    resolution: {integrity: sha512-hNgPx9lB8lTtlJAt7GWIB/S3LIStQTi4Y24ZcX3kCw05McDhUwEFxnN5WIK+F5j1iQxLgkX2vnkjsWdS7zc7Ng==}
-    engines: {node: '>=22.20.0'}
-    hasBin: true
-    peerDependencies:
-      '@cloudflare/workers-types': ^4.20250317.0
-      '@hono/node-server': ^1.19.11
-      '@react-router/dev': ^7.9.0
-      '@types/react': ^19.0.0
-      hono: ^4.12.8
-      miniflare: ^3.20241205.0
-      react-router: ^7.13.1
-      vite: '>=7.3.1'
-      wrangler: ^4.73.0
-    peerDependenciesMeta:
-      '@cloudflare/workers-types':
-        optional: true
-      miniflare:
-        optional: true
-      wrangler:
-        optional: true
 
   react-router@7.14.0:
     resolution: {integrity: sha512-m/xR9N4LQLmAS0ZhkY2nkPA1N7gQ5TUVa5n8TgANuDTARbn1gt+zLPXEm7W0XDTbrQ2AJSJKhoa6yx1D8BcpxQ==}
@@ -4947,25 +4887,6 @@ snapshots:
       long: 5.3.2
       protobufjs: 7.5.4
       yargs: 17.7.2
-
-  '@hono/node-server@1.19.13(hono@4.11.5)':
-    dependencies:
-      hono: 4.11.5
-
-  '@hono/node-ws@1.3.0(@hono/node-server@1.19.13(hono@4.11.5))(bufferutil@4.0.9)(hono@4.11.5)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@hono/node-server': 1.19.13(hono@4.11.5)
-      hono: 4.11.5
-      ws: 8.20.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
-
-  '@hono/vite-dev-server@0.25.1(hono@4.11.5)':
-    dependencies:
-      '@hono/node-server': 1.19.13(hono@4.11.5)
-      hono: 4.11.5
-      minimatch: 9.0.9
 
   '@humanwhocodes/momoa@2.0.4': {}
 
@@ -6662,8 +6583,6 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
-  hono@4.11.5: {}
-
   hookable@5.5.3: {}
 
   hpagent@1.2.0: {}
@@ -7284,21 +7203,6 @@ snapshots:
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
       react-router: 7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-
-  react-router-hono-server@2.25.2(patch_hash=e94667f181837f2501959f5cf01fa0a9e6ea2883dcb1137be8b1c6178979bc77)(@hono/node-server@1.19.13(hono@4.11.5))(@react-router/dev@7.14.0(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(terser@5.39.0)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3))(yaml@2.8.3))(@types/react@19.2.14)(bufferutil@4.0.9)(hono@4.11.5)(react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(utf-8-validate@5.0.10)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3)):
-    dependencies:
-      '@drizzle-team/brocli': 0.11.0
-      '@hono/node-server': 1.19.13(hono@4.11.5)
-      '@hono/node-ws': 1.3.0(@hono/node-server@1.19.13(hono@4.11.5))(bufferutil@4.0.9)(hono@4.11.5)(utf-8-validate@5.0.10)
-      '@hono/vite-dev-server': 0.25.1(hono@4.11.5)
-      '@react-router/dev': 7.14.0(@types/node@25.6.0)(jiti@2.6.1)(lightningcss@1.32.0)(react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(terser@5.39.0)(tsx@4.21.0)(typescript@6.0.2)(vite@8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3))(yaml@2.8.3)
-      '@types/react': 19.2.14
-      hono: 4.11.5
-      react-router: 7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      vite: 8.0.8(@types/node@25.6.0)(esbuild@0.27.3)(jiti@2.6.1)(terser@5.39.0)(tsx@4.21.0)(yaml@2.8.3)
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
 
   react-router@7.14.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
@@ -8031,6 +7935,7 @@ snapshots:
     optionalDependencies:
       bufferutil: 4.0.9
       utf-8-validate: 5.0.10
+    optional: true
 
   wsl-utils@0.1.0:
     dependencies:

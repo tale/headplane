@@ -4,7 +4,7 @@ import { useLoaderData } from "react-router";
 import Code from "~/components/code";
 import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
-import type { LoadContext } from "~/server";
+import type { AppContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
 import ManageDomains from "./components/manage-domains";
@@ -15,7 +15,7 @@ import ToggleMagic from "./components/toggle-magic";
 import { dnsAction } from "./dns-actions";
 
 // We do not want to expose every config value
-export async function loader({ request, context }: LoaderFunctionArgs<LoadContext>) {
+export async function loader({ request, context }: LoaderFunctionArgs<AppContext>) {
   if (!context.hs.readable()) {
     throw new Error("No configuration is available");
   }

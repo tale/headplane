@@ -1,12 +1,12 @@
 import { type ActionFunctionArgs, redirect } from "react-router";
 
-import type { LoadContext } from "~/server";
+import type { AppContext } from "~/server/context";
 
 export async function loader() {
   return redirect("/machines");
 }
 
-export async function action({ request, context }: ActionFunctionArgs<LoadContext>) {
+export async function action({ request, context }: ActionFunctionArgs<AppContext>) {
   let principal: Awaited<ReturnType<typeof context.auth.require>> | undefined;
   try {
     principal = await context.auth.require(request);
