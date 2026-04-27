@@ -194,7 +194,7 @@ describe("session round-trip", () => {
   test("expired session throws", async () => {
     const userId = await auth.findOrCreateUser("sub-1", { name: "Alice" });
 
-    const cookieHeader = await auth.createOidcSession(userId, { name: "Alice" }, -1);
+    const cookieHeader = await auth.createOidcSession(userId, { name: "Alice" }, { maxAge: -1 });
 
     const cookieValue = cookieHeader.split(";")[0];
     const request = new Request("http://localhost/test", {

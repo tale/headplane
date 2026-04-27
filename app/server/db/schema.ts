@@ -36,6 +36,7 @@ export const authSessions = sqliteTable("auth_sessions", {
   user_id: text("user_id"),
   api_key_hash: text("api_key_hash"),
   api_key_display: text("api_key_display"),
+  oidc_id_token: text("oidc_id_token"),
   expires_at: integer("expires_at", { mode: "timestamp" }).notNull(),
   created_at: integer("created_at", { mode: "timestamp" }).$default(() => new Date()),
 });

@@ -15,6 +15,7 @@ export interface OidcConfig {
   authorizationEndpoint?: string;
   tokenEndpoint?: string;
   userinfoEndpoint?: string;
+  endSessionEndpoint?: string;
   jwksUri?: string;
 
   tokenEndpointAuthMethod?: "client_secret_basic" | "client_secret_post";
@@ -25,6 +26,7 @@ export interface OidcConfig {
   allowWeakRsaKeys?: boolean;
   extraParams?: Record<string, string>;
   profilePictureSource?: "oidc" | "gravatar";
+  postLogoutRedirectUri?: string;
 }
 
 export interface ResolvedEndpoints {
@@ -49,6 +51,7 @@ export interface OidcIdentity {
   username: string;
   email?: string;
   picture?: string;
+  idToken?: string;
 }
 
 export type OidcErrorCode =
@@ -88,6 +91,8 @@ export interface OidcService {
     callbackParams: URLSearchParams,
     flowState: OidcFlowState,
   ): Promise<Result<OidcIdentity, OidcError>>;
+
+  buildEndSessionUrl(idToken?: string): string | undefined;
 
   invalidate(): void;
   reload(config: OidcConfig): void;
@@ -173,6 +178,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
         tokenEndpoint: config.tokenEndpoint!,
         jwksUri: config.jwksUri!,
         userinfoEndpoint: config.userinfoEndpoint,
+        endSessionEndpoint: config.endSessionEndpoint,
       };
 
       lastError = undefined;
@@ -247,7 +253,8 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     const jwksUri = config.jwksUri ?? (metadata.jwks_uri as string | undefined);
     const userinfoEndpoint =
       config.userinfoEndpoint ?? (metadata.userinfo_endpoint as string | undefined);
-    const endSessionEndpoint = metadata.end_session_endpoint as string | undefined;
+    const endSessionEndpoint =
+      config.endSessionEndpoint ?? (metadata.end_session_endpoint as string | undefined);
 
     if (!authorizationEndpoint || !tokenEndpoint || !jwksUri) {
       const missing: string[] = [];
@@ -390,7 +397,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       });
     }
 
-    return ok(buildIdentity(enriched));
+    return ok(buildIdentity(enriched, tokens.id_token));
   }
 
   async function exchangeCode(
@@ -738,7 +745,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     }
   }
 
-  function buildIdentity(claims: OidcClaims): OidcIdentity {
+  function buildIdentity(claims: OidcClaims, idToken?: string): OidcIdentity {
     const subject = resolveSubject(claims);
     if (!subject) {
       throw new Error("OIDC subject was not resolved before identity construction");
@@ -769,7 +776,27 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       username,
       email: claims.email,
       picture,
+      idToken,
     };
+  }
+
+  function buildEndSessionUrl(idToken?: string): string | undefined {
+    if (!endpoints?.endSessionEndpoint) {
+      return undefined;
+    }
+
+    const params = new URLSearchParams();
+    if (idToken) {
+      params.set("id_token_hint", idToken);
+    }
+
+    params.set("client_id", config.clientId);
+
+    const postLogoutRedirectUri =
+      config.postLogoutRedirectUri ?? new URL(`${__PREFIX__}/login?s=logout`, config.baseUrl).href;
+    params.set("post_logout_redirect_uri", postLogoutRedirectUri);
+
+    return `${endpoints.endSessionEndpoint}?${params.toString()}`;
   }
 
   function invalidate(): void {
@@ -803,7 +830,15 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     return undefined;
   }
 
-  return { status, discover, startFlow, handleCallback, invalidate, reload };
+  return {
+    status,
+    discover,
+    startFlow,
+    handleCallback,
+    buildEndSessionUrl,
+    invalidate,
+    reload,
+  };
 
   function maybeWarnWeakRsaMode(currentConfig: OidcConfig): void {
     if (!currentConfig.allowWeakRsaKeys) {

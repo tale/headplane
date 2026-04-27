@@ -418,6 +418,7 @@ describe("handleCallback", () => {
     expect(result.value.name).toBe("Test User");
     expect(result.value.email).toBe("test@example.com");
     expect(result.value.username).toBe("testuser");
+    expect(result.value.idToken).toBe(idToken);
   });
 
   test("state mismatch returns error", async () => {
@@ -1124,5 +1125,82 @@ describe("path-based issuers", () => {
     }
 
     pathServer.close();
+  });
+});
+
+describe("buildEndSessionUrl", () => {
+  test("returns undefined before discovery", () => {
+    const svc = createOidcService(testConfig());
+    expect(svc.buildEndSessionUrl("token")).toBeUndefined();
+  });
+
+  test("returns undefined when provider has no end_session_endpoint", async () => {
+    const svc = createOidcService(
+      testConfig({
+        authorizationEndpoint: `${baseUrl}/authorize`,
+        tokenEndpoint: `${baseUrl}/token`,
+        jwksUri: `${baseUrl}/jwks`,
+      }),
+    );
+
+    await svc.discover();
+    expect(svc.buildEndSessionUrl("token")).toBeUndefined();
+  });
+
+  test("builds RP-initiated logout URL after discovery", async () => {
+    const svc = createOidcService(testConfig());
+    await svc.discover();
+
+    const url = svc.buildEndSessionUrl("the-id-token");
+    expect(url).toBeDefined();
+
+    const parsed = new URL(url!);
+    expect(`${parsed.protocol}//${parsed.host}${parsed.pathname}`).toBe(`${baseUrl}/logout`);
+    expect(parsed.searchParams.get("id_token_hint")).toBe("the-id-token");
+    expect(parsed.searchParams.get("client_id")).toBe(CLIENT_ID);
+    expect(parsed.searchParams.get("post_logout_redirect_uri")).toBe(
+      "https://headplane.example.com/admin/login?s=logout",
+    );
+  });
+
+  test("omits id_token_hint when not provided", async () => {
+    const svc = createOidcService(testConfig());
+    await svc.discover();
+
+    const url = svc.buildEndSessionUrl();
+    expect(url).toBeDefined();
+
+    const parsed = new URL(url!);
+    expect(parsed.searchParams.has("id_token_hint")).toBe(false);
+    expect(parsed.searchParams.get("client_id")).toBe(CLIENT_ID);
+  });
+
+  test("uses configured post_logout_redirect_uri override", async () => {
+    const svc = createOidcService(
+      testConfig({ postLogoutRedirectUri: "https://example.com/post-logout" }),
+    );
+    await svc.discover();
+
+    const url = svc.buildEndSessionUrl("the-id-token");
+    const parsed = new URL(url!);
+    expect(parsed.searchParams.get("post_logout_redirect_uri")).toBe(
+      "https://example.com/post-logout",
+    );
+  });
+
+  test("honours manually configured end_session_endpoint", async () => {
+    const svc = createOidcService(
+      testConfig({
+        authorizationEndpoint: `${baseUrl}/authorize`,
+        tokenEndpoint: `${baseUrl}/token`,
+        jwksUri: `${baseUrl}/jwks`,
+        endSessionEndpoint: "https://provider.example.com/manual-logout",
+      }),
+    );
+
+    await svc.discover();
+    const url = svc.buildEndSessionUrl("the-id-token");
+    expect(url).toBeDefined();
+    expect(url!.startsWith("https://provider.example.com/manual-logout?")).toBe(true);
   });
 });

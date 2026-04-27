@@ -66,13 +66,21 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     log.warn("auth", "Failed to link Headscale user: %s", String(error));
   }
 
+  // Only persist the id_token when RP-initiated logout is enabled — otherwise
+  // we'd be storing a credential we never use.
+  const idToken = context.oidc?.useEndSession ? identity.idToken : undefined;
+
   return redirect("/", {
     headers: {
-      "Set-Cookie": await context.auth.createOidcSession(userId, {
-        name: identity.name,
-        email: identity.email,
-        username: identity.username,
-      }),
+      "Set-Cookie": await context.auth.createOidcSession(
+        userId,
+        {
+          name: identity.name,
+          email: identity.email,
+          username: identity.username,
+        },
+        { idToken },
+      ),
     },
   });
 }

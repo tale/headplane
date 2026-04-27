@@ -109,6 +109,7 @@ const appLoadContext = {
             authorizationEndpoint: config.oidc.authorization_endpoint,
             tokenEndpoint: config.oidc.token_endpoint,
             userinfoEndpoint: config.oidc.userinfo_endpoint,
+            endSessionEndpoint: config.oidc.end_session_endpoint,
             tokenEndpointAuthMethod:
               config.oidc.token_endpoint_auth_method === "client_secret_jwt"
                 ? undefined
@@ -119,8 +120,10 @@ const appLoadContext = {
             allowWeakRsaKeys: config.oidc.allow_weak_rsa_keys,
             extraParams: config.oidc.extra_params,
             profilePictureSource: config.oidc.profile_picture_source,
+            postLogoutRedirectUri: config.oidc.post_logout_redirect_uri,
           }),
           disableApiKeyLogin: config.oidc.disable_api_key_login,
+          useEndSession: config.oidc.use_end_session,
         }
       : undefined,
   db,

@@ -235,6 +235,52 @@ When a new OIDC user signs in for the first time, they go through a brief
 onboarding flow that helps them connect their first device to the Tailnet. This
 flow can be skipped. Once completed, users are taken to the main dashboard.
 
+## Single Logout (RP-Initiated Logout)
+
+Headplane supports
+[OpenID Connect RP-Initiated Logout](https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+When enabled, clicking "Log Out" in the UI from an OIDC-backed session will:
+
+1. Destroy the local Headplane session.
+2. Redirect the browser to the identity provider's `end_session_endpoint`.
+3. Pass along the original `id_token` as `id_token_hint`, plus a
+   `post_logout_redirect_uri` so the IdP can return the user to Headplane after
+   it has cleared its own session.
+
+### Configuration
+
+This feature is **disabled by default** because the `post_logout_redirect_uri`
+must be pre-registered in your OIDC client on the IdP. Enabling it without that
+registration will land users on the provider's error page after logout.
+
+To enable it, set `oidc.use_end_session: true`:
+
+```yaml
+oidc:
+  # Required: opt in to RP-initiated logout
+  use_end_session: true
+
+  # Optional: override the auto-discovered end_session_endpoint, or set it
+  # manually if your provider does not expose it via discovery.
+  # end_session_endpoint: "https://idp.example.com/realms/main/protocol/openid-connect/logout"
+
+  # Optional. Defaults to `<server.base_url>/admin/login?s=logout`.
+  # post_logout_redirect_uri: "https://headplane.example.com/admin/login?s=logout"
+```
+
+If your provider exposes `end_session_endpoint` in its discovery document
+(Keycloak, Authentik, Auth0, Azure AD, …) Headplane picks it up automatically
+once `use_end_session` is `true`.
+
+::: tip
+Make sure the redirect URI you supply (or the default one Headplane builds) is
+listed under the post-logout / valid redirect URIs in your IdP's client
+configuration, otherwise the provider will refuse to redirect back.
+:::
+
+When `use_end_session` is `false` (the default), Headplane simply destroys its
+own session and returns the user to the login page.
+
 ## Troubleshooting
 
 ### Common Issues

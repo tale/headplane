@@ -1,0 +1,1 @@
+ALTER TABLE `auth_sessions` ADD `oidc_id_token` text;

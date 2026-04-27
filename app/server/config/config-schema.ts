@@ -123,6 +123,9 @@ const oidcConfig = type({
   authorization_endpoint: "string.url?",
   token_endpoint: "string.url?",
   userinfo_endpoint: "string.url?",
+  end_session_endpoint: "string.url?",
+  post_logout_redirect_uri: "string.url?",
+  use_end_session: "boolean = false",
   token_endpoint_auth_method: '"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 
   // Old/deprecated options
@@ -147,6 +150,9 @@ const partialOidcConfig = type({
   authorization_endpoint: "string.url?",
   token_endpoint: "string.url?",
   userinfo_endpoint: "string.url?",
+  end_session_endpoint: "string.url?",
+  post_logout_redirect_uri: "string.url?",
+  use_end_session: "boolean?",
   token_endpoint_auth_method: '"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 
   // Old/deprecated options

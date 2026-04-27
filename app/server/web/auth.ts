@@ -20,6 +20,7 @@ export type Principal =
   | {
       kind: "oidc";
       sessionId: string;
+      idToken?: string;
       user: {
         id: string;
         subject: string;
@@ -64,7 +65,7 @@ export interface AuthService {
   createOidcSession(
     userId: string,
     profile: NonNullable<CookiePayload["profile"]>,
-    maxAge?: number,
+    options?: { idToken?: string; maxAge?: number },
   ): Promise<string>;
 
   createApiKeySession(apiKey: string, displayName: string, maxAge: number): Promise<string>;
@@ -185,6 +186,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     return {
       kind: "oidc",
       sessionId: session.id,
+      idToken: session.oidc_id_token ?? undefined,
       user: {
         id: user.id,
         subject: user.sub,
@@ -249,13 +251,15 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function createOidcSession(
     userId: string,
     profile: NonNullable<CookiePayload["profile"]>,
-    maxAge = opts.cookie.maxAge,
+    options?: { idToken?: string; maxAge?: number },
   ): Promise<string> {
+    const maxAge = options?.maxAge ?? opts.cookie.maxAge;
     const sid = ulid();
     await opts.db.insert(authSessions).values({
       id: sid,
       kind: "oidc",
       user_id: userId,
+      oidc_id_token: options?.idToken,
       expires_at: new Date(Date.now() + maxAge * 1000),
     });
 
