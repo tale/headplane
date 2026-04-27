@@ -1,14 +1,17 @@
-import { access, constants, readFile } from 'node:fs/promises';
-import { type } from 'arktype';
-import { load } from 'js-yaml';
-import log from '~/utils/log';
+import { access, constants, readFile } from "node:fs/promises";
+
+import { type } from "arktype";
+import { load } from "js-yaml";
+
+import log from "~/utils/log";
+
 import {
-	headplaneConfig,
-	PartialHeadplaneConfig,
-	partialHeadplaneConfig,
-	pathSupportedKeys,
-} from './config-schema';
-import { ConfigError } from './error';
+  headplaneConfig,
+  PartialHeadplaneConfig,
+  partialHeadplaneConfig,
+  pathSupportedKeys,
+} from "./config-schema";
+import { ConfigError } from "./error";
 
 /**
  * Main entrypoint that attempts to load and merge configuration from both
@@ -25,27 +28,27 @@ import { ConfigError } from './error';
  * @throws {Error} If there are validation errors in the final configuration
  */
 export async function loadConfig(configPathOverride?: string) {
-	const configPath =
-		configPathOverride != null
-			? configPathOverride
-			: process.env.HEADPLANE_CONFIG_PATH != null
-				? String(process.env.HEADPLANE_CONFIG_PATH)
-				: '/etc/headplane/config.yaml';
+  const configPath =
+    configPathOverride != null
+      ? configPathOverride
+      : process.env.HEADPLANE_CONFIG_PATH != null
+        ? String(process.env.HEADPLANE_CONFIG_PATH)
+        : "/etc/headplane/config.yaml";
 
-	const fileConfig = await loadConfigFile(configPath);
-	const envConfig = await loadConfigEnv();
+  const fileConfig = await loadConfigFile(configPath);
+  const envConfig = await loadConfigEnv();
 
-	const combinedConfig = deepMerge(fileConfig, envConfig);
-	await loadConfigKeyPaths(combinedConfig);
+  const combinedConfig = deepMerge(fileConfig, envConfig);
+  await loadConfigKeyPaths(combinedConfig);
 
-	const finalConfig = headplaneConfig(combinedConfig);
-	if (finalConfig instanceof type.errors) {
-		throw ConfigError.from('INVALID_REQUIRED_FIELDS', {
-			messages: finalConfig.map((e) => e.toString()),
-		});
-	}
+  const finalConfig = headplaneConfig(combinedConfig);
+  if (finalConfig instanceof type.errors) {
+    throw ConfigError.from("INVALID_REQUIRED_FIELDS", {
+      messages: finalConfig.map((e) => e.toString()),
+    });
+  }
 
-	return finalConfig;
+  return finalConfig;
 }
 
 /**
@@ -57,23 +60,23 @@ export async function loadConfig(configPathOverride?: string) {
  * @throws {Error} If there are validation errors in the loaded configuration
  */
 export async function loadConfigFile(path: string) {
-	try {
-		await access(path, constants.R_OK);
-	} catch {
-		log.info('config', 'Could not access config file at path: %s', path);
-		return;
-	}
+  try {
+    await access(path, constants.R_OK);
+  } catch {
+    log.info("config", "Could not access config file at path: %s", path);
+    return;
+  }
 
-	const rawBuffer = await readFile(path, 'utf8');
-	const rawConfig = load(rawBuffer);
-	const config = partialHeadplaneConfig(rawConfig);
-	if (config instanceof type.errors) {
-		throw ConfigError.from('INVALID_REQUIRED_FIELDS', {
-			messages: config.map((e) => e.toString()),
-		});
-	}
+  const rawBuffer = await readFile(path, "utf8");
+  const rawConfig = load(rawBuffer);
+  const config = partialHeadplaneConfig(rawConfig);
+  if (config instanceof type.errors) {
+    throw ConfigError.from("INVALID_REQUIRED_FIELDS", {
+      messages: config.map((e) => e.toString()),
+    });
+  }
 
-	return config;
+  return config;
 }
 
 /**
@@ -86,36 +89,36 @@ export async function loadConfigFile(path: string) {
  * @throws {Error} If there are validation errors in the loaded configuration
  */
 export async function loadConfigEnv() {
-	if (process.env.HEADPLANE_LOAD_ENV_OVERRIDES != null) {
-		log.warn(
-			'config',
-			'HEADPLANE_LOAD_ENV_OVERRIDES is deprecated and will be removed in future versions',
-		);
-		log.warn(
-			'config',
-			'Environment variables are always loaded and `.env` files are no longer supported',
-		);
-	}
+  if (process.env.HEADPLANE_LOAD_ENV_OVERRIDES != null) {
+    log.warn(
+      "config",
+      "HEADPLANE_LOAD_ENV_OVERRIDES is deprecated and will be removed in future versions",
+    );
+    log.warn(
+      "config",
+      "Environment variables are always loaded and `.env` files are no longer supported",
+    );
+  }
 
-	const rawConfig: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(process.env)) {
-		if (value == null || !key.startsWith('HEADPLANE_')) {
-			continue;
-		}
+  const rawConfig: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(process.env)) {
+    if (value == null || !key.startsWith("HEADPLANE_")) {
+      continue;
+    }
 
-		const parsedValue = parseEnvValue(value);
-		const configKey = key.slice('HEADPLANE_'.length).toLowerCase();
-		deepSet(rawConfig, configKey.split('__'), parsedValue);
-	}
+    const parsedValue = parseEnvValue(value);
+    const configKey = key.slice("HEADPLANE_".length).toLowerCase();
+    deepSet(rawConfig, configKey.split("__"), parsedValue);
+  }
 
-	const config = partialHeadplaneConfig(rawConfig);
-	if (config instanceof type.errors) {
-		throw ConfigError.from('INVALID_REQUIRED_FIELDS', {
-			messages: config.map((e) => e.toString()),
-		});
-	}
+  const config = partialHeadplaneConfig(rawConfig);
+  if (config instanceof type.errors) {
+    throw ConfigError.from("INVALID_REQUIRED_FIELDS", {
+      messages: config.map((e) => e.toString()),
+    });
+  }
 
-	return Object.keys(config).length > 0 ? config : undefined;
+  return Object.keys(config).length > 0 ? config : undefined;
 }
 
 /**
@@ -126,29 +129,25 @@ export async function loadConfigEnv() {
  * @returns The merged object
  */
 function deepMerge<T>(...objects: (T | undefined)[]): T {
-	const result: { [key: string]: unknown } = {};
-	for (const obj of objects.filter((o) => o != null)) {
-		for (const [key, value] of Object.entries(
-			obj as {
-				[key: string]: unknown;
-			},
-		)) {
-			if (value != null && typeof value === 'object' && !Array.isArray(value)) {
-				if (
-					result[key] == null ||
-					typeof result[key] !== 'object' ||
-					Array.isArray(result[key])
-				) {
-					result[key] = {};
-				}
-				result[key] = deepMerge(result[key], value);
-			} else {
-				result[key] = value;
-			}
-		}
-	}
+  const result: { [key: string]: unknown } = {};
+  for (const obj of objects.filter((o) => o != null)) {
+    for (const [key, value] of Object.entries(
+      obj as {
+        [key: string]: unknown;
+      },
+    )) {
+      if (value != null && typeof value === "object" && !Array.isArray(value)) {
+        if (result[key] == null || typeof result[key] !== "object" || Array.isArray(result[key])) {
+          result[key] = {};
+        }
+        result[key] = deepMerge(result[key], value);
+      } else {
+        result[key] = value;
+      }
+    }
+  }
 
-	return result as T;
+  return result as T;
 }
 
 /**
@@ -158,22 +157,18 @@ function deepMerge<T>(...objects: (T | undefined)[]): T {
  * @param path An array of keys representing the path to set
  * @param value The value to set at the specified path
  */
-function deepSet(
-	obj: { [key: string]: unknown },
-	path: string[],
-	value: unknown,
-): void {
-	let current = obj;
-	for (let i = 0; i < path.length - 1; i++) {
-		const key = path[i];
-		if (current[key] == null || typeof current[key] !== 'object') {
-			current[key] = {};
-		}
+function deepSet(obj: { [key: string]: unknown }, path: string[], value: unknown): void {
+  let current = obj;
+  for (let i = 0; i < path.length - 1; i++) {
+    const key = path[i];
+    if (current[key] == null || typeof current[key] !== "object") {
+      current[key] = {};
+    }
 
-		current = current[key] as { [key: string]: unknown };
-	}
+    current = current[key] as { [key: string]: unknown };
+  }
 
-	current[path[path.length - 1]] = value;
+  current[path[path.length - 1]] = value;
 }
 
 /**
@@ -184,18 +179,18 @@ function deepSet(
  * @returns The parsed value
  */
 function parseEnvValue(value: string): unknown {
-	const v = value.trim().toLowerCase();
-	if (v === 'true') return true;
-	if (v === 'false') return false;
-	if (v === 'null') return null;
-	if (v === 'undefined') return undefined;
+  const v = value.trim().toLowerCase();
+  if (v === "true") return true;
+  if (v === "false") return false;
+  if (v === "null") return null;
+  if (v === "undefined") return undefined;
 
-	if (/^-?\d+(\.\d+)?$/.test(v)) {
-		const num = Number(v);
-		if (!Number.isNaN(num)) return num;
-	}
+  if (/^-?\d+(\.\d+)?$/.test(v)) {
+    const num = Number(v);
+    if (!Number.isNaN(num)) return num;
+  }
 
-	return value;
+  return value;
 }
 
 /**
@@ -207,43 +202,43 @@ function parseEnvValue(value: string): unknown {
  * @param partial The partial configuration object to update
  */
 export async function loadConfigKeyPaths(partial: PartialHeadplaneConfig) {
-	for (const key of pathSupportedKeys) {
-		const pathKey = `${key}_path`;
-		const pathValue = deepGet(partial, pathKey.split('.'));
-		const existing = deepGet(partial, key.split('.'));
+  for (const key of pathSupportedKeys) {
+    const pathKey = `${key}_path`;
+    const pathValue = deepGet(partial, pathKey.split("."));
+    const existing = deepGet(partial, key.split("."));
 
-		if (pathValue == null || typeof pathValue !== 'string') {
-			continue;
-		}
+    if (pathValue == null || typeof pathValue !== "string") {
+      continue;
+    }
 
-		if (existing != null) {
-			throw ConfigError.from('CONFLICTING_SECRET_PATH_FIELD', {
-				fieldName: key,
-			});
-		}
+    if (existing != null) {
+      throw ConfigError.from("CONFLICTING_SECRET_PATH_FIELD", {
+        fieldName: key,
+      });
+    }
 
-		const realPath = pathValue.replace(/\$\{([^}]+)\}/g, (_, variableName) => {
-			const value = process.env[variableName];
-			if (value === undefined) {
-				throw ConfigError.from('MISSING_INTERPOLATION_VARIABLE', {
-					pathKey: `${key}_path`,
-					variableName: variableName,
-				});
-			}
+    const realPath = pathValue.replace(/\$\{([^}]+)\}/g, (_, variableName) => {
+      const value = process.env[variableName];
+      if (value === undefined) {
+        throw ConfigError.from("MISSING_INTERPOLATION_VARIABLE", {
+          pathKey: `${key}_path`,
+          variableName: variableName,
+        });
+      }
 
-			return value;
-		});
+      return value;
+    });
 
-		try {
-			const fileContent = await readFile(realPath, 'utf8');
-			deepSet(partial, key.split('.'), fileContent.trim().normalize());
-		} catch {
-			throw ConfigError.from('MISSING_SECRET_FILE', {
-				pathKey: `${key}_path`,
-				filePath: realPath,
-			});
-		}
-	}
+    try {
+      const fileContent = await readFile(realPath, "utf8");
+      deepSet(partial, key.split("."), fileContent.trim().normalize());
+    } catch {
+      throw ConfigError.from("MISSING_SECRET_FILE", {
+        pathKey: `${key}_path`,
+        filePath: realPath,
+      });
+    }
+  }
 }
 
 /**
@@ -254,14 +249,14 @@ export async function loadConfigKeyPaths(partial: PartialHeadplaneConfig) {
  * @returns The value at the specified path or undefined if not found
  */
 function deepGet(obj: { [key: string]: unknown }, path: string[]): unknown {
-	let current = obj;
-	for (const segment of path) {
-		if (current == null || typeof current !== 'object') {
-			return undefined;
-		}
+  let current = obj;
+  for (const segment of path) {
+    if (current == null || typeof current !== "object") {
+      return undefined;
+    }
 
-		current = current[segment] as { [key: string]: unknown };
-	}
+    current = current[segment] as { [key: string]: unknown };
+  }
 
-	return current;
+  return current;
 }

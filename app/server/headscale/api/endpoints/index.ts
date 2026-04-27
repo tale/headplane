@@ -1,56 +1,54 @@
 import {
-	composeEndpoints,
-	defineApiEndpoints,
-	type ExtractApiEndpoints,
-	type UnionToIntersection,
-} from '../factory';
-import type { HeadscaleApiInterface } from '../index';
-import apiKeyEndpoints from './api-keys';
-import nodeEndpoints from './nodes';
-import policyEndpoints from './policy';
-import preAuthKeyEndpoints from './pre-auth-keys';
-import userEndpoints from './users';
+  composeEndpoints,
+  defineApiEndpoints,
+  type ExtractApiEndpoints,
+  type UnionToIntersection,
+} from "../factory";
+import type { HeadscaleApiInterface } from "../index";
+import apiKeyEndpoints from "./api-keys";
+import nodeEndpoints from "./nodes";
+import policyEndpoints from "./policy";
+import preAuthKeyEndpoints from "./pre-auth-keys";
+import userEndpoints from "./users";
 
 interface HealthcheckEndpoint {
-	/**
-	 * Checks if the Headscale instance is healthy.
-	 *
-	 * @returns A boolean indicating if the instance is healthy.
-	 */
-	isHealthy(): Promise<boolean>;
+  /**
+   * Checks if the Headscale instance is healthy.
+   *
+   * @returns A boolean indicating if the instance is healthy.
+   */
+  isHealthy(): Promise<boolean>;
 }
 
-const healthcheckEndpoint = defineApiEndpoints<HealthcheckEndpoint>(
-	(client, apiKey) => ({
-		isHealthy: async () => {
-			try {
-				const res = await client.rawFetch('/health', {
-					method: 'GET',
-					headers: {
-						// This doesn't really matter
-						Authorization: `Bearer ${apiKey}`,
-					},
-				});
+const healthcheckEndpoint = defineApiEndpoints<HealthcheckEndpoint>((client, apiKey) => ({
+  isHealthy: async () => {
+    try {
+      const res = await client.rawFetch("/health", {
+        method: "GET",
+        headers: {
+          // This doesn't really matter
+          Authorization: `Bearer ${apiKey}`,
+        },
+      });
 
-				return res.statusCode === 200;
-			} catch {
-				return false;
-			}
-		},
-	}),
-);
+      return res.statusCode === 200;
+    } catch {
+      return false;
+    }
+  },
+}));
 
 /**
  * A constant list of all endpoint groups.
  * Add new endpoint groups here.
  */
 export const endpointSets = [
-	apiKeyEndpoints,
-	healthcheckEndpoint,
-	nodeEndpoints,
-	policyEndpoints,
-	preAuthKeyEndpoints,
-	userEndpoints,
+  apiKeyEndpoints,
+  healthcheckEndpoint,
+  nodeEndpoints,
+  policyEndpoints,
+  preAuthKeyEndpoints,
+  userEndpoints,
 ] as const;
 
 /**
@@ -63,7 +61,7 @@ export const endpointSets = [
  * passing in different internal implementations based on the OpenAPI spec.
  */
 export type RuntimeApiClient = UnionToIntersection<
-	ExtractApiEndpoints<(typeof endpointSets)[number]>
+  ExtractApiEndpoints<(typeof endpointSets)[number]>
 >;
 
 /**
@@ -73,7 +71,5 @@ export type RuntimeApiClient = UnionToIntersection<
  * @param apiKey - The API key for authentication.
  * @returns A fully composed runtime API client.
  */
-export default (
-	client: HeadscaleApiInterface['clientHelpers'],
-	apiKey: string,
-) => composeEndpoints(endpointSets, client, apiKey);
+export default (client: HeadscaleApiInterface["clientHelpers"], apiKey: string) =>
+  composeEndpoints(endpointSets, client, apiKey);

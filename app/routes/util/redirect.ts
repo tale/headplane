@@ -1,5 +1,5 @@
-import { redirect } from 'react-router';
+import { redirect } from "react-router";
 
 export async function loader() {
-	return redirect('/machines');
+  return redirect("/machines");
 }

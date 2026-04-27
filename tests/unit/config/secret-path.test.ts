@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
 
 import type { PartialHeadplaneConfigWithPaths } from "~/server/config/config-schema";
-
 import { ConfigError } from "~/server/config/error";
 import { loadConfigKeyPaths } from "~/server/config/load";
 

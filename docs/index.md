@@ -32,4 +32,3 @@ features:
     details: "Manage settings hidden behind Headscale configuration such as DNS, networking, auth controls, etc."
     icon: "📝"
 ---
-

@@ -1,11 +1,11 @@
-import { CoreV1Api, KubeConfig } from "@kubernetes/client-node";
-import { type } from "arktype";
 import { readdir, readFile } from "node:fs/promises";
 import { platform } from "node:os";
 import { join } from "node:path";
 
-import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import { CoreV1Api, KubeConfig } from "@kubernetes/client-node";
+import { type } from "arktype";
 
+import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";

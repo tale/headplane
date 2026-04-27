@@ -1,7 +1,6 @@
 import type { Machine } from "~/types";
 
 import type { HeadscaleApiInterface } from "..";
-
 import { defineApiEndpoints } from "../factory";
 
 interface RawMachine extends Omit<Machine, "tags"> {

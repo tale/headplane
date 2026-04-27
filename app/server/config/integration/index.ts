@@ -1,62 +1,58 @@
-import log from '~/utils/log';
-import type { HeadplaneConfig } from '../config-schema';
-import dockerIntegration from './docker';
-import kubernetesIntegration from './kubernetes';
-import procIntegration from './proc';
+import log from "~/utils/log";
 
-export async function loadIntegration(context: HeadplaneConfig['integration']) {
-	const integration = getIntegration(context);
-	if (!integration) {
-		return;
-	}
+import type { HeadplaneConfig } from "../config-schema";
+import dockerIntegration from "./docker";
+import kubernetesIntegration from "./kubernetes";
+import procIntegration from "./proc";
 
-	try {
-		const res = await integration.isAvailable();
-		if (!res) {
-			log.error('config', 'Integration %s is not available', integration.name);
-			return;
-		}
-	} catch (error) {
-		log.error(
-			'config',
-			'Failed to load integration %s: %s',
-			integration,
-			error,
-		);
-		log.debug('config', 'Loading error: %o', error);
-		return;
-	}
+export async function loadIntegration(context: HeadplaneConfig["integration"]) {
+  const integration = getIntegration(context);
+  if (!integration) {
+    return;
+  }
 
-	return integration;
+  try {
+    const res = await integration.isAvailable();
+    if (!res) {
+      log.error("config", "Integration %s is not available", integration.name);
+      return;
+    }
+  } catch (error) {
+    log.error("config", "Failed to load integration %s: %s", integration, error);
+    log.debug("config", "Loading error: %o", error);
+    return;
+  }
+
+  return integration;
 }
 
-function getIntegration(integration: HeadplaneConfig['integration']) {
-	const docker = integration?.docker;
-	const k8s = integration?.kubernetes;
-	const proc = integration?.proc;
+function getIntegration(integration: HeadplaneConfig["integration"]) {
+  const docker = integration?.docker;
+  const k8s = integration?.kubernetes;
+  const proc = integration?.proc;
 
-	if (!docker?.enabled && !k8s?.enabled && !proc?.enabled) {
-		log.debug('config', 'No integrations enabled');
-		return;
-	}
+  if (!docker?.enabled && !k8s?.enabled && !proc?.enabled) {
+    log.debug("config", "No integrations enabled");
+    return;
+  }
 
-	if (docker?.enabled && k8s?.enabled && proc?.enabled) {
-		log.error('config', 'Multiple integrations enabled, please pick one only');
-		return;
-	}
+  if (docker?.enabled && k8s?.enabled && proc?.enabled) {
+    log.error("config", "Multiple integrations enabled, please pick one only");
+    return;
+  }
 
-	if (docker?.enabled) {
-		log.info('config', 'Using Docker integration');
-		return new dockerIntegration(integration!.docker!);
-	}
+  if (docker?.enabled) {
+    log.info("config", "Using Docker integration");
+    return new dockerIntegration(integration!.docker!);
+  }
 
-	if (k8s?.enabled) {
-		log.info('config', 'Using Kubernetes integration');
-		return new kubernetesIntegration(integration!.kubernetes!);
-	}
+  if (k8s?.enabled) {
+    log.info("config", "Using Kubernetes integration");
+    return new kubernetesIntegration(integration!.kubernetes!);
+  }
 
-	if (proc?.enabled) {
-		log.info('config', 'Using Proc integration');
-		return new procIntegration(integration!.proc!);
-	}
+  if (proc?.enabled) {
+    log.info("config", "Using Proc integration");
+    return new procIntegration(integration!.proc!);
+  }
 }

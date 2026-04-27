@@ -12,16 +12,18 @@ deployment. Limited mode lacks advanced features such as network management,
 remote web SSH, and more.
 :::
 
-Limited Mode is good for users who want to test out the *basic* functionality
+Limited Mode is good for users who want to test out the _basic_ functionality
 provided by Headplane. It only interacts with the Headplane API and lacks all
 advanced features, making it suitable for local testing and development.
 
 ## Prerequisites
+
 - Docker (and optionally Docker Compose)
 - Headscale version 0.26.0 or later installed and running
-- A [completed configuration file](/index.md#configuration) for Headplane. 
+- A [completed configuration file](/index.md#configuration) for Headplane.
 
 ## Installation
+
 ::: tip
 If you want to test Limited Mode without Docker, you can follow the
 [Native Mode](./native-mode.md) installation guide and simply avoid setting
@@ -29,6 +31,7 @@ up any of the advanced features.
 :::
 
 Running Headplane in Limited Mode is as simple as running 1 command:
+
 ```bash
 docker run -d \
     -p 3000:3000 \
@@ -44,6 +47,7 @@ storage location for Headplane to store its own data. You can also change the
 port mapping if you want to run it on a different port.
 
 ### Optional: Docker Compose
+
 If you prefer using Docker Compose, here is a minimal example of a
 `compose.yaml` file that runs Headplane in Limited Mode:
 
@@ -54,10 +58,10 @@ services:
     container_name: headplane
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - "3000:3000"
     volumes:
-      - '/path/to/your/config.yaml:/etc/headplane/config.yaml'
-      - '/path/to/data/storage:/var/lib/headplane'
+      - "/path/to/your/config.yaml:/etc/headplane/config.yaml"
+      - "/path/to/data/storage:/var/lib/headplane"
 ```
 
 ## Accessing Headplane
@@ -83,4 +87,3 @@ Limited Mode also technically supports
 [Single Sign-On (SSO) authentication](../features/sso.md), but some parts of it
 may not work as expected. For a full-featured experience with SSO, please use
 one of the other installation methods.
-

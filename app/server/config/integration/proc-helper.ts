@@ -4,7 +4,6 @@ import { kill } from "node:process";
 import { setTimeout } from "node:timers/promises";
 
 import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
-
 import log from "~/utils/log";
 
 /**

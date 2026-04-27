@@ -1,8 +1,8 @@
-import { type } from "arktype";
 import { platform } from "node:os";
 
-import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import { type } from "arktype";
 
+import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";

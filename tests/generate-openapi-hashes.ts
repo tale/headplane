@@ -1,8 +1,8 @@
-import type { OpenAPIV2 } from "openapi-types";
-
 import { writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { cwd } from "node:process";
+
+import type { OpenAPIV2 } from "openapi-types";
 import { request } from "undici";
 
 import { hashOpenApiDocument } from "~/server/headscale/api/hasher";

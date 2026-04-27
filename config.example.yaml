@@ -165,91 +165,91 @@ integration:
 # OIDC Configuration for simpler authentication
 # (This is optional, but recommended for the best experience)
 # oidc:
-# Set to false to define OIDC config without enabling it.
-# Useful for Helm charts or generating docs from config files.
-# enabled: true
-
-# The OIDC issuer URL
-# issuer: "https://accounts.google.com"
-
-# DEPRECATED: Use headscale.api_key instead.
-# If set, this will be used as a fallback for headscale.api_key.
-# headscale_api_key: "<your-headscale-api-key>"
-
-# If your OIDC provider does not support discovery (does not have the URL at
-# `/.well-known/openid-configuration`), you need to manually set endpoints.
-# This also works to override endpoints if you so desire or if your OIDC
-# discovery is missing certain endpoints (ie GitHub).
-# For some typical providers, see https://headplane.net/features/sso.
-# authorization_endpoint: ""
-# token_endpoint: ""
-# userinfo_endpoint: ""
-
-# RP-initiated logout (https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
-# When true, /logout redirects the user to the IdP's end_session_endpoint
-# (auto-discovered or set manually below) so the upstream session is ended too.
+#   # Set to false to define OIDC config without enabling it.
+#   # Useful for Helm charts or generating docs from config files.
+#   enabled: true
 #
-# Disabled by default: the `post_logout_redirect_uri` MUST be pre-registered
-# in your OIDC client configuration on the IdP. If it isn't, users will land
-# on the provider's error page after logout.
-# use_end_session: false
-
-# Optional. Override the auto-discovered end_session_endpoint, or supply one
-# if your provider does not advertise it via discovery.
-# end_session_endpoint: ""
-
-# Where the identity provider should redirect after RP-initiated logout.
-# Most providers (Keycloak, Auth0, etc.) require this URL to be pre-registered
-# in the OIDC client configuration. If unset, Headplane defaults to its own
-# `<server.base_url>/admin/login?s=logout` page.
-# post_logout_redirect_uri: ""
-
-# The authentication method to use when communicating with the token endpoint.
-# This is fully optional and Headplane will attempt to auto-detect the best
-# method and fall back to `client_secret_basic` if unsure.
-# token_endpoint_auth_method: "client_secret_post"
-
-# The client ID for the OIDC client
-# For the best experience please ensure this is *identical* to the client_id
-# you are using for Headscale. because
-# client_id: "your-client-id"
-
-# The client secret for the OIDC client
-# You may also provide `client_secret_path` instead to read a value from disk.
-# See https://headplane.net/configuration/#sensitive-values
-# client_secret: "<your-client-secret>"
-
-# Whether to use PKCE when authenticating users. This is recommended as it
-# adds an extra layer of security to the authentication process. Enabling this
-# means your OIDC provider must support PKCE and it must be enabled on the
-# client.
-# use_pkce: true
-
-# If you want to disable traditional login via Headscale API keys
-# disable_api_key_login: false
-
-# By default profile pictures are pulled from the OIDC provider when
-# we go to fetch the userinfo endpoint. Optionally, this can be set to
-# "oidc" or "gravatar" as of 0.6.1.
-# profile_picture_source: "gravatar"
-
-# The scopes to request when authenticating users. The default is below.
-# scope: "openid email profile"
-
-# Optional fallback claims to use when your provider does not return a standard
-# OIDC `sub` claim. Headplane always checks `sub` first, then each claim here
-# in order. For Feishu/Lark, `["open_id", "email"]` is a reasonable fallback.
-# subject_claims:
-#   - "open_id"
-#   - "email"
-
-# Allow ID token verification with legacy RSA keys smaller than 2048 bits.
-# This is disabled by default because it lowers token verification security and
-# should only be used as a temporary compatibility workaround.
-# allow_weak_rsa_keys: false
-
-# Extra query parameters can be passed to the authorization endpoint
-# by setting them here. This is useful for providers that require any kind
-# of custom hinting.
-# extra_params:
-#   prompt: "select_account" # Example: force account selection on Google
+#   # The OIDC issuer URL
+#   issuer: "https://accounts.google.com"
+#
+#   # DEPRECATED: Use headscale.api_key instead.
+#   # If set, this will be used as a fallback for headscale.api_key.
+#   headscale_api_key: "<your-headscale-api-key>"
+#
+#   # If your OIDC provider does not support discovery (does not have the URL at
+#   # `/.well-known/openid-configuration`), you need to manually set endpoints.
+#   # This also works to override endpoints if you so desire or if your OIDC
+#   # discovery is missing certain endpoints (ie GitHub).
+#   # For some typical providers, see https://headplane.net/features/sso.
+#   authorization_endpoint: ""
+#   token_endpoint: ""
+#   userinfo_endpoint: ""
+#
+#   # RP-initiated logout (https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
+#   # When true, /logout redirects the user to the IdP's end_session_endpoint
+#   # (auto-discovered or set manually below) so the upstream session is ended too.
+#   #
+#   # Disabled by default: the `post_logout_redirect_uri` MUST be pre-registered
+#   # in your OIDC client configuration on the IdP. If it isn't, users will land
+#   # on the provider's error page after logout.
+#   use_end_session: false
+#
+#   # Optional. Override the auto-discovered end_session_endpoint, or supply one
+#   # if your provider does not advertise it via discovery.
+#   end_session_endpoint: ""
+#
+#   # Where the identity provider should redirect after RP-initiated logout.
+#   # Most providers (Keycloak, Auth0, etc.) require this URL to be pre-registered
+#   # in the OIDC client configuration. If unset, Headplane defaults to its own
+#   # `<server.base_url>/admin/login?s=logout` page.
+#   post_logout_redirect_uri: ""
+#
+#   # The authentication method to use when communicating with the token endpoint.
+#   # This is fully optional and Headplane will attempt to auto-detect the best
+#   # method and fall back to `client_secret_basic` if unsure.
+#   token_endpoint_auth_method: "client_secret_post"
+#
+#   # The client ID for the OIDC client
+#   # For the best experience please ensure this is *identical* to the client_id
+#   # you are using for Headscale.
+#   client_id: "your-client-id"
+#
+#   # The client secret for the OIDC client
+#   # You may also provide `client_secret_path` instead to read a value from disk.
+#   # See https://headplane.net/configuration/#sensitive-values
+#   client_secret: "<your-client-secret>"
+#
+#   # Whether to use PKCE when authenticating users. This is recommended as it
+#   # adds an extra layer of security to the authentication process. Enabling
+#   # this means your OIDC provider must support PKCE and it must be enabled on
+#   # the client.
+#   use_pkce: true
+#
+#   # If you want to disable traditional login via Headscale API keys
+#   disable_api_key_login: false
+#
+#   # By default profile pictures are pulled from the OIDC provider when
+#   # we go to fetch the userinfo endpoint. Optionally, this can be set to
+#   # "oidc" or "gravatar" as of 0.6.1.
+#   profile_picture_source: "gravatar"
+#
+#   # The scopes to request when authenticating users. The default is below.
+#   scope: "openid email profile"
+#
+#   # Optional fallback claims to use when your provider does not return a standard
+#   # OIDC `sub` claim. Headplane always checks `sub` first, then each claim here
+#   # in order. For Feishu/Lark, `["open_id", "email"]` is a reasonable fallback.
+#   subject_claims:
+#     - "open_id"
+#     - "email"
+#
+#   # Allow ID token verification with legacy RSA keys smaller than 2048 bits.
+#   # This is disabled by default because it lowers token verification security and
+#   # should only be used as a temporary compatibility workaround.
+#   allow_weak_rsa_keys: false
+#
+#   # Extra query parameters can be passed to the authorization endpoint
+#   # by setting them here. This is useful for providers that require any kind
+#   # of custom hinting.
+#   extra_params:
+#     prompt: "select_account" # Example: force account selection on Google
