@@ -15,6 +15,12 @@ export interface SshRule {
   checkPeriod?: string;
 }
 
+export interface AclTest {
+  src: string;
+  accept?: string[];
+  deny?: string[];
+}
+
 export interface AclPolicy {
   acls?: AclRule[];
   groups?: Record<string, string[]>;
@@ -22,7 +28,7 @@ export interface AclPolicy {
   tagOwners?: Record<string, string[]>;
   ssh?: SshRule[];
   autoApprovers?: { routes?: Record<string, string[]>; exitNode?: string[] };
-  tests?: unknown[];
+  tests?: AclTest[];
 }
 
 export function parsePolicy(raw: string): AclPolicy {
@@ -38,7 +44,7 @@ function patch(policy: AclPolicy, changes: Partial<AclPolicy>): AclPolicy {
   return assign(assign({} as AclPolicy, policy), changes) as AclPolicy;
 }
 
-type ArrayField = "acls" | "ssh";
+type ArrayField = "acls" | "ssh" | "tests";
 
 function appendTo<K extends ArrayField>(
   policy: AclPolicy,
@@ -122,3 +128,37 @@ export const setTagOwner = (p: AclPolicy, tag: string, owners: string[]) =>
   setEntry(p, "tagOwners", tagKey(tag), owners);
 export const removeTagOwner = (p: AclPolicy, tag: string) =>
   removeEntry(p, "tagOwners", tagKey(tag));
+
+export const addAclTest = (p: AclPolicy, test: AclTest) => appendTo(p, "tests", test);
+export const removeAclTest = (p: AclPolicy, i: number) => removeAt(p, "tests", i);
+export const updateAclTest = (p: AclPolicy, i: number, test: AclTest) =>
+  replaceAt(p, "tests", i, test);
+
+export function setAutoApproveRoute(p: AclPolicy, cidr: string, approvers: string[]): AclPolicy {
+  const current = p.autoApprovers ?? {};
+  return patch(p, {
+    autoApprovers: {
+      ...current,
+      routes: { ...current.routes, [cidr]: approvers },
+    },
+  });
+}
+
+export function removeAutoApproveRoute(p: AclPolicy, cidr: string): AclPolicy {
+  const routes = { ...p.autoApprovers?.routes };
+  delete routes[cidr];
+  return patch(p, {
+    autoApprovers: { ...p.autoApprovers, routes },
+  });
+}
+
+export function setAutoApproveExitNode(p: AclPolicy, approvers: string[]): AclPolicy {
+  return patch(p, {
+    autoApprovers: { ...p.autoApprovers, exitNode: approvers },
+  });
+}
+
+export function removeAutoApproveExitNode(p: AclPolicy): AclPolicy {
+  const { exitNode: _, ...rest } = p.autoApprovers ?? {};
+  return patch(p, { autoApprovers: rest });
+}

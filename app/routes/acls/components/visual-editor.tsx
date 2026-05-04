@@ -10,22 +10,30 @@ import TableList from "~/components/table-list";
 import {
   type AclPolicy,
   type AclRule,
+  type AclTest,
   type SshRule,
   addAclRule,
+  addAclTest,
   addSshRule,
   groupKey,
   parsePolicy,
   removeAclRule,
+  removeAclTest,
+  removeAutoApproveExitNode,
+  removeAutoApproveRoute,
   removeGroup,
   removeHost,
   removeSshRule,
   removeTagOwner,
+  setAutoApproveExitNode,
+  setAutoApproveRoute,
   setGroup,
   setHost,
   setTagOwner,
   stringifyPolicy,
   tagKey,
   updateAclRule,
+  updateAclTest,
   updateSshRule,
 } from "~/utils/acl-editor";
 
@@ -50,6 +58,15 @@ function Tags({ values }: { values: string[] }) {
   );
 }
 
+function KeyListRow({ label, values }: { label: string; values: string[] }) {
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="text-sm font-medium">{label}</span>
+      <Tags values={values} />
+    </div>
+  );
+}
+
 type ArrayDialogState =
   | { mode: "closed" }
   | { mode: "add" }
@@ -61,7 +78,6 @@ interface ArraySectionProps<T> {
   emptyText: string;
   items: T[];
   renderRow: (item: T) => ReactNode;
-  formTitle: (editing: boolean) => string;
   renderForm: (item: T | undefined) => ReactNode;
   parseForm: (fd: FormData) => T;
   onAdd: (item: T) => void;
@@ -75,7 +91,6 @@ function ArraySection<T>({
   emptyText,
   items,
   renderRow,
-  formTitle,
   renderForm,
   parseForm,
   onAdd,
@@ -86,6 +101,7 @@ function ArraySection<T>({
   const [dialog, setDialog] = useState<ArrayDialogState>({ mode: "closed" });
   const close = () => setDialog({ mode: "closed" });
   const editing = dialog.mode === "edit" ? items[dialog.index] : undefined;
+  const isEditing = dialog.mode === "edit";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -147,7 +163,7 @@ function ArraySection<T>({
           key={dialog.mode === "edit" ? `edit-${dialog.index}` : "add"}
           onSubmit={handleSubmit}
         >
-          <h2 className="text-lg font-medium">{formTitle(dialog.mode === "edit")}</h2>
+          <h2 className="text-lg font-medium">{isEditing ? `Edit ${title}` : `Add ${title}`}</h2>
           {renderForm(editing)}
         </DialogPanel>
       </Dialog>
@@ -175,7 +191,6 @@ interface RecordSectionProps<V> {
   emptyText: string;
   entries: [string, V][];
   renderRow: (key: string, value: V) => ReactNode;
-  formTitle: (editing: boolean) => string;
   renderForm: (key: string | undefined, value: V | undefined) => ReactNode;
   parseForm: (fd: FormData) => { key: string; value: V };
   onSet: (key: string, value: V) => void;
@@ -189,7 +204,6 @@ function RecordSection<V>({
   emptyText,
   entries,
   renderRow,
-  formTitle,
   renderForm,
   parseForm,
   onSet,
@@ -201,6 +215,7 @@ function RecordSection<V>({
   const close = () => setDialog({ mode: "closed" });
   const editKey = dialog.mode === "edit" ? dialog.key : undefined;
   const editValue = editKey ? entries.find(([k]) => k === editKey)?.[1] : undefined;
+  const isEditing = dialog.mode === "edit";
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -262,7 +277,7 @@ function RecordSection<V>({
         onOpenChange={(open) => !open && close()}
       >
         <DialogPanel key={editKey ?? "add"} onSubmit={handleSubmit}>
-          <h2 className="text-lg font-medium">{formTitle(dialog.mode === "edit")}</h2>
+          <h2 className="text-lg font-medium">{isEditing ? `Edit ${title}` : `Add ${title}`}</h2>
           {renderForm(editKey, editValue)}
         </DialogPanel>
       </Dialog>
@@ -292,7 +307,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
 
   return (
     <div className="space-y-8">
-      {/* ACL Rules */}
       <ArraySection<AclRule>
         title="ACL Rules"
         emptyText="No ACL rules defined"
@@ -308,7 +322,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
             {r.proto && <span className="text-xs text-mist-500">{r.proto}</span>}
           </div>
         )}
-        formTitle={(editing) => (editing ? "Edit Rule" : "Add Rule")}
         renderForm={(item) => (
           <>
             <Input
@@ -346,19 +359,12 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
         onRemove={(i) => emit(removeAclRule(policy, i))}
       />
 
-      {/* Groups */}
       <RecordSection<string[]>
         title="Groups"
         emptyText="No groups defined"
         disabled={disabled}
         entries={Object.entries(policy.groups ?? {})}
-        renderRow={(key, members) => (
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium">{key}</span>
-            <Tags values={members} />
-          </div>
-        )}
-        formTitle={(editing) => (editing ? "Edit Group" : "Add Group")}
+        renderRow={(key, members) => <KeyListRow label={key} values={members} />}
         renderForm={(key, members) => (
           <>
             <Input
@@ -388,7 +394,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
         onRemove={(key) => emit(removeGroup(policy, key))}
       />
 
-      {/* Hosts */}
       <RecordSection<string>
         title="Hosts"
         emptyText="No host aliases defined"
@@ -401,7 +406,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
             <span className="text-mist-600 dark:text-mist-300">{addr}</span>
           </div>
         )}
-        formTitle={(editing) => (editing ? "Edit Host" : "Add Host")}
         renderForm={(key, addr) => (
           <>
             <Input
@@ -429,19 +433,12 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
         onRemove={(name) => emit(removeHost(policy, name))}
       />
 
-      {/* Tag Owners */}
       <RecordSection<string[]>
         title="Tag Owners"
         emptyText="No tag owners defined"
         disabled={disabled}
         entries={Object.entries(policy.tagOwners ?? {})}
-        renderRow={(tag, owners) => (
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium">{tag}</span>
-            <Tags values={owners} />
-          </div>
-        )}
-        formTitle={(editing) => (editing ? "Edit Tag Owner" : "Add Tag Owner")}
+        renderRow={(tag, owners) => <KeyListRow label={tag} values={owners} />}
         renderForm={(key, owners) => (
           <>
             <Input
@@ -471,7 +468,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
         onRemove={(tag) => emit(removeTagOwner(policy, tag))}
       />
 
-      {/* SSH Rules */}
       <ArraySection<SshRule>
         title="SSH Rules"
         emptyText="No SSH rules defined"
@@ -499,7 +495,6 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
             </div>
           </div>
         )}
-        formTitle={(editing) => (editing ? "Edit SSH Rule" : "Add SSH Rule")}
         renderForm={(item) => (
           <>
             <Input
@@ -550,6 +545,131 @@ export default function VisualEditor({ value, onChange, disabled }: VisualEditor
         onAdd={(rule) => emit(addSshRule(policy, rule))}
         onUpdate={(i, rule) => emit(updateSshRule(policy, i, rule))}
         onRemove={(i) => emit(removeSshRule(policy, i))}
+      />
+
+      <RecordSection<string[]>
+        title="Auto Approve Routes"
+        emptyText="No auto-approved routes defined"
+        disabled={disabled}
+        entries={Object.entries(policy.autoApprovers?.routes ?? {})}
+        renderRow={(cidr, approvers) => <KeyListRow label={cidr} values={approvers} />}
+        renderForm={(key, approvers) => (
+          <>
+            <Input
+              name="cidr"
+              label="Route (CIDR)"
+              required
+              defaultValue={key ?? ""}
+              placeholder="10.0.0.0/8, 192.168.1.0/24"
+            />
+            <Input
+              name="approvers"
+              label="Approvers"
+              required
+              defaultValue={approvers ? join(approvers) : ""}
+              placeholder="group:admin, tag:server"
+            />
+          </>
+        )}
+        parseForm={(fd) => ({
+          key: (fd.get("cidr") as string).trim(),
+          value: split(fd.get("approvers") as string),
+        })}
+        onSet={(cidr, approvers) => emit(setAutoApproveRoute(policy, cidr, approvers))}
+        onRename={(oldCidr, newCidr, approvers) =>
+          emit(setAutoApproveRoute(removeAutoApproveRoute(policy, oldCidr), newCidr, approvers))
+        }
+        onRemove={(cidr) => emit(removeAutoApproveRoute(policy, cidr))}
+      />
+
+      <RecordSection<string[]>
+        title="Auto Approve Exit Nodes"
+        emptyText="No exit node auto-approvers defined"
+        disabled={disabled}
+        entries={
+          policy.autoApprovers?.exitNode ? [["exitNode", policy.autoApprovers.exitNode]] : []
+        }
+        renderRow={(_key, approvers) => <Tags values={approvers} />}
+        renderForm={(_key, approvers) => (
+          <Input
+            name="approvers"
+            label="Approvers"
+            required
+            defaultValue={approvers ? join(approvers) : ""}
+            placeholder="group:admin, tag:server"
+          />
+        )}
+        parseForm={(fd) => ({
+          key: "exitNode",
+          value: split(fd.get("approvers") as string),
+        })}
+        onSet={(_key, approvers) => emit(setAutoApproveExitNode(policy, approvers))}
+        onRename={(_old, _new, approvers) => emit(setAutoApproveExitNode(policy, approvers))}
+        onRemove={() => emit(removeAutoApproveExitNode(policy))}
+      />
+
+      <ArraySection<AclTest>
+        title="ACL Tests"
+        emptyText="No ACL tests defined"
+        disabled={disabled}
+        items={policy.tests ?? []}
+        renderRow={(t) => (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium">from</span>
+              <Chip text={t.src} />
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              {t.accept && t.accept.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <span className="text-green-600 dark:text-green-400">accept</span>
+                  <Tags values={t.accept} />
+                </span>
+              )}
+              {t.deny && t.deny.length > 0 && (
+                <span className="flex items-center gap-1">
+                  <span className="text-red-600 dark:text-red-400">deny</span>
+                  <Tags values={t.deny} />
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+        renderForm={(item) => (
+          <>
+            <Input
+              name="src"
+              label="Source"
+              required
+              defaultValue={item?.src ?? ""}
+              placeholder="user1, group:admin"
+            />
+            <Input
+              name="accept"
+              label="Accept destinations"
+              defaultValue={item?.accept ? join(item.accept) : ""}
+              placeholder="100.64.0.1:80, server1:443"
+            />
+            <Input
+              name="deny"
+              label="Deny destinations"
+              defaultValue={item?.deny ? join(item.deny) : ""}
+              placeholder="100.64.0.2:22"
+            />
+          </>
+        )}
+        parseForm={(fd) => {
+          const accept = split(fd.get("accept") as string);
+          const deny = split(fd.get("deny") as string);
+          return {
+            src: (fd.get("src") as string).trim(),
+            ...(accept.length > 0 ? { accept } : {}),
+            ...(deny.length > 0 ? { deny } : {}),
+          };
+        }}
+        onAdd={(test) => emit(addAclTest(policy, test))}
+        onUpdate={(i, test) => emit(updateAclTest(policy, i, test))}
+        onRemove={(i) => emit(removeAclTest(policy, i))}
       />
     </div>
   );

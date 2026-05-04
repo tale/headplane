@@ -5,20 +5,27 @@ import {
   type AclRule,
   type SshRule,
   addAclRule,
+  addAclTest,
   addSshRule,
   groupKey,
   parsePolicy,
   removeAclRule,
+  removeAclTest,
+  removeAutoApproveExitNode,
+  removeAutoApproveRoute,
   removeGroup,
   removeHost,
   removeSshRule,
   removeTagOwner,
+  setAutoApproveExitNode,
+  setAutoApproveRoute,
   setGroup,
   setHost,
   setTagOwner,
   stringifyPolicy,
   tagKey,
   updateAclRule,
+  updateAclTest,
   updateSshRule,
 } from "~/utils/acl-editor";
 
@@ -293,6 +300,65 @@ describe("field isolation", () => {
     const output = stringifyPolicy(setHost(parsePolicy(WITH_COMMENTS), "web", "10.0.0.5"));
     expect(output).toContain("// Main access rules");
     expect(output).toContain("// Team groups");
+  });
+});
+
+describe("autoApprovers operations", () => {
+  test("routes and exitNode are independent within the nested structure", () => {
+    let p = parsePolicy(WITH_EXTRA_FIELDS);
+
+    p = setAutoApproveRoute(p, "192.168.0.0/16", ["group:ops"]);
+    expect(p.autoApprovers?.routes?.["10.0.0.0/8"]).toEqual(["group:admin"]);
+    expect(p.autoApprovers?.routes?.["192.168.0.0/16"]).toEqual(["group:ops"]);
+    expect(p.autoApprovers?.exitNode).toEqual(["group:admin"]);
+
+    p = removeAutoApproveRoute(p, "10.0.0.0/8");
+    expect(p.autoApprovers?.routes?.["10.0.0.0/8"]).toBeUndefined();
+    expect(p.autoApprovers?.exitNode).toEqual(["group:admin"]);
+
+    p = setAutoApproveExitNode(p, ["group:ops", "user1"]);
+    expect(p.autoApprovers?.exitNode).toEqual(["group:ops", "user1"]);
+    expect(p.autoApprovers?.routes?.["192.168.0.0/16"]).toEqual(["group:ops"]);
+
+    p = removeAutoApproveExitNode(p);
+    expect(p.autoApprovers?.exitNode).toBeUndefined();
+    expect(p.autoApprovers?.routes?.["192.168.0.0/16"]).toEqual(["group:ops"]);
+  });
+
+  test("operates safely on empty/undefined autoApprovers", () => {
+    const empty: AclPolicy = {};
+    expect(removeAutoApproveRoute(empty, "10.0.0.0/8").autoApprovers?.routes).toEqual({});
+    expect(removeAutoApproveExitNode(empty).autoApprovers?.exitNode).toBeUndefined();
+
+    const fromScratch = setAutoApproveRoute(
+      setAutoApproveExitNode(empty, ["group:ops"]),
+      "10.0.0.0/8",
+      ["group:admin"],
+    );
+    const final = parsePolicy(stringifyPolicy(fromScratch));
+    expect(final.autoApprovers?.routes?.["10.0.0.0/8"]).toEqual(["group:admin"]);
+    expect(final.autoApprovers?.exitNode).toEqual(["group:ops"]);
+  });
+});
+
+describe("acl test operations", () => {
+  test("CRUD operations follow the same array mechanics as acls/ssh", () => {
+    let p: AclPolicy = {};
+    p = addAclTest(p, { src: "user1", accept: ["100.64.0.1:80"] });
+    p = addAclTest(p, { src: "user2", deny: ["*:*"] });
+    expect(p.tests).toHaveLength(2);
+
+    p = updateAclTest(p, 0, { src: "user1", accept: ["10.0.0.1:443"], deny: ["10.0.0.2:22"] });
+    expect(p.tests?.[0].accept).toEqual(["10.0.0.1:443"]);
+    expect(p.tests?.[0].deny).toEqual(["10.0.0.2:22"]);
+
+    p = removeAclTest(p, 0);
+    expect(p.tests).toHaveLength(1);
+    expect(p.tests?.[0].src).toBe("user2");
+
+    const final = parsePolicy(stringifyPolicy(p));
+    expect(final.tests?.[0].deny).toEqual(["*:*"]);
+    expect(final.tests?.[0].accept).toBeUndefined();
   });
 });
 
