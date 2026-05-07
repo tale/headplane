@@ -1,11 +1,12 @@
 import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
+import { useSubmit } from "react-router";
 
 import Button from "~/components/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { User } from "~/types";
 import cn from "~/utils/cn";
-import { PopulatedNode } from "~/utils/node-info";
+import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
 
 import Delete from "../dialogs/delete";
 import Expire from "../dialogs/expire";
@@ -35,6 +36,7 @@ export default function MachineMenu({
   existingTags,
   supportsNodeOwnerChange,
 }: MenuProps) {
+  const submit = useSubmit();
   const [modal, setModal] = useState<Modal>(null);
   const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
@@ -156,15 +158,31 @@ export default function MachineMenu({
         </MenuTrigger>
         <MenuContent>
           <MenuItem onClick={() => setModal("rename")}>Edit machine name</MenuItem>
+          <MenuItem
+            onClick={() =>
+              submit(
+                {
+                  action_id: "toggle_expiry",
+                  node_id: node.id,
+                  disableExpiry: !isNoExpiry(node.expiry),
+                },
+                { method: "post" },
+              )
+            }
+          >
+            {isNoExpiry(node.expiry) ? "Enable" : "Disable"} key expiry
+          </MenuItem>
           <MenuItem onClick={() => setModal("routes")}>Edit route settings</MenuItem>
           <MenuItem onClick={() => setModal("tags")}>Edit ACL tags</MenuItem>
           {supportsNodeOwnerChange && (
             <MenuItem onClick={() => setModal("move")}>Change owner</MenuItem>
           )}
           <MenuSeparator />
-          <MenuItem variant="danger" disabled={node.expired} onClick={() => setModal("expire")}>
-            Expire
-          </MenuItem>
+          {!isNoExpiry(node.expiry) && (
+            <MenuItem variant="danger" disabled={node.expired} onClick={() => setModal("expire")}>
+              Expire
+            </MenuItem>
+          )}
           <MenuItem variant="danger" onClick={() => setModal("remove")}>
             Remove
           </MenuItem>

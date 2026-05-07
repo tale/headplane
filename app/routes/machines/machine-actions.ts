@@ -94,6 +94,13 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       return { message: "Machine expired" };
     }
 
+    case "toggle_expiry": {
+      const disableExpiry = String(formData.get("disableExpiry")) === "true";
+      await api.toggleExpiry(nodeId, disableExpiry);
+      await context.hsLive.refresh(nodesResource, api);
+      return { message: "Machine expired" };
+    }
+
     case "update_tags": {
       const tags = formData.get("tags")?.toString().split(",") ?? [];
       if (tags.length === 0) {

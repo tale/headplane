@@ -75,6 +75,14 @@ export interface NodeEndpoints {
   expireNode(id: string): Promise<void>;
 
   /**
+   * Toggle expiry of a specific node (machine) by its ID.
+   *
+   * @param id The ID of the node to expire.
+   * @param disableExpiry `true` if machine shall have key expiry disabled, `false` otherwise.
+   */
+  toggleExpiry(id: string, disableExpiry: boolean): Promise<void>;
+
+  /**
    * Renames a specific node (machine) by its ID.
    *
    * @param id The ID of the node to rename.
@@ -142,6 +150,14 @@ export default defineApiEndpoints<NodeEndpoints>((client, apiKey) => ({
 
   expireNode: async (nodeId) => {
     await client.apiFetch<void>("POST", `v1/node/${nodeId}/expire`, apiKey);
+  },
+
+  toggleExpiry: async (nodeId, disableExpiry) => {
+    await client.apiFetch<void>(
+      "POST",
+      `v1/node/${nodeId}/expire?disableExpiry=${disableExpiry}`,
+      apiKey,
+    );
   },
 
   renameNode: async (nodeId, newName) => {
