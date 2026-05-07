@@ -67,6 +67,21 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
     expect(expiredNode.expiry).toBeDefined();
   });
 
+  test("key expiry of nodes can be toggled", async () => {
+    const client = await getRuntimeClient(version);
+    await client.toggleExpiry(workingNodeId, true);
+
+    const permanentNode = await client.getNode(workingNodeId);
+    expect(permanentNode).toBeDefined();
+    expect(permanentNode.expiry).toBeNull();
+
+    await client.toggleExpiry(workingNodeId, false);
+
+    const node = await client.getNode(workingNodeId);
+    expect(node).toBeDefined();
+    expect(node.expiry).not.toBeNull();
+  });
+
   test("nodes can be deleted", async () => {
     const client = await getRuntimeClient(version);
     await client.nodes.delete(workingNodeId);

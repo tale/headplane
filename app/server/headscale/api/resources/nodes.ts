@@ -19,6 +19,7 @@ export interface NodeApi {
   expire(id: string): Promise<void>;
   rename(id: string, newName: string): Promise<void>;
   setTags(id: string, tags: string[]): Promise<void>;
+  toggleExpiry(nodeId: string, disableExpiry: boolean): Promise<void>;
   /**
    * Reassign a node to a different user. Only present when
    * `capabilities.nodeOwnerIsImmutable` is false (Headscale < 0.28).
@@ -97,6 +98,13 @@ export function makeNodeApi(
         path: `v1/node/${id}/tags`,
         apiKey,
         body: { tags },
+      });
+    },
+    toggleExpiry: async (nodeId, disableExpiry) => {
+      await transport.request({
+        method: "POST",
+        path: `v1/node/${nodeId}/expire?disableExpiry=${disableExpiry}`,
+        apiKey,
       });
     },
   };
