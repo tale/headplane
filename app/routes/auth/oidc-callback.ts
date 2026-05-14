@@ -49,6 +49,62 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const identity = result.value;
 
+  // Enforce OIDC login restrictions: allowed_domains and allowed_users
+  // from the Headscale configuration. When these are set, only users
+  // matching the criteria are permitted to authenticate.
+  const oidcConfig = context.hs.c?.oidc;
+  if (oidcConfig) {
+    const allowedDomains = oidcConfig.allowed_domains ?? [];
+    const allowedUsers = oidcConfig.allowed_users ?? [];
+
+    if (allowedDomains.length > 0 || allowedUsers.length > 0) {
+      const userEmail = identity.email;
+      const userName = identity.username;
+
+      if (!userEmail && !userName) {
+        log.warn(
+          "auth",
+          "OIDC login restricted but identity has no email or username for subject %s",
+          identity.subject,
+        );
+        return redirect("/login?s=error_restricted_access");
+      }
+
+      if (allowedUsers.length > 0 && (allowedUsers.includes(userName) || (userEmail != null && allowedUsers.includes(userEmail)))) {
+        // User is explicitly allowed, skip domain check
+      } else if (allowedDomains.length > 0) {
+        if (!userEmail) {
+          log.warn(
+            "auth",
+            "OIDC login restricted but identity has no email claim for subject %s",
+            identity.subject,
+          );
+          return redirect("/login?s=error_restricted_access");
+        }
+
+        const emailDomain = userEmail.split("@")[1];
+        if (!emailDomain || !allowedDomains.includes(emailDomain)) {
+          log.warn(
+            "auth",
+            "OIDC login rejected for %s — domain %s is not in allowed_domains: %s",
+            userEmail,
+            emailDomain ?? "(none)",
+            allowedDomains.join(", "),
+          );
+          return redirect("/login?s=error_restricted_access");
+        }
+      } else {
+        // allowed_users is set but user is not in it
+        log.warn(
+          "auth",
+          "OIDC login rejected for %s — username not in allowed_users",
+          userName,
+        );
+        return redirect("/login?s=error_restricted_access");
+      }
+    }
+  }
+
   const userId = await context.auth.findOrCreateUser(identity.subject, {
     name: identity.name,
     email: identity.email,
