@@ -1,0 +1,82 @@
+headplane:
+  image: ghcr.io/tale/headplane:0.6.0
+  config:
+    server:
+      host: "0.0.0.0"
+      port: 3000
+      cookie_secure: true
+    headscale:
+      url: "https://vpn.lag0.com.br"
+      config_path: "/etc/headscale/config.yaml"
+      config_strict: "true"
+    integration:
+      kubernetes:
+        enabled: true
+        validate_manifest: false
+        pod_name: "headplane-0"
+  secret:
+    name: headplane-secret
+    create: true
+headscale:
+  image: headscale/headscale:0.26.0
+  config:
+    server_url: https://headscale.lag0.com.br
+    listen_addr: 0.0.0.0:8080
+    metrics_listen_addr: 0.0.0.0:9090
+    grpc_listen_addr: 0.0.0.0:50443
+    grpc_allow_insecure: false
+    policy:
+      mode: database
+    prefixes:
+      v4: 100.64.0.0/10
+      v6: fd7a:115c:a1e0::/48
+      allocation: sequential
+    database:
+      type: sqlite
+      debug: false
+      sqlite:
+        path: /etc/headscale/db.sqlite
+    noise:
+      private_key_path: /etc/headscale/noise_private.key
+    derp:
+      server:
+        enabled: true
+        region_id: 999
+        region_code: "headscale"
+        region_name: "Headscale Embedded DERP"
+        stun_listen_addr: "0.0.0.0:3478"
+        private_key_path: /var/lib/headscale/derp_server_private.key
+        automatically_add_embedded_derp_region: true
+        ipv4: 1.2.3.4
+        ipv6: 2001:db8::1
+      urls:
+        - https://controlplane.tailscale.com/derpmap/default
+      paths: []
+    dns:
+      magic_dns: true
+      base_domain: clients.lag0.com.br
+      nameservers:
+        global:
+          - 1.1.1.1
+          - 8.8.8.8
+relay:
+  enabled: false
+pvc:
+  enabled: true
+  name: headscale-config
+  accessModes:
+    - ReadWriteOnce
+  storage: 1Gi
+  annotations:
+    kustomize.toolkit.fluxcd.io/prune: disabled
+#  storageClassName: default
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-production"
+  labels: []
+  headplaneDomain: "headscale.lag0.com.br"
+  headscaleDomain: "vpn.lag0.com.br"
+  tlsSecretName: "headplane-tls"
