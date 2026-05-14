@@ -53,7 +53,7 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
     await client.setNodeUser(workingNodeId, user.id);
     const reassignedNode = await client.getNode(workingNodeId);
     expect(reassignedNode).toBeDefined();
-    expect(reassignedNode.user.name).toBe(user.name);
+    expect(reassignedNode.user?.name).toBe(user.name);
   });
 
   test("nodes can be expired", async () => {
