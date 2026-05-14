@@ -1,0 +1,145 @@
+# Headplane Helm Chart
+# Override any of these values in your own values file.
+# Only headscale.url requires explicit configuration for a working setup.
+
+# -- Override the chart name or fully qualified release name
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Container image
+image:
+  repository: ghcr.io/tale/headplane
+  pullPolicy: IfNotPresent
+  tag: ""
+
+imagePullSecrets: []
+
+# -- Headscale connection. Deploy Headscale separately using its upstream chart.
+headscale:
+  url: ""
+  publicUrl: ""
+
+# -- Server bind address, port, and cookie settings
+server:
+  host: "0.0.0.0"
+  port: 3000
+  cookieSecure: true
+  cookieSecret:
+    value: ""
+    existingSecret: ""
+    secretKey: "cookie-secret"
+
+# -- Kubernetes integration settings written into Headplane's config.yaml
+integration:
+  kubernetes:
+    enabled: true
+    validateManifest: true
+
+# -- OIDC authentication
+oidc:
+  enabled: false
+  issuerUrl: ""
+  clientId: ""
+  disableApiKeyLogin: false
+  tokenEndpointAuthMethod: client_secret_post
+  redirectUri: ""
+  clientSecret:
+    value: ""
+    existingSecret: ""
+    secretKey: "client-secret"
+  headscaleApiKey:
+    value: ""
+    existingSecret: ""
+    secretKey: "api-key"
+
+# -- Persistent storage for Headplane data
+persistence:
+  enabled: false
+  accessModes:
+    - ReadWriteOnce
+  storage: 1Gi
+  storageClassName: ""
+  annotations: {}
+  emptyDirSizeLimit: 500Mi
+
+# -- ServiceAccount configuration
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# -- RBAC role and binding
+rbac:
+  create: true
+
+# -- Container-level security context
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+# -- Pod-level security context
+podSecurityContext: {}
+
+# -- Container resource requests and limits
+resources: {}
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # limits:
+  #   cpu: 500m
+  #   memory: 256Mi
+
+# -- Liveness and readiness probes
+probes:
+  liveness:
+    enabled: true
+    path: /admin/healthz
+    port: app
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readiness:
+    enabled: true
+    path: /admin/healthz
+    port: app
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# -- Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Scheduling constraints
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+# -- Debug logging
+debug: false
+
+# -- Additional pod annotations
+podAnnotations: {}
+
+# -- Ingress configuration
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+# -- Additional host aliases injected into the pod
+hostAliases: []
+
+# -- Arbitrary extra Kubernetes objects to deploy alongside the chart
+extraObjects: []
