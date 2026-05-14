@@ -1,7 +1,6 @@
 import type { Machine } from "~/types";
 
 import type { HeadscaleApiInterface } from "..";
-
 import { defineApiEndpoints } from "../factory";
 
 interface RawMachine extends Omit<Machine, "tags"> {
@@ -146,7 +145,11 @@ export default defineApiEndpoints<NodeEndpoints>((client, apiKey) => ({
   },
 
   renameNode: async (nodeId, newName) => {
-    await client.apiFetch<void>("POST", `v1/node/${nodeId}/rename/${newName}`, apiKey);
+    await client.apiFetch<void>(
+      "POST",
+      `v1/node/${nodeId}/rename/${encodeURIComponent(newName)}`,
+      apiKey,
+    );
   },
 
   setNodeTags: async (nodeId, tags) => {
