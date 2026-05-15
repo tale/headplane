@@ -1,3 +1,17 @@
+# 0.7.0-beta.3 (May 14, 2026)
+
+> This is a beta release. Please report any issues you encounter.
+
+- Fixed GHSA-vgj6-hcf2-fqf6, a path traversal / RBAC bypass in Headscale node and user rename API calls.
+
+---
+
+# 0.6.3 (May 14, 2026)
+
+- Fixed GHSA-vgj6-hcf2-fqf6, a path traversal / RBAC bypass in Headscale node and user rename API calls.
+
+---
+
 # 0.7.0-beta.2 (April 9, 2026)
 
 > This is a beta release. Please report any issues you encounter.

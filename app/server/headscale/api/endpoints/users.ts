@@ -78,6 +78,10 @@ export default defineApiEndpoints<UserEndpoints>((client, apiKey) => ({
   },
 
   renameUser: async (oldId, newName) => {
-    await client.apiFetch<void>("POST", `v1/user/${oldId}/rename/${newName}`, apiKey);
+    await client.apiFetch<void>(
+      "POST",
+      `v1/user/${oldId}/rename/${encodeURIComponent(newName)}`,
+      apiKey,
+    );
   },
 }));
