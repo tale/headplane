@@ -1,6 +1,7 @@
 node_modules
 /.react-router
 /.cache
+/.data
 /build
 /test
 .env
