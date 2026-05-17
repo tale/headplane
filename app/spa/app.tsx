@@ -1,4 +1,5 @@
 import { RouterProvider } from "@tanstack/react-router";
+import { Suspense } from "react";
 import { FateClient } from "react-fate";
 import { createFateClient } from "react-fate/client";
 
@@ -12,7 +13,11 @@ const fate = createFateClient({
 export function App() {
   return (
     <FateClient client={fate}>
-      <RouterProvider router={router} />
+      <Suspense
+        fallback={<div className="min-h-screen bg-neutral-950 p-6 text-neutral-400">Loading…</div>}
+      >
+        <RouterProvider router={router} />
+      </Suspense>
     </FateClient>
   );
 }

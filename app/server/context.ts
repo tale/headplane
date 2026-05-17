@@ -5,6 +5,7 @@ import log from "~/utils/log";
 import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
+import { live as fateLive } from "./fate";
 import { createHeadscaleInterface } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
@@ -83,6 +84,16 @@ export async function createAppContext(config: HeadplaneConfig) {
         }
       : undefined;
 
+  const hsLive = createLiveStore([nodesResource, usersResource]);
+  hsLive.subscribe((resource, version) => {
+    const eventId = `${resource}:${version}`;
+    if (resource === nodesResource.key) {
+      fateLive.connection("machines").invalidate({ eventId });
+    } else if (resource === usersResource.key) {
+      fateLive.connection("users").invalidate({ eventId });
+    }
+  });
+
   return {
     config,
     db,
@@ -91,7 +102,7 @@ export async function createAppContext(config: HeadplaneConfig) {
     agents,
     auth,
     oidc,
-    hsLive: createLiveStore([nodesResource, usersResource]),
+    hsLive,
     hs: await loadHeadscaleConfig(
       config.headscale.config_path,
       config.headscale.config_strict,

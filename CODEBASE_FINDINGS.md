@@ -549,13 +549,28 @@ Do not add project-level wrappers such as `HeadplaneLivePublisher`, `HeadplaneDa
 
 - Removed the earlier `HeadplaneRuntime`, `HeadplaneDataContext`, and `HeadplaneLivePublisher` scaffolding.
 - Added direct dependencies: `react-fate`, `@nkzw/fate`, `@tanstack/react-router`, `@tanstack/router-plugin`, and `@vitejs/plugin-react`.
-- Added a plain Vite SPA `index.html` and `app/spa` entry with TanStack Router and a raw Fate client shell using `createClient` + `createHTTPTransport`.
+- Added a plain Vite SPA `index.html` and `app/spa` entry with TanStack Router and the generated raw Fate client from `react-fate/client`.
 - Moved the old React Router Vite config to `vite-old.config.ts` and replaced `vite.config.ts` with a clean SPA config.
 - Added Hono and `@hono/node-server`, plus a minimal Hono server shell in `app/server/hono-app.ts`, `app/server/hono-dev.ts`, and `app/server/hono-main.ts`.
 - Added `app/server/fate.ts`, which exports a raw Fate server and live bus. Hono mounts Fate's `createHonoFateHandler(fate)` at `/admin/fate` and `/admin/fate/*`, passing the existing app context through Hono variables.
 - Wired the official `react-fate/vite` plugin to `app/server/fate.ts`, ignored generated `.fate/` output, and made `pnpm run typecheck` run `fate generate` before `tsgo` so generated `react-fate/client` typings exist from a clean checkout.
+- Added the first real Fate read roots: `machines` and `users`. They use Fate `dataView(...)`, `list(...)`, and source executors directly, call the existing principal-scoped Headscale runtime API client, and enforce existing `read_machines` / `read_users` capabilities.
+- Added minimal SPA `/machines` and `/users` routes that fetch with raw `useRequest(...)`, render records with `useLiveView(...)`, and subscribe to root list connections with `useLiveListView(...)`. These routes intentionally do not port filters, actions, or optimistic updates yet.
+- Bridged existing `hsLive` resource changes directly to Fate connection invalidations: `nodes` invalidates the `machines` root connection and `users` invalidates the `users` root connection. This is a temporary seam so converted routes can exercise Fate live primitives before the old live store is deleted.
+- Added the first raw Fate mutation, `machine.rename`. It reuses existing `canManageNode` authorization, calls the Headscale API, refreshes the transitional `hsLive` nodes resource, emits direct Fate entity/list live events, and returns the client-selected `Machine` view.
 - `pnpm dev` now runs the Hono/Vite middleware shell with local `.data` storage for the example config; `pnpm build` now runs `vite build` for the SPA.
 - Fate's Drizzle peer currently warns against the repo's Drizzle `1.0.0-beta.21`; avoid Fate's Drizzle adapter until that compatibility is resolved, and start with a direct Headscale source/resolver instead.
+
+### Fate context decision
+
+The current Fate request context should stay pragmatic rather than heavily decomposed:
+
+- expose `api`, the principal-scoped Headscale runtime client, as the primary data access path for remote Headscale data;
+- keep `principal` and `request` available for authorization and future audit/session needs;
+- keep `app` available during the migration so resolvers can reuse the existing auth/config/agent services without inventing a new service layer first;
+- do not pass an unstructured context into every helper by default once a data domain settles. If a `machines`, `users`, or `authKeys` module becomes large, give that module explicit functions that accept the concrete pieces it uses.
+
+In other words: full app context is acceptable as migration scaffolding, but the resolver code should prefer the smallest direct dependency (`ctx.api`, `ctx.app.auth`, etc.) and should not become a new `HeadplaneRuntime` abstraction.
 
 ### Recommended migration sequence
 
@@ -570,9 +585,11 @@ Do not add project-level wrappers such as `HeadplaneLivePublisher`, `HeadplaneDa
    - `/fate/live` for SSE and subscription control;
    - request context resolves auth using the existing auth service and calls `context.hsApi.getRuntimeClient(...)` directly.
 5. **Convert the machines page first** using raw Fate views and live list/view hooks.
-6. **Delete the old React Router loader/action/SSE path for converted data**, rather than running duplicate data models side-by-side.
-7. **Fix critical auth/session issues early**: self-linking, raw API-key cookie, agent-route authz.
-8. **Keep runtime changes minimal** until the SPA actually needs them: Hono routes, static SPA fallback, Fate routes, and later SEA asset serving.
+6. **Add live updates to the converted lists** by publishing Fate list/entity invalidations from the existing polling/mutation seams. Keep this raw Fate live bus usage, not a Headplane live wrapper.
+7. **Port one mutation at a time**, starting with a low-risk machine mutation such as rename. The mutation should call the existing Headscale API, return the selected entity, and emit the relevant Fate live event.
+8. **Delete the old React Router loader/action/SSE path for converted data**, rather than running duplicate data models side-by-side.
+9. **Fix critical auth/session issues early**: self-linking, raw API-key cookie, agent-route authz.
+10. **Keep runtime changes minimal** until the SPA actually needs them: Hono routes, static SPA fallback, Fate routes, and later SEA asset serving.
 
 ### Vite+ / VoidZero tooling assessment
 
@@ -586,15 +603,14 @@ Recommended Vite+ approach:
 
 ## Suggested immediate backlog
 
-1. Fix OIDC self-linking authorization.
-2. Make API-key sessions opaque/server-side and set explicit auth cookie flags.
-3. Add capability checks to `/settings/agent` loader/action.
-4. Fix live-data pause cleanup/refcounting.
-5. Make `hsLive` use a stable server credential or principal-scoped cache.
-6. Add raw Fate server/client dependencies and wire the Vite plugin.
-7. Add the Vite SPA entry and TanStack Router skeleton.
-8. Mount Fate's native `/fate` and `/fate/live` handlers directly.
-9. Convert the machines page to raw Fate views/actions/live subscriptions.
-10. Serialize config patches with a real mutex/queue and clone config arrays before editing.
-11. Add CI `pnpm run typecheck` and `pnpm run lint`.
-12. Add WebSSH top-level dispose and release Go `js.Func` values.
+1. Replace the temporary `hsLive` bridge with direct Fate events from converted mutations and, if needed, a principal-safe polling source.
+2. Move the machine rename UI out of the throwaway table row controls once the permanent SPA machines page layout exists.
+3. Port the next machine mutations: expire/delete/tags/routes, one at a time, each returning selected data or deleting/updating the normalized cache explicitly.
+4. Fix OIDC self-linking authorization.
+5. Make API-key sessions opaque/server-side and set explicit auth cookie flags.
+6. Add capability checks to `/settings/agent` loader/action.
+7. Fix live-data pause cleanup/refcounting for unconverted React Router routes.
+8. Make `hsLive` use a stable server credential or principal-scoped cache while it still exists.
+9. Serialize config patches with a real mutex/queue and clone config arrays before editing.
+10. Add CI `pnpm run typecheck` and `pnpm run lint`.
+11. Add WebSSH top-level dispose and release Go `js.Func` values.
