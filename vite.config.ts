@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { fate } from "react-fate/vite";
 import { defineConfig } from "vite";
 import { parse } from "yaml";
 
@@ -41,7 +42,14 @@ const { server } = parse(config);
 export default defineConfig({
   appType: "spa",
   base: `${PREFIX}/`,
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    fate({
+      module: "./app/server/fate.ts",
+      transport: "native",
+    }),
+    react(),
+    tailwindcss(),
+  ],
   server: {
     host: server.host,
     port: server.port,

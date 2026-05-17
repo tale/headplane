@@ -552,6 +552,8 @@ Do not add project-level wrappers such as `HeadplaneLivePublisher`, `HeadplaneDa
 - Added a plain Vite SPA `index.html` and `app/spa` entry with TanStack Router and a raw Fate client shell using `createClient` + `createHTTPTransport`.
 - Moved the old React Router Vite config to `vite-old.config.ts` and replaced `vite.config.ts` with a clean SPA config.
 - Added Hono and `@hono/node-server`, plus a minimal Hono server shell in `app/server/hono-app.ts`, `app/server/hono-dev.ts`, and `app/server/hono-main.ts`.
+- Added `app/server/fate.ts`, which exports a raw Fate server and live bus. Hono mounts Fate's `createHonoFateHandler(fate)` at `/admin/fate` and `/admin/fate/*`, passing the existing app context through Hono variables.
+- Wired the official `react-fate/vite` plugin to `app/server/fate.ts`, ignored generated `.fate/` output, and made `pnpm run typecheck` run `fate generate` before `tsgo` so generated `react-fate/client` typings exist from a clean checkout.
 - `pnpm dev` now runs the Hono/Vite middleware shell with local `.data` storage for the example config; `pnpm build` now runs `vite build` for the SPA.
 - Fate's Drizzle peer currently warns against the repo's Drizzle `1.0.0-beta.21`; avoid Fate's Drizzle adapter until that compatibility is resolved, and start with a direct Headscale source/resolver instead.
 

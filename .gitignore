@@ -1,4 +1,5 @@
 node_modules
+/.fate
 /.react-router
 /.cache
 /.data

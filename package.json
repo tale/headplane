@@ -9,7 +9,7 @@
     "build": "vite build",
     "dev": "HEADPLANE_CONFIG_PATH=./config.example.yaml HEADPLANE_SERVER__DATA_PATH=./.data tsx app/server/hono-dev.ts",
     "start": "tsx app/server/hono-main.ts",
-    "typecheck": "react-router typegen && tsgo",
+    "typecheck": "fate generate && react-router typegen && tsgo",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration:*",
     "docs:dev": "vitepress dev docs",

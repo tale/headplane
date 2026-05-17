@@ -1,9 +1,11 @@
 import { versions } from "node:process";
 
 import { serveStatic } from "@hono/node-server/serve-static";
+import { createHonoFateHandler } from "@nkzw/fate/server";
 import { Hono, type Context } from "hono";
 
 import type { AppContext } from "./context";
+import { fate, type HonoFateEnv } from "./fate";
 
 interface HonoAppOptions {
   context: AppContext;
@@ -12,7 +14,13 @@ interface HonoAppOptions {
 }
 
 export function createHeadplaneHonoApp({ context, prefix, staticRoot }: HonoAppOptions) {
-  const app = new Hono();
+  const app = new Hono<HonoFateEnv>();
+  const fateHandler = createHonoFateHandler(fate);
+
+  app.use("*", async (c, next) => {
+    c.set("appContext", context);
+    await next();
+  });
 
   const health = async (c: Context) => {
     const api = context.hsApi.getRuntimeClient("fake-api-key");
@@ -86,8 +94,8 @@ export function createHeadplaneHonoApp({ context, prefix, staticRoot }: HonoAppO
     }
   });
 
-  app.all(`${prefix}/fate`, (c) => c.json({ error: "Fate server is not mounted yet" }, 501));
-  app.all(`${prefix}/fate/*`, (c) => c.json({ error: "Fate server is not mounted yet" }, 501));
+  app.all(`${prefix}/fate`, fateHandler);
+  app.all(`${prefix}/fate/*`, fateHandler);
 
   if (staticRoot) {
     const stripPrefix = (path: string) => path.slice(prefix.length) || "/";

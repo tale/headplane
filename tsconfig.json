@@ -1,5 +1,11 @@
 {
-  "include": ["**/*", "**/.server/**/*", "**/.client/**/*", ".react-router/types/**/*"],
+  "include": [
+    "**/*",
+    "**/.server/**/*",
+    "**/.client/**/*",
+    ".fate/**/*",
+    ".react-router/types/**/*"
+  ],
   "exclude": ["docs"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2023"],
