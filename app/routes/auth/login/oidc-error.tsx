@@ -42,6 +42,14 @@ function getErrorMessage(code: string) {
         </Card.Text>
       );
 
+    case "error_restricted_access":
+      return (
+        <Card.Text>
+          Your account does not meet the authentication restrictions configured by your
+          administrator. Contact your administrator to request access.
+        </Card.Text>
+      );
+
     case "error_auth_failed":
       return (
         <Card.Text>
