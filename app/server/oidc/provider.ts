@@ -51,6 +51,7 @@ export interface OidcIdentity {
   username: string;
   email?: string;
   picture?: string;
+  groups?: string[];
   idToken?: string;
 }
 
@@ -106,6 +107,7 @@ interface OidcClaims extends JWTPayload {
   preferred_username?: string;
   email?: string;
   picture?: string;
+  groups?: string[];
 }
 
 interface TokenResponse {
@@ -732,6 +734,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
           claims.preferred_username ?? (userInfo.preferred_username as string | undefined),
         email: claims.email ?? (userInfo.email as string | undefined),
         picture: claims.picture ?? (userInfo.picture as string | undefined),
+        groups: claims.groups ?? (userInfo.groups as string[] | undefined),
         sub: claims.sub ?? readClaimAsString(userInfo, "sub"),
       };
     } catch (cause) {
@@ -776,6 +779,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       username,
       email: claims.email,
       picture,
+      groups: claims.groups,
       idToken,
     };
   }

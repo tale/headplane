@@ -49,29 +49,24 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const identity = result.value;
 
-  // Enforce OIDC login restrictions: allowed_domains and allowed_users
-  // from the Headscale configuration. When these are set, only users
-  // matching the criteria are permitted to authenticate.
-  const oidcConfig = context.hs.c?.oidc;
+  const oidcConfig = context.config.oidc;
   if (oidcConfig) {
     const allowedDomains = oidcConfig.allowed_domains ?? [];
+    const allowedGroups = oidcConfig.allowed_groups ?? [];
     const allowedUsers = oidcConfig.allowed_users ?? [];
+    const hasAnyRestriction =
+      allowedDomains.length > 0 || allowedGroups.length > 0 || allowedUsers.length > 0;
 
-    if (allowedDomains.length > 0 || allowedUsers.length > 0) {
+    if (hasAnyRestriction) {
       const userEmail = identity.email;
       const userName = identity.username;
+      const userGroups = identity.groups ?? [];
 
-      if (!userEmail && !userName) {
-        log.warn(
-          "auth",
-          "OIDC login restricted but identity has no email or username for subject %s",
-          identity.subject,
-        );
-        return redirect("/login?s=error_restricted_access");
-      }
-
+      // Check if user is explicitly allowed by username or email
       if (allowedUsers.length > 0 && (allowedUsers.includes(userName) || (userEmail != null && allowedUsers.includes(userEmail)))) {
-        // User is explicitly allowed, skip domain check
+        // User is explicitly allowed, skip other checks
+      } else if (allowedGroups.length > 0 && userGroups.some((g) => allowedGroups.includes(g))) {
+        // User is in an allowed group, skip other checks
       } else if (allowedDomains.length > 0) {
         if (!userEmail) {
           log.warn(
@@ -93,12 +88,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           );
           return redirect("/login?s=error_restricted_access");
         }
-      } else {
+      } else if (allowedUsers.length > 0) {
         // allowed_users is set but user is not in it
         log.warn(
           "auth",
           "OIDC login rejected for %s — username not in allowed_users",
           userName,
+        );
+        return redirect("/login?s=error_restricted_access");
+      } else if (allowedGroups.length > 0) {
+        // allowed_groups is set but user is not in any allowed group
+        log.warn(
+          "auth",
+          "OIDC login rejected for %s — groups [%s] not in allowed_groups: %s",
+          userName,
+          userGroups.join(", "),
+          allowedGroups.join(", "),
+        );
+        return redirect("/login?s=error_restricted_access");
+      } else if (!userEmail && !userName) {
+        log.warn(
+          "auth",
+          "OIDC login restricted but identity has no email or username for subject %s",
+          identity.subject,
         );
         return redirect("/login?s=error_restricted_access");
       }

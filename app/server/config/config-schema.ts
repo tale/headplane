@@ -128,6 +128,10 @@ const oidcConfig = type({
   use_end_session: "boolean = false",
   token_endpoint_auth_method: '"client_secret_basic" | "client_secret_post" | "client_secret_jwt"?',
 
+  allowed_users: type("string[]").pipe(normalizeStringArray).optional(),
+  allowed_groups: type("string[]").pipe(normalizeStringArray).optional(),
+  allowed_domains: type("string[]").pipe(normalizeStringArray).optional(),
+
   // Old/deprecated options
   strict_validation: type("unknown").narrow(deprecatedField()).optional(),
 });

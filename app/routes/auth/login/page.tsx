@@ -32,7 +32,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       )
     : undefined;
 
-  if (context.oidc?.disableApiKeyLogin && oidcStatus?.state === "ready" && urlState !== "logout") {
+  // Don't auto-redirect to OIDC when there's an error state — the user needs
+  // to see the error message first.
+  const hasErrorState = urlState?.startsWith("error_");
+  if (context.oidc?.disableApiKeyLogin && oidcStatus?.state === "ready" && !urlState && !hasErrorState) {
     return redirect("/oidc/start");
   }
 

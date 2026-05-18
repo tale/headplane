@@ -70,6 +70,9 @@ export async function createAppContext(config: HeadplaneConfig) {
               config.oidc.token_endpoint_auth_method === "client_secret_jwt"
                 ? undefined
                 : config.oidc.token_endpoint_auth_method,
+            allowed_users: config.oidc.allowed_users,
+            allowed_groups: config.oidc.allowed_groups,
+            allowed_domains: config.oidc.allowed_domains,
             usePkce: config.oidc.use_pkce,
             scope: config.oidc.scope,
             subjectClaims: config.oidc.subject_claims,
