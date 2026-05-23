@@ -5,12 +5,14 @@ import log from "~/utils/log";
 import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
+import { disabled, enabled, type Feature } from "./feature";
 import { createHeadscaleInterface } from "./headscale/api";
+import type { RuntimeApiClient } from "./headscale/api/endpoints";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
-import { createAgentManager } from "./hp-agent";
-import { createOidcService } from "./oidc/provider";
-import { createAuthService } from "./web/auth";
+import { type AgentManager, createAgentManager } from "./hp-agent";
+import { createOidcService, type OidcService } from "./oidc/provider";
+import { createAuthService, type Principal } from "./web/auth";
 
 export type AppContext = Awaited<ReturnType<typeof createAppContext>>;
 
@@ -29,18 +31,12 @@ export async function createAppContext(config: HeadplaneConfig) {
   // falling back to the deprecated oidc.headscale_api_key for compatibility.
   const headscaleApiKey = config.headscale.api_key ?? config.oidc?.headscale_api_key;
 
-  let agents;
-  if (headscaleApiKey) {
-    agents = await createAgentManager(
-      config.integration?.agent,
-      config.headscale.url,
-      hsApi.getRuntimeClient(headscaleApiKey),
-      hsApi.clientHelpers.isAtleast("0.28.0"),
-      db,
-    );
-  } else if (config.integration?.agent?.enabled) {
-    log.warn("agent", "Agent is enabled but no headscale.api_key is configured");
-  }
+  const agents = await buildAgents(
+    config,
+    hsApi.clientHelpers.isAtleast("0.28.0"),
+    headscaleApiKey ? hsApi.getRuntimeClient(headscaleApiKey) : undefined,
+    db,
+  );
 
   const auth = createAuthService({
     secret: config.server.cookie_secret,
@@ -54,34 +50,43 @@ export async function createAppContext(config: HeadplaneConfig) {
     },
   });
 
-  const oidc =
-    config.oidc && config.oidc.enabled !== false && headscaleApiKey
-      ? {
-          service: createOidcService({
-            issuer: config.oidc.issuer,
-            clientId: config.oidc.client_id,
-            clientSecret: config.oidc.client_secret,
-            baseUrl: config.server.base_url ?? "",
-            authorizationEndpoint: config.oidc.authorization_endpoint,
-            tokenEndpoint: config.oidc.token_endpoint,
-            userinfoEndpoint: config.oidc.userinfo_endpoint,
-            endSessionEndpoint: config.oidc.end_session_endpoint,
-            tokenEndpointAuthMethod:
-              config.oidc.token_endpoint_auth_method === "client_secret_jwt"
-                ? undefined
-                : config.oidc.token_endpoint_auth_method,
-            usePkce: config.oidc.use_pkce,
-            scope: config.oidc.scope,
-            subjectClaims: config.oidc.subject_claims,
-            allowWeakRsaKeys: config.oidc.allow_weak_rsa_keys,
-            extraParams: config.oidc.extra_params,
-            profilePictureSource: config.oidc.profile_picture_source,
-            postLogoutRedirectUri: config.oidc.post_logout_redirect_uri,
-          }),
-          disableApiKeyLogin: config.oidc.disable_api_key_login,
-          useEndSession: config.oidc.use_end_session,
-        }
-      : undefined;
+  const oidc = buildOidc(config, headscaleApiKey);
+
+  const hsLive = createLiveStore([nodesResource, usersResource]);
+  const hs = await loadHeadscaleConfig(
+    config.headscale.config_path,
+    config.headscale.config_strict,
+    config.headscale.dns_records_path,
+  );
+  const integration = await loadIntegration(config.integration);
+
+  // Disposers run in reverse-registration order on shutdown.
+  const disposers: Array<() => Promise<void> | void> = [() => auth.stop(), () => hsLive.dispose()];
+  if (agents.state === "enabled") {
+    disposers.push(() => agents.value.dispose());
+  }
+
+  async function apiForRequest(
+    request: Request,
+  ): Promise<{ principal: Principal; api: RuntimeApiClient }> {
+    const principal = await auth.require(request);
+    const apiKey = auth.getHeadscaleApiKey(principal);
+    return { principal, api: hsApi.getRuntimeClient(apiKey) };
+  }
+
+  function startServices() {
+    auth.start();
+  }
+
+  async function dispose() {
+    for (const d of [...disposers].reverse()) {
+      try {
+        await d();
+      } catch (error) {
+        log.warn("server", "Error during shutdown: %s", String(error));
+      }
+    }
+  }
 
   return {
     config,
@@ -91,12 +96,80 @@ export async function createAppContext(config: HeadplaneConfig) {
     agents,
     auth,
     oidc,
-    hsLive: createLiveStore([nodesResource, usersResource]),
-    hs: await loadHeadscaleConfig(
-      config.headscale.config_path,
-      config.headscale.config_strict,
-      config.headscale.dns_records_path,
-    ),
-    integration: await loadIntegration(config.integration),
+    hsLive,
+    hs,
+    integration,
+    apiForRequest,
+    startServices,
+    dispose,
   };
+}
+
+function buildOidc(
+  config: HeadplaneConfig,
+  headscaleApiKey: string | undefined,
+): Feature<OidcService> {
+  if (!config.oidc) {
+    return disabled("OIDC is not configured");
+  }
+  if (config.oidc.enabled === false) {
+    return disabled("OIDC is disabled in the configuration");
+  }
+  if (!headscaleApiKey) {
+    return disabled("OIDC requires headscale.api_key to be configured");
+  }
+
+  return enabled(
+    createOidcService({
+      issuer: config.oidc.issuer,
+      clientId: config.oidc.client_id,
+      clientSecret: config.oidc.client_secret,
+      baseUrl: config.server.base_url ?? "",
+      authorizationEndpoint: config.oidc.authorization_endpoint,
+      tokenEndpoint: config.oidc.token_endpoint,
+      userinfoEndpoint: config.oidc.userinfo_endpoint,
+      endSessionEndpoint: config.oidc.end_session_endpoint,
+      tokenEndpointAuthMethod:
+        config.oidc.token_endpoint_auth_method === "client_secret_jwt"
+          ? undefined
+          : config.oidc.token_endpoint_auth_method,
+      usePkce: config.oidc.use_pkce,
+      scope: config.oidc.scope,
+      subjectClaims: config.oidc.subject_claims,
+      allowWeakRsaKeys: config.oidc.allow_weak_rsa_keys,
+      extraParams: config.oidc.extra_params,
+      profilePictureSource: config.oidc.profile_picture_source,
+      postLogoutRedirectUri: config.oidc.post_logout_redirect_uri,
+    }),
+  );
+}
+
+async function buildAgents(
+  config: HeadplaneConfig,
+  supportsTagOnlyKeys: boolean,
+  apiClient: RuntimeApiClient | undefined,
+  db: Awaited<ReturnType<typeof createDbClient>>,
+): Promise<Feature<AgentManager>> {
+  const agentConfig = config.integration?.agent;
+  if (!agentConfig?.enabled) {
+    return disabled("Agent is not enabled in the configuration");
+  }
+  if (!apiClient) {
+    return disabled("Agent requires headscale.api_key to be configured");
+  }
+  if (!supportsTagOnlyKeys) {
+    return disabled("Agent requires Headscale 0.28 or newer");
+  }
+
+  const manager = await createAgentManager(
+    agentConfig,
+    config.headscale.url,
+    apiClient,
+    supportsTagOnlyKeys,
+    db,
+  );
+  if (!manager) {
+    return disabled("Agent failed to initialize (see logs)");
+  }
+  return enabled(manager);
 }

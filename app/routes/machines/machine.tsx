@@ -22,7 +22,6 @@ import Routes from "./dialogs/routes";
 import { machineAction } from "./machine-actions";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
   if (!params.id) {
     throw new Error("No machine ID provided");
   }
@@ -38,7 +37,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     }
   }
 
-  const api = context.hsApi.getRuntimeClient(context.auth.getHeadscaleApiKey(principal));
+  const { api } = await context.apiForRequest(request);
   const [nodesSnap, usersSnap] = await Promise.all([
     context.hsLive.get(nodesResource, api),
     context.hsLive.get(usersResource, api),
@@ -50,18 +49,19 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     throw data(null, { status: 404 });
   }
 
-  const lookup = await context.agents?.lookup([node.nodeKey]);
+  const agents = context.agents.state === "enabled" ? context.agents.value : undefined;
+  const lookup = await agents?.lookup([node.nodeKey]);
   const [enhancedNode] = mapNodes([node], lookup);
   const tags = [...node.tags].toSorted();
   const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
-  const agentSync = context.agents?.lastSync();
+  const agentSync = agents?.lastSync();
 
   return {
     agent: agentSync
       ? {
           syncedAt: agentSync.syncedAt?.toISOString() ?? null,
           nodeCount: agentSync.nodeCount,
-          nodeKey: context.agents?.agentNodeKey(),
+          nodeKey: agents?.agentNodeKey(),
         }
       : undefined,
     existingTags: sortNodeTags(nodes),

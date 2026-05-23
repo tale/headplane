@@ -36,9 +36,18 @@ try {
 }
 
 const ctx = await createAppContext(config);
-ctx.auth.start();
+ctx.startServices();
 
 export { config };
+
+/**
+ * Disposes the per-process context. Invoked by the production
+ * supervisor on SIGTERM/SIGINT and by the dev Vite plugin on HMR
+ * reload.
+ */
+export async function dispose(): Promise<void> {
+  await ctx.dispose();
+}
 
 // TODO: `getLoadContext` is the right place to handle reverse proxy
 // translation — better than doing it in the OIDC client because it

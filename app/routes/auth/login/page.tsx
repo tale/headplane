@@ -24,7 +24,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const qp = new URL(request.url).searchParams;
   const urlState = qp.get("s") ?? undefined;
 
-  const oidcService = context.oidc?.service;
+  const oidcService = context.oidc.state === "enabled" ? context.oidc.value : undefined;
   const oidcStatus = oidcService
     ? await oidcService.discover().then(
         (r) => (r.ok ? oidcService.status() : oidcService.status()),
@@ -32,7 +32,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       )
     : undefined;
 
-  if (context.oidc?.disableApiKeyLogin && oidcStatus?.state === "ready" && urlState !== "logout") {
+  if (
+    oidcService &&
+    context.config.oidc?.disable_api_key_login &&
+    oidcStatus?.state === "ready" &&
+    urlState !== "logout"
+  ) {
     return redirect("/oidc/start");
   }
 

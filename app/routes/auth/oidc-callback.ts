@@ -7,10 +7,10 @@ import { createOidcStateCookie } from "~/utils/oidc-state";
 import type { Route } from "./+types/oidc-callback";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const service = context.oidc?.service;
-  if (!service) {
-    throw data("OIDC is not enabled or misconfigured", { status: 501 });
+  if (context.oidc.state !== "enabled") {
+    throw data(`OIDC is unavailable: ${context.oidc.reason}`, { status: 501 });
   }
+  const service = context.oidc.value;
 
   const url = new URL(request.url);
   if (url.searchParams.toString().length === 0) {
@@ -68,7 +68,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // Only persist the id_token when RP-initiated logout is enabled — otherwise
   // we'd be storing a credential we never use.
-  const idToken = context.oidc?.useEndSession ? identity.idToken : undefined;
+  const idToken = context.config.oidc?.use_end_session ? identity.idToken : undefined;
 
   return redirect("/", {
     headers: {

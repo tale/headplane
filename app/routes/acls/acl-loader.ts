@@ -29,8 +29,7 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
   };
 
   // Try to load the ACL policy from the API.
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const { api } = await context.apiForRequest(request);
   try {
     const { policy, updatedAt } = await api.getPolicy();
     flags.writable = updatedAt !== null;

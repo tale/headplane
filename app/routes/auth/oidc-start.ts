@@ -10,10 +10,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return redirect("/");
   } catch {}
 
-  const service = context.oidc?.service;
-  if (!service) {
-    throw data("OIDC is not enabled or misconfigured", { status: 501 });
+  if (context.oidc.state !== "enabled") {
+    throw data(`OIDC is unavailable: ${context.oidc.reason}`, { status: 501 });
   }
+  const service = context.oidc.value;
 
   const result = await service.startFlow();
   if (!result.ok) {

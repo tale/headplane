@@ -12,7 +12,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { composeListener, startHttpServer } from "../../runtime/http";
-import requestListener, { config } from "./app";
+import requestListener, { config, dispose } from "./app";
 
 // `import.meta.url` resolves to `build/server/index.js`; the built
 // client lives next to it at `build/client/`.
@@ -27,4 +27,5 @@ startHttpServer({
     immutableAssets: true,
     requestListener,
   }),
+  onShutdown: dispose,
 });

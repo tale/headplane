@@ -37,17 +37,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     throw data(sshErrors.wasm_missing, 405);
   }
 
-  if (context.agents == null) {
+  if (context.agents.state !== "enabled") {
     throw data(sshErrors.agent_required, 400);
   }
 
-  const principal = await context.auth.require(request);
+  const { principal, api } = await context.apiForRequest(request);
   if (principal.kind === "api_key") {
     throw data(sshErrors.oidc_required, 403);
   }
-
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
 
   const hostname = params.id;
   const username = new URL(request.url).searchParams.get("user") || undefined;

@@ -4,9 +4,7 @@ import log from "~/utils/log";
 import type { Route } from "./+types/live";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const { api } = await context.apiForRequest(request);
 
   // Ensure resources are loaded before streaming
   await Promise.all([

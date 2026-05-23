@@ -24,12 +24,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   // Unclaimed users they can pick from before anything else.
   let unlinked = false;
   if (
-    typeof context.oidc === "object" &&
+    context.oidc.state === "enabled" &&
     principal.kind === "oidc" &&
     !principal.user.headscaleUserId
   ) {
-    const apiKey = context.auth.getHeadscaleApiKey(principal);
-    const api = context.hsApi.getRuntimeClient(apiKey);
+    const { api } = await context.apiForRequest(request);
 
     let headscaleUsers: { id: string; name: string }[] = [];
     try {
@@ -64,8 +63,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   // No UI access — show the download/connect page
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const { api } = await context.apiForRequest(request);
 
   let linkedUserName: string | undefined;
   if (principal.kind === "oidc" && principal.user.headscaleUserId) {

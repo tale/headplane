@@ -7,10 +7,9 @@ import { Capabilities } from "~/server/web/roles";
 import type { Route } from "./+types/machine";
 
 export async function machineAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
+  const { principal, api } = await context.apiForRequest(request);
 
   const formData = await request.formData();
-  const api = context.hsApi.getRuntimeClient(context.auth.getHeadscaleApiKey(principal));
 
   const action = formData.get("action_id")?.toString();
   if (!action) {

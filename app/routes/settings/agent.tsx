@@ -11,13 +11,13 @@ import { formatTimeDelta } from "~/utils/time";
 import type { Route } from "./+types/agent";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
+  await context.auth.require(request);
 
-  if (!context.agents) {
-    return { enabled: false as const };
+  if (context.agents.state !== "enabled") {
+    return { enabled: false as const, reason: context.agents.reason };
   }
 
-  const sync = context.agents.lastSync();
+  const sync = context.agents.value.lastSync();
   return {
     enabled: true as const,
     syncedAt: sync.syncedAt?.toISOString() ?? null,
@@ -29,12 +29,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   await context.auth.require(request);
 
-  if (!context.agents) {
-    return { success: false, error: "Agent is not enabled" };
+  if (context.agents.state !== "enabled") {
+    return { success: false, error: context.agents.reason };
   }
 
-  await context.agents.triggerSync();
-  const sync = context.agents.lastSync();
+  await context.agents.value.triggerSync();
+  const sync = context.agents.value.lastSync();
   return { success: !sync.error, error: sync.error };
 }
 
@@ -47,7 +47,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
         <Title>Headplane Agent</Title>
         <Notice title="Agent Not Enabled">
-          The Headplane Agent is not enabled. To learn how to set up the agent, visit the{" "}
+          {loaderData.reason}. To learn how to set up the agent, visit the{" "}
           <Link external styled to="https://headplane.dev/docs/agent">
             documentation
           </Link>

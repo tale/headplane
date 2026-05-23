@@ -7,9 +7,7 @@ import type { PreAuthKey } from "~/types";
 import type { Route } from "./+types/overview";
 
 export async function authKeysAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const { principal, api } = await context.apiForRequest(request);
 
   const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
   const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);

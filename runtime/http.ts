@@ -172,6 +172,13 @@ export interface StartOptions {
   listener: RequestListener;
   tls?: HttpsServerOptions;
   logger?: Logger;
+  /**
+   * Optional async hook invoked on SIGINT/SIGTERM after the HTTP
+   * server stops accepting new connections but before the process
+   * exits. Use this to dispose long-lived resources (timers,
+   * subprocesses, DB handles).
+   */
+  onShutdown?: () => Promise<void> | void;
 }
 
 /**
@@ -189,15 +196,24 @@ export function startHttpServer(opts: StartOptions): Server {
     log.info("Listening on %s://%s:%s", proto, opts.host, opts.port);
   });
 
-  const shutdown = (signal: string) => {
+  const shutdown = async (signal: string) => {
     log.info("Received %s, shutting down...", signal);
-    server.close(() => process.exit(0));
+    server.close(async () => {
+      if (opts.onShutdown) {
+        try {
+          await opts.onShutdown();
+        } catch (err) {
+          log.error("Error during shutdown hook: %o", err);
+        }
+      }
+      process.exit(0);
+    });
     // Force exit if connections don't drain in time.
     setTimeout(() => process.exit(0), 5_000).unref();
   };
 
-  process.once("SIGINT", () => shutdown("SIGINT"));
-  process.once("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGINT", () => void shutdown("SIGINT"));
+  process.once("SIGTERM", () => void shutdown("SIGTERM"));
 
   return server;
 }

@@ -8,7 +8,8 @@ import type { Route } from "./+types/overview";
 export async function loader({ context }: Route.LoaderArgs) {
   return {
     config: context.hs.writable(),
-    isOidcEnabled: context.oidc?.service.status().state === "ready",
+    isOidcEnabled:
+      context.oidc.state === "enabled" && context.oidc.value.status().state === "ready",
   };
 }
 

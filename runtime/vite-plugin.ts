@@ -18,6 +18,11 @@ export interface DevServerOptions {
   publicDir: string;
 }
 
+interface AppModule {
+  default: RequestListener;
+  dispose?: () => Promise<void> | void;
+}
+
 export function headplaneDevServer(options: DevServerOptions): Plugin {
   return {
     name: "headplane:dev-server",
@@ -29,6 +34,12 @@ export function headplaneDevServer(options: DevServerOptions): Plugin {
         res.statusCode = 503;
         res.end("Server entry not loaded yet");
       };
+
+      // Track the last-loaded module identity so we can call its
+      // `dispose` when Vite swaps in a new one on HMR. Without this
+      // the LiveStore and other long-lived services leak intervals
+      // and subprocesses on every reload.
+      let currentModule: AppModule | null = null;
 
       const composed = composeListener({
         basename: options.basename,
@@ -43,9 +54,15 @@ export function headplaneDevServer(options: DevServerOptions): Plugin {
       return () => {
         server.middlewares.use(async (req, res, next) => {
           try {
-            const mod = (await server.ssrLoadModule(options.entry)) as {
-              default: RequestListener;
-            };
+            const mod = (await server.ssrLoadModule(options.entry)) as AppModule;
+            if (currentModule && currentModule !== mod) {
+              try {
+                await currentModule.dispose?.();
+              } catch (err) {
+                server.config.logger.warn(`[headplane:dev-server] dispose failed: ${String(err)}`);
+              }
+            }
+            currentModule = mod;
             appListener = mod.default;
             composed(req, res);
           } catch (err) {

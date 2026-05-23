@@ -31,10 +31,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   try {
-    const principal = await context.auth.require(request);
-
-    const apiKey = context.auth.getHeadscaleApiKey(principal);
-    const api = context.hsApi.getRuntimeClient(apiKey);
+    const { principal, api } = await context.apiForRequest(request);
 
     const user =
       principal.kind === "oidc"

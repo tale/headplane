@@ -30,7 +30,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const writablePermission = context.auth.can(principal, Capabilities.write_machines);
 
-  const api = context.hsApi.getRuntimeClient(context.auth.getHeadscaleApiKey(principal));
+  const { api } = await context.apiForRequest(request);
   const [nodesSnap, usersSnap] = await Promise.all([
     context.hsLive.get(nodesResource, api),
     context.hsLive.get(usersResource, api),
@@ -45,17 +45,18 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
   }
 
-  const stats = await context.agents?.lookup(nodes.map((node) => node.nodeKey));
+  const agents = context.agents.state === "enabled" ? context.agents.value : undefined;
+  const stats = await agents?.lookup(nodes.map((node) => node.nodeKey));
   const populatedNodes = mapNodes(nodes, stats);
   const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
-  const agentSync = context.agents?.lastSync();
+  const agentSync = agents?.lastSync();
 
   return {
     agent: agentSync
       ? {
           syncedAt: agentSync.syncedAt?.toISOString() ?? null,
           nodeCount: agentSync.nodeCount,
-          nodeKey: context.agents?.agentNodeKey(),
+          nodeKey: agents?.agentNodeKey(),
         }
       : undefined,
     headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,

@@ -23,15 +23,20 @@ export async function action({ request, context }: ActionFunctionArgs<AppContext
   // ended. Disabled by default because the post_logout_redirect_uri must be
   // pre-registered on the IdP — turning this on without registering it would
   // strand users on the IdP's error page.
-  if (principal?.kind === "oidc" && context.oidc?.useEndSession && context.oidc.service) {
-    const status = context.oidc.service.status();
+  if (
+    principal?.kind === "oidc" &&
+    context.oidc.state === "enabled" &&
+    context.config.oidc?.use_end_session
+  ) {
+    const service = context.oidc.value;
+    const status = service.status();
     if (status.state !== "ready") {
       // Trigger discovery if it hasn't happened yet so we can find the
       // end_session_endpoint without forcing a re-login.
-      await context.oidc.service.discover();
+      await service.discover();
     }
 
-    const endSessionUrl = context.oidc.service.buildEndSessionUrl(principal.idToken);
+    const endSessionUrl = service.buildEndSessionUrl(principal.idToken);
     if (endSessionUrl) {
       url = endSessionUrl;
     }

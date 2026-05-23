@@ -24,8 +24,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const apiKey = context.auth.getHeadscaleApiKey(principal);
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const { api } = await context.apiForRequest(request);
   switch (action) {
     case "create_user": {
       const name = formData.get("username")?.toString();
