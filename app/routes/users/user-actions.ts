@@ -37,7 +37,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      await api.createUser(name, email, displayName);
+      await api.users.create({ name, email, displayName });
       await context.hsLive.refresh(usersResource, api);
       return { message: "User created successfully" };
     }
@@ -49,7 +49,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      await api.deleteUser(userId);
+      await api.users.delete(userId);
       await context.hsLive.refresh(usersResource, api);
       return { message: "User deleted successfully" };
     }
@@ -60,7 +60,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         return data({ success: false }, 400);
       }
 
-      const users = await api.getUsers(userId);
+      const users = await api.users.list({ id: userId });
       const user = users.find((user) => user.id === userId);
       if (!user) {
         throw data(`No user found with id: ${userId}`, { status: 400 });
@@ -73,7 +73,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      await api.renameUser(userId, newName);
+      await api.users.rename(userId, newName);
       await context.hsLive.refresh(usersResource, api);
       return { message: "User renamed successfully" };
     }
@@ -86,7 +86,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      const users = await api.getUsers(userId);
+      const users = await api.users.list({ id: userId });
       const user = users.find((user) => user.id === userId);
       if (!user) {
         throw data("Specified user not found", {
@@ -117,7 +117,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         throw data("Missing `user_id` in the form data.", { status: 400 });
       }
 
-      const users = await api.getUsers(userId);
+      const users = await api.users.list({ id: userId });
       const user = users.find((user) => user.id === userId);
       if (!user) {
         throw data("Specified user not found", { status: 400 });
@@ -144,7 +144,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      const users = await api.getUsers(userId);
+      const users = await api.users.list({ id: userId });
       const user = users.find((user) => user.id === userId);
       if (!user) {
         throw data("Specified user not found", { status: 400 });

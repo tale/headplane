@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { CoreV1Api, KubeConfig } from "@kubernetes/client-node";
 import { type } from "arktype";
 
-import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import type { HeadscaleClient } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
@@ -154,7 +154,7 @@ export default class KubernetesIntegration extends Integration<typeof configSche
     }
   }
 
-  async onConfigChange(client: RuntimeApiClient) {
+  async onConfigChange(client: HeadscaleClient) {
     if (!this.pid) {
       return;
     }

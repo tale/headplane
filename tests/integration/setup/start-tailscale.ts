@@ -2,9 +2,9 @@ import { createInterface } from "node:readline";
 
 import tc from "testcontainers";
 
-import hashes from "~/openapi-operation-hashes.json";
-
-export type Version = keyof typeof hashes;
+// Imported by `env.ts` which owns the canonical version list; keep this
+// loose to avoid an import cycle.
+export type Version = string;
 
 export interface TailscaleNodeEnv {
   container: tc.StartedTestContainer;

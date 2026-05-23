@@ -31,7 +31,7 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
   // Try to load the ACL policy from the API.
   const { api } = await context.apiForRequest(request);
   try {
-    const { policy, updatedAt } = await api.getPolicy();
+    const { policy, updatedAt } = await api.policy.get();
     flags.writable = updatedAt !== null;
     flags.policy = policy;
     return flags;

@@ -1,6 +1,6 @@
 import log from "~/utils/log";
 
-import type { RuntimeApiClient } from "./api/endpoints";
+import type { HeadscaleClient } from "./api";
 
 /**
  * Defines a resource that can be fetched and polled by the live store.
@@ -19,7 +19,7 @@ export interface ResourceDefinition<T> {
   /**
    * A callback to fire to get the latest data for this resource
    */
-  readonly fetch: (client: RuntimeApiClient) => Promise<T>;
+  readonly fetch: (client: HeadscaleClient) => Promise<T>;
 }
 
 /**
@@ -37,12 +37,12 @@ export function defineResource<T>(
 
 export const nodesResource = defineResource("nodes", {
   pollInterval: 5_000,
-  fetch: (api) => api.getNodes(),
+  fetch: (api) => api.nodes.list(),
 });
 
 export const usersResource = defineResource("users", {
   pollInterval: 15_000,
-  fetch: (api) => api.getUsers(),
+  fetch: (api) => api.users.list(),
 });
 
 interface Snapshot<T> {
@@ -54,8 +54,8 @@ interface Snapshot<T> {
 type ChangeListener = (resourceKey: string, version: string) => void;
 
 export interface LiveStore {
-  get<T>(resource: ResourceDefinition<T>, apiClient: RuntimeApiClient): Promise<Snapshot<T>>;
-  refresh<T>(resource: ResourceDefinition<T>, apiClient: RuntimeApiClient): Promise<void>;
+  get<T>(resource: ResourceDefinition<T>, apiClient: HeadscaleClient): Promise<Snapshot<T>>;
+  refresh<T>(resource: ResourceDefinition<T>, apiClient: HeadscaleClient): Promise<void>;
   getVersions(): Record<string, string>;
   subscribe(listener: ChangeListener): () => void;
   dispose(): void;
@@ -66,7 +66,7 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
   const serializedCache = new Map<string, string>();
   const listeners = new Set<ChangeListener>();
   const intervals = new Map<string, ReturnType<typeof setInterval>>();
-  let storedApiClient: RuntimeApiClient | undefined;
+  let storedApiClient: HeadscaleClient | undefined;
   let versionCounter = 0;
 
   function notifyListeners(resourceKey: string, version: string) {
@@ -77,7 +77,7 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
 
   async function fetchResource(
     resource: ResourceDefinition<unknown>,
-    apiClient: RuntimeApiClient,
+    apiClient: HeadscaleClient,
   ): Promise<void> {
     const data = await resource.fetch(apiClient);
     const json = JSON.stringify(data);
@@ -138,7 +138,7 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
   return {
     async get<T>(
       resource: ResourceDefinition<T>,
-      apiClient: RuntimeApiClient,
+      apiClient: HeadscaleClient,
     ): Promise<Snapshot<T>> {
       storedApiClient = apiClient;
       const def = findResource(resource.key);
@@ -154,7 +154,7 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
       return snapshots.get(resource.key) as Snapshot<T>;
     },
 
-    async refresh<T>(resource: ResourceDefinition<T>, apiClient: RuntimeApiClient): Promise<void> {
+    async refresh<T>(resource: ResourceDefinition<T>, apiClient: HeadscaleClient): Promise<void> {
       storedApiClient = apiClient;
       const def = findResource(resource.key);
       if (!def) {

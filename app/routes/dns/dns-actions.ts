@@ -17,7 +17,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
   }
 
   // We only need it for health checks which don't require auth
-  const api = context.hsApi.getRuntimeClient("fake-api-key");
+  const api = context.headscale.client("fake-api-key");
 
   const formData = await request.formData();
   const action = formData.get("action_id")?.toString();

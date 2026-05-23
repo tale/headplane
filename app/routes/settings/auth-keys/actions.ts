@@ -20,7 +20,7 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
 
   async function checkSelfServiceOwnership(userId: string) {
     if (canGenerateAny || !canGenerateOwn) return;
-    const [targetUser] = await api.getUsers(userId);
+    const [targetUser] = await api.users.list({ id: userId });
     if (!targetUser) {
       throw data("User not found.", { status: 404 });
     }
@@ -84,13 +84,13 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
       const date = new Date();
       date.setDate(date.getDate() + day);
 
-      const key = await api.createPreAuthKey(
+      const key = await api.preAuthKeys.create({
         user,
-        ephemeral === "on",
-        reusable === "on",
-        date,
-        aclTags.length > 0 ? aclTags : null,
-      );
+        ephemeral: ephemeral === "on",
+        reusable: reusable === "on",
+        expiration: date,
+        aclTags: aclTags.length > 0 ? aclTags : null,
+      });
 
       return data({ success: true as const, key: key.key });
     }
@@ -112,7 +112,11 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
       }
 
       await checkSelfServiceOwnership(user);
-      await api.expirePreAuthKey(user, { id: keyId, key } as unknown as PreAuthKey);
+      await api.preAuthKeys.expire({
+        id: keyId,
+        key,
+        user: { name: user },
+      } as unknown as PreAuthKey);
       return data("Pre-auth key expired");
     }
 

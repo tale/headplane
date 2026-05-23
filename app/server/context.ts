@@ -6,8 +6,7 @@ import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
-import { createHeadscaleInterface } from "./headscale/api";
-import type { RuntimeApiClient } from "./headscale/api/endpoints";
+import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
 import { type AgentManager, createAgentManager } from "./hp-agent";
@@ -22,10 +21,10 @@ declare module "react-router" {
 
 export async function createAppContext(config: HeadplaneConfig) {
   const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
-  const hsApi = await createHeadscaleInterface(
-    config.headscale.url,
-    config.headscale.tls_cert_path,
-  );
+  const headscale = await createHeadscale({
+    url: config.headscale.url,
+    certPath: config.headscale.tls_cert_path,
+  });
 
   // Resolve the Headscale API key: headscale.api_key takes precedence,
   // falling back to the deprecated oidc.headscale_api_key for compatibility.
@@ -33,8 +32,8 @@ export async function createAppContext(config: HeadplaneConfig) {
 
   const agents = await buildAgents(
     config,
-    hsApi.clientHelpers.isAtleast("0.28.0"),
-    headscaleApiKey ? hsApi.getRuntimeClient(headscaleApiKey) : undefined,
+    headscale.capabilities.preAuthKeysHaveStableIds,
+    headscaleApiKey ? headscale.client(headscaleApiKey) : undefined,
     db,
   );
 
@@ -61,17 +60,21 @@ export async function createAppContext(config: HeadplaneConfig) {
   const integration = await loadIntegration(config.integration);
 
   // Disposers run in reverse-registration order on shutdown.
-  const disposers: Array<() => Promise<void> | void> = [() => auth.stop(), () => hsLive.dispose()];
+  const disposers: Array<() => Promise<void> | void> = [
+    () => auth.stop(),
+    () => hsLive.dispose(),
+    () => headscale.dispose(),
+  ];
   if (agents.state === "enabled") {
     disposers.push(() => agents.value.dispose());
   }
 
   async function apiForRequest(
     request: Request,
-  ): Promise<{ principal: Principal; api: RuntimeApiClient }> {
+  ): Promise<{ principal: Principal; api: HeadscaleClient }> {
     const principal = await auth.require(request);
     const apiKey = auth.getHeadscaleApiKey(principal);
-    return { principal, api: hsApi.getRuntimeClient(apiKey) };
+    return { principal, api: headscale.client(apiKey) };
   }
 
   function startServices() {
@@ -91,7 +94,7 @@ export async function createAppContext(config: HeadplaneConfig) {
   return {
     config,
     db,
-    hsApi,
+    headscale,
     headscaleApiKey,
     agents,
     auth,
@@ -147,7 +150,7 @@ function buildOidc(
 async function buildAgents(
   config: HeadplaneConfig,
   supportsTagOnlyKeys: boolean,
-  apiClient: RuntimeApiClient | undefined,
+  apiClient: HeadscaleClient | undefined,
   db: Awaited<ReturnType<typeof createDbClient>>,
 ): Promise<Feature<AgentManager>> {
   const agentConfig = config.integration?.agent;

@@ -11,7 +11,7 @@ import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
 import { hostInfo } from "./db/schema";
-import { RuntimeApiClient } from "./headscale/api/endpoints";
+import type { HeadscaleClient } from "./headscale/api";
 
 export interface AgentManager {
   lookup(nodeKeys: string[]): Promise<Record<string, HostInfo>>;
@@ -46,7 +46,7 @@ async function hasExistingState(workDir: string): Promise<boolean> {
 export async function createAgentManager(
   agentConfig: NonNullable<NonNullable<HeadplaneConfig["integration"]>["agent"]> | undefined,
   headscaleUrl: string,
-  apiClient: RuntimeApiClient,
+  apiClient: HeadscaleClient,
   supportsTagOnlyKeys: boolean,
   db: NodeSQLiteDatabase,
 ): Promise<AgentManager | undefined> {
@@ -101,9 +101,13 @@ export async function createAgentManager(
 
   async function generateAuthKey(): Promise<string> {
     const expiration = new Date(Date.now() + 5 * 60_000);
-    const pak = await apiClient.createPreAuthKey(null, false, false, expiration, [
-      `tag:${hostName}`,
-    ]);
+    const pak = await apiClient.preAuthKeys.create({
+      user: null,
+      ephemeral: false,
+      reusable: false,
+      expiration,
+      aclTags: [`tag:${hostName}`],
+    });
     return pak.key;
   }
 
@@ -272,7 +276,7 @@ export async function createAgentManager(
    */
   async function pruneStaleHostInfo() {
     try {
-      const nodes = await apiClient.getNodes();
+      const nodes = await apiClient.nodes.list();
       const activeKeys = nodes.map((n) => n.nodeKey);
 
       if (activeKeys.length === 0) {
@@ -298,11 +302,11 @@ export async function createAgentManager(
 
   async function pruneEphemeralNodes() {
     try {
-      const nodes = await apiClient.getNodes();
+      const nodes = await apiClient.nodes.list();
       const toPrune = nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online);
 
       for (const node of toPrune) {
-        await apiClient.deleteNode(node.id);
+        await apiClient.nodes.delete(node.id);
         log.info("agent", "Pruned offline ephemeral node %s", node.givenName);
       }
     } catch (error) {

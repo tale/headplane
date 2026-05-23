@@ -35,13 +35,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   // Use a fake API key for healthcheck
-  const api = context.hsApi.getRuntimeClient("fake-api-key");
+  const api = context.headscale.client("fake-api-key");
   const healthy = await api.isHealthy();
 
   const body = {
     status: healthy ? "healthy" : "unhealthy",
     headplane_version: __VERSION__,
-    headscale_canonical_version: healthy ? context.hsApi.apiVersion : "unknown",
+    headscale_canonical_version: healthy ? context.headscale.version.raw : "unknown",
     internal_versions: {
       node: versions.node,
       v8: versions.v8,

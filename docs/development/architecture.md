@@ -171,7 +171,7 @@ export interface AppRuntime {
   db: DbClient;
   auth: AuthService;
   oidc?: OidcService;
-  hsApi: HeadscaleInterface;
+  headscale: Headscale;
   agents?: AgentManager;
   stop(): Promise<void>;
 }
@@ -300,7 +300,7 @@ function createTestRuntime(overrides: Partial<AppRuntime> = {}): AppRuntime {
     config: testConfig,
     db: createTestDb(),
     auth: createTestAuth(),
-    hsApi: createTestHsApi(),
+    headscale: createTestHeadscale(),
     stop: async () => {},
     ...overrides,
   };

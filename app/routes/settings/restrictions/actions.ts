@@ -29,7 +29,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
   }
 
   // We only need healthchecks which don't rely on an API key
-  const api = context.hsApi.getRuntimeClient("fake-api-key");
+  const api = context.headscale.client("fake-api-key");
   switch (action) {
     case "add_domain": {
       const domain = formData.get("domain")?.toString()?.trim();

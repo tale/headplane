@@ -28,7 +28,7 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 
   const { api } = await context.apiForRequest(request);
   try {
-    const { policy, updatedAt } = await api.setPolicy(policyData);
+    const { policy, updatedAt } = await api.policy.set(policyData);
     return data({
       success: true,
       error: undefined,
@@ -56,7 +56,7 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
 
       // Starting in Headscale 0.27.0 the ACLs parsing was changed meaning
       // we need to reference other error messages based on API version.
-      if (context.hsApi.clientHelpers.isAtleast("0.27.0")) {
+      if (context.headscale.capabilities.policyErrorsUseModernFormat) {
         if (message.includes("parsing HuJSON:")) {
           const cutIndex = message.indexOf("parsing HuJSON:");
           const trimmed =

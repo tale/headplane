@@ -33,9 +33,9 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     };
   }
 
-  const api = context.hsApi.getRuntimeClient(apiKey);
+  const api = context.headscale.client(apiKey);
   try {
-    const apiKeys = await api.getApiKeys();
+    const apiKeys = await api.apiKeys.list();
 
     // We don't need to check for 0 API keys because this request cannot
     // be authenticated correctly without an API key

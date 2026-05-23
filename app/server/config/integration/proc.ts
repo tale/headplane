@@ -2,7 +2,7 @@ import { platform } from "node:os";
 
 import { type } from "arktype";
 
-import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import type { HeadscaleClient } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
@@ -51,7 +51,7 @@ export default class ProcIntegration extends Integration<typeof configSchema.ful
     }
   }
 
-  async onConfigChange(client: RuntimeApiClient) {
+  async onConfigChange(client: HeadscaleClient) {
     if (!this.pid) {
       return;
     }

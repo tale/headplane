@@ -1,16 +1,18 @@
-import hashes from "~/openapi-operation-hashes.json";
-import { createHeadscaleInterface, type HeadscaleApiInterface } from "~/server/headscale/api";
+import { createHeadscale, type Headscale } from "~/server/headscale/api";
 
 import { type HeadscaleEnv, startHeadscale } from "./start-headscale";
 import { startTailscaleNode, TailscaleNodeEnv } from "./start-tailscale";
 
-export type Version = keyof typeof hashes;
-export const HS_VERSIONS = Object.keys(hashes) as Version[];
+// The set of Headscale versions integration tests run against. Listed
+// explicitly (rather than derived from a generated manifest) so the
+// supported version matrix lives next to the code that uses it.
+export const HS_VERSIONS = ["0.26.1", "0.27.0", "0.27.1", "0.28.0"] as const;
+export type Version = (typeof HS_VERSIONS)[number];
 
 interface VersionStateEntry {
   env: HeadscaleEnv;
   tailscaleNode: TailscaleNodeEnv;
-  bootstrap: HeadscaleApiInterface;
+  bootstrap: Headscale;
 }
 
 const versionState = new Map<Version, VersionStateEntry>();
@@ -21,7 +23,7 @@ async function ensureVersion(version: Version) {
 
   const env = await startHeadscale(version);
   const tailscaleNode = await startTailscaleNode(version, env.container.getMappedPort(8080));
-  const bootstrap = await createHeadscaleInterface(env.apiUrl);
+  const bootstrap = await createHeadscale({ url: env.apiUrl });
 
   const entry = { env, tailscaleNode, bootstrap };
   versionState.set(version, entry);
@@ -35,12 +37,7 @@ export async function getBootstrapClient(version: Version) {
 
 export async function getRuntimeClient(version: Version) {
   const { env, bootstrap } = await ensureVersion(version);
-  return bootstrap.getRuntimeClient(env.apiKey);
-}
-
-export async function getIsAtLeast(version: Version) {
-  const { env, bootstrap } = await ensureVersion(version);
-  return bootstrap.clientHelpers.isAtleast;
+  return bootstrap.client(env.apiKey);
 }
 
 export async function getNode(version: Version) {
@@ -52,7 +49,9 @@ export async function getNode(version: Version) {
 }
 
 export async function stopAllVersions() {
-  for (const { env, tailscaleNode } of versionState.values()) {
+  for (const { env, tailscaleNode, bootstrap } of versionState.values()) {
+    await bootstrap.dispose();
+
     await env.container.stop({
       remove: true,
       removeVolumes: true,

@@ -56,8 +56,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   });
 
   try {
-    const hsApi = context.hsApi.getRuntimeClient(context.headscaleApiKey!);
-    const hsUsers = await hsApi.getUsers();
+    const hsApi = context.headscale.client(context.headscaleApiKey!);
+    const hsUsers = await hsApi.users.list();
     const hsUser = findHeadscaleUserBySubject(hsUsers, identity.subject, identity.email);
     if (hsUser) {
       await context.auth.linkHeadscaleUser(userId, hsUser.id);

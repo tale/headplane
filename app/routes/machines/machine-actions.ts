@@ -40,7 +40,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       });
     }
 
-    const node = await api.registerNode(user, registrationKey);
+    const node = await api.nodes.register(user, registrationKey);
     await context.hsLive.refresh(nodesResource, api);
     return redirect(`/machines/${node.id}`);
   }
@@ -53,7 +53,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const node = await api.getNode(nodeId);
+  const node = await api.nodes.get(nodeId);
   if (!node) {
     throw data(`Machine with ID ${nodeId} not found`, {
       status: 404,
@@ -76,19 +76,19 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       }
 
       const name = String(formData.get("name"));
-      await api.renameNode(nodeId, name);
+      await api.nodes.rename(nodeId, name);
       await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine renamed" };
     }
 
     case "delete": {
-      await api.deleteNode(nodeId);
+      await api.nodes.delete(nodeId);
       await context.hsLive.refresh(nodesResource, api);
       return redirect("/machines");
     }
 
     case "expire": {
-      await api.expireNode(nodeId);
+      await api.nodes.expire(nodeId);
       await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine expired" };
     }
@@ -102,7 +102,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       }
 
       try {
-        await api.setNodeTags(
+        await api.nodes.setTags(
           nodeId,
           tags.map((tag) => tag.trim()).filter((tag) => tag !== ""),
         );
@@ -171,7 +171,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
         }
       }
 
-      await api.approveNodeRoutes(nodeId, newApproved);
+      await api.nodes.approveRoutes(nodeId, newApproved);
       await context.hsLive.refresh(nodesResource, api);
       return { message: "Routes updated" };
     }
@@ -184,7 +184,12 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      await api.setNodeUser(nodeId, user);
+      if (!api.nodes.reassignUser) {
+        throw data("Reassigning a node owner is no longer supported on this Headscale version.", {
+          status: 400,
+        });
+      }
+      await api.nodes.reassignUser(nodeId, user);
       await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine reassigned" };
     }

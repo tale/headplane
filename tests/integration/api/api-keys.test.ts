@@ -5,7 +5,7 @@ import { getRuntimeClient, HS_VERSIONS } from "../setup/env";
 describe.for(HS_VERSIONS)("Headscale %s: API Keys", (version) => {
   test("api keys can be fetched", async () => {
     const client = await getRuntimeClient(version);
-    const apiKeys = await client.getApiKeys();
+    const apiKeys = await client.apiKeys.list();
     expect(Array.isArray(apiKeys)).toBe(true);
     expect(apiKeys.length).toBe(1);
   });

@@ -53,7 +53,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const lookup = await agents?.lookup([node.nodeKey]);
   const [enhancedNode] = mapNodes([node], lookup);
   const tags = [...node.tags].toSorted();
-  const supportsNodeOwnerChange = !context.hsApi.clientHelpers.isAtleast("0.28.0");
+  const supportsNodeOwnerChange = !context.headscale.capabilities.nodeOwnerIsImmutable;
   const agentSync = agents?.lastSync();
 
   return {

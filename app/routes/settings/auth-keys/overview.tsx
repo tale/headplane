@@ -29,10 +29,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   // Try fetching all keys at once (Headscale 0.28+), fall back to per-user
   let allKeys: PreAuthKey[] | null = null;
-  try {
-    allKeys = await api.getAllPreAuthKeys();
-  } catch {
-    // Older versions don't support this endpoint
+  if (api.preAuthKeys.listAll) {
+    try {
+      allKeys = await api.preAuthKeys.listAll();
+    } catch {
+      // Treat any failure as "no global list available" and fall through.
+    }
   }
 
   if (allKeys !== null) {
@@ -65,7 +67,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         .filter((u) => u.id?.length > 0)
         .map(async (user) => {
           try {
-            const preAuthKeys = await api.getPreAuthKeys(user.id);
+            const preAuthKeys = await api.preAuthKeys.listForUser(user.id);
             return { preAuthKeys, success: true as const, user };
           } catch (error) {
             log.error("api", "GET /v1/preauthkey for %s: %o", user.name, error);

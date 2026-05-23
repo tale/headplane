@@ -48,7 +48,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     const isHealthy = await api.isHealthy();
     if (isHealthy) {
       try {
-        await api.getApiKeys();
+        await api.apiKeys.list();
       } catch (error) {
         if (isDataUnauthorizedError(error)) {
           const displayName =

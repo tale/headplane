@@ -49,7 +49,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const hostname = params.id;
   const username = new URL(request.url).searchParams.get("user") || undefined;
 
-  const nodes = await api.getNodes();
+  const nodes = await api.nodes.list();
   const node = nodes.find((n) => n.givenName === hostname);
   if (!node) {
     throw data(sshErrors.node_not_found(hostname), 404);
@@ -64,20 +64,20 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   // The user must exist within Headscale to generate a pre-auth key
-  const users = await api.getUsers();
+  const users = await api.users.list();
   const hsUser = findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
 
   if (!hsUser) {
     throw data(sshErrors.user_not_linked, 404);
   }
 
-  const preAuthKey = await api.createPreAuthKey(
-    hsUser.id,
-    true,
-    false,
-    new Date(Date.now() + 60 * 1000), // 1 minute expiry
-    null,
-  );
+  const preAuthKey = await api.preAuthKeys.create({
+    user: hsUser.id,
+    ephemeral: true,
+    reusable: false,
+    expiration: new Date(Date.now() + 60 * 1000), // 1 minute expiry
+    aclTags: null,
+  });
 
   const controlURL = context.config.headscale.public_url ?? context.config.headscale.url;
   return {

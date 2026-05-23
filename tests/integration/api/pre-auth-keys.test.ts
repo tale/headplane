@@ -1,16 +1,22 @@
 import { describe, expect, test } from "vitest";
 
-import { getBootstrapClient, getIsAtLeast, getRuntimeClient, HS_VERSIONS } from "../setup/env";
+import { getBootstrapClient, getRuntimeClient, HS_VERSIONS } from "../setup/env";
 
 describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) => {
   test("pre-auth keys can be created", async () => {
     const client = await getRuntimeClient(version);
-    const preAuthKeyUser = await client.createUser("preauthkeyuser@");
+    const preAuthKeyUser = await client.users.create({ name: "preauthkeyuser@" });
     expect(preAuthKeyUser).toBeDefined();
     expect(preAuthKeyUser.name).toBe("preauthkeyuser@");
 
     const expiry = new Date(Date.now() + 3600 * 1000);
-    const preAuthKey = await client.createPreAuthKey(preAuthKeyUser.id, false, false, expiry, null);
+    const preAuthKey = await client.preAuthKeys.create({
+      user: preAuthKeyUser.id,
+      ephemeral: false,
+      reusable: false,
+      expiration: expiry,
+      aclTags: null,
+    });
 
     expect(preAuthKey).toBeDefined();
     expect(preAuthKey.user?.id).toBe(preAuthKeyUser.id);
@@ -22,12 +28,18 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) =>
 
   test("pre-auth keys can be created with ACL tags", async () => {
     const client = await getRuntimeClient(version);
-    const [preAuthKeyUser] = await client.getUsers(undefined, "preauthkeyuser@");
+    const [preAuthKeyUser] = await client.users.list({ name: "preauthkeyuser@" });
     expect(preAuthKeyUser).toBeDefined();
     expect(preAuthKeyUser.name).toBe("preauthkeyuser@");
 
     const aclTags = ["tag:test1", "tag:test2"];
-    const preAuthKey = await client.createPreAuthKey(preAuthKeyUser.id, true, true, null, aclTags);
+    const preAuthKey = await client.preAuthKeys.create({
+      user: preAuthKeyUser.id,
+      ephemeral: true,
+      reusable: true,
+      expiration: null,
+      aclTags,
+    });
 
     expect(preAuthKey).toBeDefined();
     expect(preAuthKey.user?.id).toBe(preAuthKeyUser.id);
@@ -38,13 +50,19 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) =>
 
   test("tag-only pre-auth keys (0.28+)", async (context) => {
     const bootstrap = await getBootstrapClient(version);
-    if (!bootstrap.clientHelpers.isAtleast("0.28.0")) {
+    if (!bootstrap.capabilities.preAuthKeysHaveStableIds) {
       context.skip();
     }
 
     const client = await getRuntimeClient(version);
     const aclTags = ["tag:server", "tag:prod"];
-    const preAuthKey = await client.createPreAuthKey(null, false, true, null, aclTags);
+    const preAuthKey = await client.preAuthKeys.create({
+      user: null,
+      ephemeral: false,
+      reusable: true,
+      expiration: null,
+      aclTags,
+    });
 
     expect(preAuthKey).toBeDefined();
     expect(preAuthKey.user).toBeNull();
@@ -55,44 +73,44 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) =>
 
   test("pre-auth keys can be listed", async () => {
     const client = await getRuntimeClient(version);
-    const [preAuthKeyUser] = await client.getUsers(undefined, "preauthkeyuser@");
+    const [preAuthKeyUser] = await client.users.list({ name: "preauthkeyuser@" });
     expect(preAuthKeyUser).toBeDefined();
     expect(preAuthKeyUser.name).toBe("preauthkeyuser@");
 
-    const preAuthKeys = await client.getPreAuthKeys(preAuthKeyUser.id);
+    const preAuthKeys = await client.preAuthKeys.listForUser(preAuthKeyUser.id);
     expect(Array.isArray(preAuthKeys)).toBe(true);
     expect(preAuthKeys.length).toBeGreaterThanOrEqual(2);
   });
 
   test("all pre-auth keys can be listed without user filter (0.28+)", async (context) => {
-    const isAtLeast = await getIsAtLeast(version);
-    if (!isAtLeast("0.28.0")) {
+    const bootstrap = await getBootstrapClient(version);
+    if (!bootstrap.capabilities.preAuthKeysHaveStableIds) {
       context.skip();
     }
 
     const client = await getRuntimeClient(version);
-    const [preAuthKeyUser] = await client.getUsers(undefined, "preauthkeyuser@");
+    const [preAuthKeyUser] = await client.users.list({ name: "preauthkeyuser@" });
     expect(preAuthKeyUser).toBeDefined();
 
-    const allKeys = await client.getAllPreAuthKeys();
+    const allKeys = await client.preAuthKeys.listAll!();
     expect(Array.isArray(allKeys)).toBe(true);
     expect(allKeys.length).toBeGreaterThanOrEqual(2);
 
-    const userSpecificKeys = await client.getPreAuthKeys(preAuthKeyUser.id);
+    const userSpecificKeys = await client.preAuthKeys.listForUser(preAuthKeyUser.id);
     for (const userKey of userSpecificKeys) {
       const found = allKeys.find((k) => k.key === userKey.key);
       expect(found).toBeDefined();
     }
   });
 
-  test("getAllPreAuthKeys returns keys with correct structure (0.28+)", async (context) => {
-    const isAtLeast = await getIsAtLeast(version);
-    if (!isAtLeast("0.28.0")) {
+  test("listAll returns keys with correct structure (0.28+)", async (context) => {
+    const bootstrap = await getBootstrapClient(version);
+    if (!bootstrap.capabilities.preAuthKeysHaveStableIds) {
       context.skip();
     }
 
     const client = await getRuntimeClient(version);
-    const allKeys = await client.getAllPreAuthKeys();
+    const allKeys = await client.preAuthKeys.listAll!();
 
     for (const key of allKeys) {
       expect(key.id).toBeDefined();
@@ -107,16 +125,16 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) =>
 
   test("pre-auth keys can be expired", async () => {
     const client = await getRuntimeClient(version);
-    const [preAuthKeyUser] = await client.getUsers(undefined, "preauthkeyuser@");
+    const [preAuthKeyUser] = await client.users.list({ name: "preauthkeyuser@" });
     expect(preAuthKeyUser).toBeDefined();
     expect(preAuthKeyUser.name).toBe("preauthkeyuser@");
 
-    const preAuthKeys = await client.getPreAuthKeys(preAuthKeyUser.id);
+    const preAuthKeys = await client.preAuthKeys.listForUser(preAuthKeyUser.id);
     expect(preAuthKeys.length).toBeGreaterThanOrEqual(2);
     const preAuthKeyToExpire = preAuthKeys[0];
-    await client.expirePreAuthKey(preAuthKeyUser.id, preAuthKeyToExpire);
+    await client.preAuthKeys.expire(preAuthKeyToExpire);
 
-    const preAuthKeysAfterExpire = await client.getPreAuthKeys(preAuthKeyUser.id);
+    const preAuthKeysAfterExpire = await client.preAuthKeys.listForUser(preAuthKeyUser.id);
     const expiredKey = preAuthKeysAfterExpire.find((key) => key.key === preAuthKeyToExpire.key);
     expect(expiredKey).toBeDefined();
   });

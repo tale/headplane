@@ -9,8 +9,8 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
     const client = await getRuntimeClient(version);
     const tailnetNode = await getNode(version);
 
-    const user = await client.createUser("node-reg@");
-    const node = await client.registerNode(user.name, tailnetNode.authCode);
+    const user = await client.users.create({ name: "node-reg@" });
+    const node = await client.nodes.register(user.name, tailnetNode.authCode);
     expect(node).toBeDefined();
     expect(node.registerMethod).toBe("REGISTER_METHOD_CLI");
     expect(node.name).toBe(tailnetNode.nodeName);
@@ -19,12 +19,12 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
   test("nodes can be retrieved", async () => {
     const client = await getRuntimeClient(version);
     const { nodeName } = await getNode(version);
-    const nodes = await client.getNodes();
+    const nodes = await client.nodes.list();
     const node = nodes.find((n) => n.name === nodeName);
     expect(node).toBeDefined();
     expect(node?.name).toBe(nodeName);
 
-    const fetchedNode = await client.getNode(node!.id);
+    const fetchedNode = await client.nodes.get(node!.id);
     expect(fetchedNode).toBeDefined();
     expect(fetchedNode.id).toBe(node!.id);
     workingNodeId = node!.id;
@@ -35,41 +35,43 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
     const { nodeName } = await getNode(version);
     const newName = `${nodeName}-renamed`;
 
-    await client.renameNode(workingNodeId, newName);
-    const renamedNode = await client.getNode(workingNodeId);
+    await client.nodes.rename(workingNodeId, newName);
+    const renamedNode = await client.nodes.get(workingNodeId);
     expect(renamedNode).toBeDefined();
     expect(renamedNode.givenName).toBe(newName);
   });
 
   test("nodes can be reassigned to another user", async (context) => {
     const bootstrap = await getBootstrapClient(version);
-    if (bootstrap.clientHelpers.isAtleast("0.28.0")) {
+    // Reassigning a node owner was removed in 0.28.
+    if (bootstrap.capabilities.nodeOwnerIsImmutable) {
       context.skip();
     }
 
     const client = await getRuntimeClient(version);
-    const user = await client.createUser("node-reassign@");
+    const user = await client.users.create({ name: "node-reassign@" });
 
-    await client.setNodeUser(workingNodeId, user.id);
-    const reassignedNode = await client.getNode(workingNodeId);
+    // reassignUser is only defined on pre-0.28 clients, hence the guard above.
+    await client.nodes.reassignUser!(workingNodeId, user.id);
+    const reassignedNode = await client.nodes.get(workingNodeId);
     expect(reassignedNode).toBeDefined();
-    expect(reassignedNode.user.name).toBe(user.name);
+    expect(reassignedNode.user?.name).toBe(user.name);
   });
 
   test("nodes can be expired", async () => {
     const client = await getRuntimeClient(version);
-    await client.expireNode(workingNodeId);
+    await client.nodes.expire(workingNodeId);
 
-    const expiredNode = await client.getNode(workingNodeId);
+    const expiredNode = await client.nodes.get(workingNodeId);
     expect(expiredNode).toBeDefined();
     expect(expiredNode.expiry).toBeDefined();
   });
 
   test("nodes can be deleted", async () => {
     const client = await getRuntimeClient(version);
-    await client.deleteNode(workingNodeId);
+    await client.nodes.delete(workingNodeId);
 
-    const nodes = await client.getNodes();
+    const nodes = await client.nodes.list();
     const node = nodes.find((n) => n.id === workingNodeId);
     expect(node).toBeUndefined();
   });

@@ -43,7 +43,7 @@ describe("Login action validation", () => {
     const request = mockRequest(formData);
 
     const mockContext = {
-      hsApi: { getRuntimeClient: vi.fn() },
+      headscale: { client: vi.fn() },
       sessions: { createSession: vi.fn() },
     };
 
@@ -63,7 +63,7 @@ describe("Login action validation", () => {
     const request = mockRequest(formData);
 
     const mockContext = {
-      hsApi: { getRuntimeClient: vi.fn() },
+      headscale: { client: vi.fn() },
       sessions: { createSession: vi.fn() },
     };
 
@@ -87,8 +87,8 @@ describe("Login action validation", () => {
       .mockResolvedValue([{ prefix: "other-prefix", expiration: "2030-01-01T00:00:00Z" }]);
 
     const mockContext = {
-      hsApi: {
-        getRuntimeClient: () => ({ getApiKeys: mockGetApiKeys }),
+      headscale: {
+        client: () => ({ apiKeys: { list: mockGetApiKeys } }),
       },
       sessions: { createSession: vi.fn() },
     };
@@ -114,8 +114,8 @@ describe("Login action validation", () => {
       .mockResolvedValue([{ prefix: "expired-key-prefix", expiration: "2020-01-01T00:00:00Z" }]);
 
     const mockContext = {
-      hsApi: {
-        getRuntimeClient: () => ({ getApiKeys: mockGetApiKeys }),
+      headscale: {
+        client: () => ({ apiKeys: { list: mockGetApiKeys } }),
       },
       sessions: { createSession: vi.fn() },
     };
@@ -141,8 +141,8 @@ describe("Login action validation", () => {
       .mockResolvedValue([{ prefix: "malformed-key", expiration: null } as MockApiKey]);
 
     const mockContext = {
-      hsApi: {
-        getRuntimeClient: () => ({ getApiKeys: mockGetApiKeys }),
+      headscale: {
+        client: () => ({ apiKeys: { list: mockGetApiKeys } }),
       },
       sessions: { createSession: vi.fn() },
     };
@@ -173,8 +173,8 @@ describe("Login action validation", () => {
     const mockCreateSession = vi.fn().mockResolvedValue("session-cookie");
 
     const mockContext = {
-      hsApi: {
-        getRuntimeClient: () => ({ getApiKeys: mockGetApiKeys }),
+      headscale: {
+        client: () => ({ apiKeys: { list: mockGetApiKeys } }),
       },
       sessions: { createSession: mockCreateSession },
     };

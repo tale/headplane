@@ -63,7 +63,7 @@ constructs everything that needs to live for the lifetime of the
 process:
 
 - the SQLite client (`db`)
-- the Headscale REST interface (`hsApi`)
+- the Headscale REST interface (`headscale`)
 - the optional Headplane agent manager (`agents`)
 - the auth service (`auth`)
 - the optional OIDC service (`oidc`)

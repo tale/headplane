@@ -4,7 +4,7 @@ import { setTimeout } from "node:timers/promises";
 import { type } from "arktype";
 import { Client } from "undici";
 
-import type { RuntimeApiClient } from "~/server/headscale/api/endpoints";
+import type { HeadscaleClient } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
@@ -255,7 +255,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
     return this.client !== undefined && this.containerId !== undefined;
   }
 
-  async onConfigChange(client: RuntimeApiClient) {
+  async onConfigChange(client: HeadscaleClient) {
     if (!this.client) {
       return;
     }
