@@ -1,4 +1,4 @@
-import { AlertCircle, Construction, Eye, FlaskConical, Pencil } from "lucide-react";
+import { AlertCircle, Construction, Eye, FlaskConical, LayoutGrid, Pencil } from "lucide-react";
 import { Suspense, lazy, useEffect, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
@@ -23,6 +23,7 @@ const LazyEditor = lazy(() =>
 const LazyDiffer = lazy(() =>
   import("./components/cm.client").then((m) => ({ default: m.Differ })),
 );
+const LazyVisualEditor = lazy(() => import("./components/visual-editor"));
 
 export const loader = aclLoader;
 export const action = aclAction;
@@ -100,6 +101,12 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
               <span>Preview changes</span>
             </div>
           </TabsTab>
+          <TabsTab value="visual">
+            <div className="flex items-center gap-2">
+              <LayoutGrid className="p-1" />
+              <span>Visual editor</span>
+            </div>
+          </TabsTab>
           <TabsTab value="preview">
             <div className="flex items-center gap-2">
               <FlaskConical className="p-1" />
@@ -115,6 +122,11 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
         <TabsPanel value="diff">
           <Suspense fallback={<Fallback />}>
             <LazyDiffer left={policy} right={codePolicy} />
+          </Suspense>
+        </TabsPanel>
+        <TabsPanel value="visual">
+          <Suspense fallback={<Fallback />}>
+            <LazyVisualEditor disabled={disabled} onChange={setCodePolicy} value={codePolicy} />
           </Suspense>
         </TabsPanel>
         <TabsPanel value="preview">
