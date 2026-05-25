@@ -34,9 +34,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     );
   }
 
-  // Use a fake API key for healthcheck
-  const api = context.headscale.client("fake-api-key");
-  const healthy = await api.isHealthy();
+  const healthy = await context.headscale.health();
 
   const body = {
     status: healthy ? "healthy" : "unhealthy",

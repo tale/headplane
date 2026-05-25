@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { kill } from "node:process";
 import { setTimeout } from "node:timers/promises";
 
-import type { HeadscaleClient } from "~/server/headscale/api";
+import type { Headscale } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 /**
@@ -75,12 +75,12 @@ export interface SignalHeadscaleOptions {
 
 /**
  * Sends a signal to the headscale process and waits for it to become healthy.
- * @param client The HeadscaleClient to check health
+ * @param headscale The Headscale instance to health-check
  * @param options Options for signaling and waiting
  * @returns True if headscale became healthy, false otherwise
  */
 export async function signalAndWaitHealthy(
-  client: HeadscaleClient,
+  headscale: Headscale,
   options: SignalHeadscaleOptions,
 ): Promise<boolean> {
   const { pid, signal = "SIGHUP", maxAttempts = 10, retryDelayMs = 1000 } = options;
@@ -96,7 +96,7 @@ export async function signalAndWaitHealthy(
   await setTimeout(retryDelayMs);
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const healthy = await client.isHealthy();
+      const healthy = await headscale.health();
       if (healthy) {
         log.info("config", "Headscale is healthy after restart");
         return true;

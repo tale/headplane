@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { gte } from "~/server/headscale/api/server-version";
 
-import { getBootstrapClient, getRuntimeClient, HS_VERSIONS, Version } from "../setup/env";
+import { getBootstrapClient, HS_VERSIONS, Version } from "../setup/env";
 
 describe.for(HS_VERSIONS)("Headscale %s: Runtime Client", (version) => {
   test("the runtime client is usable", async () => {
@@ -34,8 +34,8 @@ describe.for(HS_VERSIONS)("Headscale %s: Runtime Client", (version) => {
   });
 
   test("the health check endpoint works", async () => {
-    const client = await getRuntimeClient(version);
-    const health = await client.isHealthy();
+    const bootstrapper = await getBootstrapClient(version);
+    const health = await bootstrapper.health();
     expect(health).toBe(true);
   });
 });

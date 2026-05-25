@@ -2,7 +2,7 @@ import { platform } from "node:os";
 
 import { type } from "arktype";
 
-import type { HeadscaleClient } from "~/server/headscale/api";
+import type { Headscale } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
@@ -51,12 +51,12 @@ export default class ProcIntegration extends Integration<typeof configSchema.ful
     }
   }
 
-  async onConfigChange(client: HeadscaleClient) {
+  async onConfigChange(headscale: Headscale) {
     if (!this.pid) {
       return;
     }
 
-    await signalAndWaitHealthy(client, {
+    await signalAndWaitHealthy(headscale, {
       pid: this.pid,
       signal: "SIGHUP",
     });

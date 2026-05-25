@@ -45,7 +45,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         : { name: principal.displayName, subject: "api_key" };
 
     // MARK: The session should stay valid if Headscale isn't healthy
-    const isHealthy = await api.isHealthy();
+    const isHealthy = await context.headscale.health();
     if (isHealthy) {
       try {
         await api.apiKeys.list();

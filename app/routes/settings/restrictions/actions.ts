@@ -28,8 +28,6 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
     });
   }
 
-  // We only need healthchecks which don't rely on an API key
-  const api = context.headscale.client("fake-api-key");
   switch (action) {
     case "add_domain": {
       const domain = formData.get("domain")?.toString()?.trim();
@@ -48,7 +46,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         },
       ]);
 
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("Domain added successfully.");
     }
 
@@ -76,7 +74,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
           value: domains,
         },
       ]);
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("Domain removed successfully.");
     }
 
@@ -97,7 +95,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         },
       ]);
 
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("Group added successfully.");
     }
 
@@ -126,7 +124,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         },
       ]);
 
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("Group removed successfully.");
     }
 
@@ -147,7 +145,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         },
       ]);
 
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("User added successfully.");
     }
 
@@ -176,7 +174,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         },
       ]);
 
-      context.integration?.onConfigChange(api);
+      context.integration?.onConfigChange(context.headscale);
       return data("User removed successfully.");
     }
 

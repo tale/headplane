@@ -4,7 +4,7 @@ import { setTimeout } from "node:timers/promises";
 import { type } from "arktype";
 import { Client } from "undici";
 
-import type { HeadscaleClient } from "~/server/headscale/api";
+import type { Headscale } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
@@ -255,7 +255,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
     return this.client !== undefined && this.containerId !== undefined;
   }
 
-  async onConfigChange(client: HeadscaleClient) {
+  async onConfigChange(headscale: Headscale) {
     if (!this.client) {
       return;
     }
@@ -290,7 +290,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
     while (attempts <= this.maxAttempts) {
       try {
         log.debug("config", "Checking Headscale status (attempt %d)", attempts);
-        const status = await client.isHealthy();
+        const status = await headscale.health();
         if (status === false) {
           throw new Error("Headscale is not running");
         }

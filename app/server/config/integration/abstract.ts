@@ -1,4 +1,4 @@
-import type { HeadscaleClient } from "~/server/headscale/api";
+import type { Headscale } from "~/server/headscale/api";
 
 export abstract class Integration<T> {
   protected context: NonNullable<T>;
@@ -11,6 +11,6 @@ export abstract class Integration<T> {
   }
 
   abstract isAvailable(): Promise<boolean> | boolean;
-  abstract onConfigChange(client: HeadscaleClient): Promise<void> | void;
+  abstract onConfigChange(headscale: Headscale): Promise<void> | void;
   abstract get name(): string;
 }

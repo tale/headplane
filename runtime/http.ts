@@ -208,6 +208,7 @@ export function startHttpServer(opts: StartOptions): Server {
       }
       process.exit(0);
     });
+
     // Force exit if connections don't drain in time.
     setTimeout(() => process.exit(0), 5_000).unref();
   };

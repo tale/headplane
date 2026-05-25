@@ -1,9 +1,7 @@
 import type { Route } from "./+types/healthz";
 
 export async function loader({ context }: Route.LoaderArgs) {
-  // Use a fake API key for healthcheck
-  const api = context.headscale.client("fake-api-key");
-  const healthy = await api.isHealthy();
+  const healthy = await context.headscale.health();
 
   return new Response(JSON.stringify({ status: healthy ? "OK" : "ERROR" }), {
     status: healthy ? 200 : 500,

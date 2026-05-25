@@ -56,6 +56,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   });
 
   try {
+    // Looks up the Headscale user that matches this OIDC identity. We use
+    // the configured admin API key here — not a per-request one — because
+    // there is no per-request key yet (the session is being created).
     const hsApi = context.headscale.client(context.headscaleApiKey!);
     const hsUsers = await hsApi.users.list();
     const hsUser = findHeadscaleUserBySubject(hsUsers, identity.subject, identity.email);

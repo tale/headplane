@@ -33,6 +33,8 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     };
   }
 
+  // Build a client with the candidate API key the user just submitted, so the
+  // GET /api/v1/apikey call below validates the key against Headscale itself.
   const api = context.headscale.client(apiKey);
   try {
     const apiKeys = await api.apiKeys.list();

@@ -16,9 +16,6 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
     return data({ success: false }, 403);
   }
 
-  // We only need it for health checks which don't require auth
-  const api = context.headscale.client("fake-api-key");
-
   const formData = await request.formData();
   const action = formData.get("action_id")?.toString();
   if (!action) {
@@ -39,7 +36,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         },
       ]);
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Tailnet renamed successfully" };
     }
     case "toggle_magic": {
@@ -55,7 +52,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         },
       ]);
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Magic DNS state updated successfully" };
     }
     case "remove_ns": {
@@ -88,7 +85,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         ]);
       }
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Nameserver removed successfully" };
     }
     case "add_ns": {
@@ -123,7 +120,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         ]);
       }
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Nameserver added successfully" };
     }
     case "remove_domain": {
@@ -141,7 +138,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         },
       ]);
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Domain removed successfully" };
     }
     case "add_domain": {
@@ -161,7 +158,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         },
       ]);
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "Domain added successfully" };
     }
     case "remove_record": {
@@ -183,7 +180,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return;
       }
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "DNS record removed successfully" };
     }
     case "add_record": {
@@ -205,7 +202,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return;
       }
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "DNS record added successfully" };
     }
     case "override_dns": {
@@ -222,7 +219,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         },
       ]);
 
-      await context.integration?.onConfigChange(api);
+      await context.integration?.onConfigChange(context.headscale);
       return { message: "DNS override updated successfully" };
     }
     default:

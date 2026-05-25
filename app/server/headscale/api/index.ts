@@ -15,7 +15,7 @@ import { makePolicyApi, type PolicyApi } from "./resources/policy";
 import { makePreAuthKeyApi, type PreAuthKeyApi } from "./resources/pre-auth-keys";
 import { makeUserApi, type UserApi } from "./resources/users";
 import { formatServerVersion, parseServerVersion, type ServerVersion } from "./server-version";
-import { createTransport, type Transport } from "./transport";
+import { createTransport } from "./transport";
 
 export interface Headscale {
   readonly version: ServerVersion;
@@ -34,48 +34,84 @@ export interface HeadscaleClient {
   policy: PolicyApi;
   preAuthKeys: PreAuthKeyApi;
   apiKeys: ApiKeyApi;
-  /**
-   * Convenience passthrough to `Headscale.health()`. Headscale's
-   * `/health` endpoint is unauthenticated so callers that already
-   * have a client (loaders/actions) don't need to also reach for
-   * the top-level `Headscale` value.
-   */
-  isHealthy(): Promise<boolean>;
 }
 
 export interface CreateHeadscaleOptions {
   url: string;
   certPath?: string;
+  /**
+   * How often to retry `/version` while Headscale is unreachable.
+   * Defaults to 30 seconds. Exposed for tests.
+   */
+  retryIntervalMs?: number;
 }
+
+const DEFAULT_RETRY_INTERVAL_MS = 30_000;
 
 export async function createHeadscale(opts: CreateHeadscaleOptions): Promise<Headscale> {
   const transport = await createTransport({ url: opts.url, certPath: opts.certPath });
+  const retryIntervalMs = opts.retryIntervalMs ?? DEFAULT_RETRY_INTERVAL_MS;
 
-  const versionInfo = await transport.getPublic<{ version: string }>("/version");
-  const version = parseServerVersion(versionInfo.version);
-  const capabilities = capabilitiesFor(version);
+  let version: ServerVersion = parseServerVersion("unreachable");
+  let capabilities: Capabilities = capabilitiesFor(version);
+  let detected = false;
+  let retryTimer: ReturnType<typeof setTimeout> | undefined;
+  let disposed = false;
 
-  if (version.unknown) {
-    log.warn(
-      "api",
-      "Could not parse Headscale version %s, assuming newest known capabilities",
-      versionInfo.version,
-    );
-  } else {
-    log.info("api", "Connected to Headscale %s", formatServerVersion(version));
+  async function detectOnce(): Promise<boolean> {
+    try {
+      const { version: raw } = await transport.getPublic<{ version: string }>("/version");
+      const parsed = parseServerVersion(raw);
+      version = parsed;
+      capabilities = capabilitiesFor(parsed);
+      detected = true;
+      if (parsed.unknown) {
+        log.warn(
+          "api",
+          "Could not parse Headscale version %s, assuming newest known capabilities",
+          raw,
+        );
+      } else {
+        log.info("api", "Connected to Headscale %s", formatServerVersion(parsed));
+      }
+      return true;
+    } catch (error) {
+      log.debug("api", "Headscale /version probe failed: %s", String(error));
+      return false;
+    }
   }
 
-  return makeHeadscale(transport, version, capabilities);
-}
+  function scheduleRetry() {
+    if (disposed || detected) return;
+    retryTimer = setTimeout(async () => {
+      retryTimer = undefined;
+      if (disposed) return;
+      if (await detectOnce()) return;
+      scheduleRetry();
+    }, retryIntervalMs);
+    // Don't keep the event loop alive on this timer alone — Headplane
+    // should still shut down cleanly while we're waiting to retry.
+    retryTimer.unref?.();
+  }
 
-function makeHeadscale(
-  transport: Transport,
-  version: ServerVersion,
-  capabilities: Capabilities,
-): Headscale {
+  if (!(await detectOnce())) {
+    log.warn(
+      "api",
+      "Headscale unreachable at boot; defaulting to newest-known capabilities and retrying every %dms",
+      retryIntervalMs,
+    );
+    scheduleRetry();
+  }
+
   return {
-    version,
-    capabilities,
+    // Getters so callers always observe the latest detected values
+    // without having to know about the retry loop.
+    get version() {
+      return version;
+    },
+    get capabilities() {
+      return capabilities;
+    },
     health: () => transport.health(),
     client(apiKey) {
       return {
@@ -84,9 +120,15 @@ function makeHeadscale(
         policy: makePolicyApi(transport, capabilities, apiKey),
         preAuthKeys: makePreAuthKeyApi(transport, capabilities, apiKey),
         apiKeys: makeApiKeyApi(transport, capabilities, apiKey),
-        isHealthy: () => transport.health(),
       };
     },
-    dispose: () => transport.dispose(),
+    async dispose() {
+      disposed = true;
+      if (retryTimer) {
+        clearTimeout(retryTimer);
+        retryTimer = undefined;
+      }
+      await transport.dispose();
+    },
   };
 }

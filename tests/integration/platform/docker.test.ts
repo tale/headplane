@@ -81,8 +81,8 @@ describe("DockerIntegration", () => {
       socketPath: "/var/run/docker.sock",
     });
 
-    const mockClient = {
-      isHealthy: async () => {
+    const mockHeadscale = {
+      health: async () => {
         try {
           const res = await dockerClient.request({
             method: "GET",
@@ -96,9 +96,9 @@ describe("DockerIntegration", () => {
       },
     } as any;
 
-    await integration.onConfigChange(mockClient);
+    await integration.onConfigChange(mockHeadscale);
 
-    const healthy = await mockClient.isHealthy();
+    const healthy = await mockHeadscale.health();
     expect(healthy).toBe(true);
   }, 60_000);
 });
