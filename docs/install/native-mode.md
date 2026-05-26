@@ -35,15 +35,27 @@ sudo chown -R $(whoami):$(whoami) /var/lib/headplane
 
 ## Building Headplane
 
-Clone the Headplane repository, install dependencies, and build the project:
+Clone the Headplane repository and run the build script:
 
 ```bash
 # You can optionally checkout a specific release tag.
 git clone https://github.com/tale/headplane.git
 cd headplane
-pnpm install
-pnpm build
+./build.sh
 ```
+
+`./build.sh` builds everything you need to run Headplane natively: the React
+Router app, the SSH WASM module, the healthcheck binary, and the
+[Headplane Agent](../features/agent.md) (`./build/hp_agent`). Pass `--help` to
+see flags for building a subset (e.g., `./build.sh --agent` to only build the
+agent).
+
+::: tip
+A bare `pnpm install && pnpm build` only builds the React Router app and will
+not produce `hp_agent`. If you plan to enable
+`integration.agent.enabled`, use `./build.sh` so the agent binary is built and
+available to move to `/usr/libexec/headplane/agent`.
+:::
 
 ## Running Headplane
 
