@@ -9,6 +9,7 @@
 - Fixed dialog panels growing beyond the viewport; dialog content is now constrained and scrollable (via [#556](https://github.com/tale/headplane/pull/556)).
 - Fixed focus rings on inputs and buttons inside dialogs being clipped by the scrollable content container.
 - Fixed tooltips on the last row of the machines table being clipped by the viewport; tooltips now anchor above the trigger with collision padding (closes [#508](https://github.com/tale/headplane/issues/508)).
+- Fixed the "Register Machine Key" dialog passing the Headscale numeric user id instead of the username. Headscale's `RegisterNodeRequest.user` proto field is a `string` that is looked up via `GetUserByName` (no numeric fallback), so registration was failing whenever the selected owner's display name differed from their numeric id (closes [#532](https://github.com/tale/headplane/issues/532)).
 - Corrected the Docker healthcheck example in the docs to use the required `CMD` prefix so reverse proxies don't see the container as unhealthy (closes [#535](https://github.com/tale/headplane/issues/535)).
 
 ---

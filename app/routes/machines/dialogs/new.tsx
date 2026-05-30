@@ -52,7 +52,9 @@ export default function NewMachine(data: NewMachineProps) {
             onValueChange={(v) => form.setValue("user", v)}
             placeholder="Select a user"
             items={data.users.map((user) => ({
-              value: user.id,
+              // Headscale's v1/node/register endpoint resolves the owner by
+              // username via GetUserByName, so we must pass user.name (not id).
+              value: user.name,
               label: getUserDisplayName(user),
             }))}
           />
