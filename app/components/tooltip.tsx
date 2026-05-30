@@ -24,7 +24,7 @@ export default function Tooltip({ children, content, className }: TooltipProps) 
         {children}
       </BaseTooltip.Trigger>
       <BaseTooltip.Portal>
-        <BaseTooltip.Positioner sideOffset={4}>
+        <BaseTooltip.Positioner side="top" sideOffset={4} collisionPadding={8}>
           <BaseTooltip.Popup
             className={cn(
               "z-50 rounded-lg p-3 text-sm w-48",
