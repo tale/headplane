@@ -79,7 +79,12 @@ function Panel(props: DialogPanelProps) {
           }
         }}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">{children}</div>
+        {/* px-1 -mx-1 gives focus rings on inputs/buttons room to render
+            without being clipped by overflow-y-auto (which implicitly forces
+            overflow-x: auto per CSS spec). */}
+        <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1">
+          {children}
+        </div>
         <div className="mt-5 flex shrink-0 justify-end gap-3">
           {variant === "unactionable" ? (
             <AlertDialog.Close render={<Button>Close</Button>} />
