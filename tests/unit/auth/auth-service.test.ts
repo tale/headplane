@@ -78,15 +78,9 @@ describe("linkHeadscaleUser", () => {
     const user = users.find((u) => u.id === userId);
     expect(user?.headscale_user_id).toBeNull();
   });
-
-  test("linkHeadscaleUserBySubject works through subject lookup", async () => {
-    await auth.findOrCreateUser("sub-1");
-    const result = await auth.linkHeadscaleUserBySubject("sub-1", "hs-1");
-    expect(result).toBe(true);
-  });
 });
 
-describe("reassignSubject", () => {
+describe("reassignUser", () => {
   let auth: AuthService;
 
   beforeEach(() => {
@@ -95,9 +89,9 @@ describe("reassignSubject", () => {
 
   test("updates an existing non-owner role", async () => {
     await auth.findOrCreateUser("sub-owner");
-    await auth.findOrCreateUser("sub-user");
+    const userId = await auth.findOrCreateUser("sub-user");
 
-    const result = await auth.reassignSubject("sub-user", "admin");
+    const result = await auth.reassignUser(userId, "admin");
     expect(result).toBe(true);
 
     const role = await auth.roleForSubject("sub-user");
@@ -105,18 +99,15 @@ describe("reassignSubject", () => {
   });
 
   test("returns false for owner demotion attempt", async () => {
-    await auth.findOrCreateUser("sub-owner");
+    const ownerId = await auth.findOrCreateUser("sub-owner");
 
-    const result = await auth.reassignSubject("sub-owner", "member");
+    const result = await auth.reassignUser(ownerId, "member");
     expect(result).toBe(false);
   });
 
-  test("creates user with role if subject doesn't exist yet (upsert behavior)", async () => {
-    const result = await auth.reassignSubject("sub-new", "auditor");
-    expect(result).toBe(true);
-
-    const role = await auth.roleForSubject("sub-new");
-    expect(role).toBe("auditor");
+  test("returns false when user does not exist", async () => {
+    const result = await auth.reassignUser("01ARZ3NDEKTSV4RRFFQ69G5FAV", "auditor");
+    expect(result).toBe(false);
   });
 });
 
@@ -128,10 +119,10 @@ describe("transferOwnership", () => {
   });
 
   test("swaps roles: owner→admin, target→owner", async () => {
-    await auth.findOrCreateUser("sub-owner");
-    await auth.findOrCreateUser("sub-target");
+    const ownerId = await auth.findOrCreateUser("sub-owner");
+    const targetId = await auth.findOrCreateUser("sub-target");
 
-    const result = await auth.transferOwnership("sub-owner", "sub-target");
+    const result = await auth.transferOwnership(ownerId, targetId);
     expect(result).toBe(true);
 
     expect(await auth.roleForSubject("sub-owner")).toBe("admin");
@@ -139,24 +130,24 @@ describe("transferOwnership", () => {
   });
 
   test("returns false if caller is not owner", async () => {
-    await auth.findOrCreateUser("sub-owner");
-    await auth.findOrCreateUser("sub-other");
+    const ownerId = await auth.findOrCreateUser("sub-owner");
+    const otherId = await auth.findOrCreateUser("sub-other");
 
-    const result = await auth.transferOwnership("sub-other", "sub-owner");
+    const result = await auth.transferOwnership(otherId, ownerId);
     expect(result).toBe(false);
   });
 
   test("returns false if target doesn't exist", async () => {
-    await auth.findOrCreateUser("sub-owner");
+    const ownerId = await auth.findOrCreateUser("sub-owner");
 
-    const result = await auth.transferOwnership("sub-owner", "sub-ghost");
+    const result = await auth.transferOwnership(ownerId, "01ARZ3NDEKTSV4RRFFQ69G5FAV");
     expect(result).toBe(false);
   });
 
   test("returns false if target is same user as owner", async () => {
-    await auth.findOrCreateUser("sub-owner");
+    const ownerId = await auth.findOrCreateUser("sub-owner");
 
-    const result = await auth.transferOwnership("sub-owner", "sub-owner");
+    const result = await auth.transferOwnership(ownerId, ownerId);
     expect(result).toBe(false);
   });
 });

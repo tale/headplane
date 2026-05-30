@@ -21,7 +21,7 @@ export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
           update any ACL policies that may refer to this user by their old username.
         </Text>
         <input name="action_id" type="hidden" value="rename_user" />
-        <input name="user_id" type="hidden" value={user.id} />
+        <input name="headscale_user_id" type="hidden" value={user.id} />
         <Input
           defaultValue={user.name}
           required

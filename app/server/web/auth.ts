@@ -77,13 +77,12 @@ export interface AuthService {
 
   linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean>;
   unlinkHeadscaleUser(userId: string): Promise<void>;
-  linkHeadscaleUserBySubject(subject: string, headscaleUserId: string): Promise<boolean>;
   listUsers(): Promise<HeadplaneUser[]>;
   claimedHeadscaleUserIds(): Promise<Set<string>>;
   roleForSubject(subject: string): Promise<Role | undefined>;
   roleForHeadscaleUser(headscaleUserId: string): Promise<Role | undefined>;
-  transferOwnership(currentOwnerSubject: string, newOwnerSubject: string): Promise<boolean>;
-  reassignSubject(subject: string, role: Role): Promise<boolean>;
+  transferOwnership(currentOwnerUserId: string, newOwnerUserId: string): Promise<boolean>;
+  reassignUser(userId: string, role: Role): Promise<boolean>;
   pruneExpiredSessions(): Promise<void>;
   start(): void;
   stop(): void;
@@ -370,23 +369,6 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       .where(eq(users.id, userId));
   }
 
-  async function linkHeadscaleUserBySubject(
-    subject: string,
-    headscaleUserId: string,
-  ): Promise<boolean> {
-    const [user] = await opts.db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.sub, subject))
-      .limit(1);
-
-    if (!user) {
-      return false;
-    }
-
-    return linkHeadscaleUser(user.id, headscaleUserId);
-  }
-
   async function listUsers(): Promise<HeadplaneUser[]> {
     return opts.db.select().from(users);
   }
@@ -428,13 +410,17 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   async function transferOwnership(
-    currentOwnerSubject: string,
-    newOwnerSubject: string,
+    currentOwnerUserId: string,
+    newOwnerUserId: string,
   ): Promise<boolean> {
+    if (currentOwnerUserId === newOwnerUserId) {
+      return false;
+    }
+
     const [current] = await opts.db
       .select()
       .from(users)
-      .where(eq(users.sub, currentOwnerSubject))
+      .where(eq(users.id, currentOwnerUserId))
       .limit(1);
 
     if (!current || current.role !== "owner") {
@@ -444,10 +430,10 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     const [target] = await opts.db
       .select()
       .from(users)
-      .where(eq(users.sub, newOwnerSubject))
+      .where(eq(users.id, newOwnerUserId))
       .limit(1);
 
-    if (!target || target.id === current.id) {
+    if (!target) {
       return false;
     }
 
@@ -464,24 +450,16 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     return true;
   }
 
-  async function reassignSubject(subject: string, role: Role): Promise<boolean> {
-    const currentRole = await roleForSubject(subject);
-    if (currentRole === "owner") {
+  async function reassignUser(userId: string, role: Role): Promise<boolean> {
+    const [user] = await opts.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (!user || user.role === "owner") {
       return false;
     }
 
     await opts.db
-      .insert(users)
-      .values({
-        id: ulid(),
-        sub: subject,
-        role,
-        caps: capsForRole(role),
-      })
-      .onConflictDoUpdate({
-        target: users.sub,
-        set: { role, caps: capsForRole(role), updated_at: new Date() },
-      });
+      .update(users)
+      .set({ role, caps: capsForRole(role), updated_at: new Date() })
+      .where(eq(users.id, userId));
 
     return true;
   }
@@ -512,13 +490,12 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     findOrCreateUser,
     linkHeadscaleUser,
     unlinkHeadscaleUser,
-    linkHeadscaleUserBySubject,
     listUsers,
     claimedHeadscaleUserIds,
     roleForSubject,
     roleForHeadscaleUser,
     transferOwnership,
-    reassignSubject,
+    reassignUser,
     pruneExpiredSessions,
     start,
     stop,

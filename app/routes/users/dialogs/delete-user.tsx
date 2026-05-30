@@ -34,7 +34,7 @@ export default function DeleteUser({ user, machines, isOpen, setIsOpen }: Delete
           </Text>
         )}
         <input name="action_id" type="hidden" value="delete_user" />
-        <input name="user_id" type="hidden" value={user.id} />
+        <input name="headscale_user_id" type="hidden" value={user.id} />
       </DialogPanel>
     </Dialog>
   );

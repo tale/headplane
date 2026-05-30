@@ -8,7 +8,7 @@ import { Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
 interface ReassignProps {
-  userId: string;
+  headplaneUserId: string;
   displayName: string;
   role: Role;
   isOpen: boolean;
@@ -16,7 +16,7 @@ interface ReassignProps {
 }
 
 export default function ReassignUser({
-  userId,
+  headplaneUserId,
   displayName,
   role,
   isOpen,
@@ -38,7 +38,7 @@ export default function ReassignUser({
         ) : (
           <>
             <input name="action_id" type="hidden" value="reassign_user" />
-            <input name="user_id" type="hidden" value={userId} />
+            <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
             <RadioGroup className="gap-4" defaultValue={role} label="Role" name="new_role">
               {Object.keys(Roles)
                 .filter((r) => r !== "owner")

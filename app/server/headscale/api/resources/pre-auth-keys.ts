@@ -65,12 +65,14 @@ export function makePreAuthKeyApi(
         });
         return;
       }
-      // Pre-0.28: expire takes user + key string.
+      // Pre-0.28: expire takes the owning user's ID (a uint64 — Headscale
+      // rejects names with `proto: invalid value for uint64 field user`)
+      // plus the key string.
       await transport.request({
         method: "POST",
         path: "v1/preauthkey/expire",
         apiKey,
-        body: { user: key.user?.name ?? "", key: key.key },
+        body: { user: key.user?.id ?? "", key: key.key },
       });
     },
   };

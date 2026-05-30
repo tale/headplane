@@ -54,24 +54,24 @@ export default function UserMenu({
       {modal === "reassign" && (
         <Reassign
           displayName={displayName}
+          headplaneUserId={user.id}
           isOpen={modal === "reassign"}
           role={user.role}
           setIsOpen={(isOpen) => {
             if (!isOpen) setModal(null);
           }}
-          userId={user.linkedHeadscaleUser?.id ?? user.id}
         />
       )}
       {modal === "link" && (
         <LinkUser
           currentLink={currentLink}
           displayName={displayName}
+          headplaneUserId={user.id}
           headscaleUsers={linkableUsers}
           isOpen={modal === "link"}
           setIsOpen={(isOpen) => {
             if (!isOpen) setModal(null);
           }}
-          userId={user.linkedHeadscaleUser?.id ?? user.id}
         />
       )}
       {modal === "transfer" && (
@@ -81,7 +81,7 @@ export default function UserMenu({
             if (!isOpen) setModal(null);
           }}
           targetDisplayName={displayName}
-          targetUserId={user.linkedHeadscaleUser?.id ?? user.id}
+          targetHeadplaneUserId={user.id}
         />
       )}
 

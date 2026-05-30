@@ -5,7 +5,7 @@ import Title from "~/components/title";
 import cn from "~/utils/cn";
 
 interface LinkUserProps {
-  userId: string;
+  headplaneUserId: string;
   displayName: string;
   headscaleUsers: { id: string; name: string }[];
   currentLink?: string;
@@ -14,7 +14,7 @@ interface LinkUserProps {
 }
 
 export default function LinkUser({
-  userId,
+  headplaneUserId,
   displayName,
   headscaleUsers,
   currentLink,
@@ -34,7 +34,7 @@ export default function LinkUser({
         ) : (
           <>
             <input name="action_id" type="hidden" value="link_user" />
-            <input name="user_id" type="hidden" value={userId} />
+            <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
             <select
               className={cn(
                 "w-full rounded-lg border p-2",

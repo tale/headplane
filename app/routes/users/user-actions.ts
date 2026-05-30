@@ -1,7 +1,6 @@
 import { data } from "react-router";
 
 import { usersResource } from "~/server/headscale/live-store";
-import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
@@ -42,28 +41,28 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       return { message: "User created successfully" };
     }
     case "delete_user": {
-      const userId = formData.get("user_id")?.toString();
-      if (!userId) {
-        throw data("Missing `user_id` in the form data.", {
+      const headscaleUserId = formData.get("headscale_user_id")?.toString();
+      if (!headscaleUserId) {
+        throw data("Missing `headscale_user_id` in the form data.", {
           status: 400,
         });
       }
 
-      await api.users.delete(userId);
+      await api.users.delete(headscaleUserId);
       await context.hsLive.refresh(usersResource, api);
       return { message: "User deleted successfully" };
     }
     case "rename_user": {
-      const userId = formData.get("user_id")?.toString();
+      const headscaleUserId = formData.get("headscale_user_id")?.toString();
       const newName = formData.get("new_name")?.toString();
-      if (!userId || !newName) {
+      if (!headscaleUserId || !newName) {
         return data({ success: false }, 400);
       }
 
-      const users = await api.users.list({ id: userId });
-      const user = users.find((user) => user.id === userId);
+      const users = await api.users.list({ id: headscaleUserId });
+      const user = users.find((user) => user.id === headscaleUserId);
       if (!user) {
-        throw data(`No user found with id: ${userId}`, { status: 400 });
+        throw data(`No user found with id: ${headscaleUserId}`, { status: 400 });
       }
 
       if (user.provider === "oidc") {
@@ -73,34 +72,20 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      await api.users.rename(userId, newName);
+      await api.users.rename(headscaleUserId, newName);
       await context.hsLive.refresh(usersResource, api);
       return { message: "User renamed successfully" };
     }
     case "reassign_user": {
-      const userId = formData.get("user_id")?.toString();
+      const headplaneUserId = formData.get("headplane_user_id")?.toString();
       const newRole = formData.get("new_role")?.toString();
-      if (!userId || !newRole) {
-        throw data("Missing `user_id` or `new_role` in the form data.", {
+      if (!headplaneUserId || !newRole) {
+        throw data("Missing `headplane_user_id` or `new_role` in the form data.", {
           status: 400,
         });
       }
 
-      const users = await api.users.list({ id: userId });
-      const user = users.find((user) => user.id === userId);
-      if (!user) {
-        throw data("Specified user not found", {
-          status: 400,
-        });
-      }
-
-      const subject = getOidcSubject(user);
-      if (!subject) {
-        throw data("Specified user is not an OIDC user or has no subject.", { status: 400 });
-      }
-
-      const result = await context.auth.reassignSubject(subject, newRole as Role);
-
+      const result = await context.auth.reassignUser(headplaneUserId, newRole as Role);
       if (!result) {
         throw data("Failed to reassign user role.", { status: 500 });
       }
@@ -112,23 +97,12 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         throw data("Only the owner can transfer ownership.", { status: 403 });
       }
 
-      const userId = formData.get("user_id")?.toString();
-      if (!userId) {
-        throw data("Missing `user_id` in the form data.", { status: 400 });
+      const headplaneUserId = formData.get("headplane_user_id")?.toString();
+      if (!headplaneUserId) {
+        throw data("Missing `headplane_user_id` in the form data.", { status: 400 });
       }
 
-      const users = await api.users.list({ id: userId });
-      const user = users.find((user) => user.id === userId);
-      if (!user) {
-        throw data("Specified user not found", { status: 400 });
-      }
-
-      const targetSubject = getOidcSubject(user);
-      if (!targetSubject) {
-        throw data("Target user is not an OIDC user or has no subject.", { status: 400 });
-      }
-
-      const result = await context.auth.transferOwnership(principal.user.subject, targetSubject);
+      const result = await context.auth.transferOwnership(principal.user.id, headplaneUserId);
       if (!result) {
         throw data("Failed to transfer ownership.", { status: 500 });
       }
@@ -136,26 +110,15 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       return { message: "Ownership transferred successfully" };
     }
     case "link_user": {
-      const userId = formData.get("user_id")?.toString();
+      const headplaneUserId = formData.get("headplane_user_id")?.toString();
       const headscaleUserId = formData.get("headscale_user_id")?.toString();
-      if (!userId || !headscaleUserId) {
-        throw data("Missing `user_id` or `headscale_user_id` in the form data.", {
+      if (!headplaneUserId || !headscaleUserId) {
+        throw data("Missing `headplane_user_id` or `headscale_user_id` in the form data.", {
           status: 400,
         });
       }
 
-      const users = await api.users.list({ id: userId });
-      const user = users.find((user) => user.id === userId);
-      if (!user) {
-        throw data("Specified user not found", { status: 400 });
-      }
-
-      const subject = getOidcSubject(user);
-      if (!subject) {
-        throw data("Specified user is not an OIDC user or has no subject.", { status: 400 });
-      }
-
-      const linked = await context.auth.linkHeadscaleUserBySubject(subject, headscaleUserId);
+      const linked = await context.auth.linkHeadscaleUser(headplaneUserId, headscaleUserId);
       if (!linked) {
         throw data("That Headscale user is already linked to another account.", { status: 409 });
       }

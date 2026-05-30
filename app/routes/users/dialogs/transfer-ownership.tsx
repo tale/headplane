@@ -4,14 +4,14 @@ import Text from "~/components/text";
 import Title from "~/components/title";
 
 interface TransferOwnershipProps {
-  targetUserId: string;
+  targetHeadplaneUserId: string;
   targetDisplayName: string;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
 }
 
 export default function TransferOwnership({
-  targetUserId,
+  targetHeadplaneUserId,
   targetDisplayName,
   isOpen,
   setIsOpen,
@@ -29,7 +29,7 @@ export default function TransferOwnership({
           ownership.
         </Notice>
         <input name="action_id" type="hidden" value="transfer_ownership" />
-        <input name="user_id" type="hidden" value={targetUserId} />
+        <input name="headplane_user_id" type="hidden" value={targetHeadplaneUserId} />
       </DialogPanel>
     </Dialog>
   );
