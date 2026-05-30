@@ -86,6 +86,40 @@ To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment vari
 This will enable all debug logs for Headplane, which could fill up log space very quickly.
 This is not recommended in production environments.
 
+## TLS Termination
+
+Headplane can terminate TLS itself when both `server.tls_cert_path` and
+`server.tls_key_path` are set in the configuration file. Both must point to
+PEM-encoded files that Headplane can read.
+
+```yaml
+server:
+  port: 443
+  tls_cert_path: "/var/lib/headplane/tls/fullchain.pem"
+  tls_key_path: "/var/lib/headplane/tls/privkey.pem"
+```
+
+When TLS is configured Headplane serves HTTPS/1.1 on `server.port`. HTTP/2
+and HTTP/3 are intentionally not supported in-process — terminate those at a
+reverse proxy (e.g. Caddy or Traefik) and forward to Headplane over HTTP/1.1
+if you need them today.
+
+`server.cookie_secure` is forced to `true` whenever TLS is enabled (browsers
+refuse `Secure`-less cookies over HTTPS); a warning is logged if your config
+had it set to `false`.
+
+For most deployments we still recommend terminating TLS at a reverse proxy
+([see below](#reverse-proxying)) so you can share certificates with Headscale
+and other services. Built-in TLS is meant for the simpler "Headplane on a
+single box" scenarios.
+
+If you're running Headplane in Docker with TLS enabled, the bundled
+healthcheck binary needs to know it should use HTTPS. Set the following
+environment variables on the container:
+
+- `HEADPLANE_HEALTHCHECK_TLS=true`
+- `HEADPLANE_HEALTHCHECK_PORT` (if you've changed it from the default `3000`)
+
 ## Reverse Proxying
 
 Reverse proxying is very common when deploying web applications. Headscale and

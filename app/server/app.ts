@@ -35,6 +35,14 @@ try {
   exit(1);
 }
 
+if ((config.server.tls_cert_path || config.server.tls_key_path) && !config.server.cookie_secure) {
+  log.warn(
+    "server",
+    "TLS is enabled but `server.cookie_secure` is false; forcing it to true (browsers reject Secure-less cookies over HTTPS)",
+  );
+  config.server.cookie_secure = true;
+}
+
 const ctx = await createAppContext(config);
 ctx.startServices();
 

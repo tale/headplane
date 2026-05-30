@@ -17,7 +17,18 @@ server:
   # Whether cookies should be marked as Secure
   # * Should be false if running without HTTPs
   # * Should be true if running behind a reverse proxy with HTTPs
+  # When `tls_cert_path`/`tls_key_path` are set below this is forced
+  # to true automatically.
   cookie_secure: true
+
+  # Optional TLS termination. When both `tls_cert_path` and
+  # `tls_key_path` are set, Headplane serves HTTPS on `server.port`.
+  # Both files must be PEM encoded.
+  #
+  # If you are terminating TLS at a reverse proxy (recommended for most
+  # deployments) leave these unset.
+  # tls_cert_path: "/var/lib/headplane/tls/fullchain.pem"
+  # tls_key_path: "/var/lib/headplane/tls/privkey.pem"
 
   # The maximum age of the session cookie in seconds
   cookie_max_age: 86400 # 1 day in seconds
