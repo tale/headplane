@@ -112,10 +112,14 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
       }
 
       await checkSelfServiceOwnership(user);
+      // `user` here is the Headscale numeric user id (form field is wired
+      // from User.id). Pre-0.28 expire posts a uint64 `user` field, which
+      // the API layer reads from `key.user?.id`. Headscale 0.28+ only
+      // looks at `key.id` (the stable preauthkey id).
       await api.preAuthKeys.expire({
         id: keyId,
         key,
-        user: { name: user },
+        user: { id: user },
       } as unknown as PreAuthKey);
       return data("Pre-auth key expired");
     }
