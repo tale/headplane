@@ -234,7 +234,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 )}
               >
                 {loaderData.unlinkedHeadscaleUsers.map((user) => (
-                  <HeadscaleUserRow key={user.id} user={user} />
+                  <HeadscaleUserRow key={user.id} user={user} writable={loaderData.writable} />
                 ))}
               </tbody>
             </table>

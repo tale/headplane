@@ -4,12 +4,14 @@ import StatusCircle from "~/components/status-circle";
 import cn from "~/utils/cn";
 
 import type { UnlinkedHeadscaleUser } from "../overview";
+import HeadscaleUserMenu from "./headscale-user-menu";
 
 interface HeadscaleUserRowProps {
   user: UnlinkedHeadscaleUser;
+  writable?: boolean;
 }
 
-export default function HeadscaleUserRow({ user }: HeadscaleUserRowProps) {
+export default function HeadscaleUserRow({ user, writable }: HeadscaleUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
@@ -54,9 +56,7 @@ export default function HeadscaleUserRow({ user }: HeadscaleUserRowProps) {
           <p className="text-sm text-mist-600 dark:text-mist-300">No machines</p>
         )}
       </td>
-      <td className="py-2 pr-0.5">
-        {/* Unlinked users only get basic Headscale operations (rename, delete) */}
-      </td>
+      <td className="py-2 pr-0.5">{writable ? <HeadscaleUserMenu user={user} /> : null}</td>
     </tr>
   );
 }

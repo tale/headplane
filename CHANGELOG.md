@@ -11,6 +11,7 @@
 - Fixed tooltips on the last row of the machines table being clipped by the viewport; tooltips now anchor above the trigger with collision padding (closes [#508](https://github.com/tale/headplane/issues/508)).
 - Fixed the "Register Machine Key" dialog passing the Headscale numeric user id instead of the username. Headscale's `RegisterNodeRequest.user` proto field is a `string` that is looked up via `GetUserByName` (no numeric fallback), so registration was failing whenever the selected owner's display name differed from their numeric id (closes [#532](https://github.com/tale/headplane/issues/532)).
 - Fixed pre-auth key expiration on Headscale 0.27.x. The pre-0.28 expire endpoint takes a `uint64 user` field which the API layer reads from `key.user?.id`, but the caller was wrapping the id as `{ name: user }`, causing the request to send an empty user field. Headplane now correctly passes the numeric Headscale user id.
+- Added Rename and Delete actions for unlinked Headscale users on the Users page so admins can manage Headscale users that have no Headplane account (closes [#525](https://github.com/tale/headplane/issues/525)).
 - Corrected the Docker healthcheck example in the docs to use the required `CMD` prefix so reverse proxies don't see the container as unhealthy (closes [#535](https://github.com/tale/headplane/issues/535)).
 
 ---
