@@ -57,7 +57,7 @@ services:
   headplane:
     image: ghcr.io/tale/headplane:latest
     healthcheck:
-      test: ["/bin/hp_healthcheck"]
+      test: ["CMD", "/bin/hp_healthcheck"]
       interval: 30s
       timeout: 5s
       start_period: 5s

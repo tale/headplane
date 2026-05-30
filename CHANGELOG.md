@@ -7,6 +7,7 @@
 - **Made Headscale boot resilient.** Headplane now boots even when Headscale is unreachable; capabilities default permissively and a background retry settles them once Headscale responds. No more cold-start ordering problems with docker-compose.
 - Fixed user-management actions (link, change role, transfer ownership) using the wrong ID type for unlinked Headplane users. Form fields are now explicitly `headplane_user_id` vs `headscale_user_id`, and the auth layer no longer round-trips through Headscale to recover the OIDC subject.
 - Fixed dialog panels growing beyond the viewport; dialog content is now constrained and scrollable (via [#556](https://github.com/tale/headplane/pull/556)).
+- Corrected the Docker healthcheck example in the docs to use the required `CMD` prefix so reverse proxies don't see the container as unhealthy (closes [#535](https://github.com/tale/headplane/issues/535)).
 
 ---
 
