@@ -1,3 +1,15 @@
+# Next
+
+> This is a beta release. Please report any issues you encounter.
+
+- **Headplane now requires Headscale 0.27.0 or newer.** Support for 0.26.x has been dropped. If `/version` returns 404 (the endpoint was added in 0.27.0), Headplane logs an error and keeps retrying so an in-place Headscale upgrade is picked up without a restart.
+- **Replaced the OpenAPI hash detection with `/version`.** Capabilities are now derived from the version reported by `/version` instead of fingerprinting the OpenAPI schema. This dramatically simplifies version detection and works with every supported release out of the box.
+- **Made Headscale boot resilient.** Headplane now boots even when Headscale is unreachable; capabilities default permissively and a background retry settles them once Headscale responds. No more cold-start ordering problems with docker-compose.
+- Fixed user-management actions (link, change role, transfer ownership) using the wrong ID type for unlinked Headplane users. Form fields are now explicitly `headplane_user_id` vs `headscale_user_id`, and the auth layer no longer round-trips through Headscale to recover the OIDC subject.
+- Fixed dialog panels growing beyond the viewport; dialog content is now constrained and scrollable (via [#556](https://github.com/tale/headplane/pull/556)).
+
+---
+
 # 0.7.0-beta.3 (May 14, 2026)
 
 > This is a beta release. Please report any issues you encounter.
