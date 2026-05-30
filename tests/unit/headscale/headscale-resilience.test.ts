@@ -77,7 +77,29 @@ describe("createHeadscale boot-time resilience", () => {
     // Should not throw, and should default to "unknown" with permissive caps.
     expect(headscale.version.unknown).toBe(true);
     expect(headscale.capabilities.preAuthKeysHaveStableIds).toBe(true);
-    expect(headscale.capabilities.policyErrorsUseModernFormat).toBe(true);
+    await headscale.dispose();
+  });
+
+  test("a 404 from /version is treated as below the supported floor and keeps retrying", async () => {
+    const probe = await startVersionServer(() => new Response("not found", { status: 404 }));
+
+    const headscale = await createHeadscale({ url: probe.url, retryIntervalMs: 25 });
+    // 404 = pre-0.27 Headscale. We do NOT settle on an inferred version;
+    // capabilities stay permissive and the background retry keeps probing
+    // so an in-place upgrade is picked up without a Headplane restart.
+    expect(headscale.version.unknown).toBe(true);
+
+    probe.setResponse(() =>
+      Response.json({ version: "v0.28.0", commit: "x", buildTime: "", go: "", dirty: false }),
+    );
+
+    const deadline = Date.now() + 2000;
+    while (Date.now() < deadline && headscale.version.unknown) {
+      await new Promise((r) => setTimeout(r, 25));
+    }
+
+    expect(headscale.version.unknown).toBe(false);
+    expect(headscale.version.raw).toBe("v0.28.0");
     await headscale.dispose();
   });
 
@@ -100,7 +122,6 @@ describe("createHeadscale boot-time resilience", () => {
     expect(headscale.version.unknown).toBe(false);
     expect(headscale.version.raw).toBe("v0.27.1");
     expect(headscale.capabilities.preAuthKeysHaveStableIds).toBe(false);
-    expect(headscale.capabilities.policyErrorsUseModernFormat).toBe(true);
     await headscale.dispose();
   });
 

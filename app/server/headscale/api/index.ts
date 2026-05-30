@@ -1,14 +1,26 @@
 // MARK: Headscale API
 //
-// The public entry point for talking to a Headscale server. Boot
-// detects the server version via `GET /version` (unauthenticated,
-// available since Headscale 0.26.0), derives a typed `Capabilities`
-// object, and returns a `Headscale` value that constructs
-// authenticated `HeadscaleClient`s on demand.
+// The public entry point for talking to a Headscale server. At boot
+// we try `GET /version` (unauthenticated, present since Headscale
+// 0.27.0 — the minimum version Headplane supports) to derive a
+// typed `Capabilities` object. Boot outcomes:
+//
+//   - success: parse the response, derive capabilities, done.
+//   - 404: Headscale is reachable but predates 0.27.0 and is no
+//     longer supported. Log an error and keep retrying so an
+//     upgrade is picked up without a Headplane restart.
+//   - any other failure (network, 5xx, parse): Headplane still
+//     boots with `version = unknown` (capabilities-permissive) and
+//     a background retry. This handles docker-compose start-order
+//     races without making the whole process unhappy.
+//
+// Capabilities are always derived from `version`; once detection
+// finishes there's no further state to track.
 
 import log from "~/utils/log";
 
 import { type Capabilities, capabilitiesFor } from "./capabilities";
+import { isDataWithApiError } from "./error-client";
 import { type ApiKeyApi, makeApiKeyApi } from "./resources/api-keys";
 import { makeNodeApi, type NodeApi } from "./resources/nodes";
 import { makePolicyApi, type PolicyApi } from "./resources/policy";
@@ -16,6 +28,8 @@ import { makePreAuthKeyApi, type PreAuthKeyApi } from "./resources/pre-auth-keys
 import { makeUserApi, type UserApi } from "./resources/users";
 import { formatServerVersion, parseServerVersion, type ServerVersion } from "./server-version";
 import { createTransport } from "./transport";
+
+const MIN_SUPPORTED_VERSION = "0.27.0";
 
 export interface Headscale {
   readonly version: ServerVersion;
@@ -58,24 +72,39 @@ export async function createHeadscale(opts: CreateHeadscaleOptions): Promise<Hea
   let retryTimer: ReturnType<typeof setTimeout> | undefined;
   let disposed = false;
 
+  function settle(parsed: ServerVersion) {
+    version = parsed;
+    capabilities = capabilitiesFor(parsed);
+    detected = true;
+    if (parsed.unknown) {
+      log.warn(
+        "api",
+        "Could not parse Headscale version %s, assuming newest known capabilities",
+        parsed.raw,
+      );
+    } else {
+      log.info("api", "Connected to Headscale %s", formatServerVersion(parsed));
+    }
+  }
+
   async function detectOnce(): Promise<boolean> {
     try {
       const { version: raw } = await transport.getPublic<{ version: string }>("/version");
-      const parsed = parseServerVersion(raw);
-      version = parsed;
-      capabilities = capabilitiesFor(parsed);
-      detected = true;
-      if (parsed.unknown) {
-        log.warn(
-          "api",
-          "Could not parse Headscale version %s, assuming newest known capabilities",
-          raw,
-        );
-      } else {
-        log.info("api", "Connected to Headscale %s", formatServerVersion(parsed));
-      }
+      settle(parseServerVersion(raw));
       return true;
     } catch (error) {
+      // 404 means Headscale is reachable but predates 0.27.0 (where
+      // /version was introduced). That server is below the supported
+      // floor, so we don't settle — leave capabilities permissive and
+      // keep retrying in case the operator upgrades in place.
+      if (isDataWithApiError(error) && error.data.statusCode === 404) {
+        log.error(
+          "api",
+          "Headscale /version returned 404; Headplane requires Headscale %s or newer",
+          MIN_SUPPORTED_VERSION,
+        );
+        return false;
+      }
       log.debug("api", "Headscale /version probe failed: %s", String(error));
       return false;
     }

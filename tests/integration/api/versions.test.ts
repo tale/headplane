@@ -24,10 +24,9 @@ describe.for(HS_VERSIONS)("Headscale %s: Runtime Client", (version) => {
     expect(bootstrapper.capabilities.preAuthKeysHaveStableIds).toBe(gte(v, "0.28.0"));
     expect(bootstrapper.capabilities.nodeTagsAreFlat).toBe(gte(v, "0.28.0"));
     expect(bootstrapper.capabilities.nodeOwnerIsImmutable).toBe(gte(v, "0.28.0"));
-    expect(bootstrapper.capabilities.policyErrorsUseModernFormat).toBe(gte(v, "0.27.0"));
-    // The known version table only has 0.26+; if a future version is added
-    // before this test is updated, surface that explicitly rather than passing.
-    const known: Version[] = ["0.26.1", "0.27.0", "0.27.1", "0.28.0"];
+    // If a future version is added to HS_VERSIONS before this test is
+    // updated, surface that explicitly rather than passing silently.
+    const known: Version[] = ["0.27.0", "0.27.1", "0.28.0"];
     if (!known.includes(version)) {
       context.skip();
     }

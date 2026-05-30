@@ -54,71 +54,29 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
         throw error;
       }
 
-      // Starting in Headscale 0.27.0 the ACLs parsing was changed meaning
-      // we need to reference other error messages based on API version.
-      if (context.headscale.capabilities.policyErrorsUseModernFormat) {
-        if (message.includes("parsing HuJSON:")) {
-          const cutIndex = message.indexOf("parsing HuJSON:");
-          const trimmed =
-            cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 16).trim()}` : message;
+      // Policy parse errors carry one of two prefixes (HuJSON syntax vs.
+      // structural unmarshal). Headscale 0.27.0+ uses these forms; older
+      // releases are no longer supported.
+      if (message.includes("parsing HuJSON:")) {
+        const cutIndex = message.indexOf("parsing HuJSON:");
+        const trimmed =
+          cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 16).trim()}` : message;
 
-          return data(
-            {
-              success: false,
-              error: trimmed,
-              policy: undefined,
-              updatedAt: undefined,
-            },
-            400,
-          );
-        }
+        return data(
+          { success: false, error: trimmed, policy: undefined, updatedAt: undefined },
+          400,
+        );
+      }
 
-        if (message.includes("parsing policy from bytes:")) {
-          const cutIndex = message.indexOf("parsing policy from bytes:");
-          const trimmed =
-            cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 26).trim()}` : message;
+      if (message.includes("parsing policy from bytes:")) {
+        const cutIndex = message.indexOf("parsing policy from bytes:");
+        const trimmed =
+          cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 26).trim()}` : message;
 
-          return data(
-            {
-              success: false,
-              error: trimmed,
-              policy: undefined,
-              updatedAt: undefined,
-            },
-            400,
-          );
-        }
-      } else {
-        // Pre-0.27.0 error messages
-        if (message.includes("parsing hujson")) {
-          const cutIndex = message.indexOf("err: hujson:");
-          const trimmed = cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 12)}` : message;
-
-          return data(
-            {
-              success: false,
-              error: trimmed,
-              policy: undefined,
-              updatedAt: undefined,
-            },
-            400,
-          );
-        }
-
-        if (message.includes("unmarshalling policy")) {
-          const cutIndex = message.indexOf("err:");
-          const trimmed = cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 5)}` : message;
-
-          return data(
-            {
-              success: false,
-              error: trimmed,
-              policy: undefined,
-              updatedAt: undefined,
-            },
-            400,
-          );
-        }
+        return data(
+          { success: false, error: trimmed, policy: undefined, updatedAt: undefined },
+          400,
+        );
       }
     }
 

@@ -36,13 +36,6 @@ export interface Capabilities {
    * 0.28.0+.
    */
   readonly nodeOwnerIsImmutable: boolean;
-
-  /**
-   * Policy parse errors use the modern `parsing HuJSON:` /
-   * `parsing policy from bytes:` prefixes. Pre-0.27 emitted
-   * `parsing hujson` / `unmarshalling policy`. Introduced in 0.27.0.
-   */
-  readonly policyErrorsUseModernFormat: boolean;
 }
 
 export function capabilitiesFor(version: ServerVersion): Capabilities {
@@ -50,6 +43,5 @@ export function capabilitiesFor(version: ServerVersion): Capabilities {
     preAuthKeysHaveStableIds: gte(version, "0.28.0"),
     nodeTagsAreFlat: gte(version, "0.28.0"),
     nodeOwnerIsImmutable: gte(version, "0.28.0"),
-    policyErrorsUseModernFormat: gte(version, "0.27.0"),
   };
 }

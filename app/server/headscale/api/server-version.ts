@@ -2,7 +2,7 @@
 //
 // Parses the response from Headscale's `GET /version` endpoint into a
 // structured value that capability checks can reason about. The
-// endpoint exists in every Headscale release we support (0.26.0+),
+// endpoint exists in every Headscale release we support (0.27.0+) and
 // returns a plain semver-like string such as `v0.28.0`, `v0.28.0-beta.1`,
 // or `dev` for untagged builds.
 //

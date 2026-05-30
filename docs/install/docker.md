@@ -18,7 +18,7 @@ with Docker.
 ## Prerequisites
 
 - Docker and Docker Compose
-- Headscale version 0.26.0 or later installed and running
+- Headscale version 0.27.0 or later installed and running
 - A [completed configuration file](./index.md#configuration) for Headplane.
 
 ## Installation
@@ -132,7 +132,7 @@ services:
       # Read-only access to the Docker socket (or a proxy)
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
   headscale:
-    image: headscale/headscale:0.26.0
+    image: headscale/headscale:0.27.1
     container_name: headscale
     restart: unless-stopped
     command: serve
@@ -239,7 +239,7 @@ services:
       - "traefik.http.routers.headplane.entrypoints=websecure"
       - "traefik.http.routers.headplane.tls=true"
   headscale:
-    image: headscale/headscale:0.26.0
+    image: headscale/headscale:0.27.1
     container_name: headscale
     restart: unless-stopped
     command: serve

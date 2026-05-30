@@ -20,7 +20,7 @@ or prefer to avoid containers.
 - A Linux-based operating system (e.g, Ubuntu, Debian, CentOS, Fedora)
 - Go version 1.25.1 installed (only needed to build Headplane)
 - Node.js version 22.16.x and [pnpm](https://pnpm.io/) version 10.4.x installed
-- Headscale version 0.26.0 or later installed and running
+- Headscale version 0.27.0 or later installed and running
 - A [completed configuration file](./index.md#configuration) for Headplane.
 
 Before building and running Headplane, ensure that the directory defined in

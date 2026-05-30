@@ -82,7 +82,6 @@ describe("capabilitiesFor", () => {
       preAuthKeysHaveStableIds: true,
       nodeTagsAreFlat: true,
       nodeOwnerIsImmutable: true,
-      policyErrorsUseModernFormat: true,
     });
   });
 
@@ -92,19 +91,10 @@ describe("capabilitiesFor", () => {
     );
   });
 
-  test("0.27.1 only has the policy-error format flag", () => {
+  test("0.27.1 lacks every 0.28-gated capability", () => {
     const caps = capabilitiesFor(parseServerVersion("0.27.1"));
     expect(caps.preAuthKeysHaveStableIds).toBe(false);
     expect(caps.nodeTagsAreFlat).toBe(false);
     expect(caps.nodeOwnerIsImmutable).toBe(false);
-    expect(caps.policyErrorsUseModernFormat).toBe(true);
-  });
-
-  test("0.26.1 has none of the modern capabilities", () => {
-    const caps = capabilitiesFor(parseServerVersion("0.26.1"));
-    expect(caps.preAuthKeysHaveStableIds).toBe(false);
-    expect(caps.nodeTagsAreFlat).toBe(false);
-    expect(caps.nodeOwnerIsImmutable).toBe(false);
-    expect(caps.policyErrorsUseModernFormat).toBe(false);
   });
 });

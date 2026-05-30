@@ -19,7 +19,7 @@ advanced features, making it suitable for local testing and development.
 ## Prerequisites
 
 - Docker (and optionally Docker Compose)
-- Headscale version 0.26.0 or later installed and running
+- Headscale version 0.27.0 or later installed and running
 - A [completed configuration file](/index.md#configuration) for Headplane.
 
 ## Installation
