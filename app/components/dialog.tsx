@@ -58,7 +58,8 @@ function Panel(props: DialogPanelProps) {
   return (
     <AlertDialog.Popup
       className={cn(
-        "w-full max-w-lg rounded-xl p-4",
+        "flex w-full max-w-lg flex-col rounded-xl p-4",
+        "max-h-[90dvh]",
         "outline-hidden",
         "bg-white dark:bg-mist-900",
         "border border-mist-200 dark:border-mist-800",
@@ -67,6 +68,7 @@ function Panel(props: DialogPanelProps) {
     >
       <Form
         method={method ?? "POST"}
+        className="flex min-h-0 flex-1 flex-col"
         onSubmit={(event) => {
           if (onSubmit) {
             onSubmit(event);
@@ -77,8 +79,8 @@ function Panel(props: DialogPanelProps) {
           }
         }}
       >
-        <div className="flex flex-col gap-4">{children}</div>
-        <div className="mt-5 flex justify-end gap-3">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">{children}</div>
+        <div className="mt-5 flex shrink-0 justify-end gap-3">
           {variant === "unactionable" ? (
             <AlertDialog.Close render={<Button>Close</Button>} />
           ) : (
