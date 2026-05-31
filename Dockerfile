@@ -57,6 +57,11 @@ COPY --from=go-base /bin/hp_healthcheck /bin/hp_healthcheck
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 	CMD ["/bin/hp_healthcheck"]
 
+# Tells Headplane to publish its loopback healthcheck URL to this
+# file on startup; `hp_healthcheck` reads it. Docker-only — native
+# installs don't ship a consumer.
+ENV HEADPLANE_LISTEN_FILE=/tmp/headplane-listen
+
 WORKDIR /app
 CMD [ "/app/build/server/index.js" ]
 
@@ -72,6 +77,8 @@ COPY --from=go-base /bin/hp_healthcheck /bin/hp_healthcheck
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
 	CMD ["/bin/hp_healthcheck"]
+
+ENV HEADPLANE_LISTEN_FILE=/tmp/headplane-listen
 
 WORKDIR /app
 CMD [ "node", "/app/build/server/index.js" ]
