@@ -69,6 +69,11 @@ headscale:
   # If you use the TLS configuration in Headscale, and you are not using
   # Let's Encrypt for your certificate, pass in the path to the certificate.
   # (This has no effect if `url` does not start with `https://`)
+  #
+  # Note: this pins Headscale's connection to exactly this one cert. If you
+  # have a private CA you want trusted everywhere (Headscale, OIDC, Docker,
+  # etc.), set `NODE_EXTRA_CA_CERTS=/path/to/ca.pem` on the Headplane
+  # process instead — see https://headplane.net/configuration/tls#custom-certificate-authorities
   # tls_cert_path: "/var/lib/headplane/tls.crt"
 
   # Optional, public URL if its different from the `headscale.url`

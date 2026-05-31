@@ -38,6 +38,7 @@ export default defineConfig({
             link: "/configuration",
             items: [
               { text: "Common Issues", link: "/configuration/common-issues" },
+              { text: "TLS & Certificates", link: "/configuration/tls" },
               {
                 text: "Sensitive Values",
                 link: "/configuration#sensitive-values",
