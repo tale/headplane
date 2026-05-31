@@ -42,10 +42,17 @@ if (certPath || keyPath) {
   }
 }
 
+// Read by the bundled Docker healthcheck. Includes the basename
+// (`__PREFIX__`) so the Go binary can stay completely dumb — just
+// GET whatever URL is in this file. `/tmp` is writable in
+// distroless and in every dev shell we care about.
+const healthURL = `${tls ? "https" : "http"}://127.0.0.1:${config.server.port}${__PREFIX__}/healthz`;
+
 startHttpServer({
   host: config.server.host,
   port: config.server.port,
   tls,
+  listenFile: { path: "/tmp/headplane-listen", url: healthURL },
   listener: composeListener({
     basename: __PREFIX__,
     staticRoot: clientDir,

@@ -4,7 +4,7 @@
 // React Router request listener from `@react-router/node`) and serves
 // static assets out of a directory.
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { stat, writeFile } from "node:fs/promises";
 import {
   type IncomingMessage,
   type RequestListener,
@@ -173,6 +173,14 @@ export interface StartOptions {
   tls?: HttpsServerOptions;
   logger?: Logger;
   /**
+   * If set, writes `url` to `path` once the server is accepting
+   * connections. Used by the bundled Docker healthcheck binary to
+   * discover the right scheme, port, and basename without any
+   * duplicate configuration. The caller assembles the URL so that
+   * the runtime stays generic.
+   */
+  listenFile?: { path: string; url: string };
+  /**
    * Optional async hook invoked on SIGINT/SIGTERM after the HTTP
    * server stops accepting new connections but before the process
    * exits. Use this to dispose long-lived resources (timers,
@@ -194,6 +202,13 @@ export function startHttpServer(opts: StartOptions): Server {
   server.listen(opts.port, opts.host, () => {
     const proto = opts.tls ? "https" : "http";
     log.info("Listening on %s://%s:%s", proto, opts.host, opts.port);
+
+    if (opts.listenFile) {
+      const { path, url } = opts.listenFile;
+      writeFile(path, `${url}\n`, "utf8").catch((err) => {
+        log.error("Failed to write listen file %s: %s", path, err);
+      });
+    }
   });
 
   const shutdown = async (signal: string) => {

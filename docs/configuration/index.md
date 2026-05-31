@@ -113,12 +113,10 @@ For most deployments we still recommend terminating TLS at a reverse proxy
 and other services. Built-in TLS is meant for the simpler "Headplane on a
 single box" scenarios.
 
-If you're running Headplane in Docker with TLS enabled, the bundled
-healthcheck binary needs to know it should use HTTPS. Set the following
-environment variables on the container:
-
-- `HEADPLANE_HEALTHCHECK_TLS=true`
-- `HEADPLANE_HEALTHCHECK_PORT` (if you've changed it from the default `3000`)
+The bundled Docker healthcheck picks up the right scheme and port
+automatically — Headplane writes its loopback URL to `/tmp/headplane-listen`
+when it starts, and the healthcheck reads it from there. No extra environment
+variables, no duplicated config.
 
 ## Reverse Proxying
 
