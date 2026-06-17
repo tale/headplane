@@ -76,6 +76,13 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
       }
 
       const name = String(formData.get("name"));
+      if (!/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(name.toLowerCase())) {
+        throw data(
+          "Machine names must be valid DNS labels: lowercase letters, numbers, and hyphens only, and must start and end with a letter or number.",
+          { status: 400 },
+        );
+      }
+
       await api.nodes.rename(nodeId, name);
       await context.hsLive.refresh(nodesResource, api);
       return { message: "Machine renamed" };
