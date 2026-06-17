@@ -1,44 +1,58 @@
 // MARK: Side-Effects
-// This module contains a side-effect because everything running here
-// is static and logger is later modified in `app/server/index.ts` to
-// disable debug logging if the `HEADPLANE_DEBUG_LOG` specifies as such.
+// This module contains a side-effect because log levels are read from
+// the environment once at module initialization.
+
+import pino from "pino";
 
 const levels = ["info", "warn", "error", "debug"] as const;
 type Category = "server" | "config" | "agent" | "api" | "auth" | "sse";
+type Level = (typeof levels)[number];
 
 export interface Logger extends Record<
-  (typeof levels)[number],
+  Level,
   (category: Category, message: string, ...args: unknown[]) => void
 > {
   debugEnabled: boolean;
 }
 
-const logLevels = getLogLevels();
+const rootLogger = createRootLogger();
 export default {
-  debugEnabled: logLevels.includes("debug"),
-  debug: (..._: Parameters<Logger["debug"]>) => {},
-  ...Object.fromEntries(
-    logLevels.map((level) => [
-      level,
-      (category: Category, message: string, ...args: unknown[]) => {
-        const date = new Date().toISOString();
-        console.log(`${date} [${category}] ${level.toUpperCase()}: ${message}`, ...args);
-      },
-    ]),
-  ),
+  debugEnabled: rootLogger.isLevelEnabled("debug"),
+  info: (category, msg, ...args) => rootLogger.info({ component: category }, msg, ...args),
+  warn: (category, msg, ...args) => rootLogger.warn({ component: category }, msg, ...args),
+  error: (category, msg, ...args) => rootLogger.error({ component: category }, msg, ...args),
+  debug: (category, msg, ...args) => rootLogger.debug({ component: category }, msg, ...args),
 } as Logger;
 
-function getLogLevels() {
+function createRootLogger() {
+  const options = {
+    level: getLogLevel(),
+    timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+    formatters: {
+      level: (label: string) => ({ level: label }),
+    },
+  } satisfies pino.LoggerOptions;
+
+  if (process.env.NODE_ENV === "test") {
+    return pino(options);
+  }
+
+  const destination = pino.destination({ dest: 1, sync: false });
+  process.on("exit", () => destination.flushSync());
+  return pino(options, destination);
+}
+
+function getLogLevel(): Level {
   const debugLog = process.env.HEADPLANE_DEBUG_LOG;
   if (debugLog == null) {
-    return ["info", "warn", "error"];
+    return "info";
   }
 
   const normalized = debugLog.trim().toLowerCase();
   const truthyValues = ["1", "true", "yes", "on"];
   if (!truthyValues.includes(normalized)) {
-    return ["info", "warn", "error"];
+    return "info";
   }
 
-  return ["info", "warn", "error", "debug"];
+  return "debug";
 }

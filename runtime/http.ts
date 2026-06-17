@@ -19,16 +19,31 @@ import {
 import { extname, normalize, resolve, sep } from "node:path";
 
 import mime from "mime";
+import pino from "pino";
 
 export interface Logger {
   info: (msg: string, ...args: unknown[]) => void;
   error: (msg: string, ...args: unknown[]) => void;
 }
 
-// TODO: Replace with Pino!
+const runtimeDestination = pino.destination({ dest: 1, sync: false });
+process.on("exit", () => runtimeDestination.flushSync());
+
+const runtimePino = pino(
+  {
+    base: { service: "headplane" },
+    messageKey: "message",
+    timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+    formatters: {
+      level: (label) => ({ level: label }),
+    },
+  },
+  runtimeDestination,
+);
+
 const defaultLogger: Logger = {
-  info: (msg, ...args) => console.log(`[runtime] ${msg}`, ...args),
-  error: (msg, ...args) => console.error(`[runtime] ${msg}`, ...args),
+  info: (msg, ...args) => runtimePino.info({ component: "runtime" }, msg, ...args),
+  error: (msg, ...args) => runtimePino.error({ component: "runtime" }, msg, ...args),
 };
 
 export interface StaticOptions {

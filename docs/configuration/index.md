@@ -82,6 +82,10 @@ The path-based secret loading mechanism also works with environment variables. F
 
 ## Debugging
 
+Headplane writes server logs as newline-delimited JSON using Pino. Each entry
+includes a timestamp, level, component, and message (`msg`) so log aggregation
+tools can filter and index it directly.
+
 To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment variable.
 This will enable all debug logs for Headplane, which could fill up log space very quickly.
 This is not recommended in production environments.

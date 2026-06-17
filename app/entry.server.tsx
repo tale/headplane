@@ -7,6 +7,8 @@ import { renderToPipeableStream } from "react-dom/server";
 import type { AppLoadContext, EntryContext } from "react-router";
 import { ServerRouter } from "react-router";
 
+import log from "~/utils/log";
+
 export const streamTimeout = 5_000;
 export default function handleRequest(
   request: Request,
@@ -52,7 +54,7 @@ export default function handleRequest(
           // errors encountered during initial shell rendering since they'll
           // reject and get logged in handleDocumentRequest.
           if (shellRendered) {
-            console.error(error);
+            log.error("server", "Streaming render error: %o", error);
           }
         },
       },

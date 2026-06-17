@@ -57,15 +57,22 @@ const listenFile = listenFilePath
     }
   : undefined;
 
+const runtimeLogger = {
+  info: (message: string, ...args: unknown[]) => log.info("server", message, ...args),
+  error: (message: string, ...args: unknown[]) => log.error("server", message, ...args),
+};
+
 startHttpServer({
   host: config.server.host,
   port: config.server.port,
   tls,
+  logger: runtimeLogger,
   listenFile,
   listener: composeListener({
     basename: __PREFIX__,
     staticRoot: clientDir,
     immutableAssets: true,
+    logger: runtimeLogger,
     requestListener,
   }),
   onShutdown: dispose,
