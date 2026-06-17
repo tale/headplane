@@ -251,7 +251,7 @@ export async function loadHeadscaleConfig(path?: string, strict = true, dnsPath?
     return new HeadscaleConfig("no");
   }
 
-  const dns = await loadHeadscaleDNS(dnsPath);
+  const dns = await loadHeadscaleDNS(dnsPath ?? config.dns.extra_records_path);
   if (dns && !config.dns.extra_records_path) {
     log.error(
       "config",

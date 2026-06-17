@@ -123,10 +123,10 @@ services:
       # Headplane config.yaml file.
       - "/path/to/headscale/config.yaml:/etc/headscale/config.yaml"
 
-      # If you are using dns.extra_records in Headscale (recommended), you
-      # should also mount that file here so Headplane can read and write it.
-      # Ensure that the path matches `headscale.dns_records_path` in your
-      # Headplane config.yaml file.
+      # If you are using dns.extra_records_path in Headscale (recommended),
+      # also mount that file here so Headplane can read and write it. If the
+      # in-container path differs from Headscale's dns.extra_records_path,
+      # set `headscale.dns_records_path` in your Headplane config.yaml file.
       - "/path/to/headscale/dns_records.json:/etc/headscale/dns_records.json"
 
       # Read-only access to the Docker socket (or a proxy)

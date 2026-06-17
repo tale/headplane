@@ -83,7 +83,7 @@ _Default:_ `true`
 
 ## settings.headscale.dns_records_path
 
-_Description:_ If you are using `dns.extra_records_path` in your Headscale configuration, you need to set this to the path for Headplane to be able to read the DNS records.
+_Description:_ If you are using `dns.extra_records_path` in your Headscale configuration, Headplane reads that path automatically. Set this only when Headplane needs to access the same file at a different path.
 Ensure that the file is both readable and writable by the Headplane process.
 When using this, Headplane will no longer need to automatically restart Headscale for DNS record changes.
 
