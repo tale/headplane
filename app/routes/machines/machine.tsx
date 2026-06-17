@@ -12,7 +12,7 @@ import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
-import { isNoExpiry, mapNodes, sortNodeTags } from "~/utils/node-info";
+import { isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
@@ -50,11 +50,16 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const agents = context.agents.state === "enabled" ? context.agents.value : undefined;
-  const lookup = await agents?.lookup([node.nodeKey]);
-  const [enhancedNode] = mapNodes([node], lookup);
+  const [lookup, policyResult] = await Promise.allSettled([
+    agents?.lookup([node.nodeKey]),
+    api.policy.get(),
+  ]);
+  const stats = lookup.status === "fulfilled" ? lookup.value : undefined;
+  const [enhancedNode] = mapNodes([node], stats);
   const tags = [...node.tags].toSorted();
   const supportsNodeOwnerChange = !context.headscale.capabilities.nodeOwnerIsImmutable;
   const agentSync = agents?.lastSync();
+  const policy = policyResult.status === "fulfilled" ? policyResult.value.policy : undefined;
 
   return {
     agent: agentSync
@@ -64,10 +69,10 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
           nodeKey: agents?.agentNodeKey(),
         }
       : undefined,
-    existingTags: sortNodeTags(nodes),
+    existingTags: sortAssignableTags(nodes, policy),
     magic,
     node: enhancedNode,
-    stats: lookup?.[enhancedNode.nodeKey],
+    stats: stats?.[enhancedNode.nodeKey],
     supportsNodeOwnerChange: supportsNodeOwnerChange,
     tags,
     users,

@@ -24,6 +24,10 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
   const submittingRef = useRef(false);
   const [tags, setTags] = useState([...machine.tags]);
   const [tag, setTag] = useState("tag:");
+  const tagOptions = useMemo(
+    () => (existingTags ?? []).filter((existingTag) => !tags.includes(existingTag)),
+    [existingTags, tags],
+  );
   const tagIsInvalid = useMemo(
     () => tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag),
     [tag, tags],
@@ -128,6 +132,21 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
             <Plus className="p-1" size={30} />
           </Button>
         </div>
+        {tagOptions.length > 0 ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tagOptions.map((option) => (
+              <Button
+                className="px-2 py-1 font-mono text-xs"
+                key={option}
+                onClick={() => setTags([...tags, option])}
+                type="button"
+                variant="ghost"
+              >
+                {option}
+              </Button>
+            ))}
+          </div>
+        ) : null}
         <p className="mt-2 text-sm opacity-50">
           Not seeing the tags you expect? Tags need to be defined in your access control policy
           before they can be assigned to machines.

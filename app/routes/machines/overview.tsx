@@ -10,7 +10,7 @@ import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
-import { mapNodes, sortNodeTags, type PopulatedNode } from "~/utils/node-info";
+import { mapNodes, sortAssignableTags, type PopulatedNode } from "~/utils/node-info";
 
 import type { Route } from "./+types/overview";
 import { MachineFilters } from "./components/machine-filters";
@@ -46,7 +46,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const agents = context.agents.state === "enabled" ? context.agents.value : undefined;
-  const stats = await agents?.lookup(nodes.map((node) => node.nodeKey));
+  const [statsResult, policyResult] = await Promise.allSettled([
+    agents?.lookup(nodes.map((node) => node.nodeKey)),
+    api.policy.get(),
+  ]);
+  const stats = statsResult.status === "fulfilled" ? statsResult.value : undefined;
+  const policy = policyResult.status === "fulfilled" ? policyResult.value.policy : undefined;
   const populatedNodes = mapNodes(nodes, stats);
   const supportsNodeOwnerChange = !context.headscale.capabilities.nodeOwnerIsImmutable;
   const agentSync = agents?.lastSync();
@@ -60,6 +65,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         }
       : undefined,
     headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,
+    existingTags: sortAssignableTags(nodes, policy),
     magic,
     nodes,
     populatedNodes,
@@ -423,7 +429,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             ) : (
               filteredAndSortedNodes.map((node) => (
                 <MachineRow
-                  existingTags={sortNodeTags(loaderData.nodes)}
+                  existingTags={loaderData.existingTags}
                   isAgent={
                     loaderData.agent !== undefined
                       ? node.nodeKey === loaderData.agent.nodeKey

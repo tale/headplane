@@ -48,3 +48,94 @@ export function mapNodes(
 export function sortNodeTags(nodes: Machine[]): string[] {
   return Array.from(new Set(nodes.flatMap((node) => node.tags))).sort();
 }
+
+export function sortAssignableTags(nodes: Machine[], policy?: string): string[] {
+  return Array.from(new Set([...sortNodeTags(nodes), ...extractTagOwnerTags(policy)])).sort();
+}
+
+export function extractTagOwnerTags(policy: string | undefined): string[] {
+  if (!policy) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(stripJsonCommentsAndTrailingCommas(policy)) as unknown;
+    if (parsed == null || typeof parsed !== "object" || !("tagOwners" in parsed)) {
+      return [];
+    }
+
+    const tagOwners = (parsed as { tagOwners?: unknown }).tagOwners;
+    if (tagOwners == null || typeof tagOwners !== "object" || Array.isArray(tagOwners)) {
+      return [];
+    }
+
+    return Object.keys(tagOwners)
+      .filter((tag) => tag.startsWith("tag:"))
+      .sort();
+  } catch {
+    return [];
+  }
+}
+
+function stripJsonCommentsAndTrailingCommas(input: string): string {
+  let output = "";
+  let inString = false;
+  let escaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < input.length; i++) {
+    const char = input[i];
+    const next = input[i + 1];
+
+    if (inLineComment) {
+      if (char === "\n" || char === "\r") {
+        inLineComment = false;
+        output += char;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === "*" && next === "/") {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (inString) {
+      output += char;
+      if (escaped) {
+        escaped = false;
+      } else if (char === "\\") {
+        escaped = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      output += char;
+      continue;
+    }
+
+    if (char === "/" && next === "/") {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+
+    if (char === "/" && next === "*") {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output.replace(/,\s*([}\]])/g, "$1");
+}

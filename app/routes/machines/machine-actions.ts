@@ -122,6 +122,7 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
             {
               success: false as const,
               error:
+                extractApiErrorMessage(error.data) ??
                 "One or more tags are not defined in your ACL policy. Please add them to your policy before assigning them to a machine.",
             },
             { status: 400 },
@@ -206,4 +207,15 @@ export async function machineAction({ request, context }: Route.ActionArgs) {
         status: 400,
       });
   }
+}
+
+function extractApiErrorMessage(error: { data?: unknown; rawData: string }) {
+  if (error.data != null && typeof error.data === "object" && "message" in error.data) {
+    const message = (error.data as { message?: unknown }).message;
+    if (typeof message === "string" && message.length > 0) {
+      return message;
+    }
+  }
+
+  return error.rawData.length > 0 ? error.rawData : undefined;
 }
