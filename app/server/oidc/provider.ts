@@ -451,14 +451,15 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     body: URLSearchParams,
     method: "client_secret_basic" | "client_secret_post",
   ): Promise<Result<TokenResponse, OidcError>> {
+    const requestBody = new URLSearchParams(body);
     const headers: Record<string, string> = {
       "Content-Type": "application/x-www-form-urlencoded",
       Accept: "application/json",
     };
 
     if (method === "client_secret_post") {
-      body.set("client_id", config.clientId);
-      body.set("client_secret", config.clientSecret);
+      requestBody.set("client_id", config.clientId);
+      requestBody.set("client_secret", config.clientSecret);
     } else {
       const credentials = btoa(
         `${encodeURIComponent(config.clientId)}:${encodeURIComponent(config.clientSecret)}`,
@@ -472,7 +473,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       response = await fetch(tokenEndpoint, {
         method: "POST",
         headers,
-        body: body.toString(),
+        body: requestBody.toString(),
         signal: AbortSignal.timeout(10_000),
       });
     } catch (cause) {

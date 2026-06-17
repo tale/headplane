@@ -771,6 +771,7 @@ describe("handleCallback", () => {
     const idToken = await signIdToken({ sub: "user-123", name: "Test" }, flowState.nonce);
 
     let callCount = 0;
+    let retryBody = "";
     tokenHandler = async (req, res) => {
       callCount++;
       const body = await readBody(req);
@@ -781,6 +782,8 @@ describe("handleCallback", () => {
         res.end(JSON.stringify({ error: "invalid_client", error_description: "Use basic auth" }));
         return;
       }
+
+      retryBody = body;
 
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(
@@ -798,6 +801,7 @@ describe("handleCallback", () => {
 
     expect(result.ok).toBe(true);
     expect(callCount).toBe(2);
+    expect(new URLSearchParams(retryBody).has("client_secret")).toBe(false);
   });
 
   test("token exchange uses client_secret_post by default", async () => {
@@ -846,8 +850,10 @@ describe("handleCallback", () => {
     const idToken = await signIdToken({ sub: "user-123", name: "Test" }, flowState.nonce);
 
     let receivedAuth: string | undefined;
+    let receivedBody = "";
     tokenHandler = async (req, res) => {
       receivedAuth = req.headers.authorization;
+      receivedBody = await readBody(req);
       res.writeHead(200, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ access_token: "at", id_token: idToken, token_type: "Bearer" }));
     };
@@ -858,6 +864,7 @@ describe("handleCallback", () => {
 
     expect(receivedAuth).toBeDefined();
     expect(receivedAuth!.startsWith("Basic ")).toBe(true);
+    expect(new URLSearchParams(receivedBody).has("client_secret")).toBe(false);
   });
 });
 
