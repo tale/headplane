@@ -138,8 +138,8 @@ build_wasm() {
 		"$(dirname "$WASM_OUTPUT")/wasm_exec.js"
 
 	# Vendor dependencies and apply the DERP port patch.
-	# Tailscale's derphttp WebSocket URL builder ignores DERPPort,
-	# which breaks WASM connections to non-443 DERP servers.
+	# Tailscale's browser WebSocket and netcheck URL builders ignore
+	# DERPPort, which breaks WASM connections to non-443 DERP servers.
 	echo "==> Vendoring Go dependencies for WASM patch"
 	go mod vendor
 

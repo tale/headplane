@@ -1,9 +1,9 @@
-Fix DERP WebSocket URL to include non-standard ports.
+Fix DERP browser URLs to include non-standard ports.
 
-Tailscale's derphttp client ignores DERPPort when building WebSocket
-URLs, causing connections to fail when DERP servers run on non-443
-ports (e.g. :8443). The TCP dial path correctly handles DERPPort
-but the WebSocket path (used in WASM/browser builds) does not.
+Tailscale's browser DERP paths ignore DERPPort when building WebSocket
+and HTTP-only netcheck probe URLs, causing connections to fail when DERP
+servers run on non-443 ports (e.g. :8443). The TCP dial path correctly
+handles DERPPort but the browser paths used by WASM builds do not.
 
 --- a/derp/derphttp/derphttp_client.go
 +++ b/derp/derphttp/derphttp_client.go
@@ -28,3 +28,19 @@ but the WebSocket path (used in WASM/browser builds) does not.
  }
  
  // AddressFamilySelector decides whether IPv6 is preferred for
+
+--- a/net/netcheck/netcheck.go
++++ b/net/netcheck/netcheck.go
+@@ -1103,7 +1103,11 @@
+ 		go func() {
+ 			defer wg.Done()
+ 			node := rg.Nodes[0]
+-			req, _ := http.NewRequestWithContext(ctx, "HEAD", "https://"+node.HostName+"/derp/probe", nil)
++			host := node.HostName
++			if node.DERPPort != 0 {
++				host = net.JoinHostPort(node.HostName, fmt.Sprint(node.DERPPort))
++			}
++			req, _ := http.NewRequestWithContext(ctx, "HEAD", "https://"+host+"/derp/probe", nil)
+ 			// One warm-up one to get HTTP connection set
+ 			// up and get a connection from the browser's
+ 			// pool.
