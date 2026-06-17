@@ -1,3 +1,16 @@
+# Next
+
+- Switched to structured JSON logging (closes [#279](https://github.com/tale/headplane/issues/279)).
+- Added suggestions to pick existing tags to the machine tag dialog (closes [#560](https://github.com/tale/headplane/issues/560)).
+- Headplane correctly handles `dns.extra_records_path` from the Headscale configuration (closes [#543](https://github.com/tale/headplane/issues/543)).
+- Fixed Headscale PostgreSQL config validation so `pass` is not required when `password_file` is supplied (closes [#528](https://github.com/tale/headplane/issues/528)).
+- Fixed Browser SSH's WASM DERP probe to account for custom DERP ports (closes [#552](https://github.com/tale/headplane/issues/552)).
+- Fixed Browser SSH pre-auth key handling by increasing the temporary key expiry window and showing key creation errors in the UI (closes [#565](https://github.com/tale/headplane/issues/565)).
+- Fixed machine rename submission by validating names before sending the rename request (closes [#564](https://github.com/tale/headplane/issues/564)).
+- Fixed OIDC token exchange fallback when retrying with `client_secret_basic` (closes [#493](https://github.com/tale/headplane/issues/493)).
+
+---
+
 # 0.7.0-beta.4 (May 31, 2026)
 
 > This is a beta release. Please report any issues you encounter.
