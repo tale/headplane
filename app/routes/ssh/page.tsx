@@ -16,6 +16,7 @@ import { loadHeadplaneWASM } from "./wasm.client";
 
 const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
 const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
+const SSH_PREAUTH_KEY_TTL_MS = 10 * 60 * 1000;
 
 export const shouldRevalidate: ShouldRevalidateFunction = () => {
   return false;
@@ -75,7 +76,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     user: hsUser.id,
     ephemeral: true,
     reusable: false,
-    expiration: new Date(Date.now() + 60 * 1000), // 1 minute expiry
+    expiration: new Date(Date.now() + SSH_PREAUTH_KEY_TTL_MS),
     aclTags: null,
   });
 
@@ -173,7 +174,12 @@ function SSHConsole({
             setSsh(instance);
           }
         },
-        onError: (msg) => console.error("[ssh] IPN error:", msg),
+        onError: (msg) => {
+          console.error("[ssh] IPN error:", msg);
+          if (!cancelled) {
+            setStatus(`Failed to join Tailnet: ${msg}`);
+          }
+        },
       });
 
       console.log("[ssh] IPN instance created", instance);
