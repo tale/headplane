@@ -1,6 +1,7 @@
 import { data } from "react-router";
 
 import { usersResource } from "~/server/headscale/live-store";
+import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
@@ -93,7 +94,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       return { message: "User reassigned successfully" };
     }
     case "transfer_ownership": {
-      if (principal.kind !== "oidc" || principal.user.role !== "owner") {
+      if (!isUserPrincipal(principal) || principal.user.role !== "owner") {
         throw data("Only the owner can transfer ownership.", { status: 403 });
       }
 

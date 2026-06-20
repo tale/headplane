@@ -32,7 +32,7 @@ export type HeadplaneUserInsert = typeof users.$inferInsert;
 
 export const authSessions = sqliteTable("auth_sessions", {
   id: text("id").primaryKey(),
-  kind: text("kind").notNull(), // 'oidc' | 'api_key'
+  kind: text("kind").notNull(), // 'oidc' | 'api_key' (proxy auth is request-scoped)
   user_id: text("user_id"),
   api_key_hash: text("api_key_hash"),
   api_key_display: text("api_key_display"),

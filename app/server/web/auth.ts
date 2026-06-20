@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { isIP } from "node:net";
 
 import { eq, lt, sql } from "drizzle-orm";
 import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
@@ -17,23 +18,36 @@ export type Principal =
       displayName: string;
       apiKey: string;
     }
-  | {
-      kind: "oidc";
-      sessionId: string;
-      idToken?: string;
-      user: {
-        id: string;
-        subject: string;
-        role: Role;
-        headscaleUserId: string | undefined;
-      };
-      profile: {
-        name: string;
-        email?: string;
-        username?: string;
-        picture?: string;
-      };
-    };
+  | UserPrincipal;
+
+export type UserPrincipal = {
+  kind: "oidc" | "proxy";
+  sessionId: string;
+  idToken?: string;
+  user: {
+    id: string;
+    subject: string;
+    role: Role;
+    headscaleUserId: string | undefined;
+  };
+  profile: {
+    name: string;
+    email?: string;
+    username?: string;
+    picture?: string;
+  };
+};
+
+interface ProxyAuthOptions {
+  enabled: boolean;
+  allowedCidrs?: string[];
+  trustedProxyCidrs?: string[];
+  ipHeader?: string;
+  userHeader?: string;
+  emailHeader?: string;
+  nameHeader?: string;
+  pictureHeader?: string;
+}
 
 interface CookiePayload {
   sid: string;
@@ -48,6 +62,7 @@ interface CookiePayload {
 export interface AuthServiceOptions {
   secret: string;
   headscaleApiKey?: string;
+  proxyAuth?: ProxyAuthOptions;
   db: NodeSQLiteDatabase;
   cookie: {
     name: string;
@@ -58,6 +73,7 @@ export interface AuthServiceOptions {
 }
 
 export interface AuthService {
+  registerRequestClientAddress(request: Request, address: string | undefined): void;
   require(request: Request): Promise<Principal>;
   can(principal: Principal, capabilities: Capabilities): boolean;
   canManageNode(principal: Principal, node: Machine): boolean;
@@ -88,8 +104,152 @@ export interface AuthService {
   stop(): void;
 }
 
+export function isUserPrincipal(principal: Principal): principal is UserPrincipal {
+  return principal.kind === "oidc" || principal.kind === "proxy";
+}
+
+interface CidrRange {
+  family: 4 | 6;
+  base: bigint;
+  mask: bigint;
+}
+
+const DEFAULT_PROXY_AUTH_CIDRS = ["127.0.0.1/32", "::1/128"];
+const DEFAULT_PROXY_AUTH_USER_HEADER = "Remote-User";
+
+function normalizeIpAddress(address: string): string {
+  if (address.startsWith("::ffff:")) {
+    const mapped = address.slice("::ffff:".length);
+    if (isIP(mapped) === 4) {
+      return mapped;
+    }
+  }
+
+  return address;
+}
+
+function parseIpv4(address: string): bigint | undefined {
+  const parts = address.split(".");
+  if (parts.length !== 4) {
+    return;
+  }
+
+  let value = 0n;
+  for (const part of parts) {
+    if (!/^\d+$/.test(part)) {
+      return;
+    }
+
+    const byte = Number(part);
+    if (byte < 0 || byte > 255) {
+      return;
+    }
+
+    value = (value << 8n) + BigInt(byte);
+  }
+
+  return value;
+}
+
+function parseIpv6(address: string): bigint | undefined {
+  const sections = address.split("::");
+  if (sections.length > 2) {
+    return;
+  }
+
+  const head = sections[0] ? sections[0].split(":") : [];
+  const tail = sections.length === 2 && sections[1] ? sections[1].split(":") : [];
+  const missing = 8 - head.length - tail.length;
+  if (missing < 0 || (sections.length === 1 && missing !== 0)) {
+    return;
+  }
+
+  const groups = [...head, ...Array<string>(missing).fill("0"), ...tail];
+  if (groups.length !== 8) {
+    return;
+  }
+
+  let value = 0n;
+  for (const group of groups) {
+    if (!/^[0-9a-fA-F]{1,4}$/.test(group)) {
+      return;
+    }
+
+    value = (value << 16n) + BigInt(parseInt(group, 16));
+  }
+
+  return value;
+}
+
+function parseIpAddress(address: string): { family: 4 | 6; value: bigint } | undefined {
+  const normalized = normalizeIpAddress(address);
+  const family = isIP(normalized);
+  if (family === 4) {
+    const value = parseIpv4(normalized);
+    return value === undefined ? undefined : { family, value };
+  }
+  if (family === 6) {
+    const value = parseIpv6(normalized);
+    return value === undefined ? undefined : { family, value };
+  }
+
+  return;
+}
+
+function parseCidr(cidr: string): CidrRange {
+  const parts = cidr.trim().split("/");
+  if (parts.length > 2) {
+    throw new Error(`Invalid proxy auth CIDR: ${cidr}`);
+  }
+
+  const [rawAddress, rawPrefix] = parts;
+  const address = parseIpAddress(rawAddress);
+  if (!address) {
+    throw new Error(`Invalid proxy auth CIDR address: ${cidr}`);
+  }
+
+  const maxBits = address.family === 4 ? 32 : 128;
+  const prefix = rawPrefix === undefined ? maxBits : Number(rawPrefix);
+  if (!Number.isInteger(prefix) || prefix < 0 || prefix > maxBits) {
+    throw new Error(`Invalid proxy auth CIDR prefix: ${cidr}`);
+  }
+
+  const bits = BigInt(maxBits);
+  const hostBits = BigInt(maxBits - prefix);
+  const allOnes = (1n << bits) - 1n;
+  const mask = prefix === 0 ? 0n : (allOnes << hostBits) & allOnes;
+
+  return {
+    family: address.family,
+    base: address.value & mask,
+    mask,
+  };
+}
+
+function cidrContains(range: CidrRange, address: string): boolean {
+  const parsed = parseIpAddress(address);
+  if (!parsed || parsed.family !== range.family) {
+    return false;
+  }
+
+  return (parsed.value & range.mask) === range.base;
+}
+
 export function createAuthService(opts: AuthServiceOptions): AuthService {
   const requestCache = new WeakMap<Request, Promise<Principal>>();
+  const clientAddresses = new WeakMap<Request, string>();
+  const proxyAuthCidrs = opts.proxyAuth?.enabled
+    ? (opts.proxyAuth.allowedCidrs?.length
+        ? opts.proxyAuth.allowedCidrs
+        : DEFAULT_PROXY_AUTH_CIDRS
+      ).map(parseCidr)
+    : [];
+  const trustedProxyCidrs = opts.proxyAuth?.enabled
+    ? (opts.proxyAuth.trustedProxyCidrs?.length
+        ? opts.proxyAuth.trustedProxyCidrs
+        : DEFAULT_PROXY_AUTH_CIDRS
+      ).map(parseCidr)
+    : [];
   let pruneTimer: ReturnType<typeof setInterval> | undefined;
 
   async function encodeCookie(payload: CookiePayload, maxAge: number): Promise<string> {
@@ -140,7 +300,139 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     return createHash("sha256").update(key).digest("hex");
   }
 
+  function registerRequestClientAddress(request: Request, address: string | undefined): void {
+    if (address) {
+      clientAddresses.set(request, address);
+    }
+  }
+
+  function getForwardedClientAddress(request: Request): string | undefined {
+    const headerName = opts.proxyAuth?.ipHeader;
+    if (!headerName) {
+      return;
+    }
+
+    const value = request.headers.get(headerName)?.trim();
+    if (!value) {
+      return;
+    }
+
+    const first = value.split(",")[0]?.trim();
+    if (!first) {
+      return;
+    }
+
+    return parseIpAddress(first) ? first : undefined;
+  }
+
+  function getProxyAuthClientAddress(request: Request): string | undefined {
+    const directAddress = clientAddresses.get(request);
+    if (!directAddress) {
+      return;
+    }
+
+    if (!opts.proxyAuth?.ipHeader) {
+      return directAddress;
+    }
+
+    const directPeerTrusted = trustedProxyCidrs.some((cidr) => cidrContains(cidr, directAddress));
+    if (!directPeerTrusted) {
+      return;
+    }
+
+    return getForwardedClientAddress(request);
+  }
+
+  async function resolveUserPrincipal(options: {
+    kind: UserPrincipal["kind"];
+    sessionId: string;
+    userId: string;
+    idToken?: string;
+    profile?: {
+      name?: string;
+      email?: string;
+      username?: string;
+    };
+  }): Promise<UserPrincipal> {
+    const [user] = await opts.db.select().from(users).where(eq(users.id, options.userId)).limit(1);
+
+    if (!user) {
+      throw new Error("User record not found");
+    }
+
+    const role = (user.role in Roles ? user.role : "member") as Role;
+    return {
+      kind: options.kind,
+      sessionId: options.sessionId,
+      idToken: options.idToken,
+      user: {
+        id: user.id,
+        subject: user.sub,
+        role,
+        headscaleUserId: user.headscale_user_id ?? undefined,
+      },
+      profile: {
+        name: options.profile?.name ?? user.name ?? user.sub,
+        email: options.profile?.email ?? user.email ?? undefined,
+        username: options.profile?.username,
+        picture: user.picture ?? undefined,
+      },
+    };
+  }
+
+  async function resolveProxyAuthPrincipal(request: Request): Promise<Principal | undefined> {
+    if (!opts.proxyAuth?.enabled) {
+      return;
+    }
+    if (!opts.headscaleApiKey) {
+      throw new Error("Proxy authentication requires headscale.api_key to be configured");
+    }
+
+    const clientAddress = getProxyAuthClientAddress(request);
+    if (!clientAddress || !proxyAuthCidrs.some((cidr) => cidrContains(cidr, clientAddress))) {
+      return;
+    }
+
+    const userHeader = opts.proxyAuth.userHeader ?? DEFAULT_PROXY_AUTH_USER_HEADER;
+    const proxyUser = request.headers.get(userHeader)?.trim();
+    if (!proxyUser) {
+      return;
+    }
+
+    const email = opts.proxyAuth.emailHeader
+      ? request.headers.get(opts.proxyAuth.emailHeader)?.trim()
+      : undefined;
+    const name = opts.proxyAuth.nameHeader
+      ? request.headers.get(opts.proxyAuth.nameHeader)?.trim()
+      : undefined;
+    const picture = opts.proxyAuth.pictureHeader
+      ? request.headers.get(opts.proxyAuth.pictureHeader)?.trim()
+      : undefined;
+    const subject = `proxy:${proxyUser}`;
+    const userId = await findOrCreateUser(subject, {
+      name: name || proxyUser,
+      email: email || undefined,
+      picture: picture || undefined,
+    });
+
+    return resolveUserPrincipal({
+      kind: "proxy",
+      sessionId: "proxy-auth",
+      userId,
+      profile: {
+        name: name || proxyUser,
+        email: email || undefined,
+        username: proxyUser,
+      },
+    });
+  }
+
   async function resolve(request: Request): Promise<Principal> {
+    const proxyPrincipal = await resolveProxyAuthPrincipal(request);
+    if (proxyPrincipal) {
+      return proxyPrincipal;
+    }
+
     const payload = await decodeCookie(request);
 
     const [session] = await opts.db
@@ -175,30 +467,17 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       throw new Error("OIDC session missing user_id");
     }
 
-    const [user] = await opts.db.select().from(users).where(eq(users.id, session.user_id)).limit(1);
-
-    if (!user) {
-      throw new Error("User record not found");
-    }
-
-    const role = (user.role in Roles ? user.role : "member") as Role;
-    return {
+    return resolveUserPrincipal({
       kind: "oidc",
       sessionId: session.id,
       idToken: session.oidc_id_token ?? undefined,
-      user: {
-        id: user.id,
-        subject: user.sub,
-        role,
-        headscaleUserId: user.headscale_user_id ?? undefined,
-      },
+      userId: session.user_id,
       profile: {
-        name: payload.profile?.name ?? user.name ?? user.sub,
-        email: payload.profile?.email ?? user.email ?? undefined,
+        name: payload.profile?.name,
+        email: payload.profile?.email,
         username: payload.profile?.username,
-        picture: user.picture ?? undefined,
       },
-    };
+    });
   }
 
   function require(request: Request): Promise<Principal> {
@@ -241,7 +520,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     }
 
     if (!opts.headscaleApiKey) {
-      throw new Error("OIDC sessions require headscale.api_key to be configured");
+      throw new Error("User sessions require headscale.api_key to be configured");
     }
 
     return opts.headscaleApiKey;
@@ -480,6 +759,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   return {
+    registerRequestClientAddress,
     require: require,
     can,
     canManageNode,

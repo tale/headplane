@@ -18,10 +18,22 @@ interface AddAuthKeyProps {
   users: User[];
   url: string;
   selfServiceOnly: boolean;
+  currentHeadscaleUserId?: string;
   currentSubject?: string;
 }
 
-function findCurrentUser(users: User[], subject: string | undefined): User | undefined {
+function findCurrentUser(
+  users: User[],
+  headscaleUserId: string | undefined,
+  subject: string | undefined,
+): User | undefined {
+  if (headscaleUserId) {
+    const linked = users.find((u) => u.id === headscaleUserId);
+    if (linked) {
+      return linked;
+    }
+  }
+
   if (!subject) {
     return undefined;
   }
@@ -38,6 +50,7 @@ export default function AddAuthKey({
   users,
   url,
   selfServiceOnly,
+  currentHeadscaleUserId,
   currentSubject,
 }: AddAuthKeyProps) {
   const fetcher = useFetcher();
@@ -46,7 +59,9 @@ export default function AddAuthKey({
   const [reusable, setReusable] = useState(false);
   const [ephemeral, setEphemeral] = useState(false);
   const [tagOnly, setTagOnly] = useState(false);
-  const currentUser = selfServiceOnly ? findCurrentUser(users, currentSubject) : null;
+  const currentUser = selfServiceOnly
+    ? findCurrentUser(users, currentHeadscaleUserId, currentSubject)
+    : null;
   const availableUsers = selfServiceOnly && currentUser ? [currentUser] : users;
   const [userId, setUserId] = useState<string | null>(availableUsers[0]?.id);
   const [tags, setTags] = useState("");

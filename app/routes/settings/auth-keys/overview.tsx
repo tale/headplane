@@ -7,6 +7,7 @@ import Notice from "~/components/notice";
 import Select from "~/components/select";
 import TableList from "~/components/table-list";
 import { usersResource } from "~/server/headscale/live-store";
+import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import type { User } from "~/types/User";
@@ -90,7 +91,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     access: canGenerateAny || canGenerateOwn,
-    currentSubject: principal.kind === "oidc" ? principal.user.subject : undefined,
+    currentHeadscaleUserId: isUserPrincipal(principal) ? principal.user.headscaleUserId : undefined,
+    currentSubject: isUserPrincipal(principal) ? principal.user.subject : undefined,
     keys,
     missing,
     selfServiceOnly: !canGenerateAny && canGenerateOwn,
@@ -103,7 +105,16 @@ export const action = authKeysAction;
 
 type Status = "all" | "active" | "expired" | "reusable" | "ephemeral";
 export default function Page({
-  loaderData: { keys, missing, users, url, access, selfServiceOnly, currentSubject },
+  loaderData: {
+    keys,
+    missing,
+    users,
+    url,
+    access,
+    selfServiceOnly,
+    currentHeadscaleUserId,
+    currentSubject,
+  },
 }: Route.ComponentProps) {
   const [selectedUser, setSelectedUser] = useState("__headplane_all");
   const [status, setStatus] = useState<Status>("active");
@@ -199,6 +210,7 @@ export default function Page({
         </Link>
       </p>
       <AddAuthKey
+        currentHeadscaleUserId={currentHeadscaleUserId}
         currentSubject={currentSubject}
         selfServiceOnly={selfServiceOnly}
         url={url}

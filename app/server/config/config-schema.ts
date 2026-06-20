@@ -48,6 +48,17 @@ const serverConfig = type({
   // either is set, `cookie_secure` is forced to `true`.
   tls_cert_path: "string?",
   tls_key_path: "string?",
+
+  "proxy_auth?": {
+    enabled: "boolean",
+    allowed_cidrs: "string[]?",
+    trusted_proxy_cidrs: "string[]?",
+    ip_header: "string?",
+    user_header: "string?",
+    email_header: "string?",
+    name_header: "string?",
+    picture_header: "string?",
+  },
 });
 
 const partialServerConfig = type({
@@ -64,6 +75,17 @@ const partialServerConfig = type({
 
   tls_cert_path: "string?",
   tls_key_path: "string?",
+
+  "proxy_auth?": {
+    enabled: "boolean?",
+    allowed_cidrs: "string[]?",
+    trusted_proxy_cidrs: "string[]?",
+    ip_header: "string?",
+    user_header: "string?",
+    email_header: "string?",
+    name_header: "string?",
+    picture_header: "string?",
+  },
 });
 
 const headscaleConfig = type({

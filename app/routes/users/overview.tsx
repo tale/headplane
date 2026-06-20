@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import PageError from "~/components/page-error";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
+import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities, Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
@@ -131,11 +132,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     }
   }
 
-  const isOwner = principal.kind === "oidc" && principal.user.role === "owner";
+  const isOwner = isUserPrincipal(principal) && principal.user.role === "owner";
 
   return {
     writable: writablePermission,
-    currentUserId: principal.kind === "oidc" ? principal.user.id : undefined,
+    currentUserId: isUserPrincipal(principal) ? principal.user.id : undefined,
     isOwner,
     oidc: context.config.oidc ? { issuer: context.config.oidc.issuer } : undefined,
     magic,

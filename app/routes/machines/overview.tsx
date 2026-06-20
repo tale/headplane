@@ -8,6 +8,7 @@ import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import Tooltip from "~/components/tooltip";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
+import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import { mapNodes, sortAssignableTags, type PopulatedNode } from "~/utils/node-info";
@@ -64,7 +65,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
           nodeKey: agents?.agentNodeKey(),
         }
       : undefined,
-    headscaleUserId: principal.kind === "oidc" ? principal.user.headscaleUserId : undefined,
+    headscaleUserId: isUserPrincipal(principal) ? principal.user.headscaleUserId : undefined,
     existingTags: sortAssignableTags(nodes, policy),
     magic,
     nodes,

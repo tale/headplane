@@ -63,5 +63,8 @@ export async function dispose(): Promise<void> {
 export default createRequestListener({
   build,
   mode: import.meta.env.MODE,
-  getLoadContext: () => ctx,
+  getLoadContext: (request, client) => {
+    ctx.auth.registerRequestClientAddress(request, client.address);
+    return ctx;
+  },
 });

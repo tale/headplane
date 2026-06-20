@@ -66,7 +66,9 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   // The user must exist within Headscale to generate a pre-auth key
   const users = await api.users.list();
-  const hsUser = findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
+  const hsUser = principal.user.headscaleUserId
+    ? users.find((u) => u.id === principal.user.headscaleUserId)
+    : findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
 
   if (!hsUser) {
     throw data(sshErrors.user_not_linked, 404);

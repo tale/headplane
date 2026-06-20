@@ -11,6 +11,7 @@ import CodeBlock from "~/components/code-block";
 import Link from "~/components/link";
 import LinkAccount from "~/layout/link-account";
 import { usersResource } from "~/server/headscale/live-store";
+import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import { getUserDisplayName } from "~/utils/user";
@@ -20,14 +21,10 @@ import type { Route } from "./+types/home";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const principal = await context.auth.require(request);
 
-  // If the OIDC user has no linked Headscale user, check for
-  // Unclaimed users they can pick from before anything else.
+  // If the signed-in Headplane user has no linked Headscale user,
+  // check for unclaimed users they can pick from before anything else.
   let unlinked = false;
-  if (
-    context.oidc.state === "enabled" &&
-    principal.kind === "oidc" &&
-    !principal.user.headscaleUserId
-  ) {
+  if (isUserPrincipal(principal) && !principal.user.headscaleUserId) {
     const { api } = await context.apiForRequest(request);
 
     let headscaleUsers: { id: string; name: string }[] = [];
@@ -66,7 +63,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { api } = await context.apiForRequest(request);
 
   let linkedUserName: string | undefined;
-  if (principal.kind === "oidc" && principal.user.headscaleUserId) {
+  if (isUserPrincipal(principal) && principal.user.headscaleUserId) {
     try {
       const usersSnap = await context.hsLive.get(usersResource, api);
       const hsUser = usersSnap.data.find((u) => u.id === principal.user.headscaleUserId);
@@ -81,7 +78,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export async function action({ request, context }: Route.ActionArgs) {
   const principal = await context.auth.require(request);
-  if (principal.kind !== "oidc") {
+  if (!isUserPrincipal(principal)) {
     return redirect("/");
   }
 

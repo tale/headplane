@@ -38,6 +38,36 @@ server:
   # This may not work as expected if not using a reverse proxy.
   # cookie_domain: ""
 
+  # Optional proxy authentication mode. When enabled, Headplane trusts identity
+  # headers from requests that come directly from one of `allowed_cidrs` and
+  # uses `headscale.api_key` for Headscale API access.
+  #
+  # Only enable this when a trusted reverse proxy in front of Headplane already
+  # performs authentication (for example, nginx basic auth, Authelia, Authentik,
+  # etc.). The source IP check uses the direct client address connected to
+  # Headplane by default, not X-Forwarded-For headers.
+  #
+  # If `allowed_cidrs` is omitted, only localhost is trusted.
+  # proxy_auth:
+  #   enabled: false
+  #
+  #   # Optional. If set, Headplane checks allowed_cidrs against the first IP in
+  #   # this header (for example, "X-Forwarded-For" or "X-Real-IP") instead of
+  #   # the direct client address. The direct client must still match
+  #   # trusted_proxy_cidrs before this header is used.
+  #   ip_header: "X-Forwarded-For"
+  #   trusted_proxy_cidrs:
+  #     - "127.0.0.1/32"
+  #     - "::1/128"
+  #
+  #   user_header: "Remote-User"
+  #   email_header: "Remote-Email"
+  #   name_header: "Remote-Name"
+  #   picture_header: "Remote-Picture"
+  #   allowed_cidrs:
+  #     - "127.0.0.1/32"
+  #     - "::1/128"
+
   # The path to persist Headplane specific data. All data going forward
   # is stored in this directory, including the internal database and
   # any cache related files.
@@ -87,7 +117,8 @@ headscale:
   config_path: "/etc/headscale/config.yaml"
 
   # The API key used by Headplane for server-side operations.
-  # This is required for OIDC authentication and the Headplane agent.
+  # This is required for OIDC authentication, proxy authentication, and the
+  # Headplane agent.
   # Generate one with: headscale apikeys create
   # api_key: "<your-api-key>"
 

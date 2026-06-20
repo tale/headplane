@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { isUserPrincipal } from "~/server/web/auth";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
@@ -25,7 +26,10 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
       throw data("User not found.", { status: 404 });
     }
     const targetSubject = getOidcSubject(targetUser);
-    if (principal.kind !== "oidc" || targetSubject !== principal.user.subject) {
+    const ownsTarget =
+      isUserPrincipal(principal) &&
+      (principal.user.headscaleUserId === userId || targetSubject === principal.user.subject);
+    if (!ownsTarget) {
       throw data("You do not have permission to manage this user's pre-auth keys", {
         status: 403,
       });

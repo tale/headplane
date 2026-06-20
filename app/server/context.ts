@@ -40,6 +40,18 @@ export async function createAppContext(config: HeadplaneConfig) {
   const auth = createAuthService({
     secret: config.server.cookie_secret,
     headscaleApiKey,
+    proxyAuth: config.server.proxy_auth
+      ? {
+          enabled: config.server.proxy_auth.enabled,
+          allowedCidrs: config.server.proxy_auth.allowed_cidrs,
+          trustedProxyCidrs: config.server.proxy_auth.trusted_proxy_cidrs,
+          ipHeader: config.server.proxy_auth.ip_header,
+          userHeader: config.server.proxy_auth.user_header,
+          emailHeader: config.server.proxy_auth.email_header,
+          nameHeader: config.server.proxy_auth.name_header,
+          pictureHeader: config.server.proxy_auth.picture_header,
+        }
+      : undefined,
     db,
     cookie: {
       name: "_hp_auth",

@@ -8,6 +8,7 @@
 - Fixed Browser SSH pre-auth key handling by increasing the temporary key expiry window and showing key creation errors in the UI (closes [#565](https://github.com/tale/headplane/issues/565)).
 - Fixed machine rename submission by validating names before sending the rename request (closes [#564](https://github.com/tale/headplane/issues/564)).
 - Fixed OIDC token exchange fallback when retrying with `client_secret_basic` (closes [#493](https://github.com/tale/headplane/issues/493)).
+- Added support for proxy authentication via `server.proxy_auth` (closes [#353](https://github.com/tale/headplane/issues/353)).
 
 ---
 

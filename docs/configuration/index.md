@@ -58,8 +58,8 @@ The following configuration options in Headplane are treated as secret paths:
     - _Note:_ Either `cookie_secret` or `cookie_secret_path` must be provided for web session security.
 
 - **Headscale Connection Settings (`headscale.*`):**
-  - `api_key_path` (Headscale API key for server-side operations like OIDC and agent sync)
-    - _Note:_ Either `api_key` or `api_key_path` must be provided when using OIDC or the agent.
+  - `api_key_path` (Headscale API key for server-side operations like OIDC, proxy authentication, and agent sync)
+    - _Note:_ Either `api_key` or `api_key_path` must be provided when using OIDC, proxy authentication, or the agent.
   - `tls_cert_path` (custom TLS certificate for connecting to Headscale)
     - _Note:_ This is treated as a regular path, not a secret path, so it will not have its content loaded.
 

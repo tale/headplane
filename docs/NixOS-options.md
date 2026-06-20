@@ -350,3 +350,82 @@ _Description:_ The port to listen on.
 _Type:_ 16 bit unsigned integer; between 0 and 65535 (both inclusive)
 
 _Default:_ `3000`
+
+## settings.server.proxy_auth
+
+_Description:_ Proxy authentication configuration.
+
+_Type:_ submodule
+
+_Default:_ `{ }`
+
+## settings.server.proxy_auth.allowed_cidrs
+
+_Description:_ Direct client CIDR ranges allowed to bypass Headplane's login flow.
+These should be the addresses your trusted reverse proxy uses to connect
+to Headplane. Requires headscale.api_key_path.
+
+_Type:_ list of string
+
+_Default:_ `[ "127.0.0.1/32" "::1/128" ]`
+
+_Example:_ `[ "10.0.0.0/24" ]`
+
+## settings.server.proxy_auth.email_header
+
+_Description:_ Optional header containing the authenticated user's email address.
+
+_Type:_ null or string
+
+_Default:_ `null`
+
+## settings.server.proxy_auth.enabled
+
+_Description:_ Whether to trust reverse proxy authentication for allowed client CIDRs.
+
+_Type:_ boolean
+
+_Default:_ `false`
+
+## settings.server.proxy_auth.ip_header
+
+_Description:_ Optional header containing the original client IP, such as X-Forwarded-For or X-Real-IP.
+
+_Type:_ null or string
+
+_Default:_ `null`
+
+## settings.server.proxy_auth.name_header
+
+_Description:_ Optional header containing the authenticated user's display name.
+
+_Type:_ null or string
+
+_Default:_ `null`
+
+## settings.server.proxy_auth.picture_header
+
+_Description:_ Optional header containing the authenticated user's profile picture URL.
+
+_Type:_ null or string
+
+_Default:_ `null`
+
+## settings.server.proxy_auth.user_header
+
+_Description:_ Header containing the stable authenticated proxy user identity.
+
+_Type:_ string
+
+_Default:_ `"Remote-User"`
+
+## settings.server.proxy_auth.trusted_proxy_cidrs
+
+_Description:_ Direct proxy CIDR ranges trusted to supply ip_header.
+Only used when ip_header is set.
+
+_Type:_ list of string
+
+_Default:_ `[ "127.0.0.1/32" "::1/128" ]`
+
+_Example:_ `[ "127.0.0.1/32" ]`

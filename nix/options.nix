@@ -90,6 +90,77 @@ in {
                   example = "headscale.example.com";
                 };
 
+                proxy_auth = mkOption {
+                  type = types.submodule {
+                    options = {
+                      enabled = mkOption {
+                        type = types.bool;
+                        default = false;
+                        description = "Whether to trust reverse proxy authentication for allowed client CIDRs.";
+                      };
+
+                      user_header = mkOption {
+                        type = types.str;
+                        default = "Remote-User";
+                        description = "Header containing the stable authenticated proxy user identity.";
+                      };
+
+                      ip_header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Optional header containing the original client IP, such as X-Forwarded-For or X-Real-IP.";
+                      };
+
+                      trusted_proxy_cidrs = mkOption {
+                        type = types.listOf types.str;
+                        default = [
+                          "127.0.0.1/32"
+                          "::1/128"
+                        ];
+                        description = ''
+                          Direct proxy CIDR ranges trusted to supply ip_header.
+                          Only used when ip_header is set.
+                        '';
+                        example = ["127.0.0.1/32"];
+                      };
+
+                      email_header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Optional header containing the authenticated user's email address.";
+                      };
+
+                      name_header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Optional header containing the authenticated user's display name.";
+                      };
+
+                      picture_header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Optional header containing the authenticated user's profile picture URL.";
+                      };
+
+                      allowed_cidrs = mkOption {
+                        type = types.listOf types.str;
+                        default = [
+                          "127.0.0.1/32"
+                          "::1/128"
+                        ];
+                        description = ''
+                          Direct client CIDR ranges allowed to bypass Headplane's login flow.
+                          These should be the addresses your trusted reverse proxy uses to connect
+                          to Headplane. Requires headscale.api_key_path.
+                        '';
+                        example = ["10.0.0.0/24"];
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Proxy authentication configuration.";
+                };
+
                 data_path = mkOption {
                   type = types.path;
                   default = "/var/lib/headplane";
