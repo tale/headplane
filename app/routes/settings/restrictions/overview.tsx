@@ -2,6 +2,7 @@ import { data } from "react-router";
 
 import Link from "~/components/link";
 import Notice from "~/components/notice";
+import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/overview";
@@ -12,28 +13,31 @@ import AddUser from "./dialogs/add-user";
 import RestrictionTable from "./table";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.read_users);
+  const auth = context.get(authContext);
+  const headscaleConfig = context.get(headscaleConfigContext);
+
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.read_users);
   if (!check) {
     throw data("You do not have permission to view IAM settings.", {
       status: 403,
     });
   }
 
-  if (!context.hs.c?.oidc) {
+  if (!headscaleConfig.c?.oidc) {
     throw data("OIDC is not configured on this Headscale instance.", {
       status: 501,
     });
   }
 
   return {
-    access: context.auth.can(principal, Capabilities.configure_iam),
+    access: auth.can(principal, Capabilities.configure_iam),
     settings: {
-      domains: [...new Set(context.hs.c.oidc.allowed_domains)],
-      groups: [...new Set(context.hs.c.oidc.allowed_groups)],
-      users: [...new Set(context.hs.c.oidc.allowed_users)],
+      domains: [...new Set(headscaleConfig.c.oidc.allowed_domains)],
+      groups: [...new Set(headscaleConfig.c.oidc.allowed_groups)],
+      users: [...new Set(headscaleConfig.c.oidc.allowed_users)],
     },
-    writable: context.hs.writable(),
+    writable: headscaleConfig.writable(),
   };
 }
 

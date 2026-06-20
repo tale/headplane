@@ -2,14 +2,17 @@ import { ArrowRight } from "lucide-react";
 
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
+import { headscaleConfigContext, oidcContext } from "~/server/context";
 
 import type { Route } from "./+types/overview";
 
 export async function loader({ context }: Route.LoaderArgs) {
+  const headscaleConfig = context.get(headscaleConfigContext);
+  const oidc = context.get(oidcContext);
+
   return {
-    config: context.hs.writable(),
-    isOidcEnabled:
-      context.oidc.state === "enabled" && context.oidc.value.status().state === "ready",
+    config: headscaleConfig.writable(),
+    isOidcEnabled: oidc.state === "enabled" && oidc.value.status().state === "ready",
   };
 }
 

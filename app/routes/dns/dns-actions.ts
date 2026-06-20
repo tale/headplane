@@ -1,18 +1,29 @@
 import { data } from "react-router";
 
+import {
+  authContext,
+  headscaleConfigContext,
+  headscaleContext,
+  integrationContext,
+} from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/overview";
 
 export async function dnsAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.write_network);
+  const auth = context.get(authContext);
+  const headscale = context.get(headscaleContext);
+  const headscaleConfig = context.get(headscaleConfigContext);
+  const integration = context.get(integrationContext);
+
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.write_network);
 
   if (!check) {
     return data({ success: false }, 403);
   }
 
-  if (!context.hs.writable()) {
+  if (!headscaleConfig.writable()) {
     return data({ success: false }, 403);
   }
 
@@ -29,14 +40,14 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return data({ success: false }, 400);
       }
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "dns.base_domain",
           value: newName,
         },
       ]);
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Tailnet renamed successfully" };
     }
     case "toggle_magic": {
@@ -45,18 +56,18 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return data({ success: false }, 400);
       }
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "dns.magic_dns",
           value: newState === "enabled",
         },
       ]);
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Magic DNS state updated successfully" };
     }
     case "remove_ns": {
-      const config = context.hs.c!;
+      const config = headscaleConfig.c!;
       const ns = formData.get("ns")?.toString();
       const splitName = formData.get("split_name")?.toString();
 
@@ -67,7 +78,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       if (splitName === "global") {
         const servers = config.dns.nameservers.global.filter((i) => i !== ns);
 
-        await context.hs.patch([
+        await headscaleConfig.patch([
           {
             path: "dns.nameservers.global",
             value: servers,
@@ -77,7 +88,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         const splits = config.dns.nameservers.split;
         const servers = splits[splitName].filter((i) => i !== ns);
 
-        await context.hs.patch([
+        await headscaleConfig.patch([
           {
             path: `dns.nameservers.split."${splitName}"`,
             value: servers.length > 0 ? servers : null,
@@ -85,11 +96,11 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         ]);
       }
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Nameserver removed successfully" };
     }
     case "add_ns": {
-      const config = context.hs.c!;
+      const config = headscaleConfig.c!;
       const ns = formData.get("ns")?.toString();
       const splitName = formData.get("split_name")?.toString();
 
@@ -101,7 +112,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         const servers = config.dns.nameservers.global;
         servers.push(ns);
 
-        await context.hs.patch([
+        await headscaleConfig.patch([
           {
             path: "dns.nameservers.global",
             value: servers,
@@ -112,7 +123,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         const servers = splits[splitName] ?? [];
         servers.push(ns);
 
-        await context.hs.patch([
+        await headscaleConfig.patch([
           {
             path: `dns.nameservers.split."${splitName}"`,
             value: servers,
@@ -120,29 +131,29 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         ]);
       }
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Nameserver added successfully" };
     }
     case "remove_domain": {
-      const config = context.hs.c!;
+      const config = headscaleConfig.c!;
       const domain = formData.get("domain")?.toString();
       if (!domain) {
         return data({ success: false }, 400);
       }
 
       const domains = config.dns.search_domains.filter((i) => i !== domain);
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "dns.search_domains",
           value: domains,
         },
       ]);
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Domain removed successfully" };
     }
     case "add_domain": {
-      const config = context.hs.c!;
+      const config = headscaleConfig.c!;
       const domain = formData.get("domain")?.toString();
       if (!domain) {
         return data({ success: false }, 400);
@@ -151,14 +162,14 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       const domains = config.dns.search_domains;
       domains.push(domain);
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "dns.search_domains",
           value: domains,
         },
       ]);
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "Domain added successfully" };
     }
     case "remove_record": {
@@ -170,7 +181,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       }
 
       // Value is not needed for removal
-      const restart = await context.hs.removeDNS({
+      const restart = await headscaleConfig.removeDNS({
         name: recordName,
         type: recordType,
         value: "",
@@ -180,7 +191,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return;
       }
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "DNS record removed successfully" };
     }
     case "add_record": {
@@ -192,7 +203,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return data({ success: false }, 400);
       }
 
-      const restart = await context.hs.addDNS({
+      const restart = await headscaleConfig.addDNS({
         name: recordName,
         type: recordType,
         value: recordValue,
@@ -202,7 +213,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
         return;
       }
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "DNS record added successfully" };
     }
     case "override_dns": {
@@ -212,14 +223,14 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       }
 
       const overrideValue = override === "true";
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "dns.override_local_dns",
           value: overrideValue,
         },
       ]);
 
-      await context.integration?.onConfigChange(context.headscale);
+      await integration?.onConfigChange(headscale);
       return { message: "DNS override updated successfully" };
     }
     default:

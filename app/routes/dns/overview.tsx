@@ -1,12 +1,13 @@
-import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+import type { ActionFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
 import Code from "~/components/code";
 import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
-import type { AppContext } from "~/server/context";
+import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
+import type { Route } from "./+types/overview";
 import ManageDomains from "./components/manage-domains";
 import ManageNS from "./components/manage-ns";
 import ManageRecords from "./components/manage-records";
@@ -15,13 +16,16 @@ import ToggleMagic from "./components/toggle-magic";
 import { dnsAction } from "./dns-actions";
 
 // We do not want to expose every config value
-export async function loader({ request, context }: LoaderFunctionArgs<AppContext>) {
-  if (!context.hs.readable()) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const auth = context.get(authContext);
+  const headscaleConfig = context.get(headscaleConfigContext);
+
+  if (!headscaleConfig.readable()) {
     throw new Error("No configuration is available");
   }
 
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.read_network);
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.read_network);
   if (!check) {
     // Not authorized to view this page
     throw new Error(
@@ -29,9 +33,9 @@ export async function loader({ request, context }: LoaderFunctionArgs<AppContext
     );
   }
 
-  const writablePermission = context.auth.can(principal, Capabilities.write_network);
+  const writablePermission = auth.can(principal, Capabilities.write_network);
 
-  const config = context.hs.c!;
+  const config = headscaleConfig.c!;
   const dns = {
     prefixes: config.prefixes,
     magicDns: config.dns.magic_dns,
@@ -40,13 +44,13 @@ export async function loader({ request, context }: LoaderFunctionArgs<AppContext
     splitDns: config.dns.nameservers.split,
     searchDomains: config.dns.search_domains,
     overrideDns: config.dns.override_local_dns,
-    extraRecords: context.hs.d,
+    extraRecords: headscaleConfig.d,
   };
 
   return {
     ...dns,
     access: writablePermission,
-    writable: context.hs.writable(),
+    writable: headscaleConfig.writable(),
   };
 }
 

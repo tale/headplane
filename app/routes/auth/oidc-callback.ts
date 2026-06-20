@@ -1,5 +1,12 @@
 import { data, redirect } from "react-router";
 
+import {
+  appConfigContext,
+  authContext,
+  headscaleApiKeyContext,
+  headscaleContext,
+  oidcContext,
+} from "~/server/context";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { Roles } from "~/server/web/roles";
 import log from "~/utils/log";
@@ -8,16 +15,22 @@ import { createOidcStateCookie } from "~/utils/oidc-state";
 import type { Route } from "./+types/oidc-callback";
 
 export async function loader({ request, context, url }: Route.LoaderArgs) {
-  if (context.oidc.state !== "enabled") {
-    throw data(`OIDC is unavailable: ${context.oidc.reason}`, { status: 501 });
+  const auth = context.get(authContext);
+  const config = context.get(appConfigContext);
+  const headscale = context.get(headscaleContext);
+  const headscaleApiKey = context.get(headscaleApiKeyContext);
+  const oidc = context.get(oidcContext);
+
+  if (oidc.state !== "enabled") {
+    throw data(`OIDC is unavailable: ${oidc.reason}`, { status: 501 });
   }
-  const service = context.oidc.value;
+  const service = oidc.value;
 
   if (url.searchParams.toString().length === 0) {
     return redirect("/login?s=error_no_query");
   }
 
-  const cookie = createOidcStateCookie(context.config);
+  const cookie = createOidcStateCookie(config);
   const oidcCookieState = await cookie.parse(request.headers.get("Cookie"));
 
   if (oidcCookieState == null) {
@@ -53,7 +66,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
       ? identity.role
       : undefined;
 
-  const userId = await context.auth.findOrCreateUser(
+  const userId = await auth.findOrCreateUser(
     identity.subject,
     {
       name: identity.name,
@@ -61,7 +74,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
       picture: identity.picture,
     },
     {
-      initialRole: claimedRole ?? context.config.oidc?.default_role,
+      initialRole: claimedRole ?? config.oidc?.default_role,
     },
   );
 
@@ -69,11 +82,11 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     // Looks up the Headscale user that matches this OIDC identity. We use
     // the configured admin API key here — not a per-request one — because
     // there is no per-request key yet (the session is being created).
-    const hsApi = context.headscale.client(context.headscaleApiKey!);
+    const hsApi = headscale.client(headscaleApiKey!);
     const hsUsers = await hsApi.users.list();
     const hsUser = findHeadscaleUserBySubject(hsUsers, identity.subject, identity.email);
     if (hsUser) {
-      await context.auth.linkHeadscaleUser(userId, hsUser.id);
+      await auth.linkHeadscaleUser(userId, hsUser.id);
     }
   } catch (error) {
     log.warn("auth", "Failed to link Headscale user: %s", String(error));
@@ -81,11 +94,11 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
 
   // Only persist the id_token when RP-initiated logout is enabled — otherwise
   // we'd be storing a credential we never use.
-  const idToken = context.config.oidc?.use_end_session ? identity.idToken : undefined;
+  const idToken = config.oidc?.use_end_session ? identity.idToken : undefined;
 
   return redirect("/", {
     headers: {
-      "Set-Cookie": await context.auth.createOidcSession(
+      "Set-Cookie": await auth.createOidcSession(
         userId,
         {
           name: identity.name,

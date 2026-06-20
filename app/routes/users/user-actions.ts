@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
 import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
@@ -8,8 +9,12 @@ import type { Role } from "~/server/web/roles";
 import type { Route } from "./+types/overview";
 
 export async function userAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
-  const check = await context.auth.can(principal, Capabilities.write_users);
+  const auth = context.get(authContext);
+  const getRequestApi = context.get(requestApiContext);
+  const headscaleLiveStore = context.get(headscaleLiveStoreContext);
+
+  const principal = await auth.require(request);
+  const check = await auth.can(principal, Capabilities.write_users);
   if (!check) {
     throw data("You do not have permission to update users", {
       status: 403,
@@ -24,7 +29,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const { api } = await context.apiForRequest(request);
+  const { api } = await getRequestApi(request);
   switch (action) {
     case "create_user": {
       const name = formData.get("username")?.toString();
@@ -38,7 +43,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.users.create({ name, email, displayName });
-      await context.hsLive.refresh(usersResource, api);
+      await headscaleLiveStore.refresh(usersResource, api);
       return { message: "User created successfully" };
     }
     case "delete_user": {
@@ -50,7 +55,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.users.delete(headscaleUserId);
-      await context.hsLive.refresh(usersResource, api);
+      await headscaleLiveStore.refresh(usersResource, api);
       return { message: "User deleted successfully" };
     }
     case "rename_user": {
@@ -74,7 +79,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.users.rename(headscaleUserId, newName);
-      await context.hsLive.refresh(usersResource, api);
+      await headscaleLiveStore.refresh(usersResource, api);
       return { message: "User renamed successfully" };
     }
     case "reassign_user": {
@@ -86,7 +91,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      const result = await context.auth.reassignUser(headplaneUserId, newRole as Role);
+      const result = await auth.reassignUser(headplaneUserId, newRole as Role);
       if (!result) {
         throw data("Failed to reassign user role.", { status: 500 });
       }
@@ -103,7 +108,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         throw data("Missing `headplane_user_id` in the form data.", { status: 400 });
       }
 
-      const result = await context.auth.transferOwnership(principal.user.id, headplaneUserId);
+      const result = await auth.transferOwnership(principal.user.id, headplaneUserId);
       if (!result) {
         throw data("Failed to transfer ownership.", { status: 500 });
       }
@@ -119,7 +124,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      const linked = await context.auth.linkHeadscaleUser(headplaneUserId, headscaleUserId);
+      const linked = await auth.linkHeadscaleUser(headplaneUserId, headscaleUserId);
       if (!linked) {
         throw data("That Headscale user is already linked to another account.", { status: 409 });
       }

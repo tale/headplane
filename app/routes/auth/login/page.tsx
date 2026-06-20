@@ -7,6 +7,7 @@ import Card from "~/components/card";
 import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
+import { appConfigContext, authContext, oidcContext } from "~/server/context";
 import { useLiveData } from "~/utils/live-data";
 
 import type { Route } from "./+types/page";
@@ -16,15 +17,19 @@ import Logout from "./logout";
 import { OidcErrorNotice } from "./oidc-error";
 
 export async function loader({ request, context, url }: Route.LoaderArgs) {
+  const auth = context.get(authContext);
+  const config = context.get(appConfigContext);
+  const oidc = context.get(oidcContext);
+
   try {
-    await context.auth.require(request);
+    await auth.require(request);
     return redirect("/machines");
   } catch {}
 
   const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
 
-  const oidcService = context.oidc.state === "enabled" ? context.oidc.value : undefined;
+  const oidcService = oidc.state === "enabled" ? oidc.value : undefined;
   const oidcStatus = oidcService
     ? await oidcService.discover().then(
         (r) => (r.ok ? oidcService.status() : oidcService.status()),
@@ -34,7 +39,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
 
   if (
     oidcService &&
-    context.config.oidc?.disable_api_key_login &&
+    config.oidc?.disable_api_key_login &&
     oidcStatus?.state === "ready" &&
     urlState !== "logout"
   ) {
@@ -45,7 +50,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const oidcErrorCodes = oidcStatus?.state === "error" ? [oidcStatus.error.code] : [];
 
   return {
-    isCookieSecureEnabled: context.config.server.cookie_secure,
+    isCookieSecureEnabled: config.server.cookie_secure,
     isOidcConnectorEnabled,
     oidcErrorCodes,
     urlState,

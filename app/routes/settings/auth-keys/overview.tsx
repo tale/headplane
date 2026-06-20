@@ -6,6 +6,12 @@ import Link from "~/components/link";
 import Notice from "~/components/notice";
 import Select from "~/components/select";
 import TableList from "~/components/table-list";
+import {
+  appConfigContext,
+  authContext,
+  headscaleLiveStoreContext,
+  requestApiContext,
+} from "~/server/context";
 import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
@@ -20,9 +26,14 @@ import AuthKeyRow from "./auth-key-row";
 import AddAuthKey from "./dialogs/add-auth-key";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { principal, api } = await context.apiForRequest(request);
+  const auth = context.get(authContext);
+  const config = context.get(appConfigContext);
+  const getRequestApi = context.get(requestApiContext);
+  const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
-  const usersSnap = await context.hsLive.get(usersResource, api);
+  const { principal, api } = await getRequestApi(request);
+
+  const usersSnap = await headscaleLiveStore.get(usersResource, api);
   const users = usersSnap.data;
 
   let keys: { user: User | null; preAuthKeys: PreAuthKey[] }[];
@@ -86,8 +97,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .map(({ user, error }) => ({ error, user }));
   }
 
-  const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
-  const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);
+  const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
+  const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
 
   return {
     access: canGenerateAny || canGenerateOwn,
@@ -96,7 +107,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     keys,
     missing,
     selfServiceOnly: !canGenerateAny && canGenerateOwn,
-    url: context.config.headscale.public_url ?? context.config.headscale.url,
+    url: config.headscale.public_url ?? config.headscale.url,
     users,
   };
 }

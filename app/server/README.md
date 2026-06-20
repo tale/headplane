@@ -9,7 +9,7 @@ runs only on the Node process — never in the browser.
 app/server/
 ├── app.ts              ← The Headplane application (load context, RR listener)
 ├── main.ts             ← Production bootstrap (binds an http(s) server)
-├── context.ts          ← createAppContext() — assembles the AppLoadContext
+├── context.ts          ← createAppContext() — assembles the RouterContextProvider data
 ├── result.ts           ← Result<T, E> helper used across the server modules
 │
 ├── config/             ← YAML config loading, schema, env-overrides, integrations
@@ -26,9 +26,10 @@ There are two SSR entries; both are picked up by Vite via `vite.config.ts`.
 
 ### `app.ts` — the application module
 
-Loads config → builds the `AppLoadContext` (via [`context.ts`](./context.ts))
-→ exports the React Router `RequestListener` as `default`, plus the
-resolved `config` as a named export.
+Loads config → builds the application context (via [`context.ts`](./context.ts))
+→ seeds React Router's `RouterContextProvider` with the named service contexts
+→ exports the React Router `RequestListener` as `default`, plus the resolved
+`config` as a named export.
 
 This module has no opinions about how the server is hosted. It does not
 listen on a socket, doesn't compose static-asset serving, and doesn't
@@ -71,17 +72,19 @@ process:
 - the (best-effort) parsed Headscale config (`hs`)
 - the integration adapter (`integration`)
 
-The returned object is the `AppLoadContext` exposed to every React
-Router loader/action. The module also `declare module "react-router" { interface AppLoadContext extends AppContext {} }`
-so route handlers get full type inference on `context`.
+The returned object owns process-lifetime services, but route handlers consume
+those services through named React Router contexts such as `authContext`,
+`headscaleContext`, and `headscaleConfigContext`:
 
-When a route needs the type, import it from `~/server/context`:
+When a route needs a service, import the matching context from
+`~/server/context`:
 
 ```ts
-import type { AppContext } from "~/server/context";
+import { authContext } from "~/server/context";
 
-export async function loader({ context }: LoaderFunctionArgs<AppContext>) {
-  // …
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const auth = context.get(authContext);
+  const principal = await auth.require(request);
 }
 ```
 
@@ -105,7 +108,7 @@ file is loaded, not by runtime conditionals.
    that names a coherent concern, e.g. `metrics/`, `ratelimit/`).
 2. If it owns process-lifetime state (a connection pool, a service
    client, …), construct it in [`context.ts`](./context.ts) and add it
-   to the returned object — this gives every route automatic access via
-   `context.<name>`.
+   to the returned object. Expose it through a named React Router context
+   and seed that context in [`app.ts`](./app.ts)'s `getLoadContext`.
 3. If it's purely a helper (pure functions, type definitions), import
    it directly from the module that needs it.

@@ -10,6 +10,12 @@ import Card from "~/components/card";
 import CodeBlock from "~/components/code-block";
 import Link from "~/components/link";
 import LinkAccount from "~/layout/link-account";
+import {
+  authContext,
+  headscaleConfigContext,
+  headscaleLiveStoreContext,
+  requestApiContext,
+} from "~/server/context";
 import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
@@ -19,19 +25,24 @@ import { getUserDisplayName } from "~/utils/user";
 import type { Route } from "./+types/home";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
+  const auth = context.get(authContext);
+  const getRequestApi = context.get(requestApiContext);
+  const headscaleConfig = context.get(headscaleConfigContext);
+  const headscaleLiveStore = context.get(headscaleLiveStoreContext);
+
+  const principal = await auth.require(request);
 
   // If the signed-in Headplane user has no linked Headscale user,
   // check for unclaimed users they can pick from before anything else.
   let unlinked = false;
   if (isUserPrincipal(principal) && !principal.user.headscaleUserId) {
-    const { api } = await context.apiForRequest(request);
+    const { api } = await getRequestApi(request);
 
     let headscaleUsers: { id: string; name: string }[] = [];
     try {
       const [usersSnap, claimed] = await Promise.all([
-        context.hsLive.get(usersResource, api),
-        context.auth.claimedHeadscaleUserIds(),
+        headscaleLiveStore.get(usersResource, api),
+        auth.claimedHeadscaleUserIds(),
       ]);
 
       const apiUsers = usersSnap.data;
@@ -50,22 +61,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // Only warn if Headscale isn't using OIDC — if it is, the user
     // Just needs to connect a device and Headscale will auto-create
     // Their account, at which point auto-link will pick it up.
-    if (!context.hs.c?.oidc) {
+    if (!headscaleConfig.c?.oidc) {
       unlinked = true;
     }
   }
 
-  if (context.auth.can(principal, Capabilities.ui_access)) {
+  if (auth.can(principal, Capabilities.ui_access)) {
     return redirect("/machines");
   }
 
   // No UI access — show the download/connect page
-  const { api } = await context.apiForRequest(request);
+  const { api } = await getRequestApi(request);
 
   let linkedUserName: string | undefined;
   if (isUserPrincipal(principal) && principal.user.headscaleUserId) {
     try {
-      const usersSnap = await context.hsLive.get(usersResource, api);
+      const usersSnap = await headscaleLiveStore.get(usersResource, api);
       const hsUser = usersSnap.data.find((u) => u.id === principal.user.headscaleUserId);
       linkedUserName = hsUser?.name;
     } catch {
@@ -77,7 +88,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
+  const auth = context.get(authContext);
+
+  const principal = await auth.require(request);
   if (!isUserPrincipal(principal)) {
     return redirect("/");
   }
@@ -86,7 +99,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const headscaleUserId = formData.get("headscale_user_id")?.toString();
 
   if (headscaleUserId) {
-    await context.auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
+    await auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
   }
 
   return redirect("/");

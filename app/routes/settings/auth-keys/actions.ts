@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { authContext, requestApiContext } from "~/server/context";
 import { isUserPrincipal } from "~/server/web/auth";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
@@ -8,10 +9,13 @@ import type { PreAuthKey } from "~/types";
 import type { Route } from "./+types/overview";
 
 export async function authKeysAction({ request, context }: Route.ActionArgs) {
-  const { principal, api } = await context.apiForRequest(request);
+  const auth = context.get(authContext);
+  const getRequestApi = context.get(requestApiContext);
 
-  const canGenerateAny = context.auth.can(principal, Capabilities.generate_authkeys);
-  const canGenerateOwn = context.auth.can(principal, Capabilities.generate_own_authkeys);
+  const { principal, api } = await getRequestApi(request);
+
+  const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
+  const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
 
   if (!canGenerateAny && !canGenerateOwn) {
     throw data("You do not have permission to manage pre-auth keys", {

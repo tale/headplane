@@ -1,12 +1,23 @@
 import { data } from "react-router";
 
+import {
+  authContext,
+  headscaleConfigContext,
+  headscaleContext,
+  integrationContext,
+} from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/overview";
 
 export async function restrictionAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.configure_iam);
+  const auth = context.get(authContext);
+  const headscale = context.get(headscaleContext);
+  const headscaleConfig = context.get(headscaleConfigContext);
+  const integration = context.get(integrationContext);
+
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.configure_iam);
 
   if (!check) {
     throw data("You do not have permission to modify IAM settings.", {
@@ -14,7 +25,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
     });
   }
 
-  if (!context.hs.writable()) {
+  if (!headscaleConfig.writable()) {
     throw data("The Headscale configuration file is not editable.", {
       status: 403,
     });
@@ -37,16 +48,16 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const domains = [...new Set([...(context.hs.c?.oidc?.allowed_domains ?? []), domain])];
+      const domains = [...new Set([...(headscaleConfig.c?.oidc?.allowed_domains ?? []), domain])];
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_domains",
           value: domains,
         },
       ]);
 
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("Domain added successfully.");
     }
 
@@ -58,7 +69,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedDomains = context.hs.c?.oidc?.allowed_domains ?? [];
+      const storedDomains = headscaleConfig.c?.oidc?.allowed_domains ?? [];
       if (!storedDomains.includes(domain)) {
         // Domain not found in the list
         throw data(`Domain "${domain}" not found in allowed domains.`, {
@@ -68,13 +79,13 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
 
       // Filter out the domain to remove it from the list
       const domains = storedDomains.filter((d: string) => d !== domain);
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_domains",
           value: domains,
         },
       ]);
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("Domain removed successfully.");
     }
 
@@ -86,16 +97,16 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const groups = [...new Set([...(context.hs.c?.oidc?.allowed_groups ?? []), group])];
+      const groups = [...new Set([...(headscaleConfig.c?.oidc?.allowed_groups ?? []), group])];
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_groups",
           value: groups,
         },
       ]);
 
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("Group added successfully.");
     }
 
@@ -107,7 +118,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedGroups = context.hs.c?.oidc?.allowed_groups ?? [];
+      const storedGroups = headscaleConfig.c?.oidc?.allowed_groups ?? [];
       if (!storedGroups.includes(group)) {
         // Group not found in the list
         throw data(`Group "${group}" not found in allowed groups.`, {
@@ -117,14 +128,14 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
 
       // Filter out the group to remove it from the list
       const groups = storedGroups.filter((d: string) => d !== group);
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_groups",
           value: groups,
         },
       ]);
 
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("Group removed successfully.");
     }
 
@@ -136,16 +147,16 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const users = [...new Set([...(context.hs.c?.oidc?.allowed_users ?? []), user])];
+      const users = [...new Set([...(headscaleConfig.c?.oidc?.allowed_users ?? []), user])];
 
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_users",
           value: users,
         },
       ]);
 
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("User added successfully.");
     }
 
@@ -157,7 +168,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedUsers = context.hs.c?.oidc?.allowed_users ?? [];
+      const storedUsers = headscaleConfig.c?.oidc?.allowed_users ?? [];
       if (!storedUsers.includes(user)) {
         // User not found in the list
         throw data(`User "${user}" not found in allowed users.`, {
@@ -167,14 +178,14 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
 
       // Filter out the user to remove it from the list
       const users = storedUsers.filter((d: string) => d !== user);
-      await context.hs.patch([
+      await headscaleConfig.patch([
         {
           path: "oidc.allowed_users",
           value: users,
         },
       ]);
 
-      context.integration?.onConfigChange(context.headscale);
+      integration?.onConfigChange(headscale);
       return data("User removed successfully.");
     }
 

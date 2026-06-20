@@ -12,6 +12,7 @@
 import { exit, versions } from "node:process";
 
 import { createRequestListener } from "@react-router/node";
+import { RouterContextProvider } from "react-router";
 import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
@@ -19,7 +20,20 @@ import log from "~/utils/log";
 import type { HeadplaneConfig } from "./config/config-schema";
 import { ConfigError } from "./config/error";
 import { loadConfig } from "./config/load";
-import { createAppContext } from "./context";
+import {
+  agentsContext,
+  appConfigContext,
+  authContext,
+  createAppContext,
+  dbContext,
+  headscaleApiKeyContext,
+  headscaleConfigContext,
+  headscaleContext,
+  headscaleLiveStoreContext,
+  integrationContext,
+  oidcContext,
+  requestApiContext,
+} from "./context";
 
 log.info("server", "Running Node.js %s", versions.node);
 
@@ -65,6 +79,19 @@ export default createRequestListener({
   mode: import.meta.env.MODE,
   getLoadContext: (request, client) => {
     ctx.auth.registerRequestClientAddress(request, client.address);
-    return ctx;
+
+    const routerContext = new RouterContextProvider();
+    routerContext.set(agentsContext, ctx.agents);
+    routerContext.set(appConfigContext, ctx.config);
+    routerContext.set(authContext, ctx.auth);
+    routerContext.set(dbContext, ctx.db);
+    routerContext.set(headscaleContext, ctx.headscale);
+    routerContext.set(headscaleApiKeyContext, ctx.headscaleApiKey);
+    routerContext.set(headscaleConfigContext, ctx.hs);
+    routerContext.set(headscaleLiveStoreContext, ctx.hsLive);
+    routerContext.set(integrationContext, ctx.integration);
+    routerContext.set(oidcContext, ctx.oidc);
+    routerContext.set(requestApiContext, ctx.apiForRequest);
+    return routerContext;
   },
 });

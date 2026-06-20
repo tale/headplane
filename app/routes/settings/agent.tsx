@@ -6,18 +6,22 @@ import Notice from "~/components/notice";
 import StatusCircle from "~/components/status-circle";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import { agentsContext, authContext } from "~/server/context";
 import { formatTimeDelta } from "~/utils/time";
 
 import type { Route } from "./+types/agent";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  await context.auth.require(request);
+  const agents = context.get(agentsContext);
+  const auth = context.get(authContext);
 
-  if (context.agents.state !== "enabled") {
-    return { enabled: false as const, reason: context.agents.reason };
+  await auth.require(request);
+
+  if (agents.state !== "enabled") {
+    return { enabled: false as const, reason: agents.reason };
   }
 
-  const sync = context.agents.value.lastSync();
+  const sync = agents.value.lastSync();
   return {
     enabled: true as const,
     syncedAt: sync.syncedAt?.toISOString() ?? null,
@@ -27,14 +31,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export async function action({ request, context }: Route.ActionArgs) {
-  await context.auth.require(request);
+  const agents = context.get(agentsContext);
+  const auth = context.get(authContext);
 
-  if (context.agents.state !== "enabled") {
-    return { success: false, error: context.agents.reason };
+  await auth.require(request);
+
+  if (agents.state !== "enabled") {
+    return { success: false, error: agents.reason };
   }
 
-  await context.agents.value.triggerSync();
-  const sync = context.agents.value.lastSync();
+  await agents.value.triggerSync();
+  const sync = agents.value.lastSync();
   return { success: !sync.error, error: sync.error };
 }
 

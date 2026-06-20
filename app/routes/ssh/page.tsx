@@ -5,6 +5,7 @@ import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react
 import Button from "~/components/button";
 import Card from "~/components/card";
 import Code from "~/components/code";
+import { agentsContext, appConfigContext, requestApiContext } from "~/server/context";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 
 import type { Route } from "./+types/page";
@@ -23,6 +24,10 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
 };
 
 export async function loader({ request, params, context, url }: Route.LoaderArgs) {
+  const agents = context.get(agentsContext);
+  const config = context.get(appConfigContext);
+  const getRequestApi = context.get(requestApiContext);
+
   const origin = url.origin;
   const assets = [WASM_HELPER_URL, WASM_MODULE_URL];
   const missing: string[] = [];
@@ -38,11 +43,11 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
     throw data(sshErrors.wasm_missing, 405);
   }
 
-  if (context.agents.state !== "enabled") {
+  if (agents.state !== "enabled") {
     throw data(sshErrors.agent_required, 400);
   }
 
-  const { principal, api } = await context.apiForRequest(request);
+  const { principal, api } = await getRequestApi(request);
   if (principal.kind === "api_key") {
     throw data(sshErrors.oidc_required, 403);
   }
@@ -82,7 +87,7 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
     aclTags: null,
   });
 
-  const controlURL = context.config.headscale.public_url ?? context.config.headscale.url;
+  const controlURL = config.headscale.public_url ?? config.headscale.url;
   return {
     hostname,
     username,

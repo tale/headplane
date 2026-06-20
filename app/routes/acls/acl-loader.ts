@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { authContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { Capabilities } from "~/server/web/roles";
 
@@ -11,10 +12,13 @@ import type { Route } from "./+types/overview";
 // 2. Does the user have permission to write to the policy?
 // 3. Is the Headscale policy in file or database mode?
 //    If database, we can read/write easily via the API.
-//    If in file mode, we can only write if context.config is available.
+//    If in file mode, we can only write if the Headscale config is available.
 export async function aclLoader({ request, context }: Route.LoaderArgs) {
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.read_policy);
+  const auth = context.get(authContext);
+  const getRequestApi = context.get(requestApiContext);
+
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.read_policy);
   if (!check) {
     throw data("You do not have permission to read the ACL policy.", {
       status: 403,
@@ -23,13 +27,13 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
 
   const flags = {
     // Can the user write to the ACL policy
-    access: context.auth.can(principal, Capabilities.write_policy),
+    access: auth.can(principal, Capabilities.write_policy),
     writable: false,
     policy: "",
   };
 
   // Try to load the ACL policy from the API.
-  const { api } = await context.apiForRequest(request);
+  const { api } = await getRequestApi(request);
   try {
     const { policy, updatedAt } = await api.policy.get();
     flags.writable = updatedAt !== null;

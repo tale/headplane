@@ -1,11 +1,15 @@
 import { redirect } from "react-router";
 
+import { authContext, headscaleContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import log from "~/utils/log";
 
 import type { Route } from "./+types/page";
 
 export async function loginAction({ request, context }: Route.LoaderArgs) {
+  const auth = context.get(authContext);
+  const headscale = context.get(headscaleContext);
+
   const formData = await request.formData();
   const apiKey = formData.has("api_key") ? String(formData.get("api_key")) : undefined;
 
@@ -35,7 +39,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
 
   // Build a client with the candidate API key the user just submitted, so the
   // GET /api/v1/apikey call below validates the key against Headscale itself.
-  const api = context.headscale.client(apiKey);
+  const api = headscale.client(apiKey);
   try {
     const apiKeys = await api.apiKeys.list();
 
@@ -70,7 +74,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
 
     return redirect("/machines", {
       headers: {
-        "Set-Cookie": await context.auth.createApiKeySession(
+        "Set-Cookie": await auth.createApiKeySession(
           apiKey,
           `${lookup.prefix}...`,
           expiry.getTime() - Date.now(),

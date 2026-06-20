@@ -1,5 +1,6 @@
 import { data } from "react-router";
 
+import { authContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { Capabilities } from "~/server/web/roles";
 
@@ -9,8 +10,11 @@ import type { Route } from "./+types/overview";
 // If it isn't, it'll gracefully error anyways, since this means some
 // fishy client manipulation is happening.
 export async function aclAction({ request, context }: Route.ActionArgs) {
-  const principal = await context.auth.require(request);
-  const check = context.auth.can(principal, Capabilities.write_policy);
+  const auth = context.get(authContext);
+  const getRequestApi = context.get(requestApiContext);
+
+  const principal = await auth.require(request);
+  const check = auth.can(principal, Capabilities.write_policy);
   if (!check) {
     throw data("You do not have permission to write to the ACL policy", {
       status: 403,
@@ -26,7 +30,7 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
     });
   }
 
-  const { api } = await context.apiForRequest(request);
+  const { api } = await getRequestApi(request);
   try {
     const { policy, updatedAt } = await api.policy.set(policyData);
     return data({
