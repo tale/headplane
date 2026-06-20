@@ -74,6 +74,8 @@ oidc:
   # userinfo_endpoint: ""
   # scope: "openid email profile"
   # subject_claims: ["open_id", "email"]
+  # default_role: "member"
+  # role_claim: "headplane_role"
   # allow_weak_rsa_keys: false
   # extra_params:
   #  foo: "bar"
@@ -225,6 +227,40 @@ The very first user to sign in via OIDC is automatically assigned the **Owner**
 role. All subsequent users are assigned the **Member** role (no access) by
 default. An owner or admin must then assign them an appropriate role through
 the Users page.
+
+### Automatic Role Assignment
+
+You can change the role assigned to newly created OIDC users with
+`oidc.default_role`:
+
+```yaml
+oidc:
+  # Valid values: admin, network_admin, it_admin, auditor, viewer, member
+  default_role: "viewer"
+```
+
+This is useful when Headscale already restricts who can authenticate by domain,
+group, or user. For example, if Headscale only allows `@example.com` users to
+sign in and all of those users should be able to view Headplane, set
+`default_role: "viewer"`.
+
+For per-user roles from your IdP, configure `oidc.role_claim` with the OIDC
+claim that contains a Headplane role:
+
+```yaml
+oidc:
+  role_claim: "headplane_role"
+```
+
+The claim may be a string, such as `"admin"`, or an array containing one of the
+valid roles. This lets providers such as Keycloak map groups or client roles to
+a final Headplane role before login. When both `role_claim` and `default_role`
+are configured, a valid role claim takes precedence for new users.
+
+Automatic role assignment only applies when Headplane creates a user for the
+first time. It does not overwrite roles that were already assigned in Headplane.
+The **Owner** role is reserved for the first-login bootstrap and cannot be
+granted by `default_role` or `role_claim`.
 
 ### API Key Sessions
 

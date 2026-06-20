@@ -151,6 +151,7 @@ function buildOidc(
       usePkce: config.oidc.use_pkce,
       scope: config.oidc.scope,
       subjectClaims: config.oidc.subject_claims,
+      roleClaim: config.oidc.role_claim,
       allowWeakRsaKeys: config.oidc.allow_weak_rsa_keys,
       extraParams: config.oidc.extra_params,
       profilePictureSource: config.oidc.profile_picture_source,

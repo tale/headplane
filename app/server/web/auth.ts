@@ -89,6 +89,7 @@ export interface AuthService {
   findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
+    options?: { initialRole?: string },
   ): Promise<string>;
 
   linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean>;
@@ -582,6 +583,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
+    options?: { initialRole?: string },
   ): Promise<string> {
     const [existing] = await opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
 
@@ -599,6 +601,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       return existing.id;
     }
 
+    const initialRole = normalizeInitialRole(options?.initialRole) ?? "member";
     const id = ulid();
     await opts.db.insert(users).values({
       id,
@@ -606,8 +609,8 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       name: profile?.name,
       email: profile?.email,
       picture: profile?.picture,
-      role: "member",
-      caps: capsForRole("member"),
+      role: initialRole,
+      caps: capsForRole(initialRole),
     });
 
     const [{ count }] = await opts.db.select({ count: sql<number>`count(*)` }).from(users);
@@ -620,6 +623,14 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     }
 
     return id;
+  }
+
+  function normalizeInitialRole(role: string | undefined): Exclude<Role, "owner"> | undefined {
+    if (role && role !== "owner" && role in Roles) {
+      return role as Exclude<Role, "owner">;
+    }
+
+    return undefined;
   }
 
   async function linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean> {

@@ -148,6 +148,26 @@ describe("Configuration YAML file loading", () => {
     expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
   });
 
+  test("oidc.default_role and oidc.role_claim can be configured from YAML", async () => {
+    const filePath = "/config/oidc-role-assignment.yaml";
+    writeYaml(filePath, {
+      headscale: { url: "http://localhost:8080" },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      oidc: {
+        issuer: "https://accounts.google.com",
+        client_id: "my-client-id",
+        client_secret: "my-client-secret",
+        headscale_api_key: "my-api-key",
+        default_role: "viewer",
+        role_claim: "headplane_role",
+      },
+    });
+
+    const config = await loadConfig(filePath);
+    expect(config.oidc?.default_role).toBe("viewer");
+    expect(config.oidc?.role_claim).toBe("headplane_role");
+  });
+
   test("oidc.allow_weak_rsa_keys defaults to false", async () => {
     const filePath = "/config/oidc-weak-rsa-default.yaml";
     writeYaml(filePath, {

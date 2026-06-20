@@ -114,6 +114,8 @@ const partialHeadscaleConfig = type({
   tls_cert_path: "string.lower?",
 });
 
+const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
+
 const oidcConfig = type({
   enabled: "boolean = true",
   issuer: "string.url",
@@ -147,6 +149,8 @@ const oidcConfig = type({
   disable_api_key_login: "boolean = false",
   scope: 'string = "openid email profile"',
   subject_claims: type("string[]").pipe(normalizeStringArray).optional(),
+  default_role: `${assignableRole} = "member"`,
+  role_claim: "string?",
   allow_weak_rsa_keys: "boolean = false",
   profile_picture_source: '"oidc" | "gravatar" = "oidc"',
   extra_params: "Record<string, string>?",
@@ -174,6 +178,8 @@ const partialOidcConfig = type({
   disable_api_key_login: "boolean?",
   scope: "string?",
   subject_claims: type("string[]").pipe(normalizeStringArray).optional(),
+  default_role: `${assignableRole}?`,
+  role_claim: "string?",
   allow_weak_rsa_keys: "boolean?",
   extra_params: "Record<string, string>?",
   profile_picture_source: '"oidc" | "gravatar"?',

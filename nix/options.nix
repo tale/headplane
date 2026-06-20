@@ -423,6 +423,32 @@ in {
                   default = false;
                   description = "Whether to use PKCE when authenticating users.";
                 };
+
+                default_role = mkOption {
+                  type = types.enum [
+                    "admin"
+                    "network_admin"
+                    "it_admin"
+                    "auditor"
+                    "viewer"
+                    "member"
+                  ];
+                  default = "member";
+                  description = ''
+                    Role assigned to newly created OIDC users after the first owner is bootstrapped.
+                    The owner role is reserved for the first-login bootstrap.
+                  '';
+                };
+
+                role_claim = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = ''
+                    Optional OIDC claim containing the Headplane role to assign to newly created users.
+                    A valid role claim takes precedence over default_role.
+                  '';
+                  example = "headplane_role";
+                };
               };
             };
             default = {};

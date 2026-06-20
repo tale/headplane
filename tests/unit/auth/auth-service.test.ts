@@ -30,6 +30,26 @@ describe("findOrCreateUser", () => {
     expect(role).toBe("member");
   });
 
+  test("second distinct user can receive a configured initial role", async () => {
+    await auth.findOrCreateUser("sub-owner", { name: "Owner" });
+    await auth.findOrCreateUser("sub-admin", { name: "Admin" }, { initialRole: "admin" });
+    const role = await auth.roleForSubject("sub-admin");
+    expect(role).toBe("admin");
+  });
+
+  test("first created user becomes owner even with a configured initial role", async () => {
+    await auth.findOrCreateUser("sub-owner", { name: "Owner" }, { initialRole: "viewer" });
+    const role = await auth.roleForSubject("sub-owner");
+    expect(role).toBe("owner");
+  });
+
+  test("configured initial roles cannot grant owner", async () => {
+    await auth.findOrCreateUser("sub-owner", { name: "Owner" });
+    await auth.findOrCreateUser("sub-other", { name: "Other" }, { initialRole: "owner" });
+    const role = await auth.roleForSubject("sub-other");
+    expect(role).toBe("member");
+  });
+
   test("existing subject returns same id (idempotent)", async () => {
     const id1 = await auth.findOrCreateUser("sub-1", { name: "Alice" });
     const id2 = await auth.findOrCreateUser("sub-1", { name: "Alice" });

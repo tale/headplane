@@ -252,6 +252,15 @@ _Type:_ boolean
 
 _Default:_ `false`
 
+## settings.oidc.default_role
+
+_Description:_ Role assigned to newly created OIDC users after the first owner is bootstrapped.
+The owner role is reserved for the first-login bootstrap.
+
+_Type:_ one of "admin", "network_admin", "it_admin", "auditor", "viewer", "member"
+
+_Default:_ `"member"`
+
 ## settings.oidc.headscale_api_key_path
 
 _Description:_ DEPRECATED: Use `headscale.api_key_path` instead.
@@ -283,6 +292,17 @@ _Type:_ string
 _Default:_ `""`
 
 _Example:_ `"https://headscale.example.com/admin/oidc/callback"`
+
+## settings.oidc.role_claim
+
+_Description:_ Optional OIDC claim containing the Headplane role to assign to newly created users.
+A valid role claim takes precedence over default_role.
+
+_Type:_ null or string
+
+_Default:_ `null`
+
+_Example:_ `"headplane_role"`
 
 ## settings.oidc.token_endpoint_auth_method
 

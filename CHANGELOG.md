@@ -9,6 +9,7 @@
 - Fixed machine rename submission by validating names before sending the rename request (closes [#564](https://github.com/tale/headplane/issues/564)).
 - Fixed OIDC token exchange fallback when retrying with `client_secret_basic` (closes [#493](https://github.com/tale/headplane/issues/493)).
 - Added support for proxy authentication via `server.proxy_auth` (closes [#353](https://github.com/tale/headplane/issues/353)).
+- Added automatic role assignment for new OIDC users via `oidc.default_role` and IdP-provided role claims via `oidc.role_claim` (closes [#352](https://github.com/tale/headplane/issues/352)).
 
 ---
 

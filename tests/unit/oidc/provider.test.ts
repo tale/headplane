@@ -897,6 +897,53 @@ describe("identity resolution", () => {
     expect(result.ok && result.value.name).toBe("Alice Smith");
   });
 
+  test("resolves role from configured ID token claim", async () => {
+    const result = await flowWithClaims(
+      { sub: "u1", headplane_role: "network_admin" },
+      { roleClaim: "headplane_role" },
+    );
+
+    expect(result.ok && result.value.role).toBe("network_admin");
+  });
+
+  test("resolves strongest assignable role from configured array claim", async () => {
+    const result = await flowWithClaims(
+      { sub: "u1", groups: ["member", "admin"] },
+      { roleClaim: "groups" },
+    );
+
+    expect(result.ok && result.value.role).toBe("admin");
+  });
+
+  test("fetches userinfo when configured role claim is missing from ID token", async () => {
+    const svc = createOidcService(testConfig({ usePkce: false, roleClaim: "headplane_role" }));
+    const flowResult = await svc.startFlow();
+    if (!flowResult.ok) {
+      throw new Error("startFlow failed");
+    }
+
+    const { flowState } = flowResult.value;
+    const idToken = await signIdToken(
+      { sub: "u1", name: "Alice Smith", email: "alice@example.com" },
+      flowState.nonce,
+    );
+
+    tokenHandler = async (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ access_token: "at", id_token: idToken, token_type: "Bearer" }));
+    };
+
+    userinfoHandler = (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ headplane_role: "viewer" }));
+    };
+
+    const params = new URLSearchParams({ code: "c", state: flowState.state });
+    const result = await svc.handleCallback(params, flowState);
+
+    expect(result.ok && result.value.role).toBe("viewer");
+  });
+
   test("falls back to given_name + family_name", async () => {
     const result = await flowWithClaims({
       sub: "u1",

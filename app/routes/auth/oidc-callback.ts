@@ -1,6 +1,7 @@
 import { data, redirect } from "react-router";
 
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
+import { Roles } from "~/server/web/roles";
 import log from "~/utils/log";
 import { createOidcStateCookie } from "~/utils/oidc-state";
 
@@ -48,12 +49,22 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   }
 
   const identity = result.value;
+  const claimedRole =
+    identity.role && identity.role !== "owner" && identity.role in Roles
+      ? identity.role
+      : undefined;
 
-  const userId = await context.auth.findOrCreateUser(identity.subject, {
-    name: identity.name,
-    email: identity.email,
-    picture: identity.picture,
-  });
+  const userId = await context.auth.findOrCreateUser(
+    identity.subject,
+    {
+      name: identity.name,
+      email: identity.email,
+      picture: identity.picture,
+    },
+    {
+      initialRole: claimedRole ?? context.config.oidc?.default_role,
+    },
+  );
 
   try {
     // Looks up the Headscale user that matches this OIDC identity. We use
