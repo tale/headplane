@@ -15,13 +15,13 @@ import { OidcConfigErrorNotice, OidcDiscoveryFailedNotice } from "./config-error
 import Logout from "./logout";
 import { OidcErrorNotice } from "./oidc-error";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context, url }: Route.LoaderArgs) {
   try {
     await context.auth.require(request);
     return redirect("/machines");
   } catch {}
 
-  const qp = new URL(request.url).searchParams;
+  const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
 
   const oidcService = context.oidc.state === "enabled" ? context.oidc.value : undefined;

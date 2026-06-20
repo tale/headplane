@@ -22,8 +22,8 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
   return false;
 };
 
-export async function loader({ request, params, context }: Route.LoaderArgs) {
-  const origin = new URL(request.url).origin;
+export async function loader({ request, params, context, url }: Route.LoaderArgs) {
+  const origin = url.origin;
   const assets = [WASM_HELPER_URL, WASM_MODULE_URL];
   const missing: string[] = [];
 
@@ -48,7 +48,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   const hostname = params.id;
-  const username = new URL(request.url).searchParams.get("user") || undefined;
+  const username = url.searchParams.get("user") || undefined;
 
   const nodes = await api.nodes.list();
   const node = nodes.find((n) => n.givenName === hostname);

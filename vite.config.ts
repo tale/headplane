@@ -44,7 +44,7 @@ if (!VERSION) {
 const config = await readFile("config.example.yaml", "utf-8");
 const { server } = parse(config);
 
-export default defineConfig(({ command, isSsrBuild }) => ({
+export default defineConfig(({ command }) => ({
   base: command === "build" ? `${PREFIX}/` : undefined,
   plugins: [
     headplaneDevServer({
@@ -65,20 +65,35 @@ export default defineConfig(({ command, isSsrBuild }) => ({
   build: {
     target: "baseline-widely-available",
     sourcemap: true,
-    rollupOptions:
-      command === "build"
-        ? {
-            // Override the SSR build entry so React Router emits the
-            // production bootstrap (`app/server/main.ts`) as
-            // `build/server/index.js`. It transitively imports the
-            // SSR entry, which pulls in the React Router server build
-            // via the virtual module `virtual:react-router/server-build`.
-            input: isSsrBuild ? PROD_ENTRY : undefined,
-
-            // Exclude WASM from the client since it fetches from the server
-            external: isSsrBuild ? [] : [/\.wasm(\?url)?$/],
-          }
-        : undefined,
+  },
+  environments: {
+    client: {
+      build: {
+        rollupOptions:
+          command === "build"
+            ? {
+                // Exclude WASM from the client since it fetches from the server
+                external: [/\.wasm(\?url)?$/],
+              }
+            : undefined,
+      },
+    },
+    ssr: {
+      build: {
+        rollupOptions:
+          command === "build"
+            ? {
+                // Override the SSR build entry so React Router emits the
+                // production bootstrap (`app/server/main.ts`) as
+                // `build/server/index.js`. It transitively imports the
+                // SSR entry, which pulls in the React Router server build
+                // via the virtual module `virtual:react-router/server-build`.
+                input: PROD_ENTRY,
+                external: [],
+              }
+            : undefined,
+      },
+    },
   },
   ssr: {
     noExternal: command === "build" ? true : undefined,

@@ -7,13 +7,12 @@ import { createOidcStateCookie } from "~/utils/oidc-state";
 
 import type { Route } from "./+types/oidc-callback";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ request, context, url }: Route.LoaderArgs) {
   if (context.oidc.state !== "enabled") {
     throw data(`OIDC is unavailable: ${context.oidc.reason}`, { status: 501 });
   }
   const service = context.oidc.value;
 
-  const url = new URL(request.url);
   if (url.searchParams.toString().length === 0) {
     return redirect("/login?s=error_no_query");
   }
