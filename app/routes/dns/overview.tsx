@@ -35,17 +35,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const writablePermission = auth.can(principal, Capabilities.write_network);
 
-  const config = headscaleConfig.c!;
-  const dns = {
-    prefixes: config.prefixes,
-    magicDns: config.dns.magic_dns,
-    baseDomain: config.dns.base_domain,
-    nameservers: config.dns.nameservers.global,
-    splitDns: config.dns.nameservers.split,
-    searchDomains: config.dns.search_domains,
-    overrideDns: config.dns.override_local_dns,
-    extraRecords: headscaleConfig.d,
-  };
+  const dns = headscaleConfig.getDNSConfig();
 
   return {
     ...dns,

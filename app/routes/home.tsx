@@ -61,7 +61,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // Only warn if Headscale isn't using OIDC — if it is, the user
     // Just needs to connect a device and Headscale will auto-create
     // Their account, at which point auto-link will pick it up.
-    if (!headscaleConfig.c?.oidc) {
+    if (!headscaleConfig.hasOIDCConfig()) {
       unlinked = true;
     }
   }

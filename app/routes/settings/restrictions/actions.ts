@@ -48,7 +48,9 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const domains = [...new Set([...(headscaleConfig.c?.oidc?.allowed_domains ?? []), domain])];
+      const domains = [
+        ...new Set([...(headscaleConfig.getOIDCConfig()?.allowedDomains ?? []), domain]),
+      ];
 
       await headscaleConfig.patch([
         {
@@ -69,7 +71,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedDomains = headscaleConfig.c?.oidc?.allowed_domains ?? [];
+      const storedDomains = headscaleConfig.getOIDCConfig()?.allowedDomains ?? [];
       if (!storedDomains.includes(domain)) {
         // Domain not found in the list
         throw data(`Domain "${domain}" not found in allowed domains.`, {
@@ -97,7 +99,9 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const groups = [...new Set([...(headscaleConfig.c?.oidc?.allowed_groups ?? []), group])];
+      const groups = [
+        ...new Set([...(headscaleConfig.getOIDCConfig()?.allowedGroups ?? []), group]),
+      ];
 
       await headscaleConfig.patch([
         {
@@ -118,7 +122,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedGroups = headscaleConfig.c?.oidc?.allowed_groups ?? [];
+      const storedGroups = headscaleConfig.getOIDCConfig()?.allowedGroups ?? [];
       if (!storedGroups.includes(group)) {
         // Group not found in the list
         throw data(`Group "${group}" not found in allowed groups.`, {
@@ -147,7 +151,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const users = [...new Set([...(headscaleConfig.c?.oidc?.allowed_users ?? []), user])];
+      const users = [...new Set([...(headscaleConfig.getOIDCConfig()?.allowedUsers ?? []), user])];
 
       await headscaleConfig.patch([
         {
@@ -168,7 +172,7 @@ export async function restrictionAction({ request, context }: Route.ActionArgs) 
         });
       }
 
-      const storedUsers = headscaleConfig.c?.oidc?.allowed_users ?? [];
+      const storedUsers = headscaleConfig.getOIDCConfig()?.allowedUsers ?? [];
       if (!storedUsers.includes(user)) {
         // User not found in the list
         throw data(`User "${user}" not found in allowed users.`, {

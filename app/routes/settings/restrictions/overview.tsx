@@ -24,7 +24,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
-  if (!headscaleConfig.c?.oidc) {
+  const oidc = headscaleConfig.getOIDCConfig();
+  if (!oidc) {
     throw data("OIDC is not configured on this Headscale instance.", {
       status: 501,
     });
@@ -33,9 +34,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     access: auth.can(principal, Capabilities.configure_iam),
     settings: {
-      domains: [...new Set(headscaleConfig.c.oidc.allowed_domains)],
-      groups: [...new Set(headscaleConfig.c.oidc.allowed_groups)],
-      users: [...new Set(headscaleConfig.c.oidc.allowed_users)],
+      domains: [...new Set(oidc.allowedDomains)],
+      groups: [...new Set(oidc.allowedGroups)],
+      users: [...new Set(oidc.allowedUsers)],
     },
     writable: headscaleConfig.writable(),
   };

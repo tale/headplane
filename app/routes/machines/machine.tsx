@@ -43,12 +43,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     throw data(null, { status: 204 });
   }
 
-  let magic: string | undefined;
-  if (headscaleConfig.readable()) {
-    if (headscaleConfig.c?.dns.magic_dns) {
-      magic = headscaleConfig.c.dns.base_domain;
-    }
-  }
+  const magic = headscaleConfig.getMagicDNSBaseDomain();
 
   const { api } = await getRequestApi(request);
   const [nodesSnap, usersSnap] = await Promise.all([

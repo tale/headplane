@@ -56,12 +56,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const nodes = nodesSnap.data;
   const users = usersSnap.data;
 
-  let magic: string | undefined;
-  if (headscaleConfig.readable()) {
-    if (headscaleConfig.c?.dns.magic_dns) {
-      magic = headscaleConfig.c.dns.base_domain;
-    }
-  }
+  const magic = headscaleConfig.getMagicDNSBaseDomain();
 
   const agents = agentsFeature.state === "enabled" ? agentsFeature.value : undefined;
   const [statsResult, policyResult] = await Promise.allSettled([

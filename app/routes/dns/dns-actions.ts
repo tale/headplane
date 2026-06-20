@@ -67,7 +67,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       return { message: "Magic DNS state updated successfully" };
     }
     case "remove_ns": {
-      const config = headscaleConfig.c!;
+      const config = headscaleConfig.getDNSConfig();
       const ns = formData.get("ns")?.toString();
       const splitName = formData.get("split_name")?.toString();
 
@@ -76,7 +76,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       }
 
       if (splitName === "global") {
-        const servers = config.dns.nameservers.global.filter((i) => i !== ns);
+        const servers = config.nameservers.filter((i) => i !== ns);
 
         await headscaleConfig.patch([
           {
@@ -85,7 +85,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
           },
         ]);
       } else {
-        const splits = config.dns.nameservers.split;
+        const splits = config.splitDns;
         const servers = splits[splitName].filter((i) => i !== ns);
 
         await headscaleConfig.patch([
@@ -100,7 +100,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       return { message: "Nameserver removed successfully" };
     }
     case "add_ns": {
-      const config = headscaleConfig.c!;
+      const config = headscaleConfig.getDNSConfig();
       const ns = formData.get("ns")?.toString();
       const splitName = formData.get("split_name")?.toString();
 
@@ -109,8 +109,7 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       }
 
       if (splitName === "global") {
-        const servers = config.dns.nameservers.global;
-        servers.push(ns);
+        const servers = [...config.nameservers, ns];
 
         await headscaleConfig.patch([
           {
@@ -119,9 +118,8 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
           },
         ]);
       } else {
-        const splits = config.dns.nameservers.split;
-        const servers = splits[splitName] ?? [];
-        servers.push(ns);
+        const splits = config.splitDns;
+        const servers = [...(splits[splitName] ?? []), ns];
 
         await headscaleConfig.patch([
           {
@@ -135,13 +133,13 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       return { message: "Nameserver added successfully" };
     }
     case "remove_domain": {
-      const config = headscaleConfig.c!;
+      const config = headscaleConfig.getDNSConfig();
       const domain = formData.get("domain")?.toString();
       if (!domain) {
         return data({ success: false }, 400);
       }
 
-      const domains = config.dns.search_domains.filter((i) => i !== domain);
+      const domains = config.searchDomains.filter((i) => i !== domain);
       await headscaleConfig.patch([
         {
           path: "dns.search_domains",
@@ -153,14 +151,13 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       return { message: "Domain removed successfully" };
     }
     case "add_domain": {
-      const config = headscaleConfig.c!;
+      const config = headscaleConfig.getDNSConfig();
       const domain = formData.get("domain")?.toString();
       if (!domain) {
         return data({ success: false }, 400);
       }
 
-      const domains = config.dns.search_domains;
-      domains.push(domain);
+      const domains = [...config.searchDomains, domain];
 
       await headscaleConfig.patch([
         {

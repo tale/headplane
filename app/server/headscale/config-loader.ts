@@ -2,24 +2,43 @@ import { constants, access, readFile, writeFile } from "node:fs/promises";
 import { exit } from "node:process";
 import { setTimeout } from "node:timers/promises";
 
-import { type } from "arktype";
 import { Document, parseDocument } from "yaml";
 
 import log from "~/utils/log";
 
 import { DNSRecord, HeadscaleDNSConfig, loadHeadscaleDNS } from "./config-dns";
-import { headscaleConfig } from "./config-schema";
 
 interface PatchConfig {
   path: string;
   value: unknown;
 }
 
+interface DNSConfigView {
+  prefixes: {
+    v4?: string;
+    v6?: string;
+    allocation: "sequential" | "random";
+  };
+  magicDns: boolean;
+  baseDomain: string;
+  nameservers: string[];
+  splitDns: Record<string, string[]>;
+  searchDomains: string[];
+  overrideDns: boolean;
+  extraRecords: DNSRecord[];
+}
+
+interface OIDCConfigView {
+  issuer: string;
+  allowedDomains: string[];
+  allowedGroups: string[];
+  allowedUsers: string[];
+}
+
 // We need a class for the config because we need to be able to
 // support retrieving it via a getter but also be able to
 // patch it and to query it for its mode
 class HeadscaleConfig {
-  private config?: typeof headscaleConfig.infer;
   private document?: Document;
   private access: "rw" | "ro" | "no";
   private path?: string;
@@ -29,12 +48,10 @@ class HeadscaleConfig {
   constructor(
     access: "rw" | "ro" | "no",
     dns?: HeadscaleDNSConfig,
-    config?: typeof headscaleConfig.infer,
     document?: Document,
     path?: string,
   ) {
     this.access = access;
-    this.config = config;
     this.document = document;
     this.path = path;
     this.dns = dns;
@@ -48,16 +65,58 @@ class HeadscaleConfig {
     return this.access === "rw";
   }
 
-  get c() {
-    return this.config;
+  getDNSConfig(): DNSConfigView {
+    const config = this.rawConfig();
+    const prefixes = readObject(config, ["prefixes"]);
+    const dns = readObject(config, ["dns"]);
+    const nameservers = readObject(config, ["dns", "nameservers"]);
+
+    return {
+      prefixes: {
+        v4: readString(prefixes?.v4),
+        v6: readString(prefixes?.v6),
+        allocation: prefixes?.allocation === "random" ? "random" : "sequential",
+      },
+      magicDns: readBoolean(dns?.magic_dns, true),
+      baseDomain: readString(dns?.base_domain) ?? "",
+      nameservers: readStringArray(nameservers?.global),
+      splitDns: readStringArrayRecord(nameservers?.split),
+      searchDomains: readStringArray(dns?.search_domains),
+      overrideDns: readBoolean(dns?.override_local_dns, true),
+      extraRecords: this.dnsRecords(),
+    };
   }
 
-  get d() {
+  getMagicDNSBaseDomain() {
+    if (!this.readable()) return;
+    const dns = this.getDNSConfig();
+    return dns.magicDns && dns.baseDomain ? dns.baseDomain : undefined;
+  }
+
+  getOIDCConfig(): OIDCConfigView | undefined {
+    const oidc = readObject(this.rawConfig(), ["oidc"]);
+    if (!oidc) return;
+    const issuer = readString(oidc.issuer);
+    if (!issuer) return;
+
+    return {
+      issuer,
+      allowedDomains: readStringArray(oidc.allowed_domains),
+      allowedGroups: readStringArray(oidc.allowed_groups),
+      allowedUsers: readStringArray(oidc.allowed_users),
+    };
+  }
+
+  hasOIDCConfig() {
+    return this.getOIDCConfig() !== undefined;
+  }
+
+  dnsRecords() {
     if (this.dns) {
       return this.dns.r;
     }
 
-    return this.config?.dns.extra_records ?? [];
+    return readDNSRecords(readPath(this.rawConfig(), ["dns", "extra_records"]));
   }
 
   async patch(patches: PatchConfig[]) {
@@ -105,14 +164,6 @@ class HeadscaleConfig {
       this.document.setIn(key, value);
     }
 
-    // Revalidate our configuration and update the config
-    // object with the new configuration
-    log.info("config", "Revalidating Headscale configuration");
-    const config = validateConfig(this.document.toJSON());
-    if (!config) {
-      return;
-    }
-
     log.debug("config", "Writing updated Headscale configuration to %s", this.path);
 
     // We need to lock the writeLock so that we don't try to write
@@ -123,7 +174,6 @@ class HeadscaleConfig {
 
     this.writeLock = true;
     await writeFile(this.path, this.document.toString(), "utf8");
-    this.config = config;
     this.writeLock = false;
     return;
   }
@@ -152,7 +202,7 @@ class HeadscaleConfig {
 
     // If we get here, we need to add to the main config instead of
     // a separate file (which requires an integration restart)
-    const existing = this.config?.dns.extra_records ?? [];
+    const existing = this.dnsRecords();
     if (existing.some((i) => i.name === record.name && i.type === record.type)) {
       log.debug("config", "DNS record already exists");
       return;
@@ -192,7 +242,7 @@ class HeadscaleConfig {
 
     // If we get here, we need to remove from the main config instead of
     // a separate file (which requires an integration restart)
-    const existing = this.config?.dns.extra_records ?? [];
+    const existing = this.dnsRecords();
     const filtered = existing.filter((i) => i.name !== record.name || i.type !== record.type);
 
     // If the length of the existing records is the same as the filtered
@@ -209,6 +259,10 @@ class HeadscaleConfig {
     ]);
 
     return true;
+  }
+
+  private rawConfig() {
+    return this.document?.toJSON() ?? {};
   }
 }
 
@@ -230,29 +284,23 @@ export async function loadHeadscaleConfig(path?: string, strict = true, dnsPath?
   }
 
   if (!strict) {
-    return new HeadscaleConfig(
-      w ? "rw" : "ro",
-      new HeadscaleDNSConfig("no"),
-      augmentUnstrictConfig(document.toJSON()),
-      document,
-      path,
-    );
+    log.warn("config", "headscale.config_strict=false is no longer required for unknown keys");
+    log.warn("config", "Headplane now validates only the Headscale config values it reads/writes");
   }
 
-  const config = validateConfig(document.toJSON());
-  if (!config) {
-    return new HeadscaleConfig("no");
-  }
+  const rawConfig = document.toJSON();
+  const inlineExtraRecords = readPath(rawConfig, ["dns", "extra_records"]);
+  const extraRecordsPath = readString(readPath(rawConfig, ["dns", "extra_records_path"]));
 
-  if (config.dns.extra_records && config.dns.extra_records_path) {
+  if (Array.isArray(inlineExtraRecords) && extraRecordsPath) {
     log.warn("config", "Both extra_records and extra_records_path are set, Headscale will crash");
 
     log.warn("config", "Please remove one of them from the configuration file");
     return new HeadscaleConfig("no");
   }
 
-  const dns = await loadHeadscaleDNS(dnsPath ?? config.dns.extra_records_path);
-  if (dns && !config.dns.extra_records_path) {
+  const dns = await loadHeadscaleDNS(dnsPath ?? extraRecordsPath);
+  if (dns && !extraRecordsPath) {
     log.error(
       "config",
       "Using separate DNS config file but dns.extra_records_path is not set in Headscale config",
@@ -263,7 +311,7 @@ export async function loadHeadscaleConfig(path?: string, strict = true, dnsPath?
     exit(1);
   }
 
-  return new HeadscaleConfig(w ? "rw" : "ro", dns, config, document, path);
+  return new HeadscaleConfig(w ? "rw" : "ro", dns, document, path);
 }
 
 async function validateConfigPath(path: string) {
@@ -307,66 +355,58 @@ async function loadConfigFile(path: string) {
   }
 }
 
-export function validateConfig(config: unknown) {
-  log.debug("config", "Validating Headscale configuration");
-  const result = headscaleConfig(config);
-  if (result instanceof type.errors) {
-    log.error("config", "Error validating Headscale configuration:");
-    for (const [number, error] of result.entries()) {
-      log.error("config", ` - (${number}): ${error.toString()}`);
-    }
-
-    return;
+function readPath(config: unknown, path: string[]) {
+  let current = config;
+  for (const segment of path) {
+    if (!isObject(current)) return;
+    current = current[segment];
   }
+  return current;
+}
 
+function readObject(config: unknown, path: string[]) {
+  const value = readPath(config, path);
+  return isObject(value) ? value : undefined;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function readString(value: unknown) {
+  return typeof value === "string" ? value : undefined;
+}
+
+function readBoolean(value: unknown, fallback: boolean) {
+  if (typeof value === "boolean") return value;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return fallback;
+}
+
+function readStringArray(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function readStringArrayRecord(value: unknown) {
+  if (!isObject(value)) return {};
+
+  const result: Record<string, string[]> = {};
+  for (const [key, item] of Object.entries(value)) {
+    result[key] = readStringArray(item);
+  }
   return result;
 }
 
-// If config_strict is false, we set the defaults and disable
-// the schema checking for the values that are not present
-function augmentUnstrictConfig(loaded: Partial<typeof headscaleConfig.infer>) {
-  log.debug("config", "Augmenting Headscale configuration in non-strict mode");
-  const config = {
-    ...loaded,
-    tls_letsencrypt_cache_dir: loaded.tls_letsencrypt_cache_dir ?? "/var/www/cache",
-    tls_letsencrypt_challenge_type: loaded.tls_letsencrypt_challenge_type ?? "HTTP-01",
-    grpc_listen_addr: loaded.grpc_listen_addr ?? ":50443",
-    grpc_allow_insecure: loaded.grpc_allow_insecure ?? false,
-    unix_socket: loaded.unix_socket ?? "/var/run/headscale/headscale.sock",
-    unix_socket_permission: loaded.unix_socket_permission ?? "0770",
-
-    log: loaded.log ?? {
-      level: "info",
-      format: "text",
-    },
-
-    logtail: loaded.logtail ?? {
-      enabled: false,
-    },
-
-    prefixes: loaded.prefixes ?? {
-      allocation: "sequential",
-      v4: "",
-      v6: "",
-    },
-
-    dns: loaded.dns ?? {
-      nameservers: {
-        global: [],
-        split: {},
-      },
-      search_domains: [],
-      extra_records: [],
-      magic_dns: false,
-      base_domain: "headscale.net",
-    },
-  };
-
-  log.warn("config", "Headscale configuration was loaded in non-strict mode");
-  log.warn("config", "This is very dangerous and comes with a few caveats:");
-  log.warn("config", "  - Headplane could very easily crash");
-  log.warn("config", "  - Headplane could break your Headscale installation");
-  log.warn("config", "  - The UI could throw random errors/show incorrect data");
-
-  return config as typeof headscaleConfig.infer;
+function readDNSRecords(value: unknown) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is DNSRecord => {
+    if (!isObject(item)) return false;
+    return (
+      typeof item.name === "string" &&
+      typeof item.type === "string" &&
+      typeof item.value === "string"
+    );
+  });
 }
