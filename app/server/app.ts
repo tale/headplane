@@ -74,24 +74,30 @@ export async function dispose(): Promise<void> {
 // TODO: `getLoadContext` is the right place to handle reverse proxy
 // translation — better than doing it in the OIDC client because it
 // applies to all requests, not just OIDC ones.
+function getLoadContext(request: Request, client: ClientAddress) {
+  ctx.auth.registerRequestClientAddress(request, client.address);
+
+  const routerContext = new RouterContextProvider();
+  routerContext.set(agentsContext, ctx.agents);
+  routerContext.set(appConfigContext, ctx.config);
+  routerContext.set(authContext, ctx.auth);
+  routerContext.set(dbContext, ctx.db);
+  routerContext.set(headscaleContext, ctx.headscale);
+  routerContext.set(headscaleApiKeyContext, ctx.headscaleApiKey);
+  routerContext.set(headscaleConfigContext, ctx.hs);
+  routerContext.set(headscaleLiveStoreContext, ctx.hsLive);
+  routerContext.set(integrationContext, ctx.integration);
+  routerContext.set(oidcContext, ctx.oidc);
+  routerContext.set(requestApiContext, ctx.apiForRequest);
+  return routerContext;
+}
+
+interface ClientAddress {
+  address?: string;
+}
+
 export default createRequestListener({
   build,
   mode: import.meta.env.MODE,
-  getLoadContext: (request, client) => {
-    ctx.auth.registerRequestClientAddress(request, client.address);
-
-    const routerContext = new RouterContextProvider();
-    routerContext.set(agentsContext, ctx.agents);
-    routerContext.set(appConfigContext, ctx.config);
-    routerContext.set(authContext, ctx.auth);
-    routerContext.set(dbContext, ctx.db);
-    routerContext.set(headscaleContext, ctx.headscale);
-    routerContext.set(headscaleApiKeyContext, ctx.headscaleApiKey);
-    routerContext.set(headscaleConfigContext, ctx.hs);
-    routerContext.set(headscaleLiveStoreContext, ctx.hsLive);
-    routerContext.set(integrationContext, ctx.integration);
-    routerContext.set(oidcContext, ctx.oidc);
-    routerContext.set(requestApiContext, ctx.apiForRequest);
-    return routerContext;
-  },
+  getLoadContext,
 });

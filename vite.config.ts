@@ -10,6 +10,7 @@ import { headplaneDevServer } from "./runtime/vite-plugin";
 
 const PROD_ENTRY = "./app/server/main.ts";
 const DEV_ENTRY = "./app/server/app.ts";
+const REACT_ROUTER_SSR_NO_EXTERNAL = ["@react-router/node", "react-router"];
 
 const PREFIX = process.env.__INTERNAL_PREFIX || "/admin";
 if (PREFIX.endsWith("/")) {
@@ -44,62 +45,69 @@ if (!VERSION) {
 const config = await readFile("config.example.yaml", "utf-8");
 const { server } = parse(config);
 
-export default defineConfig(({ command }) => ({
-  base: command === "build" ? `${PREFIX}/` : undefined,
-  plugins: [
-    headplaneDevServer({
-      entry: DEV_ENTRY,
-      basename: PREFIX,
-      publicDir: new URL("./public", import.meta.url).pathname,
-    }),
-    reactRouter(),
-    tailwindcss(),
-  ],
-  server: {
-    host: server.host,
-    port: server.port,
-  },
-  resolve: {
-    tsconfigPaths: true,
-  },
-  build: {
-    target: "baseline-widely-available",
-    sourcemap: true,
-  },
-  environments: {
-    client: {
-      build: {
-        rollupOptions:
-          command === "build"
-            ? {
-                // Exclude WASM from the client since it fetches from the server
-                external: [/\.wasm(\?url)?$/],
-              }
-            : undefined,
+export default defineConfig(({ command }) => {
+  const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
+
+  return {
+    base: command === "build" ? `${PREFIX}/` : undefined,
+    plugins: [
+      headplaneDevServer({
+        entry: DEV_ENTRY,
+        basename: PREFIX,
+        publicDir: new URL("./public", import.meta.url).pathname,
+      }),
+      reactRouter(),
+      tailwindcss(),
+    ],
+    server: {
+      host: server.host,
+      port: server.port,
+    },
+    resolve: {
+      tsconfigPaths: true,
+    },
+    build: {
+      target: "baseline-widely-available",
+      sourcemap: true,
+    },
+    environments: {
+      client: {
+        build: {
+          rollupOptions:
+            command === "build"
+              ? {
+                  // Exclude WASM from the client since it fetches from the server
+                  external: [/\.wasm(\?url)?$/],
+                }
+              : undefined,
+        },
+      },
+      ssr: {
+        resolve: {
+          noExternal: ssrNoExternal,
+        },
+        build: {
+          rollupOptions:
+            command === "build"
+              ? {
+                  // Override the SSR build entry so React Router emits the
+                  // production bootstrap (`app/server/main.ts`) as
+                  // `build/server/index.js`. It transitively imports the
+                  // SSR entry, which pulls in the React Router server build
+                  // via the virtual module `virtual:react-router/server-build`.
+                  input: PROD_ENTRY,
+                  external: [],
+                }
+              : undefined,
+        },
       },
     },
     ssr: {
-      build: {
-        rollupOptions:
-          command === "build"
-            ? {
-                // Override the SSR build entry so React Router emits the
-                // production bootstrap (`app/server/main.ts`) as
-                // `build/server/index.js`. It transitively imports the
-                // SSR entry, which pulls in the React Router server build
-                // via the virtual module `virtual:react-router/server-build`.
-                input: PROD_ENTRY,
-                external: [],
-              }
-            : undefined,
-      },
+      noExternal: ssrNoExternal,
     },
-  },
-  ssr: {
-    noExternal: command === "build" ? true : undefined,
-  },
-  define: {
-    __VERSION__: JSON.stringify(isNext ? `${VERSION}-next` : VERSION),
-    __PREFIX__: JSON.stringify(PREFIX),
-  },
-}));
+    define: {
+      __VERSION__: JSON.stringify(isNext ? `${VERSION}-next` : VERSION),
+      __PREFIX__: JSON.stringify(PREFIX),
+    },
+  };
+});
