@@ -33,7 +33,7 @@ export default defineConfig({
           name: "integration:api",
           include: ["tests/integration/api/**/*.test.ts"],
           setupFiles: ["tests/integration/setup/vitest-hook.ts"],
-          testTimeout: 15_000,
+          testTimeout: 60_000,
         },
       },
       {

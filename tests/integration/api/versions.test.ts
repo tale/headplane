@@ -26,7 +26,7 @@ describe.for(HS_VERSIONS)("Headscale %s: Runtime Client", (version) => {
     expect(bootstrapper.capabilities.nodeOwnerIsImmutable).toBe(gte(v, "0.28.0"));
     // If a future version is added to HS_VERSIONS before this test is
     // updated, surface that explicitly rather than passing silently.
-    const known: Version[] = ["0.27.0", "0.27.1", "0.28.0"];
+    const known: Version[] = ["0.27.0", "0.27.1", "0.28.0", "0.29.0", "0.29.1"];
     if (!known.includes(version)) {
       context.skip();
     }

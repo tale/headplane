@@ -6,7 +6,7 @@ import { startTailscaleNode, TailscaleNodeEnv } from "./start-tailscale";
 // The set of Headscale versions integration tests run against. Listed
 // explicitly (rather than derived from a generated manifest) so the
 // supported version matrix lives next to the code that uses it.
-export const HS_VERSIONS = ["0.27.0", "0.27.1", "0.28.0"] as const;
+export const HS_VERSIONS = ["0.27.0", "0.27.1", "0.28.0", "0.29.0", "0.29.1"] as const;
 export type Version = (typeof HS_VERSIONS)[number];
 
 interface VersionStateEntry {

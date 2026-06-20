@@ -79,7 +79,19 @@ export const headscaleConfig = type({
   },
 
   disable_check_updates: goBool.default(false),
-  ephemeral_node_inactivity_timeout: goDuration.default("30m"),
+  "ephemeral_node_inactivity_timeout?": goDuration,
+  "node?": {
+    expiry: goDuration.default("0"),
+    "ephemeral?": {
+      inactivity_timeout: goDuration.default("30m"),
+    },
+    "routes?": {
+      "ha?": {
+        probe_interval: goDuration.default("10s"),
+        probe_timeout: goDuration.default("5s"),
+      },
+    },
+  },
   database: databaseConfig,
 
   acme_url: 'string = "https://acme-v02.api.letsencrypt.org/directory"',
@@ -147,5 +159,8 @@ export const headscaleConfig = type({
     enabled: goBool.default(false),
   },
 
-  randomize_client_port: goBool.default(false),
+  "randomize_client_port?": goBool,
+  "auto_update?": {
+    enabled: goBool.default(false),
+  },
 });

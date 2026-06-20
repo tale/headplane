@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 // This is a little shim file that we use to execute the real proc-helper that
 // is bundled through Vite in order to test against a real Linux /proc FS.
 const testRunner = `
+process.env.NODE_ENV = "test";
 const { findHeadscaleServe } = require("./proc-helper.js");
 
 async function main() {

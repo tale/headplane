@@ -332,7 +332,6 @@ function augmentUnstrictConfig(loaded: Partial<typeof headscaleConfig.infer>) {
     tls_letsencrypt_challenge_type: loaded.tls_letsencrypt_challenge_type ?? "HTTP-01",
     grpc_listen_addr: loaded.grpc_listen_addr ?? ":50443",
     grpc_allow_insecure: loaded.grpc_allow_insecure ?? false,
-    randomize_client_port: loaded.randomize_client_port ?? false,
     unix_socket: loaded.unix_socket ?? "/var/run/headscale/headscale.sock",
     unix_socket_permission: loaded.unix_socket_permission ?? "0770",
 
