@@ -65,6 +65,35 @@ describe("findOrCreateUser", () => {
     expect(user?.name).toBe("New");
     expect(user?.email).toBe("new@test.com");
   });
+
+  test("syncs an existing non-owner role when explicitly provided", async () => {
+    await auth.findOrCreateUser("sub-owner");
+    await auth.findOrCreateUser("sub-1", { name: "User" });
+
+    await auth.findOrCreateUser("sub-1", { name: "User" }, { syncRole: "admin" });
+
+    const role = await auth.roleForSubject("sub-1");
+    expect(role).toBe("admin");
+  });
+
+  test("does not apply initial role to an existing user", async () => {
+    await auth.findOrCreateUser("sub-owner");
+    await auth.findOrCreateUser("sub-1", { name: "User" });
+
+    await auth.findOrCreateUser("sub-1", { name: "User" }, { initialRole: "admin" });
+
+    const role = await auth.roleForSubject("sub-1");
+    expect(role).toBe("member");
+  });
+
+  test("does not sync the owner role", async () => {
+    await auth.findOrCreateUser("sub-owner");
+
+    await auth.findOrCreateUser("sub-owner", { name: "Owner" }, { syncRole: "admin" });
+
+    const role = await auth.roleForSubject("sub-owner");
+    expect(role).toBe("owner");
+  });
 });
 
 describe("linkHeadscaleUser", () => {

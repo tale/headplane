@@ -288,10 +288,11 @@ integration:
 #   # auditor, viewer, member. The owner role is only granted to the first user.
 #   default_role: "member"
 #
-#   # Optional OIDC claim to read a Headplane role from when creating a new user.
+#   # Optional OIDC claim to read a Headplane role from when creating or syncing a user.
 #   # This can be a string claim, or an array claim containing one of the valid
 #   # roles above. If present and valid, it takes precedence over default_role.
-#   # Configure your IdP to map groups or client roles into this claim.
+#   # Configure your IdP to map groups or client roles into this claim. Existing
+#   # non-owner users are updated on their next OIDC sign-in when this claim changes.
 #   role_claim: "headplane_role"
 #
 #   # Allow ID token verification with legacy RSA keys smaller than 2048 bits.

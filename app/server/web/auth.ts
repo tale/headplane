@@ -89,7 +89,7 @@ export interface AuthService {
   findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
-    options?: { initialRole?: string },
+    options?: { initialRole?: string; syncRole?: string },
   ): Promise<string>;
 
   linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean>;
@@ -583,17 +583,21 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
-    options?: { initialRole?: string },
+    options?: { initialRole?: string; syncRole?: string },
   ): Promise<string> {
     const [existing] = await opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
 
     if (existing) {
+      const syncedRole = normalizeInitialRole(options?.syncRole);
       await opts.db
         .update(users)
         .set({
           name: profile?.name,
           email: profile?.email,
           picture: profile?.picture,
+          ...(syncedRole && existing.role !== "owner"
+            ? { role: syncedRole, caps: capsForRole(syncedRole) }
+            : {}),
           last_login_at: new Date(),
           updated_at: new Date(),
         })

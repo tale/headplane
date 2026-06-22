@@ -257,10 +257,12 @@ valid roles. This lets providers such as Keycloak map groups or client roles to
 a final Headplane role before login. When both `role_claim` and `default_role`
 are configured, a valid role claim takes precedence for new users.
 
-Automatic role assignment only applies when Headplane creates a user for the
-first time. It does not overwrite roles that were already assigned in Headplane.
-The **Owner** role is reserved for the first-login bootstrap and cannot be
-granted by `default_role` or `role_claim`.
+For users that already exist in Headplane, a valid `role_claim` is synced on
+each OIDC login. If their IdP groups or client roles start matching a different
+Headplane role, their Headplane permissions are updated at their next sign-in.
+`default_role` remains a creation-time fallback only and does not overwrite
+existing roles. The **Owner** role is reserved for the first-login bootstrap and
+cannot be granted or overwritten by `default_role` or `role_claim`.
 
 ### API Key Sessions
 
