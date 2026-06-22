@@ -75,6 +75,13 @@ export interface OidcError {
   hint?: string;
 }
 
+export function logOidcError(context: string, error: OidcError): void {
+  log.error("auth", "%s [%s]: %s", context, error.code, error.message);
+  if (error.hint) {
+    log.error("auth", "Hint: %s", error.hint);
+  }
+}
+
 type JwksResolver = (
   protectedHeader?: JWSHeaderParameters,
   token?: FlattenedJWSInput,

@@ -7,6 +7,7 @@ import {
   headscaleContext,
   oidcContext,
 } from "~/server/context";
+import { logOidcError } from "~/server/oidc/provider";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { Roles } from "~/server/web/roles";
 import log from "~/utils/log";
@@ -27,6 +28,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const service = oidc.value;
 
   if (url.searchParams.toString().length === 0) {
+    log.warn("auth", "Called OIDC callback without query parameters");
     return redirect("/login?s=error_no_query");
   }
 
@@ -53,10 +55,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
 
   const result = await service.handleCallback(url.searchParams, flowState);
   if (!result.ok) {
-    log.error("auth", "OIDC callback failed [%s]: %s", result.error.code, result.error.message);
-    if (result.error.hint) {
-      log.error("auth", "Hint: %s", result.error.hint);
-    }
+    logOidcError("OIDC callback failed", result.error);
     return redirect("/login?s=error_auth_failed");
   }
 

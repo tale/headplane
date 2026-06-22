@@ -1,6 +1,7 @@
 import { data, redirect } from "react-router";
 
 import { appConfigContext, authContext, oidcContext } from "~/server/context";
+import { logOidcError } from "~/server/oidc/provider";
 import { createOidcStateCookie } from "~/utils/oidc-state";
 
 import type { Route } from "./+types/oidc-start";
@@ -22,6 +23,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const result = await service.startFlow();
   if (!result.ok) {
+    logOidcError("OIDC start failed", result.error);
     return redirect(`/login?s=${result.error.code}`);
   }
 

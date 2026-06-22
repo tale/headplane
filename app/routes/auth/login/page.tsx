@@ -8,7 +8,9 @@ import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
 import { appConfigContext, authContext, oidcContext } from "~/server/context";
+import type { OidcError, OidcService } from "~/server/oidc/provider";
 import { useLiveData } from "~/utils/live-data";
+import log from "~/utils/log";
 
 import type { Route } from "./+types/page";
 import { loginAction } from "./action";
@@ -30,12 +32,20 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const urlState = qp.get("s") ?? undefined;
 
   const oidcService = oidc.state === "enabled" ? oidc.value : undefined;
-  const oidcStatus = oidcService
-    ? await oidcService.discover().then(
-        (r) => (r.ok ? oidcService.status() : oidcService.status()),
-        () => oidcService.status(),
-      )
-    : undefined;
+  let oidcStatus: ReturnType<OidcService["status"]> | undefined;
+  if (oidcService) {
+    try {
+      const result = await oidcService.discover();
+      if (!result.ok) {
+        logLoginOidcError("OIDC discovery failed", result.error);
+      }
+    } catch (error) {
+      log.error("auth", "OIDC discovery failed unexpectedly: %s", String(error));
+      log.debug("auth", "OIDC discovery error details: %o", error);
+    }
+
+    oidcStatus = oidcService.status();
+  }
 
   if (
     oidcService &&
@@ -58,6 +68,13 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
 }
 
 export const action = loginAction;
+
+function logLoginOidcError(context: string, error: OidcError): void {
+  log.error("auth", "%s [%s]: %s", context, error.code, error.message);
+  if (error.hint) {
+    log.error("auth", "Hint: %s", error.hint);
+  }
+}
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
   const { isCookieSecureEnabled, isOidcConnectorEnabled, oidcErrorCodes, urlState } = loaderData;
