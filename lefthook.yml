@@ -2,7 +2,7 @@ pre-commit:
   commands:
     lint:
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-      run: pnpm lint --fix {staged_files}
+      run: pnpm lint --fix --no-error-on-unmatched-pattern {staged_files}
       stage_fixed: true
     format:
       glob: "*"

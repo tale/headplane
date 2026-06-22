@@ -7,7 +7,9 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "build": "react-router build",
-    "dev": "HEADPLANE_CONFIG_PATH=./config.example.yaml react-router dev | pino-pretty -c",
+    "dev:app": "HEADPLANE_CONFIG_PATH=./config.example.yaml react-router dev | pino-pretty -c",
+    "dev:docker": "docker compose up",
+    "dev": "pnpm run --stream /^dev:/",
     "start": "node build/server/index.js",
     "typecheck": "react-router typegen && tsc",
     "test:unit": "vitest run --project unit",
