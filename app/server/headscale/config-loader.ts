@@ -193,7 +193,7 @@ function getDNSConfig(config: HeadscaleConfigState): DNSConfigView {
     magicDns: dns.magic_dns,
     baseDomain: dns.base_domain,
     nameservers: dns.nameservers.global,
-    splitDns: dns.nameservers.split,
+    splitDns: dns.nameservers.split ?? {},
     searchDomains: dns.search_domains,
     overrideDns: dns.override_local_dns,
     extraRecords: dnsRecords(config),
