@@ -231,9 +231,8 @@ in {
                   type = types.bool;
                   default = true;
                   description = ''
-                    Headplane internally validates the Headscale configuration
-                    to ensure that it changes the configuration in a safe way.
-                    If you want to disable this validation, set this to false.
+                    Deprecated. Headplane no longer validates the complete
+                    Headscale configuration and this option has no effect.
                   '';
                 };
 

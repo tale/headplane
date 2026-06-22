@@ -99,7 +99,7 @@ async function validateConfigPath(path: string) {
   try {
     await access(path, constants.F_OK | constants.W_OK);
     return { w: true, r: true };
-  } catch (error) {
+  } catch {
     log.warn("config", "Headscale DNS file at %s is not writable", path);
     return { w: false, r: true };
   }

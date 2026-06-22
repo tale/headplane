@@ -50,6 +50,7 @@
     "tailwind-merge": "3.6.0",
     "ulidx": "2.4.1",
     "undici": "8.5.0",
+    "valibot": "^1.4.1",
     "yaml": "2.9.0"
   },
   "devDependencies": {

@@ -73,9 +73,7 @@ _Example:_ `"/etc/headscale/config.yaml"`
 
 ## settings.headscale.config_strict
 
-_Description:_ Headplane internally validates the Headscale configuration
-to ensure that it changes the configuration in a safe way.
-If you want to disable this validation, set this to false.
+_Description:_ Deprecated. Headplane no longer validates the complete Headscale configuration and this option has no effect.
 
 _Type:_ boolean
 

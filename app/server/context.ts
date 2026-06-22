@@ -75,7 +75,6 @@ export async function createAppContext(config: HeadplaneConfig) {
   const hsLive = createLiveStore([nodesResource, usersResource]);
   const hs = await loadHeadscaleConfig(
     config.headscale.config_path,
-    config.headscale.config_strict,
     config.headscale.dns_records_path,
   );
   const integration = await loadIntegration(config.integration);

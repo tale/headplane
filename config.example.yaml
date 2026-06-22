@@ -122,15 +122,6 @@ headscale:
   # Generate one with: headscale apikeys create
   # api_key: "<your-api-key>"
 
-  # Whether the Headscale configuration should be strictly validated
-  # when reading from `config_path`. If true, Headplane will not interact
-  # with Headscale if there are any issues with the configuration file.
-  #
-  # This is recommended to be true for production deployments to, however it
-  # may not work if you are using a version of Headscale that has configuration
-  # options unknown to Headplane.
-  config_strict: true
-
   # If you are using `dns.extra_records_path` in your Headscale
   # configuration, Headplane will read that path automatically. Set
   # this only when Headplane needs to access the same file at a

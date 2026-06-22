@@ -1,7 +1,7 @@
 import { constants, access, readFile, writeFile } from "node:fs/promises";
 import { exit } from "node:process";
-import { setTimeout } from "node:timers/promises";
 
+import * as v from "valibot";
 import { Document, parseDocument } from "yaml";
 
 import log from "~/utils/log";
@@ -14,11 +14,6 @@ interface PatchConfig {
 }
 
 interface DNSConfigView {
-  prefixes: {
-    v4?: string;
-    v6?: string;
-    allocation: "sequential" | "random";
-  };
   magicDns: boolean;
   baseDomain: string;
   nameservers: string[];
@@ -35,268 +30,348 @@ interface OIDCConfigView {
   allowedUsers: string[];
 }
 
-// We need a class for the config because we need to be able to
-// support retrieving it via a getter but also be able to
-// patch it and to query it for its mode
-class HeadscaleConfig {
-  private document?: Document;
-  private access: "rw" | "ro" | "no";
-  private path?: string;
-  private writeLock = false;
-  private dns?: HeadscaleDNSConfig;
+interface ParsedDNSConfig {
+  magic_dns: boolean;
+  base_domain: string;
+  nameservers: {
+    global: string[];
+    split: Record<string, string[]>;
+  };
+  search_domains: string[];
+  override_local_dns: boolean;
+  extra_records: DNSRecord[];
+  extra_records_path?: string;
+}
 
-  constructor(
-    access: "rw" | "ro" | "no",
-    dns?: HeadscaleDNSConfig,
-    document?: Document,
-    path?: string,
-  ) {
-    this.access = access;
-    this.document = document;
-    this.path = path;
-    this.dns = dns;
+const DNS_CONFIG_DEFAULTS: ParsedDNSConfig = {
+  magic_dns: true,
+  base_domain: "",
+  nameservers: {
+    global: [],
+    split: {},
+  },
+  search_domains: [],
+  override_local_dns: true,
+  extra_records: [],
+};
+
+const stringSchema = v.string();
+const stringArraySchema = v.array(v.string());
+const stringArrayRecordSchema = v.record(v.string(), stringArraySchema);
+const goBooleanSchema = v.pipe(
+  v.union([v.boolean(), v.picklist(["true", "false"])]),
+  v.transform((value) => value === true || value === "true"),
+);
+const dnsRecordsSchema = v.array(
+  v.object({
+    name: v.string(),
+    type: v.string(),
+    value: v.string(),
+  }),
+);
+const nameserversSchema = v.object({
+  global: v.optional(v.fallback(stringArraySchema, []), []),
+  split: v.optional(v.fallback(stringArrayRecordSchema, {}), {}),
+});
+const dnsConfigSchema = v.object({
+  magic_dns: v.optional(
+    v.fallback(goBooleanSchema, DNS_CONFIG_DEFAULTS.magic_dns),
+    DNS_CONFIG_DEFAULTS.magic_dns,
+  ),
+  base_domain: v.optional(
+    v.fallback(stringSchema, DNS_CONFIG_DEFAULTS.base_domain),
+    DNS_CONFIG_DEFAULTS.base_domain,
+  ),
+  nameservers: v.optional(
+    v.fallback(nameserversSchema, DNS_CONFIG_DEFAULTS.nameservers),
+    DNS_CONFIG_DEFAULTS.nameservers,
+  ),
+  search_domains: v.optional(
+    v.fallback(stringArraySchema, DNS_CONFIG_DEFAULTS.search_domains),
+    DNS_CONFIG_DEFAULTS.search_domains,
+  ),
+  override_local_dns: v.optional(
+    v.fallback(goBooleanSchema, DNS_CONFIG_DEFAULTS.override_local_dns),
+    DNS_CONFIG_DEFAULTS.override_local_dns,
+  ),
+  extra_records: v.optional(
+    v.fallback(dnsRecordsSchema, DNS_CONFIG_DEFAULTS.extra_records),
+    DNS_CONFIG_DEFAULTS.extra_records,
+  ),
+  extra_records_path: v.optional(v.string()),
+});
+const headscaleConfigSchema = v.fallback(
+  v.object({
+    dns: v.optional(v.fallback(dnsConfigSchema, DNS_CONFIG_DEFAULTS), DNS_CONFIG_DEFAULTS),
+  }),
+  { dns: DNS_CONFIG_DEFAULTS },
+);
+const oidcConfigSchema = v.object({
+  issuer: v.string(),
+  allowed_domains: v.optional(v.fallback(stringArraySchema, []), []),
+  allowed_groups: v.optional(v.fallback(stringArraySchema, []), []),
+  allowed_users: v.optional(v.fallback(stringArraySchema, []), []),
+});
+const rawOIDCConfigSchema = v.fallback(
+  v.object({
+    oidc: v.optional(v.unknown()),
+  }),
+  {},
+);
+const extraRecordsConflictSchema = v.object({
+  dns: v.optional(
+    v.object({
+      extra_records: v.optional(v.array(v.unknown())),
+      extra_records_path: v.optional(v.string()),
+    }),
+  ),
+});
+
+interface HeadscaleConfigState {
+  document?: Document;
+  config: unknown;
+  access: "rw" | "ro" | "no";
+  path?: string;
+  writeQueue: Promise<void>;
+  dns?: HeadscaleDNSConfig;
+}
+
+interface HeadscaleConfig {
+  readable: () => boolean;
+  writable: () => boolean;
+  getDNSConfig: () => DNSConfigView;
+  getMagicDNSBaseDomain: () => string | undefined;
+  getOIDCConfig: () => OIDCConfigView | undefined;
+  hasOIDCConfig: () => boolean;
+  dnsRecords: () => DNSRecord[];
+  patch: (patches: PatchConfig[]) => Promise<void>;
+  addDNS: (record: DNSRecord) => Promise<boolean | void>;
+  removeDNS: (record: DNSRecord) => Promise<boolean | void>;
+}
+
+function createHeadscaleConfig(
+  access: "rw" | "ro" | "no",
+  dns?: HeadscaleDNSConfig,
+  document?: Document,
+  path?: string,
+): HeadscaleConfig {
+  const state: HeadscaleConfigState = {
+    access,
+    config: document?.toJSON() ?? {},
+    document,
+    path,
+    writeQueue: Promise.resolve(),
+    dns,
+  };
+
+  return {
+    readable: () => readable(state),
+    writable: () => writable(state),
+    getDNSConfig: () => getDNSConfig(state),
+    getMagicDNSBaseDomain: () => getMagicDNSBaseDomain(state),
+    getOIDCConfig: () => getOIDCConfig(state),
+    hasOIDCConfig: () => hasOIDCConfig(state),
+    dnsRecords: () => dnsRecords(state),
+    patch: (patches) => patchHeadscaleConfig(state, patches),
+    addDNS: (record) => addDNS(state, record),
+    removeDNS: (record) => removeDNS(state, record),
+  };
+}
+
+function readable(config: HeadscaleConfigState) {
+  return config.access !== "no";
+}
+
+function writable(config: HeadscaleConfigState) {
+  return config.access === "rw";
+}
+
+function getDNSConfig(config: HeadscaleConfigState): DNSConfigView {
+  const dns = v.parse(headscaleConfigSchema, config.config).dns;
+
+  return {
+    magicDns: dns.magic_dns,
+    baseDomain: dns.base_domain,
+    nameservers: dns.nameservers.global,
+    splitDns: dns.nameservers.split,
+    searchDomains: dns.search_domains,
+    overrideDns: dns.override_local_dns,
+    extraRecords: dnsRecords(config),
+  };
+}
+
+function getMagicDNSBaseDomain(config: HeadscaleConfigState) {
+  if (!readable(config)) return;
+  const dns = getDNSConfig(config);
+  return dns.magicDns && dns.baseDomain ? dns.baseDomain : undefined;
+}
+
+function getOIDCConfig(config: HeadscaleConfigState): OIDCConfigView | undefined {
+  const oidc = v.safeParse(oidcConfigSchema, v.parse(rawOIDCConfigSchema, config.config).oidc);
+  if (!oidc.success) return;
+
+  return {
+    issuer: oidc.output.issuer,
+    allowedDomains: oidc.output.allowed_domains,
+    allowedGroups: oidc.output.allowed_groups,
+    allowedUsers: oidc.output.allowed_users,
+  };
+}
+
+function hasOIDCConfig(config: HeadscaleConfigState) {
+  return getOIDCConfig(config) !== undefined;
+}
+
+function dnsRecords(config: HeadscaleConfigState) {
+  if (config.dns) {
+    return config.dns.r;
   }
 
-  readable() {
-    return this.access !== "no";
-  }
+  return v.parse(headscaleConfigSchema, config.config).dns.extra_records;
+}
 
-  writable() {
-    return this.access === "rw";
-  }
-
-  getDNSConfig(): DNSConfigView {
-    const config = this.rawConfig();
-    const prefixes = readObject(config, ["prefixes"]);
-    const dns = readObject(config, ["dns"]);
-    const nameservers = readObject(config, ["dns", "nameservers"]);
-
-    return {
-      prefixes: {
-        v4: readString(prefixes?.v4),
-        v6: readString(prefixes?.v6),
-        allocation: prefixes?.allocation === "random" ? "random" : "sequential",
-      },
-      magicDns: readBoolean(dns?.magic_dns, true),
-      baseDomain: readString(dns?.base_domain) ?? "",
-      nameservers: readStringArray(nameservers?.global),
-      splitDns: readStringArrayRecord(nameservers?.split),
-      searchDomains: readStringArray(dns?.search_domains),
-      overrideDns: readBoolean(dns?.override_local_dns, true),
-      extraRecords: this.dnsRecords(),
-    };
-  }
-
-  getMagicDNSBaseDomain() {
-    if (!this.readable()) return;
-    const dns = this.getDNSConfig();
-    return dns.magicDns && dns.baseDomain ? dns.baseDomain : undefined;
-  }
-
-  getOIDCConfig(): OIDCConfigView | undefined {
-    const oidc = readObject(this.rawConfig(), ["oidc"]);
-    if (!oidc) return;
-    const issuer = readString(oidc.issuer);
-    if (!issuer) return;
-
-    return {
-      issuer,
-      allowedDomains: readStringArray(oidc.allowed_domains),
-      allowedGroups: readStringArray(oidc.allowed_groups),
-      allowedUsers: readStringArray(oidc.allowed_users),
-    };
-  }
-
-  hasOIDCConfig() {
-    return this.getOIDCConfig() !== undefined;
-  }
-
-  dnsRecords() {
-    if (this.dns) {
-      return this.dns.r;
-    }
-
-    return readDNSRecords(readPath(this.rawConfig(), ["dns", "extra_records"]));
-  }
-
-  async patch(patches: PatchConfig[]) {
-    if (!this.path || !this.document || !this.readable() || !this.writable()) {
-      return;
-    }
-
-    log.debug("config", "Patching Headscale configuration");
-    for (const patch of patches) {
-      const { path, value } = patch;
-      log.debug("config", "Patching %s with %o", path, value);
-
-      // If the key is something like `test.bar."foo.bar"`, then we treat
-      // the foo.bar as a single key, and not as two keys, so that needs
-      // to be split correctly.
-
-      // Iterate through each character, and if we find a dot, we check if
-      // the next character is a quote, and if it is, we skip until the next
-      // quote, and then we skip the next character, which should be a dot.
-      // If it's not a quote, we split it.
-      const key = [];
-      let current = "";
-      let quote = false;
-
-      for (const char of path) {
-        if (char === '"') {
-          quote = !quote;
-        }
-
-        if (char === "." && !quote) {
-          key.push(current);
-          current = "";
-          continue;
-        }
-
-        current += char;
-      }
-
-      key.push(current.replaceAll('"', ""));
-      if (value === null) {
-        this.document.deleteIn(key);
-        continue;
-      }
-
-      this.document.setIn(key, value);
-    }
-
-    log.debug("config", "Writing updated Headscale configuration to %s", this.path);
-
-    // We need to lock the writeLock so that we don't try to write
-    // to the file while we're already writing to it
-    while (this.writeLock) {
-      await setTimeout(100);
-    }
-
-    this.writeLock = true;
-    await writeFile(this.path, this.document.toString(), "utf8");
-    this.writeLock = false;
+async function patchHeadscaleConfig(config: HeadscaleConfigState, patches: PatchConfig[]) {
+  if (!config.path || !config.document || !readable(config) || !writable(config)) {
     return;
   }
 
-  /**
-   * Adds a DNS record to the Headscale configuration.
-   * Differentiates between the file mode and config mode automatically.
-   * @param record The DNS record to add.
-   * @returns True if we need to restart the integration.
-   */
-  async addDNS(record: DNSRecord) {
-    if (this.dns) {
-      if (!this.dns.readable() || !this.dns.writable()) {
-        log.debug("config", "DNS config is not writable");
-        return;
-      }
+  const write = config.writeQueue.then(() => writePatches(config, patches));
+  config.writeQueue = write.catch(() => undefined);
+  await write;
+}
 
-      const records = this.dns.r;
-      if (records.some((i) => i.name === record.name && i.type === record.type)) {
-        log.debug("config", "DNS record already exists");
-        return;
-      }
+async function writePatches(config: HeadscaleConfigState, patches: PatchConfig[]) {
+  if (!config.path || !config.document) return;
 
-      return this.dns.patch([...records, record]);
+  log.debug("config", "Patching Headscale configuration");
+  for (const patch of patches) {
+    const { path, value } = patch;
+    log.debug("config", "Patching %s with %o", path, value);
+
+    const key = splitPatchPath(path);
+    if (value === null) {
+      config.document.deleteIn(key);
+      continue;
     }
 
-    // If we get here, we need to add to the main config instead of
-    // a separate file (which requires an integration restart)
-    const existing = this.dnsRecords();
-    if (existing.some((i) => i.name === record.name && i.type === record.type)) {
+    config.document.setIn(key, value);
+  }
+
+  log.debug("config", "Writing updated Headscale configuration to %s", config.path);
+  await writeFile(config.path, config.document.toString(), "utf8");
+  config.config = config.document.toJSON();
+}
+
+function splitPatchPath(path: string) {
+  const key = [];
+  let current = "";
+  let quote = false;
+
+  for (const char of path) {
+    if (char === '"') {
+      quote = !quote;
+      continue;
+    }
+
+    if (char === "." && !quote) {
+      key.push(current);
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  key.push(current);
+  return key;
+}
+
+async function addDNS(config: HeadscaleConfigState, record: DNSRecord) {
+  if (config.dns) {
+    if (!config.dns.readable() || !config.dns.writable()) {
+      log.debug("config", "DNS config is not writable");
+      return;
+    }
+
+    const records = config.dns.r;
+    if (records.some((i) => i.name === record.name && i.type === record.type)) {
       log.debug("config", "DNS record already exists");
       return;
     }
 
-    await this.patch([
-      {
-        path: "dns.extra_records",
-        value: Array.from(new Set([...existing, record])),
-      },
-    ]);
-
-    return true;
+    return config.dns.patch([...records, record]);
   }
 
-  /**
-   * Removes a DNS record from the Headscale configuration.
-   * Differentiates between the file mode and config mode automatically.
-   * @param records The DNS record to remove.
-   * @returns True if we need to restart the integration.
-   */
-  async removeDNS(record: DNSRecord) {
-    // In this case we need to check both the main config and the DNS config
-    // to see if the record exists, and if it does, we need to remove it
-    // from both places.
+  const existing = dnsRecords(config);
+  if (existing.some((i) => i.name === record.name && i.type === record.type)) {
+    log.debug("config", "DNS record already exists");
+    return;
+  }
 
-    if (this.dns) {
-      if (!this.dns.readable() || !this.dns.writable()) {
-        log.debug("config", "DNS config is not writable");
-        return;
-      }
+  await patchHeadscaleConfig(config, [
+    {
+      path: "dns.extra_records",
+      value: [...existing, record],
+    },
+  ]);
 
-      const records = this.dns.r.filter((i) => i.name !== record.name || i.type !== record.type);
+  return true;
+}
 
-      return this.dns.patch(records);
-    }
-
-    // If we get here, we need to remove from the main config instead of
-    // a separate file (which requires an integration restart)
-    const existing = this.dnsRecords();
-    const filtered = existing.filter((i) => i.name !== record.name || i.type !== record.type);
-
-    // If the length of the existing records is the same as the filtered
-    // records, then we don't need to do anything
-    if (existing.length === filtered.length) {
+async function removeDNS(config: HeadscaleConfigState, record: DNSRecord) {
+  if (config.dns) {
+    if (!config.dns.readable() || !config.dns.writable()) {
+      log.debug("config", "DNS config is not writable");
       return;
     }
 
-    await this.patch([
-      {
-        path: "dns.extra_records",
-        value: existing.filter((i) => i.name !== record.name || i.type !== record.type),
-      },
-    ]);
-
-    return true;
+    const records = config.dns.r.filter((i) => i.name !== record.name || i.type !== record.type);
+    return config.dns.patch(records);
   }
 
-  private rawConfig() {
-    return this.document?.toJSON() ?? {};
+  const existing = dnsRecords(config);
+  const filtered = existing.filter((i) => i.name !== record.name || i.type !== record.type);
+  if (existing.length === filtered.length) {
+    return;
   }
+
+  await patchHeadscaleConfig(config, [
+    {
+      path: "dns.extra_records",
+      value: filtered,
+    },
+  ]);
+
+  return true;
 }
 
-export async function loadHeadscaleConfig(path?: string, strict = true, dnsPath?: string) {
+export async function loadHeadscaleConfig(path?: string, dnsPath?: string) {
   if (!path) {
     log.debug("config", "No Headscale configuration file was provided");
-    return new HeadscaleConfig("no");
+    return createHeadscaleConfig("no");
   }
 
   log.debug("config", "Loading Headscale configuration file: %s", path);
   const { r, w } = await validateConfigPath(path);
   if (!r) {
-    return new HeadscaleConfig("no");
+    return createHeadscaleConfig("no");
   }
 
   const document = await loadConfigFile(path);
   if (!document) {
-    return new HeadscaleConfig("no");
-  }
-
-  if (!strict) {
-    log.warn("config", "headscale.config_strict=false is no longer required for unknown keys");
-    log.warn("config", "Headplane now validates only the Headscale config values it reads/writes");
+    return createHeadscaleConfig("no");
   }
 
   const rawConfig = document.toJSON();
-  const inlineExtraRecords = readPath(rawConfig, ["dns", "extra_records"]);
-  const extraRecordsPath = readString(readPath(rawConfig, ["dns", "extra_records_path"]));
+  const parsedConfig = v.parse(headscaleConfigSchema, rawConfig);
+  const conflict = v.safeParse(extraRecordsConflictSchema, rawConfig);
+  const extraRecordsPath = parsedConfig.dns.extra_records_path;
 
-  if (Array.isArray(inlineExtraRecords) && extraRecordsPath) {
-    log.warn("config", "Both extra_records and extra_records_path are set, Headscale will crash");
-
-    log.warn("config", "Please remove one of them from the configuration file");
-    return new HeadscaleConfig("no");
+  if (conflict.success && conflict.output.dns?.extra_records && extraRecordsPath) {
+    log.warn(
+      "config",
+      "Both dns.extra_records and dns.extra_records_path are set; Headplane will use the JSON records file",
+    );
   }
 
   const dns = await loadHeadscaleDNS(dnsPath ?? extraRecordsPath);
@@ -311,7 +386,7 @@ export async function loadHeadscaleConfig(path?: string, strict = true, dnsPath?
     exit(1);
   }
 
-  return new HeadscaleConfig(w ? "rw" : "ro", dns, document, path);
+  return createHeadscaleConfig(w ? "rw" : "ro", dns, document, path);
 }
 
 async function validateConfigPath(path: string) {
@@ -327,7 +402,7 @@ async function validateConfigPath(path: string) {
   try {
     await access(path, constants.F_OK | constants.W_OK);
     return { w: true, r: true };
-  } catch (error) {
+  } catch {
     log.warn("config", "Headscale configuration file at %s is not writable", path);
     return { w: false, r: true };
   }
@@ -353,60 +428,4 @@ async function loadConfigFile(path: string) {
     log.error("config", "%s", e);
     return false;
   }
-}
-
-function readPath(config: unknown, path: string[]) {
-  let current = config;
-  for (const segment of path) {
-    if (!isObject(current)) return;
-    current = current[segment];
-  }
-  return current;
-}
-
-function readObject(config: unknown, path: string[]) {
-  const value = readPath(config, path);
-  return isObject(value) ? value : undefined;
-}
-
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function readString(value: unknown) {
-  return typeof value === "string" ? value : undefined;
-}
-
-function readBoolean(value: unknown, fallback: boolean) {
-  if (typeof value === "boolean") return value;
-  if (value === "true") return true;
-  if (value === "false") return false;
-  return fallback;
-}
-
-function readStringArray(value: unknown) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is string => typeof item === "string");
-}
-
-function readStringArrayRecord(value: unknown) {
-  if (!isObject(value)) return {};
-
-  const result: Record<string, string[]> = {};
-  for (const [key, item] of Object.entries(value)) {
-    result[key] = readStringArray(item);
-  }
-  return result;
-}
-
-function readDNSRecords(value: unknown) {
-  if (!Array.isArray(value)) return [];
-  return value.filter((item): item is DNSRecord => {
-    if (!isObject(item)) return false;
-    return (
-      typeof item.name === "string" &&
-      typeof item.type === "string" &&
-      typeof item.value === "string"
-    );
-  });
 }

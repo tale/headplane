@@ -104,6 +104,9 @@ importers:
       undici:
         specifier: 8.5.0
         version: 8.5.0
+      valibot:
+        specifier: ^1.4.1
+        version: 1.4.1(typescript@7.0.1-rc)
       yaml:
         specifier: 2.9.0
         version: 2.9.0
