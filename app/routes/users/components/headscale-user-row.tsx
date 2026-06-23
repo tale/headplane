@@ -17,22 +17,22 @@ export default function HeadscaleUserRow({ user, writable }: HeadscaleUserRowPro
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
     0,
   );
+  const displayName = user.displayName || user.name;
+  const displayUsername =
+    user.displayName && user.displayName !== user.name ? user.name : undefined;
 
   return (
     <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={user.id}>
       <td className="py-2 pl-0.5">
         <div className="flex items-center">
           {user.profilePicUrl ? (
-            <img
-              alt={user.name || user.displayName}
-              className="h-10 w-10 rounded-full"
-              src={user.profilePicUrl}
-            />
+            <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />
           ) : (
             <CircleUser className="h-10 w-10" />
           )}
           <div className="ml-4">
-            <p className="leading-snug font-semibold">{user.name || user.displayName}</p>
+            <p className="leading-snug font-semibold">{displayName}</p>
+            {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
             {user.email && <p className="text-sm opacity-50">{user.email}</p>}
           </div>
         </div>

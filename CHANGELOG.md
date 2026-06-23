@@ -11,6 +11,7 @@
 - Added support for proxy authentication via `server.proxy_auth` (closes [#353](https://github.com/tale/headplane/issues/353)).
 - Added automatic role assignment for new OIDC users via `oidc.default_role` and IdP-provided role claims via `oidc.role_claim` (closes [#352](https://github.com/tale/headplane/issues/352)).
 - Fixed the DNS page crashing when Headscale has no Split DNS nameservers configured (closes [#570](https://github.com/tale/headplane/issues/570)).
+- User lists now show Headscale display names while preserving usernames as secondary text (closes [#571](https://github.com/tale/headplane/issues/571)).
 
 ---
 

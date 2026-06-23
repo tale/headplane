@@ -27,6 +27,11 @@ export default function HeadplaneUserRow({
   );
 
   const displayName = user.linkedHeadscaleUser?.displayName || user.name || user.email || user.sub;
+  const displayUsername =
+    user.linkedHeadscaleUser?.displayName &&
+    user.linkedHeadscaleUser.displayName !== user.linkedHeadscaleUser.name
+      ? user.linkedHeadscaleUser.name
+      : undefined;
   const displayEmail = user.linkedHeadscaleUser?.email ?? user.email;
 
   return (
@@ -40,6 +45,7 @@ export default function HeadplaneUserRow({
           )}
           <div className="ml-4">
             <p className="leading-snug font-semibold">{displayName}</p>
+            {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
             {displayEmail && <p className="text-sm opacity-50">{displayEmail}</p>}
             {!user.headscaleUserId && (
               <p className="text-xs text-amber-600 dark:text-amber-400">Not linked</p>
