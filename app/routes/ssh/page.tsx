@@ -5,7 +5,13 @@ import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react
 import Button from "~/components/button";
 import Card from "~/components/card";
 import Code from "~/components/code";
-import { agentsContext, appConfigContext, requestApiContext } from "~/server/context";
+import StatusBanner from "~/components/status-banner";
+import {
+  agentsContext,
+  appConfigContext,
+  headscaleContext,
+  requestApiContext,
+} from "~/server/context";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 
 import type { Route } from "./+types/page";
@@ -26,7 +32,9 @@ export const shouldRevalidate: ShouldRevalidateFunction = () => {
 export async function loader({ request, params, context, url }: Route.LoaderArgs) {
   const agents = context.get(agentsContext);
   const config = context.get(appConfigContext);
+  const headscale = context.get(headscaleContext);
   const getRequestApi = context.get(requestApiContext);
+  const compatibilityWarning = getBrowserSSHCompatibilityWarning(headscale.version);
 
   const origin = url.origin;
   const assets = [WASM_HELPER_URL, WASM_MODULE_URL];
@@ -62,11 +70,17 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
   }
 
   if (!node.online) {
-    return { hostname, username, offline: true, node: undefined };
+    return { hostname, username, offline: true, node: undefined, compatibilityWarning };
   }
 
   if (!username) {
-    return { hostname, username: undefined, offline: false, node: undefined };
+    return {
+      hostname,
+      username: undefined,
+      offline: false,
+      node: undefined,
+      compatibilityWarning,
+    };
   }
 
   // The user must exist within Headscale to generate a pre-auth key
@@ -98,7 +112,22 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
       preAuthKey: preAuthKey.key,
       ephemeralHostname: generateHostname(username),
     },
+    compatibilityWarning,
   };
+}
+
+function getBrowserSSHCompatibilityWarning(version: {
+  unknown: boolean;
+  major: number;
+  minor: number;
+  patch: number;
+  raw: string;
+}) {
+  if (version.unknown) return null;
+  if (version.major === 0 && version.minor === 29 && version.patch < 2) {
+    return { version: version.raw };
+  }
+  return null;
 }
 
 function generateHostname(username: string) {
@@ -117,32 +146,66 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const { hostname, username, offline, node } = loaderData;
+  const { hostname, username, offline, node, compatibilityWarning } = loaderData;
 
   if (offline) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-black">
-        <Card className="w-screen" variant="flat">
-          <div className="flex items-center justify-between gap-4">
-            <Card.Title>Node Offline</Card.Title>
-            <WifiOff className="mb-2 h-6 w-6 text-red-500" />
-          </div>
-          <Card.Text>
-            <Code>{hostname}</Code> is not currently connected to the Tailnet.
-          </Card.Text>
-          <Button className="mt-8 w-full" onClick={() => window.location.reload()}>
-            Retry Connection
-          </Button>
-        </Card>
-      </div>
+      <>
+        <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
+        <div className="flex h-screen w-screen items-center justify-center bg-black">
+          <Card className="w-screen" variant="flat">
+            <div className="flex items-center justify-between gap-4">
+              <Card.Title>Node Offline</Card.Title>
+              <WifiOff className="mb-2 h-6 w-6 text-red-500" />
+            </div>
+            <Card.Text>
+              <Code>{hostname}</Code> is not currently connected to the Tailnet.
+            </Card.Text>
+            <Button className="mt-8 w-full" onClick={() => window.location.reload()}>
+              Retry Connection
+            </Button>
+          </Card>
+        </div>
+      </>
     );
   }
 
   if (!username || !node) {
-    return <UserPrompt hostname={hostname} />;
+    return (
+      <>
+        <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
+        <UserPrompt hostname={hostname} />
+      </>
+    );
   }
 
-  return <SSHConsole hostname={hostname} username={username} node={node} />;
+  return (
+    <>
+      <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
+      <SSHConsole hostname={hostname} username={username} node={node} />
+    </>
+  );
+}
+
+function BrowserSSHCompatibilityBanner({
+  warning,
+}: {
+  warning: { version: string } | null | undefined;
+}) {
+  if (!warning) return null;
+
+  return (
+    <div className="fixed inset-x-4 top-4 z-[60] mx-auto max-w-2xl">
+      <StatusBanner
+        variant="warning"
+        title={`Browser SSH is broken on Headscale ${warning.version}`}
+      >
+        Headscale 0.29 beta releases through 0.29.1 reject Tailscale's browser/WASM{" "}
+        <Code>/ts2021</Code> WebSocket request with <Code>405 Method Not Allowed</Code>. Upgrade
+        Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
+      </StatusBanner>
+    </div>
+  );
 }
 
 function SSHConsole({

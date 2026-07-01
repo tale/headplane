@@ -21,10 +21,19 @@ joins the tailnet for the duration of the SSH session.
 
 ## Prerequisites
 
-- **Headscale 0.28 or newer** is required.
+- **Headscale 0.28 or newer** is required. Browser SSH is broken in the
+  Headscale 0.29 beta releases through 0.29.1; use Headscale 0.28.x or 0.29.2
+  and newer.
 - Target nodes must have **Tailscale SSH** enabled (`tailscale up --ssh`).
 - Users must be logged-in via **OIDC** (API key logins cannot use browser SSH).
 - The **Headplane Agent** must be [enabled and configured](/features/agent).
+
+:::warning Headscale 0.29.0 beta through 0.29.1
+Browser SSH does not work with Headscale 0.29 beta releases through 0.29.1 due
+to a `/ts2021` WebSocket routing regression. These versions reject Tailscale's
+browser/WASM control-plane WebSocket request with `405 Method Not Allowed`.
+Upgrade Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
+:::
 
 ## How It Works
 
@@ -172,6 +181,10 @@ to Headscale, then retry.
 
 ### Connection fails with EOF or hangs
 
+- **Check your Headscale version.** Browser SSH is broken in Headscale 0.29 beta
+  releases through 0.29.1 due to a `/ts2021` WebSocket routing regression. If
+  the browser console shows `405 Method Not Allowed` for `/ts2021`, upgrade to
+  Headscale 0.29.2 or newer, or use Headscale 0.28.x.
 - **Check `server_url` in your Headscale config.** If Headscale runs on a
   non-standard port, `server_url` must include it (e.g.
   `https://hs.example.com:8443`). The embedded DERP server derives its
