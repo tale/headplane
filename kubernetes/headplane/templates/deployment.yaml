@@ -1,0 +1,166 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headplane-integrated
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: headplane-integrated
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: headplane-integrated
+      annotations:
+        checksum/configmap-headplane: {{ include (print $.Template.BasePath "/headplane/configmap.yaml") . | sha256sum }}
+        checksum/secret-headplane: {{ include (print $.Template.BasePath "/headplane/secrets.yaml") . | sha256sum }}
+        checksum/secret-headscale: {{ include (print $.Template.BasePath "/headscale/secret.yaml") . | sha256sum }}
+    spec:
+      hostAliases: {{- toYaml .Values.hostAliases | nindent 8 }}
+      shareProcessNamespace: true
+      serviceAccountName: headplane-integrated
+      securityContext: {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: headplane
+          image: "{{ required "headplane image repository required" .Values.headplane.image.repository }}:{{ .Values.headplane.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ required "headplane image pull policy required" .Values.headplane.image.pullPolicy }}
+          env:
+            - name: HEADPLANE_DEBUG_LOG
+              value: {{ .Values.headplane.config.debug | quote }}
+            - name: HEADPLANE_LOAD_ENV_OVERRIDES
+              value: "true"
+            - name: HEADPLANE_INTEGRATION__KUBERNETES__POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - name: app
+              containerPort: 3000
+              protocol: TCP
+          securityContext: {{- toYaml .Values.headplane.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: headplane-config
+              mountPath: /etc/headplane
+            - name: headplane-server-cookie-secret
+              mountPath: /var/secrets/headplane/server
+            {{- if .Values.headplane.config.oidc.enabled }}
+            - name: headplane-oidc-client-secret
+              mountPath: /var/secrets/headplane/oidc
+            - name: headplane-oidc-headscale-api-key
+              mountPath: /var/secrets/headplane/headscale
+            {{- end }}
+            - name: headplane-data
+              mountPath: /var/lib/headplane
+              readOnly: false
+            - name: headscale-config
+              mountPath: /etc/headscale
+      initContainers:
+        - name: headscale
+          image: "{{ required "headscale image repository required" .Values.headscale.image.repository }}:{{ required "headscale image tag required" .Values.headscale.image.tag }}"
+          imagePullPolicy: {{ required "headscale image pull policy required" .Values.headscale.image.pullPolicy }}
+          restartPolicy: Always
+          args:
+            - serve
+          ports:
+            - name: api
+              containerPort: 8080
+              protocol: TCP
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+            - name: grpc
+              containerPort: 50443
+              protocol: TCP
+            - name: stun
+              containerPort: 3478
+              protocol: UDP
+          securityContext: {{- toYaml .Values.headscale.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: headscale-config
+              mountPath: /etc/headscale
+            {{- if .Values.headscale.config.oidc.enabled }}
+            - name: headscale-oidc-client-secret
+              mountPath: /var/secrets/headscale/oidc
+            {{- end }}
+            - name: headscale-data
+              mountPath: /var/lib/headscale
+              readOnly: false
+        {{- if .Values.headplane.config.generateCredentials }}
+        - name: generate-headscale-token
+          image: alpine/k8s:1.33.1
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+            - name: HEADSCALE_SECRET_NAME
+              value: {{ default "headscale-api-key" .Values.headplane.config.oidc.headscaleApiKey.secretName }}
+            - name: HEADSCALE_POD_SELECTOR
+              value: "app=headplane-integrated"
+          command: [ "bash", "-c" ]
+          args: [ "/etc/scripts/ensure-headscale-api-key.sh" ]
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - name: headplane-scripts
+              mountPath: /etc/scripts
+        {{- end }}
+      volumes:
+        ###
+        ### Headplane Volumes ###
+        ###
+        - name: headplane-config
+          configMap:
+            name: headplane
+        - name: headplane-server-cookie-secret
+          secret:
+            secretName: {{ default "headplane-cookie-secret" .Values.headplane.config.cookieSecret.secretName }}
+        {{- if .Values.headplane.config.oidc.enabled }}
+        - name: headplane-oidc-client-secret
+          secret:
+            secretName: {{ default "headplane-oidc-client-secret" .Values.headplane.config.oidc.clientSecret.secretName }}
+        - name: headplane-oidc-headscale-api-key
+          secret:
+            secretName: {{ default "headscale-api-key" .Values.headplane.config.oidc.headscaleApiKey.secretName }}
+        {{- end }}
+        - name: headplane-data
+          {{- if .Values.headplane.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: headplane-data
+          {{- else }}
+          emptyDir:
+            sizeLimit: 500Mi
+          {{- end }}
+        {{- if .Values.headplane.config.generateCredentials }}
+        - name: headplane-scripts
+          configMap:
+            name: headplane-scripts
+            defaultMode: 0777
+        {{- end }}
+        ###
+        ### Headscale Volumes ###
+        ###
+        - name: headscale-config
+          configMap:
+            name: headscale
+        {{- if .Values.headscale.config.oidc.enabled }}
+        - name: headscale-oidc-client-secret
+          secret:
+            secretName: {{ default "headscale-oidc-client-secret" .Values.headscale.config.oidc.clientSecret.secretName }}
+        {{- end }}
+        - name: headscale-data
+          {{- if .Values.headscale.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: headscale-data
+          {{- else }}
+          emptyDir:
+            sizeLimit: 500Mi
+          {{- end }}
