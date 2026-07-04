@@ -44,6 +44,11 @@ export interface Capabilities {
    * the `hskey-authreq-` prefix. Introduced in 0.29.0.
    */
   readonly registerKeyIncludesAuthReqPrefix: boolean;
+
+  /**
+   * Disabling of key expiry was introduced in 0.29.0.
+   */
+  readonly keyExpiryCanBeDisabled: boolean;
 }
 
 export function capabilitiesFor(version: ServerVersion): Capabilities {
@@ -52,5 +57,6 @@ export function capabilitiesFor(version: ServerVersion): Capabilities {
     nodeTagsAreFlat: gte(version, "0.28.0"),
     nodeOwnerIsImmutable: gte(version, "0.28.0"),
     registerKeyIncludesAuthReqPrefix: gte(version, "0.29.0"),
+    keyExpiryCanBeDisabled: gte(version, "0.29.0"),
   };
 }

@@ -98,6 +98,7 @@ describe("capabilitiesFor", () => {
       nodeTagsAreFlat: true,
       nodeOwnerIsImmutable: true,
       registerKeyIncludesAuthReqPrefix: false,
+      keyExpiryCanBeDisabled: false,
     });
   });
 

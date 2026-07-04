@@ -111,7 +111,13 @@ describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
     expect(expiredNode.expiry).toBeDefined();
   });
 
-  test("key expiry of nodes can be toggled", async () => {
+  test("key expiry of nodes can be toggled", async (context) => {
+    const bootstrap = await getBootstrapClient(version);
+    // Key expiry was introduced in 0.29.0
+    if (!bootstrap.capabilities.keyExpiryCanBeDisabled) {
+      context.skip();
+    }
+
     const client = await getRuntimeClient(version);
     await client.nodes.toggleExpiry(workingNodeId, true);
 
