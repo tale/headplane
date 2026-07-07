@@ -55,7 +55,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         <Title>Headplane Agent</Title>
         <Notice title="Agent Not Enabled">
           {loaderData.reason}. To learn how to set up the agent, visit the{" "}
-          <Link external styled to="https://headplane.dev/docs/agent">
+          <Link external styled to="https://headplane.net/features/agent">
             documentation
           </Link>
         </Notice>
