@@ -15,6 +15,13 @@
 
 const SEMVER_RE = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$/;
 
+// Go pseudo-version prerelease segment: `<14-digit timestamp>-<12-hex sha>`,
+// e.g. the prerelease part of `v0.0.0-20260703052708-048308511c72`. Untagged
+// Headscale builds (per-commit `main-*` / `development` Docker images) report
+// this instead of `dev`, and it parses as semver 0.0.0 — which would strip
+// every capability from a server that actually runs the newest code.
+const GO_PSEUDO_VERSION_PRERELEASE_RE = /^\d{14}-[0-9a-f]{12}$/;
+
 export interface ServerVersion {
   readonly major: number;
   readonly minor: number;
@@ -47,6 +54,26 @@ export function parseServerVersion(raw: string): ServerVersion {
     };
   }
   const [, maj, min, pat, pre, build] = match;
+  // A Go pseudo-version (v0.0.0-<timestamp>-<sha>) is an untagged dev build,
+  // not an ancient release: treat it like `dev` so capability checks assume
+  // the modern code paths instead of gating everything off.
+  if (
+    Number(maj) === 0 &&
+    Number(min) === 0 &&
+    Number(pat) === 0 &&
+    pre !== undefined &&
+    GO_PSEUDO_VERSION_PRERELEASE_RE.test(pre)
+  ) {
+    return {
+      major: 0,
+      minor: 0,
+      patch: 0,
+      prerelease: pre,
+      build,
+      raw,
+      unknown: true,
+    };
+  }
   return {
     major: Number(maj),
     minor: Number(min),

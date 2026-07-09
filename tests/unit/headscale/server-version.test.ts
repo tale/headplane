@@ -39,6 +39,21 @@ describe("parseServerVersion", () => {
     expect(v.unknown).toBe(true);
     expect(v.raw).toBe("dev");
   });
+
+  test("flags Go pseudo-versions from untagged builds as unknown", () => {
+    // Headscale's per-commit Docker images (main-*, development) report a
+    // Go pseudo-version instead of `dev`. Parsing it as semver 0.0.0 would
+    // deny every capability to a server running the newest code.
+    const v = parseServerVersion("v0.0.0-20260703052708-048308511c72");
+    expect(v.unknown).toBe(true);
+    expect(v.raw).toBe("v0.0.0-20260703052708-048308511c72");
+  });
+
+  test("does not flag a genuine 0.0.0 prerelease as unknown", () => {
+    const v = parseServerVersion("v0.0.0-beta.1");
+    expect(v.unknown).toBe(false);
+    expect(v.prerelease).toBe("beta.1");
+  });
 });
 
 describe("gte", () => {
