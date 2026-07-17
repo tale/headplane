@@ -23,6 +23,7 @@ interface MenuProps {
   isDisabled?: boolean;
   existingTags?: string[];
   supportsNodeOwnerChange: boolean;
+  supportsDisablingKeyExpiry: boolean;
 }
 
 type Modal = "rename" | "expire" | "remove" | "routes" | "move" | "tags" | null;
@@ -35,6 +36,7 @@ export default function MachineMenu({
   isDisabled,
   existingTags,
   supportsNodeOwnerChange,
+  supportsDisablingKeyExpiry,
 }: MenuProps) {
   const submit = useSubmit();
   const [modal, setModal] = useState<Modal>(null);
@@ -158,20 +160,22 @@ export default function MachineMenu({
         </MenuTrigger>
         <MenuContent>
           <MenuItem onClick={() => setModal("rename")}>Edit machine name</MenuItem>
-          <MenuItem
-            onClick={() =>
-              submit(
-                {
-                  action_id: "toggle_expiry",
-                  node_id: node.id,
-                  disableExpiry: !isNoExpiry(node.expiry),
-                },
-                { method: "post" },
-              )
-            }
-          >
-            {isNoExpiry(node.expiry) ? "Enable" : "Disable"} key expiry
-          </MenuItem>
+          {supportsDisablingKeyExpiry && (
+            <MenuItem
+              onClick={() =>
+                submit(
+                  {
+                    action_id: "toggle_expiry",
+                    node_id: node.id,
+                    disableExpiry: !isNoExpiry(node.expiry),
+                  },
+                  { method: "post" },
+                )
+              }
+            >
+              {isNoExpiry(node.expiry) ? "Enable" : "Disable"} key expiry
+            </MenuItem>
+          )}
           <MenuItem onClick={() => setModal("routes")}>Edit route settings</MenuItem>
           <MenuItem onClick={() => setModal("tags")}>Edit ACL tags</MenuItem>
           {supportsNodeOwnerChange && (
