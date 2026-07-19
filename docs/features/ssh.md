@@ -38,7 +38,7 @@ Upgrade Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
 ## How It Works
 
 :::tip
-While we use Ghostty (via [restty](https://restty.dev)) to render the terminal,
+While we use Ghostty (via [restty](https://restty.pages.dev)) to render the terminal,
 the SSH connection is opened with a `TERM` value of `xterm-256color` for maximum
 compatibility. Nerd Font glyphs are supported out of the box — the terminal
 ships with a self-hosted JetBrains Mono Nerd Font.
@@ -50,7 +50,7 @@ When a user opens an SSH session from the UI, the browser:
    WireGuard. This node will connect to the tailnet via a pre-auth key.
 2. Opens an SSH session to the target node's Tailscale IP address over the
    tunnel and passes it to the browser.
-3. Using [restty](https://restty.dev) (a Ghostty-based WASM terminal emulator),
+3. Using [restty](https://restty.pages.dev) (a Ghostty-based WASM terminal emulator),
    the browser renders a full-featured terminal and proxies the SSH session
    to it.
 
