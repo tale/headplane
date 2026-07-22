@@ -11,6 +11,7 @@ import { HeadplaneAgentTag } from "~/components/tags/HeadplaneAgent";
 import { SubnetTag } from "~/components/tags/Subnet";
 import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
 import type { User } from "~/types";
+import { copyToClipboard } from "~/utils/clipboard";
 import cn from "~/utils/cn";
 import * as hinfo from "~/utils/host-info";
 import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
@@ -85,8 +86,12 @@ export default function MachineRow({
                 <MenuItem
                   key={ip}
                   onClick={async () => {
-                    await navigator.clipboard.writeText(ip);
-                    toast("Copied IP address to clipboard");
+                    const success = await copyToClipboard(ip);
+                    toast(
+                      success
+                        ? "Copied IP address to clipboard"
+                        : "Failed to copy IP address to clipboard",
+                    );
                   }}
                 >
                   <div
