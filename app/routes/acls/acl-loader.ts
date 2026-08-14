@@ -1,8 +1,12 @@
 import { data } from "react-router";
 
-import { authContext, requestApiContext } from "~/server/context";
+import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { nodesResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
+import type { AclNode } from "~/utils/acl/model";
+import { toAclNode } from "~/utils/acl/to-node";
+import { mapNodes } from "~/utils/node-info";
 
 import type { Route } from "./+types/overview";
 
@@ -30,10 +34,24 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
     access: auth.can(principal, Capabilities.write_policy),
     writable: false,
     policy: "",
+    // Reduced node shapes for the reachability map. Empty when the user cannot
+    // read machines, or when the fetch fails — the map degrades, the editor
+    // keeps working.
+    nodes: [] as AclNode[],
   };
 
   // Try to load the ACL policy from the API.
   const { api } = await getRequestApi(request);
+
+  if (auth.can(principal, Capabilities.read_machines)) {
+    try {
+      const headscaleLiveStore = context.get(headscaleLiveStoreContext);
+      const nodesSnap = await headscaleLiveStore.get(nodesResource, api);
+      flags.nodes = mapNodes(nodesSnap.data).map(toAclNode);
+    } catch {
+      // Non-fatal: the map shows nothing rather than breaking the ACL page.
+    }
+  }
   try {
     const { policy, updatedAt } = await api.policy.get();
     flags.writable = updatedAt !== null;
