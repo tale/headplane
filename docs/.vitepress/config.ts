@@ -55,6 +55,7 @@ export default defineConfig({
                 link: "/features/sso",
                 items: [{ text: "Proxy Authentication", link: "/features/proxy-auth" }],
               },
+              { text: "Access Control", link: "/features/acls" },
               { text: "Headplane Agent", link: "/features/agent" },
               { text: "Browser SSH", link: "/features/ssh" },
             ],
