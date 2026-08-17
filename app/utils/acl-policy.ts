@@ -28,6 +28,9 @@ export interface Policy {
   ssh: SshRule[];
   // Top-level keys Headplane does not model (autoApprovers, nodeAttrs, ...)
   extra: Record<string, unknown>;
+  // The order the top-level keys appeared in, so serializing does not reshuffle
+  // a policy that was written by hand in a different order.
+  keyOrder: string[];
 }
 
 export type ParseResult =
@@ -41,6 +44,7 @@ export const EMPTY_POLICY: Policy = {
   acls: [],
   ssh: [],
   extra: {},
+  keyOrder: [],
 };
 
 const KNOWN_KEYS = ["groups", "tagOwners", "hosts", "acls", "ssh"];
@@ -83,22 +87,38 @@ export function parsePolicy(raw: string): ParseResult {
       acls: toAclRules(record.acls),
       ssh: toSshRules(record.ssh),
       extra,
+      keyOrder: Object.keys(record),
     },
   };
 }
 
 export function serializePolicy(policy: Policy): string {
-  const out: Record<string, unknown> = {};
+  const sections: Record<string, unknown> = {};
 
-  // Insertion order is preserved so editing one entry doesn't reshuffle a
-  // policy the operator wrote by hand.
-  if (Object.keys(policy.groups).length > 0) out.groups = policy.groups;
-  if (Object.keys(policy.tagOwners).length > 0) out.tagOwners = policy.tagOwners;
-  if (Object.keys(policy.hosts).length > 0) out.hosts = policy.hosts;
-  if (policy.acls.length > 0) out.acls = policy.acls.map(compactAclRule);
-  if (policy.ssh.length > 0) out.ssh = policy.ssh.map(compactSshRule);
+  // Key insertion order is preserved, both for the top-level sections and
+  // within them, so editing one entry doesn't reshuffle a policy the operator
+  // wrote by hand — the diff then shows only what actually changed.
+  if (Object.keys(policy.groups).length > 0) sections.groups = policy.groups;
+  if (Object.keys(policy.tagOwners).length > 0) sections.tagOwners = policy.tagOwners;
+  if (Object.keys(policy.hosts).length > 0) sections.hosts = policy.hosts;
+  if (policy.acls.length > 0) sections.acls = policy.acls.map(compactAclRule);
+  if (policy.ssh.length > 0) sections.ssh = policy.ssh.map(compactSshRule);
   for (const [key, value] of Object.entries(policy.extra)) {
-    out[key] = value;
+    sections[key] = value;
+  }
+
+  const out: Record<string, unknown> = {};
+  // Keys the policy already had, in their original order...
+  for (const key of policy.keyOrder) {
+    if (key in sections) {
+      out[key] = sections[key];
+    }
+  }
+  // ...then any section that did not exist before, in the canonical order.
+  for (const [key, value] of Object.entries(sections)) {
+    if (!(key in out)) {
+      out[key] = value;
+    }
   }
 
   return `${format(out, 0)}\n`;

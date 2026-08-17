@@ -12,6 +12,7 @@ interface HeadscaleUserRowProps {
   writable?: boolean;
   canEditGroups?: boolean;
   policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
 export default function HeadscaleUserRow({
@@ -19,6 +20,7 @@ export default function HeadscaleUserRow({
   writable,
   canEditGroups,
   policyGroups,
+  policyHasComments,
 }: HeadscaleUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
@@ -76,6 +78,7 @@ export default function HeadscaleUserRow({
           <HeadscaleUserMenu
             canEditGroups={canEditGroups}
             policyGroups={policyGroups}
+            policyHasComments={policyHasComments}
             user={user}
           />
         ) : null}

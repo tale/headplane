@@ -1,6 +1,7 @@
 import { data } from "react-router";
 
 import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
+import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
@@ -171,7 +172,26 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         return data({ error: `The ACL policy could not be parsed: ${parsed.error}` }, 400);
       }
 
-      await api.policy.set(serializePolicy(setUserGroups(parsed.policy, userName, groups)));
+      try {
+        await api.policy.set(serializePolicy(setUserGroups(parsed.policy, userName, groups)));
+      } catch (error) {
+        // Headscale refuses the write when the policy is in `file` mode. The
+        // UI hides the action in that case, but a stale page can still get
+        // here, and a silent failure would be worse than an error message.
+        const message = isDataWithApiError(error) ? error.data.rawData : String(error);
+        if (message.includes("update is disabled")) {
+          return data(
+            {
+              error:
+                "The ACL policy is read-only. Set `policy.mode` to `database` in your Headscale configuration to edit groups.",
+            },
+            403,
+          );
+        }
+
+        return data({ error: `Could not update the ACL policy: ${message}` }, 500);
+      }
+
       return { message: "Groups updated successfully" };
     }
     default:

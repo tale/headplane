@@ -12,6 +12,7 @@ interface HeadscaleUserMenuProps {
   user: UnlinkedHeadscaleUser;
   canEditGroups?: boolean;
   policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
 type Modal = "rename" | "groups" | "delete" | null;
@@ -20,6 +21,7 @@ export default function HeadscaleUserMenu({
   user,
   canEditGroups,
   policyGroups,
+  policyHasComments,
 }: HeadscaleUserMenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
@@ -40,6 +42,7 @@ export default function HeadscaleUserMenu({
       {modal === "groups" && canEditGroups && (
         <UserGroups
           availableGroups={policyGroups ?? []}
+          policyHasComments={policyHasComments}
           displayName={user.displayName || user.name}
           groups={user.groups}
           isOpen={modal === "groups"}

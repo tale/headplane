@@ -15,6 +15,7 @@ interface HeadplaneUserRowProps {
   isOwner?: boolean;
   canEditGroups?: boolean;
   policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
 export default function HeadplaneUserRow({
@@ -24,6 +25,7 @@ export default function HeadplaneUserRow({
   isOwner,
   canEditGroups,
   policyGroups,
+  policyHasComments,
 }: HeadplaneUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
@@ -95,6 +97,7 @@ export default function HeadplaneUserRow({
           isOwner={isOwner}
           isSelf={isSelf}
           policyGroups={policyGroups}
+          policyHasComments={policyHasComments}
           user={user}
         />
       </td>

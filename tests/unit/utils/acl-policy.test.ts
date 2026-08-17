@@ -56,6 +56,7 @@ describe("parsePolicy", () => {
       acls: [],
       ssh: [],
       extra: {},
+      keyOrder: [],
     });
     expect(result.hasComments).toBe(false);
   });
@@ -145,6 +146,28 @@ describe("serializePolicy", () => {
   test("writes unknown keys back out", () => {
     const { policy } = parseOrThrow(POLICY);
     expect(serializePolicy(policy)).toContain(`"autoApprovers"`);
+  });
+
+  test("keeps the original top-level section order", () => {
+    const { policy } = parseOrThrow(`{
+      "ssh": [{ "action": "accept", "src": ["group:ops"], "dst": ["tag:server"], "users": ["root"] }],
+      "hosts": { "office": "100.64.0.0/24" },
+      "groups": { "group:eng": ["alice@"] }
+    }`);
+    const output = serializePolicy(policy);
+
+    expect(output.indexOf(`"ssh"`)).toBeLessThan(output.indexOf(`"hosts"`));
+    expect(output.indexOf(`"hosts"`)).toBeLessThan(output.indexOf(`"groups"`));
+  });
+
+  test("appends a section that did not exist before", () => {
+    const { policy } = parseOrThrow(`{ "hosts": { "office": "100.64.0.0/24" } }`);
+    const output = serializePolicy({
+      ...policy,
+      groups: { "group:eng": ["alice@"] },
+    });
+
+    expect(output.indexOf(`"hosts"`)).toBeLessThan(output.indexOf(`"groups"`));
   });
 });
 

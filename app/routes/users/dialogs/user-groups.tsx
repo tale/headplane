@@ -21,6 +21,8 @@ interface UserGroupsProps {
   groups: string[];
   // Every group defined in the policy, for one-click assignment.
   availableGroups: string[];
+  // Whether the stored policy contains HuJSON comments, which saving drops.
+  policyHasComments?: boolean;
 }
 
 export default function UserGroups({
@@ -30,6 +32,7 @@ export default function UserGroups({
   displayName,
   groups,
   availableGroups,
+  policyHasComments,
 }: UserGroupsProps) {
   const fetcher = useFetcher<{ message?: string; error?: string }>();
   const submittingRef = useRef(false);
@@ -95,6 +98,11 @@ export default function UserGroups({
           </Link>{" "}
           for details.
         </Text>
+        {policyHasComments ? (
+          <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+            Your policy contains comments. Saving here rewrites the policy and drops them.
+          </p>
+        ) : null}
         {error ? (
           <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
             {error}

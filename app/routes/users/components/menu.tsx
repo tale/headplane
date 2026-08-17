@@ -18,6 +18,7 @@ interface MenuProps {
   isOwner?: boolean;
   canEditGroups?: boolean;
   policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
 type Modal = "delete" | "reassign" | "link" | "transfer" | "groups" | null;
@@ -30,6 +31,7 @@ export default function UserMenu({
   isOwner,
   canEditGroups,
   policyGroups,
+  policyHasComments,
 }: MenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
@@ -82,6 +84,7 @@ export default function UserMenu({
       {modal === "groups" && user.linkedHeadscaleUser && (
         <UserGroups
           availableGroups={policyGroups ?? []}
+          policyHasComments={policyHasComments}
           displayName={displayName}
           groups={user.groups}
           isOpen={modal === "groups"}

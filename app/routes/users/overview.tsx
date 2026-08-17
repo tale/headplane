@@ -73,6 +73,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let apiError: string | undefined;
   let policyGroups: string[] = [];
   let groupsByUser = new Map<string, string[]>();
+  // Whether the policy can actually be written. `write_policy` is a role
+  // capability; in `file` mode Headscale refuses the write regardless.
+  let policyWritable = false;
+  let policyHasComments = false;
 
   try {
     const { api } = await getRequestApi(request);
@@ -86,9 +90,13 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     // ACL groups are stored in the policy, so they are fetched separately and
     // treated as optional: a missing or unreadable policy just hides the UI.
     try {
-      const { policy } = await api.policy.get();
+      const { policy, updatedAt } = await api.policy.get();
+      // Same signal the Access Control page uses: a null `updatedAt` means
+      // Headscale is in `file` mode and will reject any write.
+      policyWritable = updatedAt !== null;
       const parsed = parsePolicy(policy);
       if (parsed.ok) {
+        policyHasComments = parsed.hasComments;
         policyGroups = Object.keys(parsed.policy.groups).sort();
         groupsByUser = new Map(
           apiUsers.map((user) => [user.name, groupsForUser(parsed.policy, user.name)]),
@@ -168,8 +176,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     writable: writablePermission,
-    canEditGroups: writablePermission && auth.can(principal, Capabilities.write_policy),
+    canEditGroups:
+      writablePermission && auth.can(principal, Capabilities.write_policy) && policyWritable,
     policyGroups,
+    policyHasComments,
     currentUserId: isUserPrincipal(principal) ? principal.user.id : undefined,
     isOwner,
     oidc: config.oidc ? { issuer: config.oidc.issuer } : undefined,
@@ -236,6 +246,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     key={user.id}
                     headscaleUsers={loaderData.headscaleUsersForLink}
                     policyGroups={loaderData.policyGroups}
+                    policyHasComments={loaderData.policyHasComments}
                     user={user}
                   />
                 ))}
@@ -275,6 +286,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     canEditGroups={loaderData.canEditGroups}
                     key={user.id}
                     policyGroups={loaderData.policyGroups}
+                    policyHasComments={loaderData.policyHasComments}
                     user={user}
                     writable={loaderData.writable}
                   />
