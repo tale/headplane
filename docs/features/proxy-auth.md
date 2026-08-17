@@ -11,6 +11,10 @@ anyone to impersonate users and gain access to Headplane.
 It is recommended to use Headplane's built-in SSO integrations over proxy
 authentication if possible. No guarantees are made about the security of proxy
 authentication.
+
+If you are on Google Cloud, use [Google IAP](/features/google-iap) instead. It
+verifies a signed assertion rather than trusting headers, so it does not depend
+on the client address being trustworthy.
 :::
 
 # Proxy Authentication
