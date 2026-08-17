@@ -4,14 +4,13 @@ import { access, constants, mkdir, readFile, rename, writeFile } from "node:fs/p
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 
-import { inArray, notInArray, sql } from "drizzle-orm";
-import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
+import { inArray, notInArray } from "drizzle-orm";
 
 import { HostInfo, type Machine } from "~/types";
 import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
-import { hostInfo } from "./db/schema";
+import type { HeadplaneDb } from "./db/client.server";
 import type { HeadscaleClient } from "./headscale/api";
 import { headscaleErrorMessage } from "./headscale/api/error-client";
 
@@ -73,8 +72,10 @@ export async function createAgentManager(
   headscaleUrl: string,
   apiClient: HeadscaleClient,
   supportsTagOnlyKeys: boolean,
-  db: NodeSQLiteDatabase,
+  headplaneDb: HeadplaneDb,
 ): Promise<AgentManager | undefined> {
+  const { client: db, tables } = headplaneDb;
+
   if (!agentConfig?.enabled) {
     return;
   }
@@ -470,17 +471,18 @@ export async function createAgentManager(
       if (keys.length > 0) {
         const updatedAt = new Date();
         await db
-          .insert(hostInfo)
-          .values(
-            Object.entries(output.hosts).map(([nodeKey, payload]) => ({
-              host_id: nodeKey,
-              payload,
-              updated_at: updatedAt,
-            })),
-          )
+          .insert(tables.hostInfo)
+          .values({
+            host_id: nodeKey,
+            payload,
+            updated_at: new Date(),
+          })
           .onConflictDoUpdate({
-            target: hostInfo.host_id,
-            set: { payload: sql`excluded.payload`, updated_at: sql`excluded.updated_at` },
+            target: tables.hostInfo.host_id,
+            set: {
+              payload,
+              updated_at: new Date(),
+            },
           });
       }
 
@@ -538,10 +540,33 @@ export async function createAgentManager(
     }
   }
 
-  void previousOwner.then(() => {
-    ownsWorkDir = true;
-    if (!disposed) {
-      void sync();
+  /**
+   * Prunes any offline nodes marked as ephemeral. This is due to a Headscale
+   * bug where ephemeral nodes wouldn't be automatically removed on disconnect.
+   */
+  async function pruneStaleHostInfo() {
+    try {
+      const nodes = await apiClient.nodes.list();
+      const activeKeys = nodes.map((n) => n.nodeKey);
+
+      if (activeKeys.length === 0) {
+        return;
+      }
+
+      const deleted = await db
+        .delete(tables.hostInfo)
+        .where(notInArray(tables.hostInfo.host_id, activeKeys))
+        .returning();
+
+      if (deleted.length > 0) {
+        log.info("agent", "Pruned %d stale hostinfo entries", deleted.length);
+      }
+    } catch (error) {
+      log.debug(
+        "agent",
+        "Failed to prune stale hostinfo: %s",
+        error instanceof Error ? error.message : String(error),
+      );
     }
   });
 
@@ -553,7 +578,10 @@ export async function createAgentManager(
         return {};
       }
 
-      const results = await db.select().from(hostInfo).where(inArray(hostInfo.host_id, nodeKeys));
+      const results = await db
+        .select()
+        .from(tables.hostInfo)
+        .where(inArray(tables.hostInfo.host_id, nodeKeys));
 
       return Object.fromEntries(
         results.filter((r) => r.payload).map((r) => [r.host_id, r.payload]),
