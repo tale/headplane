@@ -77,7 +77,7 @@ export function extractTagOwnerTags(policy: string | undefined): string[] {
   }
 }
 
-function stripJsonCommentsAndTrailingCommas(input: string): string {
+export function stripJsonCommentsAndTrailingCommas(input: string): string {
   let output = "";
   let inString = false;
   let escaped = false;
