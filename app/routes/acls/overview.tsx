@@ -1,5 +1,14 @@
-import { AlertCircle, Construction, Eye, FlaskConical, Pencil } from "lucide-react";
-import { Suspense, lazy, useEffect, useState } from "react";
+import {
+  AlertCircle,
+  Construction,
+  Eye,
+  FlaskConical,
+  Pencil,
+  Shield,
+  TagsIcon,
+} from "lucide-react";
+import type { ReactNode } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
 import Button from "~/components/button";
@@ -10,12 +19,21 @@ import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
+import {
+  parsePolicy,
+  policyDestinations,
+  policySources,
+  serializePolicy,
+  type Policy,
+} from "~/utils/acl-policy";
 import toast from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { aclAction } from "./acl-action";
 import { aclLoader } from "./acl-loader";
 import Fallback from "./components/fallback";
+import RulesEditor from "./components/rules-editor";
+import TagsGroupsEditor from "./components/tags-groups-editor";
 
 const LazyEditor = lazy(() =>
   import("./components/cm.client").then((m) => ({ default: m.Editor })),
@@ -27,11 +45,23 @@ const LazyDiffer = lazy(() =>
 export const loader = aclLoader;
 export const action = aclAction;
 
-export default function Page({ loaderData: { access, writable, policy } }: Route.ComponentProps) {
+export default function Page({
+  loaderData: { access, writable, policy, users, tagUsage },
+}: Route.ComponentProps) {
   const [codePolicy, setCodePolicy] = useState(policy);
   const fetcher = useFetcher<typeof action>();
   const { revalidate } = useRevalidator();
   const disabled = !access || !writable; // Disable if no permission or not writable
+
+  const parsed = useMemo(() => parsePolicy(codePolicy), [codePolicy]);
+  const sources = useMemo(
+    () => (parsed.ok ? policySources(parsed.policy, users) : []),
+    [parsed, users],
+  );
+  const destinations = useMemo(
+    () => (parsed.ok ? policyDestinations(parsed.policy, users) : []),
+    [parsed, users],
+  );
 
   useEffect(() => {
     // Update the codePolicy when the loader data changes
@@ -51,6 +81,38 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
       revalidate();
     }
   }, [fetcher.data]);
+
+  // The structured editors round-trip through the policy text so that the
+  // file editor, the diff view and the save button all keep working on a
+  // single source of truth.
+  function applyPolicy(next: Policy) {
+    setCodePolicy(serializePolicy(next));
+  }
+
+  function structuredPanel(render: (value: Policy) => ReactNode) {
+    if (!parsed.ok) {
+      return (
+        <div className="p-4">
+          <Notice title="Policy cannot be edited visually" variant="error">
+            The policy could not be parsed ({parsed.error}). Fix it in the <Code>Edit file</Code>{" "}
+            tab and the visual editor will come back.
+          </Notice>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        {parsed.hasComments ? (
+          <Notice title="Comments will be removed" variant="warning">
+            This policy contains comments. Saving a change made in the visual editor rewrites the
+            policy and drops them.
+          </Notice>
+        ) : null}
+        {render(parsed.policy)}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -86,8 +148,20 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
             "An unknown error occurred while trying to update the ACL policy."}
         </Notice>
       ) : undefined}
-      <Tabs className="mb-4" label="ACL Editor" defaultValue="edit">
+      <Tabs className="mb-4" label="ACL Editor" defaultValue="rules">
         <TabsList>
+          <TabsTab value="rules">
+            <div className="flex items-center gap-2">
+              <Shield className="p-1" />
+              <span>Rules</span>
+            </div>
+          </TabsTab>
+          <TabsTab value="tags">
+            <div className="flex items-center gap-2">
+              <TagsIcon className="p-1" />
+              <span>Tags &amp; Groups</span>
+            </div>
+          </TabsTab>
           <TabsTab value="edit">
             <div className="flex items-center gap-2">
               <Pencil className="p-1" />
@@ -107,6 +181,28 @@ export default function Page({ loaderData: { access, writable, policy } }: Route
             </div>
           </TabsTab>
         </TabsList>
+        <TabsPanel value="rules">
+          {structuredPanel((value) => (
+            <RulesEditor
+              destinations={destinations}
+              isDisabled={disabled}
+              onChange={applyPolicy}
+              policy={value}
+              sources={sources}
+            />
+          ))}
+        </TabsPanel>
+        <TabsPanel value="tags">
+          {structuredPanel((value) => (
+            <TagsGroupsEditor
+              isDisabled={disabled}
+              onChange={applyPolicy}
+              policy={value}
+              tagUsage={tagUsage}
+              users={users}
+            />
+          ))}
+        </TabsPanel>
         <TabsPanel value="edit">
           <Suspense fallback={<Fallback />}>
             <LazyEditor isDisabled={disabled} onChange={setCodePolicy} value={codePolicy} />
