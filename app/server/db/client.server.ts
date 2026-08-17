@@ -1,5 +1,5 @@
 import { mkdir } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import { drizzle } from "drizzle-orm/node-sqlite";
 import type { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
@@ -7,6 +7,7 @@ import { migrate } from "drizzle-orm/node-sqlite/migrator";
 
 import log from "~/utils/log";
 
+import type { HeadplaneConfig } from "../config/config-schema";
 import { authSessions, hostInfo, users } from "./schema";
 
 export type HeadplaneDialect = "sqlite";
@@ -42,8 +43,29 @@ export interface HeadplaneDb {
 
 const sqliteTables: HeadplaneTables = { users, authSessions, hostInfo };
 
-export async function createDbClient(path: string): Promise<HeadplaneDb> {
-  const realPath = resolve(path);
+/**
+ * A database target, resolved from configuration.
+ *
+ * A discriminated union rather than a bare path so that adding a dialect adds
+ * a member here instead of changing this signature.
+ */
+export type DatabaseConfig = { type: "sqlite"; path: string };
+
+/**
+ * Turns the optional `server.database` block into a concrete target.
+ *
+ * When the block is absent this reproduces the historical location exactly, so
+ * an existing install keeps using the database it already has.
+ */
+export function resolveDatabaseConfig(server: HeadplaneConfig["server"]): DatabaseConfig {
+  return {
+    type: "sqlite",
+    path: server.database?.path ?? join(server.data_path, "hp_persist.db"),
+  };
+}
+
+export async function createDbClient(config: DatabaseConfig): Promise<HeadplaneDb> {
+  const realPath = resolve(config.path);
   try {
     await mkdir(dirname(realPath), { recursive: true });
   } catch (error) {

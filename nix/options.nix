@@ -90,6 +90,31 @@ in {
                   example = "headscale.example.com";
                 };
 
+                database = mkOption {
+                  type = types.submodule {
+                    options = {
+                      type = mkOption {
+                        type = types.enum ["sqlite"];
+                        default = "sqlite";
+                        description = "Which database engine Headplane stores its own state in.";
+                      };
+
+                      path = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Location of the SQLite database. When null it lives at
+                          hp_persist.db inside data_path, which is where it has always been.
+                          Set this to keep the database on a different volume.
+                        '';
+                        example = "/srv/state/headplane.db";
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Headplane's own database.";
+                };
+
                 proxy_auth = mkOption {
                   type = types.submodule {
                     options = {

@@ -1,5 +1,6 @@
 # Next
 
+- Added `server.database`, which allows the Headplane database to live somewhere other than `server.data_path`. Omitting it keeps the existing location.
 - Fixed concurrent first logins leaving Headplane with no owner. The check for an existing owner is now part of the promoting update rather than a separate count, so two people signing in at the same moment can no longer both skip the promotion.
 - Headplane now closes its database handle on shutdown instead of leaving it open.
 - Fixed the Headplane agent falling back to an interactive Tailscale login. The agent now starts with a pre-auth-key, preserves its existing state across restarts, and auto-approves itself when Headscale requires manual approval (closes [#582](https://github.com/tale/headplane/issues/582)).
