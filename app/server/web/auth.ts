@@ -617,14 +617,22 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       caps: capsForRole(initialRole),
     });
 
-    const [{ count }] = await opts.db.select({ count: sql<number>`count(*)` }).from(users);
-
-    if (count === 1) {
-      await opts.db
-        .update(users)
-        .set({ role: "owner", caps: capsForRole("owner") })
-        .where(eq(users.id, id));
-    }
+    // Promote the bootstrapping user to owner. The "is there an owner yet"
+    // guard lives inside the UPDATE rather than in a preceding SELECT: two
+    // people signing in at the same moment interleave at the `await`
+    // boundaries, and a separate count lets both observe a table that already
+    // holds two rows. Neither promotes itself, leaving the instance with no
+    // owner at all and nobody able to administer it.
+    //
+    // Note this tests for the absence of an owner rather than for a single
+    // user row. The two agree on a fresh install, and only the former is
+    // decidable in a single statement.
+    await opts.db
+      .update(users)
+      .set({ role: "owner", caps: capsForRole("owner") })
+      .where(
+        sql`${users.id} = ${id} and not exists (select 1 from ${users} where ${users.role} = 'owner')`,
+      );
 
     return id;
   }

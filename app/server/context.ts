@@ -6,7 +6,7 @@ import log from "~/utils/log";
 
 import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
-import { createDbClient } from "./db/client.server";
+import { closeDbClient, createDbClient } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
 import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
@@ -81,6 +81,9 @@ export async function createAppContext(config: HeadplaneConfig) {
 
   // Disposers run in reverse-registration order on shutdown.
   const disposers: Array<() => Promise<void> | void> = [
+    // Registered first so it runs last: everything above may still touch the
+    // database while it is winding down.
+    () => closeDbClient(db),
     () => auth.stop(),
     () => hsLive.dispose(),
     () => headscale.dispose(),
