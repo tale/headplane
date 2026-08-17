@@ -49,6 +49,17 @@ const serverConfig = type({
   tls_cert_path: "string?",
   tls_key_path: "string?",
 
+  // Where Headplane keeps its own state. When absent, SQLite at
+  // `<data_path>/hp_persist.db` — the behaviour before this block existed.
+  //
+  // Deliberately plain `string` rather than `string.lower`: that keyword
+  // rewrites the value, which silently breaks any path containing a capital
+  // letter on a case-sensitive filesystem.
+  "database?": {
+    type: '"sqlite" = "sqlite"',
+    path: "string?",
+  },
+
   "proxy_auth?": {
     enabled: "boolean",
     allowed_cidrs: "string[]?",
@@ -75,6 +86,11 @@ const partialServerConfig = type({
 
   tls_cert_path: "string?",
   tls_key_path: "string?",
+
+  "database?": {
+    type: '"sqlite"?',
+    path: "string?",
+  },
 
   "proxy_auth?": {
     enabled: "boolean?",

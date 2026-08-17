@@ -1,12 +1,10 @@
-import { join } from "node:path";
-
 import { createContext } from "react-router";
 
 import log from "~/utils/log";
 
 import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
-import { createDbClient, type HeadplaneDb } from "./db/client.server";
+import { createDbClient, type HeadplaneDb, resolveDatabaseConfig } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
 import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
@@ -29,7 +27,7 @@ export const oidcContext = createContext<AppContext["oidc"]>();
 export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
 export async function createAppContext(config: HeadplaneConfig) {
-  const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
+  const db = await createDbClient(resolveDatabaseConfig(config.server));
   const headscale = await createHeadscale({
     url: config.headscale.url,
     certPath: config.headscale.tls_cert_path,
