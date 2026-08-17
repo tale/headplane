@@ -1,4 +1,4 @@
-import { Plus, TagsIcon, X } from "lucide-react";
+import { AlertTriangle, Plus, TagsIcon, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
@@ -17,9 +17,12 @@ interface TagsProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   existingTags?: string[];
+  // Tags declared under `tagOwners` in the ACL policy. Anything outside this
+  // list is assignable but will not match any rule.
+  policyTags?: string[];
 }
 
-export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsProps) {
+export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyTags }: TagsProps) {
   const fetcher = useFetcher();
   const submittingRef = useRef(false);
   const [tags, setTags] = useState([...machine.tags]);
@@ -31,6 +34,10 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
   const tagIsInvalid = useMemo(
     () => tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag),
     [tag, tags],
+  );
+  const undeclaredTags = useMemo(
+    () => (policyTags === undefined ? [] : tags.filter((entry) => !policyTags.includes(entry))),
+    [policyTags, tags],
   );
 
   const error = fetcher.data && !fetcher.data.success ? fetcher.data.error : null;
@@ -96,7 +103,12 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
           ) : (
             tags.map((item) => (
               <TableList.Item className="font-mono" id={item} key={item}>
-                {item}
+                <span className="flex items-center gap-1.5">
+                  {item}
+                  {undeclaredTags.includes(item) ? (
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                  ) : null}
+                </span>
                 <Button
                   className="rounded-md p-0.5"
                   onClick={() => {
@@ -148,6 +160,18 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags }: TagsP
               </Button>
             ))}
           </div>
+        ) : null}
+        {undeclaredTags.length > 0 ? (
+          <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+            {undeclaredTags.join(", ")} {undeclaredTags.length === 1 ? "is" : "are"} not declared
+            under <code className="font-mono">tagOwners</code> in your policy, so no rule will match{" "}
+            {undeclaredTags.length === 1 ? "it" : "them"}. Declare{" "}
+            {undeclaredTags.length === 1 ? "it" : "them"} in{" "}
+            <Link styled to="/acls">
+              Access Control
+            </Link>
+            .
+          </p>
         ) : null}
         <p className="mt-2 text-sm opacity-50">
           Not seeing the tags you expect? Tags need to be defined in your access control policy

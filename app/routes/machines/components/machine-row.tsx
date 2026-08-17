@@ -27,6 +27,7 @@ interface Props {
   magic?: string;
   isDisabled?: boolean;
   existingTags?: string[];
+  policyTags?: string[];
   supportsNodeOwnerChange: boolean;
   supportsDisablingKeyExpiry: boolean;
 }
@@ -38,6 +39,7 @@ export default function MachineRow({
   magic,
   isDisabled,
   existingTags,
+  policyTags,
   supportsNodeOwnerChange,
   supportsDisablingKeyExpiry,
 }: Props) {
@@ -141,6 +143,7 @@ export default function MachineRow({
       <td className="py-2 pr-0.5">
         <MenuOptions
           existingTags={existingTags}
+          policyTags={policyTags}
           isDisabled={isDisabled}
           magic={magic}
           node={node}

@@ -19,7 +19,7 @@ import {
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
-import { isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
+import { extractTagOwnerTags, isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
@@ -79,6 +79,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         }
       : undefined,
     existingTags: sortAssignableTags(nodes, policy),
+    policyTags: extractTagOwnerTags(policy),
     magic,
     node: enhancedNode,
     stats: stats?.[enhancedNode.nodeKey],
@@ -100,6 +101,7 @@ export default function Page({
     agent,
     stats,
     existingTags,
+    policyTags,
     supportsNodeOwnerChange,
     supportsDisablingKeyExpiry,
   },
@@ -132,6 +134,7 @@ export default function Page({
         </span>
         <MenuOptions
           existingTags={existingTags}
+          policyTags={policyTags}
           isFullButton
           magic={magic}
           node={node}
