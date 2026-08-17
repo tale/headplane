@@ -14,6 +14,7 @@ import { createLiveStore, nodesResource, usersResource } from "./headscale/live-
 import { type AgentManager, createAgentManager } from "./hp-agent";
 import { createOidcService, type OidcService } from "./oidc/provider";
 import { createAuthService, type Principal } from "./web/auth";
+import { createJwtAuthService, type JwtAuthService } from "./web/jwt-auth";
 
 export type AppContext = Awaited<ReturnType<typeof createAppContext>>;
 export const agentsContext = createContext<AppContext["agents"]>();
@@ -25,6 +26,7 @@ export const headscaleApiKeyContext = createContext<AppContext["headscaleApiKey"
 export const headscaleConfigContext = createContext<AppContext["hs"]>();
 export const headscaleLiveStoreContext = createContext<AppContext["hsLive"]>();
 export const integrationContext = createContext<AppContext["integration"]>();
+export const jwtAuthContext = createContext<AppContext["jwtAuth"]>();
 export const oidcContext = createContext<AppContext["oidc"]>();
 export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
@@ -46,9 +48,14 @@ export async function createAppContext(config: HeadplaneConfig) {
     db,
   );
 
+  const jwtAuth = buildJwtAuth(config);
+
   const auth = createAuthService({
     secret: config.server.cookie_secret,
     headscaleApiKey,
+    jwtAuth: jwtAuth
+      ? { service: jwtAuth, defaultRole: config.server.jwt_auth?.default_role }
+      : undefined,
     proxyAuth: config.server.proxy_auth
       ? {
           enabled: config.server.proxy_auth.enabled,
@@ -114,6 +121,7 @@ export async function createAppContext(config: HeadplaneConfig) {
   return {
     config,
     db,
+    jwtAuth,
     headscale,
     headscaleApiKey,
     agents,
@@ -126,6 +134,26 @@ export async function createAppContext(config: HeadplaneConfig) {
     startServices,
     dispose,
   };
+}
+
+function buildJwtAuth(config: HeadplaneConfig): JwtAuthService | undefined {
+  const jwtAuth = config.server.jwt_auth;
+  if (!jwtAuth?.enabled) {
+    return;
+  }
+
+  // `audience` is mandatory and the verifier throws without it, which is the
+  // behaviour we want: a misconfigured audience would otherwise accept
+  // assertions minted for any other backend service.
+  return createJwtAuthService({
+    provider: jwtAuth.provider,
+    audience: jwtAuth.audience,
+    allowedDomains: jwtAuth.allowed_domains,
+    header: jwtAuth.header,
+    issuer: jwtAuth.issuer,
+    jwksUrl: jwtAuth.jwks_url,
+    algorithms: jwtAuth.algorithms,
+  });
 }
 
 function buildOidc(

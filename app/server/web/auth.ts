@@ -9,6 +9,7 @@ import { ulid } from "ulidx";
 import type { Machine } from "~/types";
 
 import { type HeadplaneUser, authSessions, users } from "../db/schema";
+import { type JwtAuthService, logJwtAuthError } from "./jwt-auth";
 import { Capabilities, type Role, Roles, capsForRole } from "./roles";
 
 export type Principal =
@@ -21,7 +22,7 @@ export type Principal =
   | UserPrincipal;
 
 export type UserPrincipal = {
-  kind: "oidc" | "proxy";
+  kind: "oidc" | "proxy" | "jwt";
   sessionId: string;
   idToken?: string;
   user: {
@@ -49,6 +50,11 @@ interface ProxyAuthOptions {
   pictureHeader?: string;
 }
 
+interface JwtAuthOptions {
+  service: JwtAuthService;
+  defaultRole?: string;
+}
+
 interface CookiePayload {
   sid: string;
   api_key?: string;
@@ -63,6 +69,7 @@ export interface AuthServiceOptions {
   secret: string;
   headscaleApiKey?: string;
   proxyAuth?: ProxyAuthOptions;
+  jwtAuth?: JwtAuthOptions;
   db: NodeSQLiteDatabase;
   cookie: {
     name: string;
@@ -106,7 +113,7 @@ export interface AuthService {
 }
 
 export function isUserPrincipal(principal: Principal): principal is UserPrincipal {
-  return principal.kind === "oidc" || principal.kind === "proxy";
+  return principal.kind === "oidc" || principal.kind === "proxy" || principal.kind === "jwt";
 }
 
 interface CidrRange {
@@ -428,7 +435,57 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     });
   }
 
+  async function resolveJwtAuthPrincipal(request: Request): Promise<Principal | undefined> {
+    if (!opts.jwtAuth) {
+      return;
+    }
+    if (!opts.headscaleApiKey) {
+      throw new Error("JWT authentication requires headscale.api_key to be configured");
+    }
+
+    const result = await opts.jwtAuth.service.authenticate(request);
+
+    if (!result.ok) {
+      // No assertion at all means the request simply isn't arriving through the
+      // proxy, so the other methods still get their turn.
+      if (result.error.code === "missing_assertion") {
+        return;
+      }
+
+      // An assertion that is present but does not verify rejects the request
+      // outright. Falling through to the cookie session here would turn a bad
+      // assertion into a downgrade attack.
+      logJwtAuthError("Rejected a request carrying an invalid assertion", result.error);
+      throw new Error(`JWT authentication failed: ${result.error.message}`);
+    }
+
+    const identity = result.value;
+    const userId = await findOrCreateUser(
+      identity.subject,
+      { name: identity.name, email: identity.email },
+      { initialRole: opts.jwtAuth.defaultRole },
+    );
+
+    return resolveUserPrincipal({
+      kind: "jwt",
+      sessionId: "jwt-auth",
+      userId,
+      profile: {
+        name: identity.name,
+        email: identity.email,
+        username: identity.email ?? identity.name,
+      },
+    });
+  }
+
   async function resolve(request: Request): Promise<Principal> {
+    // Runs before proxy auth: this path proves identity cryptographically
+    // rather than trusting the peer address.
+    const jwtPrincipal = await resolveJwtAuthPrincipal(request);
+    if (jwtPrincipal) {
+      return jwtPrincipal;
+    }
+
     const proxyPrincipal = await resolveProxyAuthPrincipal(request);
     if (proxyPrincipal) {
       return proxyPrincipal;

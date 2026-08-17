@@ -161,6 +161,72 @@ in {
                   description = "Proxy authentication configuration.";
                 };
 
+                jwt_auth = mkOption {
+                  type = types.submodule {
+                    options = {
+                      enabled = mkOption {
+                        type = types.bool;
+                        default = false;
+                        description = ''
+                          Whether to authenticate requests from a signed JWT assertion injected
+                          by an identity-aware proxy. Unlike proxy_auth this verifies a
+                          signature, so it does not rely on the client address being trusted.
+                          Requires headscale.api_key_path.
+                        '';
+                      };
+
+                      provider = mkOption {
+                        type = types.enum ["google_iap"];
+                        default = "google_iap";
+                        description = ''
+                          Which proxy issues the assertion. The provider supplies the header
+                          name, issuer, JWKS URL and signing algorithm.
+                        '';
+                      };
+
+                      audience = mkOption {
+                        type = types.str;
+                        default = "";
+                        description = ''
+                          The audience the assertion must carry. Required when enabled: without
+                          it Headplane would accept an assertion minted for any other backend
+                          service. For Google IAP this is
+                          /projects/PROJECT_NUMBER/global/backendServices/BACKEND_SERVICE_ID.
+                        '';
+                        example = "/projects/123456789/global/backendServices/987654321";
+                      };
+
+                      allowed_domains = mkOption {
+                        type = types.listOf types.str;
+                        default = [];
+                        description = ''
+                          Hosted domains permitted to sign in. When empty, any identity the
+                          proxy admits is accepted.
+                        '';
+                        example = ["example.com"];
+                      };
+
+                      default_role = mkOption {
+                        type = types.enum [
+                          "admin"
+                          "network_admin"
+                          "it_admin"
+                          "auditor"
+                          "viewer"
+                          "member"
+                        ];
+                        default = "member";
+                        description = ''
+                          Role assigned to newly created users. The first user to sign in
+                          always becomes the owner regardless of this setting.
+                        '';
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Verified header JWT authentication configuration.";
+                };
+
                 data_path = mkOption {
                   type = types.path;
                   default = "/var/lib/headplane";

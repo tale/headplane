@@ -7,7 +7,7 @@ import Card from "~/components/card";
 import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
-import { appConfigContext, authContext, oidcContext } from "~/server/context";
+import { appConfigContext, authContext, jwtAuthContext, oidcContext } from "~/server/context";
 import type { OidcError, OidcService } from "~/server/oidc/provider";
 import { useLiveData } from "~/utils/live-data";
 import log from "~/utils/log";
@@ -15,6 +15,7 @@ import log from "~/utils/log";
 import type { Route } from "./+types/page";
 import { loginAction } from "./action";
 import { OidcConfigErrorNotice, OidcDiscoveryFailedNotice } from "./config-error";
+import { JwtAuthErrorNotice } from "./jwt-auth-error";
 import Logout from "./logout";
 import { OidcErrorNotice } from "./oidc-error";
 
@@ -22,11 +23,24 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const config = context.get(appConfigContext);
   const oidc = context.get(oidcContext);
+  const jwtAuth = context.get(jwtAuthContext);
 
   try {
     await auth.require(request);
     return redirect("/machines");
   } catch {}
+
+  // Reaching the login page while jwt_auth is enabled means the assertion was
+  // absent or did not verify. Surfacing the reason turns the single most common
+  // misconfiguration — a mismatched audience — from a blank login form into
+  // something an operator can act on.
+  let jwtAuthErrorCode: string | undefined;
+  if (jwtAuth) {
+    const result = await jwtAuth.authenticate(request);
+    if (!result.ok) {
+      jwtAuthErrorCode = result.error.code;
+    }
+  }
 
   const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
@@ -63,6 +77,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     isCookieSecureEnabled: config.server.cookie_secure,
     isOidcConnectorEnabled,
     oidcErrorCodes,
+    jwtAuthErrorCode,
     urlState,
   };
 }
@@ -77,7 +92,13 @@ function logLoginOidcError(context: string, error: OidcError): void {
 }
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
-  const { isCookieSecureEnabled, isOidcConnectorEnabled, oidcErrorCodes, urlState } = loaderData;
+  const {
+    isCookieSecureEnabled,
+    isOidcConnectorEnabled,
+    oidcErrorCodes,
+    jwtAuthErrorCode,
+    urlState,
+  } = loaderData;
 
   const [showCookieWarning, setShowCookieWarning] = useState(false);
   const [params] = useSearchParams();
@@ -117,7 +138,9 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
   return (
     <div className="flex h-screen w-screen items-center justify-center">
       <div>
-        {urlState?.startsWith("error_") ? (
+        {jwtAuthErrorCode ? (
+          <JwtAuthErrorNotice code={jwtAuthErrorCode} />
+        ) : urlState?.startsWith("error_") ? (
           <OidcErrorNotice code={urlState} />
         ) : oidcErrorCodes.includes("discovery_failed") ? (
           <OidcDiscoveryFailedNotice />
