@@ -2,13 +2,13 @@ import { createHash, createHmac } from "node:crypto";
 import { isIP } from "node:net";
 
 import { eq, lt, sql } from "drizzle-orm";
-import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 import { createCookie } from "react-router";
 import { ulid } from "ulidx";
 
 import type { Machine } from "~/types";
 
-import { type HeadplaneUser, authSessions, users } from "../db/schema";
+import type { HeadplaneDb } from "../db/client.server";
+import { type HeadplaneUser } from "../db/schema";
 import { Capabilities, type Role, Roles, capsForRole } from "./roles";
 
 export type Principal =
@@ -63,7 +63,7 @@ export interface AuthServiceOptions {
   secret: string;
   headscaleApiKey?: string;
   proxyAuth?: ProxyAuthOptions;
-  db: NodeSQLiteDatabase;
+  db: HeadplaneDb;
   cookie: {
     name: string;
     secure: boolean;
@@ -237,6 +237,9 @@ function cidrContains(range: CidrRange, address: string): boolean {
 }
 
 export function createAuthService(opts: AuthServiceOptions): AuthService {
+  // The schema travels with the connection, so both are unpacked once here
+  // rather than imported at module scope.
+  const { client: db, tables } = opts.db;
   const requestCache = new WeakMap<Request, Promise<Principal>>();
   const clientAddresses = new WeakMap<Request, string>();
   const proxyAuthCidrs = opts.proxyAuth?.enabled
@@ -355,7 +358,11 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       username?: string;
     };
   }): Promise<UserPrincipal> {
-    const [user] = await opts.db.select().from(users).where(eq(users.id, options.userId)).limit(1);
+    const [user] = await db
+      .select()
+      .from(tables.users)
+      .where(eq(tables.users.id, options.userId))
+      .limit(1);
 
     if (!user) {
       throw new Error("User record not found");
@@ -436,10 +443,10 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
 
     const payload = await decodeCookie(request);
 
-    const [session] = await opts.db
+    const [session] = await db
       .select()
-      .from(authSessions)
-      .where(eq(authSessions.id, payload.sid))
+      .from(tables.authSessions)
+      .where(eq(tables.authSessions.id, payload.sid))
       .limit(1);
 
     if (!session) {
@@ -447,7 +454,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     }
 
     if (session.expires_at < new Date()) {
-      await opts.db.delete(authSessions).where(eq(authSessions.id, session.id));
+      await db.delete(tables.authSessions).where(eq(tables.authSessions.id, session.id));
       throw new Error("Session expired");
     }
 
@@ -534,7 +541,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   ): Promise<string> {
     const maxAge = options?.maxAge ?? opts.cookie.maxAge;
     const sid = ulid();
-    await opts.db.insert(authSessions).values({
+    await db.insert(tables.authSessions).values({
       id: sid,
       kind: "oidc",
       user_id: userId,
@@ -551,7 +558,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     maxAge: number,
   ): Promise<string> {
     const sid = ulid();
-    await opts.db.insert(authSessions).values({
+    await db.insert(tables.authSessions).values({
       id: sid,
       kind: "api_key",
       api_key_hash: hashApiKey(apiKey),
@@ -566,7 +573,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     if (request) {
       try {
         const payload = await decodeCookie(request);
-        await opts.db.delete(authSessions).where(eq(authSessions.id, payload.sid));
+        await db.delete(tables.authSessions).where(eq(tables.authSessions.id, payload.sid));
       } catch {
         // Cookie already invalid, just clear it
       }
@@ -585,12 +592,16 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     profile?: { name?: string; email?: string; picture?: string },
     options?: { initialRole?: string; syncRole?: string },
   ): Promise<string> {
-    const [existing] = await opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
+    const [existing] = await db
+      .select()
+      .from(tables.users)
+      .where(eq(tables.users.sub, subject))
+      .limit(1);
 
     if (existing) {
       const syncedRole = normalizeInitialRole(options?.syncRole);
-      await opts.db
-        .update(users)
+      await db
+        .update(tables.users)
         .set({
           name: profile?.name,
           email: profile?.email,
@@ -601,13 +612,13 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
           last_login_at: new Date(),
           updated_at: new Date(),
         })
-        .where(eq(users.id, existing.id));
+        .where(eq(tables.users.id, existing.id));
       return existing.id;
     }
 
     const initialRole = normalizeInitialRole(options?.initialRole) ?? "member";
     const id = ulid();
-    await opts.db.insert(users).values({
+    await db.insert(tables.users).values({
       id,
       sub: subject,
       name: profile?.name,
@@ -627,11 +638,11 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     // Note this tests for the absence of an owner rather than for a single
     // user row. The two agree on a fresh install, and only the former is
     // decidable in a single statement.
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ role: "owner", caps: capsForRole("owner") })
       .where(
-        sql`${users.id} = ${id} and not exists (select 1 from ${users} where ${users.role} = 'owner')`,
+        sql`${tables.users.id} = ${id} and not exists (select 1 from ${tables.users} where ${tables.users.role} = 'owner')`,
       );
 
     return id;
@@ -646,37 +657,37 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   async function linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean> {
-    const [existing] = await opts.db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.headscale_user_id, headscaleUserId))
+    const [existing] = await db
+      .select({ id: tables.users.id })
+      .from(tables.users)
+      .where(eq(tables.users.headscale_user_id, headscaleUserId))
       .limit(1);
 
     if (existing && existing.id !== userId) {
       return false;
     }
 
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ headscale_user_id: headscaleUserId, updated_at: new Date() })
-      .where(eq(users.id, userId));
+      .where(eq(tables.users.id, userId));
 
     return true;
   }
 
   async function unlinkHeadscaleUser(userId: string): Promise<void> {
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ headscale_user_id: null, updated_at: new Date() })
-      .where(eq(users.id, userId));
+      .where(eq(tables.users.id, userId));
   }
 
   async function listUsers(): Promise<HeadplaneUser[]> {
-    return opts.db.select().from(users);
+    return db.select().from(tables.users);
   }
 
   async function claimedHeadscaleUserIds(): Promise<Set<string>> {
-    const rows = await opts.db.select({ hsId: users.headscale_user_id }).from(users);
+    const rows = await db.select({ hsId: tables.users.headscale_user_id }).from(tables.users);
 
     const ids = new Set<string>();
     for (const row of rows) {
@@ -688,7 +699,11 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   async function roleForSubject(subject: string): Promise<Role | undefined> {
-    const [user] = await opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
+    const [user] = await db
+      .select()
+      .from(tables.users)
+      .where(eq(tables.users.sub, subject))
+      .limit(1);
 
     if (!user) {
       return;
@@ -698,10 +713,10 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   async function roleForHeadscaleUser(headscaleUserId: string): Promise<Role | undefined> {
-    const [user] = await opts.db
+    const [user] = await db
       .select()
-      .from(users)
-      .where(eq(users.headscale_user_id, headscaleUserId))
+      .from(tables.users)
+      .where(eq(tables.users.headscale_user_id, headscaleUserId))
       .limit(1);
 
     if (!user) {
@@ -719,55 +734,55 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       return false;
     }
 
-    const [current] = await opts.db
+    const [current] = await db
       .select()
-      .from(users)
-      .where(eq(users.id, currentOwnerUserId))
+      .from(tables.users)
+      .where(eq(tables.users.id, currentOwnerUserId))
       .limit(1);
 
     if (!current || current.role !== "owner") {
       return false;
     }
 
-    const [target] = await opts.db
+    const [target] = await db
       .select()
-      .from(users)
-      .where(eq(users.id, newOwnerUserId))
+      .from(tables.users)
+      .where(eq(tables.users.id, newOwnerUserId))
       .limit(1);
 
     if (!target) {
       return false;
     }
 
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ role: "admin", caps: capsForRole("admin"), updated_at: new Date() })
-      .where(eq(users.id, current.id));
+      .where(eq(tables.users.id, current.id));
 
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ role: "owner", caps: capsForRole("owner"), updated_at: new Date() })
-      .where(eq(users.id, target.id));
+      .where(eq(tables.users.id, target.id));
 
     return true;
   }
 
   async function reassignUser(userId: string, role: Role): Promise<boolean> {
-    const [user] = await opts.db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const [user] = await db.select().from(tables.users).where(eq(tables.users.id, userId)).limit(1);
     if (!user || user.role === "owner") {
       return false;
     }
 
-    await opts.db
-      .update(users)
+    await db
+      .update(tables.users)
       .set({ role, caps: capsForRole(role), updated_at: new Date() })
-      .where(eq(users.id, userId));
+      .where(eq(tables.users.id, userId));
 
     return true;
   }
 
   async function pruneExpiredSessions(): Promise<void> {
-    await opts.db.delete(authSessions).where(lt(authSessions.expires_at, new Date()));
+    await db.delete(tables.authSessions).where(lt(tables.authSessions.expires_at, new Date()));
   }
 
   function start(): void {

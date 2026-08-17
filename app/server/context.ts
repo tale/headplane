@@ -6,7 +6,7 @@ import log from "~/utils/log";
 
 import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
-import { closeDbClient, createDbClient } from "./db/client.server";
+import { createDbClient, type HeadplaneDb } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
 import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
@@ -83,7 +83,7 @@ export async function createAppContext(config: HeadplaneConfig) {
   const disposers: Array<() => Promise<void> | void> = [
     // Registered first so it runs last: everything above may still touch the
     // database while it is winding down.
-    () => closeDbClient(db),
+    () => db.dispose(),
     () => auth.stop(),
     () => hsLive.dispose(),
     () => headscale.dispose(),
@@ -175,7 +175,7 @@ async function buildAgents(
   config: HeadplaneConfig,
   supportsTagOnlyKeys: boolean,
   apiClient: HeadscaleClient | undefined,
-  db: Awaited<ReturnType<typeof createDbClient>>,
+  db: HeadplaneDb,
 ): Promise<Feature<AgentManager>> {
   const agentConfig = config.integration?.agent;
   if (!agentConfig?.enabled) {
