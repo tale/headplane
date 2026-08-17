@@ -7,6 +7,7 @@ import Delete from "../dialogs/delete-user";
 import LinkUser from "../dialogs/link-user";
 import Reassign from "../dialogs/reassign-user";
 import TransferOwnership from "../dialogs/transfer-ownership";
+import UserGroups from "../dialogs/user-groups";
 import type { HeadplaneUserData } from "../overview";
 
 interface MenuProps {
@@ -15,9 +16,11 @@ interface MenuProps {
   currentLink?: string;
   isSelf?: boolean;
   isOwner?: boolean;
+  canEditGroups?: boolean;
+  policyGroups?: string[];
 }
 
-type Modal = "delete" | "reassign" | "link" | "transfer" | null;
+type Modal = "delete" | "reassign" | "link" | "transfer" | "groups" | null;
 
 export default function UserMenu({
   user,
@@ -25,6 +28,8 @@ export default function UserMenu({
   currentLink,
   isSelf,
   isOwner,
+  canEditGroups,
+  policyGroups,
 }: MenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
@@ -74,6 +79,18 @@ export default function UserMenu({
           }}
         />
       )}
+      {modal === "groups" && user.linkedHeadscaleUser && (
+        <UserGroups
+          availableGroups={policyGroups ?? []}
+          displayName={displayName}
+          groups={user.groups}
+          isOpen={modal === "groups"}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+          userName={user.linkedHeadscaleUser.name}
+        />
+      )}
       {modal === "transfer" && (
         <TransferOwnership
           isOpen={modal === "transfer"}
@@ -99,6 +116,9 @@ export default function UserMenu({
           <MenuItem onClick={() => setModal("link")}>
             {isLinked ? "Change linked user" : "Link Headscale user"}
           </MenuItem>
+          {canEditGroups && user.linkedHeadscaleUser && (
+            <MenuItem onClick={() => setModal("groups")}>Edit groups</MenuItem>
+          )}
           {isOwner && !isSelf && (
             <>
               <MenuSeparator />

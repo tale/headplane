@@ -5,6 +5,7 @@ import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
+import { isValidGroupName, parsePolicy, serializePolicy, setUserGroups } from "~/utils/acl-policy";
 import { validateUsername } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
@@ -141,6 +142,37 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       return { message: "Headscale user linked successfully" };
+    }
+    case "update_user_groups": {
+      // Group membership lives in the ACL policy, so this needs the policy
+      // capability on top of the user one checked above.
+      if (!auth.can(principal, Capabilities.write_policy)) {
+        throw data("You do not have permission to write to the ACL policy", { status: 403 });
+      }
+
+      const userName = formData.get("user_name")?.toString();
+      if (!userName) {
+        throw data("Missing `user_name` in the form data.", { status: 400 });
+      }
+
+      const groups = (formData.get("groups")?.toString() ?? "")
+        .split(",")
+        .map((group) => group.trim())
+        .filter((group) => group.length > 0);
+
+      const invalid = groups.filter((group) => !isValidGroupName(group));
+      if (invalid.length > 0) {
+        return data({ error: `Invalid group name: ${invalid.join(", ")}` }, 400);
+      }
+
+      const { policy } = await api.policy.get();
+      const parsed = parsePolicy(policy);
+      if (!parsed.ok) {
+        return data({ error: `The ACL policy could not be parsed: ${parsed.error}` }, 400);
+      }
+
+      await api.policy.set(serializePolicy(setUserGroups(parsed.policy, userName, groups)));
+      return { message: "Groups updated successfully" };
     }
     default:
       throw data("Invalid `action_id` provided.", {

@@ -1,5 +1,6 @@
 import { CircleUser } from "lucide-react";
 
+import Chip from "~/components/chip";
 import StatusCircle from "~/components/status-circle";
 import type { Role } from "~/server/web/roles";
 import cn from "~/utils/cn";
@@ -12,6 +13,8 @@ interface HeadplaneUserRowProps {
   headscaleUsers: { id: string; name: string; claimed: boolean }[];
   isSelf?: boolean;
   isOwner?: boolean;
+  canEditGroups?: boolean;
+  policyGroups?: string[];
 }
 
 export default function HeadplaneUserRow({
@@ -19,6 +22,8 @@ export default function HeadplaneUserRow({
   headscaleUsers,
   isSelf,
   isOwner,
+  canEditGroups,
+  policyGroups,
 }: HeadplaneUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
@@ -50,6 +55,13 @@ export default function HeadplaneUserRow({
             {!user.headscaleUserId && (
               <p className="text-xs text-amber-600 dark:text-amber-400">Not linked</p>
             )}
+            {user.groups.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {user.groups.map((group) => (
+                  <Chip className="font-mono" key={group} text={group} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </td>
@@ -77,10 +89,12 @@ export default function HeadplaneUserRow({
       </td>
       <td className="py-2 pr-0.5">
         <MenuOptions
+          canEditGroups={canEditGroups}
           currentLink={user.headscaleUserId ?? undefined}
           headscaleUsers={headscaleUsers}
           isOwner={isOwner}
           isSelf={isSelf}
+          policyGroups={policyGroups}
           user={user}
         />
       </td>
