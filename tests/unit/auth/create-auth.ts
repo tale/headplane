@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 import { migrate } from "drizzle-orm/node-sqlite/migrator";
 
 import { createAuthService } from "~/server/web/auth";
+import type { JwtAuthService } from "~/server/web/jwt-auth";
 
 export function createTestAuth(
   options: {
@@ -16,6 +17,10 @@ export function createTestAuth(
       nameHeader?: string;
       pictureHeader?: string;
     };
+    jwtAuth?: {
+      service: JwtAuthService;
+      defaultRole?: string;
+    };
   } = {},
 ) {
   const db = drizzle(":memory:");
@@ -25,6 +30,7 @@ export function createTestAuth(
     secret: "test-secret-key-for-unit-tests",
     headscaleApiKey: options.headscaleApiKey,
     proxyAuth: options.proxyAuth,
+    jwtAuth: options.jwtAuth,
     db,
     cookie: {
       name: "_hp_test",

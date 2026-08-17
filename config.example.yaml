@@ -68,6 +68,34 @@ server:
   #     - "127.0.0.1/32"
   #     - "::1/128"
 
+  # Authentication from a signed assertion injected by an identity-aware proxy,
+  # currently Google Cloud's Identity-Aware Proxy (IAP).
+  #
+  # Unlike proxy_auth, this verifies the assertion's signature against the
+  # provider's published keys, so it does not depend on the client address being
+  # trustworthy. Requires `headscale.api_key`.
+  #
+  # Headplane must not be reachable except through the load balancer, otherwise
+  # a client can simply bypass the proxy entirely. See the Google IAP page in
+  # the documentation for the ingress rules to apply.
+  # jwt_auth:
+  #   enabled: false
+  #   provider: "google_iap"
+  #
+  #   # Required. Without it Headplane would accept an assertion minted for any
+  #   # other backend service. Find the backend service ID with:
+  #   #   gcloud compute backend-services describe <name> --global --format='value(id)'
+  #   audience: "/projects/123456789/global/backendServices/987654321"
+  #
+  #   # Optional. Hosted domains permitted to sign in. When omitted, any
+  #   # identity IAP admits is accepted.
+  #   allowed_domains:
+  #     - "example.com"
+  #
+  #   # Role given to new users. The first user to sign in always becomes the
+  #   # owner regardless of this setting.
+  #   default_role: "member"
+
   # The path to persist Headplane specific data. All data going forward
   # is stored in this directory, including the internal database and
   # any cache related files.

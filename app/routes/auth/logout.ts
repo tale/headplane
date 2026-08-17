@@ -1,6 +1,6 @@
 import { type ActionFunctionArgs, redirect } from "react-router";
 
-import { appConfigContext, authContext, oidcContext } from "~/server/context";
+import { appConfigContext, authContext, jwtAuthContext, oidcContext } from "~/server/context";
 
 export async function loader() {
   return redirect("/machines");
@@ -10,6 +10,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
   const auth = context.get(authContext);
   const config = context.get(appConfigContext);
   const oidc = context.get(oidcContext);
+  const jwtAuth = context.get(jwtAuthContext);
 
   let principal: Awaited<ReturnType<typeof auth.require>> | undefined;
   try {
@@ -27,6 +28,17 @@ export async function action({ request, context }: ActionFunctionArgs) {
   // ended. Disabled by default because the post_logout_redirect_uri must be
   // pre-registered on the IdP — turning this on without registering it would
   // strand users on the IdP's error page.
+  // JWT-authenticated sessions live in the proxy, not in Headplane. Clearing
+  // our cookie alone would leave the proxy session intact and log the user
+  // straight back in, so hand off to the provider's sign-out instead.
+  if (principal?.kind === "jwt" && jwtAuth?.logoutUrl) {
+    return redirect(jwtAuth.logoutUrl, {
+      headers: {
+        "Set-Cookie": await auth.destroySession(request),
+      },
+    });
+  }
+
   if (principal?.kind === "oidc" && oidc.state === "enabled" && config.oidc?.use_end_session) {
     const service = oidc.value;
     const status = service.status();
