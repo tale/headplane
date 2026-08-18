@@ -65,6 +65,68 @@ pointed at a path that does not exist, it creates an empty database — the firs
 person to sign in becomes the owner again, and previous role assignments are
 gone. Check the path before restarting.
 
+## PostgreSQL
+
+Headplane can store its state in PostgreSQL instead. This is worth doing when
+Headplane runs somewhere without durable local storage, when you run more than
+one Headplane replica, or simply when you already operate a PostgreSQL for
+Headscale and would rather back up one database than two.
+
+```yaml
+server:
+  database:
+    type: "postgres"
+    url: "postgres://headplane@10.0.0.5:5432/headplane"
+```
+
+Or give the parts separately:
+
+```yaml
+server:
+  database:
+    type: "postgres"
+    host: "10.0.0.5"
+    port: 5432
+    name: "headplane"
+    user: "headplane"
+    password_path: "/run/secrets/headplane-db-password"
+    ssl_mode: "require"
+    max_connections: 10
+```
+
+Headplane creates and migrates its own tables on start. Point it at a database
+it owns rather than sharing Headscale's — the table names are generic enough to
+collide, and Headplane's migrations assume it is the only writer.
+
+::: tip
+Use `password_path` rather than `password` where you can. It reads the password
+from a file, following the same convention as `headscale.api_key_path`, and
+keeps the credential out of the configuration file.
+:::
+
+### TLS
+
+| `ssl_mode`    | Behaviour                                                          |
+| ------------- | ------------------------------------------------------------------ |
+| `disable`     | No encryption.                                                      |
+| `require`     | Encrypts, but does not verify the server certificate. The default.   |
+| `verify-full` | Encrypts and verifies the server certificate.                        |
+
+`require` is the default because it is what most managed providers work with
+out of the box. Prefer `verify-full` when your provider gives you a CA you can
+verify against.
+
+### Moving from SQLite to PostgreSQL
+
+Headplane does not copy your existing data across. Pointing an instance at an
+empty PostgreSQL database gives you an empty Headplane: the first person to sign
+in becomes the owner, and previous role assignments are gone.
+
+For a small instance that is often acceptable — users are recreated on next
+sign-in and Headscale itself is untouched. If you have role assignments worth
+keeping, move them across before switching over, or reassign them from the Users
+page afterwards.
+
 ## Backups
 
 The database is small enough to copy directly, but do it with Headplane stopped,
@@ -80,7 +142,16 @@ becomes the owner. Headscale itself is unaffected.
 
 ## Reference
 
-| Field                    | Description                                                                                     |
-| ------------------------ | ----------------------------------------------------------------------------------------------- |
-| `server.database.type`   | Database engine. Currently `sqlite`.                                                             |
-| `server.database.path`   | Location of the SQLite file. Defaults to `hp_persist.db` inside `server.data_path`.              |
+| Field                              | Description                                                                          |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| `server.database.type`             | `sqlite` (default) or `postgres`.                                                     |
+| `server.database.path`             | SQLite only. Defaults to `hp_persist.db` inside `server.data_path`.                   |
+| `server.database.url`              | PostgreSQL connection string. Replaces the host/port/name/user fields.                |
+| `server.database.host`             | PostgreSQL host, when not using `url`.                                                |
+| `server.database.port`             | PostgreSQL port. Defaults to `5432`.                                                  |
+| `server.database.name`             | PostgreSQL database name, when not using `url`.                                       |
+| `server.database.user`             | PostgreSQL user, when not using `url`.                                                |
+| `server.database.password`         | PostgreSQL password. Prefer `password_path`.                                          |
+| `server.database.password_path`    | Reads the password from a file instead.                                               |
+| `server.database.ssl_mode`         | `disable`, `require` (default) or `verify-full`.                                      |
+| `server.database.max_connections`  | Connection pool size. Defaults to `10`.                                               |

@@ -2,7 +2,14 @@ import { dump } from "js-yaml";
 import { beforeEach, describe, expect, test } from "vitest";
 
 import { loadConfig } from "~/server/config/load";
-import { resolveDatabaseConfig } from "~/server/db/client.server";
+import { type DatabaseConfig, resolveDatabaseConfig } from "~/server/db/client.server";
+
+function expectSqlite(config: DatabaseConfig): Extract<DatabaseConfig, { type: "sqlite" }> {
+  if (config.type !== "sqlite") {
+    throw new Error(`expected a sqlite target, got ${config.type}`);
+  }
+  return config;
+}
 
 import { clearFakeFiles, createFakeFile } from "../setup/overlay-fs";
 
@@ -57,7 +64,9 @@ describe("server.database configuration", () => {
     writeConfig({ data_path: "/var/lib/headplane/", database: { type: "sqlite" } });
     const config = await loadConfig(CONFIG_PATH);
 
-    expect(resolveDatabaseConfig(config.server).path).toBe("/var/lib/headplane/hp_persist.db");
+    expect(expectSqlite(resolveDatabaseConfig(config.server)).path).toBe(
+      "/var/lib/headplane/hp_persist.db",
+    );
   });
 
   test("loadConfig_withDatabaseBlockOmittingType_defaultsToSqlite", async () => {
@@ -80,6 +89,6 @@ describe("server.database configuration", () => {
     writeConfig({ database: { path: "/srv/State/Headplane.db" } });
     const config = await loadConfig(CONFIG_PATH);
 
-    expect(resolveDatabaseConfig(config.server).path).toBe("/srv/State/Headplane.db");
+    expect(expectSqlite(resolveDatabaseConfig(config.server)).path).toBe("/srv/State/Headplane.db");
   });
 });
