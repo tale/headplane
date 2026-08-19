@@ -7,6 +7,8 @@ import { type HeadplaneDb, wrapPostgresClient } from "~/server/db/client.server"
 
 export interface PostgresEnv {
   db: HeadplaneDb;
+  /** Connection string, for tools that open their own pool. */
+  url: string;
   /** Truncates every table so each test starts from a clean slate. */
   reset(): Promise<void>;
   stop(): Promise<void>;
@@ -48,6 +50,7 @@ export async function startPostgres(): Promise<PostgresEnv> {
 
   const readyPool = pool;
   return {
+    url,
     db: wrapPostgresClient(client, async () => {
       await readyPool.end();
     }),

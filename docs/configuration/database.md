@@ -118,14 +118,41 @@ verify against.
 
 ### Moving from SQLite to PostgreSQL
 
-Headplane does not copy your existing data across. Pointing an instance at an
-empty PostgreSQL database gives you an empty Headplane: the first person to sign
-in becomes the owner, and previous role assignments are gone.
+Pointing an instance at an empty PostgreSQL database gives you an empty
+Headplane: the first person to sign in becomes the owner, and previous role
+assignments are gone. Copy the existing data across first.
 
-For a small instance that is often acceptable — users are recreated on next
-sign-in and Headscale itself is untouched. If you have role assignments worth
-keeping, move them across before switching over, or reassign them from the Users
-page afterwards.
+Stop Headplane before copying — reading a live database can capture a
+half-written state.
+
+```sh
+pnpm exec tsx scripts/db-copy.ts \
+  --from /var/lib/headplane/hp_persist.db \
+  --to postgres://headplane@10.0.0.5:5432/headplane
+```
+
+Pass `--dry-run` first to see what would be copied without writing anything.
+The target is created and migrated automatically, so it can be an empty
+database.
+
+The copy carries users, their roles and their Headscale links, live sessions,
+and cached node information. Expired sessions are dropped rather than copied.
+Signed-in users stay signed in, since sessions come across and the cookie
+secret has not changed.
+
+It refuses to run against a target that already holds users, so a repeated run
+cannot half-merge two databases. Pass `--allow-nonempty` if merging is what you
+actually want.
+
+::: warning
+If the copy reports that your source has more than one owner, demote all but one
+before retrying. PostgreSQL enforces a single owner and the copy stops rather
+than failing partway through.
+:::
+
+Once the copy succeeds, switch `server.database` over and start Headplane. Keep
+the SQLite file until you have confirmed everything looks right — nothing
+deletes it.
 
 ## Backups
 
