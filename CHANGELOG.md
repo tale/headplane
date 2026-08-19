@@ -1,5 +1,6 @@
 # Next
 
+- Fixed `server.data_path`, `headscale.config_path`, `headscale.dns_records_path` and `headscale.tls_cert_path` being silently lowercased, which pointed Headplane at a different location for any path containing a capital letter (closes [#612](https://github.com/tale/headplane/issues/612)).
 - Fixed the Headplane agent falling back to an interactive Tailscale login. The agent now starts with a pre-auth-key, preserves its existing state across restarts, and auto-approves itself when Headscale requires manual approval (closes [#582](https://github.com/tale/headplane/issues/582)).
 - Fixed creating pre-auth keys with an expiry of 1000 days or more. The number input submitted its locale-formatted value (`365,000`, `365 000`, `365.000`), which either failed with a 500 or silently created a key with a truncated expiry. The raw value is now submitted and the server rejects malformed expiries with a 400 (closes [#596](https://github.com/tale/headplane/issues/596)).
 
