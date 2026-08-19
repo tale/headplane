@@ -21,8 +21,13 @@ export default function NumberInput(props: NumberInputProps) {
   const { label, name, description } = props;
 
   return (
+    // `name` belongs on the Root, not the Input. The Input is a text field that
+    // holds the locale-formatted value ("365,000", "365 000", "365.000"), while
+    // the Root renders a hidden number input carrying the raw value. Naming the
+    // Input would submit the formatted string and break server-side parsing.
     <NumberField.Root
       className="flex flex-col gap-1"
+      name={name}
       defaultValue={props.defaultValue}
       value={props.value}
       onValueChange={props.onValueChange}
@@ -49,10 +54,7 @@ export default function NumberInput(props: NumberInputProps) {
           "border border-mist-200 dark:border-mist-800",
         )}
       >
-        <NumberField.Input
-          name={name}
-          className="w-full rounded-l-md bg-transparent py-2 pl-3 text-sm focus:outline-hidden"
-        />
+        <NumberField.Input className="w-full rounded-l-md bg-transparent py-2 pl-3 text-sm focus:outline-hidden" />
         <NumberField.Decrement aria-label="Decrement" className="h-7.5 w-7.5 rounded-lg p-1">
           <Minus className="h-4 w-4" />
         </NumberField.Decrement>

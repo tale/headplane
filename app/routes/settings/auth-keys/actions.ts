@@ -88,9 +88,20 @@ export async function authKeysAction({ request, context }: Route.ActionArgs) {
         });
       }
 
-      const day = Number(expiry.toString().split(" ")[0]);
+      // The form submits the raw, unformatted value of the number input, so
+      // anything that is not a plain integer (grouping separators from
+      // `Intl.NumberFormat`, unit suffixes, ...) is malformed input. Parsing it
+      // leniently either produces an Invalid Date (500) or, for dot-grouping
+      // locales, a silently truncated expiry.
+      const day = /^\d+$/.test(expiry.trim()) ? Number(expiry.trim()) : Number.NaN;
       const date = new Date();
       date.setDate(date.getDate() + day);
+
+      if (day < 1 || Number.isNaN(date.getTime())) {
+        return data("`expiry` must be a whole number of days.", {
+          status: 400,
+        });
+      }
 
       const key = await api.preAuthKeys.create({
         user,
