@@ -67,7 +67,8 @@ describe("validateUsername", () => {
 
   // "lm@" is the case from #502: Headscale creates it, but policies strip the
   // trailing "@" so no rule can ever match the user.
-  test.each(["", "a", "1abc", "@abc", "lm@", "a@b@c", "bad name", "bad/name"])(
+  // `ab²`/`abⅫ` are Nl/No, which Go's unicode.IsDigit rejects.
+  test.each(["", "a", "1abc", "@abc", "lm@", "a@b@c", "bad name", "bad/name", "ab²", "abⅫ"])(
     "rejects %s",
     (name) => {
       expect(validateUsername(name)).toBeTypeOf("string");
