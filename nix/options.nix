@@ -317,8 +317,9 @@ in {
                         type = types.bool;
                         default = true;
                         description = ''
-                          Use Tailscale's network namespace routing protections.
-                          Disable only when the agent should rely entirely on host routing.
+                          Use Tailscale's socket-level routing-loop handling in the dedicated Headplane agent process.
+                          Keep enabled unless its fallback pins the agent's Headscale connection to the wrong interface.
+                          Set to false only after verifying that ordinary OS routing in the container's network namespace reaches Headscale correctly.
                         '';
                       };
 

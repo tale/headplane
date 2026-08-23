@@ -187,8 +187,9 @@ _Default:_ `pkgs.headplane-agent`
 
 ## settings.integration.agent.tailscale_netns
 
-_Description:_ Use Tailscale's network namespace routing protections.
-Disable only when the agent should rely entirely on host routing.
+_Description:_ Use Tailscale's socket-level routing-loop handling in the dedicated Headplane agent process.
+Keep enabled unless its fallback pins the agent's Headscale connection to the wrong interface.
+Set to false only after verifying that ordinary OS routing in the container's network namespace reaches Headscale correctly.
 
 _Type:_ boolean
 

@@ -155,10 +155,12 @@ integration:
     # If using Docker, it is best to leave this as the default.
     # work_dir: "/var/lib/headplane/agent"
 
-    # Whether to use Tailscale's network namespace routing protections.
-    # Disable only when the agent should rely entirely on the host's routing,
-    # such as in a restricted multi-network container where Headscale is
-    # reachable through a non-default interface.
+    # Whether hp_agent uses Tailscale's socket handling to keep
+    # Tailscale-originated traffic from being routed back through
+    # Tailscale-managed routes. Keep enabled unless its fallback pins the
+    # agent's Headscale connection to the wrong interface. Set to false only
+    # after verifying that ordinary OS routing in the container's network
+    # namespace reaches Headscale correctly.
     # tailscale_netns: true
 
   # Only one of these should be enabled at a time or you will get errors
