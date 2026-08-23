@@ -313,6 +313,15 @@ in {
                         '';
                       };
 
+                      tailscale_netns = mkOption {
+                        type = types.bool;
+                        default = true;
+                        description = ''
+                          Use Tailscale's network namespace routing protections.
+                          Disable only when the agent should rely entirely on host routing.
+                        '';
+                      };
+
                       package = mkPackageOption pkgs "headplane-agent" {};
                     };
                   };

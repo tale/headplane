@@ -94,6 +94,7 @@ export async function createAgentManager(
   const cacheTtl = agentConfig.cache_ttl ?? 180_000;
   const executablePath = agentConfig.executable_path;
   const workDir = agentConfig.work_dir;
+  const tailscaleNetNS = agentConfig.tailscale_netns;
 
   const state: SyncState = {
     syncedAt: null,
@@ -125,6 +126,7 @@ export async function createAgentManager(
       HEADPLANE_AGENT_TS_SERVER: headscaleUrl,
       HEADPLANE_AGENT_HOSTNAME: hostName,
       HEADPLANE_AGENT_DEBUG: log.debugEnabled ? "true" : "false",
+      HEADPLANE_AGENT_TS_NETNS: tailscaleNetNS ? "true" : "false",
     };
 
     if (authKey) {

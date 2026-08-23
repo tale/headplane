@@ -185,6 +185,15 @@ _Type:_ package
 
 _Default:_ `pkgs.headplane-agent`
 
+## settings.integration.agent.tailscale_netns
+
+_Description:_ Use Tailscale's network namespace routing protections.
+Disable only when the agent should rely entirely on host routing.
+
+_Type:_ boolean
+
+_Default:_ `true`
+
 ## settings.integration.agent.work_dir
 
 _Description:_ Do not change this unless you are running a custom deployment.

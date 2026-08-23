@@ -31,13 +31,14 @@ please refer to the
 [example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml)
 for details.
 
-| Field                               | Description                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------- |
-| **`integration.agent.enabled`**     | Set to `true` to enable the agent.                                              |
-| `integration.agent.host_name`       | _Optional_. Headscale user name for the agent (default: `headplane-agent`).     |
-| `integration.agent.cache_ttl`       | _Optional_. How often to sync in milliseconds (default: `180000` / 3 minutes).  |
-| `integration.agent.work_dir`        | _Optional_. Working directory for the agent's tailnet state.                    |
-| `integration.agent.executable_path` | _Optional_. Path to the agent binary (default: `/usr/libexec/headplane/agent`). |
+| Field                               | Description                                                                          |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| **`integration.agent.enabled`**     | Set to `true` to enable the agent.                                                   |
+| `integration.agent.host_name`       | _Optional_. Headscale user name for the agent (default: `headplane-agent`).          |
+| `integration.agent.cache_ttl`       | _Optional_. How often to sync in milliseconds (default: `180000` / 3 minutes).       |
+| `integration.agent.work_dir`        | _Optional_. Working directory for the agent's tailnet state.                         |
+| `integration.agent.executable_path` | _Optional_. Path to the agent binary (default: `/usr/libexec/headplane/agent`).      |
+| `integration.agent.tailscale_netns` | _Optional_. Use Tailscale's network namespace routing protections (default: `true`). |
 
 ## Native Mode Configuration
 
@@ -61,6 +62,30 @@ Headplane preserves the agent's `tailscaled.state` in this directory. This lets
 the agent retain its Tailnet identity across Headplane restarts instead of
 registering as a new host each time. If the agent's state is lost or unusable,
 Headplane falls back to the pre-auth key and registers a new agent node.
+
+## Tailscale network namespace handling
+
+The agent uses Tailscale's network namespace routing protections by default.
+This helps prevent routing loops and should remain enabled for most deployments,
+especially when Headscale is reached through Tailscale.
+
+In a restricted multi-network container, Tailscale may be unable to mark
+sockets and may bind control traffic to the default-route interface even when
+Headscale is directly reachable through another interface. After verifying
+that the container's ordinary routing reaches Headscale correctly, the agent
+can rely on that routing instead:
+
+```yaml
+integration:
+  agent:
+    enabled: true
+    tailscale_netns: false
+```
+
+This setting affects only the Headplane agent process. It does not change the
+Headplane server's networking behavior. Do not disable it unconditionally;
+bare-metal and Tailscale-routed deployments may rely on its loop-prevention
+behavior.
 
 ## Interactive approval
 
