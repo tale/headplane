@@ -35,7 +35,7 @@ const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
   base_url: "string.url?",
-  data_path: 'string.lower = "/var/lib/headplane/"',
+  data_path: 'string = "/var/lib/headplane/"',
   info_secret: "string?",
 
   cookie_secret: "(32 <= string <= 32)",
@@ -65,7 +65,7 @@ const partialServerConfig = type({
   host: "string.ip?",
   port: "number.integer?",
   base_url: "string.url?",
-  data_path: "string.lower?",
+  data_path: "string?",
   info_secret: "string?",
 
   cookie_secret: "(32 <= string <= 32)?",
@@ -94,10 +94,10 @@ const headscaleConfig = type({
     .pipe((v) => (v.endsWith("/") ? v.slice(0, -1) : v))
     .optional(),
   api_key: "string?",
-  config_path: "string.lower?",
+  config_path: "string?",
   config_strict: "boolean = true",
-  dns_records_path: "string.lower?",
-  tls_cert_path: "string.lower?",
+  dns_records_path: "string?",
+  tls_cert_path: "string?",
 });
 
 const partialHeadscaleConfig = type({
@@ -108,10 +108,10 @@ const partialHeadscaleConfig = type({
     .pipe((v) => (v.endsWith("/") ? v.slice(0, -1) : v))
     .optional(),
   api_key: "string?",
-  config_path: "string.lower?",
+  config_path: "string?",
   config_strict: "boolean?",
-  dns_records_path: "string.lower?",
-  tls_cert_path: "string.lower?",
+  dns_records_path: "string?",
+  tls_cert_path: "string?",
 });
 
 const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
