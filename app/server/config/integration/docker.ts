@@ -16,9 +16,11 @@ interface DockerContainer {
 
 interface DockerVersionInfo {
   ApiVersion?: string;
+  MinAPIVersion?: string;
 }
 
-const REQUIRED_DOCKER_API_VERSION = "1.44";
+const TARGET_DOCKER_API_VERSION = "1.44";
+const MIN_DOCKER_API_VERSION = "1.24";
 
 function compareApiVersions(current: string, required: string) {
   const currentParts = current.split(".").map(Number);
@@ -50,7 +52,19 @@ function compareApiVersions(current: string, required: string) {
 }
 
 function isSupportedDockerApiVersion(apiVersion: string) {
-  return compareApiVersions(apiVersion, REQUIRED_DOCKER_API_VERSION) >= 0;
+  return compareApiVersions(apiVersion, MIN_DOCKER_API_VERSION) >= 0;
+}
+
+function clampApiVersion(target: string, min: string, max: string) {
+  if (compareApiVersions(target, max) > 0) {
+    return max;
+  }
+
+  if (compareApiVersions(target, min) < 0) {
+    return min;
+  }
+
+  return target;
 }
 
 const configSchema = {
@@ -73,6 +87,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
   private maxAttempts = 10;
   private client: Client | undefined;
   private containerId: string | undefined;
+  private apiVersion: string | undefined;
 
   get name() {
     return "Docker";
@@ -82,35 +97,8 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
     return configSchema;
   }
 
-  async getContainerName(label: string, value: string): Promise<string> {
-    if (!this.client) {
-      throw new Error("Docker client is not initialized");
-    }
-
-    const filters = encodeURIComponent(
-      JSON.stringify({
-        label: [`${label}=${value}`],
-      }),
-    );
-    const { body } = await this.client.request({
-      method: "GET",
-      path: `/containers/json?filters=${filters}`,
-    });
-    const containers: DockerContainer[] = (await body.json()) as DockerContainer[];
-    if (containers.length > 1) {
-      throw new Error(
-        `Found multiple Docker containers matching label ${label}=${value}. Please specify a container name.`,
-      );
-    }
-    if (containers.length === 0) {
-      throw new Error(`No Docker containers found matching label: ${label}=${value}`);
-    }
-    log.info("config", "Found Docker container matching label: %s=%s", label, value);
-    return containers[0].Id;
-  }
-
   async isAvailable() {
-    log.info("config", "Requiring Docker API version %s or newer", REQUIRED_DOCKER_API_VERSION);
+    log.info("config", "Requiring Docker API version %s or newer", MIN_DOCKER_API_VERSION);
 
     // Basic configuration check, the name overrides the container_label
     // selector because of legacy support.
@@ -198,10 +186,18 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
           "config",
           "Docker API version %s is too old, require %s or newer",
           versionInfo.ApiVersion,
-          REQUIRED_DOCKER_API_VERSION,
+          MIN_DOCKER_API_VERSION,
         );
         return false;
       }
+
+      this.apiVersion = clampApiVersion(
+        TARGET_DOCKER_API_VERSION,
+        versionInfo.MinAPIVersion ?? MIN_DOCKER_API_VERSION,
+        versionInfo.ApiVersion,
+      );
+
+      log.info("config", "Using Docker API version %s", this.apiVersion);
     } catch (error) {
       log.error("config", "Failed to validate Docker API version: %s", error);
       log.debug("config", "Version check error: %o", error);
@@ -219,7 +215,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
     log.debug("config", "Requesting Docker containers with filters: %s", qp.toString());
     const res = await this.client.request({
       method: "GET",
-      path: `/v${REQUIRED_DOCKER_API_VERSION}/containers/json?${qp.toString()}`,
+      path: `/v${this.apiVersion}/containers/json?${qp.toString()}`,
     });
 
     if (res.statusCode !== 200) {
@@ -256,7 +252,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
   }
 
   async onConfigChange(headscale: Headscale) {
-    if (!this.client) {
+    if (!this.client || !this.apiVersion) {
       return;
     }
 
@@ -268,7 +264,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
 
       const response = await this.client.request({
         method: "POST",
-        path: `/v${REQUIRED_DOCKER_API_VERSION}/containers/${this.containerId}/restart`,
+        path: `/v${this.apiVersion}/containers/${this.containerId}/restart`,
       });
 
       if (response.statusCode !== 204) {

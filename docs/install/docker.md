@@ -100,6 +100,11 @@ because Headplane needs the following permissions:
 - Access to the Docker socket (usually `/var/run/docker.sock`, you may also use
   a proxy such as [Tecnativa/docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy)).
 
+Headplane negotiates the Docker API version with the daemon at startup. It
+targets API version `1.44` and falls back to whatever the daemon serves, down
+to a floor of `1.24` (Docker Engine 1.12+). This covers all modern Docker
+installations as well as Podman's Docker-compatible socket.
+
 #### Configuration
 
 First you'll need to run both Headscale and Headplane in the same Docker

@@ -8,6 +8,15 @@ import { type HeadscaleEnv, startHeadscale } from "../setup/start-headscale";
 const TEST_LABEL_KEY = "me.tale.headplane.integration-test";
 const TEST_LABEL_VALUE = `docker-${Date.now()}`;
 
+function connect(socket: string) {
+  const url = new URL(socket);
+  if (url.protocol === "unix:") {
+    return new Client("http://localhost", { socketPath: url.pathname });
+  }
+
+  return new Client(url.href.replace(url.protocol, "http:"));
+}
+
 describe("DockerIntegration", () => {
   let env: HeadscaleEnv;
   let dockerSocket: string;
@@ -77,16 +86,21 @@ describe("DockerIntegration", () => {
     // Health check goes through the Docker socket to avoid stale port
     // mappings after container restart.
     const containerId = env.container.getId();
-    const dockerClient = new Client("http://localhost", {
-      socketPath: "/var/run/docker.sock",
+    const dockerClient = connect(dockerSocket);
+
+    const versionRes = await dockerClient.request({
+      method: "GET",
+      path: "/version",
     });
+    const versionInfo = (await versionRes.body.json()) as { ApiVersion?: string };
+    const apiVersion = versionInfo.ApiVersion ?? "1.24";
 
     const mockHeadscale = {
       health: async () => {
         try {
           const res = await dockerClient.request({
             method: "GET",
-            path: `/v1.44/containers/${containerId}/json`,
+            path: `/v${apiVersion}/containers/${containerId}/json`,
           });
           const info = (await res.body.json()) as any;
           return info.State?.Running === true;
