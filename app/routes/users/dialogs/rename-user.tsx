@@ -3,6 +3,7 @@ import Input from "~/components/input";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import { User } from "~/types";
+import { USERNAME_PATTERN, USERNAME_RULE } from "~/utils/user";
 
 interface RenameProps {
   user: User;
@@ -10,7 +11,6 @@ interface RenameProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-// TODO: Server side validation before submitting
 export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -24,7 +24,11 @@ export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
         <input name="headscale_user_id" type="hidden" value={user.id} />
         <Input
           defaultValue={user.name}
+          description={USERNAME_RULE}
+          minLength={2}
+          pattern={USERNAME_PATTERN}
           required
+          title={USERNAME_RULE}
           label="Username"
           name="new_name"
           placeholder="my-new-name"

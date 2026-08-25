@@ -5,6 +5,7 @@ import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
+import { validateUsername } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
 
@@ -42,6 +43,11 @@ export async function userAction({ request, context }: Route.ActionArgs) {
         });
       }
 
+      const nameError = validateUsername(name);
+      if (nameError) {
+        throw data(nameError, { status: 400 });
+      }
+
       await api.users.create({ name, email, displayName });
       await headscaleLiveStore.refresh(usersResource, api);
       return { message: "User created successfully" };
@@ -63,6 +69,11 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       const newName = formData.get("new_name")?.toString();
       if (!headscaleUserId || !newName) {
         return data({ success: false }, 400);
+      }
+
+      const newNameError = validateUsername(newName);
+      if (newNameError) {
+        throw data(newNameError, { status: 400 });
       }
 
       const users = await api.users.list({ id: headscaleUserId });
