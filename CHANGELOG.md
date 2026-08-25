@@ -1,5 +1,10 @@
 # Next
 
+- Added a `scripts/db-copy.ts` helper that copies an existing SQLite database onto PostgreSQL, so switching backends keeps user roles, Headscale links and active sessions.
+- Added PostgreSQL as an alternative to the embedded SQLite database, configured through `server.database`. SQLite remains the default and existing installs are unaffected (closes [#605](https://github.com/tale/headplane/issues/605)).
+- Added `server.database`, which allows the Headplane database to live somewhere other than `server.data_path`. Omitting it keeps the existing location.
+- Fixed concurrent first logins leaving Headplane with no owner. The check for an existing owner is now part of the promoting update rather than a separate count, so two people signing in at the same moment can no longer both skip the promotion.
+- Headplane now closes its database handle on shutdown instead of leaving it open.
 - Fixed the Headplane agent falling back to an interactive Tailscale login. The agent now starts with a pre-auth-key, preserves its existing state across restarts, and auto-approves itself when Headscale requires manual approval (closes [#582](https://github.com/tale/headplane/issues/582)).
 - Added `integration.agent.tailscale_netns`, an agent-only opt-out from Tailscale's routing-loop socket handling for deployments where its fallback pins the agent's Headscale connection to the wrong interface. Existing behavior remains enabled by default.
 - Fixed creating pre-auth keys with an expiry of 1000 days or more. The number input submitted its locale-formatted value (`365,000`, `365 000`, `365.000`), which either failed with a 500 or silently created a key with a truncated expiry. The raw value is now submitted and the server rejects malformed expiries with a 400 (closes [#596](https://github.com/tale/headplane/issues/596)).

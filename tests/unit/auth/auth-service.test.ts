@@ -23,6 +23,25 @@ describe("findOrCreateUser", () => {
     expect(role).toBe("owner");
   });
 
+  test("concurrent first logins still produce exactly one owner", async () => {
+    // Two people signing in at the same moment interleave at the `await`
+    // boundaries inside findOrCreateUser. Counting users as a statement
+    // separate from the insert lets both observe a table that already holds
+    // two rows, so neither promotes itself — leaving the instance with no
+    // owner and nobody able to administer it.
+    await Promise.all([
+      auth.findOrCreateUser("sub-first", { name: "First" }),
+      auth.findOrCreateUser("sub-second", { name: "Second" }),
+    ]);
+
+    const roles = await Promise.all([
+      auth.roleForSubject("sub-first"),
+      auth.roleForSubject("sub-second"),
+    ]);
+
+    expect(roles.filter((role) => role === "owner")).toHaveLength(1);
+  });
+
   test("second distinct user stays member", async () => {
     await auth.findOrCreateUser("sub-owner", { name: "Owner" });
     await auth.findOrCreateUser("sub-member", { name: "Member" });
