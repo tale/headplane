@@ -31,13 +31,14 @@ please refer to the
 [example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml)
 for details.
 
-| Field                               | Description                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------- |
-| **`integration.agent.enabled`**     | Set to `true` to enable the agent.                                              |
-| `integration.agent.host_name`       | _Optional_. Headscale user name for the agent (default: `headplane-agent`).     |
-| `integration.agent.cache_ttl`       | _Optional_. How often to sync in milliseconds (default: `180000` / 3 minutes).  |
-| `integration.agent.work_dir`        | _Optional_. Working directory for the agent's tailnet state.                    |
-| `integration.agent.executable_path` | _Optional_. Path to the agent binary (default: `/usr/libexec/headplane/agent`). |
+| Field                               | Description                                                                       |
+| ----------------------------------- | --------------------------------------------------------------------------------- |
+| **`integration.agent.enabled`**     | Set to `true` to enable the agent.                                                |
+| `integration.agent.host_name`       | _Optional_. Headscale user name for the agent (default: `headplane-agent`).       |
+| `integration.agent.cache_ttl`       | _Optional_. How often to sync in milliseconds (default: `180000` / 3 minutes).    |
+| `integration.agent.work_dir`        | _Optional_. Working directory for the agent's tailnet state.                      |
+| `integration.agent.executable_path` | _Optional_. Path to the agent binary (default: `/usr/libexec/headplane/agent`).   |
+| `integration.agent.tailscale_netns` | _Optional_. Use Tailscale's socket-level routing-loop handling (default: `true`). |
 
 ## Native Mode Configuration
 
@@ -61,6 +62,41 @@ Headplane preserves the agent's `tailscaled.state` in this directory. This lets
 the agent retain its Tailnet identity across Headplane restarts instead of
 registering as a new host each time. If the agent's state is lost or unusable,
 Headplane falls back to the pre-auth key and registers a new agent node.
+
+## Tailscale socket routing handling
+
+By default, the agent uses Tailscale's socket handling to keep
+Tailscale-originated traffic from being routed back through Tailscale-managed
+routes. Tailscale attempts to apply its bypass mark to its outbound sockets so
+its routing and policy machinery can identify that traffic.
+
+With all capabilities dropped, `SO_MARK` returns `EPERM`. This does not break
+the container's routing; it causes Tailscale to fall back to
+`SO_BINDTODEVICE(DefaultRouteInterface())`. In a multi-network container, that
+fallback can pin the agent's Headscale connection to the default interface even
+though the container's Linux routing table has a correct Headscale-specific
+route through another interface. In this topology, a successful `SO_MARK` is
+not what selects the Headscale-facing interface; ordinary destination routing
+already makes the correct selection.
+
+After verifying that ordinary OS routing in the container's network namespace
+reaches Headscale correctly, the agent can rely on that routing instead:
+
+```yaml
+integration:
+  agent:
+    enabled: true
+    tailscale_netns: false
+```
+
+Setting this to `false` disables Tailscale's mark-or-bind socket handling only
+inside the dedicated `hp_agent` process. `hp_agent` and the main Headplane
+process continue to share the container's Linux network namespace. The main
+process's networking behavior, container capabilities, Docker networks,
+interfaces, routing table, and default gateway remain unchanged. Leave this
+setting enabled unless the fallback is known to select the wrong interface;
+bare-metal and Tailscale-routed deployments may rely on its loop-avoidance
+behavior.
 
 ## Interactive approval
 

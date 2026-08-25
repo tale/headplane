@@ -202,6 +202,7 @@ const agentConfig = type({
   cache_ttl: "number.integer = 180000",
   executable_path: 'string = "/usr/libexec/headplane/agent"',
   work_dir: 'string = "/var/lib/headplane/agent"',
+  tailscale_netns: "boolean = true",
   pre_authkey: type("unknown").narrow(deprecatedField()).optional(),
   cache_path: type("unknown").narrow(deprecatedField()).optional(),
 });
@@ -212,6 +213,7 @@ const partialAgentConfig = type({
   cache_ttl: "number.integer?",
   executable_path: "string?",
   work_dir: "string?",
+  tailscale_netns: "boolean?",
   pre_authkey: type("unknown").narrow(deprecatedField()).optional(),
   cache_path: type("unknown").narrow(deprecatedField()).optional(),
 });

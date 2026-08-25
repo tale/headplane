@@ -185,6 +185,16 @@ _Type:_ package
 
 _Default:_ `pkgs.headplane-agent`
 
+## settings.integration.agent.tailscale_netns
+
+_Description:_ Use Tailscale's socket-level routing-loop handling in the dedicated Headplane agent process.
+Keep enabled unless its fallback pins the agent's Headscale connection to the wrong interface.
+Set to false only after verifying that ordinary OS routing in the container's network namespace reaches Headscale correctly.
+
+_Type:_ boolean
+
+_Default:_ `true`
+
 ## settings.integration.agent.work_dir
 
 _Description:_ Do not change this unless you are running a custom deployment.

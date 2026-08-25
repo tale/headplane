@@ -8,6 +8,7 @@ type Config struct {
 	Hostname     string
 	TSControlURL string
 	TSAuthKey    string
+	TSNetNS      bool
 	WorkDir      string
 }
 
@@ -16,6 +17,7 @@ const (
 	HostnameEnv     = "HEADPLANE_AGENT_HOSTNAME"
 	TSControlURLEnv = "HEADPLANE_AGENT_TS_SERVER"
 	TSAuthKeyEnv    = "HEADPLANE_AGENT_TS_AUTHKEY"
+	TSNetNSEnv      = "HEADPLANE_AGENT_TS_NETNS"
 	WorkDirEnv      = "HEADPLANE_AGENT_WORK_DIR"
 )
 
@@ -26,6 +28,7 @@ func Load() (*Config, error) {
 		Hostname:     os.Getenv(HostnameEnv),
 		TSControlURL: os.Getenv(TSControlURLEnv),
 		TSAuthKey:    os.Getenv(TSAuthKeyEnv),
+		TSNetNS:      os.Getenv(TSNetNSEnv) != "false",
 		WorkDir:      os.Getenv(WorkDirEnv),
 	}
 

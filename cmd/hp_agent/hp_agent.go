@@ -11,6 +11,7 @@ import (
 	"github.com/tale/headplane/internal/config"
 	"github.com/tale/headplane/internal/tsnet"
 	"github.com/tale/headplane/internal/util"
+	"tailscale.com/net/netns"
 )
 
 type output struct {
@@ -39,6 +40,11 @@ func main() {
 			prefix = prefix[:16]
 		}
 		log.Info("TS_AUTHKEY provided (prefix: %s); connecting with pre-auth key", prefix)
+	}
+
+	if !cfg.TSNetNS {
+		log.Info("Tailscale network namespace handling disabled")
+		netns.SetEnabled(false)
 	}
 
 	agent := tsnet.NewAgent(cfg)

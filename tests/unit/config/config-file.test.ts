@@ -225,4 +225,32 @@ describe("Configuration YAML file loading", () => {
     const config = await loadConfig(filePath);
     expect(config.oidc).toBeUndefined();
   });
+
+  test("agent tailscale_netns defaults to true and can be disabled", async () => {
+    const defaultFilePath = "/config/agent-default-netns.yaml";
+    writeYaml(defaultFilePath, {
+      headscale: {
+        url: "http://localhost:8080",
+        api_key: "my-api-key",
+      },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      integration: { agent: { enabled: true } },
+    });
+
+    const defaultConfig = await loadConfig(defaultFilePath);
+    expect(defaultConfig.integration?.agent?.tailscale_netns).toBe(true);
+
+    const disabledFilePath = "/config/agent-disabled-netns.yaml";
+    writeYaml(disabledFilePath, {
+      headscale: {
+        url: "http://localhost:8080",
+        api_key: "my-api-key",
+      },
+      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
+      integration: { agent: { enabled: true, tailscale_netns: false } },
+    });
+
+    const disabledConfig = await loadConfig(disabledFilePath);
+    expect(disabledConfig.integration?.agent?.tailscale_netns).toBe(false);
+  });
 });
