@@ -14,7 +14,7 @@ in
     version = (builtins.fromJSON (builtins.readFile ../package.json)).version;
     src = ../.;
     subPackages = ["cmd/hp_ssh"];
-    vendorHash = "sha256-MvrqKMD+A+qBZmzQv+T9920U5uJop+pjfJpZdm2ZqEA=";
+    vendorHash = "sha256-Q5lRDbx7bg3WsrF+ukVPl7rTSJcqKFhYM9lWtqfiIw4=";
     env.CGO_ENABLED = 0;
 
     nativeBuildInputs = [go];
@@ -23,14 +23,14 @@ in
       export GOOS=js
       export GOARCH=wasm
 
-      # Patch Tailscale's derphttp to include DERPPort in WebSocket URLs.
-      # Without this, DERP servers on non-443 ports fail in WASM builds.
-      if [ -f patches/tailscale-derp-port.patch ]; then
-        chmod -R +w vendor/tailscale.com
-        patch -d vendor/tailscale.com -p1 < patches/tailscale-derp-port.patch
-      fi
+      # Tailscale's netcheck builds its browser DERP probe URL from the
+      # hostname alone, so a DERP server on a non-443 port never gets a
+      # home relay.
+      chmod -R +w vendor/tailscale.com
+      patch -d vendor/tailscale.com -p1 < patches/tailscale-netcheck-derp-port.patch
 
-      go build -mod=vendor -o hp_ssh.wasm ./cmd/hp_ssh
+      go build -mod=vendor -tags "$(cat cmd/hp_ssh/build-tags.txt)" \
+        -trimpath -ldflags "-s -w" -o hp_ssh.wasm ./cmd/hp_ssh
     '';
 
     installPhase = ''

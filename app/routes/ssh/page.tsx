@@ -18,8 +18,7 @@ import type { Route } from "./+types/page";
 import { isSSHError, SSHErrorBoundary, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
-import type { HeadplaneSSH } from "./wasm.client";
-import { loadHeadplaneWASM } from "./wasm.client";
+import { connectTailnet } from "./wasm.client";
 
 const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
 const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
@@ -217,48 +216,36 @@ function SSHConsole({
   username: string;
   node: { ipAddress: string; controlURL: string; preAuthKey: string; ephemeralHostname: string };
 }) {
-  const [ssh, setSsh] = useState<HeadplaneSSH | null>(null);
+  const [ipn, setIpn] = useState<IPN | null>(null);
   const [connected, setConnected] = useState(false);
-  const [status, setStatus] = useState("Starting tunnel…");
+  const [status, setStatus] = useState("Joining Tailnet…");
 
   useEffect(() => {
     let cancelled = false;
 
-    console.log("[ssh] Loading WASM factory");
-    loadHeadplaneWASM().then((create) => {
-      console.log("[ssh] Factory loaded, creating IPN", create);
-
-      if (cancelled) {
-        return;
-      }
-
-      setStatus("Joining Tailnet…");
-      const instance = create({
-        controlURL: node.controlURL,
-        preAuthKey: node.preAuthKey,
-        hostname: node.ephemeralHostname,
-        onReady: () => {
-          console.log("[ssh] IPN ready (Running)");
-          if (!cancelled) {
-            setStatus(`Connecting to ${hostname}…`);
-            setSsh(instance);
-          }
-        },
-        onError: (msg) => {
-          console.error("[ssh] IPN error:", msg);
-          if (!cancelled) {
-            setStatus(`Failed to join Tailnet: ${msg}`);
-          }
-        },
-      });
-
-      console.log("[ssh] IPN instance created", instance);
-    });
+    connectTailnet({
+      controlURL: node.controlURL,
+      authKey: node.preAuthKey,
+      hostname: node.ephemeralHostname,
+      onPanic: (error) => {
+        if (!cancelled) setStatus(`Tailnet node stopped: ${error}`);
+      },
+    }).then(
+      (instance) => {
+        if (cancelled) return;
+        setStatus(`Connecting to ${hostname}…`);
+        setIpn(instance);
+      },
+      (error: unknown) => {
+        if (cancelled) return;
+        setStatus(`Failed to join Tailnet: ${error instanceof Error ? error.message : error}`);
+      },
+    );
 
     return () => {
       cancelled = true;
     };
-  }, [node]);
+  }, [node, hostname]);
 
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
@@ -271,9 +258,9 @@ function SSHConsole({
         </div>
       )}
 
-      {ssh && (
+      {ipn && (
         <Ghostty
-          ssh={ssh}
+          ipn={ipn}
           username={username}
           ipAddress={node.ipAddress}
           onConnected={() => setConnected(true)}

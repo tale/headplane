@@ -91,17 +91,28 @@ function createStaticHandler(opts: StaticOptions) {
     if (!st.isFile()) return false;
 
     const isAsset = pathname.startsWith(assetsPrefix);
-    res.setHeader(
-      "Cache-Control",
-      isAsset && opts.immutableAssets
-        ? "public, max-age=31536000, immutable"
-        : "public, max-age=3600",
-    );
+
+    // Dev serves unhashed files that are rewritten in place, so a rebuild is
+    // invisible to anything holding a copy. Revalidate instead of pinning.
+    let cacheControl = "no-cache";
+    if (opts.immutableAssets) {
+      cacheControl = isAsset ? "public, max-age=31536000, immutable" : "public, max-age=3600";
+    }
+
+    res.setHeader("Cache-Control", cacheControl);
+    res.setHeader("Last-Modified", st.mtime.toUTCString());
+
+    // HTTP dates carry one-second resolution, so floor mtime before comparing.
+    const modifiedSince = Date.parse(req.headers["if-modified-since"] ?? "");
+    if (!Number.isNaN(modifiedSince) && Math.floor(st.mtimeMs / 1000) * 1000 <= modifiedSince) {
+      res.statusCode = 304;
+      res.end();
+      return true;
+    }
 
     const mimeType = mime.getType(extname(file)) ?? "application/octet-stream";
     res.setHeader("Content-Type", mimeType);
     res.setHeader("Content-Length", String(st.size));
-    res.setHeader("Last-Modified", st.mtime.toUTCString());
     res.statusCode = 200;
 
     if (req.method === "HEAD") {

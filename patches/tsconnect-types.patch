@@ -1,0 +1,38 @@
+tsconnect: type the termType option and the wasm_exec Go global
+
+termType matches patches/tsconnect-term-type.patch. Go is declared by the
+wasm_exec.js helper the Go toolchain ships, which we load ourselves rather
+than through @tailscale/connect.
+
+@@ -4,11 +4,22 @@
+ /**
+  * @fileoverview Type definitions for types exported by the wasm_js.go Go
+  * module.
++ *
++ * Vendored from tailscale.com/cmd/tsconnect/src/types/wasm_js.d.ts; see
++ * cmd/hp_ssh/wasm_js.go for the upstream ref. Local changes live in
++ * patches/tsconnect-types.patch and are already applied here.
+  */
+ 
+ declare global {
+   function newIPN(config: IPNConfig): IPN
+ 
++  var Go: {
++    new (): {
++      importObject: WebAssembly.Imports
++      run(instance: WebAssembly.Instance): Promise<void>
++    }
++  }
++
+   interface IPN {
+     run(callbacks: IPNCallbacks): void
+     login(): void
+@@ -22,6 +33,8 @@
+         setReadFn: (readFn: (data: string) => void) => void
+         rows: number
+         cols: number
++        /** Defaults to "xterm" */
++        termType?: string
+         /** Defaults to 5 seconds */
+         timeoutSeconds?: number
+         onConnectionProgress: (message: string) => void

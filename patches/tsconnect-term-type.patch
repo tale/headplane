@@ -1,0 +1,26 @@
+tsconnect: let the caller choose the PTY terminal type and modes
+
+Upstream requests a bare "xterm" PTY with no terminal modes. Headplane
+renders with Ghostty and ships a Nerd Font, so it needs xterm-256color
+and sane modes for anything colour-aware on the far side.
+
+Applied to cmd/hp_ssh/wasm_js.go by scripts/sync-tsconnect.sh.
+
+--- a/wasm/wasm_js.go
++++ b/wasm/wasm_js.go
+@@ -484,7 +484,14 @@
+ 	if s.pendingResizeCols != 0 {
+ 		cols = s.pendingResizeCols
+ 	}
+-	err = session.RequestPty("xterm", rows, cols, ssh.TerminalModes{})
++	termType := "xterm"
++	if v := s.termConfig.Get("termType"); v.Type() == js.TypeString {
++		termType = v.String()
++	}
++	err = session.RequestPty(termType, rows, cols, ssh.TerminalModes{
++		ssh.ECHO: 1, ssh.ICANON: 1, ssh.ISIG: 1, ssh.ICRNL: 1, ssh.IUTF8: 1,
++		ssh.TTY_OP_ISPEED: 14400, ssh.TTY_OP_OSPEED: 14400,
++	})
+ 	if err != nil {
+ 		writeError("Pseudo Terminal", err)
+ 		return

@@ -3,8 +3,6 @@ import { Restty } from "restty";
 import type { GhosttyTheme } from "restty";
 import type { PtyTransport } from "restty/internal";
 
-import type { HeadplaneSSH, TunnelSession } from "./wasm.client";
-
 const FONT_BASE = `${__PREFIX__}/fonts`;
 
 // Ghostty's default canvas background is rgb(20,23,26) — a dark gray, not black.
@@ -18,36 +16,50 @@ const HEADPLANE_THEME: GhosttyTheme = {
   raw: {},
 };
 
-function createSSHTransport(ssh: HeadplaneSSH, ipAddress: string, username: string): PtyTransport {
-  let session: TunnelSession | null = null;
+function createSSHTransport(
+  ipn: IPN,
+  ipAddress: string,
+  username: string,
+  onConnected: () => void,
+): PtyTransport {
+  let session: IPNSSHSession | null = null;
+  let writeInput: ((data: string) => void) | null = null;
 
   return {
     connect(options) {
-      session = ssh.openTunnel({
-        ipAddress,
-        username,
-        onData: (data) => options.callbacks.onData?.(data),
-        onConnect: () => options.callbacks.onConnect?.(),
-        onDisconnect: () => {
+      session = ipn.ssh(ipAddress, username, {
+        writeFn: (data) => options.callbacks.onData?.(data),
+        writeErrorFn: (error) => options.callbacks.onData?.(error),
+        setReadFn: (readFn) => {
+          writeInput = readFn;
+        },
+        rows: options.rows ?? 24,
+        cols: options.cols ?? 80,
+        termType: "xterm-256color",
+        timeoutSeconds: 30,
+        onConnectionProgress: () => {},
+        onConnected: () => {
+          options.callbacks.onConnect?.();
+          onConnected();
+        },
+        onDone: () => {
           options.callbacks.onDisconnect?.();
           session = null;
+          writeInput = null;
         },
       });
-
-      if (options.cols && options.rows) {
-        session.resize(options.cols, options.rows);
-      }
     },
     disconnect() {
       session?.close();
       session = null;
     },
     sendInput(data) {
-      session?.writeInput(data);
+      writeInput?.(data);
       return session != null;
     },
+    // Restty passes cols first, the Tailscale session takes rows first.
     resize(cols, rows) {
-      session?.resize(cols, rows);
+      session?.resize(rows, cols);
       return session != null;
     },
     isConnected() {
@@ -61,66 +73,63 @@ function createSSHTransport(ssh: HeadplaneSSH, ipAddress: string, username: stri
 }
 
 interface GhosttyProps {
-  ssh: HeadplaneSSH;
+  ipn: IPN;
   ipAddress: string;
   username: string;
   onConnected: () => void;
 }
 
-export default function Ghostty({ ssh, ipAddress, username, onConnected }: GhosttyProps) {
+export default function Ghostty({ ipn, ipAddress, username, onConnected }: GhosttyProps) {
   const divRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!divRef.current) return;
 
-    const transport = createSSHTransport(ssh, ipAddress, username);
+    const transport = createSSHTransport(ipn, ipAddress, username, onConnected);
     const restty = new Restty({
       root: divRef.current,
-      createInitialPane: true,
-      defaultContextMenu: false,
-      shortcuts: false,
-      searchUi: false,
-      paneStyles: {
-        inactivePaneOpacity: 1,
-        activePaneOpacity: 1,
+      surface: {
+        createInitialPane: true,
+        defaultContextMenu: false,
+        shortcuts: false,
+        searchUi: false,
+        paneStyles: {
+          inactivePaneOpacity: 1,
+          activePaneOpacity: 1,
+        },
       },
-      appOptions: {
+      terminal: {
         fontSize: 20,
         ligatures: true,
-        fontPreset: "none",
-        fontSources: [
+        fonts: [
           {
-            type: "url",
             url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Regular.ttf`,
-            label: "JetBrains Mono Nerd Font",
+            name: "JetBrains Mono Nerd Font",
           },
           {
-            type: "url",
             url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Bold.ttf`,
-            label: "JetBrains Mono Nerd Font Bold",
+            name: "JetBrains Mono Nerd Font Bold",
+            weight: 700,
           },
           {
-            type: "url",
             url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Italic.ttf`,
-            label: "JetBrains Mono Nerd Font Italic",
+            name: "JetBrains Mono Nerd Font Italic",
+            style: "italic",
           },
           {
-            type: "url",
             url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf`,
-            label: "JetBrains Mono Nerd Font Bold Italic",
+            name: "JetBrains Mono Nerd Font Bold Italic",
+            weight: 700,
+            style: "italic",
           },
           {
-            type: "url",
             url: `${FONT_BASE}/SymbolsNerdFontMono-Regular.ttf`,
-            label: "Symbols Nerd Font",
+            name: "Symbols Nerd Font",
           },
         ],
+      },
+      services: {
         ptyTransport: transport,
-        callbacks: {
-          onPtyStatus: (status) => {
-            if (status === "connected") onConnected();
-          },
-        },
       },
     });
 
@@ -131,7 +140,7 @@ export default function Ghostty({ ssh, ipAddress, username, onConnected }: Ghost
     return () => {
       restty.destroy();
     };
-  }, [ssh, ipAddress, username]);
+  }, [ipn, ipAddress, username, onConnected]);
 
   return <div className="min-h-0 min-w-0 flex-1 overflow-hidden bg-black" ref={divRef} />;
 }

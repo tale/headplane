@@ -137,20 +137,20 @@ build_wasm() {
 	cat "$(go env GOROOT)/lib/wasm/wasm_exec.js" >> \
 		"$(dirname "$WASM_OUTPUT")/wasm_exec.js"
 
-	# Vendor dependencies and apply the DERP port patch.
-	# Tailscale's browser WebSocket and netcheck URL builders ignore
-	# DERPPort, which breaks WASM connections to non-443 DERP servers.
+	WASM_TAGS=$(cat "$ROOT_DIR/cmd/hp_ssh/build-tags.txt") || die "missing wasm build tags"
+
+	# Tailscale's netcheck still builds its browser DERP probe URL from the
+	# hostname alone, so a DERP server on a non-443 port never gets a home
+	# relay. Vendor the tree so we can patch it before building.
 	echo "==> Vendoring Go dependencies for WASM patch"
 	go mod vendor
 
-	DERP_PATCH="$ROOT_DIR/patches/tailscale-derp-port.patch"
-	if [ -f "$DERP_PATCH" ]; then
-		echo "==> Applying DERP port patch"
-		patch -d vendor/tailscale.com -p1 < "$DERP_PATCH" || \
-			die "failed to apply DERP port patch"
-	fi
+	echo "==> Applying netcheck DERP port patch"
+	patch -d vendor/tailscale.com -p1 < "$ROOT_DIR/patches/tailscale-netcheck-derp-port.patch" || \
+		die "failed to apply netcheck DERP port patch"
 
-	GOOS=js GOARCH=wasm go build -mod=vendor -o "$WASM_OUTPUT" ./cmd/hp_ssh
+	GOOS=js GOARCH=wasm go build -mod=vendor -tags "$WASM_TAGS" \
+		-trimpath -ldflags "-s -w" -o "$WASM_OUTPUT" ./cmd/hp_ssh
 	rm -rf vendor
 }
 

@@ -1,0 +1,25 @@
+netcheck: include DERPPort in the browser HTTPS probe URL
+
+The js/wasm netcheck path probes each DERP region over HTTPS to measure
+latency and pick a home relay. It builds that URL from HostName alone, so
+a DERP server on a non-443 port is never reachable and the client ends up
+with no home DERP.
+
+derphttp's urlString already handles DERPPort; this is the same fix for
+the one remaining browser path that does not.
+
+--- a/net/netcheck/netcheck.go
++++ b/net/netcheck/netcheck.go
+@@ -1075,7 +1075,11 @@
+ 		}
+ 		wg.Go(func() {
+ 			node := rg.Nodes[0]
+-			req, _ := http.NewRequestWithContext(ctx, "HEAD", "https://"+node.HostName+"/derp/probe", nil)
++			host := node.HostName
++			if node.DERPPort != 0 && node.DERPPort != 443 {
++				host = net.JoinHostPort(host, fmt.Sprint(node.DERPPort))
++			}
++			req, _ := http.NewRequestWithContext(ctx, "HEAD", "https://"+host+"/derp/probe", nil)
+ 			// One warm-up one to get HTTP connection set
+ 			// up and get a connection from the browser's
+ 			// pool.
