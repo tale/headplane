@@ -79,9 +79,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         }
       : undefined,
     existingTags: sortAssignableTags(nodes, policy),
-    // `undefined` when the policy could not be read at all, which is what
-    // stops the tag dialog from flagging every tag as undeclared.
-    policyTags: policy === undefined ? undefined : extractTagOwnerTags(policy),
+    // `undefined` keeps the tag dialog from flagging every tag as undeclared.
+    policyTags: extractTagOwnerTags(policy),
     magic,
     node: enhancedNode,
     stats: stats?.[enhancedNode.nodeKey],

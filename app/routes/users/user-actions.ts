@@ -145,8 +145,7 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       return { message: "Headscale user linked successfully" };
     }
     case "update_user_groups": {
-      // Group membership lives in the ACL policy, so this needs the policy
-      // capability on top of the user one checked above.
+      // Group membership lives in the policy, so `write_policy` is needed too.
       if (!auth.can(principal, Capabilities.write_policy)) {
         throw data("You do not have permission to write to the ACL policy", { status: 403 });
       }
@@ -175,9 +174,8 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       try {
         await api.policy.set(serializePolicy(setUserGroups(parsed.policy, userName, groups)));
       } catch (error) {
-        // Headscale refuses the write when the policy is in `file` mode. The
-        // UI hides the action in that case, but a stale page can still get
-        // here, and a silent failure would be worse than an error message.
+        // Headscale refuses the write in `file` mode. The UI hides the action
+        // then, but a stale page can still reach this point.
         const message = isDataWithApiError(error) ? error.data.rawData : String(error);
         if (message.includes("update is disabled")) {
           return data(

@@ -33,8 +33,7 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
     access: auth.can(principal, Capabilities.write_policy),
     writable: false,
     policy: "",
-    // Context for the visual editor: which users exist and which tags are
-    // already in use. Both are best-effort, the editor degrades gracefully.
+    // Context for the visual editor; both are optional.
     users: [] as string[],
     tagUsage: [] as { tag: string; nodes: string[] }[],
   };
@@ -60,8 +59,6 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
       .map(([tag, nodes]) => ({ tag, nodes }))
       .sort((a, b) => a.tag.localeCompare(b.tag));
   } catch (error) {
-    // The policy itself is what this page is about, so a failure to enrich it
-    // with users and tag usage is not fatal.
     log.warn("api", "Failed to load ACL editor context: %s", String(error));
   }
 

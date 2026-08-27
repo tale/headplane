@@ -20,9 +20,8 @@ interface TokenListProps {
   normalize?: (value: string) => string;
 }
 
-// A small chip editor used across the ACL dialogs. It mirrors the machine tag
-// dialog: a list of the current values, a text field to add a new one, and a
-// row of one-click suggestions pulled from the policy.
+// A small chip editor shared by the ACL and user dialogs, modelled on the
+// machine tag dialog: current values, a field to add one, and suggestions.
 export default function TokenList({
   label,
   description,

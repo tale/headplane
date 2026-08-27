@@ -1,24 +1,29 @@
-import { stripJsonCommentsAndTrailingCommas } from "~/utils/node-info";
+import { scanHuJson } from "~/utils/node-info";
 
-// A structured view over the Headscale ACL policy (HuJSON). Headscale stores
-// the policy as an opaque string, so the visual editor parses it into this
-// model, mutates it, and serializes it back. Unknown top-level keys are kept
-// in `extra` so editing a policy never drops fields Headplane doesn't know.
+// A structured view over the Headscale ACL policy (HuJSON), which Headscale
+// stores as an opaque string. What Headplane does not model is kept in `extra`.
 
+// `action` is kept verbatim: rewriting an unknown action into `accept` would
+// turn a rule we do not understand into one that allows traffic.
 export interface AclRule {
-  action: "accept";
+  action: string;
   src: string[];
   dst: string[];
   proto?: string;
+  extra: Record<string, unknown>;
 }
 
 export interface SshRule {
-  action: "accept" | "check";
+  action: string;
   src: string[];
   dst: string[];
   users: string[];
   checkPeriod?: string;
+  extra: Record<string, unknown>;
 }
+
+// The SSH actions the editor offers; anything else is kept and shown as-is.
+export const KNOWN_SSH_ACTIONS = ["accept", "check"];
 
 export interface Policy {
   groups: Record<string, string[]>;
@@ -28,8 +33,7 @@ export interface Policy {
   ssh: SshRule[];
   // Top-level keys Headplane does not model (autoApprovers, nodeAttrs, ...)
   extra: Record<string, unknown>;
-  // The order the top-level keys appeared in, so serializing does not reshuffle
-  // a policy that was written by hand in a different order.
+  // The order the top-level keys appeared in, so serializing keeps it.
   keyOrder: string[];
 }
 
@@ -54,7 +58,7 @@ export function parsePolicy(raw: string): ParseResult {
     return { ok: true, policy: structuredClone(EMPTY_POLICY), hasComments: false };
   }
 
-  const stripped = stripJsonCommentsAndTrailingCommas(raw);
+  const { stripped, hasComments } = scanHuJson(raw);
   let parsed: unknown;
   try {
     parsed = JSON.parse(stripped);
@@ -79,7 +83,7 @@ export function parsePolicy(raw: string): ParseResult {
 
   return {
     ok: true,
-    hasComments: stripped.length !== raw.length,
+    hasComments,
     policy: {
       groups: toStringListMap(record.groups),
       tagOwners: toStringListMap(record.tagOwners),
@@ -95,9 +99,7 @@ export function parsePolicy(raw: string): ParseResult {
 export function serializePolicy(policy: Policy): string {
   const sections: Record<string, unknown> = {};
 
-  // Key insertion order is preserved, both for the top-level sections and
-  // within them, so editing one entry doesn't reshuffle a policy the operator
-  // wrote by hand — the diff then shows only what actually changed.
+  // Insertion order is preserved so an edit does not reshuffle the rest.
   if (Object.keys(policy.groups).length > 0) sections.groups = policy.groups;
   if (Object.keys(policy.tagOwners).length > 0) sections.tagOwners = policy.tagOwners;
   if (Object.keys(policy.hosts).length > 0) sections.hosts = policy.hosts;
@@ -108,13 +110,12 @@ export function serializePolicy(policy: Policy): string {
   }
 
   const out: Record<string, unknown> = {};
-  // Keys the policy already had, in their original order...
   for (const key of policy.keyOrder) {
     if (key in sections) {
       out[key] = sections[key];
     }
   }
-  // ...then any section that did not exist before, in the canonical order.
+  // Sections that did not exist before are appended.
   for (const [key, value] of Object.entries(sections)) {
     if (!(key in out)) {
       out[key] = value;
@@ -126,7 +127,6 @@ export function serializePolicy(policy: Policy): string {
 
 // MARK: Catalog helpers
 
-// Everything that can be used as a source in an ACL rule.
 export function policySources(policy: Policy, users: string[]): string[] {
   return unique([
     "*",
@@ -139,8 +139,7 @@ export function policySources(policy: Policy, users: string[]): string[] {
   ]);
 }
 
-// Everything that can be used as a destination in an ACL rule. Ports are
-// appended by the rule editor, so the raw identities are returned here.
+// Destinations without their port spec; the rule editor appends it.
 export function policyDestinations(policy: Policy, users: string[]): string[] {
   return unique([
     "*",
@@ -158,23 +157,79 @@ export function asUserReference(user: string): string {
   return user.endsWith("@") ? user : `${user}@`;
 }
 
-// A port spec is the trailing `:...` of a destination: `*`, a single port, a
-// range, or a comma separated list of either.
-const PORT_SPEC = /:(\*|\d{1,5}(-\d{1,5})?(,\d{1,5}(-\d{1,5})?)*)$/;
+// `*`, a single port, a range, or a comma separated list of either.
+const PORT_SPEC = /^(\*|\d{1,5}(-\d{1,5})?(,\d{1,5}(-\d{1,5})?)*)$/;
 
-// Whether a destination already carries a port spec. Bare IPv6 addresses are
-// never treated as ported: `fd7a::1` ends in something that looks like a port,
-// so a port on an IPv6 destination has to be written as `[fd7a::1]:22`.
+// Headscale splits a destination on its *last* colon, so `fd7a::1:22` is
+// `fd7a::1` on port 22. The tail only counts as a port when what precedes it is
+// a destination in its own right, which keeps `fd7a::1` (head `fd7a:`) intact.
 export function hasPortSpec(destination: string): boolean {
-  if (destination.includes("::") && !destination.includes("]")) {
+  const lastColon = destination.lastIndexOf(":");
+  if (lastColon <= 0 || lastColon === destination.length - 1) {
     return false;
   }
 
-  return PORT_SPEC.test(destination);
+  if (!PORT_SPEC.test(destination.slice(lastColon + 1))) {
+    return false;
+  }
+
+  return isCompleteDestination(destination.slice(0, lastColon));
 }
 
-// ACL destinations must specify ports; Headscale rejects the rule otherwise.
-// Anything typed or picked without one gets `:*`, which is what people mean.
+const ALIAS_PREFIXES = ["tag:", "group:", "autogroup:"];
+
+// Only a prefixed alias or an IPv6 address carries an inner colon.
+function isCompleteDestination(value: string): boolean {
+  if (value.length === 0 || value.endsWith(":")) {
+    return false;
+  }
+
+  if (ALIAS_PREFIXES.some((prefix) => value.startsWith(prefix)) || !value.includes(":")) {
+    return true;
+  }
+
+  // Headscale does not accept the bracketed form, but a hand-written policy
+  // may use it and appending a port would only make it worse.
+  if (value.startsWith("[") && value.endsWith("]")) {
+    return isIpv6(value.slice(1, -1));
+  }
+
+  return isIpv6(value);
+}
+
+const IPV6_GROUP = /^[0-9a-fA-F]{1,4}$/;
+const IPV4 = /^\d{1,3}(\.\d{1,3}){3}$/;
+
+// Enough to tell an address or prefix apart from an alias, not a validator.
+function isIpv6(value: string): boolean {
+  const [address, prefixLength, ...rest] = value.split("/");
+  if (rest.length > 0 || (prefixLength !== undefined && !/^\d{1,3}$/.test(prefixLength))) {
+    return false;
+  }
+
+  const halves = address.split("::");
+  if (halves.length > 2) {
+    return false;
+  }
+
+  const groups = halves.flatMap((half) => (half.length === 0 ? [] : half.split(":")));
+  if (groups.length === 0) {
+    // The unspecified address, `::`.
+    return halves.length === 2;
+  }
+
+  const last = groups[groups.length - 1];
+  const head = IPV4.test(last) ? groups.slice(0, -1) : groups;
+  if (!head.every((group) => IPV6_GROUP.test(group))) {
+    return false;
+  }
+
+  // An embedded IPv4 tail fills the last two groups.
+  const width = IPV4.test(last) ? head.length + 2 : groups.length;
+  return halves.length === 2 ? width <= 7 : width === 8;
+}
+
+// Headscale rejects a destination without a port, so one gets `:*`.
 export function withDefaultPort(destination: string): string {
   const trimmed = destination.trim();
   if (trimmed.length === 0 || hasPortSpec(trimmed)) {
@@ -184,7 +239,6 @@ export function withDefaultPort(destination: string): string {
   return `${trimmed}:*`;
 }
 
-// The groups a given Headscale user belongs to.
 export function groupsForUser(policy: Policy, userName: string): string[] {
   const reference = asUserReference(userName);
   return Object.entries(policy.groups)
@@ -193,7 +247,6 @@ export function groupsForUser(policy: Policy, userName: string): string[] {
     .sort();
 }
 
-// Replaces the full group membership of a user in one pass.
 export function setUserGroups(policy: Policy, userName: string, groups: string[]): Policy {
   const reference = asUserReference(userName);
   const next: Record<string, string[]> = {};
@@ -275,6 +328,9 @@ function toStringList(value: unknown): string[] {
   return value.filter((entry): entry is string => typeof entry === "string");
 }
 
+const ACL_RULE_KEYS = ["action", "src", "dst", "proto"];
+const SSH_RULE_KEYS = ["action", "src", "dst", "users", "checkPeriod"];
+
 function toAclRules(value: unknown): AclRule[] {
   if (!Array.isArray(value)) {
     return [];
@@ -284,9 +340,10 @@ function toAclRules(value: unknown): AclRule[] {
     .filter((entry): entry is Record<string, unknown> => entry != null && typeof entry === "object")
     .map((entry) => {
       const rule: AclRule = {
-        action: "accept",
+        action: typeof entry.action === "string" ? entry.action : "accept",
         src: toStringList(entry.src),
         dst: toStringList(entry.dst),
+        extra: extraKeys(entry, ACL_RULE_KEYS),
       };
       if (typeof entry.proto === "string" && entry.proto.length > 0) {
         rule.proto = entry.proto;
@@ -304,10 +361,11 @@ function toSshRules(value: unknown): SshRule[] {
     .filter((entry): entry is Record<string, unknown> => entry != null && typeof entry === "object")
     .map((entry) => {
       const rule: SshRule = {
-        action: entry.action === "check" ? "check" : "accept",
+        action: typeof entry.action === "string" ? entry.action : "accept",
         src: toStringList(entry.src),
         dst: toStringList(entry.dst),
         users: toStringList(entry.users),
+        extra: extraKeys(entry, SSH_RULE_KEYS),
       };
       if (typeof entry.checkPeriod === "string" && entry.checkPeriod.length > 0) {
         rule.checkPeriod = entry.checkPeriod;
@@ -316,10 +374,21 @@ function toSshRules(value: unknown): SshRule[] {
     });
 }
 
+// Fields with no editor — `srcPosture`, `acceptEnv` — ride along untouched.
+function extraKeys(entry: Record<string, unknown>, known: string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(entry)) {
+    if (!known.includes(key)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 function compactAclRule(rule: AclRule): Record<string, unknown> {
   const out: Record<string, unknown> = { action: rule.action, src: rule.src, dst: rule.dst };
   if (rule.proto) out.proto = rule.proto;
-  return out;
+  return { ...out, ...rule.extra };
 }
 
 function compactSshRule(rule: SshRule): Record<string, unknown> {
@@ -330,7 +399,7 @@ function compactSshRule(rule: SshRule): Record<string, unknown> {
     users: rule.users,
   };
   if (rule.checkPeriod) out.checkPeriod = rule.checkPeriod;
-  return out;
+  return { ...out, ...rule.extra };
 }
 
 function unique(values: string[]): string[] {
@@ -340,10 +409,8 @@ function unique(values: string[]): string[] {
 // Rules wider than this are broken across multiple lines.
 const INLINE_WIDTH = 120;
 
-// A tiny pretty-printer that keeps arrays of primitives — and short rule
-// objects — on a single line, which is how Tailscale and Headscale policy
-// examples are formatted. Keeping the output close to hand-written policies
-// means the diff view only shows what actually changed.
+// Keeps arrays of primitives, and short rule objects, on one line, the way
+// Tailscale and Headscale policy examples are written.
 function format(value: unknown, depth: number, allowInline = false): string {
   const indent = "  ".repeat(depth);
   const inner = "  ".repeat(depth + 1);
@@ -380,8 +447,7 @@ function format(value: unknown, depth: number, allowInline = false): string {
   return JSON.stringify(value);
 }
 
-// Renders an object on one line, but only when every value is a primitive or
-// an array of primitives. Returns undefined when it must be expanded.
+// Returns undefined when the object has to be expanded.
 function inlineObject(entries: [string, unknown][]): string | undefined {
   const parts: string[] = [];
   for (const [key, value] of entries) {

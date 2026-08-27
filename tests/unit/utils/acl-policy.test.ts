@@ -61,6 +61,14 @@ describe("parsePolicy", () => {
     expect(result.hasComments).toBe(false);
   });
 
+  test("does not report comments for a policy that only has trailing commas", () => {
+    const result = parseOrThrow(`{
+      "groups": { "group:eng": ["alice@"], },
+    }`);
+
+    expect(result.hasComments).toBe(false);
+  });
+
   test("parses HuJSON with comments and trailing commas", () => {
     const result = parseOrThrow(`{
       "groups": { "group:eng": ["alice@"], }, // a comment
@@ -79,7 +87,9 @@ describe("parsePolicy", () => {
     });
     expect(policy.tagOwners).toEqual({ "tag:server": ["group:ops"] });
     expect(policy.hosts).toEqual({ office: "100.64.0.0/24" });
-    expect(policy.acls).toEqual([{ action: "accept", src: ["group:eng"], dst: ["tag:server:22"] }]);
+    expect(policy.acls).toEqual([
+      { action: "accept", src: ["group:eng"], dst: ["tag:server:22"], extra: {} },
+    ]);
     expect(policy.ssh).toEqual([
       {
         action: "check",
@@ -87,8 +97,32 @@ describe("parsePolicy", () => {
         dst: ["tag:server"],
         users: ["root"],
         checkPeriod: "12h",
+        extra: {},
       },
     ]);
+  });
+
+  test("keeps rule actions and unknown rule keys as they were written", () => {
+    const { policy } = parseOrThrow(`{
+      "acls": [
+        { "action": "deny", "src": ["group:eng"], "dst": ["tag:server:22"], "srcPosture": ["posture:latest"] }
+      ],
+      "ssh": [
+        { "action": "reject", "src": ["group:ops"], "dst": ["tag:server"], "users": ["root"], "acceptEnv": ["TERM"] }
+      ]
+    }`);
+
+    expect(policy.acls[0].action).toBe("deny");
+    expect(policy.acls[0].extra).toEqual({ srcPosture: ["posture:latest"] });
+    expect(policy.ssh[0].action).toBe("reject");
+    expect(policy.ssh[0].extra).toEqual({ acceptEnv: ["TERM"] });
+
+    // An action the editor does not know must survive a round trip: rewriting
+    // it as "accept" would widen the policy behind the operator's back.
+    const serialized = serializePolicy(policy);
+    expect(serialized).toContain('"action": "deny"');
+    expect(serialized).toContain('"srcPosture": ["posture:latest"]');
+    expect(serialized).toContain('"acceptEnv": ["TERM"]');
   });
 
   test("keeps unknown top-level keys in extra", () => {
@@ -255,6 +289,19 @@ describe("destination ports", () => {
 
   test("treats a bare IPv6 address as unported", () => {
     expect(withDefaultPort("fd7a:115c:a1e0::1")).toBe("fd7a:115c:a1e0::1:*");
+    expect(withDefaultPort("fd7a::1")).toBe("fd7a::1:*");
+    expect(withDefaultPort("fd7a::/48")).toBe("fd7a::/48:*");
+  });
+
+  test("keeps the port of a bracketless IPv6 destination", () => {
+    // Headscale splits on the last colon, so this is `fd7a::1` on port 22 and
+    // appending `:*` would change which port the rule opens.
+    expect(withDefaultPort("fd7a::1:22")).toBe("fd7a::1:22");
+    expect(withDefaultPort("fd7a:115c:a1e0::1:80,443")).toBe("fd7a:115c:a1e0::1:80,443");
+    expect(hasPortSpec("fd7a::1:22")).toBe(true);
+  });
+
+  test("leaves a bracketed IPv6 destination alone", () => {
     expect(withDefaultPort("[fd7a:115c:a1e0::1]:22")).toBe("[fd7a:115c:a1e0::1]:22");
   });
 
@@ -265,8 +312,11 @@ describe("destination ports", () => {
 
   test("reports whether a port spec is present", () => {
     expect(hasPortSpec("tag:web:80")).toBe(true);
+    expect(hasPortSpec("group:eng:*")).toBe(true);
+    expect(hasPortSpec("100.64.0.1:22")).toBe(true);
     expect(hasPortSpec("tag:web")).toBe(false);
     expect(hasPortSpec("fd7a::1")).toBe(false);
+    expect(hasPortSpec("alice@")).toBe(false);
   });
 });
 

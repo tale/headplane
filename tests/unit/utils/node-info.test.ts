@@ -41,8 +41,16 @@ describe("extractTagOwnerTags", () => {
     ).toEqual(["tag:prod", "tag:server"]);
   });
 
-  test("ignores invalid policies", () => {
-    expect(extractTagOwnerTags("not-json")).toEqual([]);
+  test("returns undefined when the policy cannot be read or parsed", () => {
+    // An unreadable policy is not the same as one declaring no tags: callers
+    // use `undefined` to keep the tag dialog from flagging every tag.
+    expect(extractTagOwnerTags(undefined)).toBeUndefined();
+    expect(extractTagOwnerTags("not-json")).toBeUndefined();
+  });
+
+  test("returns an empty list when the policy declares no tags", () => {
+    expect(extractTagOwnerTags("")).toEqual([]);
+    expect(extractTagOwnerTags('{ "groups": { "group:eng": ["alice@"] } }')).toEqual([]);
   });
 });
 

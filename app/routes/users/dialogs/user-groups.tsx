@@ -1,16 +1,12 @@
-import { Plus, UsersRound, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import Button from "~/components/button";
 import Dialog, { DialogPanel } from "~/components/dialog";
-import Input from "~/components/input";
 import Link from "~/components/link";
-import TableList from "~/components/table-list";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import TokenList from "~/components/token-list";
 import { isValidGroupName } from "~/utils/acl-policy";
-import cn from "~/utils/cn";
 
 interface UserGroupsProps {
   isOpen: boolean;
@@ -19,7 +15,6 @@ interface UserGroupsProps {
   userName: string;
   displayName: string;
   groups: string[];
-  // Every group defined in the policy, for one-click assignment.
   availableGroups: string[];
   // Whether the stored policy contains HuJSON comments, which saving drops.
   policyHasComments?: boolean;
@@ -37,24 +32,13 @@ export default function UserGroups({
   const fetcher = useFetcher<{ message?: string; error?: string }>();
   const submittingRef = useRef(false);
   const [selected, setSelected] = useState([...groups]);
-  const [draft, setDraft] = useState("group:");
-
-  const options = useMemo(
-    () => availableGroups.filter((group) => !selected.includes(group)),
-    [availableGroups, selected],
-  );
-
-  const draftIsInvalid = useMemo(
-    () => !isValidGroupName(draft) || selected.includes(draft),
-    [draft, selected],
-  );
 
   const error = fetcher.data?.error;
+  const isSubmitting = fetcher.state !== "idle";
 
   useEffect(() => {
     if (isOpen) {
       setSelected([...groups]);
-      setDraft("group:");
     }
   }, [isOpen, groups]);
 
@@ -78,7 +62,7 @@ export default function UserGroups({
       }}
     >
       <DialogPanel
-        isDisabled={fetcher.state !== "idle"}
+        isDisabled={isSubmitting}
         onSubmit={(event) => {
           event.preventDefault();
           submittingRef.current = true;
@@ -108,66 +92,16 @@ export default function UserGroups({
             {error}
           </p>
         ) : null}
-        <TableList>
-          {selected.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-              <UsersRound />
-              <p className="font-semibold">This user is not in any group</p>
-            </TableList.Item>
-          ) : (
-            selected.map((group) => (
-              <TableList.Item className="font-mono" id={group} key={group}>
-                {group}
-                <Button
-                  className="rounded-md p-0.5"
-                  onClick={() => setSelected(selected.filter((entry) => entry !== group))}
-                  type="button"
-                >
-                  <X className="p-1" />
-                </Button>
-              </TableList.Item>
-            ))
-          )}
-        </TableList>
-
-        <div className="flex items-center gap-2">
-          <Input
-            aria-label="Add a group"
-            className="w-full"
-            invalid={draft.length > 0 && draftIsInvalid}
-            label="Group"
-            labelHidden
-            onChange={setDraft}
-            placeholder="group:example"
-            value={draft}
-          />
-          <Button
-            className={cn("rounded-md p-1", draftIsInvalid && "cursor-not-allowed opacity-50")}
-            disabled={draftIsInvalid}
-            onClick={() => {
-              setSelected([...selected, draft]);
-              setDraft("group:");
-            }}
-            type="button"
-          >
-            <Plus className="p-1" size={30} />
-          </Button>
-        </div>
-        {options.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {options.map((group) => (
-              <Button
-                className="px-2 py-1 font-mono text-xs"
-                key={group}
-                onClick={() => setSelected([...selected, group])}
-                type="button"
-                variant="ghost"
-              >
-                {group}
-              </Button>
-            ))}
-          </div>
-        ) : null}
+        <TokenList
+          emptyText="This user is not in any group"
+          isDisabled={isSubmitting}
+          label="Groups"
+          onChange={setSelected}
+          placeholder="group:example"
+          suggestions={availableGroups}
+          validate={isValidGroupName}
+          values={selected}
+        />
       </DialogPanel>
     </Dialog>
   );

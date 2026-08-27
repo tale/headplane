@@ -4,9 +4,8 @@ import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import TokenList from "~/components/token-list";
 import { isValidGroupName, isValidTagName } from "~/utils/acl-policy";
-
-import TokenList from "../components/token-list";
 
 export type NamedListKind = "group" | "tag";
 
@@ -17,7 +16,6 @@ interface NamedListDialogProps {
   // Present when editing, absent when creating a new entry.
   name?: string;
   members?: string[];
-  // Names already used, so we can reject duplicates.
   existingNames: string[];
   suggestions: string[];
   onSave: (name: string, members: string[]) => void;
@@ -67,8 +65,13 @@ export default function NamedListDialog({
     }
   }, [isOpen, name, members, copy.prefix]);
 
-  const isDuplicate = draftName !== name && existingNames.includes(draftName);
-  const nameIsInvalid = !copy.validate(draftName) || isDuplicate;
+  const trimmedName = draftName.trim();
+  const isDuplicate = trimmedName !== name && existingNames.includes(trimmedName);
+  const nameIsInvalid = !copy.validate(trimmedName) || isDuplicate;
+  // The field opens pre-filled with the `group:`/`tag:` prefix, which is not a
+  // valid name yet. Saving stays blocked, but nothing is flagged until it is edited.
+  const isPristine = trimmedName.length === 0 || trimmedName === copy.prefix;
+  const showNameError = !isPristine && nameIsInvalid;
 
   return (
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
@@ -76,7 +79,7 @@ export default function NamedListDialog({
         isDisabled={nameIsInvalid}
         onSubmit={(event) => {
           event.preventDefault();
-          onSave(draftName, draftMembers);
+          onSave(trimmedName, draftMembers);
           setIsOpen(false);
         }}
       >
@@ -84,7 +87,7 @@ export default function NamedListDialog({
         <Text>{copy.hint}</Text>
         <Input
           errorMessage={isDuplicate ? `A ${copy.title} with this name already exists.` : copy.hint}
-          invalid={nameIsInvalid}
+          invalid={showNameError}
           label="Name"
           onChange={setDraftName}
           placeholder={`${copy.prefix}example`}

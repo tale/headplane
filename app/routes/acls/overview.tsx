@@ -82,9 +82,8 @@ export default function Page({
     }
   }, [fetcher.data]);
 
-  // The structured editors round-trip through the policy text so that the
-  // file editor, the diff view and the save button all keep working on a
-  // single source of truth.
+  // The structured editors round-trip through the policy text, so the file
+  // editor, the diff view and Save all work off one source of truth.
   function applyPolicy(next: Policy) {
     setCodePolicy(serializePolicy(next));
   }

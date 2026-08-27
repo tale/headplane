@@ -37,13 +37,11 @@ export interface HeadplaneUserData {
   linkedHeadscaleUser?: User;
   machines: Machine[];
   profilePicUrl?: string;
-  // ACL groups the linked Headscale user belongs to
   groups: string[];
 }
 
 export interface UnlinkedHeadscaleUser extends User {
   machines: Machine[];
-  // ACL groups this user belongs to
   groups: string[];
 }
 
@@ -73,8 +71,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let apiError: string | undefined;
   let policyGroups: string[] = [];
   let groupsByUser = new Map<string, string[]>();
-  // Whether the policy can actually be written. `write_policy` is a role
-  // capability; in `file` mode Headscale refuses the write regardless.
+  // `write_policy` is a role capability; `file` mode refuses the write anyway.
   let policyWritable = false;
   let policyHasComments = false;
 
@@ -87,12 +84,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     nodes = nodesSnap.data;
     apiUsers = usersSnap.data;
 
-    // ACL groups are stored in the policy, so they are fetched separately and
-    // treated as optional: a missing or unreadable policy just hides the UI.
+    // Groups live in the policy, so an unreadable one just hides the UI.
     try {
       const { policy, updatedAt } = await api.policy.get();
-      // Same signal the Access Control page uses: a null `updatedAt` means
-      // Headscale is in `file` mode and will reject any write.
+      // Same signal as the Access Control page: null means `file` mode.
       policyWritable = updatedAt !== null;
       const parsed = parsePolicy(policy);
       if (parsed.ok) {

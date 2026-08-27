@@ -1,16 +1,14 @@
-import { ArrowRight, Pencil, Plus, Terminal, Trash2 } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowRight, Terminal } from "lucide-react";
 import { useState } from "react";
 
-import Button from "~/components/button";
 import Chip from "~/components/chip";
 import TableList from "~/components/table-list";
 import type { AclRule, Policy, SshRule } from "~/utils/acl-policy";
-import cn from "~/utils/cn";
 
 import AclRuleDialog from "../dialogs/acl-rule";
 import HostDialog from "../dialogs/host";
 import SshRuleDialog from "../dialogs/ssh-rule";
+import { Empty, RowActions, Section } from "./editor-section";
 
 interface RulesEditorProps {
   policy: Policy;
@@ -126,7 +124,10 @@ export default function RulesEditor({
               key={`acl-${index}`}
             >
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase opacity-60">Allow</span>
+                {/* An unknown action is shown verbatim, never relabelled. */}
+                <span className="text-xs font-semibold uppercase opacity-60">
+                  {rule.action === "accept" ? "Allow" : rule.action}
+                </span>
                 <ChipRow values={rule.src} />
                 <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
                 <ChipRow values={rule.dst} />
@@ -211,32 +212,6 @@ export default function RulesEditor({
   );
 }
 
-interface SectionProps {
-  title: string;
-  description: string;
-  isDisabled: boolean;
-  onAdd: () => void;
-  children: ReactNode;
-}
-
-function Section({ title, description, isDisabled, onAdd, children }: SectionProps) {
-  return (
-    <section>
-      <div className="mb-3 flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-medium">{title}</h2>
-          <p className="text-sm text-mist-600 dark:text-mist-300">{description}</p>
-        </div>
-        <Button className="shrink-0" disabled={isDisabled} onClick={onAdd} type="button">
-          <Plus className="h-4 w-4" />
-          Add
-        </Button>
-      </div>
-      <TableList>{children}</TableList>
-    </section>
-  );
-}
-
 function ChipRow({ values }: { values: string[] }) {
   return (
     <span className="flex flex-wrap items-center gap-1">
@@ -244,44 +219,5 @@ function ChipRow({ values }: { values: string[] }) {
         <Chip className="font-mono" key={value} text={value} />
       ))}
     </span>
-  );
-}
-
-function Empty({ text }: { text: string }) {
-  return (
-    <TableList.Item className={cn("justify-center py-6 text-sm opacity-70")}>{text}</TableList.Item>
-  );
-}
-
-function RowActions({
-  isDisabled,
-  onEdit,
-  onDelete,
-}: {
-  isDisabled: boolean;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="flex shrink-0 items-center gap-1">
-      <Button
-        aria-label="Edit"
-        className="rounded-md p-1"
-        disabled={isDisabled}
-        onClick={onEdit}
-        type="button"
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
-      <Button
-        aria-label="Delete"
-        className="rounded-md p-1"
-        disabled={isDisabled}
-        onClick={onDelete}
-        type="button"
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
-    </div>
   );
 }

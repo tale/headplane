@@ -6,9 +6,8 @@ import Link from "~/components/link";
 import Select from "~/components/select";
 import Text from "~/components/text";
 import Title from "~/components/title";
-import type { SshRule } from "~/utils/acl-policy";
-
-import TokenList from "../components/token-list";
+import TokenList from "~/components/token-list";
+import { KNOWN_SSH_ACTIONS, type SshRule } from "~/utils/acl-policy";
 
 interface SshRuleDialogProps {
   isOpen: boolean;
@@ -19,7 +18,7 @@ interface SshRuleDialogProps {
   onSave: (rule: SshRule) => void;
 }
 
-const EMPTY: SshRule = { action: "accept", src: [], dst: [], users: [] };
+const EMPTY: SshRule = { action: "accept", src: [], dst: [], users: [], extra: {} };
 const SSH_USERS = ["root", "autogroup:nonroot"];
 
 export default function SshRuleDialog({
@@ -62,11 +61,13 @@ export default function SshRuleDialog({
           items={[
             { value: "accept", label: "Accept — allow the session immediately" },
             { value: "check", label: "Check — require periodic re-authentication" },
+            // An action we do not know is listed as-is so it survives an edit.
+            ...(KNOWN_SSH_ACTIONS.includes(draft.action)
+              ? []
+              : [{ value: draft.action, label: `${draft.action} — not known to Headplane` }]),
           ]}
           label="Action"
-          onValueChange={(value) =>
-            setDraft({ ...draft, action: value === "check" ? "check" : "accept" })
-          }
+          onValueChange={(value) => setDraft({ ...draft, action: value ?? draft.action })}
           value={draft.action}
         />
         <TokenList

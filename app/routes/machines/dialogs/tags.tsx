@@ -17,8 +17,7 @@ interface TagsProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   existingTags?: string[];
-  // Tags declared under `tagOwners` in the ACL policy. Anything outside this
-  // list is assignable but will not match any rule.
+  // Tags declared under `tagOwners`. Others are assignable but match no rule.
   policyTags?: string[];
 }
 

@@ -50,35 +50,52 @@ export function sortNodeTags(nodes: Machine[]): string[] {
 }
 
 export function sortAssignableTags(nodes: Machine[], policy?: string): string[] {
-  return Array.from(new Set([...sortNodeTags(nodes), ...extractTagOwnerTags(policy)])).sort();
+  return Array.from(
+    new Set([...sortNodeTags(nodes), ...(extractTagOwnerTags(policy) ?? [])]),
+  ).sort();
 }
 
-export function extractTagOwnerTags(policy: string | undefined): string[] {
-  if (!policy) {
+// The tags declared under `tagOwners`. An empty list means the policy declares
+// none; `undefined` means the policy could not be read or parsed.
+export function extractTagOwnerTags(policy: string | undefined): string[] | undefined {
+  if (policy === undefined) {
+    return undefined;
+  }
+
+  if (policy.trim().length === 0) {
     return [];
   }
 
+  let parsed: unknown;
   try {
-    const parsed = JSON.parse(stripJsonCommentsAndTrailingCommas(policy)) as unknown;
-    if (parsed == null || typeof parsed !== "object" || !("tagOwners" in parsed)) {
-      return [];
-    }
-
-    const tagOwners = (parsed as { tagOwners?: unknown }).tagOwners;
-    if (tagOwners == null || typeof tagOwners !== "object" || Array.isArray(tagOwners)) {
-      return [];
-    }
-
-    return Object.keys(tagOwners)
-      .filter((tag) => tag.startsWith("tag:"))
-      .sort();
+    parsed = JSON.parse(stripJsonCommentsAndTrailingCommas(policy));
   } catch {
+    return undefined;
+  }
+
+  if (parsed == null || typeof parsed !== "object" || !("tagOwners" in parsed)) {
     return [];
   }
+
+  const tagOwners = (parsed as { tagOwners?: unknown }).tagOwners;
+  if (tagOwners == null || typeof tagOwners !== "object" || Array.isArray(tagOwners)) {
+    return [];
+  }
+
+  return Object.keys(tagOwners)
+    .filter((tag) => tag.startsWith("tag:"))
+    .sort();
 }
 
 export function stripJsonCommentsAndTrailingCommas(input: string): string {
+  return scanHuJson(input).stripped;
+}
+
+// Strips comments and trailing commas, and reports whether the input carried
+// comments — a rewrite of the policy drops those, so callers warn first.
+export function scanHuJson(input: string): { stripped: string; hasComments: boolean } {
   let output = "";
+  let hasComments = false;
   let inString = false;
   let escaped = false;
   let inLineComment = false;
@@ -124,12 +141,14 @@ export function stripJsonCommentsAndTrailingCommas(input: string): string {
 
     if (char === "/" && next === "/") {
       inLineComment = true;
+      hasComments = true;
       i++;
       continue;
     }
 
     if (char === "/" && next === "*") {
       inBlockComment = true;
+      hasComments = true;
       i++;
       continue;
     }
@@ -137,5 +156,5 @@ export function stripJsonCommentsAndTrailingCommas(input: string): string {
     output += char;
   }
 
-  return output.replace(/,\s*([}\]])/g, "$1");
+  return { stripped: output.replace(/,\s*([}\]])/g, "$1"), hasComments };
 }

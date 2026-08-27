@@ -5,9 +5,8 @@ import Input from "~/components/input";
 import Link from "~/components/link";
 import Text from "~/components/text";
 import Title from "~/components/title";
+import TokenList from "~/components/token-list";
 import { withDefaultPort, type AclRule } from "~/utils/acl-policy";
-
-import TokenList from "../components/token-list";
 
 interface AclRuleDialogProps {
   isOpen: boolean;
@@ -18,7 +17,7 @@ interface AclRuleDialogProps {
   onSave: (rule: AclRule) => void;
 }
 
-const EMPTY: AclRule = { action: "accept", src: [], dst: [] };
+const EMPTY: AclRule = { action: "accept", src: [], dst: [], extra: {} };
 
 export default function AclRuleDialog({
   isOpen,
@@ -44,8 +43,7 @@ export default function AclRuleDialog({
         isDisabled={isInvalid}
         onSubmit={(event) => {
           event.preventDefault();
-          // Destinations loaded from a hand-written policy may be missing their
-          // port spec, which Headscale rejects. Fix them up on the way out.
+          // A hand-written policy may be missing the port spec Headscale wants.
           onSave({ ...draft, dst: draft.dst.map(withDefaultPort) });
           setIsOpen(false);
         }}
