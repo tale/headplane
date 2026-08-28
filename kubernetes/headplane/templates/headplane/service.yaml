@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headplane
+spec:
+  ports:
+  - name: headplane-ui
+    port: 80
+    protocol: TCP
+    targetPort: app
+  selector:
+    app: headplane-integrated
+  type: ClusterIP
