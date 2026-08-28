@@ -1,8 +1,19 @@
 # Next
 
+## Changes
+
+- **Rebuilt the Browser SSH module to use Tailscale's `tsconnect`**, which should result in fewer bugs and better compatibility with future Tailscale releases.
+- Added `integration.agent.tailscale_netns`, an agent-only opt-out from Tailscale's routing-loop socket handling for deployments where its fallback pins the agent's Headscale connection to the wrong interface. Existing behavior remains enabled by default.
+- Added a Disable/Enable key expiry action to the machine menu (via [#554](https://github.com/tale/headplane/pull/554)). Headscale does not keep the toggle state apart from the expiry date, so re-enabling expiry marks the node expired as of that moment.
+- Headplane now supports Docker API version 1.24+ (Engine 1.12+, including Podman's Docker-compatible socket).
+- Usernames are now validated before a user is created or renamed, so Headplane rejects names that Headscale accepts but ACL policy can never match (closes [#502](https://github.com/tale/headplane/issues/502)).
+
+## Fixes
+
+- Fixed untagged Headscale builds being read as version 0.0.0. The per-commit `main-*` and `development` images report a Go pseudo-version from `/version`, which is now treated as an unknown version instead of an ancient one (via [#590](https://github.com/tale/headplane/pull/590)).
+- Fixed the Browser SSH WASM module not building under Nix (via [#588](https://github.com/tale/headplane/pull/588)).
 - Fixed `server.data_path`, `headscale.config_path`, `headscale.dns_records_path` and `headscale.tls_cert_path` being silently lowercased, which pointed Headplane at a different location for any path containing a capital letter (closes [#612](https://github.com/tale/headplane/issues/612)).
 - Fixed the Headplane agent falling back to an interactive Tailscale login. The agent now starts with a pre-auth-key, preserves its existing state across restarts, and auto-approves itself when Headscale requires manual approval (closes [#582](https://github.com/tale/headplane/issues/582)).
-- Added `integration.agent.tailscale_netns`, an agent-only opt-out from Tailscale's routing-loop socket handling for deployments where its fallback pins the agent's Headscale connection to the wrong interface. Existing behavior remains enabled by default.
 - Fixed creating pre-auth keys with an expiry of 1000 days or more. The number input submitted its locale-formatted value (`365,000`, `365 000`, `365.000`), which either failed with a 500 or silently created a key with a truncated expiry. The raw value is now submitted and the server rejects malformed expiries with a 400 (closes [#596](https://github.com/tale/headplane/issues/596)).
 
 # 0.7.0

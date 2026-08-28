@@ -18,7 +18,8 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "release": "node --disable-warning=ExperimentalWarning scripts/release.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

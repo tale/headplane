@@ -53,3 +53,15 @@ The project has a documentation site available at the `docs/` directory built
 with VitePress. The documentation is written in Markdown and can be easily
 edited and extended. If making changes to staple features, please take care to
 also update the documentation to reflect any changes in functionality or usage.
+
+## Releases
+
+Every user-facing change adds a line to the `# Next` section of `CHANGELOG.md`,
+under `## Changes` or `## Fixes`. That section is what nightly users read on the
+docs site, so write it as prose for them, not as a commit summary. Prose placed
+directly under `# Next`, above the subheadings, becomes the release preamble.
+Use it for compatibility notes and upgrade warnings.
+
+To cut a release, run `pnpm release cut <version>`. It renames `# Next` to the
+version, bumps `package.json`, commits, and tags. Pushing the tag builds the
+images and publishes the GitHub release from that changelog section.
