@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 0.6.1
+description: Helm chart for Headplane, a web UI for managing Headscale
+name: headplane
+type: application
+version: 0.6.1
