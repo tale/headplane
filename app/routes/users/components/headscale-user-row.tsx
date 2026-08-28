@@ -1,5 +1,6 @@
 import { CircleUser } from "lucide-react";
 
+import Chip from "~/components/chip";
 import StatusCircle from "~/components/status-circle";
 import cn from "~/utils/cn";
 
@@ -9,9 +10,18 @@ import HeadscaleUserMenu from "./headscale-user-menu";
 interface HeadscaleUserRowProps {
   user: UnlinkedHeadscaleUser;
   writable?: boolean;
+  canEditGroups?: boolean;
+  policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
-export default function HeadscaleUserRow({ user, writable }: HeadscaleUserRowProps) {
+export default function HeadscaleUserRow({
+  user,
+  writable,
+  canEditGroups,
+  policyGroups,
+  policyHasComments,
+}: HeadscaleUserRowProps) {
   const isOnline = user.machines.some((machine) => machine.online);
   const lastSeen = user.machines.reduce(
     (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
@@ -34,6 +44,13 @@ export default function HeadscaleUserRow({ user, writable }: HeadscaleUserRowPro
             <p className="leading-snug font-semibold">{displayName}</p>
             {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
             {user.email && <p className="text-sm opacity-50">{user.email}</p>}
+            {user.groups.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {user.groups.map((group) => (
+                  <Chip className="font-mono" key={group} text={group} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </td>
@@ -56,7 +73,16 @@ export default function HeadscaleUserRow({ user, writable }: HeadscaleUserRowPro
           <p className="text-sm text-mist-600 dark:text-mist-300">No machines</p>
         )}
       </td>
-      <td className="py-2 pr-0.5">{writable ? <HeadscaleUserMenu user={user} /> : null}</td>
+      <td className="py-2 pr-0.5">
+        {writable ? (
+          <HeadscaleUserMenu
+            canEditGroups={canEditGroups}
+            policyGroups={policyGroups}
+            policyHasComments={policyHasComments}
+            user={user}
+          />
+        ) : null}
+      </td>
     </tr>
   );
 }

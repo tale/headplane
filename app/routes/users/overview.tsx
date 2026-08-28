@@ -13,6 +13,7 @@ import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities, Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
+import { groupsForUser, parsePolicy } from "~/utils/acl-policy";
 import cn from "~/utils/cn";
 import log from "~/utils/log";
 import { getUserDisplayName } from "~/utils/user";
@@ -36,10 +37,12 @@ export interface HeadplaneUserData {
   linkedHeadscaleUser?: User;
   machines: Machine[];
   profilePicUrl?: string;
+  groups: string[];
 }
 
 export interface UnlinkedHeadscaleUser extends User {
   machines: Machine[];
+  groups: string[];
 }
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -66,6 +69,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   let apiUsers: User[] = [];
   let nodes: Machine[] = [];
   let apiError: string | undefined;
+  let policyGroups: string[] = [];
+  let groupsByUser = new Map<string, string[]>();
+  // `write_policy` is a role capability; `file` mode refuses the write anyway.
+  let policyWritable = false;
+  let policyHasComments = false;
 
   try {
     const { api } = await getRequestApi(request);
@@ -75,6 +83,23 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ]);
     nodes = nodesSnap.data;
     apiUsers = usersSnap.data;
+
+    // Groups live in the policy, so an unreadable one just hides the UI.
+    try {
+      const { policy, updatedAt } = await api.policy.get();
+      // Same signal as the Access Control page: null means `file` mode.
+      policyWritable = updatedAt !== null;
+      const parsed = parsePolicy(policy);
+      if (parsed.ok) {
+        policyHasComments = parsed.hasComments;
+        policyGroups = Object.keys(parsed.policy.groups).sort();
+        groupsByUser = new Map(
+          apiUsers.map((user) => [user.name, groupsForUser(parsed.policy, user.name)]),
+        );
+      }
+    } catch (error) {
+      log.warn("api", "Failed to read the ACL policy for groups: %s", String(error));
+    }
   } catch (error) {
     log.warn("api", "Failed to fetch Headscale API data: %s", String(error));
     apiError =
@@ -117,6 +142,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         profilePicUrl: hsUser
           ? resolveProfilePic(hsUser.email, hsUser.profilePicUrl)
           : resolveProfilePic(hp.email ?? undefined),
+        groups: hsUser ? (groupsByUser.get(hsUser.name) ?? []) : [],
       };
     });
 
@@ -129,6 +155,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       ...u,
       machines: nodes.filter((n) => n.user?.id === u.id),
       profilePicUrl: resolveProfilePic(u.email, u.profilePicUrl),
+      groups: groupsByUser.get(u.name) ?? [],
     }));
 
   // Build linkable Headscale users for admin link dialog
@@ -144,6 +171,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     writable: writablePermission,
+    canEditGroups:
+      writablePermission && auth.can(principal, Capabilities.write_policy) && policyWritable,
+    policyGroups,
+    policyHasComments,
     currentUserId: isUserPrincipal(principal) ? principal.user.id : undefined,
     isOwner,
     oidc: config.oidc ? { issuer: config.oidc.issuer } : undefined,
@@ -204,10 +235,13 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               >
                 {loaderData.headplaneUsers.map((user) => (
                   <HeadplaneUserRow
+                    canEditGroups={loaderData.canEditGroups}
                     isSelf={user.id === loaderData.currentUserId}
                     isOwner={loaderData.isOwner}
                     key={user.id}
                     headscaleUsers={loaderData.headscaleUsersForLink}
+                    policyGroups={loaderData.policyGroups}
+                    policyHasComments={loaderData.policyHasComments}
                     user={user}
                   />
                 ))}
@@ -243,7 +277,14 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 )}
               >
                 {loaderData.unlinkedHeadscaleUsers.map((user) => (
-                  <HeadscaleUserRow key={user.id} user={user} writable={loaderData.writable} />
+                  <HeadscaleUserRow
+                    canEditGroups={loaderData.canEditGroups}
+                    key={user.id}
+                    policyGroups={loaderData.policyGroups}
+                    policyHasComments={loaderData.policyHasComments}
+                    user={user}
+                    writable={loaderData.writable}
+                  />
                 ))}
               </tbody>
             </table>

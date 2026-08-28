@@ -1,8 +1,10 @@
 import { data } from "react-router";
 
-import { authContext, requestApiContext } from "~/server/context";
+import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
+import log from "~/utils/log";
 
 import type { Route } from "./+types/overview";
 
@@ -16,6 +18,7 @@ import type { Route } from "./+types/overview";
 export async function aclLoader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const getRequestApi = context.get(requestApiContext);
+  const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
   const principal = await auth.require(request);
   const check = auth.can(principal, Capabilities.read_policy);
@@ -30,10 +33,35 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
     access: auth.can(principal, Capabilities.write_policy),
     writable: false,
     policy: "",
+    // Context for the visual editor; both are optional.
+    users: [] as string[],
+    tagUsage: [] as { tag: string; nodes: string[] }[],
   };
 
   // Try to load the ACL policy from the API.
   const { api } = await getRequestApi(request);
+
+  try {
+    const [nodesSnap, usersSnap] = await Promise.all([
+      headscaleLiveStore.get(nodesResource, api),
+      headscaleLiveStore.get(usersResource, api),
+    ]);
+
+    flags.users = usersSnap.data.map((user) => user.name).sort();
+
+    const usage = new Map<string, string[]>();
+    for (const node of nodesSnap.data) {
+      for (const tag of node.tags) {
+        usage.set(tag, [...(usage.get(tag) ?? []), node.givenName || node.name]);
+      }
+    }
+    flags.tagUsage = Array.from(usage.entries())
+      .map(([tag, nodes]) => ({ tag, nodes }))
+      .sort((a, b) => a.tag.localeCompare(b.tag));
+  } catch (error) {
+    log.warn("api", "Failed to load ACL editor context: %s", String(error));
+  }
+
   try {
     const { policy, updatedAt } = await api.policy.get();
     flags.writable = updatedAt !== null;

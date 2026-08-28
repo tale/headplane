@@ -5,15 +5,24 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/compo
 
 import Delete from "../dialogs/delete-user";
 import Rename from "../dialogs/rename-user";
+import UserGroups from "../dialogs/user-groups";
 import type { UnlinkedHeadscaleUser } from "../overview";
 
 interface HeadscaleUserMenuProps {
   user: UnlinkedHeadscaleUser;
+  canEditGroups?: boolean;
+  policyGroups?: string[];
+  policyHasComments?: boolean;
 }
 
-type Modal = "rename" | "delete" | null;
+type Modal = "rename" | "groups" | "delete" | null;
 
-export default function HeadscaleUserMenu({ user }: HeadscaleUserMenuProps) {
+export default function HeadscaleUserMenu({
+  user,
+  canEditGroups,
+  policyGroups,
+  policyHasComments,
+}: HeadscaleUserMenuProps) {
   const [modal, setModal] = useState<Modal>(null);
 
   // Headscale-managed OIDC users cannot be renamed via the API.
@@ -28,6 +37,19 @@ export default function HeadscaleUserMenu({ user }: HeadscaleUserMenuProps) {
             if (!isOpen) setModal(null);
           }}
           user={user}
+        />
+      )}
+      {modal === "groups" && canEditGroups && (
+        <UserGroups
+          availableGroups={policyGroups ?? []}
+          policyHasComments={policyHasComments}
+          displayName={user.displayName || user.name}
+          groups={user.groups}
+          isOpen={modal === "groups"}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+          userName={user.name}
         />
       )}
       {modal === "delete" && (
@@ -47,7 +69,8 @@ export default function HeadscaleUserMenu({ user }: HeadscaleUserMenuProps) {
         </MenuTrigger>
         <MenuContent>
           {canRename && <MenuItem onClick={() => setModal("rename")}>Rename</MenuItem>}
-          {canRename && <MenuSeparator />}
+          {canEditGroups && <MenuItem onClick={() => setModal("groups")}>Edit groups</MenuItem>}
+          {(canRename || canEditGroups) && <MenuSeparator />}
           <MenuItem variant="danger" onClick={() => setModal("delete")}>
             Delete
           </MenuItem>
