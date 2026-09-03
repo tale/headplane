@@ -1,8 +1,12 @@
+import { linter, lintGutter, type Diagnostic } from "@codemirror/lint";
 import * as shopify from "@shopify/lang-jsonc";
 import CodeMirror from "@uiw/react-codemirror";
-import { BookCopy, CircleX } from "lucide-react";
+import { BookCopy, Braces, CircleCheck, CircleX } from "lucide-react";
 import Merge from "react-codemirror-merge";
 import { ErrorBoundary } from "react-error-boundary";
+
+import Button from "~/components/button";
+import { formatPolicy, validatePolicy } from "~/utils/acl-policy";
 
 import { headplaneTheme } from "./theme";
 
@@ -13,6 +17,9 @@ interface EditorProps {
 }
 
 export function Editor(props: EditorProps) {
+  const diagnostics = validatePolicy(props.value);
+  const firstError = diagnostics[0];
+
   return (
     <div className="text-sm">
       <ErrorBoundary
@@ -23,9 +30,39 @@ export function Editor(props: EditorProps) {
           </div>
         }
       >
+        <div className="flex items-center justify-between gap-4 border-b border-[var(--cm-gutter-border)] bg-[var(--cm-bg)] px-3 py-2 text-[var(--cm-fg)]">
+          <div
+            role="status"
+            className={
+              firstError
+                ? "flex min-w-0 items-center gap-2 text-red-600 dark:text-red-400"
+                : "flex items-center gap-2 text-green-700 dark:text-green-400"
+            }
+          >
+            {firstError ? (
+              <CircleX className="size-4 shrink-0" />
+            ) : (
+              <CircleCheck className="size-4 shrink-0" />
+            )}
+            <span className="truncate">
+              {firstError ? firstError.message : "Valid HuJSON syntax"}
+            </span>
+          </div>
+          <Button
+            disabled={props.isDisabled || firstError !== undefined}
+            onClick={() => {
+              const result = formatPolicy(props.value);
+              if (result.ok) props.onChange(result.value);
+            }}
+            type="button"
+          >
+            <Braces className="size-4" />
+            Format
+          </Button>
+        </div>
         <CodeMirror
           editable={!props.isDisabled}
-          extensions={[shopify.jsonc()]}
+          extensions={[shopify.jsonc(), policyLinter, lintGutter()]}
           minHeight="24rem"
           maxHeight="var(--height-editor)"
           onChange={(value) => props.onChange(value)}
@@ -37,6 +74,14 @@ export function Editor(props: EditorProps) {
     </div>
   );
 }
+
+const policyLinter = linter((view): Diagnostic[] =>
+  validatePolicy(view.state.doc.toString()).map((diagnostic) => ({
+    ...diagnostic,
+    severity: "error",
+    source: "HuJSON",
+  })),
+);
 
 interface DifferProps {
   left: string;

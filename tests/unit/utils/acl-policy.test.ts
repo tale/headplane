@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   asUserReference,
+  formatPolicy,
   groupsForUser,
   hasPortSpec,
   isValidGroupName,
@@ -12,6 +13,7 @@ import {
   policySources,
   serializePolicy,
   setUserGroups,
+  validatePolicy,
   withDefaultPort,
 } from "~/utils/acl-policy";
 
@@ -147,6 +149,32 @@ describe("parsePolicy", () => {
     expect(policy.groups).toEqual({});
     expect(policy.acls).toEqual([]);
     expect(policy.hosts).toEqual({});
+  });
+
+  test("does not treat trailing-comma-like text inside strings as syntax", () => {
+    const { policy } = parseOrThrow(`{ "custom": "keep ,} and ,] intact" }`);
+    expect(policy.extra.custom).toBe("keep ,} and ,] intact");
+  });
+});
+
+describe("formatPolicy", () => {
+  test("formats HuJSON and keeps comments and trailing commas", () => {
+    const result = formatPolicy(`{"groups":{"group:eng":["alice@",],},// team\n"acls":[]}`);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value).toContain("// team");
+    expect(result.value).toContain('  "groups": {');
+    expect(result.value).toContain('"alice@",');
+    expect(result.value.endsWith("\n")).toBe(true);
+    expect(parsePolicy(result.value).ok).toBe(true);
+
+    const formattedAgain = formatPolicy(result.value);
+    expect(formattedAgain).toEqual(result);
+  });
+
+  test("does not format invalid input", () => {
+    expect(formatPolicy(`{ "groups": [ }`).ok).toBe(false);
   });
 });
 
@@ -321,6 +349,26 @@ describe("destination ports", () => {
 });
 
 describe("validation", () => {
+  test("accepts HuJSON comments and trailing commas", () => {
+    expect(validatePolicy(`{ "groups": {}, // comment\n }`)).toEqual([]);
+  });
+
+  test("reports syntax errors with source ranges", () => {
+    const diagnostics = validatePolicy(`{ "groups": [ }`);
+    expect(diagnostics.length).toBeGreaterThan(0);
+    expect(diagnostics[0]).toMatchObject({
+      from: expect.any(Number),
+      to: expect.any(Number),
+      message: expect.any(String),
+    });
+  });
+
+  test("requires a top-level object", () => {
+    expect(validatePolicy("[]")).toEqual([
+      { from: 0, to: 2, message: "The policy must be a JSON object" },
+    ]);
+  });
+
   test("accepts well-formed names", () => {
     expect(isValidGroupName("group:eng-team")).toBe(true);
     expect(isValidTagName("tag:web-01")).toBe(true);

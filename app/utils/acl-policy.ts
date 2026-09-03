@@ -1,3 +1,12 @@
+import {
+  applyEdits,
+  format as formatJson,
+  getNodeValue,
+  parseTree,
+  printParseErrorCode,
+  type ParseError,
+} from "jsonc-parser";
+
 import { scanHuJson } from "~/utils/node-info";
 
 // A structured view over the Headscale ACL policy (HuJSON), which Headscale
@@ -41,6 +50,14 @@ export type ParseResult =
   | { ok: true; policy: Policy; hasComments: boolean }
   | { ok: false; error: string };
 
+export type FormatResult = { ok: true; value: string } | { ok: false; error: string };
+
+export interface PolicyDiagnostic {
+  from: number;
+  to: number;
+  message: string;
+}
+
 export const EMPTY_POLICY: Policy = {
   groups: {},
   tagOwners: {},
@@ -58,22 +75,12 @@ export function parsePolicy(raw: string): ParseResult {
     return { ok: true, policy: structuredClone(EMPTY_POLICY), hasComments: false };
   }
 
-  const { stripped, hasComments } = scanHuJson(raw);
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stripped);
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "The policy is not valid HuJSON",
-    };
-  }
+  const result = parseHuJson(raw);
+  if (!result.ok) return result;
 
-  if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return { ok: false, error: "The policy must be a JSON object" };
-  }
+  const { parsed, hasComments } = result;
 
-  const record = parsed as Record<string, unknown>;
+  const record = parsed;
   const extra: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
     if (!KNOWN_KEYS.includes(key)) {
@@ -94,6 +101,86 @@ export function parsePolicy(raw: string): ParseResult {
       keyOrder: Object.keys(record),
     },
   };
+}
+
+export function formatPolicy(raw: string): FormatResult {
+  if (raw.trim().length === 0) {
+    return { ok: false, error: "The policy is empty" };
+  }
+
+  const result = parseHuJson(raw);
+  if (!result.ok) return result;
+
+  const edits = formatJson(raw, undefined, {
+    eol: "\n",
+    insertFinalNewline: true,
+    insertSpaces: true,
+    keepLines: false,
+    tabSize: 2,
+  });
+  return { ok: true, value: applyEdits(raw, edits) };
+}
+
+type HuJsonResult =
+  | { ok: true; parsed: Record<string, unknown>; hasComments: boolean }
+  | { ok: false; error: string };
+
+function parseHuJson(raw: string): HuJsonResult {
+  const errors: ParseError[] = [];
+  const tree = parseTree(raw, errors, { allowTrailingComma: true });
+  if (errors.length > 0) {
+    const first = errors[0];
+    return {
+      ok: false,
+      error: withLocation(raw, humanizeParseError(first), first.offset),
+    };
+  }
+
+  if (tree?.type !== "object") {
+    return { ok: false, error: "The policy must be a JSON object" };
+  }
+
+  return {
+    ok: true,
+    parsed: getNodeValue(tree) as Record<string, unknown>,
+    hasComments: scanHuJson(raw).hasComments,
+  };
+}
+
+export function validatePolicy(raw: string): PolicyDiagnostic[] {
+  if (raw.trim().length === 0) {
+    return [{ from: 0, to: 0, message: "The policy is empty" }];
+  }
+
+  const errors: ParseError[] = [];
+  const tree = parseTree(raw, errors, { allowTrailingComma: true });
+  const diagnostics = errors.map((error) => ({
+    from: error.offset,
+    to: Math.min(raw.length, error.offset + Math.max(1, error.length)),
+    message: humanizeParseError(error),
+  }));
+
+  if (diagnostics.length === 0 && tree?.type !== "object") {
+    diagnostics.push({
+      from: 0,
+      to: raw.length,
+      message: "The policy must be a JSON object",
+    });
+  }
+
+  return diagnostics;
+}
+
+function humanizeParseError(error: ParseError): string {
+  return printParseErrorCode(error.error).replace(/([a-z])([A-Z])/g, "$1 $2");
+}
+
+function withLocation(raw: string, message: string, offset: number): string {
+  const before = raw.slice(0, offset);
+  const line = before.split(/\r\n|\r|\n/).length;
+  const lastLineBreak = Math.max(before.lastIndexOf("\n"), before.lastIndexOf("\r"));
+  const column = offset - lastLineBreak;
+  return `${message} at line ${line}, column ${column}`;
 }
 
 export function serializePolicy(policy: Policy): string {

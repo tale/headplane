@@ -1,5 +1,9 @@
 # Next
 
+## Changes
+
+- The Access Control file editor now formats HuJSON, preserves comments while formatting, and shows syntax errors before an invalid policy can be saved.
+
 # 0.7.1 (August 27, 2026)
 
 ## Changes

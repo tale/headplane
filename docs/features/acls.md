@@ -69,7 +69,12 @@ The **Edit file** tab is the original CodeMirror editor over the raw policy, and
 editors write into the same buffer, so a change made visually shows up in the
 file editor and in the diff before it is saved.
 
-Nothing is sent to Headscale until **Save** is pressed.
+The file editor validates HuJSON as you type and marks syntax errors inline.
+Invalid policies cannot be saved. **Format** applies consistent two-space
+indentation while preserving HuJSON comments and trailing commas.
+
+Nothing is sent to Headscale until **Save** is pressed. Headplane also repeats
+the syntax validation on the server before sending the policy to Headscale.
 
 ::: warning Comments are not preserved
 HuJSON allows comments and trailing commas. Headplane reads them, but the
