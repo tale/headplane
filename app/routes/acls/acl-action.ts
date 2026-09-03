@@ -3,6 +3,7 @@ import { data } from "react-router";
 import { authContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { Capabilities } from "~/server/web/roles";
+import { validatePolicy } from "~/utils/acl-policy";
 
 import type { Route } from "./+types/overview";
 
@@ -24,10 +25,23 @@ export async function aclAction({ request, context }: Route.ActionArgs) {
   // Try to write to the ACL policy via the API or via config file (TODO).
   const formData = await request.formData();
   const policyData = formData.get("policy")?.toString();
-  if (!policyData) {
+  if (!policyData || policyData.trim().length === 0) {
     throw data("Missing `policy` in the form data.", {
       status: 400,
     });
+  }
+
+  const syntaxErrors = validatePolicy(policyData);
+  if (syntaxErrors.length > 0) {
+    return data(
+      {
+        success: false,
+        error: `Syntax error: ${syntaxErrors[0].message}`,
+        policy: undefined,
+        updatedAt: undefined,
+      },
+      400,
+    );
   }
 
   const { api } = await getRequestApi(request);
