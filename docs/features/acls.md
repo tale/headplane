@@ -71,7 +71,8 @@ file editor and in the diff before it is saved.
 
 The file editor validates HuJSON as you type and marks syntax errors inline.
 Invalid policies cannot be saved. **Format** applies consistent two-space
-indentation while preserving HuJSON comments and trailing commas.
+indentation and spacing while keeping the existing line breaks, HuJSON comments
+and trailing commas.
 
 Nothing is sent to Headscale until **Save** is pressed. Headplane also repeats
 the syntax validation on the server before sending the policy to Headscale.

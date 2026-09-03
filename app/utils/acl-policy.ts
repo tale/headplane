@@ -111,11 +111,13 @@ export function formatPolicy(raw: string): FormatResult {
   const result = parseHuJson(raw);
   if (!result.ok) return result;
 
+  // Line breaks are kept: a hand-written policy groups rules with blank lines
+  // and keeps short arrays inline, and reflowing would throw both away.
   const edits = formatJson(raw, undefined, {
     eol: "\n",
     insertFinalNewline: true,
     insertSpaces: true,
-    keepLines: false,
+    keepLines: true,
     tabSize: 2,
   });
   return { ok: true, value: applyEdits(raw, edits) };
@@ -147,9 +149,11 @@ function parseHuJson(raw: string): HuJsonResult {
   };
 }
 
+// An empty policy is not a syntax error; like `parsePolicy`, it is treated as
+// the "no policy yet" state and the caller decides what that means.
 export function validatePolicy(raw: string): PolicyDiagnostic[] {
   if (raw.trim().length === 0) {
-    return [{ from: 0, to: 0, message: "The policy is empty" }];
+    return [];
   }
 
   const errors: ParseError[] = [];

@@ -159,18 +159,36 @@ describe("parsePolicy", () => {
 
 describe("formatPolicy", () => {
   test("formats HuJSON and keeps comments and trailing commas", () => {
-    const result = formatPolicy(`{"groups":{"group:eng":["alice@",],},// team\n"acls":[]}`);
+    const result = formatPolicy(
+      `{\n"groups":{\n"group:eng":["alice@",],\n},// team\n"acls":[\n]\n}`,
+    );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
     expect(result.value).toContain("// team");
     expect(result.value).toContain('  "groups": {');
-    expect(result.value).toContain('"alice@",');
+    expect(result.value).toContain('    "group:eng": [ "alice@", ],');
     expect(result.value.endsWith("\n")).toBe(true);
     expect(parsePolicy(result.value).ok).toBe(true);
 
     const formattedAgain = formatPolicy(result.value);
     expect(formattedAgain).toEqual(result);
+  });
+
+  test("keeps blank lines and inline arrays", () => {
+    const result = formatPolicy(
+      `{\n"groups": { "group:eng": ["alice@", "bob@"] },\n\n"acls": [\n// engineers\n{ "action": "accept", "src": ["group:eng"], "dst": ["*:*"] },\n\n{ "action": "accept", "src": ["*"], "dst": ["*:22"] },\n],\n}\n`,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value).toBe(
+      `{\n  "groups": { "group:eng": [ "alice@", "bob@" ] },\n\n  "acls": [\n    // engineers\n    { "action": "accept", "src": [ "group:eng" ], "dst": [ "*:*" ] },\n\n    { "action": "accept", "src": [ "*" ], "dst": [ "*:22" ] },\n  ],\n}\n`,
+    );
+  });
+
+  test("does not format an empty policy", () => {
+    expect(formatPolicy("  \n").ok).toBe(false);
   });
 
   test("does not format invalid input", () => {
@@ -349,6 +367,11 @@ describe("destination ports", () => {
 });
 
 describe("validation", () => {
+  test("treats an empty policy as having no syntax errors", () => {
+    expect(validatePolicy("")).toEqual([]);
+    expect(validatePolicy("  \n")).toEqual([]);
+  });
+
   test("accepts HuJSON comments and trailing commas", () => {
     expect(validatePolicy(`{ "groups": {}, // comment\n }`)).toEqual([]);
   });
