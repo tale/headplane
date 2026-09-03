@@ -4,7 +4,7 @@ import { authContext, headscaleContext, requestApiContext } from "~/server/conte
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
-import { parsePolicy } from "~/utils/acl-policy";
+import { parsePolicy, validatePolicy } from "~/utils/acl-policy";
 import { invalid, ok } from "~/utils/form";
 
 // Headscale prefixes policy parse errors with one of these, for HuJSON syntax
@@ -21,8 +21,18 @@ export const aclAction = createAction({
   },
   intents: {
     save: {
-      fields: { policy: v.pipe(v.string(), v.nonEmpty("The policy can't be empty.")) },
+      fields: {
+        policy: v.pipe(
+          v.string(),
+          v.check((value) => value.trim().length > 0, "The policy can't be empty."),
+        ),
+      },
       async handler(input, { api, capabilities }) {
+        const syntaxErrors = validatePolicy(input.policy);
+        if (syntaxErrors.length > 0) {
+          return invalid({ form: `Syntax error: ${syntaxErrors[0].message}` });
+        }
+
         // Older Headscale only says `unknown field "grants"`.
         const parsed = parsePolicy(input.policy);
         const hasGrants = parsed.ok && parsed.policy.keyOrder.includes("grants");
