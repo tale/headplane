@@ -1,7 +1,7 @@
 import { linter, lintGutter, type Diagnostic } from "@codemirror/lint";
 import * as shopify from "@shopify/lang-jsonc";
 import CodeMirror from "@uiw/react-codemirror";
-import { BookCopy, Braces, CircleCheck, CircleX } from "lucide-react";
+import { BookCopy, Braces, CircleCheck, CircleDashed, CircleX } from "lucide-react";
 import Merge from "react-codemirror-merge";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -17,6 +17,7 @@ interface EditorProps {
 }
 
 export function Editor(props: EditorProps) {
+  const isEmpty = props.value.trim().length === 0;
   const diagnostics = validatePolicy(props.value);
   const firstError = diagnostics[0];
 
@@ -36,20 +37,24 @@ export function Editor(props: EditorProps) {
             className={
               firstError
                 ? "flex min-w-0 items-center gap-2 text-red-600 dark:text-red-400"
-                : "flex items-center gap-2 text-green-700 dark:text-green-400"
+                : isEmpty
+                  ? "flex items-center gap-2 opacity-70"
+                  : "flex items-center gap-2 text-green-700 dark:text-green-400"
             }
           >
             {firstError ? (
               <CircleX className="size-4 shrink-0" />
+            ) : isEmpty ? (
+              <CircleDashed className="size-4 shrink-0" />
             ) : (
               <CircleCheck className="size-4 shrink-0" />
             )}
             <span className="truncate">
-              {firstError ? firstError.message : "Valid HuJSON syntax"}
+              {firstError ? firstError.message : isEmpty ? "No policy yet" : "Valid HuJSON syntax"}
             </span>
           </div>
           <Button
-            disabled={props.isDisabled || firstError !== undefined}
+            disabled={props.isDisabled || isEmpty || firstError !== undefined}
             onClick={() => {
               const result = formatPolicy(props.value);
               if (result.ok) props.onChange(result.value);
