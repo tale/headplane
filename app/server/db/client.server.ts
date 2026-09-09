@@ -13,7 +13,7 @@ import log from "~/utils/log";
 
 import type { HeadplaneConfig } from "../config/config-schema";
 import { authSessions, hostInfo, users } from "./schema";
-import type { HeadplaneUser } from "./schema";
+import type { AuthSessionRecord, HeadplaneUser, HostInfoRecord } from "./schema";
 import * as postgresSchema from "./schema.postgres";
 
 export type HeadplaneDialect = "sqlite" | "postgres";
@@ -32,8 +32,8 @@ export interface PostgresTables {
 
 /**
  * The tables Headplane queries. Typed as the SQLite schema for the same reason
- * as `HeadplaneClient`, with `AssertUserRowsMatch` below pinning the two
- * schemas to identical row shapes so the cast cannot silently drift.
+ * as `HeadplaneClient`, with the row-shape assertions below pinning every table
+ * in the two schemas so the cast cannot silently drift.
  */
 export type HeadplaneTables = SqliteTables;
 
@@ -67,7 +67,18 @@ export type HeadplaneClient = NodeSQLiteDatabase;
  * be discovered by running against that dialect.
  */
 type Exact<A extends B, B extends C, C = A> = A;
+
 export type AssertUserRowsMatch = Exact<typeof postgresSchema.users.$inferSelect, HeadplaneUser>;
+
+export type AssertAuthSessionRowsMatch = Exact<
+  typeof postgresSchema.authSessions.$inferSelect,
+  AuthSessionRecord
+>;
+
+export type AssertHostInfoRowsMatch = Exact<
+  typeof postgresSchema.hostInfo.$inferSelect,
+  HostInfoRecord
+>;
 
 /**
  * A database connection bundled with the schema and dialect it belongs to.
