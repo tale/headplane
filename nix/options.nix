@@ -375,6 +375,13 @@ in {
                   example = "https://provider.example.com/userinfo_endpoint";
                 };
 
+                jwks_endpoint = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "Optionally override jwks_endpoint";
+                  example = "https://provider.example.com/jwks_endpoint";
+                };
+
                 client_id = mkOption {
                   type = types.str;
                   default = "";

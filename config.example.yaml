@@ -222,6 +222,7 @@ integration:
 #   authorization_endpoint: ""
 #   token_endpoint: ""
 #   userinfo_endpoint: ""
+#   jwks_endpoint: ""
 #
 #   # RP-initiated logout (https://openid.net/specs/openid-connect-rpinitiated-1_0.html).
 #   # When true, /logout redirects the user to the IdP's end_session_endpoint
