@@ -6,10 +6,11 @@
 // verifies a signature against the provider's published keys — identity is
 // proven rather than assumed.
 //
-// The verifier itself is provider-agnostic. `providerPresets` supplies the
-// header, issuer, JWKS URL and claim mapping for each known proxy, so adding
-// Cloudflare Access or an ALB is a preset entry rather than a second
-// implementation.
+// Fully provider-agnostic: the operator states the header, issuer, JWKS URL
+// and audience, so any proxy that signs a header works without Headplane
+// knowing it exists. The documentation carries the values for known proxies
+// rather than a preset table in code, which would be a support surface that
+// can go stale inside a released binary.
 
 import { createHash } from "node:crypto";
 
@@ -19,57 +20,51 @@ import type { JWTPayload, JWTVerifyGetKey } from "jose";
 import { type Result, err, ok } from "~/server/result";
 import log from "~/utils/log";
 
-export type JwtAuthProvider = "google_iap";
+// A JWKS publishes *public* keys. Allowing a symmetric algorithm alongside
+// them lets anyone use a published key as the HMAC secret and forge an
+// assertion, so the symmetric family is refused even when asked for.
+const SYMMETRIC_ALGORITHMS = ["HS256", "HS384", "HS512"];
+const DEFAULT_ALGORITHMS = ["ES256", "ES384", "ES512", "RS256", "RS384", "RS512", "PS256"];
 
-interface ProviderPreset {
-  header: string;
-  issuer: string;
-  jwksUrl: string;
-  algorithms: string[];
-
-  // Namespaces the Headplane subject so a provider identity can never
-  // collide with an OIDC `sub` or a `proxy:` identity.
-  subjectPrefix: string;
-
-  // Claim carrying the hosted domain, when the provider emits one.
-  domainClaim?: string;
-
-  // Where to send the browser on logout so the proxy drops its own session.
-  logoutUrl?: string;
-}
-
-export const providerPresets: Record<JwtAuthProvider, ProviderPreset> = {
-  google_iap: {
-    header: "x-goog-iap-jwt-assertion",
-    issuer: "https://cloud.google.com/iap",
-    jwksUrl: "https://www.gstatic.com/iap/verify/public_key-jwk",
-    algorithms: ["ES256"],
-    subjectPrefix: "iap",
-    domainClaim: "hd",
-    logoutUrl: "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE",
-  },
-};
+// Namespaces the Headplane subject so a proxy identity can never collide with
+// an OIDC `sub` or a `proxy:` identity. Fixed rather than configurable:
+// changing it would orphan every account created before the change.
+const SUBJECT_PREFIX = "jwt";
 
 export interface JwtAuthConfig {
-  provider: JwtAuthProvider;
+  /** Header carrying the assertion, e.g. `x-goog-iap-jwt-assertion`. */
+  header: string;
 
-  // Required. An unchecked audience accepts a valid assertion minted for any
-  // other project, so this is enforced at construction rather than per-request.
+  /** Expected `iss`, matched exactly. */
+  issuer: string;
+
+  /** Where the signing keys are published. */
+  jwksUrl: string;
+
+  /**
+   * Expected `aud`, matched exactly.
+   *
+   * Enforced at construction: without it Headplane would accept any assertion
+   * the issuer ever signed, including one minted for a different service.
+   */
   audience: string;
 
-  // When set, the assertion's hosted domain must appear in this list.
+  /** Accepted signing algorithms. Defaults to the asymmetric families. */
+  algorithms?: string[];
+
+  /** When set, the assertion's domain must appear in this list. */
   allowedDomains?: string[];
 
-  // Preset overrides. Present for compatibility and for tests; operators
-  // should not normally need any of them.
-  header?: string;
-  issuer?: string;
-  jwksUrl?: string;
-  algorithms?: string[];
+  /** Claim carrying the hosted domain, e.g. `hd` for Google IAP. */
+  domainClaim?: string;
+
+  /** Where to send the browser on logout so the proxy drops its own session. */
+  logoutUrl?: string;
+
   clockTolerance?: number;
 
-  // Verified assertions are cached to avoid re-running ES256 on every loader
-  // call. Entries never outlive the assertion's own `exp`.
+  // Verified assertions are cached to avoid re-verifying on every loader call.
+  // Entries never outlive the assertion's own `exp`.
   cacheTtlMs?: number;
   cacheMaxEntries?: number;
 
@@ -79,7 +74,7 @@ export interface JwtAuthConfig {
 }
 
 export interface JwtAuthIdentity {
-  // Namespaced Headplane subject, e.g. `iap:accounts.google.com:1156…`.
+  // Namespaced Headplane subject, e.g. `jwt:accounts.google.com:1156…`.
   subject: string;
   name: string;
   email?: string;
@@ -125,12 +120,16 @@ interface CacheEntry {
   evictAt: number;
 }
 
-export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
-  const preset = providerPresets[config.provider];
-  if (!preset) {
-    throw new Error(`Unknown JWT authentication provider: ${config.provider}`);
+function requireField(value: string | undefined, name: string): string {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    throw new Error(`server.jwt_auth.${name} is required when jwt_auth is enabled`);
   }
 
+  return trimmed;
+}
+
+export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
   // Fail fast at startup rather than accepting every project's assertions.
   const audience = config.audience?.trim();
   if (!audience) {
@@ -139,17 +138,24 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
     );
   }
 
-  const header = (config.header ?? preset.header).toLowerCase();
-  const issuer = config.issuer ?? preset.issuer;
-  const algorithms = config.algorithms ?? preset.algorithms;
+  const header = requireField(config.header, "header").toLowerCase();
+  const issuer = requireField(config.issuer, "issuer");
+  const jwksUrl = requireField(config.jwksUrl, "jwks_url");
+
+  const algorithms = config.algorithms?.length ? config.algorithms : DEFAULT_ALGORITHMS;
+  const symmetric = algorithms.filter((alg) => SYMMETRIC_ALGORITHMS.includes(alg));
+  if (symmetric.length > 0) {
+    throw new Error(
+      `server.jwt_auth.algorithms cannot include ${symmetric.join(", ")} — a JWKS publishes public keys, so a symmetric algorithm would let anyone use one as the signing secret`,
+    );
+  }
   const clockTolerance = config.clockTolerance ?? DEFAULT_CLOCK_TOLERANCE;
   const cacheTtlMs = config.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
   const cacheMaxEntries = config.cacheMaxEntries ?? DEFAULT_CACHE_MAX_ENTRIES;
 
   const allowedDomains = config.allowedDomains?.map((domain) => domain.trim().toLowerCase());
 
-  const keyResolver =
-    config.keyResolver ?? createRemoteJWKSet(new URL(config.jwksUrl ?? preset.jwksUrl));
+  const keyResolver = config.keyResolver ?? createRemoteJWKSet(new URL(jwksUrl));
 
   const cache = new Map<string, CacheEntry>();
 
@@ -205,7 +211,7 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
   }
 
   function resolveDomain(payload: JWTPayload, email: string | undefined): string | undefined {
-    const claim = preset.domainClaim ? payload[preset.domainClaim] : undefined;
+    const claim = config.domainClaim ? payload[config.domainClaim] : undefined;
     if (typeof claim === "string" && claim.length > 0) {
       return claim.toLowerCase();
     }
@@ -247,7 +253,7 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
     const name = email && at > 0 ? email.slice(0, at) : subject;
 
     return ok({
-      subject: `${preset.subjectPrefix}:${subject}`,
+      subject: `${SUBJECT_PREFIX}:${subject}`,
       name,
       email,
       domain,
@@ -340,7 +346,7 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
 
   return {
     header,
-    logoutUrl: preset.logoutUrl,
+    logoutUrl: config.logoutUrl,
     authenticate,
   };
 }

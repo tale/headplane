@@ -1,6 +1,6 @@
 # Next
 
-- Added Google Cloud Identity-Aware Proxy (IAP) authentication via `server.jwt_auth`. Unlike `server.proxy_auth`, the signed assertion is verified against the provider's published keys, so identity does not depend on trusting the client address (closes [#606](https://github.com/tale/headplane/issues/606)).
+- Added authentication from a signed assertion injected by an identity-aware proxy, via `server.jwt_auth`. Works with any proxy that signs a header — Google IAP, Cloudflare Access and Pomerium among them — by verifying the signature against the proxy's published keys, so identity does not depend on trusting the client address (closes [#606](https://github.com/tale/headplane/issues/606)).
 
 # 0.7.1 (August 27, 2026)
 

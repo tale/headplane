@@ -87,8 +87,11 @@ function requestWith(assertion?: string, headerName = HEADER): Request {
 
 function createService(overrides: Partial<JwtAuthConfig> = {}) {
   return createJwtAuthService({
-    provider: "google_iap",
+    header: HEADER,
+    issuer: ISSUER,
+    jwksUrl: "https://www.gstatic.com/iap/verify/public_key-jwk",
     audience: AUDIENCE,
+    domainClaim: "hd",
     keyResolver: resolverFor(esPublicKey),
     ...overrides,
   });
@@ -103,10 +106,44 @@ describe("createJwtAuthService configuration", () => {
     expect(() => createService({ audience: "   " })).toThrow(/audience is required/);
   });
 
-  test("createJwtAuthService_withGoogleIapPreset_exposesHeaderAndLogoutUrl", () => {
-    const service = createService();
+  test("createJwtAuthService_exposesTheConfiguredHeaderAndLogoutUrl", () => {
+    const service = createService({ logoutUrl: "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE" });
     expect(service.header).toBe(HEADER);
     expect(service.logoutUrl).toBe("/?gcp-iap-mode=CLEAR_LOGIN_COOKIE");
+  });
+
+  test.each(["header", "issuer", "jwksUrl"] as const)(
+    "createJwtAuthService_without%s_throwsAtConstruction",
+    (field) => {
+      // Each of these is a way to configure an authentication bypass, so
+      // Headplane refuses to start rather than guessing a default.
+      expect(() => createService({ [field]: "" })).toThrow(/is required/);
+    },
+  );
+
+  test.each(["HS256", "HS384", "HS512"])(
+    "createJwtAuthService_with%sInAlgorithms_throwsAtConstruction",
+    (alg) => {
+      // A JWKS publishes public keys. Verifying with a symmetric algorithm
+      // would let anyone use a published key as the signing secret.
+      expect(() => createService({ algorithms: ["ES256", alg] })).toThrow(/cannot include/);
+    },
+  );
+
+  test("createJwtAuthService_withoutAlgorithms_defaultsToAsymmetricOnly", async () => {
+    const service = createService({ algorithms: undefined });
+    const result = await service.authenticate(requestWith(await signAssertion()));
+
+    expect(result.ok).toBe(true);
+  });
+
+  test("authenticate_withHeaderCasingDifferentFromConfig_stillMatches", async () => {
+    const service = createService({ header: "X-Custom-Assertion" });
+    const result = await service.authenticate(
+      requestWith(await signAssertion(), "x-custom-assertion"),
+    );
+
+    expect(result.ok).toBe(true);
   });
 });
 
@@ -118,7 +155,7 @@ describe("authenticate happy path", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.subject).toBe(`iap:${SUBJECT}`);
+    expect(result.value.subject).toBe(`jwt:${SUBJECT}`);
     expect(result.value.email).toBe("ada@example.com");
     expect(result.value.name).toBe("ada");
     expect(result.value.expiresAt).toBeGreaterThan(Date.now());
@@ -244,8 +281,12 @@ describe("authenticate rejects unverifiable assertions", () => {
 describe("authenticate resists algorithm substitution", () => {
   test("authenticate_withRs256SignedAssertion_rejectsEvenWhenKeyMatches", async () => {
     // The resolver hands back the *correct* RSA key, so only the algorithm
-    // allowlist can reject this. If it passes, alg confusion is possible.
-    const service = createService({ keyResolver: resolverFor(rsaPublicKey) });
+    // allowlist can reject this. An operator who pinned ES256 must not have
+    // RS256 accepted on their behalf.
+    const service = createService({
+      algorithms: ["ES256"],
+      keyResolver: resolverFor(rsaPublicKey),
+    });
     const assertion = await signAssertion({ alg: "RS256", key: rsaPrivateKey });
     const result = await service.authenticate(requestWith(assertion));
 

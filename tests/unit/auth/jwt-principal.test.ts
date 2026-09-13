@@ -43,8 +43,11 @@ async function signAssertion(
 
 function buildAuth(options: { defaultRole?: string; headscaleApiKey?: string | null } = {}) {
   const service = createJwtAuthService({
-    provider: "google_iap",
+    header: HEADER,
+    issuer: ISSUER,
+    jwksUrl: "https://www.gstatic.com/iap/verify/public_key-jwk",
     audience: AUDIENCE,
+    domainClaim: "hd",
     keyResolver: (() => Promise.resolve(publicKey)) as unknown as JWTVerifyGetKey,
   });
 
@@ -79,7 +82,7 @@ describe("JWT-authenticated principals", () => {
     expect(principal.kind).toBe("jwt");
     if (principal.kind === "api_key") return;
 
-    expect(principal.user.subject).toBe("iap:accounts.google.com:1155");
+    expect(principal.user.subject).toBe("jwt:accounts.google.com:1155");
     expect(principal.profile.email).toBe("ada@example.com");
     expect(principal.sessionId).toBe("jwt-auth");
   });
