@@ -175,25 +175,61 @@ in {
                         '';
                       };
 
-                      provider = mkOption {
-                        type = types.enum ["google_iap"];
-                        default = "google_iap";
-                        description = ''
-                          Which proxy issues the assertion. The provider supplies the header
-                          name, issuer, JWKS URL and signing algorithm.
-                        '';
-                      };
-
-                      audience = mkOption {
+                      header = mkOption {
                         type = types.str;
                         default = "";
                         description = ''
-                          The audience the assertion must carry. Required when enabled: without
-                          it Headplane would accept an assertion minted for any other backend
-                          service. For Google IAP this is
-                          /projects/PROJECT_NUMBER/global/backendServices/BACKEND_SERVICE_ID.
+                          Header carrying the signed assertion. Required when enabled.
                         '';
-                        example = "/projects/123456789/global/backendServices/987654321";
+                        example = "x-goog-iap-jwt-assertion";
+                      };
+
+                      issuer = mkOption {
+                        type = types.str;
+                        default = "";
+                        description = "Expected iss claim, matched exactly. Required when enabled.";
+                        example = "https://cloud.google.com/iap";
+                      };
+
+                      jwks_url = mkOption {
+                        type = types.str;
+                        default = "";
+                        description = ''
+                          Where the proxy publishes its signing keys. Required when enabled.
+                        '';
+                        example = "https://www.gstatic.com/iap/verify/public_key-jwk";
+                      };
+
+                      algorithms = mkOption {
+                        type = types.listOf types.str;
+                        default = [];
+                        description = ''
+                          Accepted signing algorithms. Defaults to the asymmetric families.
+                          Symmetric algorithms (HS256 and friends) are refused: a JWKS
+                          publishes public keys, so one could be used as a signing secret.
+                        '';
+                        example = ["ES256"];
+                      };
+
+                      domain_claim = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Claim carrying the hosted domain. Falls back to the email domain
+                          when the claim is absent.
+                        '';
+                        example = "hd";
+                      };
+
+                      logout_url = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Where to send the browser on logout so the proxy drops its own
+                          session. Clearing only Headplane's cookie would sign the user
+                          straight back in.
+                        '';
+                        example = "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE";
                       };
 
                       allowed_domains = mkOption {

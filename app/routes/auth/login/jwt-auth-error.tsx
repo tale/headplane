@@ -47,7 +47,7 @@ function getErrorMessage(code: string) {
       return (
         <Card.Text>
           The assertion came from an unexpected issuer. Check that{" "}
-          <Code>server.jwt_auth.provider</Code> matches the proxy actually sitting in front of
+          <Code>server.jwt_auth.issuer</Code> matches the proxy actually sitting in front of
           Headplane.
         </Card.Text>
       );

@@ -67,16 +67,20 @@ const serverConfig = type({
   // depend on the peer address being trustworthy.
   "jwt_auth?": {
     enabled: "boolean",
-    provider: '"google_iap"',
-    audience: "string",
-    allowed_domains: "string[]?",
-    default_role: `${assignableRole} = "member"`,
 
-    // Preset overrides. Operators should not normally need these.
-    header: "string?",
-    issuer: "string.url?",
-    jwks_url: "string.url?",
+    // The four values that identify and verify the proxy's assertion. Stated
+    // explicitly rather than selected from a provider list, so any proxy works
+    // without Headplane having to know about it.
+    header: "string",
+    issuer: "string.url",
+    jwks_url: "string.url",
+    audience: "string",
+
+    allowed_domains: "string[]?",
+    domain_claim: "string?",
+    logout_url: "string?",
     algorithms: "string[]?",
+    default_role: `${assignableRole} = "member"`,
   },
 });
 
@@ -108,15 +112,16 @@ const partialServerConfig = type({
 
   "jwt_auth?": {
     enabled: "boolean?",
-    provider: '"google_iap"?',
-    audience: "string?",
-    allowed_domains: "string[]?",
-    default_role: `${assignableRole}?`,
-
     header: "string?",
     issuer: "string.url?",
     jwks_url: "string.url?",
+    audience: "string?",
+
+    allowed_domains: "string[]?",
+    domain_claim: "string?",
+    logout_url: "string?",
     algorithms: "string[]?",
+    default_role: `${assignableRole}?`,
   },
 });
 
