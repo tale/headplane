@@ -55,7 +55,7 @@ export default defineConfig({
                 link: "/features/sso",
                 items: [
                   { text: "Proxy Authentication", link: "/features/proxy-auth" },
-                  { text: "Google IAP", link: "/features/google-iap" },
+                  { text: "JWT Header Auth", link: "/features/jwt-auth" },
                 ],
               },
               { text: "Access Control", link: "/features/acls" },

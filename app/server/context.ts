@@ -142,17 +142,18 @@ function buildJwtAuth(config: HeadplaneConfig): JwtAuthService | undefined {
     return;
   }
 
-  // `audience` is mandatory and the verifier throws without it, which is the
-  // behaviour we want: a misconfigured audience would otherwise accept
-  // assertions minted for any other backend service.
+  // The verifier throws on a missing header, issuer, JWKS URL or audience,
+  // which is the behaviour we want: each of those is a way to configure an
+  // authentication bypass, so Headplane refuses to start instead.
   return createJwtAuthService({
-    provider: jwtAuth.provider,
-    audience: jwtAuth.audience,
-    allowedDomains: jwtAuth.allowed_domains,
     header: jwtAuth.header,
     issuer: jwtAuth.issuer,
     jwksUrl: jwtAuth.jwks_url,
+    audience: jwtAuth.audience,
     algorithms: jwtAuth.algorithms,
+    allowedDomains: jwtAuth.allowed_domains,
+    domainClaim: jwtAuth.domain_claim,
+    logoutUrl: jwtAuth.logout_url,
   });
 }
 

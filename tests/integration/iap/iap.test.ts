@@ -39,8 +39,10 @@ async function signAssertion(key: SigningKey, subject = "accounts.google.com:115
 // keys through `createRemoteJWKSet` against a real HTTP endpoint.
 function createService(jwksUrl = jwks.url) {
   return createJwtAuthService({
-    provider: "google_iap",
+    header: HEADER,
+    issuer: ISSUER,
     audience: AUDIENCE,
+    domainClaim: "hd",
     jwksUrl,
   });
 }
@@ -61,7 +63,7 @@ describe("assertion verification against a live JWKS endpoint", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.subject).toBe("iap:accounts.google.com:1155");
+    expect(result.value.subject).toBe("jwt:accounts.google.com:1155");
     // Proof the key really came over the wire rather than from a test double.
     expect(jwks.fetchCount()).toBeGreaterThan(before);
   });
