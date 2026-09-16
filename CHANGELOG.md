@@ -1,5 +1,9 @@
 # Next
 
+## Fixes
+
+- Corrected the native installation prerequisites to follow each release's Node.js, pnpm and Go requirements, and documented the complete build command so Browser SSH and Agent binaries are included.
+
 # 0.7.1 (August 27, 2026)
 
 ## Changes
