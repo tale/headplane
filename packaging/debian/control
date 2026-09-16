@@ -1,0 +1,16 @@
+Source: headplane
+Section: net
+Priority: optional
+Maintainer: Headplane packaging contributors <noreply@localhost>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
+Homepage: https://headplane.net
+Rules-Requires-Root: no
+
+Package: headplane
+Architecture: amd64 arm64
+Depends: ${misc:Depends}, nodejs (>= 24.2), nodejs (<< 25), ca-certificates, adduser
+Description: Web interface for managing Headscale
+ Headplane manages a Headscale Tailnet through a web interface and includes
+ the optional Headplane Agent and browser SSH assets.
+ Configure /etc/headplane/config.yaml before enabling headplane.service.

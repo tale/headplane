@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Preserve administrator-created configuration, persistent state and the
+# system account even on purge. Only remove an empty configuration directory.
+if [ "$1" = purge ]; then
+    rmdir /etc/headplane 2>/dev/null || true
+fi
+
+#DEBHELPER#

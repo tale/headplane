@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem=none
+
+override_dh_auto_install:
+	cp -a payload/. debian/headplane/
+
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start --restart-after-upgrade
+
+override_dh_strip:
+	dh_strip --no-automatic-dbgsym
+
+# Go emits DWARF that dwz cannot optimize. The binaries are still stripped by
+# dh_strip; there are no C/C++ debug sections to deduplicate here.
+override_dh_dwz:
+
+override_dh_compress:
+	dh_compress -Xexamples/ -Xlicenses/

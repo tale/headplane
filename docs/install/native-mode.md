@@ -15,6 +15,19 @@ Headplane can be installed and run directly on your host system without the need
 for Docker. This method is suitable for users who already run Headscale natively
 or prefer to avoid containers.
 
+## Debian package prototype
+
+The repository includes experimental tooling to build a `.deb` with the web
+application, Agent, Browser SSH assets and a systemd service. See
+[`packaging/README.md`](https://github.com/tale/headplane/blob/main/packaging/README.md)
+for building, installing, upgrading and removing the package. It requires a
+dpkg-managed Node.js `>=24.2 <25`; installation leaves the service stopped until
+you create its configuration and explicitly enable it.
+
+These packages are a contribution prototype, not yet an official Release
+artifact or an APT repository. The source installation steps below remain
+available independently.
+
 ## Prerequisites
 
 - A Linux-based operating system (e.g, Ubuntu, Debian, CentOS, Fedora)
