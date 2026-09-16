@@ -53,10 +53,10 @@ are build-time tools; the resulting application runs with Node.js.
 
 ## Running Headplane
 
-Running Headplane is as straightforward as running `pnpm start` (or also
-directly with `node build/server/index.js`). Headplane will look for a config
-file at `/etc/headplane/config.yaml` by default, but you can specify a different
-path by setting the `HEADPLANE_CONFIG_PATH` environment variable.
+Run `node build/server/index.js` from the project directory to start Headplane.
+If pnpm is installed, `pnpm start` runs the same command. Headplane will look
+for a config file at `/etc/headplane/config.yaml` by default, but you can specify
+a different path by setting the `HEADPLANE_CONFIG_PATH` environment variable.
 
 > Ensure that the `build/` directory exists relative to where the start command
 > is run, otherwise Headplane will not be able to find the frontend assets.
@@ -242,11 +242,10 @@ while building Headplane via the `__INTERNAL_PREFIX` environment variable.
 
 ```bash
 # Example for /headplane prefix
-git clone
+git clone https://github.com/tale/headplane.git
 cd headplane
-pnpm install
 # Set the prefix here
-__INTERNAL_PREFIX=/headplane pnpm build
+__INTERNAL_PREFIX=/headplane ./build.sh
 ```
 
 When running Headplane, all requests will only be served under the specified
