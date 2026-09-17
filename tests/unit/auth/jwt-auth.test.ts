@@ -228,6 +228,26 @@ describe("authenticate rejects unverifiable assertions", () => {
     expect(result.error.code).toBe("issuer_mismatch");
   });
 
+  test("authenticate_withoutExpiry_rejects", async () => {
+    // jose only validates `exp` when it is present, so an assertion without
+    // one would otherwise be accepted forever.
+    const now = Math.floor(Date.now() / 1000);
+    const noExpiry = await new SignJWT({ email: "ada@example.com" })
+      .setProtectedHeader({ alg: "ES256" })
+      .setSubject(SUBJECT)
+      .setIssuer(ISSUER)
+      .setAudience(AUDIENCE)
+      .setIssuedAt(now)
+      .sign(esPrivateKey);
+
+    const service = createService();
+    const result = await service.authenticate(requestWith(noExpiry));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe("invalid_assertion");
+  });
+
   test("authenticate_withExpiredAssertion_returnsExpired", async () => {
     const service = createService();
     const assertion = await signAssertion({ expiresIn: -600 });

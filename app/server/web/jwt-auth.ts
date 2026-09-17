@@ -257,7 +257,7 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
       name,
       email,
       domain,
-      // `exp` is validated by `jwtVerify`, so it is present here.
+      // `exp` is in `requiredClaims`, so verification fails without it.
       expiresAt: (payload.exp ?? 0) * 1000,
     });
   }
@@ -286,6 +286,9 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
         audience,
         algorithms,
         clockTolerance,
+        // jose validates `exp` only when it is present, so without this an
+        // assertion carrying no expiry would be accepted indefinitely.
+        requiredClaims: ["exp"],
       }));
     } catch (cause) {
       return err(toVerifyError(cause, assertion));

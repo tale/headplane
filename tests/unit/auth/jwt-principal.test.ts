@@ -2,6 +2,7 @@ import { SignJWT, generateKeyPair } from "jose";
 import type { JWTVerifyGetKey } from "jose";
 import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
+import { buildJwtAuth } from "~/server/context";
 import { type AuthService, isUserPrincipal } from "~/server/web/auth";
 import { createJwtAuthService } from "~/server/web/jwt-auth";
 import { Capabilities } from "~/server/web/roles";
@@ -179,11 +180,24 @@ describe("JWT authentication fails closed", () => {
     expect(principal.kind).toBe("oidc");
   });
 
-  test("require_withoutHeadscaleApiKey_rejects", async () => {
-    const { auth } = buildAuth({ headscaleApiKey: null });
+  test("buildJwtAuth_withoutHeadscaleApiKey_throwsAtStartup", () => {
+    // Checked when the app context is built, not per request: an operator who
+    // enables jwt_auth without an API key is told at startup instead of being
+    // served a 500 on every protected route. Refusing to start also avoids
+    // silently falling back to the other authentication methods.
+    const config = {
+      server: {
+        jwt_auth: {
+          enabled: true,
+          header: HEADER,
+          issuer: ISSUER,
+          jwks_url: "https://www.gstatic.com/iap/verify/public_key-jwk",
+          audience: AUDIENCE,
+        },
+      },
+    } as unknown as Parameters<typeof buildJwtAuth>[0];
 
-    await expect(auth.require(requestWith(await signAssertion()))).rejects.toThrow(
-      /requires headscale.api_key/,
-    );
+    expect(() => buildJwtAuth(config, undefined)).toThrow(/requires headscale.api_key/);
+    expect(() => buildJwtAuth(config, "hs-api-key")).not.toThrow();
   });
 });

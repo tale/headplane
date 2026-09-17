@@ -19,8 +19,9 @@ which address it arrives from.
 Headplane does not maintain a list of supported proxies. You state the four
 values your proxy uses, and anything that signs a header works.
 
-JWT header authentication requires `headscale.api_key` to be configured. All
-Headscale API calls are made with that key.
+JWT header authentication requires `headscale.api_key` to be configured — all
+Headscale API calls are made with that key, and Headplane refuses to start if
+`jwt_auth` is enabled without it.
 
 ## Configuration
 
