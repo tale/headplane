@@ -440,9 +440,6 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     if (!opts.jwtAuth) {
       return;
     }
-    if (!opts.headscaleApiKey) {
-      throw new Error("JWT authentication requires headscale.api_key to be configured");
-    }
 
     const result = await opts.jwtAuth.service.authenticate(request);
 

@@ -48,7 +48,7 @@ export async function createAppContext(config: HeadplaneConfig) {
     db,
   );
 
-  const jwtAuth = buildJwtAuth(config);
+  const jwtAuth = buildJwtAuth(config, headscaleApiKey);
 
   const auth = createAuthService({
     secret: config.server.cookie_secret,
@@ -136,10 +136,21 @@ export async function createAppContext(config: HeadplaneConfig) {
   };
 }
 
-function buildJwtAuth(config: HeadplaneConfig): JwtAuthService | undefined {
+export function buildJwtAuth(
+  config: HeadplaneConfig,
+  headscaleApiKey: string | undefined,
+): JwtAuthService | undefined {
   const jwtAuth = config.server.jwt_auth;
   if (!jwtAuth?.enabled) {
     return;
+  }
+
+  // Checked here rather than per request: an operator who enables jwt_auth
+  // without an API key should be told at startup, not served a 500 on every
+  // protected route. Refusing to start also avoids silently falling back to
+  // the other authentication methods.
+  if (!headscaleApiKey) {
+    throw new Error("server.jwt_auth requires headscale.api_key to be configured");
   }
 
   // The verifier throws on a missing header, issuer, JWKS URL or audience,

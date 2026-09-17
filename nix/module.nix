@@ -32,7 +32,21 @@
       builtins.removeAttrs settingsWithoutNulls ["oidc"]
     else
       settingsWithoutNulls;
-  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutEmptyOidc;
+  # `settings.server` is a submodule, so `jwt_auth` is always materialized with
+  # its defaults. The schema requires header/issuer/jwks_url/audience, which
+  # would reject every deployment that does not use it.
+  settingsWithoutDisabledJwtAuth =
+    if settingsWithoutEmptyOidc ? server
+       && settingsWithoutEmptyOidc.server ? jwt_auth
+       && !(settingsWithoutEmptyOidc.server.jwt_auth.enabled or false)
+    then
+      settingsWithoutEmptyOidc
+      // {
+        server = builtins.removeAttrs settingsWithoutEmptyOidc.server ["jwt_auth"];
+      }
+    else
+      settingsWithoutEmptyOidc;
+  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutDisabledJwtAuth;
 in {
   imports = [./options.nix];
   config = mkIf cfg.enable {
