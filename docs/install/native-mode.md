@@ -18,8 +18,11 @@ or prefer to avoid containers.
 ## Prerequisites
 
 - A Linux-based operating system (e.g, Ubuntu, Debian, CentOS, Fedora)
-- Go version 1.25.1 installed (only needed to build Headplane)
-- Node.js version 22.16.x and [pnpm](https://pnpm.io/) version 10.4.x installed
+- Go matching the `go` directive in the checked-out release's `go.mod`
+  (only needed to build Headplane)
+- Node.js and [pnpm](https://pnpm.io/) matching the `engines` field in the
+  checked-out release's `package.json`. For v0.7.1, use Node.js `>=24.2 <25`
+  and pnpm `>=10.4 <11`; `packageManager` pins pnpm to `10.4.0`.
 - Headscale version 0.27.0 or later installed and running
 - A [completed configuration file](./index.md#configuration) for Headplane.
 
@@ -41,16 +44,19 @@ Clone the Headplane repository, install dependencies, and build the project:
 # You can optionally checkout a specific release tag.
 git clone https://github.com/tale/headplane.git
 cd headplane
-pnpm install
-pnpm build
+./build.sh
 ```
+
+The build script installs locked dependencies and builds the web application,
+Browser SSH WASM module, Headplane Agent and healthcheck binary. Go and pnpm
+are build-time tools; the resulting application runs with Node.js.
 
 ## Running Headplane
 
-Running Headplane is as straightforward as running `pnpm start` (or also
-directly with `node build/server/index.js`). Headplane will look for a config
-file at `/etc/headplane/config.yaml` by default, but you can specify a different
-path by setting the `HEADPLANE_CONFIG_PATH` environment variable.
+Run `node build/server/index.js` from the project directory to start Headplane.
+If pnpm is installed, `pnpm start` runs the same command. Headplane will look
+for a config file at `/etc/headplane/config.yaml` by default, but you can specify
+a different path by setting the `HEADPLANE_CONFIG_PATH` environment variable.
 
 > Ensure that the `build/` directory exists relative to where the start command
 > is run, otherwise Headplane will not be able to find the frontend assets.
@@ -236,11 +242,10 @@ while building Headplane via the `__INTERNAL_PREFIX` environment variable.
 
 ```bash
 # Example for /headplane prefix
-git clone
+git clone https://github.com/tale/headplane.git
 cd headplane
-pnpm install
 # Set the prefix here
-__INTERNAL_PREFIX=/headplane pnpm build
+__INTERNAL_PREFIX=/headplane ./build.sh
 ```
 
 When running Headplane, all requests will only be served under the specified
