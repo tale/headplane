@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/node-sqlite";
 import { migrate } from "drizzle-orm/node-sqlite/migrator";
 
+import { wrapSqliteClient } from "~/server/db/client.server";
 import { createAuthService } from "~/server/web/auth";
 
 export function createTestAuth(
@@ -18,8 +19,9 @@ export function createTestAuth(
     };
   } = {},
 ) {
-  const db = drizzle(":memory:");
-  migrate(db, { migrationsFolder: "./drizzle" });
+  const client = drizzle(":memory:");
+  migrate(client, { migrationsFolder: "./drizzle" });
+  const db = wrapSqliteClient(client);
 
   const auth = createAuthService({
     secret: "test-secret-key-for-unit-tests",

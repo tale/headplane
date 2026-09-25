@@ -47,6 +47,15 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "integration:db",
+          include: ["tests/integration/db/**/*.test.ts"],
+          testTimeout: 120_000,
+          hookTimeout: 120_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "integration:oidc",
           include: ["tests/integration/oidc/**/*.test.ts"],
           testTimeout: 60_000,
