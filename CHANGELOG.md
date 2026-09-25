@@ -1,5 +1,9 @@
 # Next
 
+## Changes
+
+- Added Debian package tooling for native installations, including a dedicated service account, systemd service and prebuilt Agent and Browser SSH assets. Installation leaves the service stopped until configured, and upgrades preserve local configuration and data.
+
 # 0.7.1 (August 27, 2026)
 
 ## Changes

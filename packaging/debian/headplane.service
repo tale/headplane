@@ -1,0 +1,29 @@
+[Unit]
+Description=Headplane web interface for Headscale
+After=network.target headscale.service
+ConditionPathExists=/etc/headplane/config.yaml
+
+[Service]
+Type=simple
+User=headplane
+Group=headplane
+WorkingDirectory=/usr/lib/headplane
+Environment=NODE_ENV=production
+Environment=HEADPLANE_CONFIG_PATH=/etc/headplane/config.yaml
+ExecStart=/usr/bin/node /usr/lib/headplane/build/server/index.js
+Restart=on-failure
+RestartSec=5s
+StateDirectory=headplane
+StateDirectoryMode=0750
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+[Install]
+WantedBy=multi-user.target

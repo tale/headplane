@@ -1,0 +1,63 @@
+name: Debian packages
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Debian package (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends debhelper dpkg-dev binutils python3 patch
+      - name: Build release package and upgrade fixture
+        run: |
+          ./packaging/build-deb.sh
+          package=(dist/*.deb)
+          version=$(dpkg-deb -f "${package[0]}" Version)
+          SKIP_BUILD=1 DEB_VERSION="${version%-1}-2" OUTPUT_DIR="$RUNNER_TEMP/upgrade" \
+            ./packaging/build-deb.sh
+      - name: Check application
+        run: |
+          pnpm run typecheck
+          pnpm run lint
+          pnpm run test:unit
+      - name: Test package lifecycle on the disposable runner
+        run: |
+          sudo touch /etc/headplane-package-test-vm
+          sudo sh packaging/tests/prepare-system.sh "$RUNNER_TEMP/dependencies"
+          sudo sh packaging/tests/lifecycle.sh dist/*.deb "$RUNNER_TEMP"/upgrade/*.deb \
+            "$RUNNER_TEMP"/dependencies/nodejs_*.deb
+      - name: Upload packages and checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: headplane-debian-${{ matrix.arch }}
+          path: |
+            dist/*.deb
+            dist/*.sha256
+          if-no-files-found: error

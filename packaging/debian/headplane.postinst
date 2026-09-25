@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = configure ]; then
+    if ! getent group headplane >/dev/null; then
+        addgroup --system headplane
+    fi
+    if ! getent passwd headplane >/dev/null; then
+        adduser --system --ingroup headplane --home /var/lib/headplane \
+            --no-create-home --disabled-login headplane
+    fi
+    # The configuration itself is administrator-owned, never generated or
+    # overwritten by an upgrade. Preserve existing ownership and permissions.
+    if [ ! -d /etc/headplane ]; then
+        install -d -o root -g headplane -m 0750 /etc/headplane
+    fi
+    if [ ! -d /var/lib/headplane ]; then
+        install -d -o headplane -g headplane -m 0750 /var/lib/headplane
+    fi
+fi
+
+#DEBHELPER#
