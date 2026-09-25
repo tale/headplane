@@ -1,0 +1,132 @@
+{{- if .Values.headplane.config.generateCredentials }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: headplane-scripts
+data:
+  ensure-headscale-api-key.sh: |
+    set -e
+
+    NAMESPACE="${NAMESPACE:?Error: NAMESPACE environment variable not set.}"
+    HEADSCALE_SECRET_NAME="${HEADSCALE_SECRET_NAME:?Error: HEADSCALE_SECRET_NAME environment variable not set.}"
+    HEADSCALE_POD_SELECTOR="${HEADSCALE_POD_SELECTOR:?Error: HEADSCALE_POD_SELECTOR environment variable not set.}"
+
+    check_api_key_validity() {
+      local key_to_check="$1"
+      local validation_url="$HEADSCALE_HOST:8080/api/v1/user"
+
+      local http_status
+      local curl_stderr_output
+      local curl_exit_status
+
+      curl_stderr_output=$(curl -sS --fail -o /dev/null -w "%{http_code}\n" -H "Authorization: Bearer $key_to_check" "$validation_url" 2>&1)
+      curl_exit_status=$?
+
+      http_status=$(echo "$curl_stderr_output" | tail -n 1)
+      curl_stderr_output=$(echo "$curl_stderr_output" | head -n -1)
+
+      if [[ "$curl_exit_status" -eq 0 && "$http_status" =~ ^2 ]]; then
+        echo "Headscale API Key is valid (HTTP $http_status OK)."
+        return 0
+      else
+        echo "API Key validation failed."
+        echo "Debug Info:"
+        echo "  Validation URL: $validation_url"
+        echo "  Curl Exit Status: $curl_exit_status"
+        echo "  HTTP Status Code: $http_status"
+        if [[ -n "$curl_stderr_output" ]]; then
+          echo "  Curl Error Output: $curl_stderr_output"
+        fi
+        return 1
+      fi
+    }
+
+    echo "Finding headscale pod in namespace '$NAMESPACE' with selector '$HEADSCALE_POD_SELECTOR'..."
+    HEADPLANE_POD=$(kubectl get pod -n "$NAMESPACE" -l "$HEADSCALE_POD_SELECTOR" -o jsonpath="{.items[0].metadata.name}" --ignore-not-found)
+
+    if [[ -z "$HEADPLANE_POD" ]]; then
+      echo "Error: No headscale pod found matching selector '$HEADSCALE_POD_SELECTOR' in namespace '$NAMESPACE'."
+      exit 1
+    fi
+    echo "Success: Found headscale pod '$HEADPLANE_POD'"
+
+
+    echo "Checking 'headscale' container status in pod '$HEADPLANE_POD' for readiness..."
+    
+    container_ready=$(kubectl get pod -n "$NAMESPACE" "$HEADPLANE_POD" -o jsonpath="{.status.initContainerStatuses[?(@.name==\"headscale\")].ready}" 2>/dev/null || echo "")
+
+    if [[ "$container_ready" == "true" ]]; then
+      echo "Success: 'headscale' container is ready"
+    else
+      echo "--- Headscale Container Readiness Check Failed ---"
+      echo "Error: 'headscale' container in pod '$HEADPLANE_POD' is NOT ready."
+      if [[ -z "$container_ready" ]]; then
+        echo "  Reason: Container status not yet available (Pod might be starting or in a pending state)."
+      else
+        echo "  Reason: Container status found, but reported as '$container_ready'."
+      fi
+      echo "  Namespace: '$NAMESPACE'"
+      echo "  Pod Name: '$HEADPLANE_POD'"
+      echo "---------------------------------------------------------"
+      exit 1
+    fi
+
+    if [[ -z "${HEADSCALE_HOST:-}" ]]; then
+        echo "HEADSCALE_HOST environment variable not provided. Attempting to determine pod IP for pod '$HEADPLANE_POD'..."
+        POD_IP=$(kubectl get pod -n $NAMESPACE $HEADPLANE_POD -o jsonpath='{.status.podIP}' --ignore-not-found)
+
+        if [[ -z "$POD_IP" ]]; then
+            POD_IP="127.0.0.1"
+            echo "Could not retrieve IP for pod '$HEADPLANE_POD'. Using default."
+        fi
+        
+        HEADSCALE_HOST="http://$POD_IP"
+        echo "HEADSCALE_HOST set to: '$HEADSCALE_HOST'"
+    fi
+
+    API_KEY=""
+    echo "Checking for existing Kubernetes secret '$HEADSCALE_SECRET_NAME' in namespace '$NAMESPACE'..."
+
+    ENCODED_KEY_DATA=$(kubectl get secret "$HEADSCALE_SECRET_NAME" -n "$NAMESPACE" -o=jsonpath='{.data.api-key}' --ignore-not-found 2>/dev/null || echo "")
+
+    if [[ -n "$ENCODED_KEY_DATA" ]]; then
+      API_KEY=$(echo "$ENCODED_KEY_DATA" | base64 -d)
+      echo "Existing Headscale API Key found in secret '$HEADSCALE_SECRET_NAME'."
+
+      if check_api_key_validity "$API_KEY"; then
+        echo "Existing Headscale API Key is valid. No further action needed."
+        exit 0
+      else
+        echo "Existing Headscale API Key is invalid. A new API Key will be generated."
+      fi
+    else
+      echo "Kubernetes secret '$HEADSCALE_SECRET_NAME' not found or does not contain a 'api-key' field. A new API Key will be generated."
+    fi
+
+    echo "Generating a new Headscale API Key by executing CLI inside 'headscale' container..."
+    API_KEY=$(kubectl exec -n "$NAMESPACE" -c headscale "$HEADPLANE_POD" -- headscale apikeys create -e 100y)
+
+    if [[ -z "$API_KEY" ]]; then
+      echo "Error: Failed to create a new API Key via 'headscale apikeys create' command."
+      exit 1
+    fi
+    echo "Successfully generated a new Headscale API Key."
+
+    if kubectl get secret "$HEADSCALE_SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+      echo "Updating existing secret '$HEADSCALE_SECRET_NAME' with the new API Key..."
+      kubectl patch secret "$HEADSCALE_SECRET_NAME" -n "$NAMESPACE" -p "{\"stringData\":{\"api-key\":\"$API_KEY\"}}" --type=merge
+    else
+      echo "Creating new secret '$HEADSCALE_SECRET_NAME' with the new API Key..."
+      kubectl create secret generic "$HEADSCALE_SECRET_NAME" -n "$NAMESPACE" --from-literal="api-key=$API_KEY"
+    fi
+    echo "Successfully ensured Headscale API Key in Kubernetes secret '$HEADSCALE_SECRET_NAME'."
+
+    echo "--- Performing final validation of the newly generated API Key ---"
+    if check_api_key_validity "$API_KEY"; then
+      echo "Final validation successful: The newly generated and stored Headscale API Key is valid."
+      exit 0
+    else
+      echo "Final validation failed: The newly generated/stored Headscale API Key is NOT valid. Please investigate."
+      exit 1
+    fi
+{{- end }}

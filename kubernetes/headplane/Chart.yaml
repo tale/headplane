@@ -1,0 +1,6 @@
+apiVersion: v2
+appVersion: 0.6.1
+description: Kubernetes Helm Chart for Headplane in integrated mode
+name: headplane
+type: application
+version: 0.6.1

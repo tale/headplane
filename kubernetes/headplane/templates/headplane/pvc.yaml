@@ -1,0 +1,23 @@
+{{- if .Values.headplane.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: headplane-data
+  {{- with .Values.headplane.persistence.pvc.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.headplane.persistence.pvc.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  accessModes:
+    {{- toYaml .Values.headplane.persistence.pvc.accessModes | nindent 4 }}
+  resources:
+    requests:
+      storage: {{ .Values.headplane.persistence.pvc.storage }}
+  {{- if .Values.headplane.persistence.pvc.storageClassName }}
+  storageClassName: {{ .Values.headplane.persistence.pvc.storageClassName }}
+  {{- end }}
+{{- end }}
