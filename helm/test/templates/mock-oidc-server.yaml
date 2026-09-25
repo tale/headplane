@@ -1,0 +1,110 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mock-oidc-server
+spec:
+  selector:
+    app: mock-oidc-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mock-oidc-config
+data:
+  openid-configuration: |
+    {
+      "issuer": "http://mock-oidc-server",
+      "authorization_endpoint": "http://mock-oidc-server/oauth/authorize",
+      "token_endpoint": "http://mock-oidc-server/oauth/token",
+      "userinfo_endpoint": "http://mock-oidc-server/userinfo",
+      "jwks_uri": "http://mock-oidc-server/.well-known/jwks.json",
+      "response_types_supported": ["code", "token", "id_token"],
+      "subject_types_supported": ["public"],
+      "id_token_signing_alg_values_supported": ["RS256"],
+      "scopes_supported": ["openid", "profile", "email"],
+      "token_endpoint_auth_methods_supported": ["client_secret_post", "client_secret_basic"],
+      "claims_supported": ["sub", "iss", "name", "email"]
+    }
+  jwks.json: |
+    {
+      "keys": [
+        {
+          "kty": "RSA",
+          "kid": "test-key",
+          "use": "sig",
+          "alg": "RS256",
+          "n": "test-modulus",
+          "e": "AQAB"
+        }
+      ]
+    }
+  userinfo: |
+    {
+      "sub": "test-user-id",
+      "name": "Test User",
+      "email": "test@example.com"
+    }
+  nginx.conf: |
+    events {
+      worker_connections 1024;
+    }
+    http {
+      server {
+        listen 80;
+        
+        location /.well-known/openid-configuration {
+          add_header Content-Type application/json;
+          add_header Access-Control-Allow-Origin *;
+          return 200 '{"issuer":"http://mock-oidc-server","authorization_endpoint":"http://mock-oidc-server/oauth/authorize","token_endpoint":"http://mock-oidc-server/oauth/token","userinfo_endpoint":"http://mock-oidc-server/userinfo","jwks_uri":"http://mock-oidc-server/.well-known/jwks.json","response_types_supported":["code","token","id_token"],"subject_types_supported":["public"],"id_token_signing_alg_values_supported":["RS256"],"scopes_supported":["openid","profile","email"],"token_endpoint_auth_methods_supported":["client_secret_post","client_secret_basic"],"claims_supported":["sub","iss","name","email"]}';
+        }
+        
+        location /.well-known/jwks.json {
+          add_header Content-Type application/json;
+          add_header Access-Control-Allow-Origin *;
+          return 200 '{"keys":[{"kty":"RSA","kid":"test-key","use":"sig","alg":"RS256","n":"test-modulus","e":"AQAB"}]}';
+        }
+        
+        location /userinfo {
+          add_header Content-Type application/json;
+          add_header Access-Control-Allow-Origin *;
+          return 200 '{"sub":"test-user-id","name":"Test User","email":"test@example.com"}';
+        }
+        
+        location / {
+          return 404;
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mock-oidc-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mock-oidc-server
+  template:
+    metadata:
+      labels:
+        app: mock-oidc-server
+    spec:
+      containers:
+      - name: mock-oidc-server
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: mock-oidc-config 
