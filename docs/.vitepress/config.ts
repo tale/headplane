@@ -53,7 +53,10 @@ export default defineConfig({
               {
                 text: "Single Sign-On (SSO)",
                 link: "/features/sso",
-                items: [{ text: "Proxy Authentication", link: "/features/proxy-auth" }],
+                items: [
+                  { text: "Proxy Authentication", link: "/features/proxy-auth" },
+                  { text: "JWT Header Auth", link: "/features/jwt-auth" },
+                ],
               },
               { text: "Access Control", link: "/features/acls" },
               { text: "Headplane Agent", link: "/features/agent" },

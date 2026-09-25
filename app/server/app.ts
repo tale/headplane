@@ -26,6 +26,7 @@ import {
   authContext,
   createAppContext,
   dbContext,
+  jwtAuthContext,
   headscaleApiKeyContext,
   headscaleConfigContext,
   headscaleContext,
@@ -82,6 +83,7 @@ function getLoadContext(request: Request, client: ClientAddress) {
   routerContext.set(appConfigContext, ctx.config);
   routerContext.set(authContext, ctx.auth);
   routerContext.set(dbContext, ctx.db);
+  routerContext.set(jwtAuthContext, ctx.jwtAuth);
   routerContext.set(headscaleContext, ctx.headscale);
   routerContext.set(headscaleApiKeyContext, ctx.headscaleApiKey);
   routerContext.set(headscaleConfigContext, ctx.hs);

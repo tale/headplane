@@ -31,6 +31,8 @@ function normalizeStringArray(values: string[]): string[] {
   return normalized;
 }
 
+const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
+
 const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
@@ -59,6 +61,27 @@ const serverConfig = type({
     name_header: "string?",
     picture_header: "string?",
   },
+
+  // Authentication from a signed assertion injected by an identity-aware
+  // proxy. Unlike `proxy_auth` this verifies a signature, so it does not
+  // depend on the peer address being trustworthy.
+  "jwt_auth?": {
+    enabled: "boolean",
+
+    // The four values that identify and verify the proxy's assertion. Stated
+    // explicitly rather than selected from a provider list, so any proxy works
+    // without Headplane having to know about it.
+    header: "string",
+    issuer: "string.url",
+    jwks_url: "string.url",
+    audience: "string",
+
+    allowed_domains: "string[]?",
+    domain_claim: "string?",
+    logout_url: "string?",
+    algorithms: "string[]?",
+    default_role: `${assignableRole} = "member"`,
+  },
 });
 
 const partialServerConfig = type({
@@ -85,6 +108,20 @@ const partialServerConfig = type({
     email_header: "string?",
     name_header: "string?",
     picture_header: "string?",
+  },
+
+  "jwt_auth?": {
+    enabled: "boolean?",
+    header: "string?",
+    issuer: "string.url?",
+    jwks_url: "string.url?",
+    audience: "string?",
+
+    allowed_domains: "string[]?",
+    domain_claim: "string?",
+    logout_url: "string?",
+    algorithms: "string[]?",
+    default_role: `${assignableRole}?`,
   },
 });
 
@@ -113,8 +150,6 @@ const partialHeadscaleConfig = type({
   dns_records_path: "string?",
   tls_cert_path: "string?",
 });
-
-const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
 
 const oidcConfig = type({
   enabled: "boolean = true",

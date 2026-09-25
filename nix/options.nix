@@ -161,6 +161,120 @@ in {
                   description = "Proxy authentication configuration.";
                 };
 
+                jwt_auth = mkOption {
+                  type = types.submodule {
+                    options = {
+                      enabled = mkOption {
+                        type = types.bool;
+                        default = false;
+                        description = ''
+                          Whether to authenticate requests from a signed JWT assertion injected
+                          by an identity-aware proxy. Unlike proxy_auth this verifies a
+                          signature, so it does not rely on the client address being trusted.
+                          Requires headscale.api_key_path.
+                        '';
+                      };
+
+                      header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Header carrying the signed assertion. Required when enabled.
+                        '';
+                        example = "x-goog-iap-jwt-assertion";
+                      };
+
+                      issuer = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Expected iss claim, matched exactly. Required when enabled.";
+                        example = "https://cloud.google.com/iap";
+                      };
+
+                      jwks_url = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Where the proxy publishes its signing keys. Required when enabled.
+                        '';
+                        example = "https://www.gstatic.com/iap/verify/public_key-jwk";
+                      };
+
+                      audience = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Expected aud claim, matched exactly. Required when enabled: without
+                          it Headplane would accept an assertion minted for any other
+                          service. For Google IAP this is
+                          /projects/PROJECT_NUMBER/global/backendServices/BACKEND_SERVICE_ID.
+                        '';
+                        example = "/projects/123456789/global/backendServices/987654321";
+                      };
+
+                      algorithms = mkOption {
+                        type = types.nullOr (types.listOf types.str);
+                        default = null;
+                        description = ''
+                          Accepted signing algorithms. Defaults to the asymmetric families.
+                          Symmetric algorithms (HS256 and friends) are refused: a JWKS
+                          publishes public keys, so one could be used as a signing secret.
+                        '';
+                        example = ["ES256"];
+                      };
+
+                      domain_claim = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Claim carrying the hosted domain. Falls back to the email domain
+                          when the claim is absent.
+                        '';
+                        example = "hd";
+                      };
+
+                      logout_url = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Where to send the browser on logout so the proxy drops its own
+                          session. Clearing only Headplane's cookie would sign the user
+                          straight back in.
+                        '';
+                        example = "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE";
+                      };
+
+                      allowed_domains = mkOption {
+                        type = types.listOf types.str;
+                        default = [];
+                        description = ''
+                          Hosted domains permitted to sign in. When empty, any identity the
+                          proxy admits is accepted.
+                        '';
+                        example = ["example.com"];
+                      };
+
+                      default_role = mkOption {
+                        type = types.enum [
+                          "admin"
+                          "network_admin"
+                          "it_admin"
+                          "auditor"
+                          "viewer"
+                          "member"
+                        ];
+                        default = "member";
+                        description = ''
+                          Role assigned to newly created users. The first user to sign in
+                          always becomes the owner regardless of this setting.
+                        '';
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Verified header JWT authentication configuration.";
+                };
+
                 data_path = mkOption {
                   type = types.path;
                   default = "/var/lib/headplane";
