@@ -1,6 +1,7 @@
 import { Copy } from "lucide-react";
 
 import cn from "~/utils/cn";
+import { copyToClipboard } from "~/utils/copy";
 import toast from "~/utils/toast";
 
 export interface CodeBlockProps {
@@ -20,8 +21,8 @@ export default function CodeBlock({ children, className }: CodeBlockProps) {
         className,
       )}
       onClick={async () => {
-        await navigator.clipboard.writeText(text);
-        toast("Copied to clipboard");
+        const isCopied = await copyToClipboard(text);
+        toast(isCopied ? "Copied to clipboard" : "Copy failed. Please copy the text manually.");
       }}
     >
       <code className="block px-3 pt-2 pb-1 text-sm break-all">{text}</code>

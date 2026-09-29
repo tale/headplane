@@ -12,6 +12,7 @@ import { SubnetTag } from "~/components/tags/Subnet";
 import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
 import type { User } from "~/types";
 import cn from "~/utils/cn";
+import { copyToClipboard } from "~/utils/copy";
 import * as hinfo from "~/utils/host-info";
 import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
 import { formatTimeDelta } from "~/utils/time";
@@ -89,8 +90,12 @@ export default function MachineRow({
                 <MenuItem
                   key={ip}
                   onClick={async () => {
-                    await navigator.clipboard.writeText(ip);
-                    toast("Copied IP address to clipboard");
+                    const isCopied = await copyToClipboard(ip);
+                    toast(
+                      isCopied
+                        ? "Copied IP address to clipboard"
+                        : "Copy failed. Please copy the address manually.",
+                    );
                   }}
                 >
                   <div
