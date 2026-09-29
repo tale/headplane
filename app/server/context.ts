@@ -14,6 +14,7 @@ import { createLiveStore, nodesResource, usersResource } from "./headscale/live-
 import { type AgentManager, createAgentManager } from "./hp-agent";
 import { createOidcService, type OidcService } from "./oidc/provider";
 import { createAuthService, type Principal } from "./web/auth";
+import { createJwtAuthService, type JwtAuthService } from "./web/jwt-auth";
 
 export type AppContext = Awaited<ReturnType<typeof createAppContext>>;
 export const agentsContext = createContext<AppContext["agents"]>();
@@ -25,6 +26,7 @@ export const headscaleApiKeyContext = createContext<AppContext["headscaleApiKey"
 export const headscaleConfigContext = createContext<AppContext["hs"]>();
 export const headscaleLiveStoreContext = createContext<AppContext["hsLive"]>();
 export const integrationContext = createContext<AppContext["integration"]>();
+export const jwtAuthContext = createContext<AppContext["jwtAuth"]>();
 export const oidcContext = createContext<AppContext["oidc"]>();
 export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
@@ -46,9 +48,14 @@ export async function createAppContext(config: HeadplaneConfig) {
     db,
   );
 
+  const jwtAuth = buildJwtAuth(config, headscaleApiKey);
+
   const auth = createAuthService({
     secret: config.server.cookie_secret,
     headscaleApiKey,
+    jwtAuth: jwtAuth
+      ? { service: jwtAuth, defaultRole: config.server.jwt_auth?.default_role }
+      : undefined,
     proxyAuth: config.server.proxy_auth
       ? {
           enabled: config.server.proxy_auth.enabled,
@@ -114,6 +121,7 @@ export async function createAppContext(config: HeadplaneConfig) {
   return {
     config,
     db,
+    jwtAuth,
     headscale,
     headscaleApiKey,
     agents,
@@ -126,6 +134,38 @@ export async function createAppContext(config: HeadplaneConfig) {
     startServices,
     dispose,
   };
+}
+
+export function buildJwtAuth(
+  config: HeadplaneConfig,
+  headscaleApiKey: string | undefined,
+): JwtAuthService | undefined {
+  const jwtAuth = config.server.jwt_auth;
+  if (!jwtAuth?.enabled) {
+    return;
+  }
+
+  // Checked here rather than per request: an operator who enables jwt_auth
+  // without an API key should be told at startup, not served a 500 on every
+  // protected route. Refusing to start also avoids silently falling back to
+  // the other authentication methods.
+  if (!headscaleApiKey) {
+    throw new Error("server.jwt_auth requires headscale.api_key to be configured");
+  }
+
+  // The verifier throws on a missing header, issuer, JWKS URL or audience,
+  // which is the behaviour we want: each of those is a way to configure an
+  // authentication bypass, so Headplane refuses to start instead.
+  return createJwtAuthService({
+    header: jwtAuth.header,
+    issuer: jwtAuth.issuer,
+    jwksUrl: jwtAuth.jwks_url,
+    audience: jwtAuth.audience,
+    algorithms: jwtAuth.algorithms,
+    allowedDomains: jwtAuth.allowed_domains,
+    domainClaim: jwtAuth.domain_claim,
+    logoutUrl: jwtAuth.logout_url,
+  });
 }
 
 function buildOidc(

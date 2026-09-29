@@ -52,6 +52,14 @@ export default defineConfig({
           testTimeout: 60_000,
         },
       },
+      {
+        extends: true,
+        test: {
+          name: "integration:iap",
+          include: ["tests/integration/iap/**/*.test.ts"],
+          testTimeout: 60_000,
+        },
+      },
     ],
     env: {
       HEADPLANE_DEBUG_LOG: "true",

@@ -68,6 +68,46 @@ server:
   #     - "127.0.0.1/32"
   #     - "::1/128"
 
+  # Authentication from a signed assertion injected by an identity-aware proxy
+  # such as Google IAP, Cloudflare Access or Pomerium.
+  #
+  # Unlike proxy_auth, the assertion's signature is verified against the proxy's
+  # published keys, so it does not depend on the client address being
+  # trustworthy. Requires `headscale.api_key`.
+  #
+  # Headplane must not be reachable except through the proxy, otherwise a client
+  # can bypass it entirely. See the JWT Header Authentication page in the
+  # documentation, which also lists these values for known proxies.
+  # jwt_auth:
+  #   enabled: false
+  #
+  #   # All four required. Values below are Google IAP's.
+  #   header: "x-goog-iap-jwt-assertion"
+  #   issuer: "https://cloud.google.com/iap"
+  #   jwks_url: "https://www.gstatic.com/iap/verify/public_key-jwk"
+  #
+  #   # Required. Without it Headplane would accept an assertion minted for any
+  #   # other service. For IAP, find the backend service ID with:
+  #   #   gcloud compute backend-services describe <name> --global --format='value(id)'
+  #   audience: "/projects/123456789/global/backendServices/987654321"
+  #
+  #   # Optional. Defaults to the asymmetric families; symmetric algorithms are
+  #   # refused. Pinning the one your proxy uses is better than the default.
+  #   algorithms: ["ES256"]
+  #
+  #   # Optional. Domains permitted to sign in, checked against domain_claim and
+  #   # falling back to the email domain.
+  #   allowed_domains:
+  #     - "example.com"
+  #   domain_claim: "hd"
+  #
+  #   # Optional. Where to send the browser on logout so the proxy drops its own
+  #   # session; without it the user is signed straight back in.
+  #   logout_url: "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE"
+  #
+  #   # Role given to new users. The first user to sign in always becomes owner.
+  #   default_role: "member"
+
   # The path to persist Headplane specific data. All data going forward
   # is stored in this directory, including the internal database and
   # any cache related files.
