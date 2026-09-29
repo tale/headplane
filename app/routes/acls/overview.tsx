@@ -225,7 +225,11 @@ export default function Page({
       <Button
         className="mr-2"
         disabled={
-          disabled || fetcher.state !== "idle" || codePolicy.length === 0 || codePolicy === policy
+          disabled ||
+          fetcher.state !== "idle" ||
+          codePolicy.trim().length === 0 ||
+          !parsed.ok ||
+          codePolicy === policy
         }
         onClick={() => {
           const formData = new FormData();
