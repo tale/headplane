@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+# --no-start suppresses debhelper's stop-on-remove snippet as well.
+if [ "$1" = remove ] && [ -d /run/systemd/system ]; then
+    deb-systemd-invoke stop headplane.service >/dev/null || true
+fi
+
+#DEBHELPER#

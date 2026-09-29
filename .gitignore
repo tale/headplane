@@ -2,6 +2,7 @@ node_modules
 /.react-router
 /.cache
 /build
+/dist
 /test
 .env
 /app/hp_ssh.wasm
