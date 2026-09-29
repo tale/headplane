@@ -72,6 +72,7 @@ oidc:
   # authorization_endpoint: ""
   # token_endpoint: ""
   # userinfo_endpoint: ""
+  # jwks_endpoint: ""
   # scope: "openid email profile"
   # subject_claims: ["open_id", "email"]
   # default_role: "member"
@@ -352,5 +353,5 @@ own session and returns the user to the login page.
   you see errors mentioning `code_verifier`, this is almost always the cause.
 
 - **Missing endpoints**: If your IdP does not support OIDC discovery, you'll
-  need to set `authorization_endpoint`, `token_endpoint`, and
-  `userinfo_endpoint` manually in the config.
+  need to set `authorization_endpoint`, `token_endpoint`,
+  `userinfo_endpoint`, and `jwks_endpoint` manually in the config.

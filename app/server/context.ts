@@ -152,6 +152,7 @@ function buildOidc(
       tokenEndpoint: config.oidc.token_endpoint,
       userinfoEndpoint: config.oidc.userinfo_endpoint,
       endSessionEndpoint: config.oidc.end_session_endpoint,
+      jwksUri: config.oidc.jwks_endpoint,
       tokenEndpointAuthMethod:
         config.oidc.token_endpoint_auth_method === "client_secret_jwt"
           ? undefined
