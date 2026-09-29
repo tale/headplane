@@ -27,7 +27,7 @@ rec {
         overlays = [ devshell.overlays.default ];
       };
 
-      # nixpkgs' default go is 1.26.5; go.mod (via tailscale) needs >= 1.26.6.
+      # Match the Go 1.27 toolchain required by go.mod.
       buildGoModule = pkgs.buildGoModule.override {go = pkgs.go_1_27;};
     in rec {
       formatter = pkgs.alejandra;
