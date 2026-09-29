@@ -1,5 +1,6 @@
 import { Check, Copy, Info } from "lucide-react";
 
+import { copyToClipboard } from "~/utils/clipboard";
 import cn from "~/utils/cn";
 import toast from "~/utils/toast";
 
@@ -46,12 +47,17 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
             type="button"
             className="relative flex w-full min-w-0 items-center gap-1.5"
             onClick={async (event) => {
+              const success = await copyToClipboard(value);
+              if (!success) {
+                toast(`Failed to copy ${name} to clipboard`);
+                return;
+              }
+
               const svgs = event.currentTarget.querySelectorAll("svg");
               for (const svg of svgs) {
                 svg.toggleAttribute("data-copied", true);
               }
 
-              await navigator.clipboard.writeText(value);
               toast(`Copied ${name} to clipboard`);
 
               setTimeout(() => {
