@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { getBootstrapClient, getRuntimeClient, HS_VERSIONS } from "../setup/env";
 
-describe.sequential.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", (version) => {
+describe.for(HS_VERSIONS)("Headscale %s: Pre-auth Keys", { concurrent: false }, (version) => {
   test("pre-auth keys can be created", async () => {
     const client = await getRuntimeClient(version);
     const preAuthKeyUser = await client.users.create({ name: "preauthkeyuser@" });
