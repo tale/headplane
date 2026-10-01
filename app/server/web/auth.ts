@@ -65,6 +65,7 @@ export interface AuthServiceOptions {
   proxyAuth?: ProxyAuthOptions;
   db: NodeSQLiteDatabase;
   cookie: {
+    path?: string;
     name: string;
     secure: boolean;
     maxAge: number;
@@ -256,7 +257,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function encodeCookie(payload: CookiePayload, maxAge: number): Promise<string> {
     const cookie = createCookie(opts.cookie.name, {
       ...opts.cookie,
-      path: __PREFIX__,
+      path: opts.cookie.path ?? __PREFIX__,
       maxAge,
     });
 
@@ -273,7 +274,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
 
     const cookie = createCookie(opts.cookie.name, {
       ...opts.cookie,
-      path: __PREFIX__,
+      path: opts.cookie.path ?? __PREFIX__,
     });
 
     const raw = (await cookie.parse(cookieHeader)) as string | null;
@@ -574,7 +575,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
 
     const cookie = createCookie(opts.cookie.name, {
       ...opts.cookie,
-      path: __PREFIX__,
+      path: opts.cookie.path ?? __PREFIX__,
     });
 
     return cookie.serialize("", { expires: new Date(0) });

@@ -31,10 +31,18 @@ function normalizeStringArray(values: string[]): string[] {
   return normalized;
 }
 
+const basePath = type("string").narrow(
+  (value, ctx) =>
+    (/^\/[A-Za-z0-9._~-]+(?:\/[A-Za-z0-9._~-]+)*$/.test(value) &&
+      !value.split("/").some((segment) => segment === "." || segment === "..")) ||
+    ctx.mustBe("an absolute path of non-empty URL-safe segments without a trailing slash"),
+);
+
 const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
   base_url: "string.url?",
+  base_path: basePath.default(__PREFIX__),
   data_path: 'string = "/var/lib/headplane/"',
   info_secret: "string?",
 
@@ -65,6 +73,7 @@ const partialServerConfig = type({
   host: "string.ip?",
   port: "number.integer?",
   base_url: "string.url?",
+  base_path: basePath.optional(),
   data_path: "string?",
   info_secret: "string?",
 

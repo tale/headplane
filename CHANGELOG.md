@@ -4,6 +4,8 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 ## Changes
 
+- Configure the dashboard URL prefix with `server.base_path` without rebuilding Headplane. Existing installations continue to use `/admin` by default (closes [#637](https://github.com/tale/headplane/issues/637)).
+
 - Added `config.oidc.jwks_endpoint` to allow manually setting the JWKs keyset for OIDC (via [#620](https://github.com/tale/headplane/pull/620)).
 
 ## Fixes

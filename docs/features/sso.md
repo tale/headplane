@@ -45,6 +45,9 @@ domain with the value set for `server.base_url`):
 https://headplane.example.com/admin/oidc/callback
 ```
 
+If you change `server.base_path`, replace `/admin` in the callback URL with that
+path. The default logout URL uses the configured path as well.
+
 Once you have created the client, make note of the following:
 
 - Client ID
@@ -306,7 +309,7 @@ oidc:
   # manually if your provider does not expose it via discovery.
   # end_session_endpoint: "https://idp.example.com/realms/main/protocol/openid-connect/logout"
 
-  # Optional. Defaults to `<server.base_url>/admin/login?s=logout`.
+  # Optional. Defaults to `<server.base_url><server.base_path>/login?s=logout`.
   # post_logout_redirect_uri: "https://headplane.example.com/admin/login?s=logout"
 ```
 
@@ -347,7 +350,7 @@ own session and returns the user to the login page.
   `email` as a fallback when it is stable for your users.
 
 - **Redirect URI Mismatch**: Ensure the redirect URI registered in your IdP
-  matches `{server.base_url}/admin/oidc/callback` exactly.
+  matches `{server.base_url}{server.base_path}/oidc/callback` exactly.
 
 - **PKCE errors**: If your IdP requires PKCE, set `oidc.use_pkce: true`. If
   you see errors mentioning `code_verifier`, this is almost always the cause.

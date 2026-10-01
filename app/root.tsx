@@ -9,6 +9,7 @@ import {
 } from "react-router";
 
 import { LiveDataProvider } from "~/utils/live-data";
+import { getPrefix } from "~/utils/prefix";
 import ToastProvider from "~/utils/toast-provider";
 
 import type { Route } from "./+types/root";
@@ -54,7 +55,7 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
           <meta content="width=device-width, initial-scale=1" name="viewport" />
           <Meta />
           <Links />
-          <link href={`${__PREFIX__}/favicon.ico`} rel="icon" />
+          <link href={`${getPrefix()}/favicon.ico`} rel="icon" />
         </head>
         <body className="w-full overflow-x-hidden overscroll-none dark:bg-mist-900 dark:text-mist-50">
           {children}

@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 import log from "~/utils/log";
 
 import { type StartOptions, composeListener, startHttpServer } from "../../runtime/http";
-import requestListener, { config, dispose } from "./app";
+import requestListener, { config, dispose, runtimeBuild } from "./app";
 
 // `import.meta.url` resolves to `build/server/index.js`; the built
 // client lives next to it at `build/client/`.
@@ -51,9 +51,9 @@ const listenFilePath = process.env.HEADPLANE_LISTEN_FILE;
 const listenFile = listenFilePath
   ? {
       path: listenFilePath,
-      // Full URL including `__PREFIX__` so the Go binary can GET it
+      // Full URL including the configured dashboard prefix so the Go binary can GET it
       // verbatim — no path joining, no basename knowledge needed.
-      url: `${tls ? "https" : "http"}://127.0.0.1:${config.server.port}${__PREFIX__}/healthz`,
+      url: `${tls ? "https" : "http"}://127.0.0.1:${config.server.port}${config.server.base_path}/healthz`,
     }
   : undefined;
 
@@ -69,9 +69,10 @@ startHttpServer({
   logger: runtimeLogger,
   listenFile,
   listener: composeListener({
-    basename: __PREFIX__,
+    basename: config.server.base_path,
     staticRoot: clientDir,
     immutableAssets: true,
+    dynamicPaths: [runtimeBuild.assets.url],
     logger: runtimeLogger,
     requestListener,
   }),

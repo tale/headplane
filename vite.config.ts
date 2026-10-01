@@ -41,19 +41,21 @@ if (!VERSION) {
   throw new Error("Unable to determine version");
 }
 
-// Load the config without any environment variables (not needed here)
-const config = await readFile("config.example.yaml", "utf-8");
+// Use the same configuration as the application for the development listener.
+const config = await readFile(process.env.HEADPLANE_CONFIG_PATH || "config.example.yaml", "utf-8");
 const { server } = parse(config);
 
 export default defineConfig(({ command }) => {
   const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
 
   return {
-    base: command === "build" ? `${PREFIX}/` : undefined,
+    // Keep chunk imports, CSS URLs, and Vite preload URLs relative to their
+    // modules. The server prefixes React Router's asset manifest at startup.
+    base: command === "build" ? "./" : undefined,
     plugins: [
       headplaneDevServer({
         entry: DEV_ENTRY,
-        basename: PREFIX,
+        basename: process.env.HEADPLANE_SERVER__BASE_PATH || server.base_path || PREFIX,
         publicDir: new URL("./public", import.meta.url).pathname,
       }),
       reactRouter(),
