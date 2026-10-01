@@ -31,6 +31,7 @@ export default defineConfig({
               { text: "Limited Mode", link: "/install/limited-mode" },
               { text: "Native Mode", link: "/install/native-mode" },
               { text: "Docker", link: "/install/docker" },
+              { text: "Helm Chart", link: "/install/kubernetes-helm" },
             ],
           },
           {

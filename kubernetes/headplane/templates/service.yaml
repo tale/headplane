@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "headplane.fullname" . }}
+  labels:
+    {{- include "headplane.labels" . | nindent 4 }}
+spec:
+  selector:
+    {{- include "headplane.selectorLabels" . | nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: 80
+      name: http
+      targetPort: app

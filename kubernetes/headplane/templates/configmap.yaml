@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "headplane.fullname" . }}
+  labels:
+    {{- include "headplane.labels" . | nindent 4 }}
+data:
+  config.yaml: |
+    server:
+      host: {{ .Values.server.host | default "0.0.0.0" }}
+      port: {{ .Values.server.port | default 3000 }}
+      cookie_secret_path: /var/secrets/headplane/server/{{ .Values.server.cookieSecret.secretKey | default "cookie-secret" }}
+      cookie_secure: {{ .Values.server.cookieSecure | default true }}
+    headscale:
+      url: {{ required "headscale.url is required" .Values.headscale.url }}
+      config_strict: false
+      {{- if .Values.headscale.publicUrl }}
+      public_url: {{ .Values.headscale.publicUrl }}
+      {{- end }}
+    integration:
+      kubernetes:
+        enabled: {{ .Values.integration.kubernetes.enabled }}
+        validate_manifest: {{ .Values.integration.kubernetes.validateManifest }}
+        pod_name: replaced-by-environment-variable
+    {{- if .Values.oidc.enabled }}
+    oidc:
+      issuer: {{ .Values.oidc.issuerUrl }}
+      client_id: {{ .Values.oidc.clientId }}
+      client_secret_path: /var/secrets/headplane/oidc/{{ .Values.oidc.clientSecret.secretKey | default "client-secret" }}
+      disable_api_key_login: {{ .Values.oidc.disableApiKeyLogin | default false }}
+      token_endpoint_auth_method: {{ .Values.oidc.tokenEndpointAuthMethod | default "client_secret_post" }}
+      headscale_api_key_path: /var/secrets/headplane/headscale/{{ .Values.oidc.headscaleApiKey.secretKey | default "api-key" }}
+      {{- if .Values.oidc.redirectUri }}
+      redirect_uri: {{ .Values.oidc.redirectUri }}
+      {{- end }}
+    {{- end }}
