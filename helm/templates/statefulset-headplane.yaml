@@ -1,0 +1,122 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: headplane
+  labels:
+    app: headplane
+spec:
+  selector:
+    matchLabels:
+      app: headplane
+  template:
+    metadata:
+      labels:
+        app: headplane
+    spec:
+      shareProcessNamespace: true
+      serviceAccountName: headplane
+      initContainers:
+      - name: copy-headscale-config
+        image: busybox:latest
+        command:
+          - sh
+          - -c
+          - |
+            cp /headscale-config/config.yaml /headscale-data/config.yaml
+            cp /headscale-acl/acl.hujson /headscale-data/acl.hujson
+        volumeMounts:
+          - name: headscale-data
+            mountPath: /headscale-data
+          - name: headscale-config
+            mountPath: /headscale-config
+          - name: headscale-acl
+            mountPath: /headscale-acl
+      containers:
+      - name: headplane
+        image: {{ .Values.headplane.image }}
+        command:
+          - /bin/sh
+          - -c
+          - |
+            echo "Waiting for headscale-generate-token job to complete..."
+            kubectl wait --for=condition=complete job/headscale-generate-token -n {{ .Release.Namespace }} --timeout=300s
+            echo "Job completed successfully, starting headplane..."
+            exec node /app/build/server/index.js
+        envFrom:
+          - secretRef:
+              name: headscale-api-token
+          {{- if .Values.headplane.oidc.enabled }}
+          - secretRef:
+              name: {{ .Values.headplane.oidc.secret_name }}
+          {{- end }}
+          {{- with .Values.headplane.envFrom }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+        env:
+        - name: HEADPLANE_LOAD_ENV_OVERRIDES
+          value: 'true'
+        - name: 'HEADPLANE_INTEGRATION__KUBERNETES__POD_NAME'
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: headplane-config
+          mountPath: /etc/headplane
+        - name: headscale-data
+          mountPath: /etc/headscale
+      - name: headscale
+        image: {{ .Values.headscale.image }}
+        args:
+          - serve
+        volumeMounts:
+        - name: headscale-data
+          mountPath: /etc/headscale
+        - name: headplane-config
+          mountPath: /etc/headplane
+        envFrom:
+          {{- if .Values.headscale.oidc.enabled }}
+          - secretRef:
+              name: {{ .Values.headscale.oidc.secret_name }}
+          {{- end }}
+          {{- with .Values.headscale.envFrom }}
+          {{- toYaml . | nindent 10 }}
+          {{- end }}
+      volumes:
+        - name: headscale-config
+          secret:
+            secretName: headscale-config
+        - name: headplane-config
+          secret:
+            secretName: headplane-config
+        - name: headscale-acl
+          configMap:
+            name: headscale-acl
+  {{- if .Values.pvc.enabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: headscale-data
+      {{- if .Values.pvc.annotations }}
+      annotations:
+        {{- range $key, $value := .Values.pvc.annotations }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.pvc.labels }}
+      labels:
+        {{- range $key, $value := .Values.pvc.labels }}
+        {{ $key | quote }}: {{ $value | quote }}
+        {{- end }}
+      {{- end }}
+    spec:
+      accessModes:
+        {{- range .Values.pvc.accessModes }}
+        - {{ . | quote }}
+        {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.pvc.storage | quote }}
+      {{- if .Values.pvc.storageClassName }}
+      storageClassName: {{ .Values.pvc.storageClassName | quote }}
+      {{- end }}
+  {{- end }}
