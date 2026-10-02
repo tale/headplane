@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
+import { chromium } from "playwright";
 import { beforeAll, expect, test } from "vitest";
 
 // Exercise the real production bundle, including the HTTP static middleware.
@@ -27,7 +28,7 @@ beforeAll(async () => {
 
 test.for(["/admin", "/web", "/tools/web"])(
   "production dashboard at %s",
-  { timeout: 30_000 },
+  { timeout: 60_000 },
   async (prefix) => {
     const headscale = createServer((request, response) => {
       response.setHeader("Content-Type", "application/json");
@@ -118,6 +119,7 @@ test.for(["/admin", "/web", "/tools/web"])(
       expect(html).toContain("Welcome to Headplane");
       expect(html).toContain(`"basename":"${prefix}"`);
       expect(html).toContain(`href="${prefix}/favicon.ico"`);
+      expect(html).toContain(`name="headplane-base-path" content="${prefix}"`);
       expect(html).toContain(`action="${prefix}/login"`);
 
       const urls = [...html.matchAll(/(?:href|src)="([^"]+)"/g)]
@@ -157,6 +159,10 @@ test.for(["/admin", "/web", "/tools/web"])(
       expect((await fetch(`${origin}${prefix}/login.data`)).status).toBe(200);
       expect((await fetch(`${origin}${prefix}/healthz`)).status).toBe(200);
       if (prefix !== "/admin") expect((await fetch(`${origin}/admin/login`)).status).toBe(404);
+
+      if (prefix === "/tools/web") {
+        await checkBrowserNavigation(origin, prefix);
+      }
 
       const login = await fetch(`${origin}${prefix}/login`, {
         method: "POST",
@@ -199,3 +205,60 @@ test.for(["/admin", "/web", "/tools/web"])(
     }
   },
 );
+
+async function checkBrowserNavigation(origin: string, prefix: string) {
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    page.setDefaultTimeout(10_000);
+    const errors: string[] = [];
+    const requests: string[] = [];
+    const documents: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.origin !== origin) return;
+      requests.push(url.pathname);
+      if (request.resourceType() === "document") documents.push(url.pathname);
+    });
+
+    await page.goto(`${origin}${prefix}/login`);
+    expect(await page.locator('meta[name="headplane-base-path"]').getAttribute("content")).toBe(
+      prefix,
+    );
+    await page.getByLabel("API Key", { exact: true }).fill("test.key");
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          new URL(response.url()).pathname === `${prefix}/login.data` &&
+          response.request().method() === "POST",
+      ),
+      page.getByRole("button", { name: "Sign In", exact: true }).click(),
+    ]);
+    await page.getByRole("heading", { name: "Machines", exact: true }).waitFor();
+    expect(new URL(page.url()).pathname).toBe(`${prefix}/machines`);
+
+    // Sorting is a React event handler, so the DOM change proves hydration.
+    await page.getByRole("button", { name: "Sort by name", exact: true }).click();
+    await expect.poll(() => page.locator('th[aria-sort="descending"]').count()).toBe(1);
+
+    await page.getByRole("link", { name: "Users", exact: true }).click();
+    await page.getByRole("heading", { name: "Users", exact: true }).waitFor();
+    expect(new URL(page.url()).pathname).toBe(`${prefix}/users`);
+    await page.getByRole("link", { name: "Machines", exact: true }).click();
+    await page.getByRole("heading", { name: "Machines", exact: true }).waitFor();
+    expect(new URL(page.url()).pathname).toBe(`${prefix}/machines`);
+
+    // Client navigation must retain the document and load data/chunks at the
+    // runtime prefix, rather than falling back to a full page reload.
+    expect(documents).toEqual([`${prefix}/login`]);
+    expect(requests).toContain(`${prefix}/users.data`);
+    expect(requests.filter((path) => path === "/admin" || path.startsWith("/admin/"))).toEqual([]);
+    expect(errors).toEqual([]);
+  } finally {
+    await browser.close();
+  }
+}

@@ -49,6 +49,9 @@ jobs:
       - name: Run unit tests
         run: pnpm run test:unit
 
+      - name: Install Chromium for browser integration tests
+        run: pnpm exec playwright install --with-deps chromium
+
       - name: Run integration tests
         run: pnpm run test:integration
 
