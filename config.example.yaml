@@ -4,9 +4,13 @@ server:
   host: "0.0.0.0"
   port: 3000
 
+  # Dashboard path prefix. Change this without rebuilding Headplane.
+  # Use URL-safe segments, a leading slash, and no trailing slash.
+  base_path: "/admin"
+
   # The base URL for Headplane. Please keep in mind that this will be required
   # for Headscale to properly function going forward AND it should not include
-  # the dashboard prefix (/admin) portion.
+  # the dashboard prefix (server.base_path) portion.
   base_url: "http://localhost:3000"
 
   # The secret used to encode and decode web sessions (must be 32 characters)

@@ -231,24 +231,24 @@ server {
 
 ## Custom Path Prefix
 
-::: warning
-The only officially supported path prefix for Headplane is `/admin`. Using a
-custom path prefix may lead to unexpected issues and is not recommended.
-:::
+Set `server.base_path` in your configuration to serve Headplane under a different
+path. The default is `/admin`; changing it does not require rebuilding Headplane
+or its Docker image.
 
-If for whatever reason you do not want to serve Headplane under `/admin`
-(e.g., you want to serve it under `/headplane`), you can set the prefix
-while building Headplane via the `__INTERNAL_PREFIX` environment variable.
-
-```bash
-# Example for /headplane prefix
-git clone https://github.com/tale/headplane.git
-cd headplane
-# Set the prefix here
-__INTERNAL_PREFIX=/headplane ./build.sh
+```yaml
+server:
+  base_path: "/dashboard"
 ```
 
-When running Headplane, all requests will only be served under the specified
-path. Make sure to also adjust your reverse proxy configuration accordingly if
-you are using one. Additionally, if you want to change the path prefix again,
-you will need to rebuild Headplane with the new prefix.
+Use a leading slash and no trailing slash. Each segment may contain letters,
+numbers, periods, tildes, underscores, or hyphens (but cannot be `.` or `..`); nested paths such as `/tools/headplane` are
+supported. The root path `/` is not supported.
+
+Restart Headplane after changing the path. Update your reverse proxy to forward
+requests under the new prefix without stripping it. Keep `server.base_url` set
+to the public URL without the dashboard prefix, and update your OIDC provider's
+callback URL to `<server.base_url><server.base_path>/oidc/callback` if using SSO.
+Users will need to sign in again because session cookies are scoped to the path.
+
+The legacy `__INTERNAL_PREFIX` build variable remains a fallback default when
+`server.base_path` is omitted. New deployments should use `server.base_path`.

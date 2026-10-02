@@ -136,6 +136,8 @@ export interface ListenerOptions {
   staticRoot?: string;
   assetsDir?: string;
   immutableAssets?: boolean;
+  /** Paths served dynamically by the application, even when a static file exists. */
+  dynamicPaths?: string[];
   requestListener: RequestListener;
   logger?: Logger;
 }
@@ -159,10 +161,12 @@ export function composeListener(opts: ListenerOptions): RequestListener {
     : null;
 
   return (req, res) => {
+    let pathname: string | undefined;
     if (req.url) {
       try {
         const url = new URL(req.url, "http://localhost");
-        if (url.pathname === basename) {
+        pathname = url.pathname;
+        if (pathname === basename) {
           res.statusCode = 302;
           res.setHeader("Location", `${basename}/${url.search}`);
           res.end();
@@ -172,6 +176,11 @@ export function composeListener(opts: ListenerOptions): RequestListener {
     }
 
     if (!serveStatic) {
+      opts.requestListener(req, res);
+      return;
+    }
+
+    if (pathname && opts.dynamicPaths?.includes(pathname)) {
       opts.requestListener(req, res);
       return;
     }

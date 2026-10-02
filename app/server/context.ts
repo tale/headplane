@@ -64,6 +64,7 @@ export async function createAppContext(config: HeadplaneConfig) {
     db,
     cookie: {
       name: "_hp_auth",
+      path: config.server.base_path,
       secure: config.server.cookie_secure,
       maxAge: config.server.cookie_max_age,
       domain: config.server.cookie_domain,
@@ -148,6 +149,7 @@ function buildOidc(
       clientId: config.oidc.client_id,
       clientSecret: config.oidc.client_secret,
       baseUrl: config.server.base_url ?? "",
+      basePath: config.server.base_path,
       authorizationEndpoint: config.oidc.authorization_endpoint,
       tokenEndpoint: config.oidc.token_endpoint,
       userinfoEndpoint: config.oidc.userinfo_endpoint,

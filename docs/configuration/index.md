@@ -12,6 +12,21 @@ Headplane also stores stuff in the `/var/lib/headplane` directory by default.
 This can be configured on a per-section basis in the configuration file, but
 it is very important this directory is persistent and writable by Headplane.
 
+## Dashboard Path
+
+Set `server.base_path` to change the dashboard URL prefix without rebuilding
+Headplane or its Docker image. The default is `/admin`.
+
+```yaml
+server:
+  base_path: "/dashboard"
+```
+
+Restart Headplane after changing it, and update your reverse proxy and OIDC
+callback URL to use the new path. Keep `server.base_url` free of this prefix.
+See [Custom Path Prefix](../install/native-mode.md#custom-path-prefix) for path
+validation rules and migration details.
+
 ## Environment Variables
 
 It is also possible to override the configuration file using environment variables.

@@ -7,6 +7,7 @@ import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/compo
 import type { User } from "~/types";
 import cn from "~/utils/cn";
 import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
+import { getPrefix } from "~/utils/prefix";
 
 import Delete from "../dialogs/delete";
 import Expire from "../dialogs/expire";
@@ -114,7 +115,7 @@ export default function MachineMenu({
               // in a new WINDOW since href can only
               // do a new TAB.
               window.open(
-                `${__PREFIX__}/ssh/${node.givenName}`,
+                `${getPrefix()}/ssh/${node.givenName}`,
                 "_blank",
                 "noopener,noreferrer,width=800,height=600",
               );
@@ -134,7 +135,7 @@ export default function MachineMenu({
             variant="light"
             onClick={() => {
               window.open(
-                `${__PREFIX__}/ssh/${node.givenName}`,
+                `${getPrefix()}/ssh/${node.givenName}`,
                 "_blank",
                 "noopener,noreferrer,width=800,height=600",
               );
