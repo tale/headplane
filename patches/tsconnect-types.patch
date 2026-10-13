@@ -1,8 +1,9 @@
-tsconnect: type the termType option and the wasm_exec Go global
+tsconnect: type Headplane's WASM extensions
 
-termType matches patches/tsconnect-term-type.patch. Go is declared by the
-wasm_exec.js helper the Go toolchain ships, which we load ourselves rather
-than through @tailscale/connect.
+termType matches patches/tsconnect-term-type.patch. onAuthBanner matches
+patches/tsconnect-auth-banner.patch. Go is declared by the wasm_exec.js helper
+the Go toolchain ships, which we load ourselves rather than through
+@tailscale/connect.
 
 @@ -4,11 +4,22 @@
  /**
@@ -27,7 +28,7 @@ than through @tailscale/connect.
    interface IPN {
      run(callbacks: IPNCallbacks): void
      login(): void
-@@ -22,6 +33,8 @@
+@@ -22,9 +33,12 @@
          setReadFn: (readFn: (data: string) => void) => void
          rows: number
          cols: number
@@ -36,3 +37,7 @@ than through @tailscale/connect.
          /** Defaults to 5 seconds */
          timeoutSeconds?: number
          onConnectionProgress: (message: string) => void
++        onAuthBanner?: (message: string) => void
+         onConnected: () => void
+         onDone: () => void
+       }

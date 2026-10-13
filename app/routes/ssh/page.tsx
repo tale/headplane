@@ -1,5 +1,5 @@
 import { Loader2, WifiOff } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
 
 import Button from "~/components/button";
@@ -15,6 +15,7 @@ import {
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 
 import type { Route } from "./+types/page";
+import { getAuthenticationURL } from "./auth-banner";
 import { isSSHError, SSHErrorBoundary, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
@@ -219,6 +220,14 @@ function SSHConsole({
   const [ipn, setIpn] = useState<IPN | null>(null);
   const [connected, setConnected] = useState(false);
   const [status, setStatus] = useState("Joining Tailnet…");
+  const [authBanner, setAuthBanner] = useState<string | null>(null);
+  const [authURL, setAuthURL] = useState<string | null>(null);
+
+  const onConnected = useCallback(() => setConnected(true), []);
+  const onAuthBanner = useCallback((message: string) => {
+    setAuthBanner(message);
+    setAuthURL(getAuthenticationURL(message));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -253,7 +262,25 @@ function SSHConsole({
         <div className="absolute inset-0 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="size-8 animate-spin text-mist-200" />
-            <p className="text-sm text-mist-400">{status}</p>
+            {authBanner ? (
+              <>
+                <p className="max-w-xl text-center text-sm break-words whitespace-pre-wrap text-mist-400">
+                  {authBanner}
+                </p>
+                {authURL && (
+                  <a
+                    className="text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:underline"
+                    href={authURL}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    Authenticate to continue
+                  </a>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-mist-400">{status}</p>
+            )}
           </div>
         </div>
       )}
@@ -263,7 +290,8 @@ function SSHConsole({
           ipn={ipn}
           username={username}
           ipAddress={node.ipAddress}
-          onConnected={() => setConnected(true)}
+          onAuthBanner={onAuthBanner}
+          onConnected={onConnected}
         />
       )}
     </div>

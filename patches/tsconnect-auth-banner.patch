@@ -1,0 +1,27 @@
+tsconnect: surface SSH authentication banners in the browser
+
+Tailscale SSH sends the re-authentication URL as a pre-auth banner when an
+ACL rule uses action "check". Forward the banner to the terminal and page so
+that Browser SSH users can complete the check.
+
+--- a/wasm/wasm_js.go
++++ b/wasm/wasm_js.go
+@@ -414,4 +414,5 @@ func (s *jsSSHSession) Run() {
+ 	onConnected := s.termConfig.Get("onConnected")
++	onAuthBanner := s.termConfig.Get("onAuthBanner")
+ 	onDone := s.termConfig.Get("onDone")
+ 	defer onDone.Invoke()
+ 
+@@ -436,5 +437,12 @@ func (s *jsSSHSession) Run() {
+ 
+ 	config := &ssh.ClientConfig{
++		BannerCallback: func(message string) error {
++			writeFn.Invoke(strings.ReplaceAll(message, "\n", "\r\n"))
++			if onAuthBanner.Type() == js.TypeFunction {
++				onAuthBanner.Invoke(message)
++			}
++			return nil
++		},
+ 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+ 			// Host keys are not used with Tailscale SSH, but we can use this
+ 			// callback to know that the connection has been established.

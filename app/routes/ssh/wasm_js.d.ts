@@ -38,6 +38,7 @@ declare global {
         /** Defaults to 5 seconds */
         timeoutSeconds?: number;
         onConnectionProgress: (message: string) => void;
+        onAuthBanner?: (message: string) => void;
         onConnected: () => void;
         onDone: () => void;
       },

@@ -4,7 +4,7 @@
 // Vendored from tailscale.com/cmd/tsconnect/wasm/wasm_js.go.
 // Upstream ref: fb27d87e02c7358e44a063668902a183216b72ae
 //
-// Local changes live in patches/tsconnect-term-type.patch and are already
+// Local changes live in patches/tsconnect-term-type.patch and patches/tsconnect-auth-banner.patch and are already
 // applied here. Run scripts/sync-tsconnect.sh to move to a newer upstream.
 
 // The wasm package builds a WebAssembly module that provides a subset of
@@ -415,6 +415,7 @@ func (s *jsSSHSession) Run() {
 	}
 	onConnectionProgress := s.termConfig.Get("onConnectionProgress")
 	onConnected := s.termConfig.Get("onConnected")
+	onAuthBanner := s.termConfig.Get("onAuthBanner")
 	onDone := s.termConfig.Get("onDone")
 	defer onDone.Invoke()
 
@@ -436,6 +437,13 @@ func (s *jsSSHSession) Run() {
 	defer c.Close()
 
 	config := &ssh.ClientConfig{
+		BannerCallback: func(message string) error {
+			writeFn.Invoke(strings.ReplaceAll(message, "\n", "\r\n"))
+			if onAuthBanner.Type() == js.TypeFunction {
+				onAuthBanner.Invoke(message)
+			}
+			return nil
+		},
 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			// Host keys are not used with Tailscale SSH, but we can use this
 			// callback to know that the connection has been established.
