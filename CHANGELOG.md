@@ -4,8 +4,11 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 ## Changes
 
+- Added a structured editor to the Access Control page with **Rules** and **Tags & Groups** tabs for editing `acls`, `ssh`, `hosts`, `groups`, and `tagOwners` without touching HuJSON. Sources and destinations are suggested from the groups, tags, hosts, and users in your tailnet. Nothing is applied until you press Save, and the file editor is still there for everything else. Editing through the structured editor drops comments from the policy, and Headplane warns you when that would happen (closes [#607](https://github.com/tale/headplane/issues/607), via [#608](https://github.com/tale/headplane/pull/608)).
+- The Users page now shows which policy groups each user belongs to, and **Edit groups** in the row menu lets you change them (requires the `write_policy` permission).
+- The machine tag dialog now flags tags that are missing from `tagOwners`, since Headscale accepts them but they never match any rule.
 - Added `config.oidc.jwks_endpoint` to allow manually setting the JWKs keyset for OIDC (via [#620](https://github.com/tale/headplane/pull/620)).
-- Docker images now publish floating minor version tags (e.g., `0.7`) that always point to the latest patch release, so you can pin to a minor version in your `docker-compose.yml`.
+- Docker images now publish floating minor version tags (e.g., `0.8`) that always point to the latest patch release, so you can pin to a minor version in your `docker-compose.yml`.
 
 ## Fixes
 
