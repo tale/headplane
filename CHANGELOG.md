@@ -9,6 +9,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 ## Fixes
 
+- Fixed the Authentication Restrictions link disappearing from Settings after a restart while signed in with an existing session (closes [#645](https://github.com/tale/headplane/issues/645)).
 - Fixed copying code, attributes, and machine addresses over plain HTTP, and added feedback when copying fails (closes [#597](https://github.com/tale/headplane/issues/597)).
 - Updated NPM & Go dependencies to fix vulnerabilities.
 - Fixed the Native installation documentation as it was outdated and missing steps (via [#633](https://github.com/tale/headplane/pull/633)).
