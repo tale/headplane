@@ -192,9 +192,9 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       return { message: "DNS record removed successfully" };
     }
     case "add_record": {
-      const recordName = formData.get("record_name")?.toString();
+      const recordName = formData.get("record_name")?.toString().trim();
       const recordType = formData.get("record_type")?.toString();
-      const recordValue = formData.get("record_value")?.toString();
+      const recordValue = formData.get("record_value")?.toString().trim();
 
       if (!recordName || !recordType || !recordValue) {
         return data({ success: false }, 400);
