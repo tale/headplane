@@ -8,6 +8,10 @@ export function getUserDisplayName(user: User): string {
   return user.name || user.displayName || user.email || user.id;
 }
 
+export function sortUsersByDisplayName(users: User[]): User[] {
+  return users.toSorted((a, b) => getUserDisplayName(a).localeCompare(getUserDisplayName(b)));
+}
+
 // Mirrors Headscale's `util.ValidateUsername` (hscontrol/util/dns.go): a name has
 // to start with a letter and may only contain letters, numbers, `-`, `.`, `_` and
 // at most one `@` (`\p{L}`/`\p{Nd}` match Go's `unicode.IsLetter`/`IsDigit`).

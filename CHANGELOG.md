@@ -12,6 +12,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 ## Fixes
 
+- User pickers across Headplane, including the pre-auth key, new machine, change owner, and machine filter menus, are now sorted alphabetically to match the Users page (closes [#622](https://github.com/tale/headplane/issues/622)).
 - Long dropdown menus, such as the user and tag filters on the Machines page, now scroll instead of running off the screen (closes [#621](https://github.com/tale/headplane/issues/621)).
 - DNS records added from the UI now have leading and trailing whitespace trimmed from their name and value, which previously produced records that silently never resolved (closes [#647](https://github.com/tale/headplane/issues/647)).
 - Fixed being signed straight back in a few seconds after logging out when `oidc.disable_api_key_login` is enabled. The logged-out page now stays put across reloads and has a **Sign in again** button (closes [#642](https://github.com/tale/headplane/issues/642)).
