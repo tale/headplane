@@ -12,6 +12,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 ## Fixes
 
+- Fixed being signed straight back in a few seconds after logging out when `oidc.disable_api_key_login` is enabled. The logged-out page now stays put across reloads and has a **Sign in again** button (closes [#642](https://github.com/tale/headplane/issues/642)).
 - Fixed the Authentication Restrictions link disappearing from Settings after a restart while signed in with an existing session (closes [#645](https://github.com/tale/headplane/issues/645)).
 - Fixed copying code, attributes, and machine addresses over plain HTTP, and added feedback when copying fails (closes [#597](https://github.com/tale/headplane/issues/597)).
 - Updated NPM & Go dependencies to fix vulnerabilities.
