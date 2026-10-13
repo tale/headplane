@@ -37,6 +37,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
           flavor: |
             latest=auto
             suffix=${{ matrix.tag_suffix }},onlatest=true

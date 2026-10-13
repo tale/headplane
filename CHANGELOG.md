@@ -5,6 +5,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ## Changes
 
 - Added `config.oidc.jwks_endpoint` to allow manually setting the JWKs keyset for OIDC (via [#620](https://github.com/tale/headplane/pull/620)).
+- Docker images now publish floating minor version tags (e.g., `0.7`) that always point to the latest patch release, so you can pin to a minor version in your `docker-compose.yml`.
 
 ## Fixes
 
