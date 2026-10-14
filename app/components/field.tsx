@@ -53,7 +53,7 @@ export default function Field({
       )}
       <BaseField.Error
         className="text-bad text-xs"
-        {...(errorMessage && { match: true, children: errorMessage })}
+        {...(errorMessage && { match: invalid, children: errorMessage })}
       />
     </BaseField.Root>
   );

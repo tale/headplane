@@ -8,8 +8,8 @@ import {
   TagsIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
+import { Suspense, lazy, useMemo, useState } from "react";
+import { isRouteErrorResponse, useFetcher } from "react-router";
 
 import Button from "~/components/button";
 import Callout from "~/components/callout";
@@ -27,7 +27,8 @@ import {
   serializePolicy,
   type Policy,
 } from "~/utils/acl-policy";
-import toast from "~/utils/toast";
+import type { ActionResult } from "~/utils/form";
+import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { aclAction } from "./acl-action";
@@ -45,13 +46,19 @@ const LazyDiffer = lazy(() =>
 
 export const loader = aclLoader;
 export const action = aclAction;
+export const clientAction = toastClientAction;
 
 export default function Page({
   loaderData: { access, writable, policy, users, tagUsage },
 }: Route.ComponentProps) {
   const [codePolicy, setCodePolicy] = useState(policy);
-  const fetcher = useFetcher<typeof action>();
-  const { revalidate } = useRevalidator();
+  const [savedPolicy, setSavedPolicy] = useState(policy);
+  if (savedPolicy !== policy) {
+    setSavedPolicy(policy);
+    setCodePolicy(policy);
+  }
+
+  const fetcher = useFetcher<ActionResult>();
   const disabled = !access || !writable; // Disable if no permission or not writable
 
   const parsed = useMemo(() => parsePolicy(codePolicy), [codePolicy]);
@@ -63,25 +70,6 @@ export default function Page({
     () => (parsed.ok ? policyDestinations(parsed.policy, users) : []),
     [parsed, users],
   );
-
-  useEffect(() => {
-    // Update the codePolicy when the loader data changes
-    if (policy !== codePolicy) {
-      setCodePolicy(policy);
-    }
-  }, [policy]);
-
-  useEffect(() => {
-    if (!fetcher.data) {
-      // No data yet, return
-      return;
-    }
-
-    if (fetcher.data.success === true) {
-      toast("Updated policy");
-      revalidate();
-    }
-  }, [fetcher.data]);
 
   // The structured editors round-trip through the policy text, so the file
   // editor, the diff view and Save all work off one source of truth.
@@ -150,16 +138,11 @@ export default function Page({
           <Code>database</Code> in your Headscale configuration.
         </Callout>
       ) : undefined}
-      {fetcher.data?.error !== undefined ? (
-        <Callout
-          className="my-4 max-w-2xl"
-          title={fetcher.data.error.split(":")[0] ?? "Error"}
-          variant="error"
-        >
-          {fetcher.data.error.split(":").slice(1).join(": ") ??
-            "An unknown error occurred while trying to update the ACL policy."}
+      {fetcher.data?.ok === false && (
+        <Callout className="my-4 max-w-2xl" title="Couldn't save the policy" variant="error">
+          {fetcher.data.errors.form ?? fetcher.data.errors.policy}
         </Callout>
-      ) : undefined}
+      )}
       <Tabs className="mb-4" label="ACL Editor" defaultValue="rules">
         <TabsList>
           <TabsTab value="rules">
@@ -241,9 +224,7 @@ export default function Page({
           disabled || fetcher.state !== "idle" || codePolicy.length === 0 || codePolicy === policy
         }
         onClick={() => {
-          const formData = new FormData();
-          formData.append("policy", codePolicy);
-          fetcher.submit(formData, { method: "PATCH" });
+          fetcher.submit({ intent: "save", policy: codePolicy }, { method: "POST" });
         }}
         variant="primary"
       >
