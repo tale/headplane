@@ -1,17 +1,11 @@
+import { Check, CircleQuestionMark, Menu as MenuIcon, Monitor, Moon, Sun } from "lucide-react";
 import {
-  Check,
-  CircleQuestionMark,
-  CircleUser,
-  Globe,
-  Lock,
-  Monitor,
-  Moon,
-  Server,
-  Settings,
-  Sun,
-  Users,
-} from "lucide-react";
-import { NavLink, unstable_useRoute as useRoute, useLocation, useSubmit } from "react-router";
+  NavLink,
+  unstable_useRoute as useRoute,
+  useLocation,
+  useNavigate,
+  useSubmit,
+} from "react-router";
 
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
@@ -41,11 +35,11 @@ export interface HeaderProps {
 }
 
 const tabs = [
-  { to: "/machines", icon: Server, label: "Machines", key: "machines" },
-  { to: "/users", icon: Users, label: "Users", key: "users" },
-  { to: "/acls", icon: Lock, label: "Access Control", key: "policy" },
-  { to: "/dns", icon: Globe, label: "DNS", key: "dns" },
-  { to: "/settings", icon: Settings, label: "Settings", key: "settings" },
+  { to: "/machines", label: "Machines", key: "machines" },
+  { to: "/users", label: "Users", key: "users" },
+  { to: "/acls", label: "Access controls", key: "policy" },
+  { to: "/dns", label: "DNS", key: "dns" },
+  { to: "/settings", label: "Settings", key: "settings" },
 ] as const;
 
 const colorSchemes = [
@@ -60,6 +54,7 @@ const colorSchemes = [
 
 export default function Header({ user, access, configAvailable }: HeaderProps) {
   const submit = useSubmit();
+  const navigate = useNavigate();
   const showTabs = access.ui;
   const rootRoute = useRoute("root");
   const currentColorScheme: ColorScheme = rootRoute?.loaderData?.colorScheme ?? "system";
@@ -68,51 +63,65 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
   // following the redirect on the client.
   const location = useLocation();
   const returnTo = location.pathname + location.search;
+  const visibleTabs = tabs.filter(
+    (tab) => access[tab.key] && ((tab.key !== "dns" && tab.key !== "settings") || configAvailable),
+  );
 
   return (
     <header className={cn("bg-surface text-fg", "border-b border-line")}>
-      <div className="container flex items-center gap-x-4 py-4">
-        <div className="flex min-w-0 items-center gap-x-4">
-          <div className="flex items-center gap-x-2">
-            <picture className="min-w-8">
-              <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
-              <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
-              <img src={logoBg} alt="Headplane logo" />
-            </picture>
-            <h1 className="text-xl font-semibold">headplane</h1>
-          </div>
-          {showTabs && (
-            <nav className="hidden items-center gap-x-2 overflow-x-auto p-1 text-sm font-medium md:flex">
-              {tabs.map((tab) => {
-                if (!access[tab.key]) return null;
-                if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
-
-                return (
-                  <NavLink
-                    key={tab.to}
-                    className={({ isActive }) =>
-                      cn(
-                        "px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                        "hover:bg-line-strong/50",
-                        "focus-ring",
-                        isActive ? "bg-line-strong/70 text-fg" : "text-muted",
-                      )
-                    }
-                    prefetch="intent"
-                    to={tab.to}
-                  >
-                    <tab.icon className="w-4" />
-                    {tab.label}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          )}
+      <div className="container flex h-13 items-center gap-x-5">
+        <div className="flex items-center gap-x-2">
+          <picture className="size-[18px] shrink-0">
+            <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
+            <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
+            <img alt="Headplane logo" className="size-[18px]" src={logoBg} />
+          </picture>
+          <span className="text-sm font-semibold tracking-tight">headplane</span>
         </div>
-        <div className="ml-auto grid shrink-0 grid-cols-2 gap-x-4">
+        {showTabs && (
+          <nav className="hidden h-full min-w-0 gap-x-0.5 overflow-x-auto text-[13px] font-medium md:flex">
+            {visibleTabs.map((tab) => (
+              <NavLink
+                key={tab.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex h-full items-center px-2.5 text-nowrap",
+                    "focus-ring hover:text-fg",
+                    isActive ? "text-fg shadow-[inset_0_-2px_0_var(--color-accent)]" : "text-muted",
+                  )
+                }
+                prefetch="intent"
+                to={tab.to}
+              >
+                {tab.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
+        <div className="ml-auto flex shrink-0 items-center gap-x-2">
+          {showTabs && (
+            <Menu>
+              <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-8 rounded-md md:hidden">
+                <MenuIcon aria-label="Navigation" className="size-4" />
+              </MenuTrigger>
+              <MenuContent align="end">
+                {visibleTabs.map((tab) => (
+                  <MenuItem key={tab.to} onClick={() => navigate(tab.to)}>
+                    <span
+                      className={cn(
+                        location.pathname.startsWith(tab.to) && "text-accent font-medium",
+                      )}
+                    >
+                      {tab.label}
+                    </span>
+                  </MenuItem>
+                ))}
+              </MenuContent>
+            </Menu>
+          )}
           <Menu>
-            <MenuTrigger className="size-8 rounded-full p-1">
-              <CircleQuestionMark className="w-5" />
+            <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-8 rounded-md">
+              <CircleQuestionMark aria-label="Help" className="size-4" />
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem>
@@ -133,11 +142,11 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             </MenuContent>
           </Menu>
           <Menu>
-            <MenuTrigger className="size-8 overflow-hidden rounded-full">
+            <MenuTrigger className="bg-subtle border-line text-muted size-7 overflow-hidden rounded-full border text-[11px] font-semibold">
               {user.picture ? (
-                <img alt={user.name} className="size-8" src={user.picture} />
+                <img alt={user.name} className="size-7" src={user.picture} />
               ) : (
-                <CircleUser className="size-8" />
+                <span aria-label={user.name}>{user.name.charAt(0).toUpperCase()}</span>
               )}
             </MenuTrigger>
             <MenuContent align="end">
@@ -185,37 +194,6 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
           </Menu>
         </div>
       </div>
-      {showTabs && (
-        <div className="block overflow-x-auto p-2 md:hidden">
-          <nav className="flex items-center gap-x-2 text-sm font-medium">
-            {tabs.map((tab) => {
-              if (!access[tab.key]) return null;
-              if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
-
-              return (
-                <NavLink
-                  key={tab.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "relative px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                      "hover:bg-line-strong/50",
-                      "focus-ring",
-                      "text-muted",
-                      isActive &&
-                        "text-fg  after:content-[''] after:absolute after:-bottom-2 after:inset-x-1 after:h-0.5 after:rounded-full after:bg-accent",
-                    )
-                  }
-                  prefetch="intent"
-                  to={tab.to}
-                >
-                  <tab.icon className="w-4" />
-                  {tab.label}
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
