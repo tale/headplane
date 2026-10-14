@@ -1,8 +1,8 @@
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
 import StatusCircle from "~/components/status-circle";
 import Text from "~/components/text";
 import Title from "~/components/title";
@@ -58,12 +58,12 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     return (
       <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
         <Title>Headplane Agent</Title>
-        <Notice title="Agent Not Enabled">
+        <Callout className="my-4 max-w-2xl" title="Agent Not Enabled">
           {loaderData.reason}. To learn how to set up the agent, visit the{" "}
           <Link external styled to="https://headplane.net/features/agent">
             documentation
           </Link>
-        </Notice>
+        </Callout>
       </div>
     );
   }
@@ -104,20 +104,20 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
 
       {isPending ? (
-        <Notice variant="warning" title="Agent Needs Approval">
+        <Callout className="my-4 max-w-2xl" variant="warning" title="Agent Needs Approval">
           The agent is waiting for its Tailnet registration to be approved. Headplane will attempt
           to auto-approve it, but if that fails, you can complete approval by visiting{" "}
           <Link external styled to={loaderData.authUrl!}>
             this link
           </Link>
           .
-        </Notice>
+        </Callout>
       ) : undefined}
 
       {loaderData.error ? (
-        <Notice variant="error" title="Sync Error">
+        <Callout className="my-4 max-w-2xl" variant="error" title="Sync Error">
           {loaderData.error}
-        </Notice>
+        </Callout>
       ) : undefined}
 
       <fetcher.Form method="post">

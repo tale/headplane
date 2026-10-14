@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
 
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Card from "~/components/card";
 import Code from "~/components/code";
-import StatusBanner from "~/components/status-banner";
 import {
   agentsContext,
   appConfigContext,
@@ -195,14 +195,16 @@ function BrowserSSHCompatibilityBanner({
 
   return (
     <div className="fixed inset-x-4 top-4 z-[60] mx-auto max-w-2xl">
-      <StatusBanner
+      <Callout
+        className="bg-raised"
+        isDismissable
         variant="warning"
         title={`Browser SSH is broken on Headscale ${warning.version}`}
       >
         Headscale 0.29 beta releases through 0.29.1 reject Tailscale's browser/WASM{" "}
         <Code>/ts2021</Code> WebSocket request with <Code>405 Method Not Allowed</Code>. Upgrade
         Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
-      </StatusBanner>
+      </Callout>
     </div>
   );
 }

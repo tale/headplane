@@ -1,6 +1,6 @@
+import Callout from "~/components/callout";
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
 import RadioGroup from "~/components/radio-group";
 import Text from "~/components/text";
 import Title from "~/components/title";
@@ -34,7 +34,7 @@ export default function ReassignUser({
           </Link>
         </Text>
         {role === "owner" ? (
-          <Notice>The Tailnet owner cannot be reassigned.</Notice>
+          <Callout>The Tailnet owner cannot be reassigned.</Callout>
         ) : (
           <>
             <input name="action_id" type="hidden" value="reassign_user" />

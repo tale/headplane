@@ -1,10 +1,10 @@
 import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import Callout from "~/components/callout";
 import Code from "~/components/code";
 import Link from "~/components/link";
 import List from "~/components/list";
-import Notice from "~/components/notice";
 import Select from "~/components/select";
 import {
   appConfigContext,
@@ -196,12 +196,16 @@ export default function Page({
         <span className="mx-2">/</span> Pre-Auth Keys
       </p>
       {!access ? (
-        <Notice title="Pre-auth key permissions restricted" variant="warning">
+        <Callout
+          className="my-4 max-w-2xl"
+          title="Pre-auth key permissions restricted"
+          variant="warning"
+        >
           You do not have the necessary permissions to generate pre-auth keys. Please contact your
           administrator to request access or to generate a pre-auth key for you.
-        </Notice>
+        </Callout>
       ) : missing.length > 0 ? (
-        <Notice title="Missing authentication keys" variant="error">
+        <Callout className="my-4 max-w-2xl" title="Missing authentication keys" variant="error">
           An error occurred while fetching the authentication keys for the following users:{" "}
           {missing.map(({ user }, index) => (
             <>
@@ -210,7 +214,7 @@ export default function Page({
             </>
           ))}
           Their keys may not be listed correctly. Please check the server logs for more information.
-        </Notice>
+        </Callout>
       ) : undefined}
       <h1 className="mb-2 text-xl font-semibold">Pre-Auth Keys</h1>
       <p className="mb-4">

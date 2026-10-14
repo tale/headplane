@@ -1,8 +1,8 @@
 import type { ActionFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
+import Callout from "~/components/callout";
 import Code from "~/components/code";
-import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
@@ -62,14 +62,14 @@ export default function Page() {
   return (
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-16">
       {data.writable ? undefined : (
-        <Notice>
+        <Callout className="my-4 max-w-2xl">
           The Headscale configuration is read-only. You cannot make changes to the configuration
-        </Notice>
+        </Callout>
       )}
       {data.access ? undefined : (
-        <Notice>
+        <Callout className="my-4 max-w-2xl">
           Your permissions do not allow you to modify the DNS settings for this tailnet.
-        </Notice>
+        </Callout>
       )}
       <RenameTailnet isDisabled={isDisabled} name={data.baseDomain} />
       <ManageNS isDisabled={isDisabled} nameservers={allNs} overrideLocalDns={data.overrideDns} />

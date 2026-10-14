@@ -1,10 +1,9 @@
-import { AlertCircle } from "lucide-react";
 import { isRouteErrorResponse } from "react-router";
 
 import { isApiError, isConnectionError } from "~/server/headscale/api/error-client";
 import cn from "~/utils/cn";
 
-import Card from "./card";
+import Callout from "./callout";
 import Code from "./code";
 import Link from "./link";
 
@@ -19,14 +18,14 @@ export function getErrorMessage(error: Error | unknown): {
         return {
           jsxMessage: (
             <>
-              <Card.Text>
+              <p>
                 There was an error communicating with the Headscale API.
                 <br />
                 The server responded with a status code of <strong>{statusCode}</strong>, indicating
                 a server-side issue. Please check the Headscale server status and try again later.
-              </Card.Text>
+              </p>
               {(error.data.data != null || error.data.rawData != null) && (
-                <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
+                <pre className="border-line bg-surface text-fg mt-2 overflow-x-auto rounded-md border p-2 font-mono text-xs">
                   {error.data.data != null ? (
                     <code>{JSON.stringify(error.data.data, null, 2)}</code>
                   ) : (
@@ -45,7 +44,7 @@ export function getErrorMessage(error: Error | unknown): {
       return {
         jsxMessage: (
           <>
-            <Card.Text className="leading-snug">
+            <p>
               The Headscale API returned an unexpected response.
               {authError ? (
                 <>
@@ -56,7 +55,7 @@ export function getErrorMessage(error: Error | unknown): {
               ) : (
                 <> You may be using an unsupported version of Headscale or this may be a bug.</>
               )}
-            </Card.Text>
+            </p>
             <ul className="mt-2 list-inside list-disc">
               <li>
                 Request URL: <Code>{requestUrl}</Code>
@@ -77,8 +76,8 @@ export function getErrorMessage(error: Error | unknown): {
                 </Code>
               </li>
             </ul>
-            <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-            <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
+            <p className="text-fg mt-3 font-medium">Error details</p>
+            <pre className="border-line bg-surface text-fg mt-2 overflow-x-auto rounded-md border p-2 font-mono text-xs">
               <code>{JSON.stringify(error.data, null, 2)}</code>
             </pre>
           </>
@@ -92,12 +91,12 @@ export function getErrorMessage(error: Error | unknown): {
       return {
         jsxMessage: (
           <>
-            <Card.Text className="leading-snug">
+            <p>
               Headplane was unable to reach the Headscale API. Please check your network setup and
               configuration to ensure Headplane is able to connect.
-            </Card.Text>
-            <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-            <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
+            </p>
+            <p className="text-fg mt-3 font-medium">Error details</p>
+            <pre className="border-line bg-surface text-fg mt-2 overflow-x-auto rounded-md border p-2 font-mono text-xs">
               {requestUrl}
               <br />
               {errorCode}: {errorMessage}
@@ -133,16 +132,16 @@ export function getErrorMessage(error: Error | unknown): {
     return {
       jsxMessage: (
         <>
-          <Card.Text>
+          <p>
             An unexpected error occurred which is most likely a bug. Please consider reporting
             filing an issue on the{" "}
             <Link external styled to="https://github.com/tale/headplane/issues">
               Headplane GitHub
             </Link>{" "}
             repository with the details below.
-          </Card.Text>
-          <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-          <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
+          </p>
+          <p className="text-fg mt-3 font-medium">Error details</p>
+          <pre className="border-line bg-surface text-fg mt-2 overflow-x-auto rounded-md border p-2 font-mono text-xs">
             <code>{JSON.stringify(error, null, 2)}</code>
           </pre>
         </>
@@ -183,12 +182,8 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
   const { title, jsxMessage } = getErrorMessage(error);
 
   return (
-    <Card className={cn("w-screen", className)}>
-      <div className="flex items-center justify-between gap-4">
-        <Card.Title>{title}</Card.Title>
-        <AlertCircle className="text-bad mb-2 h-6 w-6" />
-      </div>
+    <Callout className={cn("w-full", className)} title={title} variant="error">
       {jsxMessage}
-    </Card>
+    </Callout>
   );
 }

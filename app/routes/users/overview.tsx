@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import Callout from "~/components/callout";
 import PageError from "~/components/page-error";
 import { Table, TableBody, TableHeader } from "~/components/table";
 import {
@@ -15,7 +16,6 @@ import { Capabilities, Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
 import { groupsForUser, parsePolicy } from "~/utils/acl-policy";
-import cn from "~/utils/cn";
 import log from "~/utils/log";
 import { getUserDisplayName } from "~/utils/user";
 
@@ -197,14 +197,9 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
 
       {loaderData.apiError && (
-        <div
-          className={cn(
-            "mb-6 flex items-start gap-3 rounded-lg border p-4",
-            "border-bad/30 bg-bad-subtle text-bad",
-          )}
-        >
-          <p className="text-sm">{loaderData.apiError}</p>
-        </div>
+        <Callout className="mb-6" variant="error">
+          {loaderData.apiError}
+        </Callout>
       )}
 
       <section>

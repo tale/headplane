@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Input from "~/components/input";
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
@@ -87,9 +88,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
           </Link>{" "}
           for more information.
         </Text>
-        {error ? (
-          <p className="bg-bad-subtle text-bad mt-2 rounded-lg p-3 text-sm">{error}</p>
-        ) : null}
+        {error ? <Callout variant="error">{error}</Callout> : null}
         <List className="mt-4">
           {tags.length === 0 ? (
             <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
@@ -160,7 +159,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
           </div>
         ) : null}
         {undeclaredTags.length > 0 ? (
-          <p className="bg-warn-subtle text-warn mt-2 rounded-lg p-3 text-sm">
+          <Callout variant="warning">
             {undeclaredTags.join(", ")} {undeclaredTags.length === 1 ? "is" : "are"} not declared
             under <code className="font-mono">tagOwners</code> in your policy, so no rule will match{" "}
             {undeclaredTags.length === 1 ? "it" : "them"}. Declare{" "}
@@ -169,7 +168,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
               Access Control
             </Link>
             .
-          </p>
+          </Callout>
         ) : null}
         <p className="mt-2 text-sm opacity-50">
           Not seeing the tags you expect? Tags need to be defined in your access control policy

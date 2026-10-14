@@ -1,5 +1,5 @@
+import Callout from "~/components/callout";
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
-import Notice from "~/components/notice";
 import Select from "~/components/select";
 import Text from "~/components/text";
 import Title from "~/components/title";
@@ -30,7 +30,7 @@ export default function LinkUser({
           machines they can manage and enables self-service features.
         </Text>
         {headscaleUsers.length === 0 ? (
-          <Notice>All Headscale users are already linked to other accounts.</Notice>
+          <Callout>All Headscale users are already linked to other accounts.</Callout>
         ) : (
           <>
             <input name="action_id" type="hidden" value="link_user" />

@@ -1,7 +1,8 @@
+import { CloudOff } from "lucide-react";
 import { Outlet, redirect, type ShouldRevalidateFunction } from "react-router";
 
+import Callout from "~/components/callout";
 import { ErrorBanner } from "~/components/error-banner";
-import StatusBanner from "~/components/status-banner";
 import {
   appConfigContext,
   authContext,
@@ -126,15 +127,15 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
       />
       <main className="container mt-4 mb-24 overscroll-contain">
         {!loaderData.isHealthy && (
-          <StatusBanner
+          <Callout
             className="mb-4"
-            dismissable={false}
-            title="Headscale Unreachable"
-            variant="critical"
+            icon={<CloudOff />}
+            title="Headscale is unreachable"
+            variant="error"
           >
             Unable to connect to the Headscale server. Data shown may be stale and changes cannot be
             saved until the connection is restored.
-          </StatusBanner>
+          </Callout>
         )}
         <Outlet />
       </main>
@@ -145,7 +146,7 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   return (
-    <div className="mx-auto my-24 w-fit overscroll-contain">
+    <div className="mx-auto my-24 max-w-2xl px-4">
       <ErrorBanner className="max-w-2xl" error={error} />
     </div>
   );

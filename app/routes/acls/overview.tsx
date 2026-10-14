@@ -12,10 +12,10 @@ import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
 
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Card from "~/components/card";
 import Code from "~/components/code";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
 import PageError from "~/components/page-error";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
@@ -92,10 +92,14 @@ export default function Page({
     if (!parsed.ok) {
       return (
         <div className="p-4">
-          <Notice title="Policy cannot be edited visually" variant="error">
+          <Callout
+            className="my-4 max-w-2xl"
+            title="Policy cannot be edited visually"
+            variant="error"
+          >
             The policy could not be parsed ({parsed.error}). Fix it in the <Code>Edit file</Code>{" "}
             tab and the visual editor will come back.
-          </Notice>
+          </Callout>
         </div>
       );
     }
@@ -103,10 +107,10 @@ export default function Page({
     return (
       <div className="flex flex-col gap-4 p-4">
         {parsed.hasComments ? (
-          <Notice title="Comments will be removed" variant="warning">
+          <Callout className="my-4 max-w-2xl" title="Comments will be removed" variant="warning">
             This policy contains comments. Saving a change made in the visual editor rewrites the
             policy and drops them.
-          </Notice>
+          </Callout>
         ) : null}
         {render(parsed.policy)}
       </div>
@@ -116,17 +120,17 @@ export default function Page({
   return (
     <div>
       {!access ? (
-        <Notice title="ACL Policy restricted" variant="warning">
+        <Callout className="my-4 max-w-2xl" title="ACL Policy restricted" variant="warning">
           You do not have the necessary permissions to edit the Access Control List policy. Please
           contact your administrator to request access or to make changes to the ACL policy.
-        </Notice>
+        </Callout>
       ) : !writable ? (
-        <Notice title="Read-only ACL Policy" variant="error">
+        <Callout className="my-4 max-w-2xl" title="Read-only ACL Policy" variant="error">
           The ACL policy mode is most likely set to <Code>file</Code> in your Headscale
           configuration. This means that the ACL file cannot be edited through the web interface. In
           order to resolve this, you'll need to set <Code>policy.mode</Code> to{" "}
           <Code>database</Code> in your Headscale configuration.
-        </Notice>
+        </Callout>
       ) : undefined}
       <h1 className="mb-4 text-xl font-semibold">Access Control List (ACL)</h1>
       <p className="mb-4 max-w-prose">
@@ -142,10 +146,14 @@ export default function Page({
         .
       </p>
       {fetcher.data?.error !== undefined ? (
-        <Notice title={fetcher.data.error.split(":")[0] ?? "Error"} variant="error">
+        <Callout
+          className="my-4 max-w-2xl"
+          title={fetcher.data.error.split(":")[0] ?? "Error"}
+          variant="error"
+        >
           {fetcher.data.error.split(":").slice(1).join(": ") ??
             "An unknown error occurred while trying to update the ACL policy."}
-        </Notice>
+        </Callout>
       ) : undefined}
       <Tabs className="mb-4" label="ACL Editor" defaultValue="rules">
         <TabsList>

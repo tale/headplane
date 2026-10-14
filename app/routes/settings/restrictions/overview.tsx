@@ -1,7 +1,7 @@
 import { data } from "react-router";
 
+import Callout from "~/components/callout";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
@@ -57,16 +57,20 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
           <span className="mx-2">/</span> Authentication Restrictions
         </p>
         {!access ? (
-          <Notice title="Authentication permissions restricted" variant="warning">
+          <Callout
+            className="my-4 max-w-2xl"
+            title="Authentication permissions restricted"
+            variant="warning"
+          >
             You do not have the necessary permissions to edit the Authentication Restrictions
             settings. Please contact your administrator to request access or to make changes to
             these settings.
-          </Notice>
+          </Callout>
         ) : !writable ? (
-          <Notice title="Configuration Locked" variant="error">
+          <Callout className="my-4 max-w-2xl" title="Configuration Locked" variant="error">
             The Headscale configuration file is not editable through the web interface. Please
             ensure that you have correctly given Headplane write access to the file.
-          </Notice>
+          </Callout>
         ) : undefined}
         <h1 className="mt-4 mb-2 text-xl font-semibold">Authentication Restrictions</h1>
         <p>
