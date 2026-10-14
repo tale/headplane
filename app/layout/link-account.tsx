@@ -2,7 +2,7 @@ import { Form } from "react-router";
 
 import Button from "~/components/button";
 import Card from "~/components/card";
-import cn from "~/utils/cn";
+import Select from "~/components/select";
 
 interface LinkAccountProps {
   headscaleUsers: { id: string; name: string }[];
@@ -18,18 +18,14 @@ export default function LinkAccount({ headscaleUsers }: LinkAccountProps) {
           Please select your user from the list below to link your account and continue.
         </Card.Text>
         <Form method="POST" className="mt-4">
-          <select
-            className={cn("mb-4 w-full rounded-lg border p-2", "border-line", "bg-subtle")}
+          <Select
+            className="mb-4"
+            items={headscaleUsers.map((u) => ({ value: u.id, label: u.name }))}
+            label="Headscale user"
             name="headscale_user_id"
+            placeholder="Select a user"
             required
-          >
-            <option value="">Select a user...</option>
-            {headscaleUsers.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.name}
-              </option>
-            ))}
-          </select>
+          />
           <Button className="w-full" type="submit" variant="primary">
             Link and Continue
           </Button>

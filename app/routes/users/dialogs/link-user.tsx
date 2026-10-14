@@ -1,8 +1,8 @@
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Notice from "~/components/notice";
+import Select from "~/components/select";
 import Text from "~/components/text";
 import Title from "~/components/title";
-import cn from "~/utils/cn";
 
 interface LinkUserProps {
   headplaneUserId: string;
@@ -35,20 +35,17 @@ export default function LinkUser({
           <>
             <input name="action_id" type="hidden" value="link_user" />
             <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
-            <select
-              className={cn("w-full rounded-lg border p-2", "border-line", "bg-subtle")}
-              defaultValue={currentLink ?? ""}
+            <Select
+              defaultValue={currentLink ?? null}
+              items={headscaleUsers.map((u) => ({
+                value: u.id,
+                label: u.id === currentLink ? `${u.name} (current)` : u.name,
+              }))}
+              label="Headscale user"
               name="headscale_user_id"
+              placeholder="Select a Headscale user"
               required
-            >
-              <option value="">Select a Headscale user...</option>
-              {headscaleUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                  {u.id === currentLink ? " (current)" : ""}
-                </option>
-              ))}
-            </select>
+            />
           </>
         )}
       </DialogPanel>

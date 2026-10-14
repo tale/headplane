@@ -36,17 +36,15 @@ interface RadioItemProps {
 
 function RadioItem({ children, label, className, value, disabled }: RadioItemProps) {
   return (
-    <label className="flex items-center gap-2.5 text-sm">
+    <label className="flex items-center gap-2.5">
       <Radio.Root
         value={value}
         disabled={disabled}
         aria-label={label}
         className={cn(
-          "w-5 h-5 aspect-square rounded-full border-2",
-          "border-line-strong",
-          "focus-ring",
-          "data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed",
-          "data-[checked]:border-[6px] data-[checked]:border-line-strong",
+          "size-4 shrink-0 rounded-full border border-line-strong bg-surface",
+          "focus-ring data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
+          "data-[checked]:border-[5px] data-[checked]:border-accent",
           className,
         )}
       >

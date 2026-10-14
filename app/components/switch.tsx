@@ -19,12 +19,9 @@ export default function Switch(props: SwitchProps) {
       aria-label={props.label}
       checked={props.checked}
       className={cn(
-        "flex h-[22px] w-[38px] p-[3px] shrink-0 rounded-full",
-        "bg-line-strong",
-        "border border-transparent",
-        "data-[checked]:bg-accent",
-        "focus-ring",
-        props.disabled && "opacity-50",
+        "flex h-[18px] w-[30px] shrink-0 rounded-full p-0.5",
+        "bg-line-strong data-[checked]:bg-accent",
+        "focus-ring data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
         props.className,
       )}
       defaultChecked={props.defaultChecked}
@@ -34,9 +31,8 @@ export default function Switch(props: SwitchProps) {
     >
       <BaseSwitch.Thumb
         className={cn(
-          "h-[14px] w-[14px] transform rounded-full",
-          "bg-surface data-[checked]:bg-accent-fg transition duration-50 ease-in-out",
-          "translate-x-0 data-[checked]:translate-x-full",
+          "size-3.5 rounded-full bg-white shadow-xs",
+          "transition-transform duration-100 data-[checked]:translate-x-3 data-[checked]:bg-accent-fg",
           props.switchClassName,
         )}
       />

@@ -1,61 +1,44 @@
-import { Field } from "@base-ui/react/field";
 import { Input as BaseInput } from "@base-ui/react/input";
-import { Asterisk } from "lucide-react";
 import type { ComponentProps } from "react";
 
+import Field, { controlClass, type FieldProps } from "~/components/field";
 import cn from "~/utils/cn";
 
-export interface InputProps extends Omit<ComponentProps<typeof BaseInput>, "onChange"> {
-  label: string;
-  labelHidden?: boolean;
-  required?: boolean;
-  className?: string;
-  invalid?: boolean;
-  errorMessage?: string;
-  description?: string;
+export interface InputProps
+  extends
+    Omit<ComponentProps<typeof BaseInput>, "onChange" | "children" | "className">,
+    Omit<FieldProps, "children"> {
   onChange?: (value: string) => void;
 }
 
-export default function Input(props: InputProps) {
-  const {
-    label,
-    labelHidden,
-    className,
-    invalid,
-    errorMessage,
-    description,
-    required,
-    onChange,
-    ...rest
-  } = props;
-
+export default function Input({
+  label,
+  labelHidden,
+  description,
+  invalid,
+  errorMessage,
+  className,
+  name,
+  disabled,
+  onChange,
+  ...props
+}: InputProps) {
   return (
-    <Field.Root className={cn("flex w-full flex-col gap-1", className)} invalid={invalid}>
-      <Field.Label className={cn("text-sm font-medium", "text-fg", labelHidden && "sr-only")}>
-        {label}
-        {required && <Asterisk className="text-bad ml-0.5 inline w-3.5 pb-1" />}
-      </Field.Label>
+    <Field
+      className={className}
+      description={description}
+      disabled={disabled}
+      errorMessage={errorMessage}
+      invalid={invalid}
+      label={label}
+      labelHidden={labelHidden}
+      name={name}
+    >
       <BaseInput
-        {...rest}
-        required={required}
-        className={cn(
-          "rounded-md px-3 py-2 text-sm",
-          "focus-ring",
-          "bg-surface",
-          "border border-line",
-        )}
-        onChange={
-          onChange
-            ? (e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)
-            : undefined
-        }
+        {...props}
+        className={cn(controlClass, "px-2.5")}
+        onChange={onChange ? (event) => onChange(event.currentTarget.value) : undefined}
       />
-      {description && (
-        <Field.Description className={cn("text-xs", "text-muted")}>{description}</Field.Description>
-      )}
-      {invalid && errorMessage ? (
-        <Field.Error className={cn("text-xs", "text-bad")}>{errorMessage}</Field.Error>
-      ) : null}
-    </Field.Root>
+    </Field>
   );
 }
