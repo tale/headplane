@@ -1,5 +1,4 @@
-import { Form } from "react-router";
-
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
 import Code from "~/components/code";
 import Link from "~/components/link";
@@ -49,26 +48,30 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                     </p>
                   </div>
                 </div>
-                <Form method="POST">
-                  <input name="action_id" type="hidden" value="remove_record" />
-                  <input name="record_name" type="hidden" value={record.name} />
-                  <input name="record_type" type="hidden" value={record.type} />
-                  <Button
-                    className="text-bad hover:bg-bad-subtle hover:text-bad"
-                    size="sm"
-                    variant="ghost"
-                    disabled={isDisabled}
-                    type="submit"
-                  >
-                    Remove
-                  </Button>
-                </Form>
+                <ActionDialog
+                  description="Devices stop resolving this domain to the record's address."
+                  fields={{ name: record.name, type: record.type }}
+                  intent="remove_record"
+                  isDestructive
+                  submitLabel="Remove"
+                  title={`Remove the ${record.type} record for ${record.name}?`}
+                  trigger={
+                    <Button
+                      className="text-bad hover:bg-bad-subtle hover:text-bad"
+                      disabled={isDisabled}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Remove
+                    </Button>
+                  }
+                />
               </List.Item>
             ))
           )}
         </List>
 
-        {isDisabled ? undefined : <AddRecord records={records} />}
+        {isDisabled ? undefined : <AddRecord />}
       </div>
     </div>
   );

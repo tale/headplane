@@ -1,11 +1,14 @@
 import { Info } from "lucide-react";
-import { Form, useSubmit } from "react-router";
+import { useFetcher } from "react-router";
 
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Link from "~/components/link";
 import List from "~/components/list";
 import Switch from "~/components/switch";
 import Tooltip from "~/components/tooltip";
+import type { ActionResult } from "~/utils/form";
 
 import AddNS from "../dialogs/add-ns";
 
@@ -16,6 +19,8 @@ interface Props {
 }
 
 export default function ManageNS({ nameservers, isDisabled, overrideLocalDns }: Props) {
+  const fetcher = useFetcher<ActionResult>();
+
   return (
     <div className="flex w-full flex-col sm:w-2/3">
       <h2 className="mb-4 text-lg font-semibold">Nameservers</h2>
@@ -28,6 +33,7 @@ export default function ManageNS({ nameservers, isDisabled, overrideLocalDns }: 
       <div className="mt-4">
         {Object.keys(nameservers).map((key) => (
           <NameserverList
+            fetcher={fetcher}
             isDisabled={isDisabled}
             isGlobal={key === "global"}
             key={key}
@@ -37,13 +43,19 @@ export default function ManageNS({ nameservers, isDisabled, overrideLocalDns }: 
           />
         ))}
 
-        {isDisabled ? undefined : <AddNS nameservers={nameservers} />}
+        {fetcher.data?.ok === false && (
+          <Callout className="mb-4" variant="error">
+            {fetcher.data.errors.form ?? "Couldn't update the DNS override."}
+          </Callout>
+        )}
+        {isDisabled ? undefined : <AddNS />}
       </div>
     </div>
   );
 }
 
 interface ListProps {
+  fetcher: ReturnType<typeof useFetcher<ActionResult>>;
   isGlobal: boolean;
   isDisabled: boolean;
   nameservers: Record<string, string[]>;
@@ -51,9 +63,15 @@ interface ListProps {
   name: string;
 }
 
-function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, name }: ListProps) {
+function NameserverList({
+  fetcher,
+  isGlobal,
+  isDisabled,
+  nameservers,
+  overrideLocalDns,
+  name,
+}: ListProps) {
   const list = isGlobal ? nameservers.global : nameservers[name];
-  const submit = useSubmit();
 
   if (list.length === 0) {
     return null;
@@ -85,16 +103,11 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
                 className="h-[15px] w-[23px] p-0.5"
                 defaultChecked={overrideLocalDns}
                 label="Override local DNS settings"
-                name="override_dns"
-                onCheckedChange={(v) => {
-                  submit(
-                    {
-                      action_id: "override_dns",
-                      override_dns: v ? "true" : "false",
-                    },
-                    {
-                      method: "POST",
-                    },
+                disabled={isDisabled}
+                onCheckedChange={(checked) => {
+                  fetcher.submit(
+                    { intent: "override_dns", enabled: String(checked) },
+                    { method: "POST" },
                   );
                 }}
                 switchClassName="h-[9px] w-[9px]"
@@ -110,20 +123,28 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
           ? list.map((ns) => (
               <List.Item key={ns}>
                 <p className="font-mono text-sm">{ns}</p>
-                <Form method="POST">
-                  <input name="action_id" type="hidden" value="remove_ns" />
-                  <input name="ns" type="hidden" value={ns} />
-                  <input name="split_name" type="hidden" value={isGlobal ? "global" : name} />
-                  <Button
-                    className="text-bad hover:bg-bad-subtle hover:text-bad"
-                    size="sm"
-                    variant="ghost"
-                    disabled={isDisabled}
-                    type="submit"
-                  >
-                    Remove
-                  </Button>
-                </Form>
+                <ActionDialog
+                  description={
+                    isGlobal
+                      ? "Devices stop using this nameserver for queries outside the tailnet."
+                      : `Devices stop using this nameserver for ${name}.`
+                  }
+                  fields={isGlobal ? { nameserver: ns } : { nameserver: ns, split_domain: name }}
+                  intent="remove_ns"
+                  isDestructive
+                  submitLabel="Remove"
+                  title={`Remove nameserver ${ns}?`}
+                  trigger={
+                    <Button
+                      className="text-bad hover:bg-bad-subtle hover:text-bad"
+                      disabled={isDisabled}
+                      size="sm"
+                      variant="ghost"
+                    >
+                      Remove
+                    </Button>
+                  }
+                />
               </List.Item>
             ))
           : undefined}

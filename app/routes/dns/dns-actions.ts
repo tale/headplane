@@ -1,5 +1,3 @@
-import { data } from "react-router";
-
 import {
   authContext,
   headscaleConfigContext,
@@ -7,8 +5,10 @@ import {
   integrationContext,
 } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
+import { invalid, ok, parseForm } from "~/utils/form";
 
 import type { Route } from "./+types/overview";
+import { dnsAction as dnsActionSchema } from "./schemas";
 
 export async function dnsAction({ request, context }: Route.ActionArgs) {
   const auth = context.get(authContext);
@@ -16,221 +16,113 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
   const headscaleConfig = context.get(headscaleConfigContext);
   const integration = context.get(integrationContext);
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.write_network);
-
-  if (!check) {
-    return data({ success: false }, 403);
-  }
-
+  await auth.requireCapability(request, Capabilities.write_network);
   if (!headscaleConfig.writable()) {
-    return data({ success: false }, 403);
+    return invalid({ form: "The Headscale configuration is read-only." }, 403);
   }
 
-  const formData = await request.formData();
-  const action = formData.get("action_id")?.toString();
-  if (!action) {
-    return data({ success: false }, 400);
+  const form = await parseForm(request, dnsActionSchema);
+  if (!form.ok) {
+    return invalid(form.errors);
   }
 
-  switch (action) {
-    case "rename_tailnet": {
-      const newName = formData.get("new_name")?.toString();
-      if (!newName) {
-        return data({ success: false }, 400);
-      }
+  const input = form.data;
+  const config = headscaleConfig.getDNSConfig();
+  const nameserverPath = (split?: string) =>
+    split ? `dns.nameservers.split."${split}"` : "dns.nameservers.global";
 
-      await headscaleConfig.patch([
-        {
-          path: "dns.base_domain",
-          value: newName,
-        },
-      ]);
-
+  switch (input.intent) {
+    case "rename_tailnet":
+      await headscaleConfig.patch([{ path: "dns.base_domain", value: input.name }]);
       await integration?.onConfigChange(headscale);
-      return { message: "Tailnet renamed successfully" };
-    }
+      return ok("Tailnet renamed");
+
     case "toggle_magic": {
-      const newState = formData.get("new_state")?.toString();
-      if (!newState) {
-        return data({ success: false }, 400);
-      }
+      const isEnabled = input.enabled === "true";
+      await headscaleConfig.patch([{ path: "dns.magic_dns", value: isEnabled }]);
+      await integration?.onConfigChange(headscale);
+      return ok(isEnabled ? "Magic DNS enabled" : "Magic DNS disabled");
+    }
 
+    case "override_dns":
       await headscaleConfig.patch([
-        {
-          path: "dns.magic_dns",
-          value: newState === "enabled",
-        },
+        { path: "dns.override_local_dns", value: input.enabled === "true" },
       ]);
-
       await integration?.onConfigChange(headscale);
-      return { message: "Magic DNS state updated successfully" };
-    }
-    case "remove_ns": {
-      const config = headscaleConfig.getDNSConfig();
-      const ns = formData.get("ns")?.toString();
-      const splitName = formData.get("split_name")?.toString();
+      return ok("DNS override updated");
 
-      if (!ns || !splitName) {
-        return data({ success: false }, 400);
-      }
-
-      if (splitName === "global") {
-        const servers = config.nameservers.filter((i) => i !== ns);
-
-        await headscaleConfig.patch([
-          {
-            path: "dns.nameservers.global",
-            value: servers,
-          },
-        ]);
-      } else {
-        const splits = config.splitDns;
-        const servers = splits[splitName].filter((i) => i !== ns);
-
-        await headscaleConfig.patch([
-          {
-            path: `dns.nameservers.split."${splitName}"`,
-            value: servers.length > 0 ? servers : null,
-          },
-        ]);
-      }
-
-      await integration?.onConfigChange(headscale);
-      return { message: "Nameserver removed successfully" };
-    }
     case "add_ns": {
-      const config = headscaleConfig.getDNSConfig();
-      const ns = formData.get("ns")?.toString();
-      const splitName = formData.get("split_name")?.toString();
-
-      if (!ns || !splitName) {
-        return data({ success: false }, 400);
+      const servers = input.split_domain
+        ? (config.splitDns[input.split_domain] ?? [])
+        : config.nameservers;
+      if (servers.includes(input.nameserver)) {
+        return invalid({ nameserver: "This nameserver is already in the list." });
       }
 
-      if (splitName === "global") {
-        const servers = [...config.nameservers, ns];
-
-        await headscaleConfig.patch([
-          {
-            path: "dns.nameservers.global",
-            value: servers,
-          },
-        ]);
-      } else {
-        const splits = config.splitDns;
-        const servers = [...(splits[splitName] ?? []), ns];
-
-        await headscaleConfig.patch([
-          {
-            path: `dns.nameservers.split."${splitName}"`,
-            value: servers,
-          },
-        ]);
-      }
-
+      await headscaleConfig.patch([
+        { path: nameserverPath(input.split_domain), value: [...servers, input.nameserver] },
+      ]);
       await integration?.onConfigChange(headscale);
-      return { message: "Nameserver added successfully" };
+      return ok("Nameserver added");
     }
-    case "remove_domain": {
-      const config = headscaleConfig.getDNSConfig();
-      const domain = formData.get("domain")?.toString();
-      if (!domain) {
-        return data({ success: false }, 400);
+
+    case "remove_ns": {
+      const servers = (
+        input.split_domain ? (config.splitDns[input.split_domain] ?? []) : config.nameservers
+      ).filter((server) => server !== input.nameserver);
+
+      // An empty split list is dropped so Headscale doesn't keep the domain.
+      await headscaleConfig.patch([
+        {
+          path: nameserverPath(input.split_domain),
+          value: input.split_domain && servers.length === 0 ? null : servers,
+        },
+      ]);
+      await integration?.onConfigChange(headscale);
+      return ok("Nameserver removed");
+    }
+
+    case "add_domain":
+      if (config.searchDomains.includes(input.domain)) {
+        return invalid({ domain: "This search domain is already in the list." });
       }
 
-      const domains = config.searchDomains.filter((i) => i !== domain);
+      await headscaleConfig.patch([
+        { path: "dns.search_domains", value: [...config.searchDomains, input.domain] },
+      ]);
+      await integration?.onConfigChange(headscale);
+      return ok("Search domain added");
+
+    case "remove_domain":
       await headscaleConfig.patch([
         {
           path: "dns.search_domains",
-          value: domains,
+          value: config.searchDomains.filter((domain) => domain !== input.domain),
         },
       ]);
-
       await integration?.onConfigChange(headscale);
-      return { message: "Domain removed successfully" };
-    }
-    case "add_domain": {
-      const config = headscaleConfig.getDNSConfig();
-      const domain = formData.get("domain")?.toString();
-      if (!domain) {
-        return data({ success: false }, 400);
-      }
+      return ok("Search domain removed");
 
-      const domains = [...config.searchDomains, domain];
-
-      await headscaleConfig.patch([
-        {
-          path: "dns.search_domains",
-          value: domains,
-        },
-      ]);
-
-      await integration?.onConfigChange(headscale);
-      return { message: "Domain added successfully" };
-    }
-    case "remove_record": {
-      const recordName = formData.get("record_name")?.toString();
-      const recordType = formData.get("record_type")?.toString();
-
-      if (!recordName || !recordType) {
-        return data({ success: false }, 400);
-      }
-
-      // Value is not needed for removal
-      const restart = await headscaleConfig.removeDNS({
-        name: recordName,
-        type: recordType,
-        value: "",
-      });
-
-      if (!restart) {
-        return;
-      }
-
-      await integration?.onConfigChange(headscale);
-      return { message: "DNS record removed successfully" };
-    }
     case "add_record": {
-      const recordName = formData.get("record_name")?.toString().trim();
-      const recordType = formData.get("record_type")?.toString();
-      const recordValue = formData.get("record_value")?.toString().trim();
-
-      if (!recordName || !recordType || !recordValue) {
-        return data({ success: false }, 400);
+      const record = { name: input.name, type: input.type, value: input.value };
+      if (config.extraRecords.some((r) => r.name === record.name && r.type === record.type)) {
+        return invalid({ name: `This domain already has an ${record.type} record.` });
       }
 
-      const restart = await headscaleConfig.addDNS({
-        name: recordName,
-        type: recordType,
-        value: recordValue,
-      });
-
-      if (!restart) {
-        return;
+      // A separate records file is watched by Headscale, so only records in
+      // the main config need a restart.
+      if (await headscaleConfig.addDNS(record)) {
+        await integration?.onConfigChange(headscale);
       }
 
-      await integration?.onConfigChange(headscale);
-      return { message: "DNS record added successfully" };
+      return ok("Record added");
     }
-    case "override_dns": {
-      const override = formData.get("override_dns")?.toString();
-      if (!override) {
-        return data({ success: false }, 400);
+
+    case "remove_record":
+      if (await headscaleConfig.removeDNS({ name: input.name, type: input.type, value: "" })) {
+        await integration?.onConfigChange(headscale);
       }
 
-      const overrideValue = override === "true";
-      await headscaleConfig.patch([
-        {
-          path: "dns.override_local_dns",
-          value: overrideValue,
-        },
-      ]);
-
-      await integration?.onConfigChange(headscale);
-      return { message: "DNS override updated successfully" };
-    }
-    default:
-      return data({ success: false }, 400);
+      return ok("Record removed");
   }
 }

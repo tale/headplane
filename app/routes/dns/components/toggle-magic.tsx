@@ -1,26 +1,30 @@
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/legacy-dialog";
-import Text from "~/components/text";
-import Title from "~/components/title";
 
 interface Props {
   isEnabled: boolean;
   isDisabled: boolean;
 }
 
-export default function Modal({ isEnabled, isDisabled }: Props) {
+export default function ToggleMagic({ isEnabled, isDisabled }: Props) {
+  const label = isEnabled ? "Disable Magic DNS" : "Enable Magic DNS";
+
   return (
-    <Dialog>
-      <Button disabled={isDisabled}>{isEnabled ? "Disable" : "Enable"} Magic DNS</Button>
-      <DialogPanel isDisabled={isDisabled}>
-        <Title>{isEnabled ? "Disable" : "Enable"} Magic DNS</Title>
-        <Text>
-          Devices will no longer be accessible via your tailnet domain. The search domain will also
-          be disabled.
-        </Text>
-        <input type="hidden" name="action_id" value="toggle_magic" />
-        <input type="hidden" name="new_state" value={isEnabled ? "disabled" : "enabled"} />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description={
+        isEnabled
+          ? "Devices will no longer be reachable at your tailnet domain, and the search domain is removed."
+          : "Devices become reachable at your tailnet domain, which is added as the first search domain."
+      }
+      fields={{ enabled: String(!isEnabled) }}
+      intent="toggle_magic"
+      submitLabel={label}
+      title={`${label}?`}
+      trigger={
+        <Button className="self-start" disabled={isDisabled}>
+          {label}
+        </Button>
+      }
+    />
   );
 }

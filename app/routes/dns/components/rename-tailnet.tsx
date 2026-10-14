@@ -1,9 +1,7 @@
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
 import Code from "~/components/code";
 import Input from "~/components/input";
-import Dialog, { DialogPanel } from "~/components/legacy-dialog";
-import Text from "~/components/text";
-import Title from "~/components/title";
 
 interface Props {
   name: string;
@@ -28,24 +26,19 @@ export default function RenameTailnet({ name, isDisabled }: Props) {
         }}
         value={name}
       />
-      <Dialog>
-        <Button disabled={isDisabled}>Rename Tailnet</Button>
-        <DialogPanel isDisabled={isDisabled}>
-          <Title>Rename Tailnet</Title>
-          <Text className="mb-8">
-            Keep in mind that changing this can lead to all sorts of unexpected behavior and may
-            break existing devices in your tailnet.
-          </Text>
-          <input name="action_id" type="hidden" value="rename_tailnet" />
-          <Input
-            defaultValue={name}
-            required
-            label="Tailnet name"
-            name="new_name"
-            placeholder="ts.net"
-          />
-        </DialogPanel>
-      </Dialog>
+      <ActionDialog
+        description="Devices may misbehave until they pick up the new name."
+        intent="rename_tailnet"
+        submitLabel="Rename"
+        title="Rename tailnet"
+        trigger={
+          <Button className="self-start" disabled={isDisabled}>
+            Rename tailnet
+          </Button>
+        }
+      >
+        <Input defaultValue={name} label="Tailnet name" name="name" placeholder="ts.net" required />
+      </ActionDialog>
     </div>
   );
 }

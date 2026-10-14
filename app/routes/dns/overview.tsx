@@ -1,4 +1,3 @@
-import type { ActionFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 
 import Callout from "~/components/callout";
@@ -7,6 +6,7 @@ import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
+import { toastOnSuccess } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import ManageDomains from "./components/manage-domains";
@@ -45,8 +45,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-export async function action(data: ActionFunctionArgs) {
-  return dnsAction(data);
+export const action = dnsAction;
+
+export function clientAction({ serverAction }: Route.ClientActionArgs) {
+  return toastOnSuccess(serverAction());
 }
 
 export default function Page() {

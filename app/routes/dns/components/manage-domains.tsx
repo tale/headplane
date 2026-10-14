@@ -1,3 +1,4 @@
+import { Form } from "@base-ui/react/form";
 import { closestCorners, DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -8,13 +9,16 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, Lock } from "lucide-react";
-import { useEffect, useState } from "react";
-import { Form } from "react-router";
+import { useState } from "react";
+import { useFetcher } from "react-router";
 
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
+import Callout from "~/components/callout";
 import Input from "~/components/input";
 import List from "~/components/list";
 import cn from "~/utils/cn";
+import type { ActionResult } from "~/utils/form";
 
 interface Props {
   searchDomains: string[];
@@ -23,12 +27,16 @@ interface Props {
 }
 
 export default function ManageDomains({ searchDomains, isDisabled, magic }: Props) {
+  const fetcher = useFetcher<ActionResult>();
   const [activeId, setActiveId] = useState<number | string | null>(null);
   const [localDomains, setLocalDomains] = useState(searchDomains);
-
-  useEffect(() => {
+  const [prevDomains, setPrevDomains] = useState(searchDomains);
+  if (prevDomains !== searchDomains) {
+    setPrevDomains(searchDomains);
     setLocalDomains(searchDomains);
-  }, [searchDomains]);
+  }
+
+  const errors = fetcher.data?.ok === false ? fetcher.data.errors : undefined;
 
   return (
     <div className="flex w-full flex-col sm:w-2/3">
@@ -96,8 +104,14 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
           </SortableContext>
           {isDisabled ? undefined : (
             <List.Item key="add-sd">
-              <Form className="flex w-full items-center justify-between" method="POST">
-                <input name="action_id" type="hidden" value="add_domain" />
+              <Form
+                className="flex w-full items-start justify-between"
+                errors={errors}
+                // Remounts after each change so a submitted domain clears.
+                key={searchDomains.join()}
+                render={<fetcher.Form method="POST" />}
+              >
+                <input name="intent" type="hidden" value="add_domain" />
                 <Input
                   className={cn(
                     "border-none font-mono p-0 text-sm",
@@ -110,7 +124,11 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                   placeholder="Search Domain"
                   type="text"
                 />
-                <Button size="sm" type="submit">
+                <Button
+                  pending={fetcher.formData?.get("intent") === "add_domain"}
+                  size="sm"
+                  type="submit"
+                >
                   Add
                 </Button>
               </Form>
@@ -118,6 +136,11 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
           )}
         </List>
       </DndContext>
+      {errors?.form && (
+        <Callout className="mt-4" variant="error">
+          {errors.form}
+        </Callout>
+      )}
     </div>
   );
 }
@@ -159,19 +182,24 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
         {domain}
       </p>
       {isDragging ? undefined : (
-        <Form method="POST">
-          <input name="action_id" type="hidden" value="remove_domain" />
-          <input name="domain" type="hidden" value={domain} />
-          <Button
-            className="text-bad hover:bg-bad-subtle hover:text-bad"
-            size="sm"
-            variant="ghost"
-            disabled={isDisabled}
-            type="submit"
-          >
-            Remove
-          </Button>
-        </Form>
+        <ActionDialog
+          description="Devices stop appending this domain to short names."
+          fields={{ domain }}
+          intent="remove_domain"
+          isDestructive
+          submitLabel="Remove"
+          title={`Remove search domain ${domain}?`}
+          trigger={
+            <Button
+              className="text-bad hover:bg-bad-subtle hover:text-bad"
+              disabled={isDisabled}
+              size="sm"
+              variant="ghost"
+            >
+              Remove
+            </Button>
+          }
+        />
       )}
     </List.Item>
   );
