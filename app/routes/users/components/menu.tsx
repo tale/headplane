@@ -36,10 +36,6 @@ export default function UserMenu({
   const [modal, setModal] = useState<Modal>(null);
 
   const isLinked = currentLink !== undefined;
-  const disabledKeys: string[] = [];
-  if (!isLinked) {
-    disabledKeys.push("reassign");
-  }
 
   // Filter linkable users: unclaimed, or the one currently linked to this user
   const linkableUsers = headscaleUsers.filter((u) => !u.claimed || u.id === currentLink);
@@ -111,7 +107,7 @@ export default function UserMenu({
         </MenuTrigger>
         <MenuContent>
           <MenuItem
-            disabled={disabledKeys.includes("reassign")}
+            disabled={!isLinked || user.role === "owner"}
             onClick={() => setModal("reassign")}
           >
             Change role
