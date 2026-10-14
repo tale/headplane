@@ -6,7 +6,6 @@ import cn from "~/utils/cn";
 export interface SwitchProps {
   label: string;
   className?: string;
-  switchClassName?: string;
   name?: string;
   disabled?: boolean;
   checked?: boolean;
@@ -34,7 +33,6 @@ export default function Switch(props: SwitchProps) {
         className={cn(
           "size-3.5 rounded-full bg-white shadow-xs",
           "transition-transform duration-100 data-[checked]:translate-x-3 data-[checked]:bg-accent-fg",
-          props.switchClassName,
         )}
       />
     </BaseSwitch.Root>

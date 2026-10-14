@@ -100,7 +100,6 @@ function NameserverList({
               </Tooltip>
               <p>Override DNS servers</p>
               <Switch
-                className="h-[15px] w-[23px] p-0.5"
                 defaultChecked={overrideLocalDns}
                 label="Override local DNS settings"
                 disabled={isDisabled}
@@ -110,7 +109,6 @@ function NameserverList({
                     { method: "POST" },
                   );
                 }}
-                switchClassName="h-[9px] w-[9px]"
               />
             </div>
           </div>
