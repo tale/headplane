@@ -26,7 +26,7 @@ export function getErrorMessage(error: Error | unknown): {
                 a server-side issue. Please check the Headscale server status and try again later.
               </Card.Text>
               {(error.data.data != null || error.data.rawData != null) && (
-                <pre className="mt-2 overflow-x-auto rounded-lg bg-mist-100 p-2 dark:bg-mist-800">
+                <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
                   {error.data.data != null ? (
                     <code>{JSON.stringify(error.data.data, null, 2)}</code>
                   ) : (
@@ -78,7 +78,7 @@ export function getErrorMessage(error: Error | unknown): {
               </li>
             </ul>
             <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-            <pre className="mt-2 overflow-x-auto rounded-lg bg-mist-100 p-2 dark:bg-mist-800">
+            <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
               <code>{JSON.stringify(error.data, null, 2)}</code>
             </pre>
           </>
@@ -97,7 +97,7 @@ export function getErrorMessage(error: Error | unknown): {
               configuration to ensure Headplane is able to connect.
             </Card.Text>
             <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-            <pre className="mt-2 overflow-x-auto rounded-lg bg-mist-100 p-2 dark:bg-mist-800">
+            <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
               {requestUrl}
               <br />
               {errorCode}: {errorMessage}
@@ -142,7 +142,7 @@ export function getErrorMessage(error: Error | unknown): {
             repository with the details below.
           </Card.Text>
           <Card.Text className="mt-4 text-lg font-semibold">Error Details</Card.Text>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-mist-100 p-2 dark:bg-mist-800">
+          <pre className="bg-subtle mt-2 overflow-x-auto rounded-lg p-2">
             <code>{JSON.stringify(error, null, 2)}</code>
           </pre>
         </>
@@ -183,10 +183,10 @@ export function ErrorBanner({ error, className }: ErrorBannerProps) {
   const { title, jsxMessage } = getErrorMessage(error);
 
   return (
-    <Card className={cn("w-screen", className)} variant="flat">
+    <Card className={cn("w-screen", className)}>
       <div className="flex items-center justify-between gap-4">
         <Card.Title>{title}</Card.Title>
-        <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+        <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
       {jsxMessage}
     </Card>

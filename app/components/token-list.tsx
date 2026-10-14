@@ -67,10 +67,8 @@ export default function TokenList({
   return (
     <div className="flex flex-col gap-2">
       <div>
-        <p className="text-sm font-medium text-mist-700 dark:text-mist-200">{label}</p>
-        {description ? (
-          <p className="text-xs text-mist-500 dark:text-mist-400">{description}</p>
-        ) : null}
+        <p className="text-fg text-sm font-medium">{label}</p>
+        {description ? <p className="text-muted text-xs">{description}</p> : null}
       </div>
       <TableList>
         {values.length === 0 ? (

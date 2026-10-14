@@ -72,7 +72,7 @@ export default function NewMachine(data: NewMachineProps) {
         </DialogPanel>
       </Dialog>
       <Menu disabled={data.isDisabled}>
-        <MenuTrigger className="rounded-md bg-indigo-500 px-3.5 py-2 text-sm font-semibold text-white hover:bg-indigo-500/90 dark:bg-indigo-500/90 dark:hover:bg-indigo-500/80">
+        <MenuTrigger className="bg-ink text-ink-fg hover:bg-ink/90 rounded-md px-3.5 py-2 text-sm font-medium">
           Add Device
         </MenuTrigger>
         <MenuContent>

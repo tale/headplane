@@ -55,16 +55,10 @@ export default function MachineRow({
   }, [magic, node.ipAddresses]);
 
   return (
-    <tr className="group hover:bg-mist-100 dark:hover:bg-mist-800" key={node.id}>
+    <tr className="group hover:bg-hover" key={node.id}>
       <td className="py-2 pl-2 focus-within:ring-3">
-        <Link className={cn("group/link h-full focus:outline-hidden")} to={`/machines/${node.id}`}>
-          <p
-            className={cn(
-              "font-semibold leading-snug",
-              "group-hover/link:text-blue-600",
-              "dark:group-hover/link:text-blue-400",
-            )}
-          >
+        <Link className={cn("group/link h-full")} to={`/machines/${node.id}`}>
+          <p className={cn("font-semibold leading-snug", "group-hover/link:text-accent")}>
             {node.givenName}
           </p>
           <p className="text-sm opacity-50">
@@ -82,7 +76,7 @@ export default function MachineRow({
         <div className="flex items-center gap-x-1">
           {node.ipAddresses[0]}
           <Menu>
-            <MenuTrigger className="rounded-full bg-transparent p-1 hover:bg-mist-100 dark:hover:bg-mist-800">
+            <MenuTrigger className="hover:bg-hover rounded-full bg-transparent p-1">
               <ChevronDown className="h-4 w-4" />
             </MenuTrigger>
             <MenuContent align="end">
@@ -129,10 +123,7 @@ export default function MachineRow({
         <div className="flex items-start gap-x-1">
           <StatusCircle className="mt-0.5 h-4 w-4" isOnline={node.online && !node.expired} />
           <div>
-            <p
-              className={cn("text-sm", "text-mist-600 dark:text-mist-300")}
-              suppressHydrationWarning
-            >
+            <p className={cn("text-sm", "text-muted")} suppressHydrationWarning>
               {node.online && !node.expired
                 ? "Connected"
                 : new Date(node.lastSeen).toLocaleString()}

@@ -28,7 +28,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
     <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
       <DialogPanel variant="unactionable">
         <Title>Edit route settings of {node.givenName}</Title>
-        <Text className="font-bold">Subnet routes</Text>
+        <Text className="font-semibold">Subnet routes</Text>
         <Text>
           Connect to devices you can&apos;t install Tailscale on by advertising IP ranges as subnet
           routes.{" "}
@@ -64,7 +64,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             </TableList.Item>
           ))}
         </TableList>
-        <Text className="mt-8 font-bold">Exit nodes</Text>
+        <Text className="mt-8 font-semibold">Exit nodes</Text>
         <Text>
           Allow your network to route internet traffic through this machine.{" "}
           <Link external styled to="https://tailscale.com/kb/1103/exit-nodes">

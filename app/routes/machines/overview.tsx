@@ -242,7 +242,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     <>
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col">
-          <h1 className="mb-2 text-2xl font-medium">Machines</h1>
+          <h1 className="mb-2 text-xl font-semibold">Machines</h1>
           <p>
             Manage the devices connected to your Tailnet.{" "}
             <Link external styled to="https://tailscale.com/kb/1372/manage-devices">
@@ -273,9 +273,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               className={cn(
                 "absolute right-2 top-1/2 -translate-y-1/2",
                 "p-1 rounded-full",
-                "text-mist-400 hover:text-mist-600",
-                "dark:text-mist-500 dark:hover:text-mist-300",
-                "hover:bg-mist-100 dark:hover:bg-mist-800",
+                "text-muted hover:text-muted",
+                "hover:bg-hover",
               )}
               onClick={clearSearch}
               type="button"
@@ -285,7 +284,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           )}
         </div>
         <MachineFilters users={loaderData.users} populatedNodes={loaderData.populatedNodes} />
-        <span className="ml-auto text-sm whitespace-nowrap text-mist-500">
+        <span className="text-muted ml-auto text-sm whitespace-nowrap">
           {searchQuery || hasActiveFilters
             ? `Showing ${filteredAndSortedNodes.length} of ${loaderData.populatedNodes.length} machines`
             : `${loaderData.populatedNodes.length} machines`}
@@ -293,7 +292,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-160 table-auto rounded-lg">
-          <thead className="text-mist-600 dark:text-mist-300">
+          <thead className="text-muted">
             <tr className="px-0.5 text-left">
               <th
                 aria-sort={
@@ -303,14 +302,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                       : "descending"
                     : "none"
                 }
-                className="pb-2 text-xs font-bold uppercase"
+                className="pb-2 text-xs font-semibold uppercase"
               >
                 <button
                   aria-label="Sort by name"
-                  className={cn(
-                    "flex items-center gap-x-1 cursor-pointer",
-                    "hover:text-mist-900 dark:hover:text-mist-100",
-                  )}
+                  className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
                   onClick={() => handleSort("name")}
                   type="button"
                 >
@@ -337,8 +333,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                   <button
                     aria-label="Sort by IP address"
                     className={cn(
-                      "flex items-center gap-x-1 cursor-pointer uppercase text-xs font-bold",
-                      "hover:text-mist-900 dark:hover:text-mist-100",
+                      "flex items-center gap-x-1 cursor-pointer uppercase text-xs font-semibold",
+                      "hover:text-fg",
                     )}
                     onClick={() => handleSort("ip")}
                     type="button"
@@ -379,14 +375,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                         : "descending"
                       : "none"
                   }
-                  className="pb-2 text-xs font-bold uppercase"
+                  className="pb-2 text-xs font-semibold uppercase"
                 >
                   <button
                     aria-label="Sort by version"
-                    className={cn(
-                      "flex items-center gap-x-1 cursor-pointer",
-                      "hover:text-mist-900 dark:hover:text-mist-100",
-                    )}
+                    className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
                     onClick={() => handleSort("version")}
                     type="button"
                   >
@@ -408,14 +401,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                       : "descending"
                     : "none"
                 }
-                className="pb-2 text-xs font-bold uppercase"
+                className="pb-2 text-xs font-semibold uppercase"
               >
                 <button
                   aria-label="Sort by last seen"
-                  className={cn(
-                    "flex items-center gap-x-1 cursor-pointer",
-                    "hover:text-mist-900 dark:hover:text-mist-100",
-                  )}
+                  className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
                   onClick={() => handleSort("lastSeen")}
                   type="button"
                 >
@@ -433,16 +423,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
               </th>
             </tr>
           </thead>
-          <tbody
-            className={cn(
-              "divide-y divide-mist-100 dark:divide-mist-800 align-top",
-              "border-t border-mist-100 dark:border-mist-800",
-            )}
-          >
+          <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
             {filteredAndSortedNodes.length === 0 ? (
               <tr>
                 <td
-                  className="py-8 text-center text-mist-500"
+                  className="text-muted py-8 text-center"
                   colSpan={loaderData.agent !== undefined ? 6 : 5}
                 >
                   No machines match the current filters

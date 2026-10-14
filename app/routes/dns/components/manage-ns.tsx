@@ -19,7 +19,7 @@ interface Props {
 export default function ManageNS({ nameservers, isDisabled, overrideLocalDns }: Props) {
   return (
     <div className="flex w-full flex-col sm:w-2/3">
-      <h1 className="mb-4 text-2xl font-medium">Nameservers</h1>
+      <h1 className="mb-4 text-xl font-semibold">Nameservers</h1>
       <p>
         Set the nameservers used by devices on the Tailnet to resolve DNS queries.{" "}
         <Link external styled to="https://tailscale.com/kb/1054/dns">
@@ -65,7 +65,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
       <div className="mb-2 flex items-center justify-between">
         {isGlobal ? (
           <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-md font-medium opacity-80">Global Nameservers</h2>
+            <h2 className="font-medium opacity-80">Global Nameservers</h2>
             <div className="flex items-center gap-2 text-sm">
               <Tooltip
                 content={
@@ -103,7 +103,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
             </div>
           </div>
         ) : (
-          <h2 className="text-md font-medium opacity-80">{name}</h2>
+          <h2 className="font-medium opacity-80">{name}</h2>
         )}
       </div>
       <TableList>
@@ -116,7 +116,7 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
                   <input name="ns" type="hidden" value={ns} />
                   <input name="split_name" type="hidden" value={isGlobal ? "global" : name} />
                   <Button
-                    className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
+                    className={cn("px-2 py-1 rounded-md", "text-bad")}
                     disabled={isDisabled}
                     type="submit"
                   >

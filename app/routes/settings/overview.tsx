@@ -19,7 +19,7 @@ export default function Page({ loaderData: { config, hasOidcConfig } }: Route.Co
   return (
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
       <div className="flex w-full flex-col sm:w-2/3">
-        <h1 className="mb-4 text-2xl font-medium">Settings</h1>
+        <h1 className="mb-4 text-xl font-semibold">Settings</h1>
         <p>
           The settings page is still under construction. As I'm able to add more features, I'll be
           adding them here. If you require any features, feel free to open an issue on the GitHub
@@ -27,7 +27,7 @@ export default function Page({ loaderData: { config, hasOidcConfig } }: Route.Co
         </p>
       </div>
       <div className="flex w-full flex-col sm:w-2/3">
-        <h1 className="mb-4 text-2xl font-medium">Pre-Auth Keys</h1>
+        <h1 className="mb-4 text-xl font-semibold">Pre-Auth Keys</h1>
         <p>
           Headscale fully supports pre-authentication keys in order to easily add devices to your
           Tailnet. To learn more about using pre-authentication keys, visit the{" "}
@@ -43,7 +43,7 @@ export default function Page({ loaderData: { config, hasOidcConfig } }: Route.Co
         </div>
       </Link>
       <div className="flex w-full flex-col sm:w-2/3">
-        <h1 className="mb-4 text-2xl font-medium">Headplane Agent</h1>
+        <h1 className="mb-4 text-xl font-semibold">Headplane Agent</h1>
         <p>
           The Headplane Agent syncs node information like OS version and connectivity details from
           your Tailnet.
@@ -58,7 +58,7 @@ export default function Page({ loaderData: { config, hasOidcConfig } }: Route.Co
       {config && hasOidcConfig ? (
         <>
           <div className="flex w-full flex-col sm:w-2/3">
-            <h1 className="mb-4 text-2xl font-medium">Authentication Restrictions</h1>
+            <h1 className="mb-4 text-xl font-semibold">Authentication Restrictions</h1>
             <p>
               Headscale supports restricting OIDC authentication to only allow certain email
               domains, groups, or users to authenticate. This can be used to limit access to your

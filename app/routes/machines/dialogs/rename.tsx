@@ -51,7 +51,7 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
         <Input {...form.field("name")} required label="Machine name" placeholder="Machine name" />
         {magic ? (
           name.length > 0 && name !== machine.givenName ? (
-            <p className="mt-2 text-sm leading-tight text-mist-600 dark:text-mist-300">
+            <p className="text-muted mt-2 text-sm leading-tight">
               This machine will be accessible by the hostname{" "}
               <Code className="text-sm">{name.toLowerCase().replaceAll(/\s+/g, "-")}</Code>
               {". "}
@@ -59,7 +59,7 @@ export default function Rename({ machine, magic, isOpen, setIsOpen }: RenameProp
               to this machine.
             </p>
           ) : (
-            <p className="mt-2 text-sm leading-tight text-mist-600 dark:text-mist-300">
+            <p className="text-muted mt-2 text-sm leading-tight">
               This machine is accessible by the hostname{" "}
               <Code className="text-sm">{machine.givenName}</Code>.
             </p>

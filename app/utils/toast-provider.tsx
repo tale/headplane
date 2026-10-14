@@ -10,12 +10,7 @@ function ToastList() {
     <Toast.Root
       key={toast.id}
       toast={toast}
-      className={cn(
-        "toast-root rounded-lg",
-        "bg-white text-mist-900 border border-mist-200",
-        "dark:bg-mist-800 dark:text-mist-50 dark:border-mist-700",
-        "shadow-lg",
-      )}
+      className={cn("toast-root rounded-lg", "bg-raised text-fg border-overlay shadow-overlay")}
     >
       <Toast.Content
         className={cn("toast-content", "flex items-center justify-between gap-x-3 pl-4 pr-3 py-3")}
@@ -25,8 +20,7 @@ function ToastList() {
           aria-label="Close"
           className={cn(
             "inline-flex shrink-0 items-center justify-center rounded-full p-1",
-            "bg-transparent hover:bg-mist-100",
-            "dark:bg-transparent dark:hover:bg-mist-700",
+            "bg-transparent hover:bg-hover",
           )}
         >
           <X className="h-4 w-4" />

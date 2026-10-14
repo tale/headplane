@@ -47,7 +47,7 @@ export default function ReassignUser({
                   return (
                     <RadioGroup.Radio key={r} label={name} value={r}>
                       <div className="block">
-                        <p className="font-bold">{name}</p>
+                        <p className="font-semibold">{name}</p>
                         <p className="opacity-70">{desc}</p>
                       </div>
                     </RadioGroup.Radio>

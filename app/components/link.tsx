@@ -27,11 +27,7 @@ export default function Link(props: LinkProps): JSX.Element {
         target="_blank"
         rel="noreferrer"
         className={cn(
-          props.styled && [
-            "inline-flex items-center gap-x-0.5",
-            "text-blue-500 hover:text-blue-700",
-            "dark:text-blue-400 dark:hover:text-blue-300",
-          ],
+          props.styled && ["inline-flex items-center gap-x-0.5", "text-accent hover:text-accent"],
           props.className,
         )}
       >

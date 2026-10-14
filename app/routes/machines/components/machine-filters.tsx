@@ -42,8 +42,8 @@ function FilterDropdown({
           "border transition-colors",
           "flex items-center gap-1.5",
           isActive
-            ? "border-indigo-300 bg-indigo-50 text-indigo-700 dark:border-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300"
-            : "border-mist-200 dark:border-mist-700 text-mist-700 dark:text-mist-300 hover:border-mist-300 dark:hover:border-mist-600",
+            ? "border-accent/30 bg-accent-subtle text-accent"
+            : "border-line text-fg hover:border-line-strong",
         )}
       >
         {activeOption?.label ?? label}
@@ -56,9 +56,7 @@ function FilterDropdown({
             onClick={() => onChange(value === option.value ? null : option.value)}
           >
             {option.value === value ? (
-              <span className="font-medium text-indigo-600 dark:text-indigo-400">
-                {option.label}
-              </span>
+              <span className="text-accent font-medium">{option.label}</span>
             ) : (
               option.label
             )}
@@ -136,9 +134,9 @@ export function MachineFilters({ users, populatedNodes }: MachineFiltersProps): 
         <button
           className={cn(
             "flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium",
-            "border border-mist-200 dark:border-mist-700",
-            "text-mist-600 dark:text-mist-400",
-            "hover:border-mist-300 dark:hover:border-mist-600",
+            "border border-line",
+            "text-muted",
+            "hover:border-line-strong",
           )}
           onClick={clearFilters}
           type="button"

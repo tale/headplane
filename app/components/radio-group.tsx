@@ -43,10 +43,10 @@ function RadioItem({ children, label, className, value, disabled }: RadioItemPro
         aria-label={label}
         className={cn(
           "w-5 h-5 aspect-square rounded-full border-2",
-          "border-mist-400 dark:border-mist-500",
-          "focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-1 dark:focus-visible:ring-indigo-400/40 dark:focus-visible:ring-offset-mist-900",
+          "border-line-strong",
+          "focus-ring",
           "data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed",
-          "data-[checked]:border-[6px] data-[checked]:border-mist-900 dark:data-[checked]:border-mist-100",
+          "data-[checked]:border-[6px] data-[checked]:border-line-strong",
           className,
         )}
       >

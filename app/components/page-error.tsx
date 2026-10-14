@@ -18,9 +18,9 @@ export default function PageError({ error, page }: PageErrorProps) {
   if (isRouteErrorResponse(error) && isConnectionError(error.data)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center">
-        <ServerOff className={cn("h-12 w-12", "text-mist-400 dark:text-mist-500")} />
+        <ServerOff className={cn("h-12 w-12", "text-muted")} />
         <h2 className="mt-4 text-lg font-semibold">{page} Unavailable</h2>
-        <p className="mt-1 max-w-sm text-sm text-mist-500 dark:text-mist-400">
+        <p className="text-muted mt-1 max-w-sm text-sm">
           This page could not be loaded because the Headscale server is unreachable. It will be
           available once the connection is restored.
         </p>

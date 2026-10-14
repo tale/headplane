@@ -89,9 +89,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
           for more information.
         </Text>
         {error ? (
-          <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </p>
+          <p className="bg-bad-subtle text-bad mt-2 rounded-lg p-3 text-sm">{error}</p>
         ) : null}
         <TableList className="mt-4">
           {tags.length === 0 ? (
@@ -105,7 +103,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
                 <span className="flex items-center gap-1.5">
                   {item}
                   {undeclaredTags.includes(item) ? (
-                    <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                    <AlertTriangle className="text-warn h-3.5 w-3.5" />
                   ) : null}
                 </span>
                 <Button
@@ -161,7 +159,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
           </div>
         ) : null}
         {undeclaredTags.length > 0 ? (
-          <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          <p className="bg-warn-subtle text-warn mt-2 rounded-lg p-3 text-sm">
             {undeclaredTags.join(", ")} {undeclaredTags.length === 1 ? "is" : "are"} not declared
             under <code className="font-mono">tagOwners</code> in your policy, so no rule will match{" "}
             {undeclaredTags.length === 1 ? "it" : "them"}. Declare{" "}

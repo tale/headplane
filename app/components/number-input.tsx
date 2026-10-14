@@ -39,7 +39,7 @@ export default function NumberInput(props: NumberInputProps) {
     >
       {label && (
         <NumberField.ScrubArea>
-          <label className={cn("text-sm font-medium", "text-mist-700 dark:text-mist-200")}>
+          <label className={cn("text-sm font-medium", "text-fg")}>
             <NumberField.ScrubAreaCursor />
             {label}
           </label>
@@ -48,13 +48,12 @@ export default function NumberInput(props: NumberInputProps) {
       <NumberField.Group
         className={cn(
           "flex items-center gap-1 rounded-md pr-1",
-          "focus-within:outline-hidden focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
-          "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
-          "bg-white dark:bg-mist-900",
-          "border border-mist-200 dark:border-mist-800",
+          "focus-within-ring",
+          "bg-surface",
+          "border border-line",
         )}
       >
-        <NumberField.Input className="w-full rounded-l-md bg-transparent py-2 pl-3 text-sm focus:outline-hidden" />
+        <NumberField.Input className="w-full rounded-l-md bg-transparent py-2 pl-3 text-sm" />
         <NumberField.Decrement aria-label="Decrement" className="h-7.5 w-7.5 rounded-lg p-1">
           <Minus className="h-4 w-4" />
         </NumberField.Decrement>
@@ -62,9 +61,7 @@ export default function NumberInput(props: NumberInputProps) {
           <Plus className="h-4 w-4" />
         </NumberField.Increment>
       </NumberField.Group>
-      {description && (
-        <div className={cn("text-xs", "text-mist-500 dark:text-mist-400")}>{description}</div>
-      )}
+      {description && <div className={cn("text-xs", "text-muted")}>{description}</div>}
     </NumberField.Root>
   );
 }

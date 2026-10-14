@@ -58,12 +58,10 @@ function Panel(props: DialogPanelProps) {
   return (
     <AlertDialog.Popup
       className={cn(
-        "flex w-full max-w-lg flex-col rounded-xl p-4",
+        "flex w-full max-w-lg flex-col rounded-lg p-4",
         "max-h-[90dvh]",
         "outline-hidden",
-        "bg-white dark:bg-mist-900",
-        "border border-mist-200 dark:border-mist-800",
-        "shadow-overlay",
+        "bg-raised border-overlay shadow-overlay",
       )}
     >
       <Form
@@ -113,7 +111,7 @@ function DialogOverlay({ children }: { children: React.ReactNode }) {
       <AlertDialog.Backdrop
         className={cn(
           "fixed inset-0 z-20 h-screen w-screen",
-          "bg-mist-900/30 dark:bg-mist-950/60",
+          "bg-backdrop",
           "transition-opacity duration-100",
         )}
       />

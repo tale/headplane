@@ -8,5 +8,5 @@ export interface TextProps {
 }
 
 export default function Text({ children, className }: TextProps) {
-  return <p className={cn("text-md my-0", className)}>{children}</p>;
+  return <p className={cn("my-0", className)}>{children}</p>;
 }

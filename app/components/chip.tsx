@@ -14,8 +14,8 @@ export default function Chip({ text, className, leftIcon, rightIcon }: ChipProps
     <span
       className={cn(
         "h-5 text-xs py-0.5 px-1 rounded-md text-nowrap",
-        "text-mist-700 dark:text-mist-100",
-        "bg-mist-100 dark:bg-mist-700",
+        "text-fg",
+        "bg-subtle",
         "inline-flex items-center gap-x-1",
         className,
       )}

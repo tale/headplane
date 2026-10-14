@@ -13,7 +13,7 @@ interface Props {
 export default function RenameTailnet({ name, isDisabled }: Props) {
   return (
     <div className="flex w-full flex-col gap-y-4 sm:w-2/3">
-      <h1 className="mb-2 text-2xl font-medium">Tailnet Name</h1>
+      <h1 className="mb-2 text-xl font-semibold">Tailnet Name</h1>
       <p>
         This is the base domain name of your Tailnet. Devices are accessible at{" "}
         <Code>[device].{name}</Code> when Magic DNS is enabled.

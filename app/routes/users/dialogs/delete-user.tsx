@@ -26,7 +26,7 @@ export default function DeleteUser({ user, machines, isOpen, setIsOpen }: Delete
           <Text className="mb-6">
             Deleted users cannot be recovered.
             {user.provider === "oidc" && (
-              <p className="mt-4 text-sm text-mist-600 dark:text-mist-300">
+              <p className="text-muted mt-4 text-sm">
                 Since this user is authenticated via an external provider, they will be recreated if
                 they sign in again.
               </p>

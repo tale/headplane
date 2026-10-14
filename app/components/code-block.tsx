@@ -16,8 +16,8 @@ export default function CodeBlock({ children, className }: CodeBlockProps) {
     <button
       type="button"
       className={cn(
-        "w-full cursor-pointer rounded-md bg-mist-100 text-left dark:bg-mist-800",
-        "hover:bg-mist-200 dark:hover:bg-mist-700 transition-colors",
+        "w-full cursor-pointer rounded-md bg-subtle text-left",
+        "hover:bg-hover transition-colors",
         className,
       )}
       onClick={async () => {
@@ -26,7 +26,7 @@ export default function CodeBlock({ children, className }: CodeBlockProps) {
       }}
     >
       <code className="block px-3 pt-2 pb-1 text-sm break-all">{text}</code>
-      <span className="mt-0.5 flex items-center gap-1 px-3 pb-2 text-xs text-mist-500 dark:text-mist-400">
+      <span className="text-muted mt-0.5 flex items-center gap-1 px-3 pb-2 text-xs">
         <Copy className="size-3" />
         Click to copy
       </span>

@@ -16,7 +16,7 @@ interface Props {
 export default function ManageRecords({ records, isDisabled }: Props) {
   return (
     <div className="flex w-full flex-col sm:w-2/3">
-      <h1 className="mb-4 text-2xl font-medium">DNS Records</h1>
+      <h1 className="mb-4 text-xl font-semibold">DNS Records</h1>
       <p>
         Headscale supports adding custom DNS records to your Tailnet. As of now, only <Code>A</Code>{" "}
         and <Code>AAAA</Code> records are supported.{" "}
@@ -36,8 +36,8 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                 <div className="flex w-full items-center gap-2">
                   <p
                     className={cn(
-                      "font-mono text-sm font-bold py-1 px-2 rounded-md text-center",
-                      "bg-mist-100 dark:bg-mist-700/30 min-w-12",
+                      "font-mono text-sm font-semibold py-1 px-2 rounded-md text-center",
+                      "bg-subtle min-w-12",
                     )}
                   >
                     {record.type}
@@ -54,7 +54,7 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                   <input name="record_name" type="hidden" value={record.name} />
                   <input name="record_type" type="hidden" value={record.type} />
                   <Button
-                    className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
+                    className={cn("px-2 py-1 rounded-md", "text-bad")}
                     disabled={isDisabled}
                     type="submit"
                   >

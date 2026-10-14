@@ -152,10 +152,10 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       <>
         <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
         <div className="flex h-screen w-screen items-center justify-center bg-black">
-          <Card className="w-screen" variant="flat">
+          <Card className="w-screen">
             <div className="flex items-center justify-between gap-4">
               <Card.Title>Node Offline</Card.Title>
-              <WifiOff className="mb-2 h-6 w-6 text-red-500" />
+              <WifiOff className="text-bad mb-2 h-6 w-6" />
             </div>
             <Card.Text>
               <Code>{hostname}</Code> is not currently connected to the Tailnet.
@@ -252,8 +252,8 @@ function SSHConsole({
       {!connected && (
         <div className="absolute inset-0 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="size-8 animate-spin text-mist-200" />
-            <p className="text-sm text-mist-400">{status}</p>
+            <Loader2 className="text-faint size-8 animate-spin" />
+            <p className="text-muted text-sm">{status}</p>
           </div>
         </div>
       )}

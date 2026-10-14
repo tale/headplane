@@ -83,14 +83,12 @@ export default function UserGroups({
           for details.
         </Text>
         {policyHasComments ? (
-          <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
+          <p className="bg-warn-subtle text-warn mt-2 rounded-lg p-3 text-sm">
             Your policy contains comments. Saving here rewrites the policy and drops them.
           </p>
         ) : null}
         {error ? (
-          <p className="mt-2 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </p>
+          <p className="bg-bad-subtle text-bad mt-2 rounded-lg p-3 text-sm">{error}</p>
         ) : null}
         <TokenList
           emptyText="This user is not in any group"

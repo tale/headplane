@@ -140,27 +140,27 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <div className="mx-auto mt-6 mb-24 flex max-w-2xl flex-col gap-4">
       {loaderData.linkedUserName && (
-        <Card variant="flat" className="flex max-w-2xl items-center gap-4">
+        <Card className="flex max-w-2xl items-center gap-4">
           <Check className="inline-flex size-4" />
           <Card.Text className="text-sm">
             Your account is linked to Headscale user <strong>{loaderData.linkedUserName}</strong>.
           </Card.Text>
         </Card>
       )}
-      <Card variant="flat" className="max-w-2xl">
+      <Card className="max-w-2xl">
         <Card.Title>Access your network via Tailscale</Card.Title>
         <Card.Text className="mt-1">
           You've successfully authenticated but don't have access to the dashboard. You can still
           connect to your Headscale network by installing Tailscale.
         </Card.Text>
 
-        <div className="mt-4 rounded-lg border border-mist-200 p-3 dark:border-mist-700">
+        <div className="border-line mt-4 rounded-lg border p-3">
           <div className="flex items-center gap-2">
             <img alt="Linux" className="w-4 dark:invert" src={linuxSvg} />
             <span className="text-sm font-medium">Linux</span>
           </div>
           <CodeBlock className="mt-2">curl -fsSL https://tailscale.com/install.sh | sh</CodeBlock>
-          <p className="mt-1 text-xs text-mist-500 dark:text-mist-400">
+          <p className="text-muted mt-1 text-xs">
             <Link
               external
               styled
@@ -177,10 +177,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               key={dl.name}
               className={cn(
                 "flex flex-col items-center gap-2 rounded-lg p-3",
-                "border border-mist-200 dark:border-mist-700",
-                "hover:bg-mist-100 dark:hover:bg-mist-800",
-                "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
+                "border border-line",
+                "hover:bg-hover",
+                "focus-ring",
                 "transition-colors",
               )}
               href={dl.href}
@@ -189,16 +188,14 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             >
               <img alt={dl.name} className="h-6 dark:invert" src={dl.icon} />
               <span className="text-sm font-medium">{dl.name}</span>
-              <span className="text-xs text-mist-500 dark:text-mist-400">{dl.note}</span>
+              <span className="text-muted text-xs">{dl.note}</span>
             </a>
           ))}
         </div>
         <Card.Text
           className={cn(
             "mt-8 text-center text-xs",
-            loaderData.unlinked
-              ? "text-yellow-600 dark:text-yellow-400"
-              : "text-mist-600 dark:text-mist-300",
+            loaderData.unlinked ? "text-warn" : "text-muted",
           )}
         >
           {loaderData.unlinked

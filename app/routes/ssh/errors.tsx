@@ -59,10 +59,10 @@ const DOCS_BASE = "https://headplane.net/features/ssh";
 
 export function SSHErrorBoundary({ title, message, anchor }: SSHErrorBoundaryProps) {
   return (
-    <Card className="w-screen" variant="flat">
+    <Card className="w-screen">
       <div className="flex items-center justify-between gap-4">
         <Card.Title>{title}</Card.Title>
-        <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+        <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
       <Card.Text>
         {message}

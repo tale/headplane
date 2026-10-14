@@ -64,7 +64,7 @@ export default function HeadscaleUserMenu({
       )}
 
       <Menu>
-        <MenuTrigger className="w-10 rounded-full bg-transparent p-1 py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800">
+        <MenuTrigger className="hover:bg-hover w-10 rounded-full bg-transparent p-1 py-0.5">
           <Ellipsis className="h-5" />
         </MenuTrigger>
         <MenuContent>

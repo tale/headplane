@@ -5,10 +5,10 @@ import Code from "~/components/code";
 
 export function OidcErrorNotice({ code }: { code: string }) {
   return (
-    <Card className="m-4 mb-4 max-w-md border border-red-500 sm:m-0 sm:mb-4">
+    <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-red-500">Configuration Issue(s)</Card.Title>
-        <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+        <Card.Title className="text-bad">Configuration Issue(s)</Card.Title>
+        <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
       {getErrorMessage(code)}
     </Card>

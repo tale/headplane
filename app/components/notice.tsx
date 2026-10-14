@@ -12,7 +12,7 @@ export interface NoticeProps {
 
 export default function Notice({ children, title, variant, icon }: NoticeProps) {
   return (
-    <Card variant="flat" className="my-6 max-w-2xl">
+    <Card className="my-6 max-w-2xl">
       <div className="flex items-center justify-between">
         {title ? <Card.Title className="mb-0 text-xl">{title}</Card.Title> : undefined}
         {!variant && icon ? icon : iconForVariant(variant)}
@@ -25,9 +25,9 @@ export default function Notice({ children, title, variant, icon }: NoticeProps) 
 function iconForVariant(variant?: "default" | "error" | "warning") {
   switch (variant) {
     case "error":
-      return <TriangleAlert className="text-red-500" />;
+      return <TriangleAlert className="text-bad" />;
     case "warning":
-      return <CircleAlert className="text-yellow-500" />;
+      return <CircleAlert className="text-warn" />;
     default:
       return <CircleSlash2 />;
   }

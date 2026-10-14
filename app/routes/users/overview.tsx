@@ -191,16 +191,15 @@ export const action = userAction;
 export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <h1 className="mb-1.5 text-2xl font-medium">Users</h1>
-      <p className="text-md mb-8">Manage the users in your network and their permissions.</p>
+      <h1 className="mb-1.5 text-xl font-semibold">Users</h1>
+      <p className="mb-8">Manage the users in your network and their permissions.</p>
       <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
 
       {loaderData.apiError && (
         <div
           className={cn(
             "mb-6 flex items-start gap-3 rounded-lg border p-4",
-            "border-red-200 bg-red-50 text-red-800",
-            "dark:border-red-800 dark:bg-red-950 dark:text-red-200",
+            "border-bad/30 bg-bad-subtle text-bad",
           )}
         >
           <p className="text-sm">{loaderData.apiError}</p>
@@ -210,29 +209,22 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       <section>
         <h2 className="mb-3 text-lg font-medium">Headplane Users</h2>
         {loaderData.headplaneUsers.length === 0 ? (
-          <p className="text-sm text-mist-600 dark:text-mist-300">
-            No users have signed into Headplane yet.
-          </p>
+          <p className="text-muted text-sm">No users have signed into Headplane yet.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-mist-600 dark:text-mist-300">
+              <thead className="text-muted">
                 <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-bold uppercase">User</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Role</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Last Login</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Status</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">User</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">Role</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">Last Login</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">Status</th>
                   <th className="w-12 pb-2">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody
-                className={cn(
-                  "divide-y divide-mist-100 dark:divide-mist-800 align-top",
-                  "border-t border-mist-100 dark:border-mist-800",
-                )}
-              >
+              <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
                 {loaderData.headplaneUsers.map((user) => (
                   <HeadplaneUserRow
                     canEditGroups={loaderData.canEditGroups}
@@ -254,28 +246,23 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       {!loaderData.apiError && loaderData.unlinkedHeadscaleUsers.length > 0 && (
         <section className="mt-10">
           <h2 className="mb-1 text-lg font-medium">Unlinked Headscale Users</h2>
-          <p className="mb-3 text-sm text-mist-600 dark:text-mist-300">
+          <p className="text-muted mb-3 text-sm">
             These Headscale users are not linked to a Headplane account and cannot be managed
             through Headplane.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-mist-600 dark:text-mist-300">
+              <thead className="text-muted">
                 <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-bold uppercase">User</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Created At</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Status</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">User</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">Created At</th>
+                  <th className="pb-2 text-xs font-semibold uppercase">Status</th>
                   <th className="w-12 pb-2">
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
               </thead>
-              <tbody
-                className={cn(
-                  "divide-y divide-mist-100 dark:divide-mist-800 align-top",
-                  "border-t border-mist-100 dark:border-mist-800",
-                )}
-              >
+              <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
                 {loaderData.unlinkedHeadscaleUsers.map((user) => (
                   <HeadscaleUserRow
                     canEditGroups={loaderData.canEditGroups}

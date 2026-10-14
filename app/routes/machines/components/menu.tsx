@@ -148,8 +148,8 @@ export default function MachineMenu({
         <MenuTrigger
           className={
             isFullButton
-              ? "gap-x-2 rounded-md border border-mist-200 bg-white px-3.5 py-2 text-sm font-medium hover:bg-mist-50 dark:border-mist-700 dark:bg-mist-800/50 dark:hover:bg-mist-700/50"
-              : "w-10 rounded-full bg-transparent p-1 hover:bg-mist-100 dark:hover:bg-mist-800"
+              ? "border-line-strong bg-surface hover:bg-hover gap-x-2 rounded-md border px-3.5 py-2 text-sm font-medium"
+              : "hover:bg-hover w-10 rounded-full bg-transparent p-1"
           }
         >
           {isFullButton ? (

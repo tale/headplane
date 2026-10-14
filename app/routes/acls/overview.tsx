@@ -128,7 +128,7 @@ export default function Page({
           <Code>database</Code> in your Headscale configuration.
         </Notice>
       ) : undefined}
-      <h1 className="mb-4 text-2xl font-medium">Access Control List (ACL)</h1>
+      <h1 className="mb-4 text-xl font-semibold">Access Control List (ACL)</h1>
       <p className="mb-4 max-w-prose">
         The ACL file is used to define the access control rules for your network. You can find more
         information about the ACL file in the{" "}
@@ -258,10 +258,10 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   ) {
     return (
       <div className="flex flex-col gap-4">
-        <Card className="max-w-2xl" variant="flat">
+        <Card className="max-w-2xl">
           <div className="flex items-center justify-between gap-4">
             <Card.Title>ACL Policy Unavailable</Card.Title>
-            <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+            <AlertCircle className="text-bad mb-2 h-6 w-6" />
           </div>
           <Card.Text>
             The ACL policy is currently unavailable because the policy file does not exist on the
@@ -269,7 +269,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
             ACLs, and the specified policy file is missing.
           </Card.Text>
         </Card>
-        <Card className="max-w-2xl" variant="flat">
+        <Card className="max-w-2xl">
           <Card.Text>
             In order to resolve this issue, there are two possible actions you can take:
           </Card.Text>

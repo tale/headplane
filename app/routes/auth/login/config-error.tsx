@@ -7,10 +7,10 @@ import type { OidcErrorCode } from "~/server/oidc/provider";
 
 export function OidcDiscoveryFailedNotice() {
   return (
-    <Card className="m-4 mb-4 max-w-md border border-yellow-500 sm:m-0 sm:mb-4">
+    <Card className="border-warn m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-yellow-500">SSO Temporarily Unavailable</Card.Title>
-        <CloudOff className="mb-2 h-6 w-6 text-yellow-500" />
+        <Card.Title className="text-warn">SSO Temporarily Unavailable</Card.Title>
+        <CloudOff className="text-warn mb-2 h-6 w-6" />
       </div>
       <Card.Text className="text-sm">
         Unable to reach the identity provider. Single Sign-On will be available once the provider is
@@ -22,10 +22,10 @@ export function OidcDiscoveryFailedNotice() {
 
 export function OidcConfigErrorNotice({ errors }: { errors: OidcErrorCode[] }) {
   return (
-    <Card className="m-4 mb-4 max-w-md border border-red-500 sm:m-0 sm:mb-4">
+    <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-red-500">Authentication Error</Card.Title>
-        <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+        <Card.Title className="text-bad">Authentication Error</Card.Title>
+        <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
       <Card.Text className="text-sm">
         The OpenID Connect (OIDC) Single Sign-On (SSO) configuration has issues:{" "}

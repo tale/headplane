@@ -32,7 +32,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
 
   return (
     <div className="flex w-full flex-col sm:w-2/3">
-      <h1 className="mb-4 text-2xl font-medium">Search Domains</h1>
+      <h1 className="mb-4 text-xl font-semibold">Search Domains</h1>
       <p className="mb-4">
         Set custom DNS search domains for your Tailnet. When using Magic DNS, your tailnet domain is
         used as the first search domain.
@@ -110,10 +110,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                   placeholder="Search Domain"
                   type="text"
                 />
-                <Button
-                  className={cn("px-2 py-1 rounded-md", "text-blue-500 dark:text-blue-400")}
-                  type="submit"
-                >
+                <Button className={cn("px-2 py-1 rounded-md", "text-accent")} type="submit">
                   Add
                 </Button>
               </Form>
@@ -144,10 +141,7 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
 
   return (
     <TableList.Item
-      className={cn(
-        isSortableDragging ? "opacity-50" : "",
-        isDragging ? "ring-3 bg-white dark:bg-mist-900" : "",
-      )}
+      className={cn(isSortableDragging ? "opacity-50" : "", isDragging ? "ring-3 bg-raised" : "")}
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform),
@@ -169,7 +163,7 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
           <input name="action_id" type="hidden" value="remove_domain" />
           <input name="domain" type="hidden" value={domain} />
           <Button
-            className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
+            className={cn("px-2 py-1 rounded-md", "text-bad")}
             disabled={isDisabled}
             type="submit"
           >

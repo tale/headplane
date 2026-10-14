@@ -32,7 +32,7 @@ export default function HeadscaleUserRow({
     user.displayName && user.displayName !== user.name ? user.name : undefined;
 
   return (
-    <tr className="group hover:bg-mist-50 dark:hover:bg-mist-950" key={user.id}>
+    <tr className="group hover:bg-hover" key={user.id}>
       <td className="py-2 pl-0.5">
         <div className="flex items-center">
           {user.profilePicUrl ? (
@@ -55,22 +55,20 @@ export default function HeadscaleUserRow({
         </div>
       </td>
       <td className="py-2 pl-0.5">
-        <p className="text-sm text-mist-600 dark:text-mist-300" suppressHydrationWarning>
+        <p className="text-muted text-sm" suppressHydrationWarning>
           {new Date(user.createdAt).toLocaleDateString()}
         </p>
       </td>
       <td className="py-2 pl-0.5">
         {user.machines.length > 0 ? (
-          <span
-            className={cn("flex items-center gap-x-1 text-sm", "text-mist-600 dark:text-mist-300")}
-          >
+          <span className={cn("flex items-center gap-x-1 text-sm", "text-muted")}>
             <StatusCircle className="h-4 w-4" isOnline={isOnline} />
             <p suppressHydrationWarning>
               {isOnline ? "Connected" : new Date(lastSeen).toLocaleString()}
             </p>
           </span>
         ) : (
-          <p className="text-sm text-mist-600 dark:text-mist-300">No machines</p>
+          <p className="text-muted text-sm">No machines</p>
         )}
       </td>
       <td className="py-2 pr-0.5">

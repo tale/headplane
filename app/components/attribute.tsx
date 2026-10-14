@@ -19,7 +19,7 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
       <dt
         className={cn(
           "w-1/3 sm:w-1/4 lg:w-1/3 shrink-0 min-w-0",
-          "text-mist-600 dark:text-mist-300",
+          "text-muted",
           tooltip ? "flex items-baseline gap-1" : undefined,
         )}
       >
@@ -34,11 +34,7 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
         className={cn(
           "min-w-0 px-1.5 py-1 rounded-lg border border-transparent",
           ...(isCopyable
-            ? [
-                "cursor-pointer hover:shadow-xs",
-                "hover:bg-mist-50 dark:hover:bg-mist-800",
-                "hover:border-mist-100 dark:hover:border-mist-700",
-              ]
+            ? ["cursor-pointer hover:shadow-xs", "hover:bg-hover", "hover:border-line"]
             : []),
         )}
       >

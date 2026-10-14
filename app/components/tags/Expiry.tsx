@@ -30,7 +30,7 @@ export function ExpiryTag({ variant, expiry }: ExpiryTagProps) {
         text={
           variant === "expired" ? `Expired ${formatter.format(new Date(expiry!))}` : "No expiry"
         }
-        className="bg-mist-200 text-mist-800 dark:bg-mist-800 dark:text-mist-200"
+        className="bg-hover text-fg"
       />
     </Tooltip>
   );

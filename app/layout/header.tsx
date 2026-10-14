@@ -70,12 +70,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
   const returnTo = location.pathname + location.search;
 
   return (
-    <header
-      className={cn(
-        "bg-mist-200 dark:bg-mist-950 text-mist-800 dark:text-mist-200",
-        "dark:border-b dark:border-mist-800 shadow-inner",
-      )}
-    >
+    <header className={cn("bg-surface text-fg", "border-b border-line")}>
       <div className="container flex items-center gap-x-4 py-4">
         <div className="flex min-w-0 items-center gap-x-4">
           <div className="flex items-center gap-x-2">
@@ -84,7 +79,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
               <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
               <img src={logoBg} alt="Headplane logo" />
             </picture>
-            <h1 className="text-2xl font-semibold">headplane</h1>
+            <h1 className="text-xl font-semibold">headplane</h1>
           </div>
           {showTabs && (
             <nav className="hidden items-center gap-x-2 overflow-x-auto p-1 text-sm font-medium md:flex">
@@ -98,12 +93,9 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
                     className={({ isActive }) =>
                       cn(
                         "px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                        "hover:bg-mist-300/50 dark:hover:bg-mist-800",
-                        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-                        isActive
-                          ? "bg-mist-300/70 dark:bg-mist-800 text-mist-900 dark:text-mist-50"
-                          : "text-mist-600 dark:text-mist-300",
+                        "hover:bg-line-strong/50",
+                        "focus-ring",
+                        isActive ? "bg-line-strong/70 text-fg" : "text-muted",
                       )
                     }
                     prefetch="intent"
@@ -150,15 +142,15 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem disabled>
-                <div className="text-mist-900 dark:text-mist-50">
+                <div className="text-fg">
                   {user.subject === "api_key" ? (
                     <>
-                      <p className="font-bold">API Key</p>
+                      <p className="font-semibold">API Key</p>
                       <p>{user.name}</p>
                     </>
                   ) : (
                     <>
-                      <p className="font-bold">{user.name}</p>
+                      <p className="font-semibold">{user.name}</p>
                       {user.email && <p>{user.email}</p>}
                     </>
                   )}
@@ -206,12 +198,11 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
                   className={({ isActive }) =>
                     cn(
                       "relative px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                      "hover:bg-mist-300/50 dark:hover:bg-mist-800",
-                      "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                      "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-                      "text-mist-600 dark:text-mist-300",
+                      "hover:bg-line-strong/50",
+                      "focus-ring",
+                      "text-muted",
                       isActive &&
-                        "text-mist-900 dark:text-mist-50 after:content-[''] after:absolute after:-bottom-2 after:inset-x-1 after:h-0.5 after:rounded-full after:bg-indigo-500",
+                        "text-fg  after:content-[''] after:absolute after:-bottom-2 after:inset-x-1 after:h-0.5 after:rounded-full after:bg-accent",
                     )
                   }
                   prefetch="intent"

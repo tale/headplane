@@ -25,7 +25,7 @@ export function ExitNodeTag({ isEnabled }: ExitNodeTagProps) {
     >
       <Chip
         text="Exit Node"
-        className={cn("bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-300")}
+        className={cn("bg-accent-subtle text-accent")}
         rightIcon={isEnabled ? undefined : <Info className="h-full w-fit" />}
       />
     </Tooltip>

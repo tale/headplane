@@ -1,5 +1,9 @@
 # Next
 
+## Changes
+
+- Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
+
 # 0.8.0 (October 13, 2026)
 
 Building Headplane from source now requires Go 1.27.1 or newer.

@@ -189,7 +189,7 @@ export default function Page({
 
   return (
     <div className="flex flex-col md:w-2/3">
-      <p className="text-md mb-8">
+      <p className="mb-8">
         <Link className="font-medium" to="/settings">
           Settings
         </Link>
@@ -212,7 +212,7 @@ export default function Page({
           Their keys may not be listed correctly. Please check the server logs for more information.
         </Notice>
       ) : undefined}
-      <h1 className="mb-2 text-2xl font-medium">Pre-Auth Keys</h1>
+      <h1 className="mb-2 text-xl font-semibold">Pre-Auth Keys</h1>
       <p className="mb-4">
         Headscale fully supports pre-authentication keys in order to easily add devices to your
         Tailnet. To learn more about using pre-authentication keys, visit the{" "}

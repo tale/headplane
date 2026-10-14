@@ -42,7 +42,7 @@ export default function HeadplaneUserRow({
   const displayEmail = user.linkedHeadscaleUser?.email ?? user.email;
 
   return (
-    <tr className="group hover:bg-mist-100 dark:hover:bg-mist-800" key={user.id}>
+    <tr className="group hover:bg-hover" key={user.id}>
       <td className="py-2 pl-2">
         <div className="flex items-center">
           {user.profilePicUrl ? (
@@ -54,9 +54,7 @@ export default function HeadplaneUserRow({
             <p className="leading-snug font-semibold">{displayName}</p>
             {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
             {displayEmail && <p className="text-sm opacity-50">{displayEmail}</p>}
-            {!user.headscaleUserId && (
-              <p className="text-xs text-amber-600 dark:text-amber-400">Not linked</p>
-            )}
+            {!user.headscaleUserId && <p className="text-warn text-xs">Not linked</p>}
             {user.groups.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {user.groups.map((group) => (
@@ -71,22 +69,20 @@ export default function HeadplaneUserRow({
         <p>{mapRoleToName(user.role)}</p>
       </td>
       <td className="py-2 pl-0.5">
-        <p className="text-sm text-mist-600 dark:text-mist-300" suppressHydrationWarning>
+        <p className="text-muted text-sm" suppressHydrationWarning>
           {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}
         </p>
       </td>
       <td className="py-2 pl-0.5">
         {user.machines.length > 0 ? (
-          <span
-            className={cn("flex items-center gap-x-1 text-sm", "text-mist-600 dark:text-mist-300")}
-          >
+          <span className={cn("flex items-center gap-x-1 text-sm", "text-muted")}>
             <StatusCircle className="h-4 w-4" isOnline={isOnline} />
             <p suppressHydrationWarning>
               {isOnline ? "Connected" : new Date(lastSeen).toLocaleString()}
             </p>
           </span>
         ) : (
-          <p className="text-sm text-mist-600 dark:text-mist-300">No machines</p>
+          <p className="text-muted text-sm">No machines</p>
         )}
       </td>
       <td className="py-2 pr-0.5">

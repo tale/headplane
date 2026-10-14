@@ -36,11 +36,7 @@ export default function LinkUser({
             <input name="action_id" type="hidden" value="link_user" />
             <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
             <select
-              className={cn(
-                "w-full rounded-lg border p-2",
-                "border-mist-200 dark:border-mist-700",
-                "bg-mist-50 dark:bg-mist-900",
-              )}
+              className={cn("w-full rounded-lg border p-2", "border-line", "bg-subtle")}
               defaultValue={currentLink ?? ""}
               name="headscale_user_id"
               required

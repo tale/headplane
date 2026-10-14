@@ -16,7 +16,7 @@ interface RestrictionProps {
 export default function RestrictionTable({ children, type, values, isDisabled }: RestrictionProps) {
   return (
     <div className="w-full sm:w-2/3">
-      <h2 className="mt-8 text-2xl font-medium">
+      <h2 className="mt-8 text-xl font-semibold">
         Permitted {type.charAt(0).toUpperCase() + type.slice(1)}s
       </h2>
       <TableList className="my-4">
@@ -25,8 +25,8 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
             <TableList.Item key={`${type}-${value}`}>
               {type === "domain" ? (
                 <p>
-                  <span className="text-mist-600 dark:text-mist-300">{"<user>"}</span>
-                  <span className="font-bold">@</span>
+                  <span className="text-muted">{"<user>"}</span>
+                  <span className="font-semibold">@</span>
                   <span>{value}</span>
                 </p>
               ) : (
@@ -36,7 +36,7 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
                 <input name="action_id" type="hidden" value={`remove_${type}`} />
                 <input name={type} type="hidden" value={value} />
                 <Button
-                  className={cn("px-2 py-1 rounded-md", "text-red-500 dark:text-red-400")}
+                  className={cn("px-2 py-1 rounded-md", "text-bad")}
                   disabled={isDisabled}
                   type="submit"
                 >

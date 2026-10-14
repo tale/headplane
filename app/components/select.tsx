@@ -46,11 +46,7 @@ export default function Select({
 
   return (
     <div className={cn("flex flex-col gap-1", className)}>
-      {label && (
-        <label className={cn("text-sm font-medium", "text-mist-700 dark:text-mist-200")}>
-          {label}
-        </label>
-      )}
+      {label && <label className={cn("text-sm font-medium", "text-fg")}>{label}</label>}
       <Combobox.Root
         items={items}
         value={selectedItem}
@@ -63,11 +59,10 @@ export default function Select({
         <div
           className={cn(
             "relative rounded-md",
-            "focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
-            "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
-            "bg-white dark:bg-mist-900",
-            "border border-mist-200 dark:border-mist-800",
-            invalid && "ring-red-400",
+            "focus-within-ring",
+            "bg-surface",
+            "border border-line",
+            invalid && "ring-bad",
           )}
         >
           <Combobox.Input
@@ -79,10 +74,8 @@ export default function Select({
           <Combobox.Trigger
             className={cn(
               "absolute inset-y-0 right-0 flex items-center pr-3",
-              "text-mist-400 dark:text-mist-500",
-              disabled
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:text-mist-600 dark:hover:text-mist-300",
+              "text-muted",
+              disabled ? "opacity-50 cursor-not-allowed" : "hover:text-muted",
             )}
           >
             <ChevronDown className="h-4 w-4" />
@@ -96,13 +89,11 @@ export default function Select({
           >
             <Combobox.Popup
               className={cn(
-                "max-h-72 w-full overflow-auto rounded-lg p-1",
-                "bg-white dark:bg-mist-900",
-                "border border-mist-200 dark:border-mist-800",
-                "shadow-overlay",
+                "max-h-72 w-full overflow-auto rounded-lg p-1 outline-hidden",
+                "bg-raised border-overlay shadow-overlay",
               )}
             >
-              <Combobox.Empty className="px-3 py-2 text-sm text-mist-500 empty:hidden">
+              <Combobox.Empty className="text-muted px-3 py-2 text-sm empty:hidden">
                 No results found.
               </Combobox.Empty>
               <Combobox.List>
@@ -114,9 +105,9 @@ export default function Select({
                       "flex items-center justify-between text-sm",
                       "py-1.5 px-2.5 rounded-md",
                       "outline-hidden select-none cursor-default",
-                      "data-[highlighted]:bg-mist-100 dark:data-[highlighted]:bg-mist-800",
+                      "data-[highlighted]:bg-hover",
                       "data-[selected]:font-medium",
-                      "data-[disabled]:text-mist-300 dark:data-[disabled]:text-mist-600",
+                      "data-[disabled]:text-faint",
                     )}
                   >
                     {item.label}
@@ -130,9 +121,7 @@ export default function Select({
           </Combobox.Positioner>
         </Combobox.Portal>
       </Combobox.Root>
-      {description && (
-        <div className={cn("text-xs", "text-mist-500 dark:text-mist-400")}>{description}</div>
-      )}
+      {description && <div className={cn("text-xs", "text-muted")}>{description}</div>}
     </div>
   );
 }
