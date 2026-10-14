@@ -35,7 +35,7 @@ import {
   sortAssignableTags,
   type PopulatedNode,
 } from "~/utils/node-info";
-import { toastOnSuccess } from "~/utils/toast";
+import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { MachineFilters } from "./components/machine-filters";
@@ -112,9 +112,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export const action = machineAction;
 
-export function clientAction({ serverAction }: Route.ClientActionArgs) {
-  return toastOnSuccess(serverAction());
-}
+export const clientAction = toastClientAction;
 
 type SortField = "name" | "ip" | "version" | "lastSeen";
 

@@ -18,7 +18,7 @@ import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
 import { groupsForUser, parsePolicy } from "~/utils/acl-policy";
 import log from "~/utils/log";
-import { toastOnSuccess } from "~/utils/toast";
+import { toastClientAction } from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
@@ -191,9 +191,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export const action = userAction;
 
-export function clientAction({ serverAction }: Route.ClientActionArgs) {
-  return toastOnSuccess(serverAction());
-}
+export const clientAction = toastClientAction;
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   return (

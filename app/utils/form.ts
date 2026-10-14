@@ -6,19 +6,21 @@ export type FormErrors = Record<string, string>;
 export type ActionResult = { ok: true; message?: string } | { ok: false; errors: FormErrors };
 type ParseResult<T> = { ok: true; data: T } | { ok: false; errors: FormErrors };
 
-export async function parseForm<S extends v.GenericSchema>(
-  request: Request,
-  schema: S,
-): Promise<ParseResult<v.InferOutput<S>>> {
-  const formData = await request.formData();
-  const input: Record<string, FormDataEntryValue | FormDataEntryValue[]> = {};
-
+export function formValues(formData: FormData) {
+  const values: Record<string, FormDataEntryValue | FormDataEntryValue[]> = {};
   for (const key of new Set(formData.keys())) {
-    const values = formData.getAll(key);
-    input[key] = values.length === 1 ? values[0] : values;
+    const entries = formData.getAll(key);
+    values[key] = entries.length === 1 ? entries[0] : entries;
   }
 
-  const result = v.safeParse(schema, input);
+  return values;
+}
+
+export function parseValues<S extends v.GenericSchema>(
+  schema: S,
+  values: unknown,
+): ParseResult<v.InferOutput<S>> {
+  const result = v.safeParse(schema, values);
   if (result.success) {
     return { ok: true, data: result.output };
   }

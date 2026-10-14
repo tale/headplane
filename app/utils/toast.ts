@@ -16,3 +16,7 @@ export async function toastOnSuccess<T>(result: Promise<T>) {
 
   return value;
 }
+
+export function toastClientAction({ serverAction }: { serverAction: () => Promise<unknown> }) {
+  return toastOnSuccess(serverAction());
+}

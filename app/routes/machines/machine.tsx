@@ -20,7 +20,7 @@ import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { extractTagOwnerTags, isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
-import { toastOnSuccess } from "~/utils/toast";
+import { toastClientAction } from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
@@ -94,9 +94,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export const action = machineAction;
 
-export function clientAction({ serverAction }: Route.ClientActionArgs) {
-  return toastOnSuccess(serverAction());
-}
+export const clientAction = toastClientAction;
 
 export default function Page({
   loaderData: {
