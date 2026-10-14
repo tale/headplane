@@ -1,6 +1,5 @@
 import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
-import { useSubmit } from "react-router";
 
 import Button from "~/components/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
@@ -10,6 +9,7 @@ import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
 
 import Delete from "../dialogs/delete";
 import Expire from "../dialogs/expire";
+import KeyExpiry from "../dialogs/key-expiry";
 import Move from "../dialogs/move";
 import Rename from "../dialogs/rename";
 import Routes from "../dialogs/routes";
@@ -27,7 +27,7 @@ interface MenuProps {
   supportsDisablingKeyExpiry: boolean;
 }
 
-type Modal = "rename" | "expire" | "remove" | "routes" | "move" | "tags" | null;
+type Modal = "rename" | "expire" | "remove" | "routes" | "move" | "tags" | "key-expiry" | null;
 
 export default function MachineMenu({
   node,
@@ -40,7 +40,6 @@ export default function MachineMenu({
   supportsNodeOwnerChange,
   supportsDisablingKeyExpiry,
 }: MenuProps) {
-  const submit = useSubmit();
   const [modal, setModal] = useState<Modal>(null);
   const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
@@ -79,6 +78,15 @@ export default function MachineMenu({
         <Routes
           isOpen={modal === "routes"}
           node={node}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
+        />
+      )}
+      {modal === "key-expiry" && (
+        <KeyExpiry
+          isOpen
+          machine={node}
           setIsOpen={(isOpen) => {
             if (!isOpen) setModal(null);
           }}
@@ -163,18 +171,7 @@ export default function MachineMenu({
         <MenuContent>
           <MenuItem onClick={() => setModal("rename")}>Edit machine name</MenuItem>
           {supportsDisablingKeyExpiry && (
-            <MenuItem
-              onClick={() =>
-                submit(
-                  {
-                    action_id: "toggle_expiry",
-                    node_id: node.id,
-                    disableExpiry: !isNoExpiry(node.expiry),
-                  },
-                  { method: "post" },
-                )
-              }
-            >
+            <MenuItem onClick={() => setModal("key-expiry")}>
               {isNoExpiry(node.expiry) ? "Enable" : "Disable"} key expiry
             </MenuItem>
           )}

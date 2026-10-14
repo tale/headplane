@@ -26,18 +26,20 @@ export async function parseForm<S extends v.GenericSchema>(
   return { ok: false, errors: flattenErrors(result.issues) };
 }
 
-export function validate<S extends v.GenericSchema>(schema: S, input: unknown) {
-  const result = v.safeParse(schema, input);
-  return result.success ? undefined : flattenErrors(result.issues);
+export function fieldValidator<S extends v.GenericSchema>(schema: S) {
+  return (value: unknown) => {
+    const result = v.safeParse(schema, value);
+    return result.success ? null : result.issues[0].message;
+  };
 }
 
-export function list<S extends v.GenericSchema<string>>(item: S) {
+export function list(item: v.GenericSchema<string> = v.string()) {
   return v.optional(
     v.pipe(
       v.union([item, v.array(item)]),
       v.transform((value) => (Array.isArray(value) ? value : [value])),
     ),
-    [],
+    (): string[] => [],
   );
 }
 

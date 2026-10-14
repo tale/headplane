@@ -7,6 +7,7 @@ import cn from "~/utils/cn";
 export interface DialogProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onOpenChangeComplete?: (open: boolean) => void;
   trigger?: React.ReactElement;
   className?: string;
   children: React.ReactNode;
@@ -25,9 +26,20 @@ const popupClass = cn(
   "data-starting-style:scale-[0.98] data-starting-style:opacity-0",
 );
 
-export function Dialog({ open, onOpenChange, trigger, className, children }: DialogProps) {
+export function Dialog({
+  open,
+  onOpenChange,
+  onOpenChangeComplete,
+  trigger,
+  className,
+  children,
+}: DialogProps) {
   return (
-    <BaseDialog.Root open={open} onOpenChange={(next) => onOpenChange?.(next)}>
+    <BaseDialog.Root
+      onOpenChange={(next) => onOpenChange?.(next)}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+    >
       {trigger && <BaseDialog.Trigger render={trigger} />}
       <BaseDialog.Portal>
         <BaseDialog.Backdrop className={backdropClass} />
@@ -39,9 +51,20 @@ export function Dialog({ open, onOpenChange, trigger, className, children }: Dia
   );
 }
 
-export function AlertDialog({ open, onOpenChange, trigger, className, children }: DialogProps) {
+export function AlertDialog({
+  open,
+  onOpenChange,
+  onOpenChangeComplete,
+  trigger,
+  className,
+  children,
+}: DialogProps) {
   return (
-    <BaseAlertDialog.Root open={open} onOpenChange={(next) => onOpenChange?.(next)}>
+    <BaseAlertDialog.Root
+      onOpenChange={(next) => onOpenChange?.(next)}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+    >
       {trigger && <BaseAlertDialog.Trigger render={trigger} />}
       <BaseAlertDialog.Portal>
         <BaseAlertDialog.Backdrop className={backdropClass} />

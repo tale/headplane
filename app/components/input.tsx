@@ -20,6 +20,7 @@ export default function Input({
   className,
   name,
   disabled,
+  validate,
   onChange,
   ...props
 }: InputProps) {
@@ -33,6 +34,7 @@ export default function Input({
       label={label}
       labelHidden={labelHidden}
       name={name}
+      validate={validate}
     >
       <BaseInput
         {...props}

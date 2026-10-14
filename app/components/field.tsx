@@ -19,6 +19,7 @@ export interface FieldProps {
   disabled?: boolean;
   invalid?: boolean;
   errorMessage?: string;
+  validate?: (value: unknown) => string | null;
   className?: string;
   children: React.ReactNode;
 }
@@ -31,6 +32,7 @@ export default function Field({
   disabled,
   invalid,
   errorMessage,
+  validate,
   className,
   children,
 }: FieldProps) {
@@ -40,6 +42,7 @@ export default function Field({
       disabled={disabled}
       invalid={invalid}
       name={name}
+      validate={validate}
     >
       <BaseField.Label className={cn("text-sm font-medium text-fg", labelHidden && "sr-only")}>
         {label}
@@ -48,9 +51,10 @@ export default function Field({
       {description && (
         <BaseField.Description className="text-muted text-xs">{description}</BaseField.Description>
       )}
-      <BaseField.Error className="text-bad text-xs" match={errorMessage ? true : undefined}>
-        {errorMessage}
-      </BaseField.Error>
+      <BaseField.Error
+        className="text-bad text-xs"
+        {...(errorMessage && { match: true, children: errorMessage })}
+      />
     </BaseField.Root>
   );
 }

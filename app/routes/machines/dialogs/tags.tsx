@@ -1,15 +1,10 @@
-import { AlertTriangle, Plus, TagsIcon, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useFetcher } from "react-router";
+import { useState } from "react";
 
-import Button from "~/components/button";
+import ActionDialog from "~/components/action-dialog";
 import Callout from "~/components/callout";
-import Input from "~/components/input";
-import Dialog, { DialogPanel } from "~/components/legacy-dialog";
+import Code from "~/components/code";
 import Link from "~/components/link";
-import List from "~/components/list";
-import Text from "~/components/text";
-import Title from "~/components/title";
+import TokenList from "~/components/token-list";
 import type { Machine } from "~/types";
 
 interface TagsProps {
@@ -22,159 +17,55 @@ interface TagsProps {
 }
 
 export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyTags }: TagsProps) {
-  const fetcher = useFetcher();
-  const submittingRef = useRef(false);
   const [tags, setTags] = useState([...machine.tags]);
-  const [tag, setTag] = useState("tag:");
-  const tagOptions = useMemo(
-    () => (existingTags ?? []).filter((existingTag) => !tags.includes(existingTag)),
-    [existingTags, tags],
-  );
-  const tagIsInvalid = useMemo(
-    () => tag.length === 0 || !tag.startsWith("tag:") || tags.includes(tag),
-    [tag, tags],
-  );
-  const undeclaredTags = useMemo(
-    () => (policyTags === undefined ? [] : tags.filter((entry) => !policyTags.includes(entry))),
-    [policyTags, tags],
-  );
-
-  const error = fetcher.data && !fetcher.data.success ? fetcher.data.error : null;
-
-  useEffect(() => {
-    if (fetcher.data?.success) {
-      submittingRef.current = false;
-      setIsOpen(false);
-    }
-
-    if (fetcher.state === "idle" && fetcher.data && !fetcher.data.success) {
-      submittingRef.current = false;
-    }
-  }, [fetcher.data, fetcher.state]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setTags([...machine.tags]);
-    }
-  }, [isOpen]);
+  const undeclaredTags =
+    policyTags === undefined ? [] : tags.filter((tag) => !policyTags.includes(tag));
+  const isUnchanged =
+    tags.length === machine.tags.length && tags.every((tag) => machine.tags.includes(tag));
 
   return (
-    <Dialog
-      isOpen={isOpen}
-      onOpenChange={(open) => {
-        if (!open && submittingRef.current) {
-          return;
-        }
-        setIsOpen(open);
-      }}
-    >
-      <DialogPanel
-        onSubmit={(event) => {
-          event.preventDefault();
-          submittingRef.current = true;
-          const form = new FormData();
-          form.set("action_id", "update_tags");
-          form.set("node_id", machine.id);
-          form.set("tags", tags.filter((t) => t !== "").join(","));
-          fetcher.submit(form, { method: "POST" });
-        }}
-        isDisabled={fetcher.state !== "idle"}
-      >
-        <Title>Edit ACL tags for {machine.givenName}</Title>
-        <Text>
-          ACL tags can be used to reference machines in your ACL policies. See the{" "}
+    <ActionDialog
+      description={
+        <>
+          Tags let your access control policy refer to machines by role.{" "}
           <Link external styled to="https://tailscale.com/kb/1068/acl-tags">
-            Tailscale documentation
-          </Link>{" "}
-          for more information.
-        </Text>
-        {error ? <Callout variant="error">{error}</Callout> : null}
-        <List className="mt-4">
-          {tags.length === 0 ? (
-            <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-              <TagsIcon />
-              <p className="font-semibold">No tags are set on this machine</p>
-            </List.Item>
-          ) : (
-            tags.map((item) => (
-              <List.Item className="font-mono" id={item} key={item}>
-                <span className="flex items-center gap-1.5">
-                  {item}
-                  {undeclaredTags.includes(item) ? (
-                    <AlertTriangle className="text-warn h-3.5 w-3.5" />
-                  ) : null}
-                </span>
-                <Button
-                  aria-label={`Remove ${item}`}
-                  onClick={() => {
-                    setTags(tags.filter((tag) => tag !== item));
-                  }}
-                  size="sm"
-                  type="button"
-                  variant="icon"
-                >
-                  <X className="size-4" />
-                </Button>
-              </List.Item>
-            ))
-          )}
-        </List>
-
-        <div className="mt-2 flex items-center gap-2">
-          <Input
-            aria-label="Add a tag"
-            className="w-full"
-            value={tag}
-            onChange={setTag}
-            invalid={tag.length > 0 && tagIsInvalid}
-            placeholder="tag:example"
-            label="Tag"
-            labelHidden
-          />
-          <Button
-            disabled={tagIsInvalid}
-            onClick={() => {
-              setTags([...tags, tag]);
-              setTag("tag:");
-            }}
-            type="button"
-          >
-            <Plus className="size-4" />
-            Add
-          </Button>
-        </div>
-        {tagOptions.length > 0 ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {tagOptions.map((option) => (
-              <Button
-                className="font-mono text-xs"
-                key={option}
-                onClick={() => setTags([...tags, option])}
-                size="sm"
-                type="button"
-              >
-                {option}
-              </Button>
-            ))}
-          </div>
-        ) : null}
-        {undeclaredTags.length > 0 ? (
-          <Callout variant="warning">
-            {undeclaredTags.join(", ")} {undeclaredTags.length === 1 ? "is" : "are"} not declared
-            under <code className="font-mono">tagOwners</code> in your policy, so no rule will match{" "}
-            {undeclaredTags.length === 1 ? "it" : "them"}. Declare{" "}
-            {undeclaredTags.length === 1 ? "it" : "them"} in{" "}
-            <Link styled to="/acls">
-              Access Control
-            </Link>
-            .
-          </Callout>
-        ) : null}
-        <p className="mt-2 text-sm opacity-50">
-          Not seeing the tags you expect? Tags need to be defined in your access control policy
-          before they can be assigned to machines.
-        </p>
-      </DialogPanel>
-    </Dialog>
+            Learn more
+          </Link>
+        </>
+      }
+      fields={{ node_id: machine.id }}
+      intent="update_tags"
+      isDisabled={isUnchanged}
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Save tags"
+      title={`Tags for ${machine.givenName}`}
+    >
+      {tags.map((tag) => (
+        <input key={tag} name="tags" type="hidden" value={tag} />
+      ))}
+      <TokenList
+        emptyText="No tags on this machine"
+        label="Tags"
+        normalize={(value) => (value.startsWith("tag:") ? value : `tag:${value}`)}
+        onChange={setTags}
+        placeholder="tag:server"
+        suggestions={existingTags}
+        validate={(value) => /^tag:\S+$/.test(value)}
+        values={tags}
+      />
+      {undeclaredTags.length > 0 && (
+        <Callout variant="warning">
+          {undeclaredTags.join(", ")} {undeclaredTags.length === 1 ? "isn't" : "aren't"} declared
+          under <Code>tagOwners</Code>, so no rule will match{" "}
+          {undeclaredTags.length === 1 ? "it" : "them"}. Declare{" "}
+          {undeclaredTags.length === 1 ? "it" : "them"} in{" "}
+          <Link styled to="/acls">
+            Access Control
+          </Link>
+          .
+        </Callout>
+      )}
+    </ActionDialog>
   );
 }

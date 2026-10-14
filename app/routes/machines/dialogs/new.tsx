@@ -1,24 +1,15 @@
-import { type } from "arktype";
 import { Computer, FileKey2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
+import ActionDialog from "~/components/action-dialog";
 import CodeBlock from "~/components/code-block";
 import Input from "~/components/input";
-import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import Select from "~/components/select";
-import Text from "~/components/text";
-import Title from "~/components/title";
-import { useForm } from "~/hooks/use-form";
 import type { User } from "~/types";
 import { normalizeRegistrationKey } from "~/utils/register-key";
 import { getUserDisplayName, sortUsersByDisplayName } from "~/utils/user";
-
-const registerSchema = type({
-  register_key: "string > 0",
-  user: "string > 0",
-});
 
 export interface NewMachineProps {
   server: string;
@@ -28,49 +19,45 @@ export interface NewMachineProps {
 }
 
 export default function NewMachine(data: NewMachineProps) {
-  const [pushDialog, setPushDialog] = useState(false);
-  const form = useForm({
-    schema: registerSchema,
-    validate: (values) =>
-      normalizeRegistrationKey(String(values.register_key ?? ""))
-        ? undefined
-        : {
-            register_key:
-              "Paste the registration URL or full hskey-authreq-... key from tailscale up.",
-          },
-  });
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
   const navigate = useNavigate();
 
   return (
     <>
-      <Dialog isOpen={pushDialog} onOpenChange={setPushDialog}>
-        <DialogPanel isDisabled={!form.canSubmit}>
-          <Title>Register Machine Key</Title>
-          <Text>The machine key is given when you run the following command on your device:</Text>
-          <CodeBlock className="mb-4">{`tailscale up --login-server=${data.server}`}</CodeBlock>
-          <input name="action_id" type="hidden" value="register" />
-          <Input
-            {...form.field("register_key")}
-            required
-            label="Machine Key"
-            placeholder="hskey-authreq-XXXXXXXXXXXXXXXXXXXXXXXX"
-            description="Paste the registration URL or full key shown by tailscale up."
-          />
-          <Select
-            required
-            label="Owner"
-            name="user"
-            onValueChange={(v) => form.setValue("user", v)}
-            placeholder="Select a user"
-            items={sortUsersByDisplayName(data.users).map((user) => ({
-              // Headscale's v1/node/register endpoint resolves the owner by
-              // username via GetUserByName, so we must pass user.name (not id).
-              value: user.name,
-              label: getUserDisplayName(user),
-            }))}
-          />
-        </DialogPanel>
-      </Dialog>
+      <ActionDialog
+        description="Run this on the device, then paste the key it prints."
+        intent="register"
+        onOpenChange={setIsRegisterOpen}
+        open={isRegisterOpen}
+        submitLabel="Register"
+        title="Register a machine"
+      >
+        <CodeBlock>{`tailscale up --login-server=${data.server}`}</CodeBlock>
+        <Input
+          description="The registration URL or the full hskey-authreq-... key."
+          label="Machine key"
+          name="register_key"
+          placeholder="hskey-authreq-XXXXXXXXXXXXXXXXXXXXXXXX"
+          required
+          validate={(value) =>
+            normalizeRegistrationKey(String(value ?? ""))
+              ? null
+              : "Paste the registration URL or full hskey-authreq-... key."
+          }
+        />
+        <Select
+          items={sortUsersByDisplayName(data.users).map((user) => ({
+            // Headscale's v1/node/register endpoint resolves the owner by
+            // username via GetUserByName, so we must pass user.name (not id).
+            value: user.name,
+            label: getUserDisplayName(user),
+          }))}
+          label="Owner"
+          name="user"
+          placeholder="Select a user"
+          required
+        />
+      </ActionDialog>
       <Menu disabled={data.isDisabled}>
         <MenuTrigger className="bg-ink text-ink-fg hover:bg-ink/90 rounded-md px-3.5 py-2 text-sm font-medium">
           Add Device
@@ -78,7 +65,7 @@ export default function NewMachine(data: NewMachineProps) {
         <MenuContent>
           <MenuItem
             disabled={data.disabledKeys?.includes("register")}
-            onClick={() => setPushDialog(true)}
+            onClick={() => setIsRegisterOpen(true)}
           >
             <div className="flex items-center gap-x-3">
               <Computer className="w-4" />
