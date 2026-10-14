@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import type { Machine } from "~/types";

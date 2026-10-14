@@ -197,11 +197,7 @@ export default function Page({
               </ul>
             )}
           </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
+          <Button className="mt-1.5" onClick={() => setShowRouting(true)} size="sm" variant="ghost">
             Edit
           </Button>
         </div>
@@ -223,11 +219,7 @@ export default function Page({
               </ul>
             )}
           </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
+          <Button className="mt-1.5" onClick={() => setShowRouting(true)} size="sm" variant="ghost">
             Edit
           </Button>
         </div>
@@ -253,11 +245,7 @@ export default function Page({
               </span>
             )}
           </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
+          <Button className="mt-1.5" onClick={() => setShowRouting(true)} size="sm" variant="ghost">
             Edit
           </Button>
         </div>

@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Button from "~/components/button";
 import Input from "~/components/input";
 import TableList from "~/components/table-list";
-import cn from "~/utils/cn";
 
 interface TokenListProps {
   label: string;
@@ -80,12 +79,14 @@ export default function TokenList({
             <TableList.Item className="font-mono text-sm" id={value} key={value}>
               {value}
               <Button
-                className="rounded-md p-0.5"
+                aria-label={`Remove ${value}`}
                 disabled={isDisabled}
                 onClick={() => onChange(values.filter((entry) => entry !== value))}
+                size="sm"
                 type="button"
+                variant="icon"
               >
-                <X className="p-1" />
+                <X className="size-4" />
               </Button>
             </TableList.Item>
           ))
@@ -109,25 +110,21 @@ export default function TokenList({
           placeholder={placeholder}
           value={draft}
         />
-        <Button
-          className={cn("rounded-md p-1", draftIsInvalid && "cursor-not-allowed opacity-50")}
-          disabled={isDisabled || draftIsInvalid}
-          onClick={() => add(draft)}
-          type="button"
-        >
-          <Plus className="p-1" size={30} />
+        <Button disabled={isDisabled || draftIsInvalid} onClick={() => add(draft)} type="button">
+          <Plus className="size-4" />
+          Add
         </Button>
       </div>
       {available.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {available.map((suggestion) => (
             <Button
-              className="px-2 py-1 font-mono text-xs"
+              className="font-mono text-xs"
               disabled={isDisabled}
               key={suggestion}
               onClick={() => add(suggestion)}
+              size="sm"
               type="button"
-              variant="ghost"
             >
               {suggestion}
             </Button>

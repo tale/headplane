@@ -121,7 +121,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       ) : undefined}
 
       <fetcher.Form method="post">
-        <Button type="submit" variant="heavy" disabled={isSyncing}>
+        <Button type="submit" variant="primary" disabled={isSyncing}>
           {isSyncing ? "Syncing…" : "Sync Now"}
         </Button>
       </fetcher.Form>

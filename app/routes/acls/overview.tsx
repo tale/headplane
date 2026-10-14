@@ -232,7 +232,7 @@ export default function Page({
           formData.append("policy", codePolicy);
           fetcher.submit(formData, { method: "PATCH" });
         }}
-        variant="heavy"
+        variant="primary"
       >
         Save
       </Button>

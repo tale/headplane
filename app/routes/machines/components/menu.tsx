@@ -108,7 +108,6 @@ export default function MachineMenu({
       {supportsTailscaleSSH ? (
         isFullButton ? (
           <Button
-            className="flex items-center gap-x-2"
             onClick={() => {
               // We need to use JS to open the SSH URL
               // in a new WINDOW since href can only
@@ -119,19 +118,19 @@ export default function MachineMenu({
                 "noopener,noreferrer,width=800,height=600",
               );
             }}
-            variant="heavy"
+            variant="primary"
           >
-            <SquareTerminal className="h-5" />
-            <p>SSH</p>
+            <SquareTerminal className="size-4" />
+            SSH
           </Button>
         ) : (
           <Button
             className={cn(
-              "py-0.5 rounded-lg",
               "opacity-0 pointer-events-none group-hover:opacity-100",
               "group-hover:pointer-events-auto",
             )}
-            variant="light"
+            size="sm"
+
             onClick={() => {
               window.open(
                 `${__PREFIX__}/ssh/${node.givenName}`,

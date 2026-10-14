@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import Text from "~/components/text";
 import Title from "~/components/title";

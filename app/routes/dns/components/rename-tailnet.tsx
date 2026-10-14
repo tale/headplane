@@ -1,7 +1,7 @@
 import Button from "~/components/button";
 import Code from "~/components/code";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Text from "~/components/text";
 import Title from "~/components/title";
 

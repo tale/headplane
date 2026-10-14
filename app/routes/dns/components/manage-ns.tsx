@@ -6,7 +6,6 @@ import Link from "~/components/link";
 import Switch from "~/components/switch";
 import TableList from "~/components/table-list";
 import Tooltip from "~/components/tooltip";
-import cn from "~/utils/cn";
 
 import AddNS from "../dialogs/add-ns";
 
@@ -116,7 +115,9 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
                   <input name="ns" type="hidden" value={ns} />
                   <input name="split_name" type="hidden" value={isGlobal ? "global" : name} />
                   <Button
-                    className={cn("px-2 py-1 rounded-md", "text-bad")}
+                    className="text-bad hover:bg-bad-subtle hover:text-bad"
+                    size="sm"
+                    variant="ghost"
                     disabled={isDisabled}
                     type="submit"
                   >

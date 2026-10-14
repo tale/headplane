@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import Text from "~/components/text";
 import Title from "~/components/title";

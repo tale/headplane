@@ -54,7 +54,9 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                   <input name="record_name" type="hidden" value={record.name} />
                   <input name="record_type" type="hidden" value={record.type} />
                   <Button
-                    className={cn("px-2 py-1 rounded-md", "text-bad")}
+                    className="text-bad hover:bg-bad-subtle hover:text-bad"
+                    size="sm"
+                    variant="ghost"
                     disabled={isDisabled}
                     type="submit"
                   >

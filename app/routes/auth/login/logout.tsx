@@ -10,7 +10,7 @@ export default function Logout() {
         <Card.Title>You have been logged out</Card.Title>
         <Card.Text>You can now close this window.</Card.Text>
         <RouterLink to="/login" prefetch="none" reloadDocument>
-          <Button className="mt-8 w-full" variant="heavy">
+          <Button className="mt-8 w-full" variant="primary">
             Sign in again
           </Button>
         </RouterLink>

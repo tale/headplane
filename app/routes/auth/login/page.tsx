@@ -164,13 +164,13 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
             {actionData?.success === false ? (
               <Card.Text className="text-bad mb-2 text-sm">{actionData.message}</Card.Text>
             ) : undefined}
-            <Button className="w-full" type="submit" variant="heavy">
+            <Button className="w-full" type="submit" variant="primary">
               Sign In
             </Button>
           </Form>
           {isOidcConnectorEnabled ? (
             <RouterLink to="/oidc/start" prefetch="none" reloadDocument>
-              <Button className="mt-2 w-full" disabled={oidcErrorCodes.length > 0} variant="light">
+              <Button className="mt-2 w-full" disabled={oidcErrorCodes.length > 0}>
                 Single Sign-On
               </Button>
             </RouterLink>

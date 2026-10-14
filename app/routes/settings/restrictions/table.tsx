@@ -4,7 +4,6 @@ import { Form } from "react-router";
 
 import Button from "~/components/button";
 import TableList from "~/components/table-list";
-import cn from "~/utils/cn";
 
 interface RestrictionProps {
   children: React.ReactNode;
@@ -36,7 +35,9 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
                 <input name="action_id" type="hidden" value={`remove_${type}`} />
                 <input name={type} type="hidden" value={value} />
                 <Button
-                  className={cn("px-2 py-1 rounded-md", "text-bad")}
+                  className="text-bad hover:bg-bad-subtle hover:text-bad"
+                  size="sm"
+                  variant="ghost"
                   disabled={isDisabled}
                   type="submit"
                 >

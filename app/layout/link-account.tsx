@@ -30,7 +30,7 @@ export default function LinkAccount({ headscaleUsers }: LinkAccountProps) {
               </option>
             ))}
           </select>
-          <Button className="w-full" type="submit" variant="heavy">
+          <Button className="w-full" type="submit" variant="primary">
             Link and Continue
           </Button>
         </Form>

@@ -26,7 +26,7 @@ export default function PageError({ error, page }: PageErrorProps) {
         </p>
         <Button
           className="mt-6"
-          variant="light"
+
           onClick={() => revalidate()}
           disabled={state === "loading"}
         >

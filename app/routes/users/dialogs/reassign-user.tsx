@@ -1,4 +1,4 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import Notice from "~/components/notice";
 import RadioGroup from "~/components/radio-group";

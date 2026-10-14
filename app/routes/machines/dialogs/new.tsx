@@ -4,8 +4,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 
 import CodeBlock from "~/components/code-block";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import Select from "~/components/select";
 import Text from "~/components/text";

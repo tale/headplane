@@ -23,7 +23,7 @@ export function Section({ title, description, isDisabled, onAdd, children }: Sec
           <p className="text-muted max-w-prose text-sm">{description}</p>
         </div>
         <Button className="shrink-0" disabled={isDisabled} onClick={onAdd} type="button">
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add
         </Button>
       </div>
@@ -47,19 +47,21 @@ export function RowActions({ isDisabled, onEdit, onDelete }: RowActionsProps) {
     <div className="flex shrink-0 items-center gap-1">
       <Button
         aria-label="Edit"
-        className="rounded-md p-1"
         disabled={isDisabled}
         onClick={onEdit}
+        size="sm"
         type="button"
+        variant="icon"
       >
         <Pencil className="h-4 w-4" />
       </Button>
       <Button
         aria-label="Delete"
-        className="rounded-md p-1"
         disabled={isDisabled}
         onClick={onDelete}
+        size="sm"
         type="button"
+        variant="icon"
       >
         <Trash2 className="h-4 w-4" />
       </Button>

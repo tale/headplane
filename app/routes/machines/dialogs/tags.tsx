@@ -3,14 +3,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import TableList from "~/components/table-list";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import type { Machine } from "~/types";
-import cn from "~/utils/cn";
 
 interface TagsProps {
   machine: Machine;
@@ -107,13 +106,15 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
                   ) : null}
                 </span>
                 <Button
-                  className="rounded-md p-0.5"
+                  aria-label={`Remove ${item}`}
                   onClick={() => {
                     setTags(tags.filter((tag) => tag !== item));
                   }}
+                  size="sm"
                   type="button"
+                  variant="icon"
                 >
-                  <X className="p-1" />
+                  <X className="size-4" />
                 </Button>
               </TableList.Item>
             ))
@@ -132,7 +133,6 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
             labelHidden
           />
           <Button
-            className={cn("rounded-md p-1", tagIsInvalid && "opacity-50 cursor-not-allowed")}
             disabled={tagIsInvalid}
             onClick={() => {
               setTags([...tags, tag]);
@@ -140,18 +140,19 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
             }}
             type="button"
           >
-            <Plus className="p-1" size={30} />
+            <Plus className="size-4" />
+            Add
           </Button>
         </div>
         {tagOptions.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {tagOptions.map((option) => (
               <Button
-                className="px-2 py-1 font-mono text-xs"
+                className="font-mono text-xs"
                 key={option}
                 onClick={() => setTags([...tags, option])}
+                size="sm"
                 type="button"
-                variant="ghost"
               >
                 {option}
               </Button>

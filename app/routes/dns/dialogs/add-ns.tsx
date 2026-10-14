@@ -3,8 +3,8 @@ import { Split } from "lucide-react";
 
 import Button from "~/components/button";
 import Chip from "~/components/chip";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Switch from "~/components/switch";
 import Text from "~/components/text";
 import Title from "~/components/title";

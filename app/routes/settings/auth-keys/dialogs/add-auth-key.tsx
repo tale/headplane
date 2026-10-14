@@ -3,8 +3,8 @@ import { useFetcher } from "react-router";
 
 import Button from "~/components/button";
 import CodeBlock from "~/components/code-block";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import NumberInput from "~/components/number-input";
 import Select from "~/components/select";

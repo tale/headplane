@@ -55,7 +55,7 @@ export default function UserPrompt({ hostname }: UserPromptProps) {
             className="mb-2"
             required
           />
-          <Button type="submit" variant="heavy" className="w-full">
+          <Button type="submit" variant="primary" className="w-full">
             Connect
           </Button>
         </Form>

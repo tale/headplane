@@ -110,7 +110,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                   placeholder="Search Domain"
                   type="text"
                 />
-                <Button className={cn("px-2 py-1 rounded-md", "text-accent")} type="submit">
+                <Button size="sm" type="submit">
                   Add
                 </Button>
               </Form>
@@ -163,7 +163,9 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
           <input name="action_id" type="hidden" value="remove_domain" />
           <input name="domain" type="hidden" value={domain} />
           <Button
-            className={cn("px-2 py-1 rounded-md", "text-bad")}
+            className="text-bad hover:bg-bad-subtle hover:text-bad"
+            size="sm"
+            variant="ghost"
             disabled={isDisabled}
             type="submit"
           >

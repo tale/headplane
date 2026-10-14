@@ -1,7 +1,7 @@
 import { GlobeLock, RouteOff } from "lucide-react";
 import { useFetcher } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
 import Switch from "~/components/switch";
 import TableList from "~/components/table-list";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Select from "~/components/select";
 import Text from "~/components/text";
 import Title from "~/components/title";
