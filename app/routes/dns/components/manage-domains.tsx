@@ -32,7 +32,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
 
   return (
     <div className="flex w-full flex-col sm:w-2/3">
-      <h1 className="mb-4 text-xl font-semibold">Search Domains</h1>
+      <h2 className="mb-4 text-lg font-semibold">Search Domains</h2>
       <p className="mb-4">
         Set custom DNS search domains for your Tailnet. When using Magic DNS, your tailnet domain is
         used as the first search domain.

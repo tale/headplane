@@ -5,6 +5,7 @@ import Callout from "~/components/callout";
 import Code from "~/components/code";
 import Link from "~/components/link";
 import List from "~/components/list";
+import PageHeader from "~/components/page-header";
 import Select from "~/components/select";
 import {
   appConfigContext,
@@ -195,6 +196,27 @@ export default function Page({
         </Link>
         <span className="mx-2">/</span> Pre-Auth Keys
       </p>
+      <PageHeader
+        actions={
+          <AddAuthKey
+            currentHeadscaleUserId={currentHeadscaleUserId}
+            currentSubject={currentSubject}
+            selfServiceOnly={selfServiceOnly}
+            url={url}
+            users={users}
+          />
+        }
+        description={
+          <>
+            Headscale fully supports pre-authentication keys in order to easily add devices to your
+            Tailnet. To learn more about using pre-authentication keys, visit the{" "}
+            <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
+              Tailscale documentation
+            </Link>
+          </>
+        }
+        title="Pre-Auth Keys"
+      />
       {!access ? (
         <Callout
           className="my-4 max-w-2xl"
@@ -216,21 +238,6 @@ export default function Page({
           Their keys may not be listed correctly. Please check the server logs for more information.
         </Callout>
       ) : undefined}
-      <h1 className="mb-2 text-xl font-semibold">Pre-Auth Keys</h1>
-      <p className="mb-4">
-        Headscale fully supports pre-authentication keys in order to easily add devices to your
-        Tailnet. To learn more about using pre-authentication keys, visit the{" "}
-        <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
-          Tailscale documentation
-        </Link>
-      </p>
-      <AddAuthKey
-        currentHeadscaleUserId={currentHeadscaleUserId}
-        currentSubject={currentSubject}
-        selfServiceOnly={selfServiceOnly}
-        url={url}
-        users={users}
-      />
       <div className="mt-4 flex items-center gap-4">
         <Select
           className="w-full"

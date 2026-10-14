@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import Callout from "~/components/callout";
 import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
 import { Table, TableBody, TableHeader } from "~/components/table";
 import {
   appConfigContext,
@@ -192,8 +193,10 @@ export const action = userAction;
 export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <h1 className="mb-1.5 text-xl font-semibold">Users</h1>
-      <p className="mb-8">Manage the users in your network and their permissions.</p>
+      <PageHeader
+        description="Manage the users in your network and their permissions."
+        title="Users"
+      />
       <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
 
       {loaderData.apiError && (

@@ -2,6 +2,7 @@ import { data } from "react-router";
 
 import Callout from "~/components/callout";
 import Link from "~/components/link";
+import PageHeader from "~/components/page-header";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 
@@ -56,6 +57,21 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
           </Link>
           <span className="mx-2">/</span> Authentication Restrictions
         </p>
+        <PageHeader
+          className="mb-0"
+          description={
+            <>
+              Headscale supports restricting OIDC authentication to only allow certain email
+              domains, groups, or users to authenticate. This can be used to limit access to your
+              Tailnet to only certain users or groups and Headplane will also respect these settings
+              when authenticating.{" "}
+              <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
+                Learn More
+              </Link>
+            </>
+          }
+          title="Authentication Restrictions"
+        />
         {!access ? (
           <Callout
             className="my-4 max-w-2xl"
@@ -72,16 +88,6 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
             ensure that you have correctly given Headplane write access to the file.
           </Callout>
         ) : undefined}
-        <h1 className="mt-4 mb-2 text-xl font-semibold">Authentication Restrictions</h1>
-        <p>
-          Headscale supports restricting OIDC authentication to only allow certain email domains,
-          groups, or users to authenticate. This can be used to limit access to your Tailnet to only
-          certain users or groups and Headplane will also respect these settings when
-          authenticating.{" "}
-          <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
-            Learn More
-          </Link>
-        </p>
       </div>
       <RestrictionTable isDisabled={isDisabled} type="domain" values={settings.domains}>
         <AddDomain domains={settings.domains} isDisabled={isDisabled} />

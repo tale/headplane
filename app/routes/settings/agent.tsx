@@ -3,9 +3,9 @@ import { useFetcher } from "react-router";
 import Button from "~/components/button";
 import Callout from "~/components/callout";
 import Link from "~/components/link";
+import PageHeader from "~/components/page-header";
 import StatusCircle from "~/components/status-circle";
 import Text from "~/components/text";
-import Title from "~/components/title";
 import { agentsContext, authContext } from "~/server/context";
 import { formatTimeDelta } from "~/utils/time";
 
@@ -57,7 +57,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   if (!loaderData.enabled) {
     return (
       <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
-        <Title>Headplane Agent</Title>
+        <PageHeader className="mb-0" title="Headplane Agent" />
         <Callout className="my-4 max-w-2xl" title="Agent Not Enabled">
           {loaderData.reason}. To learn how to set up the agent, visit the{" "}
           <Link external styled to="https://headplane.net/features/agent">
@@ -73,13 +73,11 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
-      <div className="flex w-full flex-col sm:w-2/3">
-        <Title>Headplane Agent</Title>
-        <Text>
-          The Headplane Agent syncs node information like OS version and connectivity details from
-          your Tailnet.
-        </Text>
-      </div>
+      <PageHeader
+        className="mb-0"
+        description="The Headplane Agent syncs node information like OS version and connectivity details from your Tailnet."
+        title="Headplane Agent"
+      />
 
       <div className="flex items-center gap-3">
         <StatusCircle isOnline={!hasError && !isPending} className="h-5 w-5" />

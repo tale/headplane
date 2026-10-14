@@ -6,6 +6,7 @@ import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
 import {
   SortHeader,
   Table,
@@ -250,23 +251,25 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 
   return (
     <>
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col">
-          <h1 className="mb-2 text-xl font-semibold">Machines</h1>
-          <p>
+      <PageHeader
+        actions={
+          <NewMachine
+            disabledKeys={loaderData.preAuth ? [] : ["pre-auth"]}
+            isDisabled={!loaderData.writable}
+            server={loaderData.publicServer ?? loaderData.server}
+            users={loaderData.users}
+          />
+        }
+        description={
+          <>
             Manage the devices connected to your Tailnet.{" "}
             <Link external styled to="https://tailscale.com/kb/1372/manage-devices">
               Learn more
             </Link>
-          </p>
-        </div>
-        <NewMachine
-          disabledKeys={loaderData.preAuth ? [] : ["pre-auth"]}
-          isDisabled={!loaderData.writable}
-          server={loaderData.publicServer ?? loaderData.server}
-          users={loaderData.users}
-        />
-      </div>
+          </>
+        }
+        title="Machines"
+      />
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="relative w-64">
           <Input

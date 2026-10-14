@@ -104,9 +104,7 @@ export default function AddAuthKey({
         setIsOpen(open);
       }}
     >
-      <Button className="my-4" onClick={() => setIsOpen(true)}>
-        Create pre-auth key
-      </Button>
+      <Button onClick={() => setIsOpen(true)}>Create pre-auth key</Button>
       {createdKey ? (
         <DialogPanel variant="unactionable">
           <Title>Pre-auth key created</Title>

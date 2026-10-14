@@ -17,6 +17,7 @@ import Card from "~/components/card";
 import Code from "~/components/code";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
 import {
@@ -119,6 +120,23 @@ export default function Page({
 
   return (
     <div>
+      <PageHeader
+        description={
+          <>
+            The ACL file is used to define the access control rules for your network. You can find
+            more information about the ACL file in the{" "}
+            <Link external styled to="https://tailscale.com/kb/1018/acls">
+              Tailscale ACL guide
+            </Link>{" "}
+            and the{" "}
+            <Link external styled to="https://headscale.net/stable/ref/acls/">
+              Headscale docs
+            </Link>
+            .
+          </>
+        }
+        title="Access Control List (ACL)"
+      />
       {!access ? (
         <Callout className="my-4 max-w-2xl" title="ACL Policy restricted" variant="warning">
           You do not have the necessary permissions to edit the Access Control List policy. Please
@@ -132,19 +150,6 @@ export default function Page({
           <Code>database</Code> in your Headscale configuration.
         </Callout>
       ) : undefined}
-      <h1 className="mb-4 text-xl font-semibold">Access Control List (ACL)</h1>
-      <p className="mb-4 max-w-prose">
-        The ACL file is used to define the access control rules for your network. You can find more
-        information about the ACL file in the{" "}
-        <Link external styled to="https://tailscale.com/kb/1018/acls">
-          Tailscale ACL guide
-        </Link>{" "}
-        and the{" "}
-        <Link external styled to="https://headscale.net/stable/ref/acls/">
-          Headscale docs
-        </Link>
-        .
-      </p>
       {fetcher.data?.error !== undefined ? (
         <Callout
           className="my-4 max-w-2xl"
