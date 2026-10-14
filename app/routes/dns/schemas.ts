@@ -32,6 +32,11 @@ export const dnsAction = v.variant("intent", [
   v.object({ intent: v.literal("remove_ns"), nameserver: v.string(), split_domain: splitDomain }),
   v.object({ intent: v.literal("add_domain"), domain: text("Enter a search domain.") }),
   v.object({ intent: v.literal("remove_domain"), domain: v.string() }),
+  v.object({
+    intent: v.literal("move_domain"),
+    domain: v.string(),
+    direction: v.picklist(["up", "down"]),
+  }),
   v.variant("type", [record("A"), record("AAAA")]),
   v.object({
     intent: v.literal("remove_record"),

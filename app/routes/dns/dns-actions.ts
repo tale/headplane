@@ -9,6 +9,7 @@ import { invalid, ok, parseForm } from "~/utils/form";
 
 import type { Route } from "./+types/overview";
 import { dnsAction as dnsActionSchema } from "./schemas";
+import { moveDomain } from "./search-domains";
 
 export async function dnsAction({ request, context }: Route.ActionArgs) {
   const auth = context.get(authContext);
@@ -102,6 +103,16 @@ export async function dnsAction({ request, context }: Route.ActionArgs) {
       ]);
       await integration?.onConfigChange(headscale);
       return ok("Search domain removed");
+
+    case "move_domain":
+      await headscaleConfig.patch([
+        {
+          path: "dns.search_domains",
+          value: moveDomain(config.searchDomains, input.domain, input.direction),
+        },
+      ]);
+      await integration?.onConfigChange(headscale);
+      return ok();
 
     case "add_record": {
       const record = { name: input.name, type: input.type, value: input.value };

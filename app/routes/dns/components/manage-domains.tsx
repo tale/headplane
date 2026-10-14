@@ -1,24 +1,16 @@
-import { Form } from "@base-ui/react/form";
-import { closestCorners, DndContext, DragOverlay } from "@dnd-kit/core";
-import { restrictToParentElement, restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import {
-  arrayMove,
-  SortableContext,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, Lock } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { useState } from "react";
 import { useFetcher } from "react-router";
 
 import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
 import Callout from "~/components/callout";
-import Input from "~/components/input";
 import List from "~/components/list";
 import cn from "~/utils/cn";
 import type { ActionResult } from "~/utils/form";
+
+import AddDomain from "../dialogs/add-domain";
+import { type Direction, moveDomain } from "../search-domains";
 
 interface Props {
   searchDomains: string[];
@@ -28,179 +20,117 @@ interface Props {
 
 export default function ManageDomains({ searchDomains, isDisabled, magic }: Props) {
   const fetcher = useFetcher<ActionResult>();
-  const [activeId, setActiveId] = useState<number | string | null>(null);
-  const [localDomains, setLocalDomains] = useState(searchDomains);
-  const [prevDomains, setPrevDomains] = useState(searchDomains);
-  if (prevDomains !== searchDomains) {
-    setPrevDomains(searchDomains);
-    setLocalDomains(searchDomains);
+  const [focusTarget, setFocusTarget] = useState<{ domain: string; direction: Direction }>();
+  const pending = fetcher.formData;
+  const domains = pending
+    ? moveDomain(
+        searchDomains,
+        String(pending.get("domain")),
+        pending.get("direction") as Direction,
+      )
+    : searchDomains;
+
+  function move(domain: string, direction: Direction) {
+    setFocusTarget({ domain, direction });
+    fetcher.submit({ intent: "move_domain", domain, direction }, { method: "POST" });
   }
 
-  const errors = fetcher.data?.ok === false ? fetcher.data.errors : undefined;
+  // Moving a row in the DOM drops focus, so the moved row's arrow takes it
+  // back when it commits. At the end of the list that arrow is disabled and
+  // the other one takes it instead.
+  function focusRef(domain: string, index: number, direction: Direction) {
+    if (focusTarget?.domain !== domain) {
+      return undefined;
+    }
+
+    const isUp = focusTarget.direction === "up";
+    const isEdge = isUp ? index === 0 : index === domains.length - 1;
+    const opposite = isUp ? "down" : "up";
+    const wanted = isEdge ? opposite : focusTarget.direction;
+    return wanted === direction ? (el: HTMLButtonElement | null) => el?.focus() : undefined;
+  }
 
   return (
     <div className="flex w-full flex-col sm:w-2/3">
       <h2 className="mb-4 text-lg font-semibold">Search Domains</h2>
       <p className="mb-4">
-        Set custom DNS search domains for your Tailnet. When using Magic DNS, your tailnet domain is
-        used as the first search domain.
+        Devices try these suffixes, in order, when resolving a short name. With Magic DNS on, your
+        tailnet domain always comes first.
       </p>
-      <DndContext
-        collisionDetection={closestCorners}
-        modifiers={[restrictToVerticalAxis, restrictToParentElement]}
-        onDragEnd={(event) => {
-          setActiveId(null);
-          const { active, over } = event;
-          if (!over) {
-            return;
-          }
-
-          const activeItem = localDomains[(active.id as number) - 1];
-          const overItem = localDomains[(over.id as number) - 1];
-
-          if (!activeItem || !overItem) {
-            return;
-          }
-
-          const oldIndex = localDomains.indexOf(activeItem);
-          const newIndex = localDomains.indexOf(overItem);
-
-          if (oldIndex !== newIndex) {
-            setLocalDomains(arrayMove(localDomains, oldIndex, newIndex));
-          }
-        }}
-        onDragStart={(event) => {
-          setActiveId(event.active.id);
-        }}
-      >
-        <List>
-          {magic ? (
-            <List.Item key="magic-dns-sd">
-              <div
-                className={cn(
-                  "flex items-center gap-4",
-                  isDisabled ? "flex-row-reverse justify-between w-full" : "",
-                )}
-              >
-                <Lock className="p-0.5" />
-                <p className="py-0.5 font-mono text-sm">{magic}</p>
-              </div>
-            </List.Item>
-          ) : undefined}
-          <SortableContext items={localDomains} strategy={verticalListSortingStrategy}>
-            {localDomains.map((sd, index) => (
-              <Domain domain={sd} id={index + 1} isDisabled={isDisabled} key={sd} />
-            ))}
-            <DragOverlay adjustScale>
-              {activeId ? (
-                <Domain
-                  domain={localDomains[(activeId as number) - 1]}
-                  id={(activeId as number) - 1}
-                  isDisabled={isDisabled}
-                  isDragging
-                />
-              ) : undefined}
-            </DragOverlay>
-          </SortableContext>
-          {isDisabled ? undefined : (
-            <List.Item key="add-sd">
-              <Form
-                className="flex w-full items-start justify-between"
-                errors={errors}
-                // Remounts after each change so a submitted domain clears.
-                key={searchDomains.join()}
-                render={<fetcher.Form method="POST" />}
-              >
-                <input name="intent" type="hidden" value="add_domain" />
-                <Input
+      <List className="group/list mb-4">
+        {magic && (
+          <List.Item>
+            <p className="font-mono text-sm">{magic}</p>
+            <p className="text-muted flex h-7 items-center px-2 text-sm">Magic DNS</p>
+          </List.Item>
+        )}
+        {domains.map((domain, index) => (
+          <List.Item key={domain}>
+            <p className="font-mono text-sm">{domain}</p>
+            <div className="flex items-center gap-1">
+              {!isDisabled && (
+                <div
                   className={cn(
-                    "border-none font-mono p-0 text-sm",
-                    "rounded-none focus:ring-0 w-full ml-1",
+                    "flex opacity-0 transition-opacity",
+                    "group-hover/list:opacity-100 group-has-focus-visible/list:opacity-100",
+                    "pointer-coarse:opacity-100",
                   )}
-                  required
-                  label="Search Domain"
-                  labelHidden
-                  name="domain"
-                  placeholder="Search Domain"
-                  type="text"
-                />
-                <Button
-                  pending={fetcher.formData?.get("intent") === "add_domain"}
-                  size="sm"
-                  type="submit"
                 >
-                  Add
-                </Button>
-              </Form>
-            </List.Item>
-          )}
-        </List>
-      </DndContext>
-      {errors?.form && (
-        <Callout className="mt-4" variant="error">
-          {errors.form}
+                  <Button
+                    aria-label={`Move ${domain} up`}
+                    disabled={index === 0}
+                    onClick={() => move(domain, "up")}
+                    onFocus={() => setFocusTarget(undefined)}
+                    ref={focusRef(domain, index, "up")}
+                    size="sm"
+                    variant="icon"
+                  >
+                    <ArrowUp className="size-4" />
+                  </Button>
+                  <Button
+                    aria-label={`Move ${domain} down`}
+                    disabled={index === domains.length - 1}
+                    onClick={() => move(domain, "down")}
+                    onFocus={() => setFocusTarget(undefined)}
+                    ref={focusRef(domain, index, "down")}
+                    size="sm"
+                    variant="icon"
+                  >
+                    <ArrowDown className="size-4" />
+                  </Button>
+                </div>
+              )}
+              <ActionDialog
+                description="Devices stop trying this suffix on short names."
+                fields={{ domain }}
+                intent="remove_domain"
+                isDestructive
+                submitLabel="Remove"
+                title={`Remove search domain ${domain}?`}
+                trigger={
+                  <Button
+                    className="text-bad hover:bg-bad-subtle hover:text-bad"
+                    disabled={isDisabled}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    Remove
+                  </Button>
+                }
+              />
+            </div>
+          </List.Item>
+        ))}
+        {!magic && domains.length === 0 && (
+          <List.Item className="text-muted justify-center py-3">No search domains</List.Item>
+        )}
+      </List>
+      {fetcher.data?.ok === false && (
+        <Callout className="mb-4" variant="error">
+          {fetcher.data.errors.form ?? "Couldn't reorder the search domains."}
         </Callout>
       )}
+      {!isDisabled && <AddDomain />}
     </div>
-  );
-}
-
-interface DomainProps {
-  domain: string;
-  id: number;
-  isDragging?: boolean;
-  isDisabled: boolean;
-}
-
-function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging: isSortableDragging,
-  } = useSortable({ id });
-
-  return (
-    <List.Item
-      className={cn(isSortableDragging ? "opacity-50" : "", isDragging ? "ring-3 bg-raised" : "")}
-      ref={setNodeRef}
-      style={{
-        transform: CSS.Transform.toString(transform),
-        transition,
-      }}
-    >
-      <p className="flex items-center gap-4 font-mono text-sm">
-        {isDisabled ? undefined : (
-          <GripVertical
-            {...attributes}
-            {...listeners}
-            className="rounded-md p-0.5 outline-hidden focus:ring-3"
-          />
-        )}
-        {domain}
-      </p>
-      {isDragging ? undefined : (
-        <ActionDialog
-          description="Devices stop appending this domain to short names."
-          fields={{ domain }}
-          intent="remove_domain"
-          isDestructive
-          submitLabel="Remove"
-          title={`Remove search domain ${domain}?`}
-          trigger={
-            <Button
-              className="text-bad hover:bg-bad-subtle hover:text-bad"
-              disabled={isDisabled}
-              size="sm"
-              variant="ghost"
-            >
-              Remove
-            </Button>
-          }
-        />
-      )}
-    </List.Item>
   );
 }
