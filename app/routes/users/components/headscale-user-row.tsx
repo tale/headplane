@@ -62,8 +62,8 @@ export default function HeadscaleUserRow({
       </TableCell>
       <TableCell>
         {user.machines.length > 0 ? (
-          <span className={cn("flex items-center gap-x-1 text-sm", "text-muted")}>
-            <StatusCircle className="h-4 w-4" isOnline={isOnline} />
+          <span className={cn("flex items-center gap-x-2 text-sm", "text-muted")}>
+            <StatusCircle isOnline={isOnline} />
             <p suppressHydrationWarning>
               {isOnline ? "Connected" : new Date(lastSeen).toLocaleString()}
             </p>

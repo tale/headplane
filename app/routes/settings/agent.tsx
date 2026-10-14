@@ -79,7 +79,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       />
 
       <div className="flex items-center gap-3">
-        <StatusCircle isOnline={!hasError && !isPending} className="h-5 w-5" />
+        <StatusCircle isOnline={!hasError && !isPending} className="size-2" />
         <span className="text-lg font-medium">
           {hasError ? "Error" : isPending ? "Waiting for approval" : "Healthy"}
         </span>

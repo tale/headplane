@@ -1,4 +1,4 @@
-import { Info, X } from "lucide-react";
+import { Info, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
@@ -26,6 +26,7 @@ import {
   requestApiContext,
 } from "~/server/context";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
+import { latestTailscaleVersion } from "~/server/tailscale-release";
 import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
@@ -89,6 +90,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       : undefined,
     headscaleUserId: isUserPrincipal(principal) ? principal.user.headscaleUserId : undefined,
     existingTags: sortAssignableTags(nodes, policy),
+    latestVersion: agents ? latestTailscaleVersion() : undefined,
     // `undefined` keeps the tag dialog from flagging every tag as undeclared.
     policyTags: extractTagOwnerTags(policy),
     magic,
@@ -259,22 +261,24 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         }
         description={
           <>
-            Manage the devices connected to your Tailnet.{" "}
+            Devices connected to your tailnet.{" "}
             <Link external styled to="https://tailscale.com/kb/1372/manage-devices">
-              Learn more
+              Docs
             </Link>
           </>
         }
         title="Machines"
       />
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="relative w-64">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <div className="relative w-64 max-w-full">
+          <Search className="text-faint pointer-events-none absolute top-1/2 left-2.5 z-10 size-3.5 -translate-y-1/2" />
           <Input
+            className="[&_input]:pl-8"
             label="Search machines"
             labelHidden
             maxLength={100}
             onChange={setSearchQuery}
-            placeholder="Search by name or IP address..."
+            placeholder="Search by name or IP"
             value={searchQuery}
           />
           {searchQuery && (
@@ -294,7 +298,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           )}
         </div>
         <MachineFilters users={loaderData.users} populatedNodes={loaderData.populatedNodes} />
-        <span className="text-muted ml-auto text-sm whitespace-nowrap">
+        <span className="text-muted ml-auto text-xs whitespace-nowrap tabular-nums">
           {searchQuery || hasActiveFilters
             ? `Showing ${filteredAndSortedNodes.length} of ${loaderData.populatedNodes.length} machines`
             : `${loaderData.populatedNodes.length} machines`}
@@ -368,6 +372,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                     : node.user?.id !== loaderData.headscaleUserId
                 }
                 key={node.id}
+                latestVersion={loaderData.latestVersion}
                 magic={loaderData.magic}
                 node={node}
                 users={loaderData.users}

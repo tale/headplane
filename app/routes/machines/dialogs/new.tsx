@@ -1,4 +1,4 @@
-import { Computer, FileKey2 } from "lucide-react";
+import { Computer, FileKey2, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -59,8 +59,9 @@ export default function NewMachine(data: NewMachineProps) {
         />
       </ActionDialog>
       <Menu disabled={data.isDisabled}>
-        <MenuTrigger className="bg-ink text-ink-fg hover:bg-ink/90 rounded-md px-3.5 py-2 text-sm font-medium">
-          Add Device
+        <MenuTrigger className="bg-ink text-ink-fg hover:bg-ink/90 h-8 gap-1.5 rounded-md px-3 text-sm font-medium">
+          <Plus className="size-3.5" />
+          Add machine
         </MenuTrigger>
         <MenuContent>
           <MenuItem

@@ -1,6 +1,5 @@
 import { Check, Copy, Info } from "lucide-react";
 
-import cn from "~/utils/cn";
 import { copyToClipboard } from "~/utils/copy";
 import toast from "~/utils/toast";
 
@@ -15,14 +14,8 @@ export interface AttributeProps {
 
 export default function Attribute({ name, value, tooltip, isCopyable }: AttributeProps) {
   return (
-    <dl className="group/attr flex items-baseline gap-1 text-sm">
-      <dt
-        className={cn(
-          "w-1/3 sm:w-1/4 lg:w-1/3 shrink-0 min-w-0",
-          "text-muted",
-          tooltip ? "flex items-baseline gap-1" : undefined,
-        )}
-      >
+    <div className="group/attr flex items-baseline gap-4 py-2 text-sm">
+      <dt className="text-muted flex w-1/3 min-w-0 shrink-0 items-baseline gap-1 sm:w-40">
         {name}
         {tooltip ? (
           <Tooltip content={tooltip}>
@@ -30,18 +23,11 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
           </Tooltip>
         ) : undefined}
       </dt>
-      <dd
-        className={cn(
-          "min-w-0 px-1.5 py-1 rounded-lg border border-transparent",
-          ...(isCopyable
-            ? ["cursor-pointer hover:shadow-xs", "hover:bg-hover", "hover:border-line"]
-            : []),
-        )}
-      >
+      <dd className="min-w-0 flex-1">
         {isCopyable ? (
           <button
             type="button"
-            className="relative flex w-full min-w-0 items-center gap-1.5"
+            className="focus-ring hover:bg-hover relative -mx-1 flex max-w-full min-w-0 items-center gap-1.5 rounded-sm px-1"
             onClick={async (event) => {
               const svgs = event.currentTarget.querySelectorAll("svg");
               const isCopied = await copyToClipboard(value);
@@ -54,7 +40,7 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
                 svg.toggleAttribute("data-copied", true);
               }
 
-              toast(`Copied ${name} to clipboard`);
+              toast(`Copied ${name}`);
 
               setTimeout(() => {
                 for (const svg of svgs) {
@@ -85,6 +71,6 @@ export default function Attribute({ name, value, tooltip, isCopyable }: Attribut
           </div>
         )}
       </dd>
-    </dl>
+    </div>
   );
 }

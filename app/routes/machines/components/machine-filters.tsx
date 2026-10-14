@@ -1,6 +1,7 @@
 import { ChevronDown, X } from "lucide-react";
 import type { JSX } from "react";
 
+import Button from "~/components/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import type { User } from "~/types/User";
 import cn from "~/utils/cn";
@@ -38,16 +39,20 @@ function FilterDropdown({
     <Menu>
       <MenuTrigger
         className={cn(
-          "px-3 py-1.5 rounded-full text-sm font-medium",
-          "border transition-colors",
-          "flex items-center gap-1.5",
+          "h-8 gap-1 rounded-md border px-2.5 text-[13px] transition-colors",
           isActive
-            ? "border-accent/30 bg-accent-subtle text-accent"
-            : "border-line text-fg hover:border-line-strong",
+            ? "bg-accent-subtle text-fg border-transparent"
+            : "border-line-strong text-muted hover:text-fg border-dashed",
         )}
       >
-        {activeOption?.label ?? label}
-        <ChevronDown className="h-3.5 w-3.5" />
+        {isActive ? (
+          <>
+            {label}: <span className="text-accent font-medium">{activeOption.label}</span>
+          </>
+        ) : (
+          label
+        )}
+        <ChevronDown className="size-3" />
       </MenuTrigger>
       <MenuContent>
         {options.map((option) => (
@@ -131,19 +136,10 @@ export function MachineFilters({ users, populatedNodes }: MachineFiltersProps): 
         value={filterRoute}
       />
       {hasActiveFilters && (
-        <button
-          className={cn(
-            "flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium",
-            "border border-line",
-            "text-muted",
-            "hover:border-line-strong",
-          )}
-          onClick={clearFilters}
-          type="button"
-        >
+        <Button onClick={clearFilters} variant="ghost">
           Clear filters
-          <X className="h-3.5 w-3.5" />
-        </button>
+          <X className="size-3.5" />
+        </Button>
       )}
     </>
   );

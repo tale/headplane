@@ -1,4 +1,4 @@
-import { Cog, Ellipsis, SquareTerminal } from "lucide-react";
+import { ChevronDown, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
 
 import Button from "~/components/button";
@@ -44,7 +44,7 @@ export default function MachineMenu({
   const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
   return (
-    <div className="flex items-center justify-end gap-1.5 px-4">
+    <div className={cn("flex items-center justify-end gap-1.5", !isFullButton && "px-4")}>
       {modal === "remove" && (
         <Delete
           isOpen={modal === "remove"}
@@ -128,7 +128,7 @@ export default function MachineMenu({
             }}
             variant="primary"
           >
-            <SquareTerminal className="size-4" />
+            <SquareTerminal className="size-3.5" />
             SSH
           </Button>
         ) : (
@@ -155,17 +155,17 @@ export default function MachineMenu({
         <MenuTrigger
           className={
             isFullButton
-              ? "border-line-strong bg-surface hover:bg-hover gap-x-2 rounded-md border px-3.5 py-2 text-sm font-medium"
-              : "hover:bg-hover w-10 rounded-full bg-transparent p-1"
+              ? "border-line-strong bg-surface hover:bg-hover h-8 gap-x-1.5 rounded-md border px-3 text-sm font-medium"
+              : "text-muted hover:bg-hover hover:text-fg size-7 rounded-md"
           }
         >
           {isFullButton ? (
             <>
-              <Cog className="h-5" />
-              <p>Machine Settings</p>
+              Manage
+              <ChevronDown className="size-3.5" />
             </>
           ) : (
-            <Ellipsis className="h-5" />
+            <Ellipsis className="size-4" />
           )}
         </MenuTrigger>
         <MenuContent>

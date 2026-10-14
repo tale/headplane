@@ -1,7 +1,6 @@
-import { ChevronDown, Copy } from "lucide-react";
+import { ArrowUp, Copy } from "lucide-react";
 import { useMemo } from "react";
 
-import Chip from "~/components/chip";
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import StatusCircle from "~/components/status-circle";
@@ -11,14 +10,14 @@ import { ExpiryTag } from "~/components/tags/Expiry";
 import { HeadplaneAgentTag } from "~/components/tags/HeadplaneAgent";
 import { SubnetTag } from "~/components/tags/Subnet";
 import { TailscaleSSHTag } from "~/components/tags/TailscaleSSH";
+import Tooltip from "~/components/tooltip";
 import type { User } from "~/types";
-import cn from "~/utils/cn";
 import { copyToClipboard } from "~/utils/copy";
 import * as hinfo from "~/utils/host-info";
 import { isNoExpiry, type PopulatedNode } from "~/utils/node-info";
 import { formatTimeDelta } from "~/utils/time";
 import toast from "~/utils/toast";
-import { getUserDisplayName } from "~/utils/user";
+import { getUserDisplayName, isTaggedDevicesUser } from "~/utils/user";
 
 import MenuOptions from "./menu";
 
@@ -26,6 +25,7 @@ interface Props {
   node: PopulatedNode;
   users: User[];
   isAgent?: boolean;
+  latestVersion?: string;
   magic?: string;
   isDisabled?: boolean;
   existingTags?: string[];
@@ -38,6 +38,7 @@ export default function MachineRow({
   node,
   users,
   isAgent,
+  latestVersion,
   magic,
   isDisabled,
   existingTags,
@@ -47,66 +48,98 @@ export default function MachineRow({
 }: Props) {
   const uiTags = useMemo(() => uiTagsForNode(node, isAgent), [node, isAgent]);
 
-  const ipOptions = useMemo(() => {
+  const addresses = useMemo(() => {
+    const list = node.ipAddresses.map((ip) => ({
+      label: ip.includes(":") ? "IPv6" : "IPv4",
+      value: ip,
+    }));
+
+    list.sort((a, b) => a.label.localeCompare(b.label));
     if (magic) {
-      return [...node.ipAddresses, `${node.givenName}.${magic}`];
+      list.push({ label: "MagicDNS", value: `${node.givenName}.${magic}` });
     }
 
-    return node.ipAddresses;
-  }, [magic, node.ipAddresses]);
+    return list;
+  }, [magic, node.givenName, node.ipAddresses]);
+
+  const isConnected = node.online && !node.expired;
+  const [ipv4, ipv6] = [
+    addresses.find((a) => a.label === "IPv4"),
+    addresses.find((a) => a.label === "IPv6"),
+  ];
 
   return (
-    <tr className="group" key={node.id}>
+    <tr className="group">
       <TableCell>
         <Link className="group/link focus-ring rounded-sm" to={`/machines/${node.id}`}>
-          <p className="group-hover/link:text-accent font-medium">{node.givenName}</p>
-          <p className="text-muted">{node.user ? getUserDisplayName(node.user) : "Tag-owned"}</p>
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {mapTagsToComponents(node, uiTags)}
-            {node.tags?.map((tag) => (
-              <Chip key={tag} text={tag} />
-            ))}
-          </div>
+          <span className="group-hover/link:text-accent flex items-center gap-2 font-medium">
+            <StatusCircle isExpired={node.expired} isOnline={isConnected} />
+            {node.givenName}
+          </span>
         </Link>
+        <div className="text-muted mt-0.5 ml-[15px] flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+          {node.user && !(isTaggedDevicesUser(node.user) && node.tags?.length) ? (
+            <span>{getUserDisplayName(node.user)}</span>
+          ) : undefined}
+          {node.tags?.map((tag) => (
+            <span className="font-mono" key={tag}>
+              {tag}
+            </span>
+          ))}
+          {mapTagsToComponents(node, uiTags)}
+        </div>
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-x-1 font-mono">
-          {node.ipAddresses[0]}
-          <Menu>
-            <MenuTrigger className="text-muted hover:bg-hover hover:text-fg w-auto rounded-sm p-0.5">
-              <ChevronDown className="size-3.5" />
-            </MenuTrigger>
-            <MenuContent align="end">
-              {ipOptions.map((ip) => (
-                <MenuItem
-                  key={ip}
-                  onClick={async () => {
-                    const isCopied = await copyToClipboard(ip);
-                    toast(
-                      isCopied
-                        ? "Copied IP address to clipboard"
-                        : "Copy failed. Please copy the address manually.",
-                    );
-                  }}
-                >
-                  <div
-                    className={cn("flex items-center justify-between", "text-sm w-full gap-x-6")}
-                  >
-                    {ip}
-                    <Copy className="h-3 w-3" />
+        <Menu>
+          <MenuTrigger className="hover:bg-hover -mx-1 -my-0.5 cursor-pointer flex-col items-start rounded-sm px-1 py-0.5 font-mono text-xs leading-5">
+            {ipv4 ? (
+              <span className="flex items-center gap-1.5">
+                {ipv4.value}
+                <Copy className="text-muted size-3 opacity-0 transition-opacity group-hover:opacity-100 [@media(hover:none)]:opacity-100" />
+              </span>
+            ) : undefined}
+            {ipv6 ? <span className="text-muted">{ipv6.value}</span> : undefined}
+          </MenuTrigger>
+          <MenuContent>
+            {addresses.map(({ label, value }) => (
+              <MenuItem
+                key={value}
+                onClick={async () => {
+                  const isCopied = await copyToClipboard(value);
+                  toast(isCopied ? `Copied ${value}` : "Copy failed. Copy the address manually.");
+                }}
+              >
+                <div className="flex w-full items-center justify-between gap-x-6">
+                  <div>
+                    <p className="text-muted text-xs">{label}</p>
+                    <p className="font-mono text-sm">{value}</p>
                   </div>
-                </MenuItem>
-              ))}
-            </MenuContent>
-          </Menu>
-        </div>
+                  <Copy className="text-muted size-3.5" />
+                </div>
+              </MenuItem>
+            ))}
+          </MenuContent>
+        </Menu>
       </TableCell>
       {/* We pass undefined when agents are not enabled */}
       {isAgent !== undefined ? (
-        <TableCell>
+        <TableCell className="text-xs leading-5">
           {node.hostInfo !== undefined ? (
             <>
-              <p>{hinfo.getTSVersion(node.hostInfo)}</p>
+              <p className="flex items-center gap-x-1 font-mono">
+                {hinfo.getTSVersion(node.hostInfo)}
+                {latestVersion && hinfo.isUpdateAvailable(node.hostInfo, latestVersion) ? (
+                  <Tooltip content={`Tailscale ${latestVersion} is available.`}>
+                    <span className="bg-warn-subtle text-warn inline-flex size-4 items-center justify-center rounded-full">
+                      <ArrowUp
+                        aria-label="Update available"
+                        className="size-3"
+                        strokeWidth={2.75}
+                      />
+                    </span>
+                  </Tooltip>
+                ) : undefined}
+              </p>
               <p className="text-muted max-w-48 truncate">{hinfo.getOSInfo(node.hostInfo)}</p>
             </>
           ) : (
@@ -114,24 +147,20 @@ export default function MachineRow({
           )}
         </TableCell>
       ) : undefined}
-      <TableCell>
-        <div className="flex items-start gap-x-1">
-          <StatusCircle className="mt-0.5 h-4 w-4" isOnline={node.online && !node.expired} />
-          <div>
-            <p className="text-muted" suppressHydrationWarning>
-              {node.online && !node.expired
-                ? "Connected"
-                : new Date(node.lastSeen).toLocaleString()}
-            </p>
-            {!(node.online && !node.expired) && (
-              <p className="text-muted text-xs" suppressHydrationWarning>
-                {formatTimeDelta(new Date(node.lastSeen))}
-              </p>
-            )}
-          </div>
-        </div>
+      <TableCell className="whitespace-nowrap">
+        {isConnected ? (
+          <span className="text-ok">Connected</span>
+        ) : (
+          <span
+            className="text-muted"
+            suppressHydrationWarning
+            title={new Date(node.lastSeen).toLocaleString()}
+          >
+            {formatTimeDelta(new Date(node.lastSeen))}
+          </span>
+        )}
       </TableCell>
-      <TableCell className="pr-0">
+      <TableCell className="pr-0 align-middle">
         <MenuOptions
           existingTags={existingTags}
           policyTags={policyTags}
@@ -147,6 +176,8 @@ export default function MachineRow({
   );
 }
 
+const EXPIRING_SOON_MS = 7 * 24 * 60 * 60 * 1000;
+
 export function uiTagsForNode(node: PopulatedNode, isAgent?: boolean) {
   const uiTags: string[] = [];
   if (node.expired) {
@@ -155,6 +186,13 @@ export function uiTagsForNode(node: PopulatedNode, isAgent?: boolean) {
 
   if (!node.expired && isNoExpiry(node.expiry)) {
     uiTags.push("no-expiry");
+  }
+
+  if (!node.expired && !isNoExpiry(node.expiry)) {
+    const remaining = new Date(node.expiry!).getTime() - Date.now();
+    if (remaining < EXPIRING_SOON_MS) {
+      uiTags.push("expiring");
+    }
   }
 
   if (node.customRouting.exitRoutes.length > 0) {
@@ -192,10 +230,20 @@ export function mapTagsToComponents(node: PopulatedNode, uiTags: string[]) {
 
       case "subnet-approved":
       case "subnet-waiting": {
-        return <SubnetTag isEnabled={tag === "subnet-approved"} key={tag} />;
+        return (
+          <SubnetTag
+            count={
+              node.customRouting.subnetApprovedRoutes.length +
+              node.customRouting.subnetWaitingRoutes.length
+            }
+            isEnabled={tag === "subnet-approved"}
+            key={tag}
+          />
+        );
       }
 
       case "expired":
+      case "expiring":
       case "no-expiry": {
         return <ExpiryTag expiry={node.expiry ?? undefined} key={tag} variant={tag} />;
       }

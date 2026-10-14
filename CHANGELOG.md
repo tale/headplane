@@ -4,6 +4,10 @@
 
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
 - Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.
+- The navigation bar is slimmer, and on small screens the pages now live in a menu instead of a second row of tabs.
+- The machines list is easier to scan: each machine shows its status next to its name, its tags and badges on one line, and both of its addresses. Badges only use color when something needs attention, like an expired key, a key expiring within a week, or routes waiting for approval. Click an address to copy it (via [#654](https://github.com/tale/headplane/issues/654)).
+- With the Headplane agent enabled, the machines list marks clients running an older Tailscale release than the latest stable one. Headplane checks pkgs.tailscale.com for the latest version once a day in the background.
+- The machine page has a simpler layout, with routing and network details shown as plain lists instead of boxed cards.
 
 # 0.8.0 (October 13, 2026)
 

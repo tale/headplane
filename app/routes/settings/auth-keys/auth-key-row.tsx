@@ -18,13 +18,15 @@ export default function AuthKeyRow({ authKey, user }: Props) {
 
   return (
     <div className="w-full">
-      <Attribute name="Key" value={authKey.key} />
-      <Attribute name="User" value={userDisplay} />
-      <Attribute name="Reusable" value={authKey.reusable ? "Yes" : "No"} />
-      <Attribute name="Ephemeral" value={authKey.ephemeral ? "Yes" : "No"} />
-      <Attribute name="Used" value={authKey.used ? "Yes" : "No"} />
-      <Attribute name="Created" value={createdAt} />
-      <Attribute name="Expiration" value={expiration} />
+      <dl>
+        <Attribute name="Key" value={authKey.key} />
+        <Attribute name="User" value={userDisplay} />
+        <Attribute name="Reusable" value={authKey.reusable ? "Yes" : "No"} />
+        <Attribute name="Ephemeral" value={authKey.ephemeral ? "Yes" : "No"} />
+        <Attribute name="Used" value={authKey.used ? "Yes" : "No"} />
+        <Attribute name="Created" value={createdAt} />
+        <Attribute name="Expiration" value={expiration} />
+      </dl>
       {!isExpired && user && (
         <div className="mt-2" suppressHydrationWarning>
           <ExpireAuthKey authKey={authKey} user={user} />
