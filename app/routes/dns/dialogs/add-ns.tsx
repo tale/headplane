@@ -3,7 +3,7 @@ import { useState } from "react";
 import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
 import Input from "~/components/input";
-import Switch from "~/components/switch";
+import { SwitchField } from "~/components/switch";
 import { fieldValidator } from "~/utils/form";
 
 import { nameserver } from "../schemas";
@@ -28,15 +28,12 @@ export default function AddNameserver() {
         required
         validate={validateNameserver}
       />
-      <label className="flex items-center justify-between gap-4">
-        <span>
-          <span className="block font-medium">Restrict to domain</span>
-          <span className="text-muted block">
-            Split DNS. Only Tailscale 1.8 and later use this nameserver.
-          </span>
-        </span>
-        <Switch checked={isSplit} label="Restrict to domain" onCheckedChange={setIsSplit} />
-      </label>
+      <SwitchField
+        checked={isSplit}
+        description="Split DNS. Only Tailscale 1.8 and later use this nameserver."
+        label="Restrict to domain"
+        onCheckedChange={setIsSplit}
+      />
       {isSplit && (
         <Input
           description="Only queries for this domain and its subdomains use the nameserver."

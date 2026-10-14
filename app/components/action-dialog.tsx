@@ -27,6 +27,8 @@ export interface ActionDialogProps {
   onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactElement;
   children?: React.ReactNode;
+  // Replaces the form after a successful submit instead of closing.
+  success?: (data: Record<string, string>) => React.ReactNode;
 }
 
 export default function ActionDialog({
@@ -42,6 +44,7 @@ export default function ActionDialog({
   onOpenChange,
   trigger,
   children,
+  success,
 }: ActionDialogProps) {
   const fetcher = useFetcher<ActionResult>();
   const [internalOpen, setInternalOpen] = useState(false);
@@ -53,7 +56,7 @@ export default function ActionDialog({
   }
 
   const result = hasSubmitted && !isPending ? fetcher.data : undefined;
-  const isDone = result?.ok === true;
+  const isDone = result?.ok === true && !success;
   const errors = result?.ok === false ? result.errors : undefined;
 
   function handleOpenChange(next: boolean) {
@@ -88,32 +91,43 @@ export default function ActionDialog({
       open={(open ?? internalOpen) && !isDone}
       trigger={trigger}
     >
-      <DialogTitle>{title}</DialogTitle>
-      {description && <DialogDescription>{description}</DialogDescription>}
-      <Form
-        className="flex flex-col gap-4"
-        errors={errors}
-        render={<fetcher.Form action={action} method="post" />}
-        validationMode="onBlur"
-      >
-        <input name="intent" type="hidden" value={intent} />
-        {Object.entries(fields ?? {}).map(([name, value]) => (
-          <input key={name} name={name} type="hidden" value={value} />
-        ))}
-        {children}
-        {errors?.form && <Callout variant="error">{errors.form}</Callout>}
-        <DialogActions>
-          <DialogClose disabled={isPending} render={<Button>Cancel</Button>} />
-          <Button
-            disabled={isDisabled}
-            pending={isPending}
-            type="submit"
-            variant={isDestructive ? "danger" : "primary"}
+      {result?.ok && success ? (
+        <>
+          {success(result.data ?? {})}
+          <DialogActions>
+            <DialogClose render={<Button>Done</Button>} />
+          </DialogActions>
+        </>
+      ) : (
+        <>
+          <DialogTitle>{title}</DialogTitle>
+          {description && <DialogDescription>{description}</DialogDescription>}
+          <Form
+            className="flex flex-col gap-4"
+            errors={errors}
+            render={<fetcher.Form action={action} method="post" />}
+            validationMode="onBlur"
           >
-            {submitLabel}
-          </Button>
-        </DialogActions>
-      </Form>
+            <input name="intent" type="hidden" value={intent} />
+            {Object.entries(fields ?? {}).map(([name, value]) => (
+              <input key={name} name={name} type="hidden" value={value} />
+            ))}
+            {children}
+            {errors?.form && <Callout variant="error">{errors.form}</Callout>}
+            <DialogActions>
+              <DialogClose disabled={isPending} render={<Button>Cancel</Button>} />
+              <Button
+                disabled={isDisabled}
+                pending={isPending}
+                type="submit"
+                variant={isDestructive ? "danger" : "primary"}
+              >
+                {submitLabel}
+              </Button>
+            </DialogActions>
+          </Form>
+        </>
+      )}
     </Root>
   );
 }

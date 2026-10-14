@@ -19,6 +19,7 @@ import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import type { User } from "~/types/User";
 import log from "~/utils/log";
+import { toastClientAction } from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
@@ -114,6 +115,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const action = authKeysAction;
+export const clientAction = toastClientAction;
 
 type Status = "all" | "active" | "expired" | "reusable" | "ephemeral";
 export default function Page({

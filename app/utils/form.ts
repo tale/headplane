@@ -3,7 +3,9 @@ import * as v from "valibot";
 
 // Errors not tied to a field are keyed as `form`.
 export type FormErrors = Record<string, string>;
-export type ActionResult = { ok: true; message?: string } | { ok: false; errors: FormErrors };
+export type ActionResult =
+  | { ok: true; message?: string; data?: Record<string, string> }
+  | { ok: false; errors: FormErrors };
 type ParseResult<T> = { ok: true; data: T } | { ok: false; errors: FormErrors };
 
 export function formValues(formData: FormData) {
@@ -45,8 +47,8 @@ export function list(item: v.GenericSchema<string> = v.string()) {
   );
 }
 
-export function ok(message?: string): ActionResult {
-  return { ok: true, message };
+export function ok(message?: string, data?: Record<string, string>): ActionResult {
+  return { ok: true, message, data };
 }
 
 export function invalid(errors: FormErrors, status = 400) {

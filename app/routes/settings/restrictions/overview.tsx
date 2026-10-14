@@ -5,12 +5,11 @@ import Link from "~/components/link";
 import PageHeader from "~/components/page-header";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
+import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { restrictionAction } from "./actions";
-import AddDomain from "./dialogs/add-domain";
-import AddGroup from "./dialogs/add-group";
-import AddUser from "./dialogs/add-user";
+import AddRestriction from "./dialogs/add-restriction";
 import RestrictionTable from "./table";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
@@ -44,6 +43,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const action = restrictionAction;
+export const clientAction = toastClientAction;
 
 export default function Page({ loaderData: { access, writable, settings } }: Route.ComponentProps) {
   const isDisabled = writable ? !access : true;
@@ -90,13 +90,13 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
         ) : undefined}
       </div>
       <RestrictionTable isDisabled={isDisabled} type="domain" values={settings.domains}>
-        <AddDomain domains={settings.domains} isDisabled={isDisabled} />
+        <AddRestriction isDisabled={isDisabled} type="domain" />
       </RestrictionTable>
       <RestrictionTable isDisabled={isDisabled} type="group" values={settings.groups}>
-        <AddGroup groups={settings.groups} isDisabled={isDisabled} />
+        <AddRestriction isDisabled={isDisabled} type="group" />
       </RestrictionTable>
       <RestrictionTable isDisabled={isDisabled} type="user" values={settings.users}>
-        <AddUser isDisabled={isDisabled} users={settings.users} />
+        <AddRestriction isDisabled={isDisabled} type="user" />
       </RestrictionTable>
     </div>
   );

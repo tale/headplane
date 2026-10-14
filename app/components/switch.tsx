@@ -1,4 +1,5 @@
 import { Switch as BaseSwitch } from "@base-ui/react/switch";
+import type React from "react";
 
 import cn from "~/utils/cn";
 
@@ -37,5 +38,21 @@ export default function Switch(props: SwitchProps) {
         )}
       />
     </BaseSwitch.Root>
+  );
+}
+
+interface SwitchFieldProps extends SwitchProps {
+  description?: React.ReactNode;
+}
+
+export function SwitchField({ label, description, ...props }: SwitchFieldProps) {
+  return (
+    <label className="flex items-center justify-between gap-4">
+      <span>
+        <span className="block font-medium">{label}</span>
+        {description && <span className="text-muted block">{description}</span>}
+      </span>
+      <Switch label={label} {...props} />
+    </label>
   );
 }
