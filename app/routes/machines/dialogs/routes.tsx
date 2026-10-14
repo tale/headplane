@@ -3,8 +3,8 @@ import { useFetcher } from "react-router";
 
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
+import List from "~/components/list";
 import Switch from "~/components/switch";
-import TableList from "~/components/table-list";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import { PopulatedNode } from "~/utils/node-info";
@@ -36,15 +36,15 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             Learn More
           </Link>
         </Text>
-        <TableList className="mt-4">
+        <List className="mt-4">
           {subnets.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+            <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
               <RouteOff />
               <p className="font-semibold">No routes are advertised by this machine</p>
-            </TableList.Item>
+            </List.Item>
           ) : undefined}
           {subnets.map((route) => (
-            <TableList.Item key={route}>
+            <List.Item key={route}>
               <p>{route}</p>
               <Switch
                 defaultChecked={node.approvedRoutes.includes(route)}
@@ -61,9 +61,9 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
                   });
                 }}
               />
-            </TableList.Item>
+            </List.Item>
           ))}
-        </TableList>
+        </List>
         <Text className="mt-8 font-semibold">Exit nodes</Text>
         <Text>
           Allow your network to route internet traffic through this machine.{" "}
@@ -71,14 +71,14 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             Learn More
           </Link>
         </Text>
-        <TableList className="mt-4">
+        <List className="mt-4">
           {node.customRouting.exitRoutes.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+            <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
               <GlobeLock />
               <p className="font-semibold">This machine is not an exit node</p>
-            </TableList.Item>
+            </List.Item>
           ) : (
-            <TableList.Item>
+            <List.Item>
               <p>Use as exit node</p>
               <Switch
                 defaultChecked={node.customRouting.exitApproved}
@@ -95,9 +95,9 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
                   });
                 }}
               />
-            </TableList.Item>
+            </List.Item>
           )}
-        </TableList>
+        </List>
       </DialogPanel>
     </Dialog>
   );

@@ -3,7 +3,7 @@ import React from "react";
 import { Form } from "react-router";
 
 import Button from "~/components/button";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 
 interface RestrictionProps {
   children: React.ReactNode;
@@ -18,10 +18,10 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
       <h2 className="mt-8 text-xl font-semibold">
         Permitted {type.charAt(0).toUpperCase() + type.slice(1)}s
       </h2>
-      <TableList className="my-4">
+      <List className="my-4">
         {values.length > 0 ? (
           values.map((value) => (
-            <TableList.Item key={`${type}-${value}`}>
+            <List.Item key={`${type}-${value}`}>
               {type === "domain" ? (
                 <p>
                   <span className="text-muted">{"<user>"}</span>
@@ -44,15 +44,15 @@ export default function RestrictionTable({ children, type, values, isDisabled }:
                   Remove
                 </Button>
               </Form>
-            </TableList.Item>
+            </List.Item>
           ))
         ) : (
-          <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+          <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
             {iconForType(type)}
             <p className="text-center font-semibold">All {type}s are permitted to authenticate.</p>
-          </TableList.Item>
+          </List.Item>
         )}
-      </TableList>
+      </List>
       {children}
     </div>
   );

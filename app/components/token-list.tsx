@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
 import Input from "~/components/input";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 
 interface TokenListProps {
   label: string;
@@ -69,14 +69,12 @@ export default function TokenList({
         <p className="text-fg text-sm font-medium">{label}</p>
         {description ? <p className="text-muted text-xs">{description}</p> : null}
       </div>
-      <TableList>
+      <List>
         {values.length === 0 ? (
-          <TableList.Item className="justify-center py-3 text-sm opacity-70">
-            {emptyText}
-          </TableList.Item>
+          <List.Item className="justify-center py-3 text-sm opacity-70">{emptyText}</List.Item>
         ) : (
           values.map((value) => (
-            <TableList.Item className="font-mono text-sm" id={value} key={value}>
+            <List.Item className="font-mono text-sm" id={value} key={value}>
               {value}
               <Button
                 aria-label={`Remove ${value}`}
@@ -88,10 +86,10 @@ export default function TokenList({
               >
                 <X className="size-4" />
               </Button>
-            </TableList.Item>
+            </List.Item>
           ))
         )}
-      </TableList>
+      </List>
       <div className="flex items-center gap-2">
         <Input
           aria-label={`Add to ${label}`}

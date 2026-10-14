@@ -5,6 +5,7 @@ import Chip from "~/components/chip";
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "~/components/menu";
 import StatusCircle from "~/components/status-circle";
+import { TableCell } from "~/components/table";
 import { ExitNodeTag } from "~/components/tags/ExitNode";
 import { ExpiryTag } from "~/components/tags/Expiry";
 import { HeadplaneAgentTag } from "~/components/tags/HeadplaneAgent";
@@ -55,15 +56,11 @@ export default function MachineRow({
   }, [magic, node.ipAddresses]);
 
   return (
-    <tr className="group hover:bg-hover" key={node.id}>
-      <td className="py-2 pl-2 focus-within:ring-3">
-        <Link className={cn("group/link h-full")} to={`/machines/${node.id}`}>
-          <p className={cn("font-semibold leading-snug", "group-hover/link:text-accent")}>
-            {node.givenName}
-          </p>
-          <p className="text-sm opacity-50">
-            {node.user ? getUserDisplayName(node.user) : "Tag-owned"}
-          </p>
+    <tr className="group" key={node.id}>
+      <TableCell>
+        <Link className="group/link focus-ring rounded-sm" to={`/machines/${node.id}`}>
+          <p className="group-hover/link:text-accent font-medium">{node.givenName}</p>
+          <p className="text-muted">{node.user ? getUserDisplayName(node.user) : "Tag-owned"}</p>
           <div className="mt-1.5 flex flex-wrap gap-1">
             {mapTagsToComponents(node, uiTags)}
             {node.tags?.map((tag) => (
@@ -71,13 +68,13 @@ export default function MachineRow({
             ))}
           </div>
         </Link>
-      </td>
-      <td className="py-2">
-        <div className="flex items-center gap-x-1">
+      </TableCell>
+      <TableCell>
+        <div className="flex items-center gap-x-1 font-mono">
           {node.ipAddresses[0]}
           <Menu>
-            <MenuTrigger className="hover:bg-hover rounded-full bg-transparent p-1">
-              <ChevronDown className="h-4 w-4" />
+            <MenuTrigger className="text-muted hover:bg-hover hover:text-fg w-auto rounded-sm p-0.5">
+              <ChevronDown className="size-3.5" />
             </MenuTrigger>
             <MenuContent align="end">
               {ipOptions.map((ip) => (
@@ -103,40 +100,38 @@ export default function MachineRow({
             </MenuContent>
           </Menu>
         </div>
-      </td>
+      </TableCell>
       {/* We pass undefined when agents are not enabled */}
       {isAgent !== undefined ? (
-        <td className="py-2">
+        <TableCell>
           {node.hostInfo !== undefined ? (
             <>
-              <p className="leading-snug">{hinfo.getTSVersion(node.hostInfo)}</p>
-              <p className="max-w-48 truncate text-sm opacity-50">
-                {hinfo.getOSInfo(node.hostInfo)}
-              </p>
+              <p>{hinfo.getTSVersion(node.hostInfo)}</p>
+              <p className="text-muted max-w-48 truncate">{hinfo.getOSInfo(node.hostInfo)}</p>
             </>
           ) : (
-            <p className="text-sm opacity-50">Unknown</p>
+            <p className="text-muted">Unknown</p>
           )}
-        </td>
+        </TableCell>
       ) : undefined}
-      <td className="py-2">
+      <TableCell>
         <div className="flex items-start gap-x-1">
           <StatusCircle className="mt-0.5 h-4 w-4" isOnline={node.online && !node.expired} />
           <div>
-            <p className={cn("text-sm", "text-muted")} suppressHydrationWarning>
+            <p className="text-muted" suppressHydrationWarning>
               {node.online && !node.expired
                 ? "Connected"
                 : new Date(node.lastSeen).toLocaleString()}
             </p>
             {!(node.online && !node.expired) && (
-              <p className="text-xs opacity-50" suppressHydrationWarning>
+              <p className="text-muted text-xs" suppressHydrationWarning>
                 {formatTimeDelta(new Date(node.lastSeen))}
               </p>
             )}
           </div>
         </div>
-      </td>
-      <td className="py-2 pr-0.5">
+      </TableCell>
+      <TableCell className="pr-0">
         <MenuOptions
           existingTags={existingTags}
           policyTags={policyTags}
@@ -147,7 +142,7 @@ export default function MachineRow({
           supportsNodeOwnerChange={supportsNodeOwnerChange}
           supportsDisablingKeyExpiry={supportsDisablingKeyExpiry}
         />
-      </td>
+      </TableCell>
     </tr>
   );
 }

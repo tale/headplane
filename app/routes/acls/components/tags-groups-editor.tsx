@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import Chip from "~/components/chip";
 import Link from "~/components/link";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 import type { Policy } from "~/utils/acl-policy";
 import { asUserReference } from "~/utils/acl-policy";
 
@@ -102,7 +102,7 @@ export default function TagsGroupsEditor({
           <Empty text="No groups are defined yet." />
         ) : (
           groups.map(([name, members]) => (
-            <TableList.Item
+            <List.Item
               className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
               key={name}
             >
@@ -123,7 +123,7 @@ export default function TagsGroupsEditor({
                 onDelete={() => remove("group", name)}
                 onEdit={() => setEditing({ kind: "group", name })}
               />
-            </TableList.Item>
+            </List.Item>
           ))
         )}
       </Section>
@@ -149,7 +149,7 @@ export default function TagsGroupsEditor({
           tags.map(([name, owners]) => {
             const usedBy = tagUsage.find((usage) => usage.tag === name)?.nodes ?? [];
             return (
-              <TableList.Item
+              <List.Item
                 className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
                 key={name}
               >
@@ -175,7 +175,7 @@ export default function TagsGroupsEditor({
                   onDelete={() => remove("tag", name)}
                   onEdit={() => setEditing({ kind: "tag", name })}
                 />
-              </TableList.Item>
+              </List.Item>
             );
           })
         )}

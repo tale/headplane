@@ -2,6 +2,7 @@ import { CircleUser } from "lucide-react";
 
 import Chip from "~/components/chip";
 import StatusCircle from "~/components/status-circle";
+import { TableCell } from "~/components/table";
 import cn from "~/utils/cn";
 
 import type { UnlinkedHeadscaleUser } from "../overview";
@@ -32,8 +33,8 @@ export default function HeadscaleUserRow({
     user.displayName && user.displayName !== user.name ? user.name : undefined;
 
   return (
-    <tr className="group hover:bg-hover" key={user.id}>
-      <td className="py-2 pl-0.5">
+    <tr className="group" key={user.id}>
+      <TableCell>
         <div className="flex items-center">
           {user.profilePicUrl ? (
             <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />
@@ -42,8 +43,8 @@ export default function HeadscaleUserRow({
           )}
           <div className="ml-4">
             <p className="leading-snug font-semibold">{displayName}</p>
-            {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
-            {user.email && <p className="text-sm opacity-50">{user.email}</p>}
+            {displayUsername && <p className="text-muted">{displayUsername}</p>}
+            {user.email && <p className="text-muted">{user.email}</p>}
             {user.groups.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {user.groups.map((group) => (
@@ -53,13 +54,13 @@ export default function HeadscaleUserRow({
             )}
           </div>
         </div>
-      </td>
-      <td className="py-2 pl-0.5">
+      </TableCell>
+      <TableCell>
         <p className="text-muted text-sm" suppressHydrationWarning>
           {new Date(user.createdAt).toLocaleDateString()}
         </p>
-      </td>
-      <td className="py-2 pl-0.5">
+      </TableCell>
+      <TableCell>
         {user.machines.length > 0 ? (
           <span className={cn("flex items-center gap-x-1 text-sm", "text-muted")}>
             <StatusCircle className="h-4 w-4" isOnline={isOnline} />
@@ -70,8 +71,8 @@ export default function HeadscaleUserRow({
         ) : (
           <p className="text-muted text-sm">No machines</p>
         )}
-      </td>
-      <td className="py-2 pr-0.5">
+      </TableCell>
+      <TableCell className="pr-0">
         {writable ? (
           <HeadscaleUserMenu
             canEditGroups={canEditGroups}
@@ -80,7 +81,7 @@ export default function HeadscaleUserRow({
             user={user}
           />
         ) : null}
-      </td>
+      </TableCell>
     </tr>
   );
 }

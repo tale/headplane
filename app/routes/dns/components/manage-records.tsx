@@ -3,7 +3,7 @@ import { Form } from "react-router";
 import Button from "~/components/button";
 import Code from "~/components/code";
 import Link from "~/components/link";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 import cn from "~/utils/cn";
 
 import AddRecord from "../dialogs/add-record";
@@ -25,14 +25,14 @@ export default function ManageRecords({ records, isDisabled }: Props) {
         </Link>
       </p>
       <div className="mt-4">
-        <TableList className="mb-8">
+        <List className="mb-8">
           {records.length === 0 ? (
-            <TableList.Item>
+            <List.Item>
               <p className="mx-auto opacity-50">No DNS records found</p>
-            </TableList.Item>
+            </List.Item>
           ) : (
             records.map((record) => (
-              <TableList.Item key={`${record.name}-${record.value}`}>
+              <List.Item key={`${record.name}-${record.value}`}>
                 <div className="flex w-full items-center gap-2">
                   <p
                     className={cn(
@@ -63,10 +63,10 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                     Remove
                   </Button>
                 </Form>
-              </TableList.Item>
+              </List.Item>
             ))
           )}
-        </TableList>
+        </List>
 
         {isDisabled ? undefined : <AddRecord records={records} />}
       </div>

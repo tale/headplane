@@ -3,8 +3,8 @@ import { Form, useSubmit } from "react-router";
 
 import Button from "~/components/button";
 import Link from "~/components/link";
+import List from "~/components/list";
 import Switch from "~/components/switch";
-import TableList from "~/components/table-list";
 import Tooltip from "~/components/tooltip";
 
 import AddNS from "../dialogs/add-ns";
@@ -105,10 +105,10 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
           <h2 className="font-medium opacity-80">{name}</h2>
         )}
       </div>
-      <TableList>
+      <List>
         {list.length > 0
           ? list.map((ns) => (
-              <TableList.Item key={ns}>
+              <List.Item key={ns}>
                 <p className="font-mono text-sm">{ns}</p>
                 <Form method="POST">
                   <input name="action_id" type="hidden" value="remove_ns" />
@@ -124,10 +124,10 @@ function NameserverList({ isGlobal, isDisabled, nameservers, overrideLocalDns, n
                     Remove
                   </Button>
                 </Form>
-              </TableList.Item>
+              </List.Item>
             ))
           : undefined}
-      </TableList>
+      </List>
     </div>
   );
 }

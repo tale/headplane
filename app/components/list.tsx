@@ -2,7 +2,7 @@ import type { HTMLProps } from "react";
 
 import cn from "~/utils/cn";
 
-function TableList(props: HTMLProps<HTMLDivElement>) {
+function List(props: HTMLProps<HTMLDivElement>) {
   return (
     <div {...props} className={cn("rounded-lg", "border border-line", props.className)}>
       {props.children}
@@ -15,7 +15,7 @@ function Item(props: HTMLProps<HTMLDivElement>) {
     <div
       {...props}
       className={cn(
-        "flex items-center justify-between p-2 last:border-b-0",
+        "flex items-center justify-between gap-3 px-3 py-2 last:border-b-0",
         "border-b border-line",
         props.className,
       )}
@@ -25,4 +25,4 @@ function Item(props: HTMLProps<HTMLDivElement>) {
   );
 }
 
-export default Object.assign(TableList, { Item });
+export default Object.assign(List, { Item });

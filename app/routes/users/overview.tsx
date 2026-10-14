@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import PageError from "~/components/page-error";
+import { Table, TableBody, TableHeader } from "~/components/table";
 import {
   appConfigContext,
   authContext,
@@ -211,35 +212,33 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         {loaderData.headplaneUsers.length === 0 ? (
           <p className="text-muted text-sm">No users have signed into Headplane yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-muted">
-                <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-semibold uppercase">User</th>
-                  <th className="pb-2 text-xs font-semibold uppercase">Role</th>
-                  <th className="pb-2 text-xs font-semibold uppercase">Last Login</th>
-                  <th className="pb-2 text-xs font-semibold uppercase">Status</th>
-                  <th className="w-12 pb-2">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
-                {loaderData.headplaneUsers.map((user) => (
-                  <HeadplaneUserRow
-                    canEditGroups={loaderData.canEditGroups}
-                    isSelf={user.id === loaderData.currentUserId}
-                    isOwner={loaderData.isOwner}
-                    key={user.id}
-                    headscaleUsers={loaderData.headscaleUsersForLink}
-                    policyGroups={loaderData.policyGroups}
-                    policyHasComments={loaderData.policyHasComments}
-                    user={user}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <thead>
+              <tr>
+                <TableHeader>User</TableHeader>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Last login</TableHeader>
+                <TableHeader>Status</TableHeader>
+                <TableHeader className="w-12">
+                  <span className="sr-only">Actions</span>
+                </TableHeader>
+              </tr>
+            </thead>
+            <TableBody>
+              {loaderData.headplaneUsers.map((user) => (
+                <HeadplaneUserRow
+                  canEditGroups={loaderData.canEditGroups}
+                  isSelf={user.id === loaderData.currentUserId}
+                  isOwner={loaderData.isOwner}
+                  key={user.id}
+                  headscaleUsers={loaderData.headscaleUsersForLink}
+                  policyGroups={loaderData.policyGroups}
+                  policyHasComments={loaderData.policyHasComments}
+                  user={user}
+                />
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
 
@@ -250,32 +249,30 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             These Headscale users are not linked to a Headplane account and cannot be managed
             through Headplane.
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-muted">
-                <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-semibold uppercase">User</th>
-                  <th className="pb-2 text-xs font-semibold uppercase">Created At</th>
-                  <th className="pb-2 text-xs font-semibold uppercase">Status</th>
-                  <th className="w-12 pb-2">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
-                {loaderData.unlinkedHeadscaleUsers.map((user) => (
-                  <HeadscaleUserRow
-                    canEditGroups={loaderData.canEditGroups}
-                    key={user.id}
-                    policyGroups={loaderData.policyGroups}
-                    policyHasComments={loaderData.policyHasComments}
-                    user={user}
-                    writable={loaderData.writable}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <thead>
+              <tr>
+                <TableHeader>User</TableHeader>
+                <TableHeader>Created at</TableHeader>
+                <TableHeader>Status</TableHeader>
+                <TableHeader className="w-12">
+                  <span className="sr-only">Actions</span>
+                </TableHeader>
+              </tr>
+            </thead>
+            <TableBody>
+              {loaderData.unlinkedHeadscaleUsers.map((user) => (
+                <HeadscaleUserRow
+                  canEditGroups={loaderData.canEditGroups}
+                  key={user.id}
+                  policyGroups={loaderData.policyGroups}
+                  policyHasComments={loaderData.policyHasComments}
+                  user={user}
+                  writable={loaderData.writable}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </section>
       )}
     </>

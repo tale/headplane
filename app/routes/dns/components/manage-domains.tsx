@@ -13,7 +13,7 @@ import { Form } from "react-router";
 
 import Button from "~/components/button";
 import Input from "~/components/input";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 import cn from "~/utils/cn";
 
 interface Props {
@@ -65,9 +65,9 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
           setActiveId(event.active.id);
         }}
       >
-        <TableList>
+        <List>
           {magic ? (
-            <TableList.Item key="magic-dns-sd">
+            <List.Item key="magic-dns-sd">
               <div
                 className={cn(
                   "flex items-center gap-4",
@@ -77,7 +77,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                 <Lock className="p-0.5" />
                 <p className="py-0.5 font-mono text-sm">{magic}</p>
               </div>
-            </TableList.Item>
+            </List.Item>
           ) : undefined}
           <SortableContext items={localDomains} strategy={verticalListSortingStrategy}>
             {localDomains.map((sd, index) => (
@@ -95,7 +95,7 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
             </DragOverlay>
           </SortableContext>
           {isDisabled ? undefined : (
-            <TableList.Item key="add-sd">
+            <List.Item key="add-sd">
               <Form className="flex w-full items-center justify-between" method="POST">
                 <input name="action_id" type="hidden" value="add_domain" />
                 <Input
@@ -114,9 +114,9 @@ export default function ManageDomains({ searchDomains, isDisabled, magic }: Prop
                   Add
                 </Button>
               </Form>
-            </TableList.Item>
+            </List.Item>
           )}
-        </TableList>
+        </List>
       </DndContext>
     </div>
   );
@@ -140,7 +140,7 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
   } = useSortable({ id });
 
   return (
-    <TableList.Item
+    <List.Item
       className={cn(isSortableDragging ? "opacity-50" : "", isDragging ? "ring-3 bg-raised" : "")}
       ref={setNodeRef}
       style={{
@@ -173,6 +173,6 @@ function Domain({ domain, id, isDragging, isDisabled }: DomainProps) {
           </Button>
         </Form>
       )}
-    </TableList.Item>
+    </List.Item>
   );
 }

@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Info, X } from "lucide-react";
+import { Info, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 
@@ -6,6 +6,14 @@ import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
+import {
+  SortHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  type SortDirection,
+} from "~/components/table";
 import Tooltip from "~/components/tooltip";
 import {
   agentsContext,
@@ -120,7 +128,7 @@ const ROUTE_MATCH: Record<string, (n: PopulatedNode) => boolean> = {
 export default function Page({ loaderData }: Route.ComponentProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortField, setSortField] = useState<SortField>("name");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const searchQuery = searchParams.get("q") ?? "";
   const { filterUser, filterTag, filterStatus, filterRoute, hasActiveFilters } =
@@ -229,14 +237,16 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     sortDirection,
   ]);
 
-  const handleSort = (field: SortField) => {
+  const sortProps = { sortField, sortDirection, onSort: handleSort };
+
+  function handleSort(field: SortField) {
     if (sortField === field) {
       setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(field);
       setSortDirection("asc");
     }
-  };
+  }
 
   return (
     <>
@@ -290,176 +300,84 @@ export default function Page({ loaderData }: Route.ComponentProps) {
             : `${loaderData.populatedNodes.length} machines`}
         </span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-160 table-auto rounded-lg">
-          <thead className="text-muted">
-            <tr className="px-0.5 text-left">
-              <th
-                aria-sort={
-                  sortField === "name"
-                    ? sortDirection === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                }
-                className="pb-2 text-xs font-semibold uppercase"
-              >
-                <button
-                  aria-label="Sort by name"
-                  className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
-                  onClick={() => handleSort("name")}
-                  type="button"
-                >
-                  Name
-                  {sortField === "name" &&
-                    (sortDirection === "asc" ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    ))}
-                </button>
-              </th>
-              <th
-                aria-sort={
-                  sortField === "ip"
-                    ? sortDirection === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                }
-                className="w-1/4 pb-2"
-              >
-                <div className="flex items-center gap-x-1">
-                  <button
-                    aria-label="Sort by IP address"
-                    className={cn(
-                      "flex items-center gap-x-1 cursor-pointer uppercase text-xs font-semibold",
-                      "hover:text-fg",
-                    )}
-                    onClick={() => handleSort("ip")}
-                    type="button"
-                  >
-                    Addresses
-                    {sortField === "ip" &&
-                      (sortDirection === "asc" ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      ))}
-                  </button>
-                  {loaderData.magic ? (
+      <Table>
+        <thead>
+          <tr>
+            <SortHeader field="name" {...sortProps}>
+              Name
+            </SortHeader>
+            <SortHeader
+              className="w-1/4"
+              field="ip"
+              suffix={
+                loaderData.magic ? (
+                  <span className="ml-1 inline-flex align-middle">
                     <Tooltip
                       content={
                         <span className="font-normal">
                           Since MagicDNS is enabled, you can access devices based on their name and
-                          also at{" "}
-                          <Code>
-                            [name].
-                            {loaderData.magic}
-                          </Code>
+                          also at <Code>[name].{loaderData.magic}</Code>
                         </span>
                       }
                     >
-                      <Info className="h-4 w-4" />
+                      <Info className="size-3.5" />
                     </Tooltip>
-                  ) : undefined}
-                </div>
-              </th>
-              {/* We only want to show the version column if there are agents */}
-              {loaderData.agent !== undefined ? (
-                <th
-                  aria-sort={
-                    sortField === "version"
-                      ? sortDirection === "asc"
-                        ? "ascending"
-                        : "descending"
-                      : "none"
-                  }
-                  className="pb-2 text-xs font-semibold uppercase"
-                >
-                  <button
-                    aria-label="Sort by version"
-                    className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
-                    onClick={() => handleSort("version")}
-                    type="button"
-                  >
-                    Version
-                    {sortField === "version" &&
-                      (sortDirection === "asc" ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      ))}
-                  </button>
-                </th>
-              ) : undefined}
-              <th
-                aria-sort={
-                  sortField === "lastSeen"
-                    ? sortDirection === "asc"
-                      ? "ascending"
-                      : "descending"
-                    : "none"
-                }
-                className="pb-2 text-xs font-semibold uppercase"
+                  </span>
+                ) : undefined
+              }
+              {...sortProps}
+            >
+              Addresses
+            </SortHeader>
+            {loaderData.agent !== undefined ? (
+              <SortHeader field="version" {...sortProps}>
+                Version
+              </SortHeader>
+            ) : undefined}
+            <SortHeader field="lastSeen" {...sortProps}>
+              Last seen
+            </SortHeader>
+            <TableHeader className="w-12">
+              <span className="sr-only">Actions</span>
+            </TableHeader>
+          </tr>
+        </thead>
+        <TableBody>
+          {filteredAndSortedNodes.length === 0 ? (
+            <tr>
+              <TableCell
+                className="text-muted py-8 text-center"
+                colSpan={loaderData.agent !== undefined ? 5 : 4}
               >
-                <button
-                  aria-label="Sort by last seen"
-                  className={cn("flex items-center gap-x-1 cursor-pointer", "hover:text-fg")}
-                  onClick={() => handleSort("lastSeen")}
-                  type="button"
-                >
-                  Last Seen
-                  {sortField === "lastSeen" &&
-                    (sortDirection === "asc" ? (
-                      <ChevronUp className="h-3 w-3" />
-                    ) : (
-                      <ChevronDown className="h-3 w-3" />
-                    ))}
-                </button>
-              </th>
-              <th className="w-12 pb-2">
-                <span className="sr-only">Actions</span>
-              </th>
+                No machines match the current filters
+              </TableCell>
             </tr>
-          </thead>
-          <tbody className={cn("divide-y divide-line align-top", "border-t border-line")}>
-            {filteredAndSortedNodes.length === 0 ? (
-              <tr>
-                <td
-                  className="text-muted py-8 text-center"
-                  colSpan={loaderData.agent !== undefined ? 6 : 5}
-                >
-                  No machines match the current filters
-                </td>
-              </tr>
-            ) : (
-              filteredAndSortedNodes.map((node) => (
-                <MachineRow
-                  existingTags={loaderData.existingTags}
-                  policyTags={loaderData.policyTags}
-                  isAgent={
-                    loaderData.agent !== undefined
-                      ? node.nodeKey === loaderData.agent.nodeKey
-                      : undefined
-                  }
-                  isDisabled={
-                    loaderData.writable
-                      ? false // If the user has write permissions, they can edit all machines
-                      : node.user?.id !== loaderData.headscaleUserId
-                  }
-                  key={node.id}
-                  magic={loaderData.magic}
-                  node={node}
-                  users={loaderData.users}
-                  supportsNodeOwnerChange={loaderData.supportsNodeOwnerChange}
-                  supportsDisablingKeyExpiry={loaderData.supportsDisablingKeyExpiry}
-                />
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+          ) : (
+            filteredAndSortedNodes.map((node) => (
+              <MachineRow
+                existingTags={loaderData.existingTags}
+                policyTags={loaderData.policyTags}
+                isAgent={
+                  loaderData.agent !== undefined
+                    ? node.nodeKey === loaderData.agent.nodeKey
+                    : undefined
+                }
+                isDisabled={
+                  loaderData.writable
+                    ? false // If the user has write permissions, they can edit all machines
+                    : node.user?.id !== loaderData.headscaleUserId
+                }
+                key={node.id}
+                magic={loaderData.magic}
+                node={node}
+                users={loaderData.users}
+                supportsNodeOwnerChange={loaderData.supportsNodeOwnerChange}
+                supportsDisablingKeyExpiry={loaderData.supportsDisablingKeyExpiry}
+              />
+            ))
+          )}
+        </TableBody>
+      </Table>
     </>
   );
 }

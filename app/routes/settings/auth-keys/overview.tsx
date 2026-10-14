@@ -3,9 +3,9 @@ import { useMemo, useState } from "react";
 
 import Code from "~/components/code";
 import Link from "~/components/link";
+import List from "~/components/list";
 import Notice from "~/components/notice";
 import Select from "~/components/select";
-import TableList from "~/components/table-list";
 import {
   appConfigContext,
   authContext,
@@ -261,25 +261,25 @@ export default function Page({
           ]}
         />
       </div>
-      <TableList className="mt-4">
+      <List className="mt-4">
         {keys.flatMap(({ preAuthKeys }) => preAuthKeys).length === 0 ? (
-          <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+          <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
             <FileKey2 />
             <p className="font-semibold">No pre-auth keys have been created yet.</p>
-          </TableList.Item>
+          </List.Item>
         ) : filteredKeys.length === 0 ? (
-          <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+          <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
             <FileKey2 />
             <p className="font-semibold">No pre-auth keys match the selected filters.</p>
-          </TableList.Item>
+          </List.Item>
         ) : (
           filteredKeys.map((key) => {
             // Tag-only keys have no user
             if (!key.user) {
               return (
-                <TableList.Item key={key.id}>
+                <List.Item key={key.id}>
                   <AuthKeyRow authKey={key} user={null} />
-                </TableList.Item>
+                </List.Item>
               );
             }
 
@@ -291,13 +291,13 @@ export default function Page({
             }
 
             return (
-              <TableList.Item key={key.id}>
+              <List.Item key={key.id}>
                 <AuthKeyRow authKey={key} user={user} />
-              </TableList.Item>
+              </List.Item>
             );
           })
         )}
-      </TableList>
+      </List>
     </div>
   );
 }

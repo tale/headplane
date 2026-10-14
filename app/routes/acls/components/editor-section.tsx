@@ -2,7 +2,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import Button from "~/components/button";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 
 // Chrome shared by the rules and the tags/groups editors.
 
@@ -27,13 +27,13 @@ export function Section({ title, description, isDisabled, onAdd, children }: Sec
           Add
         </Button>
       </div>
-      <TableList>{children}</TableList>
+      <List>{children}</List>
     </section>
   );
 }
 
 export function Empty({ text }: { text: string }) {
-  return <TableList.Item className="justify-center py-6 text-sm opacity-70">{text}</TableList.Item>;
+  return <List.Item className="justify-center py-6 text-sm opacity-70">{text}</List.Item>;
 }
 
 interface RowActionsProps {

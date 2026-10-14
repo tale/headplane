@@ -6,7 +6,7 @@ import Button from "~/components/button";
 import Input from "~/components/input";
 import Dialog, { DialogPanel } from "~/components/legacy-dialog";
 import Link from "~/components/link";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import type { Machine } from "~/types";
@@ -90,15 +90,15 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
         {error ? (
           <p className="bg-bad-subtle text-bad mt-2 rounded-lg p-3 text-sm">{error}</p>
         ) : null}
-        <TableList className="mt-4">
+        <List className="mt-4">
           {tags.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
+            <List.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
               <TagsIcon />
               <p className="font-semibold">No tags are set on this machine</p>
-            </TableList.Item>
+            </List.Item>
           ) : (
             tags.map((item) => (
-              <TableList.Item className="font-mono" id={item} key={item}>
+              <List.Item className="font-mono" id={item} key={item}>
                 <span className="flex items-center gap-1.5">
                   {item}
                   {undeclaredTags.includes(item) ? (
@@ -116,10 +116,10 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
                 >
                   <X className="size-4" />
                 </Button>
-              </TableList.Item>
+              </List.Item>
             ))
           )}
-        </TableList>
+        </List>
 
         <div className="mt-2 flex items-center gap-2">
           <Input

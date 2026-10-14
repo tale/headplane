@@ -2,6 +2,7 @@ import { CircleUser } from "lucide-react";
 
 import Chip from "~/components/chip";
 import StatusCircle from "~/components/status-circle";
+import { TableCell } from "~/components/table";
 import type { Role } from "~/server/web/roles";
 import cn from "~/utils/cn";
 
@@ -42,8 +43,8 @@ export default function HeadplaneUserRow({
   const displayEmail = user.linkedHeadscaleUser?.email ?? user.email;
 
   return (
-    <tr className="group hover:bg-hover" key={user.id}>
-      <td className="py-2 pl-2">
+    <tr className="group" key={user.id}>
+      <TableCell>
         <div className="flex items-center">
           {user.profilePicUrl ? (
             <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />
@@ -52,8 +53,8 @@ export default function HeadplaneUserRow({
           )}
           <div className="ml-4">
             <p className="leading-snug font-semibold">{displayName}</p>
-            {displayUsername && <p className="text-sm opacity-50">{displayUsername}</p>}
-            {displayEmail && <p className="text-sm opacity-50">{displayEmail}</p>}
+            {displayUsername && <p className="text-muted">{displayUsername}</p>}
+            {displayEmail && <p className="text-muted">{displayEmail}</p>}
             {!user.headscaleUserId && <p className="text-warn text-xs">Not linked</p>}
             {user.groups.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
@@ -64,16 +65,16 @@ export default function HeadplaneUserRow({
             )}
           </div>
         </div>
-      </td>
-      <td className="py-2 pl-0.5">
+      </TableCell>
+      <TableCell>
         <p>{mapRoleToName(user.role)}</p>
-      </td>
-      <td className="py-2 pl-0.5">
+      </TableCell>
+      <TableCell>
         <p className="text-muted text-sm" suppressHydrationWarning>
           {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}
         </p>
-      </td>
-      <td className="py-2 pl-0.5">
+      </TableCell>
+      <TableCell>
         {user.machines.length > 0 ? (
           <span className={cn("flex items-center gap-x-1 text-sm", "text-muted")}>
             <StatusCircle className="h-4 w-4" isOnline={isOnline} />
@@ -84,8 +85,8 @@ export default function HeadplaneUserRow({
         ) : (
           <p className="text-muted text-sm">No machines</p>
         )}
-      </td>
-      <td className="py-2 pr-0.5">
+      </TableCell>
+      <TableCell className="pr-0">
         <MenuOptions
           canEditGroups={canEditGroups}
           currentLink={user.headscaleUserId ?? undefined}
@@ -96,7 +97,7 @@ export default function HeadplaneUserRow({
           policyHasComments={policyHasComments}
           user={user}
         />
-      </td>
+      </TableCell>
     </tr>
   );
 }
@@ -116,7 +117,7 @@ function mapRoleToName(role: Role) {
     case "viewer":
       return "Viewer";
     case "member":
-      return <p className="opacity-50">Member</p>;
+      return <p className="text-muted">Member</p>;
     default:
       return "Unknown";
   }
