@@ -16,13 +16,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const headscaleConfig = context.get(headscaleConfigContext);
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.read_users);
-  if (!check) {
-    throw data("You do not have permission to view IAM settings.", {
-      status: 403,
-    });
-  }
+  const principal = await auth.requireCapability(request, Capabilities.read_users);
 
   const oidc = headscaleConfig.getOIDCConfig();
   if (!oidc) {

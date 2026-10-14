@@ -25,14 +25,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     throw new Error("No configuration is available");
   }
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.read_network);
-  if (!check) {
-    // Not authorized to view this page
-    throw new Error(
-      "You do not have permission to view this page. Please contact your administrator.",
-    );
-  }
+  const principal = await auth.requireCapability(request, Capabilities.read_network);
 
   const writablePermission = auth.can(principal, Capabilities.write_network);
 

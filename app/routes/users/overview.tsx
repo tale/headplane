@@ -55,15 +55,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const headscaleConfig = context.get(headscaleConfigContext);
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
-  const principal = await auth.require(request);
-  const check = await auth.can(principal, Capabilities.read_users);
-  if (!check) {
-    throw new Error(
-      "You do not have permission to view this page. Please contact your administrator.",
-    );
-  }
-
-  const writablePermission = await auth.can(principal, Capabilities.write_users);
+  const principal = await auth.requireCapability(request, Capabilities.read_users);
+  const writablePermission = auth.can(principal, Capabilities.write_users);
 
   // Primary data: Headplane users from the database (always available)
   const hpUsers = await auth.listUsers();

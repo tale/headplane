@@ -53,13 +53,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const headscaleConfig = context.get(headscaleConfigContext);
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
-  const principal = await auth.require(request);
-
-  if (!auth.can(principal, Capabilities.read_machines)) {
-    throw new Error(
-      "You do not have permission to view this page. Please contact your administrator.",
-    );
-  }
+  const principal = await auth.requireCapability(request, Capabilities.read_machines);
 
   const writablePermission = auth.can(principal, Capabilities.write_machines);
 
