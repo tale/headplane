@@ -3,8 +3,6 @@ import type React from "react";
 
 import cn from "~/utils/cn";
 
-// Shared by every text-like control. Keyed off the parent Field's `group` so
-// wrappers (number steppers, comboboxes) pick up invalid/disabled states too.
 export const controlClass = cn(
   "h-8 w-full rounded-md border border-line-strong bg-surface text-sm text-fg",
   "placeholder:text-muted outline-hidden transition-[border-color,box-shadow] duration-100",

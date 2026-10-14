@@ -1,5 +1,3 @@
-// Temporary: the old close-on-submit dialog API, rebuilt on the new primitives.
-// Each caller moves to a fetcher-driven dialog in #653, then this file goes away.
 import React, { useEffect, useRef } from "react";
 import { Form, type HTMLFormMethod } from "react-router";
 

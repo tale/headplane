@@ -109,7 +109,6 @@
   color-scheme: dark;
 }
 
-/* Raised surfaces need a visible edge in dark mode; shadows barely show. */
 @utility border-overlay {
   border-width: 1px;
   border-color: var(--hp-line);
@@ -156,7 +155,6 @@
 }
 
 @layer base {
-  /* Faint is for icons and decoration only; text uses fg or muted. */
   html {
     --hp-canvas: #fbfaf9;
     --hp-surface: #ffffff;

@@ -39,10 +39,6 @@ export function Dialog({ open, onOpenChange, trigger, className, children }: Dia
   );
 }
 
-/**
- * For confirming destructive actions only. It can't be dismissed by clicking
- * outside, so the user has to choose.
- */
 export function AlertDialog({ open, onOpenChange, trigger, className, children }: DialogProps) {
   return (
     <BaseAlertDialog.Root open={open} onOpenChange={(next) => onOpenChange?.(next)}>

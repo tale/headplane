@@ -30,10 +30,10 @@ export default function NumberInput({
   disabled,
   ...props
 }: NumberInputProps) {
+  // name goes on Root, which submits the raw number via a hidden input.
+  // The visible Input holds the locale-formatted string.
   return (
     <Field description={description} disabled={disabled} label={label} name={name}>
-      {/* `name` must stay on the Root: it renders a hidden input with the raw
-          number, while the visible Input holds the locale-formatted string. */}
       <NumberField.Root
         defaultValue={props.defaultValue}
         max={props.max}

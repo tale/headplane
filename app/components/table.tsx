@@ -49,7 +49,6 @@ export interface SortHeaderProps<T extends string> extends Omit<
   sortField: T;
   sortDirection: SortDirection;
   onSort: (field: T) => void;
-  /** Rendered after the sort button, e.g. a help tooltip. */
   suffix?: React.ReactNode;
 }
 
