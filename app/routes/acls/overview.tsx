@@ -273,19 +273,17 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <div className="flex flex-col gap-4">
         <Card className="max-w-2xl">
           <div className="flex items-center justify-between gap-4">
-            <Card.Title>ACL Policy Unavailable</Card.Title>
+            <h2 className="mb-2 text-lg font-semibold">ACL Policy Unavailable</h2>
             <AlertCircle className="text-bad mb-2 h-6 w-6" />
           </div>
-          <Card.Text>
+          <p>
             The ACL policy is currently unavailable because the policy file does not exist on the
             server. This usually indicates that Headscale is running in <Code>file</Code> mode for
             ACLs, and the specified policy file is missing.
-          </Card.Text>
+          </p>
         </Card>
         <Card className="max-w-2xl">
-          <Card.Text>
-            In order to resolve this issue, there are two possible actions you can take:
-          </Card.Text>
+          <p>In order to resolve this issue, there are two possible actions you can take:</p>
           <ul className="mt-2 ml-4 list-outside list-disc space-y-1 text-sm">
             <li>
               Create the ACL policy file at the specified path in your Headscale configuration.

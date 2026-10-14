@@ -127,11 +127,11 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
         ) : showCookieWarning ? (
           <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
             <div className="flex items-center justify-between gap-4">
-              <Card.Title className="text-bad">Configuration Issue</Card.Title>
+              <h2 className="text-bad mb-2 text-lg font-semibold">Configuration Issue</h2>
               <AlertCircle className="text-bad mb-2 h-6 w-6" />
             </div>
             {showCookieWarning ? (
-              <Card.Text className="text-sm">
+              <p className="text-sm">
                 Headplane is configured to use secure cookies, but this site is being served over an
                 insecure connection and login will not work correctly.{" "}
                 <Link
@@ -141,17 +141,17 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
                 >
                   Learn more.
                 </Link>
-              </Card.Text>
+              </p>
             ) : undefined}
           </Card>
         ) : undefined}
         <Card className="m-4 max-w-md sm:m-0">
-          <Card.Title>Welcome to Headplane</Card.Title>
+          <h2 className="mb-2 text-lg font-semibold">Welcome to Headplane</h2>
           <Form method="POST">
-            <Card.Text>
+            <p>
               Enter an API key to authenticate with Headplane. You can generate one by running{" "}
               <Code>headscale apikeys create</Code> in your terminal.
-            </Card.Text>
+            </p>
             <Input
               className="mt-8 mb-2"
               required
@@ -162,7 +162,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
               type="password"
             />
             {actionData?.success === false ? (
-              <Card.Text className="text-bad mb-2 text-sm">{actionData.message}</Card.Text>
+              <p className="text-bad mb-2 text-sm">{actionData.message}</p>
             ) : undefined}
             <Button className="w-full" type="submit" variant="primary">
               Sign In

@@ -61,17 +61,17 @@ export function SSHErrorBoundary({ title, message, anchor }: SSHErrorBoundaryPro
   return (
     <Card className="w-screen">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title>{title}</Card.Title>
+        <h2 className="mb-2 text-lg font-semibold">{title}</h2>
         <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
-      <Card.Text>
+      <p>
         {message}
         <br />
         <br />
         <Link to={`${DOCS_BASE}${anchor}`} external styled>
           Headplane SSH Documentation
         </Link>{" "}
-      </Card.Text>
+      </p>
     </Card>
   );
 }

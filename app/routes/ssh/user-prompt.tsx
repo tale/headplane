@@ -14,8 +14,8 @@ export default function UserPrompt({ hostname }: UserPromptProps) {
   return (
     <div className="flex h-screen items-center justify-center">
       <Card>
-        <Card.Title>Enter Username</Card.Title>
-        <Card.Text className="mb-4">
+        <h2 className="mb-2 text-lg font-semibold">Enter Username</h2>
+        <p className="mb-4">
           Enter the username you want to use to connect to <Code>{hostname}</Code>
           {". "}
           SSH via the web follows the same ACL rules as regular SSH access in Headscale, so only
@@ -27,7 +27,7 @@ export default function UserPrompt({ hostname }: UserPromptProps) {
             troubleshooting guide
           </Link>{" "}
           for common errors.
-        </Card.Text>
+        </p>
         <Form
           method="GET"
           onSubmit={(e) => {

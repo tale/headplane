@@ -7,7 +7,7 @@ export function OidcErrorNotice({ code }: { code: string }) {
   return (
     <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-bad">Configuration Issue(s)</Card.Title>
+        <h2 className="text-bad mb-2 text-lg font-semibold">Configuration Issue(s)</h2>
         <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
       {getErrorMessage(code)}
@@ -19,42 +19,38 @@ function getErrorMessage(code: string) {
   switch (code) {
     case "error_no_query":
       return (
-        <Card.Text>
+        <p>
           The SSO provider did not correctly redirect back to Headplane with the required
           parameters. Please ensure your SSO provider is configured correctly.
-        </Card.Text>
+        </p>
       );
 
     case "error_no_session":
     case "error_invalid_session":
       return (
-        <Card.Text>
+        <p>
           Unable to complete SSO login due to missing or invalid session data. Ensure that your
           Headplane cookie configuration is correct and that your browser is accepting cookies.
-        </Card.Text>
+        </p>
       );
 
     case "error_no_sub":
       return (
-        <Card.Text>
+        <p>
           The SSO provider did not return a valid user identifier. Please ensure your SSO provider
           is correctly configured to provide the <Code>sub</Code> claim.
-        </Card.Text>
+        </p>
       );
 
     case "error_auth_failed":
       return (
-        <Card.Text>
+        <p>
           Authentication with the SSO provider failed. Please try again later. Headplane logs may
           provide more information.
-        </Card.Text>
+        </p>
       );
 
     default:
-      return (
-        <Card.Text>
-          An unknown error occurred during OIDC authentication. Please try again later.
-        </Card.Text>
-      );
+      return <p>An unknown error occurred during OIDC authentication. Please try again later.</p>;
   }
 }

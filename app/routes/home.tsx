@@ -142,17 +142,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {loaderData.linkedUserName && (
         <Card className="flex max-w-2xl items-center gap-4">
           <Check className="inline-flex size-4" />
-          <Card.Text className="text-sm">
+          <p className="text-sm">
             Your account is linked to Headscale user <strong>{loaderData.linkedUserName}</strong>.
-          </Card.Text>
+          </p>
         </Card>
       )}
       <Card className="max-w-2xl">
-        <Card.Title>Access your network via Tailscale</Card.Title>
-        <Card.Text className="mt-1">
+        <h2 className="mb-2 text-lg font-semibold">Access your network via Tailscale</h2>
+        <p className="mt-1">
           You've successfully authenticated but don't have access to the dashboard. You can still
           connect to your Headscale network by installing Tailscale.
-        </Card.Text>
+        </p>
 
         <div className="border-line mt-4 rounded-lg border p-3">
           <div className="flex items-center gap-2">
@@ -192,7 +192,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </a>
           ))}
         </div>
-        <Card.Text
+        <p
           className={cn(
             "mt-8 text-center text-xs",
             loaderData.unlinked ? "text-warn" : "text-muted",
@@ -201,7 +201,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {loaderData.unlinked
             ? "Your account isn't linked to a Headscale user. Ask your administrator to create one for you."
             : "Need access to the dashboard? Contact your administrator to request access."}
-        </Card.Text>
+        </p>
       </Card>
     </div>
   );

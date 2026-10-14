@@ -1,7 +1,5 @@
 import React from "react";
 
-import Text from "~/components/text";
-import Title from "~/components/title";
 import cn from "~/utils/cn";
 
 function Card(props: React.HTMLProps<HTMLDivElement>) {
@@ -20,4 +18,4 @@ function Card(props: React.HTMLProps<HTMLDivElement>) {
   );
 }
 
-export default Object.assign(Card, { Title, Text });
+export default Card;

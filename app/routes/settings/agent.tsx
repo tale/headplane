@@ -5,7 +5,6 @@ import Callout from "~/components/callout";
 import Link from "~/components/link";
 import PageHeader from "~/components/page-header";
 import StatusCircle from "~/components/status-circle";
-import Text from "~/components/text";
 import { agentsContext, authContext } from "~/server/context";
 import { formatTimeDelta } from "~/utils/time";
 
@@ -87,18 +86,18 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Text>
+        <p>
           <span className="font-medium">Last synced: </span>
           {loaderData.syncedAt ? (
             <span suppressHydrationWarning>{formatTimeDelta(new Date(loaderData.syncedAt))}</span>
           ) : (
             "Never"
           )}
-        </Text>
-        <Text>
+        </p>
+        <p>
           <span className="font-medium">Nodes synced: </span>
           {loaderData.nodeCount}
-        </Text>
+        </p>
       </div>
 
       {isPending ? (

@@ -154,12 +154,12 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         <div className="flex h-screen w-screen items-center justify-center bg-black">
           <Card className="w-screen">
             <div className="flex items-center justify-between gap-4">
-              <Card.Title>Node Offline</Card.Title>
+              <h2 className="mb-2 text-lg font-semibold">Node Offline</h2>
               <WifiOff className="text-bad mb-2 h-6 w-6" />
             </div>
-            <Card.Text>
+            <p>
               <Code>{hostname}</Code> is not currently connected to the Tailnet.
-            </Card.Text>
+            </p>
             <Button className="mt-8 w-full" onClick={() => window.location.reload()}>
               Retry Connection
             </Button>

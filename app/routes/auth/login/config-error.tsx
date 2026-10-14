@@ -9,13 +9,13 @@ export function OidcDiscoveryFailedNotice() {
   return (
     <Card className="border-warn m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-warn">SSO Temporarily Unavailable</Card.Title>
+        <h2 className="text-warn mb-2 text-lg font-semibold">SSO Temporarily Unavailable</h2>
         <CloudOff className="text-warn mb-2 h-6 w-6" />
       </div>
-      <Card.Text className="text-sm">
+      <p className="text-sm">
         Unable to reach the identity provider. Single Sign-On will be available once the provider is
         reachable again. You can still sign in with an API key.
-      </Card.Text>
+      </p>
     </Card>
   );
 }
@@ -24,10 +24,10 @@ export function OidcConfigErrorNotice({ errors }: { errors: OidcErrorCode[] }) {
   return (
     <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
       <div className="flex items-center justify-between gap-4">
-        <Card.Title className="text-bad">Authentication Error</Card.Title>
+        <h2 className="text-bad mb-2 text-lg font-semibold">Authentication Error</h2>
         <AlertCircle className="text-bad mb-2 h-6 w-6" />
       </div>
-      <Card.Text className="text-sm">
+      <p className="text-sm">
         The OpenID Connect (OIDC) Single Sign-On (SSO) configuration has issues:{" "}
         <ul className="mt-2 mb-1 list-inside list-disc">
           {mapOidcErrorsToMessages(errors).map((code) => (
@@ -37,7 +37,7 @@ export function OidcConfigErrorNotice({ errors }: { errors: OidcErrorCode[] }) {
         <Link external styled to="https://headplane.net/features/sso#troubleshooting">
           Learn more
         </Link>
-      </Card.Text>
+      </p>
     </Card>
   );
 }
@@ -54,10 +54,10 @@ function mapOidcErrorsToMessages(errors: OidcErrorCode[]) {
         messages.push({
           key: error,
           node: (
-            <Card.Text className="inline">
+            <p className="inline">
               The provided API key for OIDC authentication is invalid. Ensure that{" "}
               <Code>headscale.api_key</Code> is a valid API key.
-            </Card.Text>
+            </p>
           ),
         });
         break;
@@ -67,10 +67,10 @@ function mapOidcErrorsToMessages(errors: OidcErrorCode[]) {
         messages.push({
           key: error,
           node: (
-            <Card.Text className="inline">
+            <p className="inline">
               The OIDC provider is missing required endpoints. Ensure the discovery URL is correct
               or provide manual endpoint overrides in your configuration.
-            </Card.Text>
+            </p>
           ),
         });
         break;
@@ -80,10 +80,10 @@ function mapOidcErrorsToMessages(errors: OidcErrorCode[]) {
         messages.push({
           key: error,
           node: (
-            <Card.Text className="inline">
+            <p className="inline">
               Unable to reach the OIDC provider for discovery. SSO will retry on the next login
               attempt.
-            </Card.Text>
+            </p>
           ),
         });
         break;
@@ -93,10 +93,10 @@ function mapOidcErrorsToMessages(errors: OidcErrorCode[]) {
         messages.push({
           key: error,
           node: (
-            <Card.Text className="inline">
+            <p className="inline">
               An unknown OIDC configuration error occurred. Please check the Headplane logs for more
               information.
-            </Card.Text>
+            </p>
           ),
         });
         break;
