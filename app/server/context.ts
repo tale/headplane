@@ -145,25 +145,16 @@ export function buildJwtAuth(
     return;
   }
 
-  // Checked here rather than per request: an operator who enables jwt_auth
-  // without an API key should be told at startup, not served a 500 on every
-  // protected route. Refusing to start also avoids silently falling back to
-  // the other authentication methods.
   if (!headscaleApiKey) {
     throw new Error("server.jwt_auth requires headscale.api_key to be configured");
   }
 
-  // The verifier throws on a missing header, issuer, JWKS URL or audience,
-  // which is the behaviour we want: each of those is a way to configure an
-  // authentication bypass, so Headplane refuses to start instead.
   return createJwtAuthService({
     header: jwtAuth.header,
     issuer: jwtAuth.issuer,
-    jwksUrl: jwtAuth.jwks_url,
+    jwksEndpoint: jwtAuth.jwks_endpoint,
     audience: jwtAuth.audience,
     algorithms: jwtAuth.algorithms,
-    allowedDomains: jwtAuth.allowed_domains,
-    domainClaim: jwtAuth.domain_claim,
     logoutUrl: jwtAuth.logout_url,
   });
 }

@@ -10,7 +10,7 @@ export interface SigningKey {
 }
 
 export interface JwksEnv {
-  /** URL of the served key set, for `jwks_url`. */
+  /** URL of the served key set, for `jwks_endpoint`. */
   url: string;
   /** The key the server publishes on startup. */
   key: SigningKey;

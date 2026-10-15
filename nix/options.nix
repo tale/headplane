@@ -168,19 +168,16 @@ in {
                         type = types.bool;
                         default = false;
                         description = ''
-                          Whether to authenticate requests from a signed JWT assertion injected
-                          by an identity-aware proxy. Unlike proxy_auth this verifies a
-                          signature, so it does not rely on the client address being trusted.
-                          Requires headscale.api_key_path.
+                          Whether to authenticate requests from a signed JWT injected by an
+                          identity-aware proxy. The signature is verified against the proxy's
+                          JWKS. Requires headscale.api_key_path.
                         '';
                       };
 
                       header = mkOption {
                         type = types.nullOr types.str;
                         default = null;
-                        description = ''
-                          Header carrying the signed assertion. Required when enabled.
-                        '';
+                        description = "Header carrying the signed assertion. Required when enabled.";
                         example = "x-goog-iap-jwt-assertion";
                       };
 
@@ -191,24 +188,17 @@ in {
                         example = "https://cloud.google.com/iap";
                       };
 
-                      jwks_url = mkOption {
+                      jwks_endpoint = mkOption {
                         type = types.nullOr types.str;
                         default = null;
-                        description = ''
-                          Where the proxy publishes its signing keys. Required when enabled.
-                        '';
+                        description = "Where the proxy publishes its signing keys. Required when enabled.";
                         example = "https://www.gstatic.com/iap/verify/public_key-jwk";
                       };
 
                       audience = mkOption {
                         type = types.nullOr types.str;
                         default = null;
-                        description = ''
-                          Expected aud claim, matched exactly. Required when enabled: without
-                          it Headplane would accept an assertion minted for any other
-                          service. For Google IAP this is
-                          /projects/PROJECT_NUMBER/global/backendServices/BACKEND_SERVICE_ID.
-                        '';
+                        description = "Expected aud claim, matched exactly. Required when enabled.";
                         example = "/projects/123456789/global/backendServices/987654321";
                       };
 
@@ -216,42 +206,17 @@ in {
                         type = types.nullOr (types.listOf types.str);
                         default = null;
                         description = ''
-                          Accepted signing algorithms. Defaults to the asymmetric families.
-                          Symmetric algorithms (HS256 and friends) are refused: a JWKS
-                          publishes public keys, so one could be used as a signing secret.
+                          Accepted signing algorithms. Defaults to the asymmetric families;
+                          symmetric algorithms are refused.
                         '';
                         example = ["ES256"];
-                      };
-
-                      domain_claim = mkOption {
-                        type = types.nullOr types.str;
-                        default = null;
-                        description = ''
-                          Claim carrying the hosted domain. Falls back to the email domain
-                          when the claim is absent.
-                        '';
-                        example = "hd";
                       };
 
                       logout_url = mkOption {
                         type = types.nullOr types.str;
                         default = null;
-                        description = ''
-                          Where to send the browser on logout so the proxy drops its own
-                          session. Clearing only Headplane's cookie would sign the user
-                          straight back in.
-                        '';
+                        description = "Where to send the browser on logout so the proxy drops its own session.";
                         example = "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE";
-                      };
-
-                      allowed_domains = mkOption {
-                        type = types.listOf types.str;
-                        default = [];
-                        description = ''
-                          Hosted domains permitted to sign in. When empty, any identity the
-                          proxy admits is accepted.
-                        '';
-                        example = ["example.com"];
                       };
 
                       default_role = mkOption {

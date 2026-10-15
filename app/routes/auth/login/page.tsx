@@ -15,7 +15,6 @@ import log from "~/utils/log";
 import type { Route } from "./+types/page";
 import { loginAction } from "./action";
 import { OidcConfigErrorNotice, OidcDiscoveryFailedNotice } from "./config-error";
-import { JwtAuthErrorNotice } from "./jwt-auth-error";
 import Logout from "./logout";
 import { OidcErrorNotice } from "./oidc-error";
 
@@ -30,17 +29,9 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     return redirect("/machines");
   } catch {}
 
-  // Reaching the login page while jwt_auth is enabled means the assertion was
-  // absent or did not verify. Surfacing the reason turns the single most common
-  // misconfiguration — a mismatched audience — from a blank login form into
-  // something an operator can act on.
-  let jwtAuthErrorCode: string | undefined;
-  if (jwtAuth) {
-    const result = await jwtAuth.authenticate(request);
-    if (!result.ok) {
-      jwtAuthErrorCode = result.error.code;
-    }
-  }
+  // The assertion was already verified and logged by auth.require; its
+  // presence here means it was rejected.
+  const jwtAuthRejected = jwtAuth !== undefined && request.headers.has(jwtAuth.header);
 
   const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
@@ -77,7 +68,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     isCookieSecureEnabled: config.server.cookie_secure,
     isOidcConnectorEnabled,
     oidcErrorCodes,
-    jwtAuthErrorCode,
+    jwtAuthRejected,
     urlState,
   };
 }
@@ -96,7 +87,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     isCookieSecureEnabled,
     isOidcConnectorEnabled,
     oidcErrorCodes,
-    jwtAuthErrorCode,
+    jwtAuthRejected,
     urlState,
   } = loaderData;
 
@@ -139,8 +130,17 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
   return (
     <div className="flex h-screen w-screen items-center justify-center">
       <div>
-        {jwtAuthErrorCode ? (
-          <JwtAuthErrorNotice code={jwtAuthErrorCode} />
+        {jwtAuthRejected ? (
+          <Card className="m-4 mb-4 max-w-md border border-red-500 sm:m-0 sm:mb-4">
+            <div className="flex items-center justify-between gap-4">
+              <Card.Title className="text-red-500">Proxy Sign-In Failed</Card.Title>
+              <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
+            </div>
+            <Card.Text className="text-sm">
+              The assertion from your identity-aware proxy was not accepted. The Headplane log has
+              the reason.
+            </Card.Text>
+          </Card>
         ) : urlState?.startsWith("error_") ? (
           <OidcErrorNotice code={urlState} />
         ) : oidcErrorCodes.includes("discovery_failed") ? (
