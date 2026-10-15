@@ -72,3 +72,15 @@ with `pnpm install`.
 
 The base image is Debian (instead of Alpine) to keep compatibility with common
 official Dev Container features used by this project (Node, Go, and Docker).
+
+### Browser Integration Test
+
+The base-path integration test requires Chromium:
+
+```sh
+pnpm exec playwright install chromium
+pnpm exec vitest run --project integration:platform tests/integration/platform/base-path.test.ts
+```
+
+On Linux, install its system libraries with
+`pnpm exec playwright install --with-deps chromium`.

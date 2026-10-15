@@ -12,6 +12,29 @@ Headplane also stores stuff in the `/var/lib/headplane` directory by default.
 This can be configured on a per-section basis in the configuration file, but
 it is very important this directory is persistent and writable by Headplane.
 
+## Dashboard Path
+
+Set `server.base_path` to change the dashboard URL prefix without rebuilding
+Headplane. The default is `/admin`.
+
+```yaml
+server:
+  base_path: "/dashboard"
+```
+
+Use a leading slash and no trailing slash. Segments may contain letters, numbers,
+periods, tildes, underscores, or hyphens, but cannot be `.` or `..`. Nested paths
+such as `/tools/headplane` are supported; the root path `/` is not.
+
+Restart Headplane after changing the path. Configure your reverse proxy to
+forward the new prefix without stripping it. Keep `server.base_url` free of the
+prefix. For SSO, register `<server.base_url><server.base_path>/oidc/callback`
+with your identity provider. Changing the path requires users to sign in again
+because session cookies are scoped to it.
+
+If you previously set the `__INTERNAL_PREFIX` build variable, move its value to
+`server.base_path`.
+
 ## Environment Variables
 
 It is also possible to override the configuration file using environment variables.

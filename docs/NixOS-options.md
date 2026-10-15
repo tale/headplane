@@ -328,6 +328,16 @@ _Type:_ submodule
 
 _Default:_ `{ }`
 
+## settings.server.base_path
+
+_Description:_ Dashboard path prefix, with a leading slash and no trailing slash.
+
+_Type:_ string
+
+_Default:_ `"/admin"`
+
+_Example:_ `"/dashboard"`
+
 ## settings.server.cookie_secret_path
 
 _Description:_ Path to a file containing the cookie secret.

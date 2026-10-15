@@ -12,11 +12,6 @@ const PROD_ENTRY = "./app/server/main.ts";
 const DEV_ENTRY = "./app/server/app.ts";
 const REACT_ROUTER_SSR_NO_EXTERNAL = ["@react-router/node", "react-router"];
 
-const PREFIX = process.env.__INTERNAL_PREFIX || "/admin";
-if (PREFIX.endsWith("/")) {
-  throw new Error("Prefix must not end with a slash");
-}
-
 // Derive version: HEADPLANE_VERSION env > git describe > package.json
 const isNext = process.env.IMAGE_TAG?.includes("next");
 let VERSION: string;
@@ -41,19 +36,19 @@ if (!VERSION) {
   throw new Error("Unable to determine version");
 }
 
-// Load the config without any environment variables (not needed here)
-const config = await readFile("config.example.yaml", "utf-8");
+const config = await readFile(process.env.HEADPLANE_CONFIG_PATH || "config.example.yaml", "utf-8");
 const { server } = parse(config);
 
 export default defineConfig(({ command }) => {
   const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
 
   return {
-    base: command === "build" ? `${PREFIX}/` : undefined,
+    // Relative imports let one build run under any configured path.
+    base: command === "build" ? "./" : undefined,
     plugins: [
       headplaneDevServer({
         entry: DEV_ENTRY,
-        basename: PREFIX,
+        basename: process.env.HEADPLANE_SERVER__BASE_PATH || server.base_path || "/admin",
         publicDir: new URL("./public", import.meta.url).pathname,
       }),
       reactRouter(),
@@ -107,7 +102,6 @@ export default defineConfig(({ command }) => {
     },
     define: {
       __VERSION__: JSON.stringify(isNext ? `${VERSION}-next` : VERSION),
-      __PREFIX__: JSON.stringify(PREFIX),
     },
   };
 });

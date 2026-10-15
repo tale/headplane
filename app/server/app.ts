@@ -16,7 +16,9 @@ import { RouterContextProvider } from "react-router";
 import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
+import { setServerPrefix } from "~/utils/prefix";
 
+import { configureBuild } from "./assets";
 import type { HeadplaneConfig } from "./config/config-schema";
 import { ConfigError } from "./config/error";
 import { loadConfig } from "./config/load";
@@ -57,6 +59,7 @@ if ((config.server.tls_cert_path || config.server.tls_key_path) && !config.serve
   config.server.cookie_secure = true;
 }
 
+setServerPrefix(config.server.base_path);
 const ctx = await createAppContext(config);
 ctx.startServices();
 
@@ -96,8 +99,11 @@ interface ClientAddress {
   address?: string;
 }
 
+export const runtimeBuild = import.meta.env.PROD
+  ? configureBuild(build, config.server.base_path)
+  : { ...build, basename: config.server.base_path };
 export default createRequestListener({
-  build,
+  build: runtimeBuild,
   mode: import.meta.env.MODE,
   getLoadContext,
 });

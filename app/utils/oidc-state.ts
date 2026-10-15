@@ -15,7 +15,7 @@ export function createOidcStateCookie(config: HeadplaneConfig) {
     maxAge: 1800,
     secure: config.server.cookie_secure,
     domain: config.server.cookie_domain,
-    path: `${__PREFIX__}/oidc/callback`,
+    path: `${config.server.base_path}/oidc/callback`,
   });
 
   return {

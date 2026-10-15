@@ -13,6 +13,7 @@ import {
   requestApiContext,
 } from "~/server/context";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
+import { getPrefix } from "~/utils/prefix";
 
 import type { Route } from "./+types/page";
 import { isSSHError, SSHErrorBoundary, sshErrors } from "./errors";
@@ -20,8 +21,6 @@ import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
 import { connectTailnet } from "./wasm.client";
 
-const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
-const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
 const SSH_PREAUTH_KEY_TTL_MS = 10 * 60 * 1000;
 
 export const shouldRevalidate: ShouldRevalidateFunction = () => {
@@ -36,7 +35,10 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
   const compatibilityWarning = getBrowserSSHCompatibilityWarning(headscale.version);
 
   const origin = url.origin;
-  const assets = [WASM_HELPER_URL, WASM_MODULE_URL];
+  const assets = [
+    `${config.server.base_path}/wasm_exec.js`,
+    `${config.server.base_path}/hp_ssh.wasm`,
+  ];
   const missing: string[] = [];
 
   for (const file of assets) {
@@ -137,7 +139,7 @@ function generateHostname(username: string) {
 export const links: Route.LinksFunction = () => [
   {
     rel: "preload",
-    href: WASM_MODULE_URL,
+    href: `${getPrefix()}/hp_ssh.wasm`,
     as: "fetch",
     type: "application/wasm",
     crossOrigin: "anonymous",

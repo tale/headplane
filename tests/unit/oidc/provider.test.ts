@@ -290,6 +290,19 @@ describe("invalidate and reload", () => {
 });
 
 describe("startFlow", () => {
+  test("uses the configured dashboard path for callback and logout", async () => {
+    const svc = createOidcService(testConfig({ basePath: "/tools/web" }));
+    const result = await svc.startFlow();
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(new URL(result.value.url).searchParams.get("redirect_uri")).toBe(
+      "https://headplane.example.com/tools/web/oidc/callback",
+    );
+    expect(
+      new URL(svc.buildEndSessionUrl("token")!).searchParams.get("post_logout_redirect_uri"),
+    ).toBe("https://headplane.example.com/tools/web/login?s=logout");
+  });
+
   test("builds authorization URL with required params", async () => {
     const svc = createOidcService(testConfig());
     const result = await svc.startFlow();
