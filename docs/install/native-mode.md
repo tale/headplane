@@ -21,7 +21,7 @@ or prefer to avoid containers.
 - Go matching the `go` directive in the checked-out release's `go.mod`
   (only needed to build Headplane)
 - Node.js and [pnpm](https://pnpm.io/) matching the `engines` field in the
-  checked-out release's `package.json`. For v0.7.1, use Node.js `>=24.2 <25`
+  checked-out release's `package.json`. For v0.8.0, use Node.js `>=24.2 <25`
   and pnpm `>=10.4 <11`; `packageManager` pins pnpm to `10.4.0`.
 - Headscale version 0.27.0 or later installed and running
 - A [completed configuration file](./index.md#configuration) for Headplane.

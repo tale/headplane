@@ -20,15 +20,15 @@ export default function Footer({ isDebug, baseUrl }: FooterProps) {
         "dark:border-t dark:border-mist-800",
       )}
     >
-      <div className="container flex items-center justify-between py-2">
-        <p className="text-xs">
+      <div className="container flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <p className="min-w-0 text-xs">
           Headplane is free and open-source. Please consider{" "}
           <Link external styled to="https://tale.me/sponsor">
             sponsoring
           </Link>{" "}
           to support development.
         </p>
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex min-w-0 items-center gap-2 text-xs">
           {isDebug && (
             <span
               className={cn(
@@ -43,7 +43,7 @@ export default function Footer({ isDebug, baseUrl }: FooterProps) {
           <p className="text-mist-500 dark:text-mist-400">
             {__VERSION__} &middot;{" "}
             {urlVisible ? (
-              <code>{baseUrl}</code>
+              <code className="break-all">{baseUrl}</code>
             ) : (
               <span aria-hidden="true">&bull;&bull;&bull;&bull;&bull;</span>
             )}

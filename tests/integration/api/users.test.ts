@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import { getRuntimeClient, HS_VERSIONS } from "../setup/env";
 
-describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
+describe.for(HS_VERSIONS)("Headscale %s: Users", { concurrent: false }, (version) => {
   test("users can be created", async () => {
     const client = await getRuntimeClient(version);
     const user = await client.users.create({ name: "tale@" });

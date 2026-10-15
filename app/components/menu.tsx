@@ -54,7 +54,7 @@ export const MenuContent = ({
     <BaseMenu.Positioner side={side} sideOffset={sideOffset} align={align}>
       <BaseMenu.Popup
         className={cn(
-          "min-w-50 rounded-lg py-1",
+          "max-h-(--available-height) min-w-50 overflow-y-auto rounded-lg py-1",
           "bg-white dark:bg-mist-900",
           "shadow-lg dark:shadow-none",
           "border border-mist-200 dark:border-mist-700",

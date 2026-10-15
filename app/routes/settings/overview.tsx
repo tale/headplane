@@ -2,21 +2,20 @@ import { ArrowRight } from "lucide-react";
 
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
-import { headscaleConfigContext, oidcContext } from "~/server/context";
+import { headscaleConfigContext } from "~/server/context";
 
 import type { Route } from "./+types/overview";
 
 export async function loader({ context }: Route.LoaderArgs) {
   const headscaleConfig = context.get(headscaleConfigContext);
-  const oidc = context.get(oidcContext);
 
   return {
     config: headscaleConfig.writable(),
-    isOidcEnabled: oidc.state === "enabled" && oidc.value.status().state === "ready",
+    hasOidcConfig: headscaleConfig.hasOIDCConfig(),
   };
 }
 
-export default function Page({ loaderData: { config, isOidcEnabled } }: Route.ComponentProps) {
+export default function Page({ loaderData: { config, hasOidcConfig } }: Route.ComponentProps) {
   return (
     <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
       <div className="flex w-full flex-col sm:w-2/3">
@@ -56,7 +55,7 @@ export default function Page({ loaderData: { config, isOidcEnabled } }: Route.Co
           <ArrowRight className="ml-2 h-5 w-5" />
         </div>
       </Link>
-      {config && isOidcEnabled ? (
+      {config && hasOidcConfig ? (
         <>
           <div className="flex w-full flex-col sm:w-2/3">
             <h1 className="mb-4 text-2xl font-medium">Authentication Restrictions</h1>

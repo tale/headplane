@@ -1,18 +1,34 @@
 # Next
 
-Building Headplane from source now requires Go 1.27.1 or newer.
-
 ## Changes
 
 - Configure the dashboard URL prefix with `server.base_path` without rebuilding Headplane. Existing installations continue to use `/admin` by default (closes [#637](https://github.com/tale/headplane/issues/637)).
 
+# 0.8.0 (October 13, 2026)
+
+Building Headplane from source now requires Go 1.27.1 or newer.
+
+## Changes
+
+- Added a structured editor to the Access Control page with **Rules** and **Tags & Groups** tabs for editing `acls`, `ssh`, `hosts`, `groups`, and `tagOwners` without touching HuJSON. Sources and destinations are suggested from the groups, tags, hosts, and users in your tailnet. Nothing is applied until you press Save, and the file editor is still there for everything else. Editing through the structured editor drops comments from the policy, and Headplane warns you when that would happen (closes [#607](https://github.com/tale/headplane/issues/607), via [#608](https://github.com/tale/headplane/pull/608)).
+- The Users page now shows which policy groups each user belongs to, and **Edit groups** in the row menu lets you change them (requires the `write_policy` permission).
+- The machine tag dialog now flags tags that are missing from `tagOwners`, since Headscale accepts them but they never match any rule.
 - Added `config.oidc.jwks_endpoint` to allow manually setting the JWKs keyset for OIDC (via [#620](https://github.com/tale/headplane/pull/620)).
+- Docker images now publish floating minor version tags (e.g., `0.8`) that always point to the latest patch release, so you can pin to a minor version in your `docker-compose.yml`.
 
 ## Fixes
 
+- The footer now stacks on narrow screens instead of forcing the whole page to scroll sideways on phones (closes [#648](https://github.com/tale/headplane/issues/648)).
+- User pickers across Headplane, including the pre-auth key, new machine, change owner, and machine filter menus, are now sorted alphabetically to match the Users page (closes [#622](https://github.com/tale/headplane/issues/622)).
+- Long dropdown menus, such as the user and tag filters on the Machines page, now scroll instead of running off the screen (closes [#621](https://github.com/tale/headplane/issues/621)).
+- DNS records added from the UI now have leading and trailing whitespace trimmed from their name and value, which previously produced records that silently never resolved (closes [#647](https://github.com/tale/headplane/issues/647)).
+- Fixed being signed straight back in a few seconds after logging out when `oidc.disable_api_key_login` is enabled. The logged-out page now stays put across reloads and has a **Sign in again** button (closes [#642](https://github.com/tale/headplane/issues/642)).
+- Fixed the Authentication Restrictions link disappearing from Settings after a restart while signed in with an existing session (closes [#645](https://github.com/tale/headplane/issues/645)).
 - Fixed copying code, attributes, and machine addresses over plain HTTP, and added feedback when copying fails (closes [#597](https://github.com/tale/headplane/issues/597)).
 - Updated NPM & Go dependencies to fix vulnerabilities.
 - Fixed the Native installation documentation as it was outdated and missing steps (via [#633](https://github.com/tale/headplane/pull/633)).
+
+---
 
 # 0.7.1 (August 27, 2026)
 

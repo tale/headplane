@@ -12,7 +12,7 @@ import Switch from "~/components/switch";
 import Text from "~/components/text";
 import Title from "~/components/title";
 import type { User } from "~/types";
-import { getUserDisplayName } from "~/utils/user";
+import { getUserDisplayName, sortUsersByDisplayName } from "~/utils/user";
 
 interface AddAuthKeyProps {
   users: User[];
@@ -62,7 +62,8 @@ export default function AddAuthKey({
   const currentUser = selfServiceOnly
     ? findCurrentUser(users, currentHeadscaleUserId, currentSubject)
     : null;
-  const availableUsers = selfServiceOnly && currentUser ? [currentUser] : users;
+  const availableUsers =
+    selfServiceOnly && currentUser ? [currentUser] : sortUsersByDisplayName(users);
   const [userId, setUserId] = useState<string | null>(availableUsers[0]?.id);
   const [tags, setTags] = useState("");
 

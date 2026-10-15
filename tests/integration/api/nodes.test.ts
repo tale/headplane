@@ -32,7 +32,7 @@ function actionContext(api: Awaited<ReturnType<typeof getRuntimeClient>>) {
   return { auth, context, liveStore };
 }
 
-describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
+describe.for(HS_VERSIONS)("Headscale %s: Users", { concurrent: false }, (version) => {
   let workingNodeId: string;
 
   test("nodes can register from a Tailscale registration URL", async () => {

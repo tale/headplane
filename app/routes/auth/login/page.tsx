@@ -94,8 +94,9 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 
   useEffect(() => {
     // State is a one time thing, we need to remove it after it has
-    // Been consumed to prevent logic loops.
-    if (urlState !== null) {
+    // Been consumed to prevent logic loops. The logout marker stays so a
+    // reload doesn't auto-redirect into OIDC and silently sign back in.
+    if (urlState !== undefined && urlState !== "logout") {
       const searchParams = new URLSearchParams(params);
       searchParams.delete("s");
 
@@ -103,7 +104,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
       // We can't use the useSearchParams method since it revalidates
       // Which will trigger a full reload
       const newUrl = searchParams.toString()
-        ? `{${window.location.pathname}?${searchParams.toString()}`
+        ? `${window.location.pathname}?${searchParams.toString()}`
         : window.location.pathname;
 
       window.history.replaceState(null, "", newUrl);
