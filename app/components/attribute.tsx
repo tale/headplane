@@ -1,76 +1,80 @@
-import { Check, Copy, Info } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 
+import { SettingRow } from "~/components/section";
+import cn from "~/utils/cn";
 import { copyToClipboard } from "~/utils/copy";
 import toast from "~/utils/toast";
-
-import Tooltip from "./tooltip";
 
 export interface AttributeProps {
   name: string;
   value: string;
   tooltip?: string;
   isCopyable?: boolean;
+  // Addresses, keys, and versions read better in mono, as in the tables.
+  isMono?: boolean;
 }
 
-export default function Attribute({ name, value, tooltip, isCopyable }: AttributeProps) {
+// A read-only SettingRow, optionally copied on click. Multi-line values are
+// split on newlines. The copy button has no background or outline because the
+// row clips overflow to truncate, which would cut them off.
+export default function Attribute({ name, value, tooltip, isCopyable, isMono }: AttributeProps) {
+  const lines = value.split("\n");
+  const textClass = isMono ? "font-mono text-xs" : undefined;
+
   return (
-    <div className="group/attr flex items-baseline gap-4 py-2 text-sm">
-      <dt className="text-muted flex w-1/3 min-w-0 shrink-0 items-baseline gap-1 sm:w-40">
-        {name}
-        {tooltip ? (
-          <Tooltip content={tooltip}>
-            <Info className="size-3.5 translate-y-0.5 opacity-40 transition-opacity hover:opacity-100" />
-          </Tooltip>
-        ) : undefined}
-      </dt>
-      <dd className="min-w-0 flex-1">
-        {isCopyable ? (
-          <button
-            type="button"
-            className="focus-ring hover:bg-hover relative -mx-1 flex max-w-full min-w-0 items-center gap-1.5 rounded-sm px-1"
-            onClick={async (event) => {
-              const svgs = event.currentTarget.querySelectorAll("svg");
-              const isCopied = await copyToClipboard(value);
-              if (!isCopied) {
-                toast("Copy failed. Please copy the text manually.");
-                return;
-              }
+    <SettingRow isMultiline={lines.length > 1} label={name} tooltip={tooltip}>
+      {isCopyable ? (
+        <button
+          className={cn(
+            "group/copy flex max-w-full min-w-0 items-center gap-1.5 text-left outline-none",
+            "decoration-accent decoration-2 underline-offset-2 focus-visible:underline",
+          )}
+          onClick={async (event) => {
+            const svgs = event.currentTarget.querySelectorAll("svg");
+            const isCopied = await copyToClipboard(value);
+            if (!isCopied) {
+              toast("Copy failed. Please copy the text manually.");
+              return;
+            }
 
+            for (const svg of svgs) {
+              svg.toggleAttribute("data-copied", true);
+            }
+
+            toast(`Copied ${name}`);
+
+            setTimeout(() => {
               for (const svg of svgs) {
-                svg.toggleAttribute("data-copied", true);
+                svg.toggleAttribute("data-copied", false);
               }
-
-              toast(`Copied ${name}`);
-
-              setTimeout(() => {
-                for (const svg of svgs) {
-                  svg.toggleAttribute("data-copied", false);
-                }
-              }, 1000);
-            }}
-          >
-            <div suppressHydrationWarning className="truncate">
-              {value}
-            </div>
-            <div className="opacity-0 transition-opacity group-hover/attr:opacity-100">
-              <Check className="hidden size-3.5 data-copied:block" />
-              <Copy className="block size-3.5 data-copied:hidden" />
-            </div>
-          </button>
-        ) : (
-          <div className="relative min-w-0" suppressHydrationWarning>
-            {value.includes("\n") ? (
-              value.split("\n").map((line) => (
-                <div key={line} className="truncate">
-                  {line}
-                </div>
-              ))
-            ) : (
-              <div className="truncate">{value}</div>
+            }, 1000);
+          }}
+          type="button"
+        >
+          <span className={cn("truncate", textClass)} suppressHydrationWarning>
+            {value}
+          </span>
+          <span
+            className={cn(
+              "text-muted group-hover/copy:text-fg opacity-0 transition-opacity",
+              "group-hover/setting:opacity-100 group-focus-visible/copy:opacity-100 pointer-coarse:opacity-100",
             )}
-          </div>
-        )}
-      </dd>
-    </div>
+          >
+            <Check className="hidden size-3.5 data-copied:block" />
+            <Copy className="block size-3.5 data-copied:hidden" />
+          </span>
+        </button>
+      ) : (
+        lines.map((line) => (
+          <span
+            className={cn("block break-all sm:truncate", textClass)}
+            key={line}
+            suppressHydrationWarning
+          >
+            {line}
+          </span>
+        ))
+      )}
+    </SettingRow>
   );
 }

@@ -1,6 +1,8 @@
+import { Info } from "lucide-react";
 import type React from "react";
 
 import Button, { type ButtonProps } from "~/components/button";
+import Tooltip from "~/components/tooltip";
 import cn from "~/utils/cn";
 
 interface Props {
@@ -73,7 +75,10 @@ export function Row({ action, className, children }: RowProps) {
 
 interface SettingRowProps {
   label: string;
+  tooltip?: React.ReactNode;
   action?: React.ReactNode;
+  // Top-aligns the label for values that span several lines.
+  isMultiline?: boolean;
   children?: React.ReactNode;
 }
 
@@ -81,12 +86,19 @@ export function SettingList({ children }: { children: React.ReactNode }) {
   return <dl className={listClass}>{children}</dl>;
 }
 
-export function SettingRow({ label, action, children }: SettingRowProps) {
+export function SettingRow({ label, tooltip, action, isMultiline, children }: SettingRowProps) {
   return (
-    <div className={rowClass}>
-      <dt className="text-muted w-32 shrink-0 sm:w-40">{label}</dt>
+    <div className={cn("group/setting", rowClass, isMultiline && "items-start py-2.5")}>
+      <dt className="text-muted flex w-32 shrink-0 items-center gap-1 sm:w-40">
+        {label}
+        {tooltip && (
+          <Tooltip content={tooltip}>
+            <Info className="size-3.5 opacity-40 transition-opacity hover:opacity-100" />
+          </Tooltip>
+        )}
+      </dt>
       <dd className="flex min-w-0 flex-1 items-center justify-between gap-4">
-        <span className="min-w-0 sm:truncate">{children}</span>
+        <span className="min-w-0 flex-1 sm:truncate">{children}</span>
         {action}
       </dd>
     </div>
