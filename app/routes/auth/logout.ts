@@ -28,9 +28,8 @@ export async function action({ request, context }: ActionFunctionArgs) {
   // ended. Disabled by default because the post_logout_redirect_uri must be
   // pre-registered on the IdP — turning this on without registering it would
   // strand users on the IdP's error page.
-  // JWT-authenticated sessions live in the proxy, not in Headplane. Clearing
-  // our cookie alone would leave the proxy session intact and log the user
-  // straight back in, so hand off to the provider's sign-out instead.
+  //
+  // JWT sessions live in the proxy, so hand off to its sign-out URL instead.
   if (principal?.kind === "jwt" && jwtAuth?.logoutUrl) {
     return redirect(jwtAuth.logoutUrl, {
       headers: {

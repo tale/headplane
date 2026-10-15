@@ -1,12 +1,8 @@
 import { SignJWT, generateKeyPair } from "jose";
 import type { JWTVerifyGetKey } from "jose";
-import { beforeAll, describe, expect, test, vi } from "vitest";
+import { beforeAll, describe, expect, test } from "vitest";
 
 import { createJwtAuthService, type JwtAuthConfig } from "~/server/web/jwt-auth";
-
-vi.mock("~/utils/log", () => ({
-  default: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
 
 const AUDIENCE = "/projects/123456789/global/backendServices/987654321";
 const ISSUER = "https://cloud.google.com/iap";
@@ -24,8 +20,7 @@ beforeAll(async () => {
   esPrivateKey = es.privateKey;
   esPublicKey = es.publicKey;
 
-  const otherEs = await generateKeyPair("ES256");
-  otherEsPrivateKey = otherEs.privateKey;
+  otherEsPrivateKey = (await generateKeyPair("ES256")).privateKey;
 
   const rsa = await generateKeyPair("RS256");
   rsaPrivateKey = rsa.privateKey;
@@ -41,8 +36,7 @@ interface AssertionOptions {
   issuer?: string;
   subject?: string | null;
   email?: string | null;
-  hd?: string;
-  expiresIn?: number;
+  expiresIn?: number | null;
   notBefore?: number;
   alg?: string;
   key?: CryptoKey;
@@ -53,17 +47,17 @@ async function signAssertion(options: AssertionOptions = {}): Promise<string> {
   if (options.email !== null) {
     claims.email = options.email ?? "ada@example.com";
   }
-  if (options.hd) {
-    claims.hd = options.hd;
-  }
 
   const now = Math.floor(Date.now() / 1000);
   let jwt = new SignJWT(claims)
     .setProtectedHeader({ alg: options.alg ?? "ES256" })
     .setIssuer(options.issuer ?? ISSUER)
     .setAudience(options.audience ?? AUDIENCE)
-    .setIssuedAt(now)
-    .setExpirationTime(now + (options.expiresIn ?? 600));
+    .setIssuedAt(now);
+
+  if (options.expiresIn !== null) {
+    jwt = jwt.setExpirationTime(now + (options.expiresIn ?? 600));
+  }
 
   if (options.subject !== null) {
     jwt = jwt.setSubject(options.subject ?? SUBJECT);
@@ -89,84 +83,76 @@ function createService(overrides: Partial<JwtAuthConfig> = {}) {
   return createJwtAuthService({
     header: HEADER,
     issuer: ISSUER,
-    jwksUrl: "https://www.gstatic.com/iap/verify/public_key-jwk",
+    jwksEndpoint: "https://www.gstatic.com/iap/verify/public_key-jwk",
     audience: AUDIENCE,
-    domainClaim: "hd",
     keyResolver: resolverFor(esPublicKey),
     ...overrides,
   });
 }
 
 describe("createJwtAuthService configuration", () => {
-  test("createJwtAuthService_withoutAudience_throwsAtConstruction", () => {
-    expect(() => createService({ audience: "" })).toThrow(/audience is required/);
-  });
-
-  test("createJwtAuthService_withBlankAudience_throwsAtConstruction", () => {
-    expect(() => createService({ audience: "   " })).toThrow(/audience is required/);
-  });
-
-  test("createJwtAuthService_exposesTheConfiguredHeaderAndLogoutUrl", () => {
-    const service = createService({ logoutUrl: "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE" });
-    expect(service.header).toBe(HEADER);
-    expect(service.logoutUrl).toBe("/?gcp-iap-mode=CLEAR_LOGIN_COOKIE");
-  });
-
-  test.each(["header", "issuer", "jwksUrl"] as const)(
-    "createJwtAuthService_without%s_throwsAtConstruction",
+  test.each(["header", "issuer", "jwksEndpoint", "audience"] as const)(
+    "createJwtAuthService_withBlank_%s_throwsAtConstruction",
     (field) => {
-      // Each of these is a way to configure an authentication bypass, so
-      // Headplane refuses to start rather than guessing a default.
-      expect(() => createService({ [field]: "" })).toThrow(/is required/);
+      expect(() => createService({ [field]: "  " })).toThrow(/is required/);
     },
   );
 
   test.each(["HS256", "HS384", "HS512"])(
     "createJwtAuthService_with%sInAlgorithms_throwsAtConstruction",
     (alg) => {
-      // A JWKS publishes public keys. Verifying with a symmetric algorithm
-      // would let anyone use a published key as the signing secret.
       expect(() => createService({ algorithms: ["ES256", alg] })).toThrow(/cannot include/);
     },
   );
 
-  test("createJwtAuthService_withoutAlgorithms_defaultsToAsymmetricOnly", async () => {
+  test("createJwtAuthService_exposesTheConfiguredHeaderAndLogoutUrl", () => {
+    const service = createService({ logoutUrl: "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE" });
+
+    expect(service.header).toBe(HEADER);
+    expect(service.logoutUrl).toBe("/?gcp-iap-mode=CLEAR_LOGIN_COOKIE");
+  });
+
+  test("createJwtAuthService_withoutAlgorithms_acceptsAsymmetricSignatures", async () => {
     const service = createService({ algorithms: undefined });
     const result = await service.authenticate(requestWith(await signAssertion()));
 
     expect(result.ok).toBe(true);
   });
-
-  test("authenticate_withHeaderCasingDifferentFromConfig_stillMatches", async () => {
-    const service = createService({ header: "X-Custom-Assertion" });
-    const result = await service.authenticate(
-      requestWith(await signAssertion(), "x-custom-assertion"),
-    );
-
-    expect(result.ok).toBe(true);
-  });
 });
 
-describe("authenticate happy path", () => {
-  test("authenticate_withValidAssertion_returnsNamespacedIdentity", async () => {
+describe("authenticate identity", () => {
+  test("authenticate_withValidAssertion_returnsIssuerScopedSubject", async () => {
     const service = createService();
     const result = await service.authenticate(requestWith(await signAssertion()));
 
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.subject).toBe(`jwt:${SUBJECT}`);
+    expect(result.value.subject).toBe(`jwt:${ISSUER}:${SUBJECT}`);
     expect(result.value.email).toBe("ada@example.com");
     expect(result.value.name).toBe("ada");
-    expect(result.value.expiresAt).toBeGreaterThan(Date.now());
   });
 
-  test("authenticate_headerLookupIsCaseInsensitive_returnsIdentity", async () => {
+  test("authenticate_sameSubjectFromAnotherIssuer_yieldsDifferentIdentity", async () => {
+    const other = "https://other.example.com";
+    const first = await createService().authenticate(requestWith(await signAssertion()));
+    const second = await createService({ issuer: other }).authenticate(
+      requestWith(await signAssertion({ issuer: other })),
+    );
+
+    if (!first.ok || !second.ok) throw new Error("expected both assertions to verify");
+    expect(first.value.subject).not.toBe(second.value.subject);
+  });
+
+  test("authenticate_withWhitespaceInSubject_keepsItExactly", async () => {
     const service = createService();
-    const assertion = await signAssertion();
-    const result = await service.authenticate(requestWith(assertion, "X-Goog-IAP-JWT-Assertion"));
+    const result = await service.authenticate(
+      requestWith(await signAssertion({ subject: " 42 " })),
+    );
 
     expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.subject).toBe(`jwt:${ISSUER}: 42 `);
   });
 
   test("authenticate_withoutEmailClaim_fallsBackToSubjectForName", async () => {
@@ -179,293 +165,105 @@ describe("authenticate happy path", () => {
     expect(result.value.email).toBeUndefined();
     expect(result.value.name).toBe(SUBJECT);
   });
+
+  test("authenticate_headerLookupIsCaseInsensitive_returnsIdentity", async () => {
+    const service = createService({ header: "X-Custom-Assertion" });
+    const result = await service.authenticate(
+      requestWith(await signAssertion(), "x-custom-assertion"),
+    );
+
+    expect(result.ok).toBe(true);
+  });
 });
 
 describe("authenticate rejects unverifiable assertions", () => {
+  async function expectRejection(
+    assertion: string | undefined,
+    code: string,
+    overrides: Partial<JwtAuthConfig> = {},
+  ) {
+    const result = await createService(overrides).authenticate(requestWith(assertion));
+
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error.code).toBe(code);
+    return result.error;
+  }
+
   test("authenticate_withoutHeader_returnsMissingAssertion", async () => {
-    const service = createService();
-    const result = await service.authenticate(requestWith());
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    // The caller relies on this code to distinguish "fall through to the
-    // cookie session" from "fail closed".
-    expect(result.error.code).toBe("missing_assertion");
+    await expectRejection(undefined, "missing_assertion");
   });
 
-  test("authenticate_withEmptyHeader_returnsMissingAssertion", async () => {
-    const service = createService();
-    const result = await service.authenticate(requestWith("   "));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("missing_assertion");
-  });
-
-  test("authenticate_withWrongAudience_reportsMismatchAndActualAudience", async () => {
-    const service = createService();
-    const assertion = await signAssertion({
-      audience: "/projects/999/global/backendServices/111",
-    });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-
-    expect(result.error.code).toBe("audience_mismatch");
-    // Diagnosing an audience mismatch is impossible without both values.
-    expect(result.error.message).toContain(AUDIENCE);
-    expect(result.error.message).toContain("/projects/999/global/backendServices/111");
-  });
-
-  test("authenticate_withWrongIssuer_returnsIssuerMismatch", async () => {
-    const service = createService();
-    const assertion = await signAssertion({ issuer: "https://evil.example.com" });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("issuer_mismatch");
-  });
-
-  test("authenticate_withoutExpiry_rejects", async () => {
-    // jose only validates `exp` when it is present, so an assertion without
-    // one would otherwise be accepted forever.
-    const now = Math.floor(Date.now() / 1000);
-    const noExpiry = await new SignJWT({ email: "ada@example.com" })
-      .setProtectedHeader({ alg: "ES256" })
-      .setSubject(SUBJECT)
-      .setIssuer(ISSUER)
-      .setAudience(AUDIENCE)
-      .setIssuedAt(now)
-      .sign(esPrivateKey);
-
-    const service = createService();
-    const result = await service.authenticate(requestWith(noExpiry));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
-  });
-
-  test("authenticate_withExpiredAssertion_returnsExpired", async () => {
-    const service = createService();
-    const assertion = await signAssertion({ expiresIn: -600 });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("expired_assertion");
-  });
-
-  test("authenticate_withFutureNotBefore_returnsInvalid", async () => {
-    const service = createService();
-    const assertion = await signAssertion({ notBefore: 600 });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
-  });
-
-  test("authenticate_withForeignSignature_returnsInvalid", async () => {
-    const service = createService();
-    const assertion = await signAssertion({ key: otherEsPrivateKey });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
-  });
-
-  test("authenticate_withMissingSubject_returnsMissingSubject", async () => {
-    const service = createService();
-    const assertion = await signAssertion({ subject: null });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("missing_subject");
+  test("authenticate_withEmptyHeader_returnsInvalidAssertion", async () => {
+    await expectRejection("", "invalid_assertion");
+    await expectRejection("   ", "invalid_assertion");
   });
 
   test("authenticate_withGarbageHeader_returnsInvalid", async () => {
-    const service = createService();
-    const result = await service.authenticate(requestWith("not-a-jwt"));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
+    await expectRejection("not-a-jwt", "invalid_assertion");
   });
-});
 
-describe("authenticate resists algorithm substitution", () => {
-  test("authenticate_withRs256SignedAssertion_rejectsEvenWhenKeyMatches", async () => {
-    // The resolver hands back the *correct* RSA key, so only the algorithm
-    // allowlist can reject this. An operator who pinned ES256 must not have
-    // RS256 accepted on their behalf.
-    const service = createService({
-      algorithms: ["ES256"],
-      keyResolver: resolverFor(rsaPublicKey),
-    });
-    const assertion = await signAssertion({ alg: "RS256", key: rsaPrivateKey });
-    const result = await service.authenticate(requestWith(assertion));
+  test("authenticate_withWrongAudience_reportsBothAudiences", async () => {
+    const wrong = "/projects/999/global/backendServices/111";
+    const error = await expectRejection(
+      await signAssertion({ audience: wrong }),
+      "audience_mismatch",
+    );
 
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
+    expect(error?.message).toContain(AUDIENCE);
+    expect(error?.message).toContain(wrong);
+  });
+
+  test("authenticate_withWrongIssuer_returnsIssuerMismatch", async () => {
+    await expectRejection(
+      await signAssertion({ issuer: "https://evil.example.com" }),
+      "issuer_mismatch",
+    );
+  });
+
+  test("authenticate_withoutExpiry_rejects", async () => {
+    await expectRejection(await signAssertion({ expiresIn: null }), "invalid_assertion");
+  });
+
+  test("authenticate_withExpiredAssertion_returnsExpired", async () => {
+    await expectRejection(await signAssertion({ expiresIn: -600 }), "expired_assertion");
+  });
+
+  test("authenticate_withFutureNotBefore_returnsInvalid", async () => {
+    await expectRejection(await signAssertion({ notBefore: 600 }), "invalid_assertion");
+  });
+
+  test("authenticate_withForeignSignature_returnsInvalid", async () => {
+    await expectRejection(await signAssertion({ key: otherEsPrivateKey }), "invalid_assertion");
+  });
+
+  test("authenticate_withMissingSubject_returnsMissingSubject", async () => {
+    await expectRejection(await signAssertion({ subject: null }), "missing_subject");
+  });
+
+  test("authenticate_withEmptySubject_returnsMissingSubject", async () => {
+    await expectRejection(await signAssertion({ subject: "" }), "missing_subject");
+  });
+
+  test("authenticate_withAlgorithmOutsideAllowlist_rejectsEvenWhenKeyMatches", async () => {
+    await expectRejection(
+      await signAssertion({ alg: "RS256", key: rsaPrivateKey }),
+      "invalid_assertion",
+      { algorithms: ["ES256"], keyResolver: resolverFor(rsaPublicKey) },
+    );
   });
 
   test("authenticate_withAlgNoneAssertion_rejects", async () => {
     const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
-
     const now = Math.floor(Date.now() / 1000);
     const unsigned = `${encode({ alg: "none", typ: "JWT" })}.${encode({
       sub: SUBJECT,
-      email: "ada@example.com",
       iss: ISSUER,
       aud: AUDIENCE,
       iat: now,
       exp: now + 600,
     })}.`;
 
-    const service = createService();
-    const result = await service.authenticate(requestWith(unsigned));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("invalid_assertion");
-  });
-});
-
-describe("hosted domain allowlist", () => {
-  test("authenticate_withHdOutsideAllowlist_returnsDomainNotAllowed", async () => {
-    const service = createService({ allowedDomains: ["example.com"] });
-    const assertion = await signAssertion({
-      hd: "attacker.com",
-      email: "ada@attacker.com",
-    });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("domain_not_allowed");
-  });
-
-  test("authenticate_withHdInAllowlist_returnsIdentity", async () => {
-    const service = createService({ allowedDomains: ["example.com"] });
-    const assertion = await signAssertion({ hd: "example.com" });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.domain).toBe("example.com");
-  });
-
-  test("authenticate_consumerAccountWithoutHd_fallsBackToEmailDomain", async () => {
-    // Consumer Google accounts carry no `hd`. Without the email fallback an
-    // allowlist of ["example.com"] would silently admit any gmail.com user.
-    const service = createService({ allowedDomains: ["example.com"] });
-    const assertion = await signAssertion({ email: "someone@gmail.com" });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("domain_not_allowed");
-  });
-
-  test("authenticate_withoutEmailOrHdAndAllowlistSet_returnsDomainNotAllowed", async () => {
-    const service = createService({ allowedDomains: ["example.com"] });
-    const assertion = await signAssertion({ email: null });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(false);
-    if (result.ok) return;
-    expect(result.error.code).toBe("domain_not_allowed");
-  });
-
-  test("authenticate_allowlistMatchIsCaseInsensitive_returnsIdentity", async () => {
-    const service = createService({ allowedDomains: ["  Example.COM  "] });
-    const assertion = await signAssertion({ hd: "EXAMPLE.com" });
-    const result = await service.authenticate(requestWith(assertion));
-
-    expect(result.ok).toBe(true);
-  });
-});
-
-describe("verification cache", () => {
-  test("authenticate_repeatedAssertion_verifiesSignatureOnce", async () => {
-    const resolver = vi.fn(() => Promise.resolve(esPublicKey)) as unknown as JWTVerifyGetKey;
-    const service = createService({ keyResolver: resolver });
-    const assertion = await signAssertion();
-    const request = requestWith(assertion);
-
-    await service.authenticate(request);
-    await service.authenticate(request);
-    await service.authenticate(request);
-
-    expect(resolver).toHaveBeenCalledTimes(1);
-  });
-
-  test("authenticate_distinctAssertions_verifiesEach", async () => {
-    const resolver = vi.fn(() => Promise.resolve(esPublicKey)) as unknown as JWTVerifyGetKey;
-    const service = createService({ keyResolver: resolver });
-
-    await service.authenticate(requestWith(await signAssertion({ email: "a@example.com" })));
-    await service.authenticate(requestWith(await signAssertion({ email: "b@example.com" })));
-
-    expect(resolver).toHaveBeenCalledTimes(2);
-  });
-
-  test("authenticate_failedAssertion_isNotCached", async () => {
-    const resolver = vi.fn(() => Promise.resolve(esPublicKey)) as unknown as JWTVerifyGetKey;
-    const service = createService({ keyResolver: resolver });
-    const assertion = await signAssertion({ issuer: "https://evil.example.com" });
-
-    await service.authenticate(requestWith(assertion));
-    await service.authenticate(requestWith(assertion));
-
-    expect(resolver).toHaveBeenCalledTimes(2);
-  });
-
-  test("authenticate_cacheIsBounded_evictsOldestEntries", async () => {
-    const resolver = vi.fn(() => Promise.resolve(esPublicKey)) as unknown as JWTVerifyGetKey;
-    const service = createService({ keyResolver: resolver, cacheMaxEntries: 2 });
-
-    const first = await signAssertion({ email: "a@example.com" });
-    const second = await signAssertion({ email: "b@example.com" });
-    const third = await signAssertion({ email: "c@example.com" });
-
-    await service.authenticate(requestWith(first));
-    await service.authenticate(requestWith(second));
-    await service.authenticate(requestWith(third));
-    expect(resolver).toHaveBeenCalledTimes(3);
-
-    // `first` was evicted when `third` pushed the cache past its bound.
-    await service.authenticate(requestWith(first));
-    expect(resolver).toHaveBeenCalledTimes(4);
-  });
-
-  test("authenticate_cacheNeverOutlivesAssertionExpiry", async () => {
-    const resolver = vi.fn(() => Promise.resolve(esPublicKey)) as unknown as JWTVerifyGetKey;
-    // A long cache TTL must still be clamped by the assertion's own `exp`.
-    const service = createService({ keyResolver: resolver, cacheTtlMs: 600_000 });
-    const assertion = await signAssertion({ expiresIn: 3 });
-    const request = requestWith(assertion);
-
-    await service.authenticate(request);
-    expect(resolver).toHaveBeenCalledTimes(1);
-
-    vi.useFakeTimers();
-    try {
-      // Past `exp` *and* past the default clock tolerance.
-      vi.setSystemTime(Date.now() + 20_000);
-      const result = await service.authenticate(request);
-
-      // Re-verified rather than served from cache, and now genuinely expired.
-      expect(resolver).toHaveBeenCalledTimes(2);
-      expect(result.ok).toBe(false);
-    } finally {
-      vi.useRealTimers();
-    }
+    await expectRejection(unsigned, "invalid_assertion");
   });
 });

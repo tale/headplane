@@ -32,9 +32,8 @@
       builtins.removeAttrs settingsWithoutNulls ["oidc"]
     else
       settingsWithoutNulls;
-  # `settings.server` is a submodule, so `jwt_auth` is always materialized with
-  # its defaults. The schema requires header/issuer/jwks_url/audience, which
-  # would reject every deployment that does not use it.
+  # A disabled jwt_auth block is dropped: the submodule materializes it with
+  # null required fields, which the schema would reject.
   settingsWithoutDisabledJwtAuth =
     if settingsWithoutEmptyOidc ? server
        && settingsWithoutEmptyOidc.server ? jwt_auth

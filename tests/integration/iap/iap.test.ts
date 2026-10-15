@@ -35,15 +35,13 @@ async function signAssertion(key: SigningKey, subject = "accounts.google.com:115
     .sign(key.privateKey);
 }
 
-// Note there is no `keyResolver` here: this is the production path, resolving
-// keys through `createRemoteJWKSet` against a real HTTP endpoint.
-function createService(jwksUrl = jwks.url) {
+// No `keyResolver` here: keys come from `createRemoteJWKSet` over real HTTP.
+function createService(jwksEndpoint = jwks.url) {
   return createJwtAuthService({
     header: HEADER,
     issuer: ISSUER,
     audience: AUDIENCE,
-    domainClaim: "hd",
-    jwksUrl,
+    jwksEndpoint,
   });
 }
 
@@ -63,16 +61,13 @@ describe("assertion verification against a live JWKS endpoint", () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
 
-    expect(result.value.subject).toBe("jwt:accounts.google.com:1155");
-    // Proof the key really came over the wire rather than from a test double.
+    expect(result.value.subject).toBe(`jwt:${ISSUER}:accounts.google.com:1155`);
     expect(jwks.fetchCount()).toBeGreaterThan(before);
   });
 
   test("authenticate_distinctAssertions_doesNotRefetchPerRequest", async () => {
     const service = createService();
 
-    // Two different assertions bypass the service's own verification cache, so
-    // what is being measured here is the JWKS cache underneath it.
     await service.authenticate(requestWith(await signAssertion(jwks.key, "accounts.google.com:a")));
     const afterFirst = jwks.fetchCount();
     await service.authenticate(requestWith(await signAssertion(jwks.key, "accounts.google.com:b")));
@@ -91,18 +86,25 @@ describe("assertion verification against a live JWKS endpoint", () => {
     expect(result.error.code).toBe("invalid_assertion");
   });
 
-  test("authenticate_withRotatedKeySet_acceptsTheNewKey", async () => {
-    // A service with its own cache, so this rotation cannot be satisfied by a
-    // key another test already warmed.
+  test("authenticate_afterKeyRotation_refetchesOnTheSameVerifier", async () => {
+    const service = createService();
+    const warmed = await service.authenticate(requestWith(await signAssertion(jwks.key)));
+    expect(warmed.ok).toBe(true);
+    const fetchesBefore = jwks.fetchCount();
+
     const rotated = await createSigningKey("test-key-2");
     jwks.publish([rotated]);
 
+    // jose refetches for an unknown kid only once its 30s cooldown has passed.
+    vi.useFakeTimers({ toFake: ["Date"] });
     try {
-      const service = createService();
+      vi.setSystemTime(Date.now() + 31_000);
       const result = await service.authenticate(requestWith(await signAssertion(rotated)));
 
       expect(result.ok).toBe(true);
+      expect(jwks.fetchCount()).toBe(fetchesBefore + 1);
     } finally {
+      vi.useRealTimers();
       jwks.publish([jwks.key]);
     }
   });

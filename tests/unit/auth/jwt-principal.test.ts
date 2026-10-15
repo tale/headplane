@@ -46,9 +46,8 @@ function buildAuth(options: { defaultRole?: string; headscaleApiKey?: string | n
   const service = createJwtAuthService({
     header: HEADER,
     issuer: ISSUER,
-    jwksUrl: "https://www.gstatic.com/iap/verify/public_key-jwk",
+    jwksEndpoint: "https://www.gstatic.com/iap/verify/public_key-jwk",
     audience: AUDIENCE,
-    domainClaim: "hd",
     keyResolver: (() => Promise.resolve(publicKey)) as unknown as JWTVerifyGetKey,
   });
 
@@ -60,7 +59,7 @@ function buildAuth(options: { defaultRole?: string; headscaleApiKey?: string | n
 
 function requestWith(assertion?: string, cookie?: string): Request {
   const headers = new Headers();
-  if (assertion) {
+  if (assertion !== undefined) {
     headers.set(HEADER, assertion);
   }
   if (cookie) {
@@ -83,7 +82,7 @@ describe("JWT-authenticated principals", () => {
     expect(principal.kind).toBe("jwt");
     if (principal.kind === "api_key") return;
 
-    expect(principal.user.subject).toBe("jwt:accounts.google.com:1155");
+    expect(principal.user.subject).toBe(`jwt:${ISSUER}:accounts.google.com:1155`);
     expect(principal.profile.email).toBe("ada@example.com");
     expect(principal.sessionId).toBe("jwt-auth");
   });
@@ -92,7 +91,6 @@ describe("JWT-authenticated principals", () => {
     const { auth: service, db } = buildAuth();
     await service.require(requestWith(await signAssertion()));
 
-    // The proxy owns the session; Headplane keeps no server-side state for it.
     const { authSessions } = await import("~/server/db/schema");
     const sessions = await db.select().from(authSessions);
     expect(sessions).toHaveLength(0);
@@ -121,11 +119,8 @@ describe("JWT-authenticated principals", () => {
 });
 
 describe("JWT principals participate in authorization", () => {
-  // Regression guard: `isUserPrincipal` and the capability checks enumerate
-  // principal kinds explicitly. A new kind that is missing from them still
-  // compiles and still authenticates, but silently stops being treated as a
-  // user — an authorization failure with no error anywhere.
-
+  // `isUserPrincipal` enumerates principal kinds explicitly; a kind missing
+  // from it still authenticates but is no longer treated as a user.
   test("isUserPrincipal_forJwtPrincipal_returnsTrue", async () => {
     const { auth } = buildAuth();
     const principal = await auth.require(requestWith(await signAssertion()));
@@ -158,14 +153,23 @@ describe("JWT authentication fails closed", () => {
   test("require_withInvalidAssertion_rejectsInsteadOfFallingThrough", async () => {
     const { auth } = buildAuth();
 
-    // Establish a legitimate cookie session, then present it alongside an
-    // assertion signed by the wrong key. If the bad assertion silently fell
-    // through, the cookie would authenticate the request — a downgrade attack.
+    // A valid cookie session must not rescue a request carrying a bad assertion.
     const userId = await auth.findOrCreateUser("sub-cookie", { name: "Cookie" });
     const cookie = await auth.createOidcSession(userId, { name: "Cookie" });
     const forged = await signAssertion({ key: foreignKey });
 
     await expect(auth.require(requestWith(forged, cookie))).rejects.toThrow(
+      /JWT authentication failed/,
+    );
+  });
+
+  test("require_withEmptyAssertionHeader_rejectsInsteadOfFallingThrough", async () => {
+    const { auth } = buildAuth();
+
+    const userId = await auth.findOrCreateUser("sub-cookie", { name: "Cookie" });
+    const cookie = await auth.createOidcSession(userId, { name: "Cookie" });
+
+    await expect(auth.require(requestWith("", cookie))).rejects.toThrow(
       /JWT authentication failed/,
     );
   });
@@ -181,17 +185,13 @@ describe("JWT authentication fails closed", () => {
   });
 
   test("buildJwtAuth_withoutHeadscaleApiKey_throwsAtStartup", () => {
-    // Checked when the app context is built, not per request: an operator who
-    // enables jwt_auth without an API key is told at startup instead of being
-    // served a 500 on every protected route. Refusing to start also avoids
-    // silently falling back to the other authentication methods.
     const config = {
       server: {
         jwt_auth: {
           enabled: true,
           header: HEADER,
           issuer: ISSUER,
-          jwks_url: "https://www.gstatic.com/iap/verify/public_key-jwk",
+          jwks_endpoint: "https://www.gstatic.com/iap/verify/public_key-jwk",
           audience: AUDIENCE,
         },
       },

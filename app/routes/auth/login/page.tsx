@@ -14,7 +14,6 @@ import log from "~/utils/log";
 import type { Route } from "./+types/page";
 import { loginAction } from "./action";
 import { OidcConfigErrorNotice, OidcDiscoveryFailedNotice } from "./config-error";
-import { JwtAuthErrorNotice } from "./jwt-auth-error";
 import Logout from "./logout";
 import { OidcErrorNotice } from "./oidc-error";
 import Shell from "./shell";
@@ -30,17 +29,9 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     return redirect("/machines");
   } catch {}
 
-  // Reaching the login page while jwt_auth is enabled means the assertion was
-  // absent or did not verify. Surfacing the reason turns the single most common
-  // misconfiguration — a mismatched audience — from a blank login form into
-  // something an operator can act on.
-  let jwtAuthErrorCode: string | undefined;
-  if (jwtAuth) {
-    const result = await jwtAuth.authenticate(request);
-    if (!result.ok) {
-      jwtAuthErrorCode = result.error.code;
-    }
-  }
+  // The assertion was already verified and logged by auth.require; its
+  // presence here means it was rejected.
+  const jwtAuthRejected = jwtAuth !== undefined && request.headers.has(jwtAuth.header);
 
   const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
@@ -77,7 +68,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     isCookieSecureEnabled: config.server.cookie_secure,
     isOidcConnectorEnabled,
     oidcErrorCodes,
-    jwtAuthErrorCode,
+    jwtAuthRejected,
     urlState,
   };
 }
@@ -96,7 +87,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     isCookieSecureEnabled,
     isOidcConnectorEnabled,
     oidcErrorCodes,
-    jwtAuthErrorCode,
+    jwtAuthRejected,
     urlState,
   } = loaderData;
 

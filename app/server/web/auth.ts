@@ -7,9 +7,10 @@ import { createCookie, data } from "react-router";
 import { ulid } from "ulidx";
 
 import type { Machine } from "~/types";
+import log from "~/utils/log";
 
 import { type HeadplaneUser, authSessions, users } from "../db/schema";
-import { type JwtAuthService, logJwtAuthError } from "./jwt-auth";
+import type { JwtAuthService } from "./jwt-auth";
 import { Capabilities, type Role, Roles, capsForRole } from "./roles";
 
 export type Principal =
@@ -442,18 +443,14 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     }
 
     const result = await opts.jwtAuth.service.authenticate(request);
-
     if (!result.ok) {
-      // No assertion at all means the request simply isn't arriving through the
-      // proxy, so the other methods still get their turn.
+      // Only a request with no assertion at all falls through to the other
+      // methods. A present but invalid one fails closed.
       if (result.error.code === "missing_assertion") {
         return;
       }
 
-      // An assertion that is present but does not verify rejects the request
-      // outright. Falling through to the cookie session here would turn a bad
-      // assertion into a downgrade attack.
-      logJwtAuthError("Rejected a request carrying an invalid assertion", result.error);
+      log.error("auth", "Rejected JWT assertion [%s]: %s", result.error.code, result.error.message);
       throw new Error(`JWT authentication failed: ${result.error.message}`);
     }
 
@@ -477,8 +474,6 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   }
 
   async function resolve(request: Request): Promise<Principal> {
-    // Runs before proxy auth: this path proves identity cryptographically
-    // rather than trusting the peer address.
     const jwtPrincipal = await resolveJwtAuthPrincipal(request);
     if (jwtPrincipal) {
       return jwtPrincipal;

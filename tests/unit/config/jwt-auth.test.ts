@@ -27,7 +27,7 @@ const COMPLETE = {
   enabled: true,
   header: "x-goog-iap-jwt-assertion",
   issuer: "https://cloud.google.com/iap",
-  jwks_url: "https://www.gstatic.com/iap/verify/public_key-jwk",
+  jwks_endpoint: "https://www.gstatic.com/iap/verify/public_key-jwk",
   audience: "/projects/123456789/global/backendServices/987654321",
 };
 
@@ -37,8 +37,6 @@ describe("server.jwt_auth configuration", () => {
   });
 
   test("loadConfig_withoutJwtAuthBlock_loads", async () => {
-    // The shape the NixOS module emits when jwt_auth is not enabled: the block
-    // is removed entirely rather than emitted with empty defaults.
     writeConfig();
     const config = await loadConfig(CONFIG_PATH);
 
@@ -53,7 +51,7 @@ describe("server.jwt_auth configuration", () => {
     expect(config.server.jwt_auth?.default_role).toBe("member");
   });
 
-  test.each(["header", "issuer", "jwks_url", "audience"] as const)(
+  test.each(["header", "issuer", "jwks_endpoint", "audience"] as const)(
     "loadConfig_withJwtAuthMissing_%s_rejects",
     async (field) => {
       const { [field]: _omitted, ...rest } = COMPLETE;
@@ -63,11 +61,12 @@ describe("server.jwt_auth configuration", () => {
     },
   );
 
-  test.each(["issuer", "jwks_url"] as const)("loadConfig_withEmpty_%s_rejects", async (field) => {
-    // This is the failure a materialized Nix submodule used to produce, and
-    // why nix/module.nix strips a disabled jwt_auth block outright.
-    writeConfig({ ...COMPLETE, [field]: "" });
+  test.each(["issuer", "jwks_endpoint"] as const)(
+    "loadConfig_withEmpty_%s_rejects",
+    async (field) => {
+      writeConfig({ ...COMPLETE, [field]: "" });
 
-    await expect(loadConfig(CONFIG_PATH)).rejects.toThrow();
-  });
+      await expect(loadConfig(CONFIG_PATH)).rejects.toThrow();
+    },
+  );
 });
