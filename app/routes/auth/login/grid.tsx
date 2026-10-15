@@ -89,10 +89,11 @@ export default function Grid() {
     }
 
     function place(now: number) {
-      const span = Math.floor(field.half * 0.6);
+      const span = Math.floor(field.half * 0.7);
       for (let tries = 0; tries < 200; tries++) {
-        const x = rand(Math.floor(field.cols * 0.3), field.cols - 3);
+        const x = rand(3, field.cols - 4);
         const y = rand(-span, span);
+
         if (nodes.every((n) => Math.abs(n.x - x) + Math.abs(n.y - y) > NODE_GAP)) {
           nodes.push({ x, y, bornAt: now, diesAt: Infinity });
           return true;
@@ -128,6 +129,7 @@ export default function Grid() {
       for (let i = packets.length - 1; i >= 0; i--) {
         const packet = packets[i];
         const reached = Math.floor((now - packet.startedAt) / STEP_MS);
+
         while (packet.index <= reached && packet.index < packet.cells.length) {
           const [x, y] = packet.cells[packet.index];
           light(field, x, y, PEAK);
@@ -160,6 +162,7 @@ export default function Grid() {
       b.setTransform(field.dpr, 0, 0, field.dpr, 0, 0);
       b.clearRect(0, 0, field.width, field.height);
       b.fillStyle = color;
+
       for (let y = -field.half; y <= field.half; y++) {
         for (let x = 0; x < field.cols; x++) {
           const [px, py] = position(field, x, y);
@@ -174,6 +177,7 @@ export default function Grid() {
       const style = getComputedStyle(canvas);
       const dim = style.getPropertyValue("--hp-line-strong").trim();
       const bright = style.getPropertyValue("--hp-fg").trim();
+
       if (dim !== baseColor) {
         baseColor = dim;
         paintBase(dim);
@@ -187,6 +191,7 @@ export default function Grid() {
       ctx.fillStyle = bright;
       ctx.strokeStyle = bright;
       ctx.lineWidth = 1;
+
       for (let y = -field.half; y <= field.half; y++) {
         for (let x = 0; x < field.cols; x++) {
           const v = field.lit[index(field, x, y)];
@@ -267,15 +272,16 @@ function light(f: Field, x: number, y: number, value: number) {
   f.lit[i] = Math.max(f.lit[i], value);
 }
 
-// Row 0 sits on the vertical middle, level with the form.
+// The grid is centered in the panel, with row 0 on its vertical middle.
 function position(f: Field, x: number, y: number): Cell {
-  return [SPACING / 2 + x * SPACING, f.height / 2 + y * SPACING];
+  return [(f.width - (f.cols - 1) * SPACING) / 2 + x * SPACING, f.height / 2 + y * SPACING];
 }
 
-// Fades in from the form side and out at the top and bottom.
+// Fades out toward every edge of the panel.
 function mask(f: Field, px: number, py: number) {
-  const t = py / f.height;
-  return smooth(px / (f.width * 0.3)) * smooth(t / 0.22) * smooth((1 - t) / 0.22);
+  const x = px / f.width;
+  const y = py / f.height;
+  return smooth(x / 0.15) * smooth((1 - x) / 0.15) * smooth(y / 0.15) * smooth((1 - y) / 0.15);
 }
 
 function smooth(t: number) {

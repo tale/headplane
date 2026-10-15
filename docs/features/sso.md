@@ -157,26 +157,37 @@ Headplane uses a two-step matching strategy:
    back to comparing the user's email address from the OIDC `userinfo` endpoint
    against the email stored on the Headscale user record.
 
-Once a link is established, it's stored as a `headscale_user_id` in Headplane's
-database and reused on subsequent logins — so the matching only needs to succeed
-once.
+Only Headscale users that aren't already linked to another Headplane account
+are considered. Once a link is established, it's stored as a
+`headscale_user_id` in Headplane's database and reused on subsequent logins.
+
+Matching runs at sign-in and again whenever an unlinked user opens Headplane.
+If Headscale also uses OIDC, a user's Headscale account is created the first
+time one of their devices signs in, and Headplane links to it on its own. Users
+without dashboard access see a home page that waits for this and updates as
+soon as it happens.
 
 ### Headscale Without OIDC
 
 If your Headscale instance uses **local users** (created via
-`headscale users create`) rather than OIDC, automatic matching cannot work —
-local users have no `provider_id` or email to compare against.
+`headscale users create`) rather than OIDC, there's no `provider_id` to match.
+Email matching still works if the user was created with an email:
 
-In this case, Headplane will prompt the user during onboarding to manually
-select which Headscale user they are. This selection is persisted, so it only
-needs to happen once. After linking, all ownership-based features (viewing your
-own machines, self-service pre-auth keys, WebSSH) work normally.
+```sh
+headscale users create alice --email alice@example.com
+```
 
-::: tip
-If you skip the user selection during onboarding, you can still use Headplane
-— you just won't have ownership-based features. An admin can manage everything
-regardless of whether users are linked.
-:::
+Otherwise, users have to be linked by hand:
+
+- **Admins** (any role that can manage users) see a one-time screen after
+  signing in where they pick their own Headscale user. They can skip it and
+  link later from the **Users** page.
+- **Everyone else** is linked by an admin from the **Users** page. Until then,
+  their home page asks them to contact an administrator.
+
+Only admins can pick a user for themselves, because a link grants access to
+that user's machines and auth keys. Letting anyone pick would let a new account
+claim someone else's Headscale identity.
 
 ### Same Client vs. Different Clients
 

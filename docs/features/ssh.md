@@ -162,7 +162,8 @@ you can use Browser SSH."
 
 Your OIDC account does not match any user in Headscale. You must authenticate
 with Headscale at least once before using Browser SSH, so that a Headscale
-user is created and linked to your OIDC identity.
+user is created and linked to your OIDC identity. If Headscale doesn't use
+OIDC, ask an administrator to link your account from the **Users** page.
 
 ### Node Not Found
 

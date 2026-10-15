@@ -13,6 +13,15 @@
 - The DNS page is reorganized: the tailnet name, Magic DNS, and the local DNS override sit together under **General**, and each section has its heading and add button in a column beside its list. Split DNS nameservers now sit in the same list as global ones, marked with the domain they answer for, and nameservers can be reordered the same way as search domains.
 - Settings has a sidebar for **Auth keys**, **Sign-in restrictions**, and **Agent** instead of a page of links, and `/settings` opens auth keys directly. Auth keys are listed in a table, newest first, with filters like the machines list. Sign-in restrictions and the agent status use the same layout as the DNS page.
 - The agent page shows more of what the agent is doing: how many times in a row a sync has failed, how often it syncs, when its process started, its own machine and Tailscale version, and which machines were missing from the last sync and how old their details are.
+- The sign-in page is redesigned: the form sits on one side and an animated tailnet on the other, with machines coming and going and passing packets between them. Single sign-on sits above the API key field, sign-in errors are shorter and appear under the field, and the signed-out and single sign-on error pages share the same layout.
+- Accounts that sign in with single sign-on keep trying to link to a matching Headscale user (same subject or email) after sign-in, not only during it. With single sign-on set up on Headscale too, an account links by itself once its first device signs in.
+- Only admins can pick which Headscale user their account links to, on a page shown once after signing in that they can skip. Previously anyone signing in for the first time could claim any unlinked Headscale user, and with it that user's machines and auth keys wherever their role allowed. Everyone else is linked automatically or by an admin from the Users page.
+- People without dashboard access get a new home page that walks through installing Tailscale and connecting it to this network, and shows whether their account is linked yet. It updates live, so it notices as soon as their first device signs in.
+
+## Fixes
+
+- The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
+- Fields with an error keep their red border while focused instead of turning blue.
 
 # 0.8.0 (October 13, 2026)
 

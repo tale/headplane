@@ -19,6 +19,7 @@ export interface SelectProps {
   required?: boolean;
   disabled?: boolean;
   invalid?: boolean;
+  errorMessage?: string;
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (value: string | null) => void;
@@ -33,6 +34,7 @@ export default function Select({
   required,
   disabled,
   invalid,
+  errorMessage,
   value,
   defaultValue,
   onValueChange,
@@ -48,6 +50,7 @@ export default function Select({
       className={className}
       description={description}
       disabled={disabled}
+      errorMessage={errorMessage}
       invalid={invalid}
       label={label}
       name={name}

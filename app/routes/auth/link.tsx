@@ -1,18 +1,19 @@
-import { Form, redirect, useNavigation } from "react-router";
+import { data, Form, Link as RouterLink, redirect, useNavigation } from "react-router";
 
 import Button from "~/components/button";
 import Select from "~/components/select";
 import { authContext } from "~/server/context";
 import { isUserPrincipal } from "~/server/web/auth";
-import { listUnclaimedUsers } from "~/server/web/link";
+import { autoLink, listPickableUsers } from "~/server/web/link";
+import { Capabilities } from "~/server/web/roles";
 
 import type { Route } from "./+types/link";
-import Shell from "./login/shell";
+import Shell, { SignedIn } from "./login/shell";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
-
   let principal: Awaited<ReturnType<typeof auth.require>>;
+
   try {
     principal = await auth.require(request);
   } catch {
@@ -23,7 +24,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return redirect("/");
   }
 
-  const users = await listUnclaimedUsers({ request, context });
+  if (await autoLink({ request, context }, principal)) {
+    return redirect("/");
+  }
+
+  if (!auth.can(principal, Capabilities.write_users)) {
+    return redirect("/");
+  }
+
+  const users = await listPickableUsers({ request, context });
   if (users.length === 0) {
     return redirect("/");
   }
@@ -34,20 +43,27 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 export async function action({ request, context }: Route.ActionArgs) {
   const auth = context.get(authContext);
   const principal = await auth.require(request);
-  if (!isUserPrincipal(principal)) {
+  if (
+    !isUserPrincipal(principal) ||
+    principal.user.headscaleUserId ||
+    !auth.can(principal, Capabilities.write_users)
+  ) {
     return redirect("/");
   }
 
   const formData = await request.formData();
   const headscaleUserId = formData.get("headscale_user_id")?.toString();
-  if (headscaleUserId) {
-    await auth.linkHeadscaleUser(principal.user.id, headscaleUserId);
+  const users = await listPickableUsers({ request, context });
+
+  const isPickable = users.some((u) => u.id === headscaleUserId);
+  if (!isPickable || !(await auth.linkHeadscaleUser(principal.user.id, headscaleUserId!))) {
+    return data({ message: "That user can't be linked anymore. Pick another." }, { status: 400 });
   }
 
   return redirect("/");
 }
 
-export default function Page({ loaderData }: Route.ComponentProps) {
+export default function Page({ loaderData, actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
 
   return (
@@ -57,6 +73,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     >
       <Form className="flex flex-col gap-3" method="POST">
         <Select
+          errorMessage={actionData?.message}
+          invalid={actionData !== undefined}
           items={loaderData.users.map((u) => ({ value: u.id, label: u.name }))}
           label="Headscale user"
           name="headscale_user_id"
@@ -71,21 +89,15 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         >
           Link account
         </Button>
+        <Button className="w-full" nativeButton={false} render={<RouterLink to="/" />}>
+          Skip for now
+        </Button>
       </Form>
       <p className="text-muted mt-6 text-sm">
-        Don't see yours? Ask an administrator. Headscale users with the same email as your sign-in
-        are linked automatically.
+        You'll add machines and create auth keys as this user. You can change it later from the
+        Users page.
       </p>
-      <Form
-        action="/logout"
-        className="border-line text-muted mt-8 border-t pt-6 text-sm"
-        method="POST"
-      >
-        Signed in as <span className="text-fg">{loaderData.email}</span>.{" "}
-        <button className="text-accent focus-ring rounded-sm" type="submit">
-          Sign out
-        </button>
-      </Form>
+      <SignedIn name={loaderData.email} />
     </Shell>
   );
 }

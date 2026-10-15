@@ -17,11 +17,13 @@ export default [
   route("/oidc/callback", "routes/auth/oidc-callback.ts"),
   route("/oidc/start", "routes/auth/oidc-start.ts"),
   route("/link", "routes/auth/link.tsx"),
+
+  // Accounts without dashboard access land here, outside the app layout
+  index("routes/home.tsx"),
   route("/ssh/:id", "routes/ssh/page.tsx"),
 
   // All the main logged-in routes
   layout("layout/app.tsx", [
-    index("routes/home.tsx"),
     ...prefix("/machines", [
       index("routes/machines/overview.tsx"),
       route("/:id", "routes/machines/machine.tsx"),
