@@ -18,9 +18,14 @@ export interface AgentManager {
   lastSync(): {
     syncedAt: Date | null;
     nodeCount: number;
+    syncedKeys: string[];
+    intervalMs: number;
+    consecutiveErrors: number;
+    startedAt?: Date;
     error?: string;
     authUrl?: string;
   };
+  lastUpdated(nodeKeys: string[]): Promise<Record<string, Date>>;
   agentNodeKey(): string | undefined;
   triggerSync(): Promise<void>;
   dispose(): void;
@@ -35,6 +40,8 @@ interface AgentOutput {
 interface SyncState {
   syncedAt: Date | null;
   nodeCount: number;
+  syncedKeys: string[];
+  startedAt?: Date;
   selfKey?: string;
   error?: string;
   authUrl?: string;
@@ -99,6 +106,7 @@ export async function createAgentManager(
   const state: SyncState = {
     syncedAt: null,
     nodeCount: 0,
+    syncedKeys: [],
   };
 
   let proc: ChildProcess | null = null;
@@ -201,6 +209,7 @@ export async function createAgentManager(
         );
       }
       proc = null;
+      state.startedAt = undefined;
 
       // Reject any pending sync request
       if (responseHandler) {
@@ -211,6 +220,7 @@ export async function createAgentManager(
     });
 
     proc = child;
+    state.startedAt = new Date();
     return child;
   }
 
@@ -302,6 +312,7 @@ export async function createAgentManager(
 
       state.syncedAt = new Date();
       state.nodeCount = keys.length;
+      state.syncedKeys = keys;
       state.selfKey = output.self || undefined;
       state.error = undefined;
 
@@ -398,9 +409,28 @@ export async function createAgentManager(
       return {
         syncedAt: state.syncedAt,
         nodeCount: state.nodeCount,
+        syncedKeys: state.syncedKeys,
+        intervalMs: cacheTtl,
+        consecutiveErrors,
+        startedAt: state.startedAt,
         error: state.error,
         authUrl: state.authUrl,
       };
+    },
+
+    async lastUpdated(nodeKeys) {
+      if (nodeKeys.length === 0) {
+        return {};
+      }
+
+      const results = await db
+        .select({ id: hostInfo.host_id, updatedAt: hostInfo.updated_at })
+        .from(hostInfo)
+        .where(inArray(hostInfo.host_id, nodeKeys));
+
+      return Object.fromEntries(
+        results.flatMap((r) => (r.updatedAt ? [[r.id, r.updatedAt]] : [])),
+      ) as Record<string, Date>;
     },
 
     agentNodeKey() {
