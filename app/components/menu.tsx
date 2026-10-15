@@ -50,7 +50,7 @@ export const MenuContent = ({
   align?: ComponentProps<typeof BaseMenu.Positioner>["align"];
 }): JSX.Element => (
   <BaseMenu.Portal>
-    <BaseMenu.Positioner side={side} sideOffset={sideOffset} align={align}>
+    <BaseMenu.Positioner align={align} className="z-50" side={side} sideOffset={sideOffset}>
       <BaseMenu.Popup
         className={cn(
           "max-h-(--available-height) min-w-50 overflow-y-auto rounded-lg py-1 outline-hidden",

@@ -69,7 +69,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
   );
 
   return (
-    <header className={cn("bg-surface text-fg", "border-b border-line")}>
+    <header className={cn("sticky top-0 z-20 bg-surface text-fg", "border-b border-line")}>
       <div className="container flex h-13 items-center gap-x-5">
         <div className="flex items-center gap-x-2">
           <picture className="size-[18px] shrink-0">

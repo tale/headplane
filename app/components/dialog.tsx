@@ -14,7 +14,7 @@ export interface DialogProps {
 }
 
 const backdropClass = cn(
-  "fixed inset-0 z-20 bg-backdrop",
+  "fixed inset-0 z-40 bg-backdrop",
   "transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
 );
 
@@ -43,7 +43,7 @@ export function Dialog({
       {trigger && <BaseDialog.Trigger render={trigger} />}
       <BaseDialog.Portal>
         <BaseDialog.Backdrop className={backdropClass} />
-        <BaseDialog.Viewport className="fixed inset-0 z-20 grid place-items-center p-4">
+        <BaseDialog.Viewport className="fixed inset-0 z-40 grid place-items-center p-4">
           <BaseDialog.Popup className={cn(popupClass, className)}>{children}</BaseDialog.Popup>
         </BaseDialog.Viewport>
       </BaseDialog.Portal>
@@ -68,7 +68,7 @@ export function AlertDialog({
       {trigger && <BaseAlertDialog.Trigger render={trigger} />}
       <BaseAlertDialog.Portal>
         <BaseAlertDialog.Backdrop className={backdropClass} />
-        <BaseAlertDialog.Viewport className="fixed inset-0 z-20 grid place-items-center p-4">
+        <BaseAlertDialog.Viewport className="fixed inset-0 z-40 grid place-items-center p-4">
           <BaseAlertDialog.Popup className={cn(popupClass, className)}>
             {children}
           </BaseAlertDialog.Popup>

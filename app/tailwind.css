@@ -181,6 +181,18 @@
     --hp-backdrop: rgb(31 30 30 / 0.3);
     --hp-shadow-overlay: 0 1px 2px rgb(31 30 30 / 0.05), 0 8px 24px -6px rgb(31 30 30 / 0.12);
     color-scheme: light;
+    /* The scrollbar gutter shows the root background, not body's. */
+    background-color: var(--hp-canvas);
+
+    /* app/layout/scrollbar.tsx draws an overlay thumb instead, so the page
+       never shifts when a classic scrollbar appears. */
+    @media (pointer: fine) {
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
 
     @apply dark:dark-tokens;
   }

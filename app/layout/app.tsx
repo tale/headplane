@@ -20,6 +20,7 @@ import log from "~/utils/log";
 import type { Route } from "./+types/app";
 import Footer from "./footer";
 import Header from "./header";
+import Scrollbar from "./scrollbar";
 
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   currentUrl,
@@ -140,6 +141,7 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         <Outlet />
       </main>
       <Footer isDebug={loaderData.isDebug} baseUrl={loaderData.baseUrl} />
+      <Scrollbar />
     </>
   );
 }
