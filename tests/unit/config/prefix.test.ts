@@ -4,7 +4,7 @@ import { getPrefix, setServerPrefix } from "~/utils/prefix";
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  setServerPrefix(__PREFIX__);
+  setServerPrefix("/admin");
 });
 
 test("uses the configured server prefix during SSR", () => {
@@ -20,8 +20,8 @@ test("reads the app's HTML configuration before router hydration", () => {
   expect(querySelector).toHaveBeenCalledWith('meta[name="headplane-base-path"]');
 });
 
-test("falls back to the build prefix when HTML configuration is absent", () => {
+test("falls back to /admin when HTML configuration is absent", () => {
   vi.stubGlobal("window", {});
   vi.stubGlobal("document", { querySelector: () => null });
-  expect(getPrefix()).toBe(__PREFIX__);
+  expect(getPrefix()).toBe("/admin");
 });

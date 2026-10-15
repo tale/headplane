@@ -29,13 +29,18 @@ describe("dashboard base path", () => {
     expect((await loadConfig(configPath)).server.base_path).toBe("/admin");
   });
 
-  test.each(["/web", "/tools/Headplane", "/my-dashboard_2", "/dashboard.v2", "/~ui"])(
-    "accepts %s",
-    async (path) => {
-      writeConfig(path);
-      expect((await loadConfig(configPath)).server.base_path).toBe(path);
-    },
-  );
+  test.each([
+    "/web",
+    "/tools/Headplane",
+    "/my-dashboard_2",
+    "/dashboard.v2",
+    "/~ui",
+    "/...",
+    "/.hidden/ui..",
+  ])("accepts %s", async (path) => {
+    writeConfig(path);
+    expect((await loadConfig(configPath)).server.base_path).toBe(path);
+  });
 
   test.each([
     "",
@@ -44,12 +49,16 @@ describe("dashboard base path", () => {
     "/web/",
     "//web",
     "/web//ui",
+    "/.",
+    "/..",
     "/../web",
     "/web/.",
     "/web/../ui",
     "/web?x=1",
     "/web#x",
     "/web%2fui",
+    "/web\\ui",
+    "/web\n",
     "/web ui",
   ])("rejects %s", async (path) => {
     writeConfig(path);

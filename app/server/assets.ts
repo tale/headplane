@@ -1,6 +1,5 @@
 import type { ServerBuild } from "react-router";
 
-/** Vite emits relative URLs so imports and CSS also work under any basename. */
 export function configureBuild(build: ServerBuild, prefix: string): ServerBuild {
   const assetUrl = (url: string) => `${prefix}/${url.replace(/^\.\//, "").replace(/^\//, "")}`;
   const assets = build.assets;

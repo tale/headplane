@@ -8,11 +8,7 @@ const config = parse(
 );
 
 export default {
-  basename:
-    process.env.HEADPLANE_SERVER__BASE_PATH ||
-    config.server?.base_path ||
-    process.env.__INTERNAL_PREFIX ||
-    "/admin",
+  basename: process.env.HEADPLANE_SERVER__BASE_PATH || config.server?.base_path || "/admin",
   ssr: true,
   future: {
     unstable_optimizeDeps: true,

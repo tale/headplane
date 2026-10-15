@@ -1,5 +1,8 @@
 # Next
 
+The `__INTERNAL_PREFIX` build variable has been removed. Use `server.base_path`
+in your configuration to keep a custom dashboard URL prefix.
+
 ## Changes
 
 - Configure the dashboard URL prefix with `server.base_path` without rebuilding Headplane. Existing installations continue to use `/admin` by default (closes [#637](https://github.com/tale/headplane/issues/637)).

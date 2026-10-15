@@ -160,44 +160,27 @@ export function composeListener(opts: ListenerOptions): RequestListener {
       })
     : null;
 
-  return (req, res) => {
-    let pathname: string | undefined;
-    if (req.url) {
-      try {
-        const url = new URL(req.url, "http://localhost");
-        pathname = url.pathname;
-        if (pathname === basename) {
-          res.statusCode = 302;
-          res.setHeader("Location", `${basename}/${url.search}`);
-          res.end();
-          return;
-        }
-      } catch {}
-    }
+  return async (req, res) => {
+    try {
+      const url = URL.parse(req.url ?? "", "http://localhost");
+      if (url?.pathname === basename) {
+        res.writeHead(302, { Location: `${basename}/${url.search}` });
+        res.end();
+        return;
+      }
 
-    if (!serveStatic) {
-      opts.requestListener(req, res);
-      return;
+      const dynamic = url && opts.dynamicPaths?.includes(url.pathname);
+      if (!dynamic && serveStatic && (await serveStatic(req, res))) return;
+      await opts.requestListener(req, res);
+    } catch (error) {
+      log.error("Request handler failed: %s", error);
+      if (!res.headersSent) {
+        res.writeHead(500);
+        res.end("Internal Server Error");
+      } else {
+        res.destroy(error instanceof Error ? error : new Error(String(error)));
+      }
     }
-
-    if (pathname && opts.dynamicPaths?.includes(pathname)) {
-      opts.requestListener(req, res);
-      return;
-    }
-
-    serveStatic(req, res)
-      .then((handled) => {
-        if (!handled) opts.requestListener(req, res);
-      })
-      .catch((err) => {
-        log.error("Static handler failed: %s", err);
-        if (!res.headersSent) {
-          res.statusCode = 500;
-          res.end("Internal Server Error");
-        } else {
-          res.destroy(err as Error);
-        }
-      });
   };
 }
 

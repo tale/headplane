@@ -109,13 +109,12 @@ const requestListener = createRequestListener({
   getLoadContext,
 });
 
-// The emitted manifest contains build-time URLs; serve its runtime equivalent.
-// This also supports clients that load the full manifest after hydration.
+// Serve the rebased manifest before the static copy can be read.
 const listener: RequestListener = (request, response) => {
   if (
     import.meta.env.PROD &&
     request.url &&
-    new URL(request.url, "http://localhost").pathname === runtimeBuild.assets.url &&
+    URL.parse(request.url, "http://localhost")?.pathname === runtimeBuild.assets.url &&
     (request.method === "GET" || request.method === "HEAD")
   ) {
     response.setHeader("Content-Type", "text/javascript; charset=utf-8");

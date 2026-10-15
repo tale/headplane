@@ -1,6 +1,5 @@
-// The server configures this once at startup. The root layout emits a meta
-// tag before any module scripts so the browser can read it before hydration.
-let serverPrefix = __PREFIX__;
+// SSR writes the prefix into the document before the client modules run.
+let serverPrefix = "/admin";
 
 export function setServerPrefix(prefix: string): void {
   serverPrefix = prefix;

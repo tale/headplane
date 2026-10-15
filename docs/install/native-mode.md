@@ -250,5 +250,5 @@ to the public URL without the dashboard prefix, and update your OIDC provider's
 callback URL to `<server.base_url><server.base_path>/oidc/callback` if using SSO.
 Users will need to sign in again because session cookies are scoped to the path.
 
-The legacy `__INTERNAL_PREFIX` build variable remains a fallback default when
-`server.base_path` is omitted. New deployments should use `server.base_path`.
+The `__INTERNAL_PREFIX` build variable has been removed. If you previously used
+it, set `server.base_path` to the same value in your configuration instead.

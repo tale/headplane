@@ -9,9 +9,8 @@
 // straight to `./app`'s default export.
 
 import { readFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { exit } from "node:process";
-import { fileURLToPath } from "node:url";
 
 import log from "~/utils/log";
 
@@ -20,7 +19,7 @@ import requestListener, { config, dispose, runtimeBuild } from "./app";
 
 // `import.meta.url` resolves to `build/server/index.js`; the built
 // client lives next to it at `build/client/`.
-const clientDir = resolve(dirname(fileURLToPath(import.meta.url)), "../client");
+const clientDir = resolve(import.meta.dirname, "../client");
 
 let tls: StartOptions["tls"];
 const { tls_cert_path: certPath, tls_key_path: keyPath } = config.server;
@@ -51,8 +50,6 @@ const listenFilePath = process.env.HEADPLANE_LISTEN_FILE;
 const listenFile = listenFilePath
   ? {
       path: listenFilePath,
-      // Full URL including the configured dashboard prefix so the Go binary can GET it
-      // verbatim — no path joining, no basename knowledge needed.
       url: `${tls ? "https" : "http"}://127.0.0.1:${config.server.port}${config.server.base_path}/healthz`,
     }
   : undefined;

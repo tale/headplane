@@ -1,6 +1,6 @@
 import { execFile, spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtempDisposable, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -9,13 +9,12 @@ import { promisify } from "node:util";
 import { chromium } from "playwright";
 import { beforeAll, expect, test } from "vitest";
 
-// Exercise the real production bundle, including the HTTP static middleware.
-// All three paths use the same build, proving this is a runtime setting.
+// Build once, then boot the same bundle with each runtime prefix.
 const cleanEnv = {
   NODE_ENV: "production",
   ...Object.fromEntries(
     Object.entries(process.env).filter(
-      ([key]) => !key.startsWith("HEADPLANE_") && key !== "__INTERNAL_PREFIX" && key !== "NODE_ENV",
+      ([key]) => !key.startsWith("HEADPLANE_") && key !== "NODE_ENV",
     ),
   ),
 };
@@ -30,7 +29,7 @@ test.for(["/admin", "/web", "/tools/web"])(
   "production dashboard at %s",
   { timeout: 60_000 },
   async (prefix) => {
-    const headscale = createServer((request, response) => {
+    await using headscale = createServer((request, response) => {
       response.setHeader("Content-Type", "application/json");
       response.end(
         JSON.stringify(
@@ -56,23 +55,18 @@ test.for(["/admin", "/web", "/tools/web"])(
     const address = headscale.address();
     if (!address || typeof address === "string") throw new Error("Missing mock Headscale address");
 
-    const reserve = createServer();
-    reserve.listen(0, "127.0.0.1");
-    await once(reserve, "listening");
-    const reserved = reserve.address();
-    if (!reserved || typeof reserved === "string") throw new Error("Missing application address");
-    await new Promise<void>((resolve) => reserve.close(() => resolve()));
-    const origin = `http://127.0.0.1:${reserved.port}`;
-    const directory = await mkdtemp(join(tmpdir(), "headplane-base-path-"));
+    const port = await unusedPort();
+    const origin = `http://127.0.0.1:${port}`;
+    await using directory = await mkdtempDisposable(join(tmpdir(), "headplane-base-path-"));
     const child = spawn(process.execPath, ["build/server/index.js"], {
       env: {
         ...cleanEnv,
-        HEADPLANE_CONFIG_PATH: join(directory, "missing.yaml"),
+        HEADPLANE_CONFIG_PATH: join(directory.path, "missing.yaml"),
         HEADPLANE_SERVER__HOST: "127.0.0.1",
-        HEADPLANE_SERVER__PORT: String(reserved.port),
+        HEADPLANE_SERVER__PORT: String(port),
         ...(prefix === "/admin" ? {} : { HEADPLANE_SERVER__BASE_PATH: prefix }),
-        HEADPLANE_SERVER__DATA_PATH: directory,
-        HEADPLANE_LISTEN_FILE: join(directory, "listen-url"),
+        HEADPLANE_SERVER__DATA_PATH: directory.path,
+        HEADPLANE_LISTEN_FILE: join(directory.path, "listen-url"),
         HEADPLANE_SERVER__COOKIE_SECRET: "abcdefghijklmnopqrstuvwxyz123456",
         HEADPLANE_SERVER__COOKIE_SECURE: "false",
         HEADPLANE_HEADSCALE__URL: `http://127.0.0.1:${address.port}`,
@@ -80,35 +74,20 @@ test.for(["/admin", "/web", "/tools/web"])(
       stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";
-    const exit = once(child, "exit");
+    child.stdout.setEncoding("utf8").on("data", (chunk) => (output += chunk));
+    child.stderr.setEncoding("utf8").on("data", (chunk) => (output += chunk));
+    await once(child, "spawn", { signal: AbortSignal.timeout(5_000) });
     try {
-      await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(
-          () => reject(new Error(`Server did not start: ${output}`)),
-          15_000,
-        );
-        child.stdout.on("data", (chunk) => {
-          output += chunk;
-          if (output.includes("Listening on")) {
-            clearTimeout(timer);
-            resolve();
-          }
-        });
-        child.stderr.on("data", (chunk) => {
-          output += chunk;
-        });
-        child.once("error", (error) => {
-          clearTimeout(timer);
-          reject(error);
-        });
-        child.once("exit", () => {
-          clearTimeout(timer);
-          reject(new Error(output));
-        });
-      });
-
       await expect
-        .poll(() => readFile(join(directory, "listen-url"), "utf8"))
+        .poll(
+          async () => {
+            if (child.exitCode !== null || child.signalCode !== null) {
+              throw new Error(`Server exited before becoming ready: ${output}`);
+            }
+            return readFile(join(directory.path, "listen-url"), "utf8");
+          },
+          { timeout: 15_000 },
+        )
         .toBe(`${origin}${prefix}/healthz\n`);
       const redirect = await fetch(`${origin}${prefix}?test=1`, { redirect: "manual" });
       expect(redirect.status).toBe(302);
@@ -171,24 +150,26 @@ test.for(["/admin", "/web", "/tools/web"])(
       });
       expect(login.status).toBe(302);
       expect(login.headers.get("location")).toBe(`${prefix}/machines`);
-      const cookie = login.headers.get("set-cookie");
+      const [cookie] = login.headers.getSetCookie();
       expect(cookie).toContain(`Path=${prefix}`);
       const authenticated = await fetch(`${origin}${prefix}/login`, {
-        headers: { Cookie: cookie!.split(";")[0] },
+        headers: { Cookie: cookie.split(";")[0] },
         redirect: "manual",
       });
       expect(authenticated.headers.get("location")).toBe(`${prefix}/machines`);
-      const headers = { Cookie: cookie!.split(";")[0] };
-      const abort = new AbortController();
+      const headers = { Cookie: cookie.split(";")[0] };
       const events = await fetch(`${origin}${prefix}/events/live`, {
         headers,
-        signal: abort.signal,
+        signal: AbortSignal.timeout(5_000),
       });
       expect(events.headers.get("content-type")).toContain("text/event-stream");
-      const reader = events.body!.getReader();
-      expect(new TextDecoder().decode((await reader.read()).value)).toContain("event: hello");
-      await reader.cancel();
-      abort.abort();
+      const reader = events.body?.pipeThrough(new TextDecoderStream()).getReader();
+      if (!reader) throw new Error("Missing live-data response body");
+      try {
+        expect((await reader.read()).value).toContain("event: hello");
+      } finally {
+        await reader.cancel();
+      }
       const logout = await fetch(`${origin}${prefix}/logout`, {
         method: "POST",
         headers,
@@ -198,10 +179,11 @@ test.for(["/admin", "/web", "/tools/web"])(
       expect(logout.headers.get("set-cookie")).toContain(`Path=${prefix}`);
       expect(logout.headers.get("set-cookie")).toContain("Expires=Thu, 01 Jan 1970");
     } finally {
-      child.kill("SIGTERM");
-      await exit;
-      await new Promise<void>((resolve) => headscale.close(() => resolve()));
-      await rm(directory, { recursive: true, force: true });
+      if (child.exitCode === null && child.signalCode === null) {
+        const exited = once(child, "exit", { signal: AbortSignal.timeout(10_000) });
+        child.kill("SIGTERM");
+        await exited;
+      }
     }
   },
 );
@@ -241,7 +223,6 @@ async function checkBrowserNavigation(origin: string, prefix: string) {
     await page.getByRole("heading", { name: "Machines", exact: true }).waitFor();
     expect(new URL(page.url()).pathname).toBe(`${prefix}/machines`);
 
-    // Sorting is a React event handler, so the DOM change proves hydration.
     await page.getByRole("button", { name: "Sort by name", exact: true }).click();
     await expect.poll(() => page.locator('th[aria-sort="descending"]').count()).toBe(1);
 
@@ -252,8 +233,6 @@ async function checkBrowserNavigation(origin: string, prefix: string) {
     await page.getByRole("heading", { name: "Machines", exact: true }).waitFor();
     expect(new URL(page.url()).pathname).toBe(`${prefix}/machines`);
 
-    // Client navigation must retain the document and load data/chunks at the
-    // runtime prefix, rather than falling back to a full page reload.
     expect(documents).toEqual([`${prefix}/login`]);
     expect(requests).toContain(`${prefix}/users.data`);
     expect(requests.filter((path) => path === "/admin" || path.startsWith("/admin/"))).toEqual([]);
@@ -261,4 +240,13 @@ async function checkBrowserNavigation(origin: string, prefix: string) {
   } finally {
     await browser.close();
   }
+}
+
+async function unusedPort() {
+  await using server = createServer();
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  const address = server.address();
+  if (!address || typeof address === "string") throw new Error("Missing application address");
+  return address.port;
 }
