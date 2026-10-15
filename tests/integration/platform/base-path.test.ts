@@ -9,7 +9,6 @@ import { promisify } from "node:util";
 import { chromium } from "playwright";
 import { beforeAll, expect, test } from "vitest";
 
-// Build once, then boot the same bundle with each runtime prefix.
 const cleanEnv = {
   NODE_ENV: "production",
   ...Object.fromEntries(

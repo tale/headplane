@@ -43,7 +43,7 @@ export default defineConfig(({ command }) => {
   const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
 
   return {
-    // The runtime manifest supplies the prefix; chunk and CSS imports stay relative.
+    // Relative imports let one build run under any configured path.
     base: command === "build" ? "./" : undefined,
     plugins: [
       headplaneDevServer({

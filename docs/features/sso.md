@@ -45,8 +45,7 @@ domain with the value set for `server.base_url`):
 https://headplane.example.com/admin/oidc/callback
 ```
 
-If you change `server.base_path`, replace `/admin` in the callback URL with that
-path. The default logout URL uses the configured path as well.
+For a custom `server.base_path`, replace `/admin` in this URL with that path.
 
 Once you have created the client, make note of the following:
 

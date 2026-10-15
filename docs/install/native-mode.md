@@ -231,24 +231,6 @@ server {
 
 ## Custom Path Prefix
 
-Set `server.base_path` in your configuration to serve Headplane under a different
-path. The default is `/admin`; changing it does not require rebuilding Headplane
-or its Docker image.
-
-```yaml
-server:
-  base_path: "/dashboard"
-```
-
-Use a leading slash and no trailing slash. Each segment may contain letters,
-numbers, periods, tildes, underscores, or hyphens (but cannot be `.` or `..`); nested paths such as `/tools/headplane` are
-supported. The root path `/` is not supported.
-
-Restart Headplane after changing the path. Update your reverse proxy to forward
-requests under the new prefix without stripping it. Keep `server.base_url` set
-to the public URL without the dashboard prefix, and update your OIDC provider's
-callback URL to `<server.base_url><server.base_path>/oidc/callback` if using SSO.
-Users will need to sign in again because session cookies are scoped to the path.
-
-The `__INTERNAL_PREFIX` build variable has been removed. If you previously used
-it, set `server.base_path` to the same value in your configuration instead.
+Set `server.base_path` to serve Headplane under a path other than `/admin`.
+See [Dashboard Path](../configuration/index.md#dashboard-path) for configuration,
+path restrictions, and migration instructions.

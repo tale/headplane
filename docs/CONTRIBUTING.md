@@ -75,16 +75,12 @@ official Dev Container features used by this project (Node, Go, and Docker).
 
 ### Browser Integration Test
 
-The platform base-path test builds Headplane once and runs it under several
-dashboard paths. It also uses headless Chromium to check hydration, API-key
-login, and client navigation under `/tools/web`.
-
-Install the browser before running the test:
+The base-path integration test requires Chromium:
 
 ```sh
 pnpm exec playwright install chromium
 pnpm exec vitest run --project integration:platform tests/integration/platform/base-path.test.ts
 ```
 
-On Linux, use `pnpm exec playwright install --with-deps chromium` to install
-the required system libraries as well. CI installs these before integration tests.
+On Linux, install its system libraries with
+`pnpm exec playwright install --with-deps chromium`.

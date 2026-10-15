@@ -109,7 +109,7 @@ const requestListener = createRequestListener({
   getLoadContext,
 });
 
-// Serve the rebased manifest before the static copy can be read.
+// The on-disk manifest still contains build-time asset URLs.
 const listener: RequestListener = (request, response) => {
   if (
     import.meta.env.PROD &&
