@@ -1,17 +1,11 @@
-import { AlertCircle } from "lucide-react";
-
-import Card from "~/components/card";
+import Callout from "~/components/callout";
 import Code from "~/components/code";
 
 export function OidcErrorNotice({ code }: { code: string }) {
   return (
-    <Card className="border-bad m-4 mb-4 max-w-md border sm:m-0 sm:mb-4">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-bad mb-2 text-lg font-semibold">Configuration Issue(s)</h2>
-        <AlertCircle className="text-bad mb-2 h-6 w-6" />
-      </div>
+    <Callout className="mb-6" title="Single sign-on failed" variant="error">
       {getErrorMessage(code)}
-    </Card>
+    </Callout>
   );
 }
 

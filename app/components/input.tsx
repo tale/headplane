@@ -14,6 +14,7 @@ export interface InputProps
 export default function Input({
   label,
   labelHidden,
+  labelTooltip,
   description,
   invalid,
   errorMessage,
@@ -33,6 +34,7 @@ export default function Input({
       invalid={invalid}
       label={label}
       labelHidden={labelHidden}
+      labelTooltip={labelTooltip}
       name={name}
       validate={validate}
     >

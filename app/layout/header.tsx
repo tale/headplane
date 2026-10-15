@@ -9,10 +9,8 @@ import {
 
 import Avatar from "~/components/avatar";
 import Link from "~/components/link";
+import LogoMark from "~/components/logo-mark";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
-import logoBg from "~/logo/dark-bg.svg";
-import logoDark from "~/logo/dark.svg";
-import logoLight from "~/logo/light.svg";
 import cn from "~/utils/cn";
 import type { ColorScheme } from "~/utils/color-scheme";
 
@@ -72,11 +70,7 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
     <header className={cn("sticky top-0 z-20 bg-surface text-fg", "border-b border-line")}>
       <div className="container flex h-13 items-center gap-x-5">
         <div className="flex items-center gap-x-2">
-          <picture className="size-[18px] shrink-0">
-            <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
-            <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
-            <img alt="Headplane logo" className="size-[18px]" src={logoBg} />
-          </picture>
+          <LogoMark className="size-[18px] shrink-0" />
           <span className="text-sm font-semibold tracking-tight">headplane</span>
         </div>
         {showTabs && (
