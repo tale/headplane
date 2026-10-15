@@ -10,8 +10,8 @@ import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
 import { invalid, ok, parseValues } from "~/utils/form";
 
+import { moveItem } from "./reorder";
 import { nameserver, recordValue } from "./schemas";
-import { moveDomain } from "./search-domains";
 
 const text = (message: string) => v.pipe(v.string(), v.trim(), v.nonEmpty(message));
 const toggle = v.picklist(["true", "false"]);
@@ -108,6 +108,27 @@ export const dnsAction = createAction({
         return ok("Nameserver removed");
       },
     },
+    move_ns: {
+      fields: {
+        nameserver: v.string(),
+        split_domain: splitDomain,
+        direction: v.picklist(["up", "down"]),
+      },
+      async handler(input, { config, dns, restart }) {
+        const servers = input.split_domain
+          ? (dns.splitDns[input.split_domain] ?? [])
+          : dns.nameservers;
+
+        await config.patch([
+          {
+            path: nameserverPath(input.split_domain),
+            value: moveItem(servers, input.nameserver, input.direction),
+          },
+        ]);
+        await restart();
+        return ok();
+      },
+    },
     add_domain: {
       fields: { domain: text("Enter a search domain.") },
       async handler(input, { config, dns, restart }) {
@@ -141,7 +162,7 @@ export const dnsAction = createAction({
         await config.patch([
           {
             path: "dns.search_domains",
-            value: moveDomain(dns.searchDomains, input.domain, input.direction),
+            value: moveItem(dns.searchDomains, input.domain, input.direction),
           },
         ]);
         await restart();
