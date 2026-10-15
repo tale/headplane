@@ -8,6 +8,7 @@
 - The machines list is easier to scan: each machine shows its status next to its name, its tags and badges on one line, and both of its addresses. Badges only use color when something needs attention, like an expired key, a key expiring within a week, or routes waiting for approval. Click an address to copy it (via [#654](https://github.com/tale/headplane/issues/654)).
 - With the Headplane agent enabled, the machines list marks clients running an older Tailscale release than the latest stable one. Headplane checks pkgs.tailscale.com for the latest version once a day in the background.
 - The machine page has a simpler layout, with routing and network details shown as plain lists instead of boxed cards.
+- The Users page matches the new machines list: each user shows their avatar, email, and groups on one line, along with when their machines were last seen. **Add user** now sits in the page header, and users whose profile picture fails to load get an initial instead of a broken image.
 
 # 0.8.0 (October 13, 2026)
 

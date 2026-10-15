@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 
 import Callout from "~/components/callout";
+import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import { Table, TableBody, TableHeader } from "~/components/table";
@@ -24,7 +25,7 @@ import { getUserDisplayName } from "~/utils/user";
 import type { Route } from "./+types/overview";
 import HeadplaneUserRow from "./components/headplane-user-row";
 import HeadscaleUserRow from "./components/headscale-user-row";
-import ManageBanner from "./components/manage-banner";
+import CreateUser from "./dialogs/create-user";
 import { userAction } from "./user-actions";
 
 export interface HeadplaneUserData {
@@ -190,10 +191,29 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <PageHeader
-        description="Manage the users in your network and their permissions."
+        actions={
+          <CreateUser isDisabled={!loaderData.writable} isOidc={loaderData.oidc !== undefined} />
+        }
+        description={
+          loaderData.oidc ? (
+            <>
+              People who can sign in to Headplane, managed through your{" "}
+              <Link external styled to={loaderData.oidc.issuer}>
+                OIDC provider
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              People in your tailnet, managed locally.{" "}
+              <Link external styled to="https://headscale.net/stable/ref/oidc">
+                Set up OIDC
+              </Link>
+            </>
+          )
+        }
         title="Users"
       />
-      <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
 
       {loaderData.apiError && (
         <Callout className="mb-6" variant="error">
@@ -202,7 +222,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Headplane Users</h2>
+        <h2 className="mb-2 font-semibold">Headplane users</h2>
         {loaderData.headplaneUsers.length === 0 ? (
           <p className="text-muted text-sm">No users have signed into Headplane yet.</p>
         ) : (
@@ -212,7 +232,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
                 <TableHeader>User</TableHeader>
                 <TableHeader>Role</TableHeader>
                 <TableHeader>Last login</TableHeader>
-                <TableHeader>Status</TableHeader>
+                <TableHeader>Last seen</TableHeader>
                 <TableHeader className="w-12">
                   <span className="sr-only">Actions</span>
                 </TableHeader>
@@ -238,17 +258,16 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 
       {!loaderData.apiError && loaderData.unlinkedHeadscaleUsers.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-1 text-lg font-medium">Unlinked Headscale Users</h2>
-          <p className="text-muted mb-3 text-sm">
-            These Headscale users are not linked to a Headplane account and cannot be managed
-            through Headplane.
+          <h2 className="font-semibold">Unlinked Headscale users</h2>
+          <p className="text-muted mb-2 text-sm">
+            These Headscale users have no Headplane account, so Headplane can't manage their access.
           </p>
           <Table>
             <thead>
               <tr>
                 <TableHeader>User</TableHeader>
-                <TableHeader>Created at</TableHeader>
-                <TableHeader>Status</TableHeader>
+                <TableHeader>Created</TableHeader>
+                <TableHeader>Last seen</TableHeader>
                 <TableHeader className="w-12">
                   <span className="sr-only">Actions</span>
                 </TableHeader>

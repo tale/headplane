@@ -7,6 +7,7 @@ import {
   useSubmit,
 } from "react-router";
 
+import Avatar from "~/components/avatar";
 import Link from "~/components/link";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 import logoBg from "~/logo/dark-bg.svg";
@@ -142,12 +143,8 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             </MenuContent>
           </Menu>
           <Menu>
-            <MenuTrigger className="bg-subtle border-line text-muted size-7 overflow-hidden rounded-full border text-[11px] font-semibold">
-              {user.picture ? (
-                <img alt={user.name} className="size-7" src={user.picture} />
-              ) : (
-                <span aria-label={user.name}>{user.name.charAt(0).toUpperCase()}</span>
-              )}
+            <MenuTrigger className="rounded-full">
+              <Avatar name={user.name} src={user.picture} />
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem disabled>

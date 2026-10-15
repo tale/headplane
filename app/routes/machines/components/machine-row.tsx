@@ -160,7 +160,7 @@ export default function MachineRow({
           </span>
         )}
       </TableCell>
-      <TableCell className="pr-0 align-middle">
+      <TableCell className="align-middle">
         <MenuOptions
           existingTags={existingTags}
           policyTags={policyTags}

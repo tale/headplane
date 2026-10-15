@@ -44,7 +44,7 @@ export default function MachineMenu({
   const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
   return (
-    <div className={cn("flex items-center justify-end gap-1.5", !isFullButton && "px-4")}>
+    <div className="flex items-center justify-end gap-1.5">
       {modal === "remove" && (
         <Delete
           isOpen={modal === "remove"}

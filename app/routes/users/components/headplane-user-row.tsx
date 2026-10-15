@@ -1,12 +1,12 @@
-import { CircleUser } from "lucide-react";
-
+import Avatar from "~/components/avatar";
 import Chip from "~/components/chip";
-import StatusCircle from "~/components/status-circle";
 import { TableCell } from "~/components/table";
 import type { Role } from "~/server/web/roles";
 import cn from "~/utils/cn";
+import { formatTimeDelta } from "~/utils/time";
 
 import type { HeadplaneUserData } from "../overview";
+import MachinesSeen from "./machines-seen";
 import MenuOptions from "./menu";
 
 interface HeadplaneUserRowProps {
@@ -28,12 +28,6 @@ export default function HeadplaneUserRow({
   policyGroups,
   policyHasComments,
 }: HeadplaneUserRowProps) {
-  const isOnline = user.machines.some((machine) => machine.online);
-  const lastSeen = user.machines.reduce(
-    (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
-    0,
-  );
-
   const displayName = user.linkedHeadscaleUser?.displayName || user.name || user.email || user.sub;
   const displayUsername =
     user.linkedHeadscaleUser?.displayName &&
@@ -43,50 +37,41 @@ export default function HeadplaneUserRow({
   const displayEmail = user.linkedHeadscaleUser?.email ?? user.email;
 
   return (
-    <tr className="group" key={user.id}>
+    <tr className="group">
       <TableCell>
-        <div className="flex items-center">
-          {user.profilePicUrl ? (
-            <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />
-          ) : (
-            <CircleUser className="h-10 w-10" />
-          )}
-          <div className="ml-4">
-            <p className="leading-snug font-semibold">{displayName}</p>
-            {displayUsername && <p className="text-muted">{displayUsername}</p>}
-            {displayEmail && <p className="text-muted">{displayEmail}</p>}
-            {!user.headscaleUserId && <p className="text-warn text-xs">Not linked</p>}
-            {user.groups.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {user.groups.map((group) => (
-                  <Chip className="font-mono" key={group} text={group} />
-                ))}
-              </div>
-            )}
+        <div className="flex items-start gap-3">
+          <Avatar name={displayName} src={user.profilePicUrl} />
+          <div className="min-w-0">
+            <p className="font-medium">{displayName}</p>
+            <div className="text-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              {displayUsername && <span>{displayUsername}</span>}
+              {displayEmail && <span>{displayEmail}</span>}
+              {user.groups.map((group) => (
+                <span className="font-mono" key={group}>
+                  {group}
+                </span>
+              ))}
+              {!user.headscaleUserId && <Chip text="Not linked" variant="warn" />}
+            </div>
           </div>
         </div>
       </TableCell>
-      <TableCell>
-        <p>{mapRoleToName(user.role)}</p>
+      <TableCell className={cn(user.role === "member" && "text-muted")}>
+        {mapRoleToName(user.role)}
       </TableCell>
-      <TableCell>
-        <p className="text-muted text-sm" suppressHydrationWarning>
-          {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : "Never"}
-        </p>
-      </TableCell>
-      <TableCell>
-        {user.machines.length > 0 ? (
-          <span className={cn("flex items-center gap-x-2 text-sm", "text-muted")}>
-            <StatusCircle isOnline={isOnline} />
-            <p suppressHydrationWarning>
-              {isOnline ? "Connected" : new Date(lastSeen).toLocaleString()}
-            </p>
+      <TableCell className="text-muted whitespace-nowrap">
+        {user.lastLoginAt ? (
+          <span suppressHydrationWarning title={new Date(user.lastLoginAt).toLocaleString()}>
+            {formatTimeDelta(new Date(user.lastLoginAt))}
           </span>
         ) : (
-          <p className="text-muted text-sm">No machines</p>
+          "Never"
         )}
       </TableCell>
-      <TableCell className="pr-0">
+      <TableCell className="whitespace-nowrap">
+        <MachinesSeen machines={user.machines} />
+      </TableCell>
+      <TableCell className="w-12 text-right align-middle">
         <MenuOptions
           canEditGroups={canEditGroups}
           currentLink={user.headscaleUserId ?? undefined}
@@ -117,7 +102,7 @@ function mapRoleToName(role: Role) {
     case "viewer":
       return "Viewer";
     case "member":
-      return <p className="text-muted">Member</p>;
+      return "Member";
     default:
       return "Unknown";
   }

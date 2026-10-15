@@ -102,8 +102,8 @@ export default function UserMenu({
       )}
 
       <Menu>
-        <MenuTrigger className="hover:bg-hover w-10 rounded-full bg-transparent p-1 py-0.5">
-          <Ellipsis className="h-5" />
+        <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-7 rounded-md">
+          <Ellipsis className="size-4" />
         </MenuTrigger>
         <MenuContent>
           <MenuItem

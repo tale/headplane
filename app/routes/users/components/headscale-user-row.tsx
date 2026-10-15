@@ -1,12 +1,10 @@
-import { CircleUser } from "lucide-react";
-
-import Chip from "~/components/chip";
-import StatusCircle from "~/components/status-circle";
+import Avatar from "~/components/avatar";
 import { TableCell } from "~/components/table";
-import cn from "~/utils/cn";
+import { formatTimeDelta } from "~/utils/time";
 
 import type { UnlinkedHeadscaleUser } from "../overview";
 import HeadscaleUserMenu from "./headscale-user-menu";
+import MachinesSeen from "./machines-seen";
 
 interface HeadscaleUserRowProps {
   user: UnlinkedHeadscaleUser;
@@ -23,56 +21,38 @@ export default function HeadscaleUserRow({
   policyGroups,
   policyHasComments,
 }: HeadscaleUserRowProps) {
-  const isOnline = user.machines.some((machine) => machine.online);
-  const lastSeen = user.machines.reduce(
-    (acc, machine) => Math.max(acc, new Date(machine.lastSeen).getTime()),
-    0,
-  );
   const displayName = user.displayName || user.name;
   const displayUsername =
     user.displayName && user.displayName !== user.name ? user.name : undefined;
 
   return (
-    <tr className="group" key={user.id}>
+    <tr className="group">
       <TableCell>
-        <div className="flex items-center">
-          {user.profilePicUrl ? (
-            <img alt={displayName} className="h-10 w-10 rounded-full" src={user.profilePicUrl} />
-          ) : (
-            <CircleUser className="h-10 w-10" />
-          )}
-          <div className="ml-4">
-            <p className="leading-snug font-semibold">{displayName}</p>
-            {displayUsername && <p className="text-muted">{displayUsername}</p>}
-            {user.email && <p className="text-muted">{user.email}</p>}
-            {user.groups.length > 0 && (
-              <div className="mt-1 flex flex-wrap gap-1">
-                {user.groups.map((group) => (
-                  <Chip className="font-mono" key={group} text={group} />
-                ))}
-              </div>
-            )}
+        <div className="flex items-start gap-3">
+          <Avatar name={displayName} src={user.profilePicUrl} />
+          <div className="min-w-0">
+            <p className="font-medium">{displayName}</p>
+            <div className="text-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              {displayUsername && <span>{displayUsername}</span>}
+              {user.email && <span>{user.email}</span>}
+              {user.groups.map((group) => (
+                <span className="font-mono" key={group}>
+                  {group}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </TableCell>
-      <TableCell>
-        <p className="text-muted text-sm" suppressHydrationWarning>
-          {new Date(user.createdAt).toLocaleDateString()}
-        </p>
+      <TableCell className="text-muted whitespace-nowrap">
+        <span suppressHydrationWarning title={new Date(user.createdAt).toLocaleString()}>
+          {formatTimeDelta(new Date(user.createdAt))}
+        </span>
       </TableCell>
-      <TableCell>
-        {user.machines.length > 0 ? (
-          <span className={cn("flex items-center gap-x-2 text-sm", "text-muted")}>
-            <StatusCircle isOnline={isOnline} />
-            <p suppressHydrationWarning>
-              {isOnline ? "Connected" : new Date(lastSeen).toLocaleString()}
-            </p>
-          </span>
-        ) : (
-          <p className="text-muted text-sm">No machines</p>
-        )}
+      <TableCell className="whitespace-nowrap">
+        <MachinesSeen machines={user.machines} />
       </TableCell>
-      <TableCell className="pr-0">
+      <TableCell className="w-12 text-right align-middle">
         {writable ? (
           <HeadscaleUserMenu
             canEditGroups={canEditGroups}

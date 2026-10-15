@@ -1,3 +1,5 @@
+import { Plus } from "lucide-react";
+
 import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
 import Input from "~/components/input";
@@ -22,7 +24,12 @@ export default function CreateUser({ isOidc, isDisabled }: CreateUserProps) {
       intent="create"
       submitLabel="Create user"
       title="Create a Headscale user"
-      trigger={<Button disabled={isDisabled}>Add user</Button>}
+      trigger={
+        <Button disabled={isDisabled} variant="primary">
+          <Plus className="size-3.5" />
+          Add user
+        </Button>
+      }
     >
       <Input
         description={USERNAME_RULE}
