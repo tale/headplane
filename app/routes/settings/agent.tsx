@@ -4,6 +4,7 @@ import Button from "~/components/button";
 import Callout from "~/components/callout";
 import Link from "~/components/link";
 import PageHeader from "~/components/page-header";
+import { SettingList, SettingRow } from "~/components/section";
 import StatusCircle from "~/components/status-circle";
 import { agentsContext, authContext } from "~/server/context";
 import { formatTimeDelta } from "~/utils/time";
@@ -51,77 +52,74 @@ export async function action({ request, context }: Route.ActionArgs) {
 
 export default function Page({ loaderData }: Route.ComponentProps) {
   const fetcher = useFetcher<typeof action>();
-  const isSyncing = fetcher.state !== "idle";
+  const description = (
+    <>
+      Syncs each machine's Tailscale version, OS, and connectivity from your tailnet.{" "}
+      <Link external styled to="https://headplane.net/features/agent">
+        Docs
+      </Link>
+    </>
+  );
 
   if (!loaderData.enabled) {
     return (
-      <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
-        <PageHeader className="mb-0" title="Headplane Agent" />
-        <Callout className="my-4 max-w-2xl" title="Agent Not Enabled">
-          {loaderData.reason}. To learn how to set up the agent, visit the{" "}
-          <Link external styled to="https://headplane.net/features/agent">
-            documentation
-          </Link>
-        </Callout>
-      </div>
+      <>
+        <PageHeader isSubpage description={description} title="Agent" />
+        <Callout title="The agent is off">{loaderData.reason}.</Callout>
+      </>
     );
   }
 
-  const isPending = !loaderData.syncedAt && loaderData.authUrl;
+  const isPending = !loaderData.syncedAt && Boolean(loaderData.authUrl);
   const hasError = Boolean(loaderData.error);
 
   return (
-    <div className="flex max-w-(--breakpoint-lg) flex-col gap-8">
+    <>
       <PageHeader
-        className="mb-0"
-        description="The Headplane Agent syncs node information like OS version and connectivity details from your Tailnet."
-        title="Headplane Agent"
+        isSubpage
+        actions={
+          <fetcher.Form method="post">
+            <Button pending={fetcher.state !== "idle"} type="submit">
+              Sync now
+            </Button>
+          </fetcher.Form>
+        }
+        description={description}
+        title="Agent"
       />
-
-      <div className="flex items-center gap-3">
-        <StatusCircle isOnline={!hasError && !isPending} className="size-2" />
-        <span className="text-lg font-medium">
-          {hasError ? "Error" : isPending ? "Waiting for approval" : "Healthy"}
-        </span>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <p>
-          <span className="font-medium">Last synced: </span>
-          {loaderData.syncedAt ? (
-            <span suppressHydrationWarning>{formatTimeDelta(new Date(loaderData.syncedAt))}</span>
-          ) : (
-            "Never"
-          )}
-        </p>
-        <p>
-          <span className="font-medium">Nodes synced: </span>
-          {loaderData.nodeCount}
-        </p>
-      </div>
-
-      {isPending ? (
-        <Callout className="my-4 max-w-2xl" variant="warning" title="Agent Needs Approval">
-          The agent is waiting for its Tailnet registration to be approved. Headplane will attempt
-          to auto-approve it, but if that fails, you can complete approval by visiting{" "}
-          <Link external styled to={loaderData.authUrl!}>
-            this link
+      {isPending && loaderData.authUrl && (
+        <Callout className="mb-6" title="Waiting for approval" variant="warning">
+          Headplane tries to approve the agent's tailnet registration automatically. If that doesn't
+          work,{" "}
+          <Link external styled to={loaderData.authUrl}>
+            approve it here
           </Link>
           .
         </Callout>
-      ) : undefined}
-
-      {loaderData.error ? (
-        <Callout className="my-4 max-w-2xl" variant="error" title="Sync Error">
+      )}
+      {loaderData.error && (
+        <Callout className="mb-6" title="Sync failed" variant="error">
           {loaderData.error}
         </Callout>
-      ) : undefined}
-
-      <fetcher.Form method="post">
-        <Button type="submit" variant="primary" disabled={isSyncing}>
-          {isSyncing ? "Syncing…" : "Sync Now"}
-        </Button>
-      </fetcher.Form>
-    </div>
+      )}
+      <SettingList>
+        <SettingRow label="Status">
+          <span className="flex items-center gap-2">
+            <StatusCircle isOnline={!hasError && !isPending} />
+            {hasError ? "Error" : isPending ? "Waiting for approval" : "Healthy"}
+          </span>
+        </SettingRow>
+        <SettingRow label="Last synced">
+          {loaderData.syncedAt ? (
+            <span suppressHydrationWarning title={new Date(loaderData.syncedAt).toLocaleString()}>
+              {formatTimeDelta(new Date(loaderData.syncedAt))}
+            </span>
+          ) : (
+            <span className="text-muted">Never</span>
+          )}
+        </SettingRow>
+        <SettingRow label="Machines synced">{loaderData.nodeCount}</SettingRow>
+      </SettingList>
+    </>
   );
 }

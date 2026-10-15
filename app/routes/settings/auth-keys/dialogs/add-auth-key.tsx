@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import ActionDialog from "~/components/action-dialog";
@@ -71,8 +72,13 @@ export default function AddAuthKey({
           <CodeBlock>{`tailscale up --login-server=${url} --authkey ${key}`}</CodeBlock>
         </>
       )}
-      title="Create pre-auth key"
-      trigger={<Button>Create pre-auth key</Button>}
+      title="Create auth key"
+      trigger={
+        <Button variant="primary">
+          <Plus className="size-3.5" />
+          Create key
+        </Button>
+      }
     >
       <AuthKeyFields currentUser={currentUser} selfServiceOnly={selfServiceOnly} users={users} />
     </ActionDialog>

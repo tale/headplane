@@ -1,8 +1,8 @@
 import ActionDialog from "~/components/action-dialog";
 import Link from "~/components/link";
+import Section, { RemoveButton, Row, RowList } from "~/components/section";
 
 import AddRecord from "../dialogs/add-record";
-import Section, { RemoveButton, Row, RowList } from "./section";
 
 interface Props {
   records: { name: string; type: "A" | string; value: string }[];

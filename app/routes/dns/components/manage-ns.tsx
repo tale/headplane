@@ -2,10 +2,10 @@ import ActionDialog from "~/components/action-dialog";
 import Callout from "~/components/callout";
 import Chip from "~/components/chip";
 import Link from "~/components/link";
+import Section, { RemoveButton, Row, RowList } from "~/components/section";
 
 import AddNS from "../dialogs/add-ns";
 import { useReorder } from "./reorder";
-import Section, { RemoveButton, Row, RowList } from "./section";
 
 interface Props {
   global: string[];

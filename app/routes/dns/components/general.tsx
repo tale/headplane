@@ -1,11 +1,11 @@
 import { useFetcher } from "react-router";
 
 import Callout from "~/components/callout";
+import Section, { SettingList, SettingRow } from "~/components/section";
 import Switch from "~/components/switch";
 import type { ActionResult } from "~/utils/form";
 
 import RenameTailnet from "./rename-tailnet";
-import Section, { SettingList, SettingRow } from "./section";
 
 interface Props {
   baseDomain: string;

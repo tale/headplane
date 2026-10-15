@@ -101,7 +101,7 @@ export const authKeysAction = createAction({
           key: input.key,
           user: { id: input.user_id },
         } as unknown as PreAuthKey);
-        return ok("Pre-auth key expired");
+        return ok("Auth key expired");
       },
     },
   },

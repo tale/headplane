@@ -1,9 +1,9 @@
 import ActionDialog from "~/components/action-dialog";
 import Callout from "~/components/callout";
+import Section, { RemoveButton, Row, RowList } from "~/components/section";
 
 import AddDomain from "../dialogs/add-domain";
 import { useReorder } from "./reorder";
-import Section, { RemoveButton, Row, RowList } from "./section";
 
 interface Props {
   searchDomains: string[];

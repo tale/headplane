@@ -1,5 +1,5 @@
 import ActionDialog from "~/components/action-dialog";
-import Button from "~/components/button";
+import { RemoveButton } from "~/components/section";
 import type { PreAuthKey, User } from "~/types";
 
 interface ExpireAuthKeyProps {
@@ -15,8 +15,8 @@ export default function ExpireAuthKey({ authKey, user }: ExpireAuthKeyProps) {
       intent="expire"
       isDestructive
       submitLabel="Expire key"
-      title="Expire this pre-auth key?"
-      trigger={<Button size="sm">Expire key</Button>}
+      title="Expire this auth key?"
+      trigger={<RemoveButton>Expire</RemoveButton>}
     />
   );
 }

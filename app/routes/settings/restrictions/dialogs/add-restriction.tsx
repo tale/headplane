@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import ActionDialog from "~/components/action-dialog";
@@ -36,10 +37,9 @@ const validators = {
 
 interface AddRestrictionProps {
   type: RestrictionType;
-  isDisabled?: boolean;
 }
 
-export default function AddRestriction({ type, isDisabled }: AddRestrictionProps) {
+export default function AddRestriction({ type }: AddRestrictionProps) {
   const [value, setValue] = useState("");
   const { title, label, description, placeholder } = copy[type];
   const domain = value.trim();
@@ -51,7 +51,12 @@ export default function AddRestriction({ type, isDisabled }: AddRestrictionProps
       intent="add"
       submitLabel={title}
       title={title}
-      trigger={<Button disabled={isDisabled}>{title}</Button>}
+      trigger={
+        <Button>
+          <Plus className="size-3.5" />
+          {title}
+        </Button>
+      }
     >
       <Input
         description={

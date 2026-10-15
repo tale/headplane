@@ -10,6 +10,7 @@
 - The machine page has a simpler layout, with routing and network details shown as plain lists instead of boxed cards.
 - The Users page matches the new machines list: each user shows their avatar, email, and groups on one line, along with when their machines were last seen. **Add user** now sits in the page header, and users whose profile picture fails to load get an initial instead of a broken image.
 - The DNS page is reorganized: the tailnet name, Magic DNS, and the local DNS override sit together under **General**, and each section has its heading and add button in a column beside its list. Split DNS nameservers now sit in the same list as global ones, marked with the domain they answer for, and nameservers can be reordered the same way as search domains.
+- Settings has a sidebar for **Auth keys**, **Sign-in restrictions**, and **Agent** instead of a page of links, and `/settings` opens auth keys directly. Auth keys are listed in a table, newest first, with filters like the machines list. Sign-in restrictions and the agent status use the same layout as the DNS page.
 
 # 0.8.0 (October 13, 2026)
 

@@ -10,27 +10,32 @@ interface Props {
   children: React.ReactNode;
 }
 
+// Splits into two columns by its own width rather than the viewport, so it
+// also fits beside the settings nav.
 export default function Section({ title, description, action, children }: Props) {
   return (
     <section
       className={cn(
-        "border-line -mx-2 grid gap-x-12 gap-y-4 border-t px-2 py-8",
-        "first-of-type:border-t-0 first-of-type:pt-0 md:grid-cols-[15rem_minmax(0,1fr)]",
+        "@container border-line -mx-2 border-t px-2 py-8",
+        "first-of-type:border-t-0 first-of-type:pt-0",
       )}
     >
-      <div className="flex min-w-0 flex-col items-start gap-3">
-        <div>
-          <h2 className="font-semibold">{title}</h2>
-          {description && <p className="text-muted mt-1 text-sm">{description}</p>}
+      <div className="grid gap-x-12 gap-y-4 @2xl:grid-cols-[15rem_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col items-start gap-3">
+          <div>
+            <h2 className="font-semibold">{title}</h2>
+            {description && <p className="text-muted mt-1 text-sm">{description}</p>}
+          </div>
+          {action}
         </div>
-        {action}
+        <div className="min-w-0">{children}</div>
       </div>
-      <div className="min-w-0">{children}</div>
     </section>
   );
 }
 
-export function RemoveButton({ className, ...props }: ButtonProps) {
+// Quiet until hovered, since it repeats on every row.
+export function RemoveButton({ className, children, ...props }: ButtonProps) {
   return (
     <Button
       {...props}
@@ -38,7 +43,7 @@ export function RemoveButton({ className, ...props }: ButtonProps) {
       size="sm"
       variant="ghost"
     >
-      Remove
+      {children ?? "Remove"}
     </Button>
   );
 }
