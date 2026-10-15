@@ -17,6 +17,7 @@ import {
   createServer as createHttpsServer,
 } from "node:https";
 import { extname, normalize, resolve, sep } from "node:path";
+import { pipeline } from "node:stream/promises";
 
 import mime from "mime";
 import pino from "pino";
@@ -120,12 +121,7 @@ function createStaticHandler(opts: StaticOptions) {
       return true;
     }
 
-    await new Promise<void>((resolve_, reject) => {
-      const stream = createReadStream(file);
-      stream.on("error", reject);
-      stream.on("end", () => resolve_());
-      stream.pipe(res);
-    });
+    await pipeline(createReadStream(file), res);
 
     return true;
   };
@@ -136,18 +132,11 @@ export interface ListenerOptions {
   staticRoot?: string;
   assetsDir?: string;
   immutableAssets?: boolean;
-  /** Paths served dynamically by the application, even when a static file exists. */
-  dynamicPaths?: string[];
+  assetManifest?: { path: string; body: string };
   requestListener: RequestListener;
   logger?: Logger;
 }
 
-/**
- * Composes the full Node `RequestListener` chain:
- *   1. `${basename}` → 302 to `${basename}/`
- *   2. Static asset serving (optional)
- *   3. Delegate to the downstream request listener
- */
 export function composeListener(opts: ListenerOptions): RequestListener {
   const log = opts.logger ?? defaultLogger;
   const basename = opts.basename;
@@ -169,8 +158,21 @@ export function composeListener(opts: ListenerOptions): RequestListener {
         return;
       }
 
-      const dynamic = url && opts.dynamicPaths?.includes(url.pathname);
-      if (!dynamic && serveStatic && (await serveStatic(req, res))) return;
+      const { assetManifest } = opts;
+      if (
+        assetManifest &&
+        url?.pathname === assetManifest.path &&
+        (req.method === "GET" || req.method === "HEAD")
+      ) {
+        res.writeHead(200, {
+          "Content-Type": "text/javascript; charset=utf-8",
+          "Cache-Control": "no-cache",
+        });
+        res.end(req.method === "HEAD" ? undefined : assetManifest.body);
+        return;
+      }
+
+      if (serveStatic && (await serveStatic(req, res))) return;
       await opts.requestListener(req, res);
     } catch (error) {
       log.error("Request handler failed: %s", error);

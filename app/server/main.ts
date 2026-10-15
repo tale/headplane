@@ -69,7 +69,10 @@ startHttpServer({
     basename: config.server.base_path,
     staticRoot: clientDir,
     immutableAssets: true,
-    dynamicPaths: [runtimeBuild.assets.url],
+    assetManifest: {
+      path: runtimeBuild.assets.url,
+      body: `window.__reactRouterManifest=${JSON.stringify(runtimeBuild.assets)};`,
+    },
     logger: runtimeLogger,
     requestListener,
   }),

@@ -9,7 +9,6 @@
 //   - `runtime/vite-plugin.ts` — the dev-mode Vite middleware; loads
 //     this module through `ssrLoadModule` and dispatches each request.
 
-import type { RequestListener } from "node:http";
 import { exit, versions } from "node:process";
 
 import { createRequestListener } from "@react-router/node";
@@ -103,29 +102,8 @@ interface ClientAddress {
 export const runtimeBuild = import.meta.env.PROD
   ? configureBuild(build, config.server.base_path)
   : { ...build, basename: config.server.base_path };
-const requestListener = createRequestListener({
+export default createRequestListener({
   build: runtimeBuild,
   mode: import.meta.env.MODE,
   getLoadContext,
 });
-
-// The on-disk manifest still contains build-time asset URLs.
-const listener: RequestListener = (request, response) => {
-  if (
-    import.meta.env.PROD &&
-    request.url &&
-    URL.parse(request.url, "http://localhost")?.pathname === runtimeBuild.assets.url &&
-    (request.method === "GET" || request.method === "HEAD")
-  ) {
-    response.setHeader("Content-Type", "text/javascript; charset=utf-8");
-    response.setHeader("Cache-Control", "no-cache");
-    response.end(
-      request.method === "HEAD"
-        ? undefined
-        : `window.__reactRouterManifest=${JSON.stringify(runtimeBuild.assets)};`,
-    );
-    return;
-  }
-  requestListener(request, response);
-};
-export default listener;
