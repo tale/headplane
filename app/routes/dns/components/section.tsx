@@ -1,0 +1,89 @@
+import type React from "react";
+
+import Button, { type ButtonProps } from "~/components/button";
+import cn from "~/utils/cn";
+
+interface Props {
+  title: string;
+  description?: React.ReactNode;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}
+
+export default function Section({ title, description, action, children }: Props) {
+  return (
+    <section
+      className={cn(
+        "border-line -mx-2 grid gap-x-12 gap-y-4 border-t px-2 py-8",
+        "first-of-type:border-t-0 first-of-type:pt-0 md:grid-cols-[15rem_minmax(0,1fr)]",
+      )}
+    >
+      <div className="flex min-w-0 flex-col items-start gap-3">
+        <div>
+          <h2 className="font-semibold">{title}</h2>
+          {description && <p className="text-muted mt-1 text-sm">{description}</p>}
+        </div>
+        {action}
+      </div>
+      <div className="min-w-0">{children}</div>
+    </section>
+  );
+}
+
+export function RemoveButton({ className, ...props }: ButtonProps) {
+  return (
+    <Button
+      {...props}
+      className={cn("hover:bg-bad-subtle hover:text-bad", className)}
+      size="sm"
+      variant="ghost"
+    >
+      Remove
+    </Button>
+  );
+}
+
+// Lists bleed into the gutter like Section so their edges line up.
+const listClass = "divide-line -mx-2 divide-y text-sm";
+const rowClass = "flex min-h-11 items-center gap-4 px-2 py-1.5";
+
+interface RowProps {
+  action?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function RowList({ children }: { children: React.ReactNode }) {
+  return <ul className={listClass}>{children}</ul>;
+}
+
+export function Row({ action, className, children }: RowProps) {
+  return (
+    <li className={cn(rowClass, className)}>
+      <div className="min-w-0 flex-1">{children}</div>
+      {action}
+    </li>
+  );
+}
+
+interface SettingRowProps {
+  label: string;
+  action?: React.ReactNode;
+  children?: React.ReactNode;
+}
+
+export function SettingList({ children }: { children: React.ReactNode }) {
+  return <dl className={listClass}>{children}</dl>;
+}
+
+export function SettingRow({ label, action, children }: SettingRowProps) {
+  return (
+    <div className={rowClass}>
+      <dt className="text-muted w-32 shrink-0 sm:w-40">{label}</dt>
+      <dd className="flex min-w-0 flex-1 items-center justify-between gap-4">
+        <span className="min-w-0 sm:truncate">{children}</span>
+        {action}
+      </dd>
+    </div>
+  );
+}

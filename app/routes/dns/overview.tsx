@@ -1,7 +1,7 @@
 import { useLoaderData } from "react-router";
 
 import Callout from "~/components/callout";
-import Code from "~/components/code";
+import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import { authContext, headscaleConfigContext } from "~/server/context";
@@ -9,11 +9,10 @@ import { Capabilities } from "~/server/web/roles";
 import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
+import General from "./components/general";
 import ManageDomains from "./components/manage-domains";
 import ManageNS from "./components/manage-ns";
 import ManageRecords from "./components/manage-records";
-import RenameTailnet from "./components/rename-tailnet";
-import ToggleMagic from "./components/toggle-magic";
 import { dnsAction } from "./dns-actions";
 
 // We do not want to expose every config value
@@ -44,51 +43,42 @@ export const clientAction = toastClientAction;
 
 export default function Page() {
   const data = useLoaderData<typeof loader>();
-
-  const allNs: Record<string, string[]> = {};
-  for (const key of Object.keys(data.splitDns)) {
-    allNs[key] = data.splitDns[key];
-  }
-
-  allNs.global = data.nameservers;
   const isDisabled = data.access === false || data.writable === false;
 
   return (
     <>
-      <PageHeader description="Control how devices on your tailnet resolve names." title="DNS" />
-      <div className="flex max-w-(--breakpoint-lg) flex-col gap-16">
-        {data.writable ? undefined : (
-          <Callout className="my-4 max-w-2xl">
-            The Headscale configuration is read-only. You cannot make changes to the configuration
+      <PageHeader
+        description={
+          <>
+            Control how devices on your tailnet resolve names.{" "}
+            <Link external styled to="https://headscale.net/stable/ref/dns">
+              Docs
+            </Link>
+          </>
+        }
+        title="DNS"
+      />
+      <div className="max-w-5xl">
+        {isDisabled && (
+          <Callout className="mb-6">
+            {data.writable
+              ? "Your permissions don't allow changes to DNS settings."
+              : "The Headscale configuration is read-only, so DNS settings can't be changed here."}
           </Callout>
         )}
-        {data.access ? undefined : (
-          <Callout className="my-4 max-w-2xl">
-            Your permissions do not allow you to modify the DNS settings for this tailnet.
-          </Callout>
-        )}
-        <RenameTailnet isDisabled={isDisabled} name={data.baseDomain} />
-        <ManageNS isDisabled={isDisabled} nameservers={allNs} overrideLocalDns={data.overrideDns} />
+        <General
+          baseDomain={data.baseDomain}
+          isDisabled={isDisabled}
+          isMagicDns={data.magicDns}
+          isOverrideDns={data.overrideDns}
+        />
+        <ManageNS global={data.nameservers} isDisabled={isDisabled} split={data.splitDns} />
         <ManageRecords isDisabled={isDisabled} records={data.extraRecords} />
         <ManageDomains
           isDisabled={isDisabled}
           magic={data.magicDns ? data.baseDomain : undefined}
           searchDomains={data.searchDomains}
         />
-
-        <div className="flex w-full flex-col sm:w-2/3">
-          <h2 className="mb-4 text-lg font-semibold">Magic DNS</h2>
-          <p className="mb-4">
-            Automatically register domain names for each device on the tailnet. Devices will be
-            accessible at{" "}
-            <Code>
-              [device].
-              {data.baseDomain}
-            </Code>{" "}
-            when Magic DNS is enabled.
-          </p>
-          <ToggleMagic isDisabled={isDisabled} isEnabled={data.magicDns} />
-        </div>
       </div>
     </>
   );

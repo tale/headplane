@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import ActionDialog from "~/components/action-dialog";
@@ -22,7 +23,12 @@ export default function AddRecord() {
       intent="add_record"
       submitLabel="Add record"
       title="Add DNS record"
-      trigger={<Button>Add DNS record</Button>}
+      trigger={
+        <Button>
+          <Plus className="size-3.5" />
+          Add record
+        </Button>
+      }
     >
       <Select
         items={[

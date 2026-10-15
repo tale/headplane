@@ -1,3 +1,4 @@
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
 import ActionDialog from "~/components/action-dialog";
@@ -18,7 +19,12 @@ export default function AddNameserver() {
       intent="add_ns"
       submitLabel="Add nameserver"
       title="Add nameserver"
-      trigger={<Button>Add nameserver</Button>}
+      trigger={
+        <Button>
+          <Plus className="size-3.5" />
+          Add nameserver
+        </Button>
+      }
     >
       <Input
         description="Use this IPv4 or IPv6 address to resolve names."

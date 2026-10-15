@@ -9,6 +9,7 @@
 - With the Headplane agent enabled, the machines list marks clients running an older Tailscale release than the latest stable one. Headplane checks pkgs.tailscale.com for the latest version once a day in the background.
 - The machine page has a simpler layout, with routing and network details shown as plain lists instead of boxed cards.
 - The Users page matches the new machines list: each user shows their avatar, email, and groups on one line, along with when their machines were last seen. **Add user** now sits in the page header, and users whose profile picture fails to load get an initial instead of a broken image.
+- The DNS page is reorganized: the tailnet name, Magic DNS, and the local DNS override sit together under **General**, and each section has its heading and add button in a column beside its list. Split DNS nameservers now sit in the same list as global ones, marked with the domain they answer for.
 
 # 0.8.0 (October 13, 2026)
 
