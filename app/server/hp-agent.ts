@@ -123,20 +123,21 @@ export async function createAgentManager(
   }
 
   try {
-    await access(agentConfig.work_dir, constants.R_OK | constants.W_OK);
-  } catch {
-    try {
-      await mkdir(agentConfig.work_dir, { recursive: true });
+    const created = await mkdir(agentConfig.work_dir, { recursive: true });
+    if (created) {
       log.info("agent", "Created agent work dir at %s", agentConfig.work_dir);
-    } catch (innerError) {
-      log.error(
-        "agent",
-        "Failed to create agent work dir at %s: %s",
-        agentConfig.work_dir,
-        innerError instanceof Error ? innerError.message : String(innerError),
-      );
-      return;
     }
+
+    // mkdir succeeds on an existing read-only directory, so check it too.
+    await access(agentConfig.work_dir, constants.R_OK | constants.W_OK);
+  } catch (error) {
+    log.error(
+      "agent",
+      "Agent work dir at %s isn't usable: %s",
+      agentConfig.work_dir,
+      error instanceof Error ? error.message : String(error),
+    );
+    return;
   }
 
   const hostName = agentConfig.host_name ?? "headplane-agent";
