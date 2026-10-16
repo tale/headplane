@@ -230,16 +230,25 @@ export default function Grid() {
       }
     }
 
+    // A hidden panel leaves the canvas at 0x0, and drawing an empty canvas
+    // throws, so idle until it has a size instead of killing the loop.
+    function isVisible() {
+      return field.width > 0 && field.height > 0;
+    }
+
     function loop(now: number) {
-      tick(now, Math.min(64, now - last));
-      draw(now);
-      last = now;
       frame = requestAnimationFrame(loop);
+      if (isVisible()) {
+        tick(now, Math.min(64, now - last));
+        draw(now);
+      }
+
+      last = now;
     }
 
     function onResize() {
       resize();
-      if (isReduced) draw(performance.now());
+      if (isReduced && isVisible()) draw(performance.now());
     }
 
     onResize();

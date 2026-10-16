@@ -1,21 +1,21 @@
-import { Loader2, WifiOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
 
 import Button from "~/components/button";
 import Callout from "~/components/callout";
-import Card from "~/components/card";
 import Code from "~/components/code";
+import Shell from "~/routes/auth/login/shell";
 import {
   agentsContext,
   appConfigContext,
   headscaleContext,
   requestApiContext,
 } from "~/server/context";
-import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
+import { autoLink } from "~/server/web/link";
 
 import type { Route } from "./+types/page";
-import { isSSHError, SSHErrorBoundary, sshErrors } from "./errors";
+import { isSSHError, SSHError, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
 import { connectTailnet } from "./wasm.client";
@@ -84,9 +84,9 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
 
   // The user must exist within Headscale to generate a pre-auth key
   const users = await api.users.list();
-  const hsUser = principal.user.headscaleUserId
-    ? users.find((u) => u.id === principal.user.headscaleUserId)
-    : findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
+  const headscaleUserId =
+    principal.user.headscaleUserId ?? (await autoLink({ request, context }, principal));
+  const hsUser = users.find((u) => u.id === headscaleUserId);
 
   if (!hsUser) {
     throw data(sshErrors.user_not_linked, 404);
@@ -151,20 +151,14 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     return (
       <>
         <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
-        <div className="flex h-screen w-screen items-center justify-center bg-black">
-          <Card className="w-screen">
-            <div className="flex items-center justify-between gap-4">
-              <h2 className="mb-2 text-lg font-semibold">Node Offline</h2>
-              <WifiOff className="text-bad mb-2 h-6 w-6" />
-            </div>
-            <p>
-              <Code>{hostname}</Code> is not currently connected to the Tailnet.
-            </p>
-            <Button className="mt-8 w-full" onClick={() => window.location.reload()}>
-              Retry Connection
-            </Button>
-          </Card>
-        </div>
+        <Shell
+          description="It isn't connected to the tailnet right now. Start Tailscale on it, then try again."
+          title={`${hostname} is offline`}
+        >
+          <Button onClick={() => window.location.reload()} variant="primary">
+            Try again
+          </Button>
+        </Shell>
       </>
     );
   }
@@ -280,12 +274,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
-      <SSHErrorBoundary
-        title={routeError.title}
-        message={routeError.message}
-        anchor={routeError.anchor}
-      />
-    </div>
+    <SSHError anchor={routeError.anchor} message={routeError.message} title={routeError.title} />
   );
 }

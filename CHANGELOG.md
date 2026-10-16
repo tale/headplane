@@ -18,6 +18,7 @@
 - Only admins can pick which Headscale user their account links to, on a page shown once after signing in that they can skip. Previously anyone signing in for the first time could claim any unlinked Headscale user, and with it that user's machines and auth keys wherever their role allowed. Everyone else is linked automatically or by an admin from the Users page.
 - People without dashboard access get a new home page that walks through installing Tailscale and connecting it to this network, and shows whether their account is linked yet. It updates live, so it notices as soon as their first device signs in.
 - Error pages are redesigned. Inside the app, an error keeps the navigation bar and explains what went wrong in a sentence, with raw details tucked under **Details** and a **Try again** button where retrying can help. Errors that stop the app from loading, and unknown addresses, use the sign-in layout.
+- Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 
 ## Fixes
@@ -29,6 +30,7 @@
 - Fixed the error page crashing on errors that bundle several failures together.
 - The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
 - Fields with an error keep their red border while focused instead of turning blue.
+- Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
 
 # 0.8.0 (October 13, 2026)
 

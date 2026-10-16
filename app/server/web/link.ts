@@ -33,10 +33,13 @@ export async function autoLink(args: Args, principal: UserPrincipal) {
   );
 
   if (!match) {
-    return false;
+    return undefined;
   }
 
-  return args.context.get(authContext).linkHeadscaleUser(principal.user.id, match.id);
+  const isLinked = await args.context
+    .get(authContext)
+    .linkHeadscaleUser(principal.user.id, match.id);
+  return isLinked ? match.id : undefined;
 }
 
 export async function listPickableUsers(args: Args) {
