@@ -250,6 +250,12 @@ export default function RulesEditor({
                     <ChipRow values={entry.ip} />
                   </>
                 ) : null}
+                {entry.via.length > 0 ? (
+                  <>
+                    <span className="text-xs opacity-60">via</span>
+                    <ChipRow values={entry.via} />
+                  </>
+                ) : null}
                 {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
               </div>
               <RowActions

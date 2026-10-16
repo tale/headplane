@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import Link from "~/components/link";
 import TokenList from "~/components/token-list";
-import type { Grant } from "~/utils/acl-policy";
+import { isValidTagName, type Grant } from "~/utils/acl-policy";
 
 import EditorDialog from "./editor-dialog";
 
@@ -15,7 +15,7 @@ interface GrantDialogProps {
   onSave: (grant: Grant) => void;
 }
 
-const EMPTY: Grant = { src: [], dst: [], ip: ["*"], extra: {} };
+const EMPTY: Grant = { src: [], dst: [], ip: ["*"], via: [], extra: {} };
 const IP_SUGGESTIONS = ["*", "tcp:22", "tcp:80", "tcp:443", "udp:53", "icmp"];
 
 export default function GrantDialog({
@@ -80,6 +80,16 @@ export default function GrantDialog({
         placeholder="tcp:443"
         suggestions={IP_SUGGESTIONS}
         values={draft.ip}
+      />
+      <TokenList
+        description="Optional. Tags of the subnet routers the traffic must go through. Only tags are allowed."
+        emptyText="Traffic is not routed through a subnet router"
+        label="Via"
+        onChange={(via) => setDraft({ ...draft, via })}
+        placeholder="tag:router"
+        suggestions={sources.filter((source) => source.startsWith("tag:"))}
+        validate={isValidTagName}
+        values={draft.via}
       />
     </EditorDialog>
   );
