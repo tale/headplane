@@ -320,7 +320,11 @@ export function isValidRoute(route: string): boolean {
     return false;
   }
 
-  return IPV4.test(address) ? Number(prefixLength) <= 32 : isIpv6(route);
+  if (IPV4.test(address)) {
+    return Number(prefixLength) <= 32 && address.split(".").every((octet) => Number(octet) <= 255);
+  }
+
+  return isIpv6(route) && Number(prefixLength) <= 128;
 }
 
 // MARK: Internals
