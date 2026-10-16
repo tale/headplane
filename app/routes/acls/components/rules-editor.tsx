@@ -244,8 +244,12 @@ export default function RulesEditor({
                 <ChipRow values={entry.src} />
                 <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
                 <ChipRow values={entry.dst} />
-                <span className="text-xs opacity-60">on</span>
-                <ChipRow values={entry.ip} />
+                {entry.ip.length > 0 ? (
+                  <>
+                    <span className="text-xs opacity-60">on</span>
+                    <ChipRow values={entry.ip} />
+                  </>
+                ) : null}
                 {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
               </div>
               <RowActions

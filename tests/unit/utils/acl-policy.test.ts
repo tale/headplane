@@ -382,5 +382,8 @@ describe("validation", () => {
     expect(isValidRoute("10.0.0.1")).toBe(false);
     expect(isValidRoute("10.0.0.0/33")).toBe(false);
     expect(isValidRoute("tag:router/8")).toBe(false);
+    expect(isValidRoute("10.0.0.999/8")).toBe(false);
+    expect(isValidRoute("fd7a::/129")).toBe(false);
+    expect(isValidRoute("fd7a::/999")).toBe(false);
   });
 });
