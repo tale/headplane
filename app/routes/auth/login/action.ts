@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 
 import { authContext, headscaleContext } from "~/server/context";
-import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { headscaleErrorMessage, isDataWithApiError } from "~/server/headscale/api/error-client";
 import log from "~/utils/log";
 
 import type { Route } from "./+types/page";
@@ -98,7 +98,11 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       }
     }
 
-    log.error("auth", "Error while validating API key: %s", error);
+    log.error(
+      "auth",
+      "Error while validating API key: %s",
+      headscaleErrorMessage(error) ?? String(error),
+    );
     log.debug("auth", "Error details: %o", error);
     return {
       success: false,
