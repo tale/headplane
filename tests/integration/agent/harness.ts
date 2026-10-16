@@ -20,8 +20,7 @@ export const AGENT_TAG = `tag:${HOST_NAME}`;
  * Lists running agent processes. Each test run builds the agent into its own
  * temp path, so the command line identifies our processes exactly.
  */
-export function agentPids() {
-  const agentPath = inject("agentPath");
+export function agentPids(agentPath = inject("agentPath")) {
   const rows = execFileSync("ps", ["-A", "-o", "pid=,command="], { encoding: "utf8" });
   return rows
     .split("\n")
@@ -120,8 +119,8 @@ export async function createHarness(version: string, options: HarnessOptions = {
     expect(agentProcessCount(), "dispose left an agent process running").toBe(0);
   }
 
-  function signalAgent(signal: NodeJS.Signals) {
-    const pids = agentPids();
+  function signalAgent(signal: NodeJS.Signals, agentPath?: string) {
+    const pids = agentPids(agentPath);
     expect(pids, "expected exactly one agent process to signal").toHaveLength(1);
     process.kill(pids[0], signal);
   }

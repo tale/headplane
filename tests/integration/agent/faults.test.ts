@@ -1,9 +1,9 @@
-import { chmod, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
+import { chmod, copyFile, mkdtemp, readdir, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, inject, test, vi } from "vitest";
 
 import type { AgentManager } from "~/server/hp-agent";
 
@@ -246,6 +246,35 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(agentProcessCount()).toBe(0);
     expect(await harness.nodes()).toHaveLength(0);
     expect(await harness.authKeys()).toHaveLength(0);
+  });
+
+  // Like an upgrade swapping the binary out while the agent restarts.
+  test("an agent binary that vanishes reports an error, then recovers", async () => {
+    harness = await createHarness(version);
+    const binDir = await mkdtemp(join(tmpdir(), "hp-agent-bin-copy-"));
+    const binary = join(binDir, "hp_agent");
+    await copyFile(inject("agentPath"), binary);
+    await chmod(binary, 0o755);
+
+    try {
+      const agent = await harness.createManager({ executablePath: binary });
+      const { syncedAt } = await waitForSync(agent!);
+
+      await rename(binary, `${binary}.moved`);
+      harness.signalAgent("SIGKILL", binary);
+      await vi.waitFor(() => expect(agent!.lastSync().consecutiveErrors).toBeGreaterThan(0), {
+        timeout: 30_000,
+      });
+
+      await rename(`${binary}.moved`, binary);
+      await waitForNextSync(agent!, syncedAt!);
+
+      expect(await harness.nodes()).toHaveLength(1);
+      expect(await harness.authKeys()).toHaveLength(1);
+    } finally {
+      await harness.stopAgent();
+      await rm(binDir, { recursive: true, force: true });
+    }
   });
 
   test("a missing agent executable refuses to start", async () => {

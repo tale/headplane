@@ -228,6 +228,28 @@ export async function createAgentManager(
       log.debug("agent", "Agent stdin closed: %s", error.message);
     });
 
+    // A failed spawn (e.g. the binary was replaced mid-upgrade) emits "error"
+    // and may never emit "exit", so treat it as an exit or the manager would
+    // wait on a process that never started.
+    child.on("error", (error) => {
+      log.error("agent", "Failed to run the agent: %s", error.message);
+      if (proc !== child) {
+        return;
+      }
+
+      proc = null;
+      state.startedAt = undefined;
+      if (responseHandler) {
+        const handler = responseHandler;
+        responseHandler = null;
+        handler("");
+      }
+
+      if (!disposed) {
+        scheduleRestart();
+      }
+    });
+
     child.stderr?.on("data", (chunk: Buffer) => {
       const text = chunk.toString().trim();
       if (!text) {
