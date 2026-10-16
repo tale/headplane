@@ -131,6 +131,29 @@ function createStaticHandler(opts: StaticOptions) {
   };
 }
 
+// React router tightened the CSRF check to compare full origins in a PR so now
+// we need to rewrite the origin header to match the scheme of the request.
+//
+// PR: https://github.com/remix-run/react-router/pull/15419
+export function alignOriginScheme(req: IncomingMessage) {
+  const { origin, host } = req.headers;
+  if (!origin || !host || origin === "null") {
+    return;
+  }
+
+  const originUrl = URL.parse(origin);
+  if (!originUrl || originUrl.host !== host.toLowerCase()) {
+    return;
+  }
+
+  const scheme = "encrypted" in req.socket && req.socket.encrypted ? "https:" : "http:";
+  if (originUrl.protocol === scheme) {
+    return;
+  }
+
+  req.headers.origin = `${scheme}//${originUrl.host}`;
+}
+
 export interface ListenerOptions {
   basename: string;
   staticRoot?: string;
@@ -171,6 +194,7 @@ export function composeListener(opts: ListenerOptions): RequestListener {
       } catch {}
     }
 
+    alignOriginScheme(req);
     if (!serveStatic) {
       opts.requestListener(req, res);
       return;
