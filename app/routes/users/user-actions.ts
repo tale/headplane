@@ -63,6 +63,12 @@ export async function userAction({ request, context }: Route.ActionArgs) {
       }
 
       await api.users.delete(headscaleUserId);
+      for (const user of await auth.listUsers()) {
+        if (user.headscale_user_id === headscaleUserId) {
+          await auth.unlinkHeadscaleUser(user.id);
+        }
+      }
+
       await headscaleLiveStore.refresh(usersResource, api);
       return { message: "User deleted successfully" };
     }
