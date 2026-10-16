@@ -1,6 +1,4 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
-import Text from "~/components/text";
-import Title from "~/components/title";
+import ActionDialog from "~/components/action-dialog";
 import type { Machine } from "~/types";
 
 interface ExpireProps {
@@ -11,16 +9,15 @@ interface ExpireProps {
 
 export default function Expire({ machine, isOpen, setIsOpen }: ExpireProps) {
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel variant="destructive">
-        <Title>Expire {machine.givenName}</Title>
-        <Text>
-          This will disconnect the machine from your Tailnet. In order to reconnect, you will need
-          to re-authenticate from the device.
-        </Text>
-        <input name="action_id" type="hidden" value="expire" />
-        <input name="node_id" type="hidden" value={machine.id} />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description="The machine disconnects from your tailnet until someone signs in on it again."
+      fields={{ node_id: machine.id }}
+      intent="expire"
+      isDestructive
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Expire"
+      title={`Expire ${machine.givenName}?`}
+    />
   );
 }

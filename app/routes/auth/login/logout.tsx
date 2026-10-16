@@ -1,14 +1,20 @@
-import Card from "~/components/card";
+import { Link as RouterLink } from "react-router";
+
+import Button from "~/components/button";
+
+import Shell from "./shell";
 
 export default function Logout() {
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
-      <Card className="m-4 max-w-md sm:m-0">
-        <Card.Title>You have been logged out</Card.Title>
-        <Card.Text>
-          You can now close this window. If you would like to log in again, please refresh the page.
-        </Card.Text>
-      </Card>
-    </div>
+    <Shell description="You can close this window." title="You're signed out">
+      <Button
+        className="w-full"
+        nativeButton={false}
+        render={<RouterLink prefetch="none" reloadDocument to="/login" />}
+        variant="primary"
+      >
+        Sign in again
+      </Button>
+    </Shell>
   );
 }

@@ -1,21 +1,21 @@
-import { Loader2, WifiOff } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
 
 import Button from "~/components/button";
-import Card from "~/components/card";
+import Callout from "~/components/callout";
 import Code from "~/components/code";
-import StatusBanner from "~/components/status-banner";
+import Shell from "~/routes/auth/login/shell";
 import {
   agentsContext,
   appConfigContext,
   headscaleContext,
   requestApiContext,
 } from "~/server/context";
-import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
+import { autoLink } from "~/server/web/link";
 
 import type { Route } from "./+types/page";
-import { isSSHError, SSHErrorBoundary, sshErrors } from "./errors";
+import { isSSHError, SSHError, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
 import { connectTailnet } from "./wasm.client";
@@ -84,9 +84,9 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
 
   // The user must exist within Headscale to generate a pre-auth key
   const users = await api.users.list();
-  const hsUser = principal.user.headscaleUserId
-    ? users.find((u) => u.id === principal.user.headscaleUserId)
-    : findHeadscaleUserBySubject(users, principal.user.subject, principal.profile.email);
+  const headscaleUserId =
+    principal.user.headscaleUserId ?? (await autoLink({ request, context }, principal));
+  const hsUser = users.find((u) => u.id === headscaleUserId);
 
   if (!hsUser) {
     throw data(sshErrors.user_not_linked, 404);
@@ -151,20 +151,14 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     return (
       <>
         <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
-        <div className="flex h-screen w-screen items-center justify-center bg-black">
-          <Card className="w-screen" variant="flat">
-            <div className="flex items-center justify-between gap-4">
-              <Card.Title>Node Offline</Card.Title>
-              <WifiOff className="mb-2 h-6 w-6 text-red-500" />
-            </div>
-            <Card.Text>
-              <Code>{hostname}</Code> is not currently connected to the Tailnet.
-            </Card.Text>
-            <Button className="mt-8 w-full" onClick={() => window.location.reload()}>
-              Retry Connection
-            </Button>
-          </Card>
-        </div>
+        <Shell
+          description="It isn't connected to the tailnet right now. Start Tailscale on it, then try again."
+          title={`${hostname} is offline`}
+        >
+          <Button onClick={() => window.location.reload()} variant="primary">
+            Try again
+          </Button>
+        </Shell>
       </>
     );
   }
@@ -195,14 +189,16 @@ function BrowserSSHCompatibilityBanner({
 
   return (
     <div className="fixed inset-x-4 top-4 z-[60] mx-auto max-w-2xl">
-      <StatusBanner
+      <Callout
+        className="bg-raised"
+        isDismissable
         variant="warning"
         title={`Browser SSH is broken on Headscale ${warning.version}`}
       >
         Headscale 0.29 beta releases through 0.29.1 reject Tailscale's browser/WASM{" "}
         <Code>/ts2021</Code> WebSocket request with <Code>405 Method Not Allowed</Code>. Upgrade
         Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
-      </StatusBanner>
+      </Callout>
     </div>
   );
 }
@@ -252,8 +248,8 @@ function SSHConsole({
       {!connected && (
         <div className="absolute inset-0 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <Loader2 className="size-8 animate-spin text-mist-200" />
-            <p className="text-sm text-mist-400">{status}</p>
+            <Loader2 className="text-faint size-8 animate-spin" />
+            <p className="text-muted text-sm">{status}</p>
           </div>
         </div>
       )}
@@ -278,12 +274,6 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center">
-      <SSHErrorBoundary
-        title={routeError.title}
-        message={routeError.message}
-        anchor={routeError.anchor}
-      />
-    </div>
+    <SSHError anchor={routeError.anchor} message={routeError.message} title={routeError.title} />
   );
 }

@@ -1,151 +1,108 @@
-import { data } from "react-router";
+import * as v from "valibot";
 
 import { authContext, requestApiContext } from "~/server/context";
+import { ActionError, createAction } from "~/server/web/actions";
 import { isUserPrincipal } from "~/server/web/auth";
 import { getOidcSubject } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
+import { list, ok } from "~/utils/form";
 
-import type { Route } from "./+types/overview";
+const id = v.pipe(v.string(), v.minLength(1));
+const switchValue = v.pipe(
+  v.optional(v.string(), ""),
+  v.transform((value) => value === "on"),
+);
 
-export async function authKeysAction({ request, context }: Route.ActionArgs) {
-  const auth = context.get(authContext);
-  const getRequestApi = context.get(requestApiContext);
+// The form submits the raw value of the number input, so anything that isn't
+// a plain integer (locale grouping, unit suffixes) is malformed. Parsing it
+// leniently gives an Invalid Date or, for dot-grouping locales, a silently
+// truncated expiry.
+const expiryDays = v.pipe(
+  v.string(),
+  v.trim(),
+  v.regex(/^\d+$/, "Enter a whole number of days."),
+  v.transform(Number),
+  v.minValue(1, "Enter at least 1 day."),
+  v.maxValue(365_000, "Enter at most 365,000 days."),
+);
 
-  const { principal, api } = await getRequestApi(request);
-
-  const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
-  const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
-
-  if (!canGenerateAny && !canGenerateOwn) {
-    throw data("You do not have permission to manage pre-auth keys", {
-      status: 403,
-    });
-  }
-
-  async function checkSelfServiceOwnership(userId: string) {
-    if (canGenerateAny || !canGenerateOwn) return;
-    const [targetUser] = await api.users.list({ id: userId });
-    if (!targetUser) {
-      throw data("User not found.", { status: 404 });
-    }
-    const targetSubject = getOidcSubject(targetUser);
-    const ownsTarget =
-      isUserPrincipal(principal) &&
-      (principal.user.headscaleUserId === userId || targetSubject === principal.user.subject);
-    if (!ownsTarget) {
-      throw data("You do not have permission to manage this user's pre-auth keys", {
-        status: 403,
-      });
-    }
-  }
-
-  const formData = await request.formData();
-  const action = formData.get("action_id")?.toString();
-  if (!action) {
-    throw data("Missing `action_id` in the form data.", {
-      status: 400,
-    });
-  }
-
-  switch (action) {
-    case "add_preauthkey": {
-      const user = formData.get("user_id")?.toString() || null;
-      const aclTagsRaw = formData.get("acl_tags")?.toString() || "";
-      const aclTags = aclTagsRaw
-        .split(",")
-        .map((t) => t.trim())
-        .filter((t) => t.length > 0);
-
-      if (!user && aclTags.length === 0) {
-        return data("Must specify either a user or ACL tags.", {
-          status: 400,
-        });
-      }
-
-      if (user) {
-        await checkSelfServiceOwnership(user);
-      }
-
-      const expiry = formData.get("expiry")?.toString();
-      if (!expiry) {
-        return data("Missing `expiry` in the form data.", {
-          status: 400,
-        });
-      }
-
-      const reusable = formData.get("reusable")?.toString();
-      if (!reusable) {
-        return data("Missing `reusable` in the form data.", {
-          status: 400,
-        });
-      }
-
-      const ephemeral = formData.get("ephemeral")?.toString();
-      if (!ephemeral) {
-        return data("Missing `ephemeral` in the form data.", {
-          status: 400,
-        });
-      }
-
-      // The form submits the raw, unformatted value of the number input, so
-      // anything that is not a plain integer (grouping separators from
-      // `Intl.NumberFormat`, unit suffixes, ...) is malformed input. Parsing it
-      // leniently either produces an Invalid Date (500) or, for dot-grouping
-      // locales, a silently truncated expiry.
-      const day = /^\d+$/.test(expiry.trim()) ? Number(expiry.trim()) : Number.NaN;
-      const date = new Date();
-      date.setDate(date.getDate() + day);
-
-      if (day < 1 || Number.isNaN(date.getTime())) {
-        return data("`expiry` must be a whole number of days.", {
-          status: 400,
-        });
-      }
-
-      const key = await api.preAuthKeys.create({
-        user,
-        ephemeral: ephemeral === "on",
-        reusable: reusable === "on",
-        expiration: date,
-        aclTags: aclTags.length > 0 ? aclTags : null,
-      });
-
-      return data({ success: true as const, key: key.key });
+export const authKeysAction = createAction({
+  async setup({ request, context }) {
+    const auth = context.get(authContext);
+    const { principal, api } = await context.get(requestApiContext)(request);
+    const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
+    const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
+    if (!canGenerateAny && !canGenerateOwn) {
+      throw new ActionError("You don't have permission to manage auth keys.", 403);
     }
 
-    case "expire_preauthkey": {
-      const keyId = formData.get("key_id")?.toString();
-      const key = formData.get("key")?.toString();
-      if (!keyId || !key) {
-        return data("Missing `key_id` or `key` in the form data.", {
-          status: 400,
-        });
+    async function requireOwnUser(userId: string) {
+      if (canGenerateAny) {
+        return;
       }
 
-      const user = formData.get("user_id")?.toString();
-      if (!user) {
-        return data("Missing `user_id` in the form data.", {
-          status: 400,
-        });
+      const [user] = await api.users.list({ id: userId });
+      const ownsUser =
+        user &&
+        isUserPrincipal(principal) &&
+        (principal.user.headscaleUserId === userId ||
+          getOidcSubject(user) === principal.user.subject);
+      if (!ownsUser) {
+        throw new ActionError("You can only manage your own auth keys.", 403);
       }
-
-      await checkSelfServiceOwnership(user);
-      // `user` here is the Headscale numeric user id (form field is wired
-      // from User.id). Pre-0.28 expire posts a uint64 `user` field, which
-      // the API layer reads from `key.user?.id`. Headscale 0.28+ only
-      // looks at `key.id` (the stable preauthkey id).
-      await api.preAuthKeys.expire({
-        id: keyId,
-        key,
-        user: { id: user },
-      } as unknown as PreAuthKey);
-      return data("Pre-auth key expired");
     }
 
-    default:
-      return data("Invalid action", {
-        status: 400,
-      });
-  }
-}
+    return { principal, api, requireOwnUser };
+  },
+  intents: {
+    create: {
+      fields: {
+        user_id: v.optional(v.string()),
+        tags: list(),
+        expiry: expiryDays,
+        reusable: switchValue,
+        ephemeral: switchValue,
+      },
+      async handler(input, { api, requireOwnUser }) {
+        const tags = input.tags.map((tag) => tag.trim()).filter((tag) => tag !== "");
+        const user = input.user_id || null;
+        if (!user && tags.length === 0) {
+          throw new ActionError("Choose a user or add at least one tag.");
+        }
+
+        if (user) {
+          await requireOwnUser(user);
+        }
+
+        const expiration = new Date();
+        expiration.setDate(expiration.getDate() + input.expiry);
+
+        const key = await api.preAuthKeys.create({
+          user,
+          ephemeral: input.ephemeral,
+          reusable: input.reusable,
+          expiration,
+          aclTags: tags.length > 0 ? tags : null,
+        });
+
+        return ok(undefined, { key: key.key });
+      },
+    },
+    expire: {
+      fields: { key_id: id, key: id, user_id: id },
+      async handler(input, { api, requireOwnUser }) {
+        await requireOwnUser(input.user_id);
+
+        // `user` is the Headscale user id. Before 0.28, expiring posts it as a
+        // uint64 read from `key.user?.id`. 0.28 and later only use `key.id`.
+        await api.preAuthKeys.expire({
+          id: input.key_id,
+          key: input.key,
+          user: { id: input.user_id },
+        } as unknown as PreAuthKey);
+        return ok("Auth key expired");
+      },
+    },
+  },
+});

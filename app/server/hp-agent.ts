@@ -11,15 +11,21 @@ import log from "~/utils/log";
 import { HeadplaneConfig } from "./config/config-schema";
 import type { HeadplaneDb } from "./db/client.server";
 import type { HeadscaleClient } from "./headscale/api";
+import { headscaleErrorMessage } from "./headscale/api/error-client";
 
 export interface AgentManager {
   lookup(nodeKeys: string[]): Promise<Record<string, HostInfo>>;
   lastSync(): {
     syncedAt: Date | null;
     nodeCount: number;
+    syncedKeys: string[];
+    intervalMs: number;
+    consecutiveErrors: number;
+    startedAt?: Date;
     error?: string;
     authUrl?: string;
   };
+  lastUpdated(nodeKeys: string[]): Promise<Record<string, Date>>;
   agentNodeKey(): string | undefined;
   triggerSync(): Promise<void>;
   dispose(): void;
@@ -34,6 +40,8 @@ interface AgentOutput {
 interface SyncState {
   syncedAt: Date | null;
   nodeCount: number;
+  syncedKeys: string[];
+  startedAt?: Date;
   selfKey?: string;
   error?: string;
   authUrl?: string;
@@ -100,6 +108,7 @@ export async function createAgentManager(
   const state: SyncState = {
     syncedAt: null,
     nodeCount: 0,
+    syncedKeys: [],
   };
 
   let proc: ChildProcess | null = null;
@@ -202,6 +211,7 @@ export async function createAgentManager(
         );
       }
       proc = null;
+      state.startedAt = undefined;
 
       // Reject any pending sync request
       if (responseHandler) {
@@ -212,6 +222,7 @@ export async function createAgentManager(
     });
 
     proc = child;
+    state.startedAt = new Date();
     return child;
   }
 
@@ -303,13 +314,16 @@ export async function createAgentManager(
 
       state.syncedAt = new Date();
       state.nodeCount = keys.length;
+      state.syncedKeys = keys;
       state.selfKey = output.self || undefined;
       state.error = undefined;
 
       log.info("agent", "Sync complete: %d nodes updated", keys.length);
     } catch (error) {
       consecutiveErrors++;
-      const message = error instanceof Error ? error.message : String(error);
+      // Headscale API failures are thrown as plain objects, not Errors.
+      const message =
+        headscaleErrorMessage(error) ?? (error instanceof Error ? error.message : String(error));
       state.error = message;
       log.error("agent", "Sync failed (%d/5): %s", consecutiveErrors, message);
 
@@ -323,7 +337,7 @@ export async function createAgentManager(
       isSyncing = false;
       if (pendingResync) {
         pendingResync = false;
-        sync();
+        syncInBackground();
       }
     }
   }
@@ -376,11 +390,21 @@ export async function createAgentManager(
     }
   }
 
-  sync();
+  // Background syncs have no caller to catch for them, and an unhandled
+  // rejection takes the whole server down.
+  function syncInBackground() {
+    sync().catch((error) => {
+      log.error(
+        "agent",
+        "Sync crashed: %s",
+        error instanceof Error ? error.message : String(error),
+      );
+    });
+  }
 
-  const interval = setInterval(() => {
-    sync();
-  }, cacheTtl);
+  syncInBackground();
+
+  const interval = setInterval(syncInBackground, cacheTtl);
 
   return {
     async lookup(nodeKeys) {
@@ -402,9 +426,28 @@ export async function createAgentManager(
       return {
         syncedAt: state.syncedAt,
         nodeCount: state.nodeCount,
+        syncedKeys: state.syncedKeys,
+        intervalMs: cacheTtl,
+        consecutiveErrors,
+        startedAt: state.startedAt,
         error: state.error,
         authUrl: state.authUrl,
       };
+    },
+
+    async lastUpdated(nodeKeys) {
+      if (nodeKeys.length === 0) {
+        return {};
+      }
+
+      const results = await db
+        .select({ id: tables.hostInfo.host_id, updatedAt: tables.hostInfo.updated_at })
+        .from(tables.hostInfo)
+        .where(inArray(tables.hostInfo.host_id, nodeKeys));
+
+      return Object.fromEntries(
+        results.flatMap((r) => (r.updatedAt ? [[r.id, r.updatedAt]] : [])),
+      ) as Record<string, Date>;
     },
 
     agentNodeKey() {

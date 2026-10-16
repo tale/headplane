@@ -9,7 +9,7 @@ import { getBootstrapClient, getNode, getRuntimeClient, HS_VERSIONS } from "../s
 
 function registerRequest(registerKey: string) {
   const form = new FormData();
-  form.set("action_id", "register");
+  form.set("intent", "register");
   form.set("register_key", registerKey);
   form.set("user", "node-reg@");
 
@@ -32,7 +32,7 @@ function actionContext(api: Awaited<ReturnType<typeof getRuntimeClient>>) {
   return { auth, context, liveStore };
 }
 
-describe.sequential.for(HS_VERSIONS)("Headscale %s: Users", (version) => {
+describe.for(HS_VERSIONS)("Headscale %s: Users", { concurrent: false }, (version) => {
   let workingNodeId: string;
 
   test("nodes can register from a Tailscale registration URL", async () => {

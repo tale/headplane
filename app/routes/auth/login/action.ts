@@ -1,7 +1,7 @@
 import { redirect } from "react-router";
 
 import { authContext, headscaleContext } from "~/server/context";
-import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { headscaleErrorMessage, isDataWithApiError } from "~/server/headscale/api/error-client";
 import log from "~/utils/log";
 
 import type { Route } from "./+types/page";
@@ -21,7 +21,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     );
     return {
       success: false,
-      message: "Missing API key. Please enter your API key.",
+      message: "Enter an API key.",
     };
   }
 
@@ -33,7 +33,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     );
     return {
       success: false,
-      message: "API key cannot be empty. Please enter a valid API key.",
+      message: "Enter an API key.",
     };
   }
 
@@ -52,7 +52,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     if (!lookup) {
       return {
         success: false,
-        message: "API key was not found in the Headscale database",
+        message: "That API key doesn't exist on this server.",
       };
     }
 
@@ -60,7 +60,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       log.error("auth", "Got an API key without an expiration");
       return {
         success: false,
-        message: "API key is malformed (missing expiration). Please generate a new API key.",
+        message: "That API key has no expiration. Create a new one.",
       };
     }
 
@@ -68,7 +68,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     if (expiry.getTime() < Date.now()) {
       return {
         success: false,
-        message: "API key has expired",
+        message: "That API key has expired.",
       };
     }
 
@@ -93,16 +93,20 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
       ) {
         return {
           success: false,
-          message: "API key is invalid (it may be incorrect or expired)",
+          message: "That API key is invalid or has expired.",
         };
       }
     }
 
-    log.error("auth", "Error while validating API key: %s", error);
+    log.error(
+      "auth",
+      "Error while validating API key: %s",
+      headscaleErrorMessage(error) ?? String(error),
+    );
     log.debug("auth", "Error details: %o", error);
     return {
       success: false,
-      message: "Error while validating API key (see logs for details)",
+      message: "Couldn't check the API key. See the server logs.",
     };
   }
 }

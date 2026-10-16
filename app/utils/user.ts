@@ -1,11 +1,20 @@
 import type { User } from "~/types/User";
 
+// Headscale 0.28+ assigns tagged nodes to this placeholder user.
+export function isTaggedDevicesUser(user: User): boolean {
+  return user.name === "tagged-devices";
+}
+
 export function getUserDisplayName(user: User): string {
-  if (user.name === "tagged-devices") {
+  if (isTaggedDevicesUser(user)) {
     return "Tag-owned";
   }
 
   return user.name || user.displayName || user.email || user.id;
+}
+
+export function sortUsersByDisplayName(users: User[]): User[] {
+  return users.toSorted((a, b) => getUserDisplayName(a).localeCompare(getUserDisplayName(b)));
 }
 
 // Mirrors Headscale's `util.ValidateUsername` (hscontrol/util/dns.go): a name has

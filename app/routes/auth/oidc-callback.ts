@@ -7,6 +7,7 @@ import {
   headscaleContext,
   oidcContext,
 } from "~/server/context";
+import { headscaleErrorMessage } from "~/server/headscale/api/error-client";
 import { logOidcError } from "~/server/oidc/provider";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { Roles } from "~/server/web/roles";
@@ -78,25 +79,31 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     },
   );
 
+  let isLinked = false;
   try {
-    // Looks up the Headscale user that matches this OIDC identity. We use
-    // the configured admin API key here — not a per-request one — because
-    // there is no per-request key yet (the session is being created).
     const hsApi = headscale.client(headscaleApiKey!);
-    const hsUsers = await hsApi.users.list();
-    const hsUser = findHeadscaleUserBySubject(hsUsers, identity.subject, identity.email);
+    const [hsUsers, claimed] = await Promise.all([
+      hsApi.users.list(),
+      auth.claimedHeadscaleUserIds(),
+    ]);
+
+    const unclaimed = hsUsers.filter((u) => !claimed.has(u.id));
+    const hsUser = findHeadscaleUserBySubject(unclaimed, identity.subject, identity.email);
     if (hsUser) {
-      await auth.linkHeadscaleUser(userId, hsUser.id);
+      isLinked = await auth.linkHeadscaleUser(userId, hsUser.id);
     }
   } catch (error) {
-    log.warn("auth", "Failed to link Headscale user: %s", String(error));
+    log.warn(
+      "auth",
+      "Failed to link Headscale user: %s",
+      headscaleErrorMessage(error) ?? String(error),
+    );
   }
 
   // Only persist the id_token when RP-initiated logout is enabled — otherwise
   // we'd be storing a credential we never use.
   const idToken = config.oidc?.use_end_session ? identity.idToken : undefined;
-
-  return redirect("/", {
+  return redirect(isLinked ? "/" : "/link", {
     headers: {
       "Set-Cookie": await auth.createOidcSession(
         userId,

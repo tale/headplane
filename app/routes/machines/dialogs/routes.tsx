@@ -1,13 +1,13 @@
-import { GlobeLock, RouteOff } from "lucide-react";
 import { useFetcher } from "react-router";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import Button from "~/components/button";
+import Callout from "~/components/callout";
+import { Dialog, DialogActions, DialogClose, DialogTitle } from "~/components/dialog";
 import Link from "~/components/link";
+import { Row, RowList } from "~/components/section";
 import Switch from "~/components/switch";
-import TableList from "~/components/table-list";
-import Text from "~/components/text";
-import Title from "~/components/title";
-import { PopulatedNode } from "~/utils/node-info";
+import type { ActionResult } from "~/utils/form";
+import type { PopulatedNode } from "~/utils/node-info";
 
 interface RoutesProps {
   node: PopulatedNode;
@@ -15,90 +15,93 @@ interface RoutesProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
-// TODO: Support deleting routes
 export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
-  const fetcher = useFetcher();
-
+  const fetcher = useFetcher<ActionResult>();
   const subnets = [
     ...node.customRouting.subnetApprovedRoutes,
     ...node.customRouting.subnetWaitingRoutes,
   ];
 
+  function submit(routes: string[], enabled: boolean) {
+    const form = new FormData();
+    form.set("intent", "update_routes");
+    form.set("node_id", node.id);
+    form.set("enabled", String(enabled));
+    for (const route of routes) {
+      form.append("routes", route);
+    }
+
+    fetcher.submit(form, { method: "POST" });
+  }
+
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel variant="unactionable">
-        <Title>Edit route settings of {node.givenName}</Title>
-        <Text className="font-bold">Subnet routes</Text>
-        <Text>
-          Connect to devices you can&apos;t install Tailscale on by advertising IP ranges as subnet
-          routes.{" "}
+    <Dialog onOpenChange={setIsOpen} open={isOpen}>
+      <DialogTitle>Routes for {node.givenName}</DialogTitle>
+      <section className="flex flex-col gap-2">
+        <h3 className="font-medium">Subnet routes</h3>
+        <p className="text-muted">
+          Reach devices that can&apos;t run Tailscale through IP ranges this machine advertises.{" "}
           <Link external styled to="https://tailscale.com/kb/1019/subnets">
-            Learn More
+            Docs
           </Link>
-        </Text>
-        <TableList className="mt-4">
-          {subnets.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-              <RouteOff />
-              <p className="font-semibold">No routes are advertised by this machine</p>
-            </TableList.Item>
-          ) : undefined}
-          {subnets.map((route) => (
-            <TableList.Item key={route}>
-              <p>{route}</p>
-              <Switch
-                defaultChecked={node.approvedRoutes.includes(route)}
-                label="Enabled"
-                onCheckedChange={(checked) => {
-                  const form = new FormData();
-                  form.set("action_id", "update_routes");
-                  form.set("node_id", node.id);
-                  form.set("routes", [route].join(","));
-
-                  form.set("enabled", String(checked));
-                  fetcher.submit(form, {
-                    method: "POST",
-                  });
-                }}
-              />
-            </TableList.Item>
-          ))}
-        </TableList>
-        <Text className="mt-8 font-bold">Exit nodes</Text>
-        <Text>
-          Allow your network to route internet traffic through this machine.{" "}
+        </p>
+        {subnets.length === 0 ? (
+          <p className="text-muted py-2.5 text-sm">
+            This machine doesn&apos;t advertise any routes
+          </p>
+        ) : (
+          <RowList>
+            {subnets.map((route) => (
+              <Row
+                action={
+                  <Switch
+                    defaultChecked={node.approvedRoutes.includes(route)}
+                    label={`Approve ${route}`}
+                    onCheckedChange={(checked) => submit([route], checked)}
+                  />
+                }
+                key={route}
+              >
+                <span className="font-mono text-xs break-all">{route}</span>
+              </Row>
+            ))}
+          </RowList>
+        )}
+      </section>
+      <section className="flex flex-col gap-2">
+        <h3 className="font-medium">Exit node</h3>
+        <p className="text-muted">
+          Let devices send their internet traffic through this machine.{" "}
           <Link external styled to="https://tailscale.com/kb/1103/exit-nodes">
-            Learn More
+            Docs
           </Link>
-        </Text>
-        <TableList className="mt-4">
-          {node.customRouting.exitRoutes.length === 0 ? (
-            <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-              <GlobeLock />
-              <p className="font-semibold">This machine is not an exit node</p>
-            </TableList.Item>
-          ) : (
-            <TableList.Item>
-              <p>Use as exit node</p>
-              <Switch
-                defaultChecked={node.customRouting.exitApproved}
-                label="Enabled"
-                onCheckedChange={(checked) => {
-                  const form = new FormData();
-                  form.set("action_id", "update_routes");
-                  form.set("node_id", node.id);
-                  form.set("routes", node.customRouting.exitRoutes.map((route) => route).join(","));
-
-                  form.set("enabled", String(checked));
-                  fetcher.submit(form, {
-                    method: "POST",
-                  });
-                }}
-              />
-            </TableList.Item>
-          )}
-        </TableList>
-      </DialogPanel>
+        </p>
+        {node.customRouting.exitRoutes.length === 0 ? (
+          <p className="text-muted py-2.5 text-sm">
+            This machine isn&apos;t advertised as an exit node
+          </p>
+        ) : (
+          <RowList>
+            <Row
+              action={
+                <Switch
+                  defaultChecked={node.customRouting.exitApproved}
+                  label="Use as exit node"
+                  onCheckedChange={(checked) => submit(node.customRouting.exitRoutes, checked)}
+                />
+              }
+            >
+              Use as exit node
+            </Row>
+          </RowList>
+        )}
+      </section>
+      {fetcher.data?.ok === false && (
+        <Callout variant="error">{fetcher.data.errors.form ?? "Couldn't update routes."}</Callout>
+      )}
+      <DialogActions>
+        <DialogClose render={<Button>Done</Button>} />
+      </DialogActions>
     </Dialog>
   );
 }

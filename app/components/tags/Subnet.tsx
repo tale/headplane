@@ -1,15 +1,12 @@
-import { Info } from "lucide-react";
-
-import cn from "~/utils/cn";
-
 import Chip from "../chip";
 import Tooltip from "../tooltip";
 
 export interface SubnetTagProps {
   isEnabled?: boolean;
+  count: number;
 }
 
-export function SubnetTag({ isEnabled }: SubnetTagProps) {
+export function SubnetTag({ isEnabled, count }: SubnetTagProps) {
   return (
     <Tooltip
       content={
@@ -17,16 +14,15 @@ export function SubnetTag({ isEnabled }: SubnetTagProps) {
           <>This machine advertises subnet routes.</>
         ) : (
           <>
-            This machine has unadvertised subnet routes. Review this from the "Edit route
-            settings..." option in the machine's menu.
+            This machine has subnet routes waiting for approval. Review them from "Edit route
+            settings" in the machine's menu.
           </>
         )
       }
     >
       <Chip
-        text="Subnets"
-        className={cn("bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-300")}
-        rightIcon={isEnabled ? undefined : <Info className="h-full w-fit" />}
+        text={`${count} ${count === 1 ? "subnet" : "subnets"}`}
+        variant={isEnabled ? "neutral" : "warn"}
       />
     </Tooltip>
   );

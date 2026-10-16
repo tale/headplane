@@ -1,8 +1,6 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
-import Notice from "~/components/notice";
-import Text from "~/components/text";
-import Title from "~/components/title";
-import cn from "~/utils/cn";
+import ActionDialog from "~/components/action-dialog";
+import Callout from "~/components/callout";
+import Select from "~/components/select";
 
 interface LinkUserProps {
   headplaneUserId: string;
@@ -21,41 +19,34 @@ export default function LinkUser({
   isOpen,
   setIsOpen,
 }: LinkUserProps) {
+  const hasChoices = headscaleUsers.length > 0;
+
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel>
-        <Title>Link Headscale user for {displayName}</Title>
-        <Text className="mb-6">
-          Select which Headscale user this identity should be linked to. This controls which
-          machines they can manage and enables self-service features.
-        </Text>
-        {headscaleUsers.length === 0 ? (
-          <Notice>All Headscale users are already linked to other accounts.</Notice>
-        ) : (
-          <>
-            <input name="action_id" type="hidden" value="link_user" />
-            <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
-            <select
-              className={cn(
-                "w-full rounded-lg border p-2",
-                "border-mist-200 dark:border-mist-700",
-                "bg-mist-50 dark:bg-mist-900",
-              )}
-              defaultValue={currentLink ?? ""}
-              name="headscale_user_id"
-              required
-            >
-              <option value="">Select a Headscale user...</option>
-              {headscaleUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name}
-                  {u.id === currentLink ? " (current)" : ""}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description="The linked Headscale user decides which machines they can manage and enables self-service features."
+      fields={{ headplane_user_id: headplaneUserId }}
+      intent="link"
+      isDisabled={!hasChoices}
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Link user"
+      title={`Link a Headscale user to ${displayName}`}
+    >
+      {hasChoices ? (
+        <Select
+          defaultValue={currentLink ?? null}
+          items={headscaleUsers.map((user) => ({
+            value: user.id,
+            label: user.id === currentLink ? `${user.name} (current)` : user.name,
+          }))}
+          label="Headscale user"
+          name="headscale_user_id"
+          placeholder="Select a Headscale user"
+          required
+        />
+      ) : (
+        <Callout>Every Headscale user is already linked to another account.</Callout>
+      )}
+    </ActionDialog>
   );
 }

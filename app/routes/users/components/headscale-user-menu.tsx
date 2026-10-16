@@ -64,8 +64,8 @@ export default function HeadscaleUserMenu({
       )}
 
       <Menu>
-        <MenuTrigger className="w-10 rounded-full bg-transparent p-1 py-0.5 hover:bg-mist-100 dark:hover:bg-mist-800">
-          <Ellipsis className="h-5" />
+        <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-7 rounded-md">
+          <Ellipsis className="size-4" />
         </MenuTrigger>
         <MenuContent>
           {canRename && <MenuItem onClick={() => setModal("rename")}>Rename</MenuItem>}

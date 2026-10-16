@@ -73,3 +73,29 @@ export function isDataUnauthorizedError(error: unknown): boolean {
 export function isDataWithApiError(error: unknown): error is { data: HeadscaleAPIError } {
   return error != null && typeof error === "object" && "data" in error && isApiError(error.data);
 }
+
+export function headscaleErrorMessage(error: unknown): string | undefined {
+  if (error == null || typeof error !== "object" || !("data" in error)) {
+    return undefined;
+  }
+
+  if (isConnectionError(error.data)) {
+    return "Couldn't reach Headscale. Check that it's running and try again.";
+  }
+
+  if (!isApiError(error.data)) {
+    return undefined;
+  }
+
+  const { data, rawData, statusCode } = error.data;
+  const message =
+    data != null && typeof data.message === "string" && data.message.length > 0
+      ? data.message
+      : rawData;
+
+  if (message.length === 0) {
+    return `Headscale rejected the change (${statusCode}).`;
+  }
+
+  return message.charAt(0).toUpperCase() + message.slice(1);
+}

@@ -16,8 +16,28 @@ permissions:
   attestations: write
 
 jobs:
+  channel:
+    name: Release Channel
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.check.outputs.latest }}
+    steps:
+      # Patch releases on older lines must not take over `latest`.
+      - name: Check if this is the newest stable release
+        id: check
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          NEWEST=$(git ls-remote --tags --refs "$REPO_URL" 'v*' \
+            | sed 's|.*refs/tags/||' | grep -v -- - | sort -V | tail -n 1)
+          [[ "$TAG" == "$NEWEST" ]] && LATEST=true || LATEST=false
+          echo "Newest stable release is $NEWEST, latest=$LATEST"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
   docker:
     name: Docker Release (${{ matrix.target }})
+    needs: channel
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -37,8 +57,9 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
           flavor: |
-            latest=auto
+            latest=${{ needs.channel.outputs.latest }}
             suffix=${{ matrix.tag_suffix }},onlatest=true
 
       - name: Set up QEMU
@@ -80,7 +101,7 @@ jobs:
 
   release:
     name: GitHub Release
-    needs: docker
+    needs: [channel, docker]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -97,10 +118,11 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
+          LATEST: ${{ needs.channel.outputs.latest }}
         run: |
           node --disable-warning=ExperimentalWarning scripts/release.ts notes "$TAG" > "$RUNNER_TEMP/notes.md"
           if [[ "$TAG" == *-* ]]; then
             gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
           else
-            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --latest
+            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --latest="$LATEST"
           fi

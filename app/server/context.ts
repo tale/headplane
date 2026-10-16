@@ -142,17 +142,22 @@ function buildOidc(
   if (!headscaleApiKey) {
     return disabled("OIDC requires headscale.api_key to be configured");
   }
+  if (!config.server.base_url) {
+    log.warn("config", "OIDC is disabled because `server.base_url` is not set");
+    return disabled("OIDC requires server.base_url to be configured");
+  }
 
   return enabled(
     createOidcService({
       issuer: config.oidc.issuer,
       clientId: config.oidc.client_id,
       clientSecret: config.oidc.client_secret,
-      baseUrl: config.server.base_url ?? "",
+      baseUrl: config.server.base_url,
       authorizationEndpoint: config.oidc.authorization_endpoint,
       tokenEndpoint: config.oidc.token_endpoint,
       userinfoEndpoint: config.oidc.userinfo_endpoint,
       endSessionEndpoint: config.oidc.end_session_endpoint,
+      jwksUri: config.oidc.jwks_endpoint,
       tokenEndpointAuthMethod:
         config.oidc.token_endpoint_auth_method === "client_secret_jwt"
           ? undefined

@@ -25,8 +25,7 @@ export const MenuTrigger = ({
   <BaseMenu.Trigger
     className={cn(
       "inline-flex items-center justify-center",
-      "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-      "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
+      "focus-ring",
       "disabled:opacity-50 disabled:cursor-not-allowed",
       className,
     )}
@@ -51,14 +50,11 @@ export const MenuContent = ({
   align?: ComponentProps<typeof BaseMenu.Positioner>["align"];
 }): JSX.Element => (
   <BaseMenu.Portal>
-    <BaseMenu.Positioner side={side} sideOffset={sideOffset} align={align}>
+    <BaseMenu.Positioner align={align} className="z-50" side={side} sideOffset={sideOffset}>
       <BaseMenu.Popup
         className={cn(
-          "min-w-50 rounded-lg py-1",
-          "bg-white dark:bg-mist-900",
-          "shadow-lg dark:shadow-none",
-          "border border-mist-200 dark:border-mist-700",
-          "focus:outline-hidden",
+          "max-h-(--available-height) min-w-50 overflow-y-auto rounded-lg py-1 outline-hidden",
+          "bg-raised border-overlay shadow-overlay",
           className,
         )}
       >
@@ -81,11 +77,10 @@ export const MenuItem = ({
     className={cn(
       "py-2 px-3 mx-1 rounded-md",
       "select-none cursor-pointer",
-      "focus:outline-hidden",
-      "text-mist-700 dark:text-mist-300",
-      "data-highlighted:bg-mist-100/50 dark:data-highlighted:bg-mist-800",
-      "data-disabled:text-mist-400 dark:data-disabled:text-mist-600 data-disabled:cursor-default",
-      variant === "danger" && "text-red-500 dark:text-red-400",
+      "text-fg",
+      "data-highlighted:bg-hover",
+      "data-disabled:text-muted data-disabled:cursor-default",
+      variant === "danger" && "text-bad",
       className,
     )}
     disabled={disabled}
@@ -96,7 +91,5 @@ export const MenuItem = ({
 );
 
 export const MenuSeparator = ({ className }: { className?: string }): JSX.Element => (
-  <BaseMenu.Separator
-    className={cn("mx-2 my-1 border-t border-mist-200 dark:border-mist-800", className)}
-  />
+  <BaseMenu.Separator className={cn("mx-2 my-1 border-t border-line", className)} />
 );

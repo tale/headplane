@@ -1,9 +1,8 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
+import { useState } from "react";
+
+import ActionDialog from "~/components/action-dialog";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
 import RadioGroup from "~/components/radio-group";
-import Text from "~/components/text";
-import Title from "~/components/title";
 import { Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 
@@ -22,42 +21,48 @@ export default function ReassignUser({
   isOpen,
   setIsOpen,
 }: ReassignProps) {
+  const [selected, setSelected] = useState<string>(role);
+
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel variant={role === "owner" ? "unactionable" : "normal"}>
-        <Title>Change role for {displayName}?</Title>
-        <Text className="mb-6">
-          Roles control what the user can access in Headplane. Each role grants a specific set of
-          capabilities.{" "}
+    <ActionDialog
+      description={
+        <>
+          Roles decide what the user can access in Headplane.{" "}
           <Link external styled to="https://tailscale.com/kb/1138/user-roles">
-            Learn More
+            Docs
           </Link>
-        </Text>
-        {role === "owner" ? (
-          <Notice>The Tailnet owner cannot be reassigned.</Notice>
-        ) : (
-          <>
-            <input name="action_id" type="hidden" value="reassign_user" />
-            <input name="headplane_user_id" type="hidden" value={headplaneUserId} />
-            <RadioGroup className="gap-4" defaultValue={role} label="Role" name="new_role">
-              {Object.keys(Roles)
-                .filter((r) => r !== "owner")
-                .map((r) => {
-                  const { name, desc } = mapRoleToName(r);
-                  return (
-                    <RadioGroup.Radio key={r} label={name} value={r}>
-                      <div className="block">
-                        <p className="font-bold">{name}</p>
-                        <p className="opacity-70">{desc}</p>
-                      </div>
-                    </RadioGroup.Radio>
-                  );
-                })}
-            </RadioGroup>
-          </>
-        )}
-      </DialogPanel>
-    </Dialog>
+        </>
+      }
+      fields={{ headplane_user_id: headplaneUserId }}
+      intent="reassign"
+      isDisabled={selected === role}
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Change role"
+      title={`Change role for ${displayName}`}
+    >
+      <RadioGroup
+        className="gap-4"
+        label="Role"
+        name="role"
+        onValueChange={setSelected}
+        value={selected}
+      >
+        {Object.keys(Roles)
+          .filter((r) => r !== "owner")
+          .map((r) => {
+            const { name, desc } = mapRoleToName(r);
+            return (
+              <RadioGroup.Radio key={r} label={name} value={r}>
+                <div>
+                  <p className="font-medium">{name}</p>
+                  <p className="text-muted">{desc}</p>
+                </div>
+              </RadioGroup.Radio>
+            );
+          })}
+      </RadioGroup>
+    </ActionDialog>
   );
 }
 

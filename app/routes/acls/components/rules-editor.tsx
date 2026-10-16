@@ -2,7 +2,7 @@ import { ArrowRight, Terminal } from "lucide-react";
 import { useState } from "react";
 
 import Chip from "~/components/chip";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 import type { AclRule, Policy, SshRule } from "~/utils/acl-policy";
 
 import AclRuleDialog from "../dialogs/acl-rule";
@@ -119,7 +119,7 @@ export default function RulesEditor({
           <Empty text="No access rules are defined yet." />
         ) : (
           policy.acls.map((rule, index) => (
-            <TableList.Item
+            <List.Item
               className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
               key={`acl-${index}`}
             >
@@ -140,7 +140,7 @@ export default function RulesEditor({
                 }
                 onEdit={() => setEditing({ kind: "acl", index })}
               />
-            </TableList.Item>
+            </List.Item>
           ))
         )}
       </Section>
@@ -155,7 +155,7 @@ export default function RulesEditor({
           <Empty text="No SSH rules are defined yet." />
         ) : (
           policy.ssh.map((rule, index) => (
-            <TableList.Item
+            <List.Item
               className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
               key={`ssh-${index}`}
             >
@@ -175,7 +175,7 @@ export default function RulesEditor({
                 }
                 onEdit={() => setEditing({ kind: "ssh", index })}
               />
-            </TableList.Item>
+            </List.Item>
           ))
         )}
       </Section>
@@ -190,7 +190,7 @@ export default function RulesEditor({
           <Empty text="No hosts are defined yet." />
         ) : (
           hostEntries.map(([name, value]) => (
-            <TableList.Item key={name}>
+            <List.Item key={name}>
               <div className="flex min-w-0 items-center gap-2">
                 <span className="font-mono text-sm">{name}</span>
                 <span className="font-mono text-sm opacity-60">{value}</span>
@@ -204,7 +204,7 @@ export default function RulesEditor({
                 }}
                 onEdit={() => setEditing({ kind: "host", name })}
               />
-            </TableList.Item>
+            </List.Item>
           ))
         )}
       </Section>

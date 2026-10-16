@@ -1,7 +1,4 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
-import Notice from "~/components/notice";
-import Text from "~/components/text";
-import Title from "~/components/title";
+import ActionDialog from "~/components/action-dialog";
 
 interface TransferOwnershipProps {
   targetHeadplaneUserId: string;
@@ -17,20 +14,15 @@ export default function TransferOwnership({
   setIsOpen,
 }: TransferOwnershipProps) {
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel variant="destructive">
-        <Title>Transfer ownership to {targetDisplayName}?</Title>
-        <Text className="mb-6">
-          This will make {targetDisplayName} the new owner of this Headplane instance. You will be
-          demoted to an Admin. This action cannot be easily undone.
-        </Text>
-        <Notice variant="warning">
-          Only the owner can transfer ownership. After this, you will no longer be able to manage
-          ownership.
-        </Notice>
-        <input name="action_id" type="hidden" value="transfer_ownership" />
-        <input name="headplane_user_id" type="hidden" value={targetHeadplaneUserId} />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description={`${targetDisplayName} becomes the owner of this Headplane instance and you become an Admin. Only the new owner can transfer it back.`}
+      fields={{ headplane_user_id: targetHeadplaneUserId }}
+      intent="transfer"
+      isDestructive
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Transfer ownership"
+      title={`Transfer ownership to ${targetDisplayName}?`}
+    />
   );
 }

@@ -9,12 +9,14 @@ export function clearFakeFiles() {
   fakeFs.clear();
 }
 
-// @ts-expect-error: I have no clue why vitest's types are wrong here
 vi.mock(import("node:fs/promises"), async (importOrig) => {
   const orig = await importOrig();
   return {
     ...orig,
-    readFile: (path, options) => {
+    readFile: ((
+      path: Parameters<typeof orig.readFile>[0],
+      options?: Parameters<typeof orig.readFile>[1],
+    ) => {
       const p = path.toString();
       if (fakeFs.has(p)) {
         const content = fakeFs.get(p)!;
@@ -25,8 +27,8 @@ vi.mock(import("node:fs/promises"), async (importOrig) => {
         return Promise.resolve(Buffer.from(content));
       }
 
-      return orig.readFile.call(this, path, options);
-    },
+      return orig.readFile.call(this, path, options ?? null);
+    }) as typeof orig.readFile,
 
     access: (path, mode) => {
       const p = path.toString();

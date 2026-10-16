@@ -2,7 +2,7 @@ import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import Button from "~/components/button";
-import TableList from "~/components/table-list";
+import List from "~/components/list";
 
 // Chrome shared by the rules and the tags/groups editors.
 
@@ -20,20 +20,20 @@ export function Section({ title, description, isDisabled, onAdd, children }: Sec
       <div className="mb-3 flex items-end justify-between gap-4">
         <div>
           <h2 className="text-lg font-medium">{title}</h2>
-          <p className="max-w-prose text-sm text-mist-600 dark:text-mist-300">{description}</p>
+          <p className="text-muted max-w-prose text-sm">{description}</p>
         </div>
         <Button className="shrink-0" disabled={isDisabled} onClick={onAdd} type="button">
-          <Plus className="h-4 w-4" />
+          <Plus className="size-4" />
           Add
         </Button>
       </div>
-      <TableList>{children}</TableList>
+      <List>{children}</List>
     </section>
   );
 }
 
 export function Empty({ text }: { text: string }) {
-  return <TableList.Item className="justify-center py-6 text-sm opacity-70">{text}</TableList.Item>;
+  return <List.Item className="justify-center py-6 text-sm opacity-70">{text}</List.Item>;
 }
 
 interface RowActionsProps {
@@ -47,19 +47,21 @@ export function RowActions({ isDisabled, onEdit, onDelete }: RowActionsProps) {
     <div className="flex shrink-0 items-center gap-1">
       <Button
         aria-label="Edit"
-        className="rounded-md p-1"
         disabled={isDisabled}
         onClick={onEdit}
+        size="sm"
         type="button"
+        variant="icon"
       >
         <Pencil className="h-4 w-4" />
       </Button>
       <Button
         aria-label="Delete"
-        className="rounded-md p-1"
         disabled={isDisabled}
         onClick={onDelete}
+        size="sm"
         type="button"
+        variant="icon"
       >
         <Trash2 className="h-4 w-4" />
       </Button>

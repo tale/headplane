@@ -108,9 +108,9 @@ keeps the credential out of the configuration file.
 
 | `ssl_mode`    | Behaviour                                                          |
 | ------------- | ------------------------------------------------------------------ |
-| `disable`     | No encryption.                                                      |
-| `require`     | Encrypts, but does not verify the server certificate. The default.   |
-| `verify-full` | Encrypts and verifies the server certificate.                        |
+| `disable`     | No encryption.                                                     |
+| `require`     | Encrypts, but does not verify the server certificate. The default. |
+| `verify-full` | Encrypts and verifies the server certificate.                      |
 
 `require` is the default because it is what most managed providers work with
 out of the box. Prefer `verify-full` when your provider gives you a CA you can
@@ -169,16 +169,16 @@ becomes the owner. Headscale itself is unaffected.
 
 ## Reference
 
-| Field                              | Description                                                                          |
-| ---------------------------------- | ------------------------------------------------------------------------------------ |
-| `server.database.type`             | `sqlite` (default) or `postgres`.                                                     |
-| `server.database.path`             | SQLite only. Defaults to `hp_persist.db` inside `server.data_path`.                   |
-| `server.database.url`              | PostgreSQL connection string. Replaces the host/port/name/user fields.                |
-| `server.database.host`             | PostgreSQL host, when not using `url`.                                                |
-| `server.database.port`             | PostgreSQL port. Defaults to `5432`.                                                  |
-| `server.database.name`             | PostgreSQL database name, when not using `url`.                                       |
-| `server.database.user`             | PostgreSQL user, when not using `url`.                                                |
-| `server.database.password`         | PostgreSQL password. Prefer `password_path`.                                          |
-| `server.database.password_path`    | Reads the password from a file instead.                                               |
-| `server.database.ssl_mode`         | `disable`, `require` (default) or `verify-full`.                                      |
-| `server.database.max_connections`  | Connection pool size. Defaults to `10`.                                               |
+| Field                             | Description                                                            |
+| --------------------------------- | ---------------------------------------------------------------------- |
+| `server.database.type`            | `sqlite` (default) or `postgres`.                                      |
+| `server.database.path`            | SQLite only. Defaults to `hp_persist.db` inside `server.data_path`.    |
+| `server.database.url`             | PostgreSQL connection string. Replaces the host/port/name/user fields. |
+| `server.database.host`            | PostgreSQL host, when not using `url`.                                 |
+| `server.database.port`            | PostgreSQL port. Defaults to `5432`.                                   |
+| `server.database.name`            | PostgreSQL database name, when not using `url`.                        |
+| `server.database.user`            | PostgreSQL user, when not using `url`.                                 |
+| `server.database.password`        | PostgreSQL password. Prefer `password_path`.                           |
+| `server.database.password_path`   | Reads the password from a file instead.                                |
+| `server.database.ssl_mode`        | `disable`, `require` (default) or `verify-full`.                       |
+| `server.database.max_connections` | Connection pool size. Defaults to `10`.                                |

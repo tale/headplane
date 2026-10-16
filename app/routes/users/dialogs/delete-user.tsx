@@ -1,6 +1,5 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
-import Text from "~/components/text";
-import Title from "~/components/title";
+import ActionDialog from "~/components/action-dialog";
+import Callout from "~/components/callout";
 import type { Machine, User } from "~/types";
 
 interface DeleteProps {
@@ -11,31 +10,29 @@ interface DeleteProps {
 }
 
 export default function DeleteUser({ user, machines, isOpen, setIsOpen }: DeleteProps) {
-  const name = user.name || user.displayName;
+  const hasMachines = machines.length > 0;
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel variant={machines.length > 0 ? "unactionable" : "normal"}>
-        <Title>Delete {name}?</Title>
-        {machines.length > 0 ? (
-          <Text className="mb-6">
-            Users cannot be deleted if they have machines. Please delete or re-assign their machines
-            to other users before proceeding.
-          </Text>
-        ) : (
-          <Text className="mb-6">
-            Deleted users cannot be recovered.
-            {user.provider === "oidc" && (
-              <p className="mt-4 text-sm text-mist-600 dark:text-mist-300">
-                Since this user is authenticated via an external provider, they will be recreated if
-                they sign in again.
-              </p>
-            )}
-          </Text>
-        )}
-        <input name="action_id" type="hidden" value="delete_user" />
-        <input name="headscale_user_id" type="hidden" value={user.id} />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description={
+        user.provider === "oidc"
+          ? "Deleted users can't be recovered. They sign in through your OIDC provider, so signing in again recreates them."
+          : "Deleted users can't be recovered."
+      }
+      fields={{ headscale_user_id: user.id }}
+      intent="delete"
+      isDestructive
+      isDisabled={hasMachines}
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Delete"
+      title={`Delete ${user.name || user.displayName}?`}
+    >
+      {hasMachines && (
+        <Callout variant="warning">
+          This user still owns machines. Remove them or change their owner first.
+        </Callout>
+      )}
+    </ActionDialog>
   );
 }

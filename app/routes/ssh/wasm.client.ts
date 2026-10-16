@@ -62,7 +62,7 @@ export async function connectTailnet(config: TailnetConfig): Promise<IPN> {
       },
       notifyNetMap: () => {},
       // Only reached when the auth key was refused and the node wants a human.
-      notifyBrowseToURL: () => reject(new Error("Headscale rejected the pre-auth key")),
+      notifyBrowseToURL: () => reject(new Error("Headscale rejected the auth key")),
       notifyPanicRecover: (error) => reject(new Error(error)),
     });
   });

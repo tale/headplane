@@ -1,11 +1,9 @@
 import { useState } from "react";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
+import ActionDialog from "~/components/action-dialog";
 import Select from "~/components/select";
-import Text from "~/components/text";
-import Title from "~/components/title";
 import type { Machine, User } from "~/types";
-import { getUserDisplayName } from "~/utils/user";
+import { getUserDisplayName, sortUsersByDisplayName } from "~/utils/user";
 
 interface MoveProps {
   machine: Machine;
@@ -15,31 +13,31 @@ interface MoveProps {
 }
 
 export default function Move({ machine, users, isOpen, setIsOpen }: MoveProps) {
-  const [userId, setUserId] = useState<string | null>(machine.user?.id ?? null);
+  const [userId, setUserId] = useState(machine.user?.id ?? null);
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel isDisabled={userId === machine.user?.id}>
-        <Title>Change the owner of {machine.givenName}</Title>
-        <Text>The owner of the machine is the user associated with it.</Text>
-        <input name="action_id" type="hidden" value="reassign" />
-        <input name="node_id" type="hidden" value={machine.id} />
-        <input name="user_id" type="hidden" value={userId?.toString()} />
-        <Select
-          defaultValue={machine.user?.id}
-          required
-          label="Owner"
-          name="user"
-          onValueChange={(key) => {
-            setUserId(key);
-          }}
-          placeholder="Select a user"
-          items={users.map((user) => ({
-            value: user.id,
-            label: getUserDisplayName(user),
-          }))}
-        />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description="The owner is the user the machine belongs to."
+      fields={{ node_id: machine.id }}
+      intent="reassign"
+      isDisabled={!userId || userId === machine.user?.id}
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Change owner"
+      title={`Change owner of ${machine.givenName}`}
+    >
+      <Select
+        defaultValue={machine.user?.id ?? null}
+        items={sortUsersByDisplayName(users).map((user) => ({
+          value: user.id,
+          label: getUserDisplayName(user),
+        }))}
+        label="Owner"
+        name="user_id"
+        onValueChange={setUserId}
+        placeholder="Select a user"
+        required
+      />
+    </ActionDialog>
   );
 }
