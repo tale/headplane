@@ -309,10 +309,12 @@ export async function createAgentManager(
           signal,
         );
       }
-      if (proc === child) {
-        proc = null;
+      // A replaced agent's late exit must not fail its successor's request.
+      if (proc !== child) {
+        return;
       }
 
+      proc = null;
       state.startedAt = undefined;
 
       // Reject any pending sync request
