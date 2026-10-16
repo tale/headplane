@@ -36,8 +36,9 @@ The **Rules** tab renders the policy as five lists:
 - **Grants**: the `grants` section. Grants work like access rules, but
   ports and protocols go in their own field, for example `tcp:443`, and
   destinations have no port. **Via** routes the traffic through subnet routers
-  with the given tags. App capabilities (`app`) are kept but can only be edited
-  in the file.
+  or exit nodes with the given tags. To route through an exit node, use
+  `autogroup:internet` as the destination. App capabilities (`app`) are kept
+  but can only be edited in the file.
 - **SSH rules** — the `ssh` section, including `check` mode and its check
   period.
 - **Hosts** — the `hosts` section, which names an IP address or CIDR range so
