@@ -49,6 +49,9 @@ interface SyncState {
   authUrl?: string;
 }
 
+const MIN_RESTART_DELAY_MS = 1_000;
+const MAX_RESTART_DELAY_MS = 60_000;
+
 async function hasExistingState(workDir: string): Promise<boolean> {
   const path = join(workDir, "tailscaled.state");
   let raw: string;
@@ -130,6 +133,9 @@ export async function createAgentManager(
   let consecutiveErrors = 0;
   let approvingAuthId: string | undefined;
   let needsAuthKey = false;
+  let restartTimer: ReturnType<typeof setTimeout> | undefined;
+  let restartDelayMs = MIN_RESTART_DELAY_MS;
+  const stopping = new WeakSet<ChildProcess>();
 
   async function generateAuthKey(): Promise<string> {
     const expiration = new Date(Date.now() + 5 * 60_000);
@@ -163,6 +169,12 @@ export async function createAgentManager(
     const child = spawn(executablePath, [], {
       env,
       stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    // Writing to an agent that just died raises EPIPE here, and an unhandled
+    // stream error would take down Headplane. The exit handler cleans up.
+    child.stdin?.on("error", (error) => {
+      log.debug("agent", "Agent stdin closed: %s", error.message);
     });
 
     child.stderr?.on("data", (chunk: Buffer) => {
@@ -236,11 +248,31 @@ export async function createAgentManager(
         responseHandler = null;
         handler("");
       }
+
+      if (!disposed && !stopping.has(child)) {
+        scheduleRestart();
+      }
     });
 
     proc = child;
     state.startedAt = new Date();
     return child;
+  }
+
+  // An agent that dies on its own (crash, OOM, killed) is brought back with
+  // backoff, so a binary that crashes on every start can't spin.
+  function scheduleRestart() {
+    if (restartTimer) {
+      return;
+    }
+
+    log.info("agent", "Restarting the agent in %ds", restartDelayMs / 1000);
+    restartTimer = setTimeout(() => {
+      restartTimer = undefined;
+      syncInBackground();
+    }, restartDelayMs);
+
+    restartDelayMs = Math.min(restartDelayMs * 2, MAX_RESTART_DELAY_MS);
   }
 
   // Waits for the process to exit so a replacement (or a new manager after a
@@ -250,6 +282,7 @@ export async function createAgentManager(
       return;
     }
 
+    stopping.add(child);
     const exited = once(child, "exit");
     child.kill("SIGTERM");
     const timeout = setTimeout(() => child.kill("SIGKILL"), 10_000);
@@ -378,6 +411,7 @@ export async function createAgentManager(
       await replacePreviousNode(self.id, nodes);
 
       consecutiveErrors = 0;
+      restartDelayMs = MIN_RESTART_DELAY_MS;
       const keys = Object.keys(output.hosts);
 
       for (const [nodeKey, payload] of Object.entries(output.hosts)) {
@@ -546,6 +580,7 @@ export async function createAgentManager(
     async dispose() {
       disposed = true;
       clearInterval(interval);
+      clearTimeout(restartTimer);
       if (proc) {
         await stopProcess(proc);
       }
