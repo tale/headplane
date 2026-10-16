@@ -1,9 +1,9 @@
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import Button from "~/components/button";
 import Input from "~/components/input";
-import List from "~/components/list";
+import { RemoveButton, Row, RowList } from "~/components/section";
 
 interface TokenListProps {
   label: string;
@@ -69,27 +69,27 @@ export default function TokenList({
         <p className="text-fg text-sm font-medium">{label}</p>
         {description ? <p className="text-muted text-xs">{description}</p> : null}
       </div>
-      <List>
-        {values.length === 0 ? (
-          <List.Item className="justify-center py-3 text-sm opacity-70">{emptyText}</List.Item>
-        ) : (
-          values.map((value) => (
-            <List.Item className="font-mono text-sm" id={value} key={value}>
-              {value}
-              <Button
-                aria-label={`Remove ${value}`}
-                disabled={isDisabled}
-                onClick={() => onChange(values.filter((entry) => entry !== value))}
-                size="sm"
-                type="button"
-                variant="icon"
-              >
-                <X className="size-4" />
-              </Button>
-            </List.Item>
-          ))
-        )}
-      </List>
+      {values.length === 0 ? (
+        <p className="text-muted py-2.5 text-sm">{emptyText}</p>
+      ) : (
+        <RowList>
+          {values.map((value) => (
+            <Row
+              action={
+                <RemoveButton
+                  aria-label={`Remove ${value}`}
+                  disabled={isDisabled}
+                  onClick={() => onChange(values.filter((entry) => entry !== value))}
+                  type="button"
+                />
+              }
+              key={value}
+            >
+              <span className="font-mono text-xs break-all">{value}</span>
+            </Row>
+          ))}
+        </RowList>
+      )}
       <div className="flex items-center gap-2">
         <Input
           aria-label={`Add to ${label}`}

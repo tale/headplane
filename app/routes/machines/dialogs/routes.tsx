@@ -4,7 +4,7 @@ import Button from "~/components/button";
 import Callout from "~/components/callout";
 import { Dialog, DialogActions, DialogClose, DialogTitle } from "~/components/dialog";
 import Link from "~/components/link";
-import List from "~/components/list";
+import { Row, RowList } from "~/components/section";
 import Switch from "~/components/switch";
 import type { ActionResult } from "~/utils/form";
 import type { PopulatedNode } from "~/utils/node-info";
@@ -45,24 +45,28 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             Learn more
           </Link>
         </p>
-        <List>
-          {subnets.length === 0 ? (
-            <List.Item className="text-muted justify-center py-3">
-              This machine doesn&apos;t advertise any routes
-            </List.Item>
-          ) : (
-            subnets.map((route) => (
-              <List.Item key={route}>
-                <span className="font-mono">{route}</span>
-                <Switch
-                  defaultChecked={node.approvedRoutes.includes(route)}
-                  label={`Approve ${route}`}
-                  onCheckedChange={(checked) => submit([route], checked)}
-                />
-              </List.Item>
-            ))
-          )}
-        </List>
+        {subnets.length === 0 ? (
+          <p className="text-muted py-2.5 text-sm">
+            This machine doesn&apos;t advertise any routes
+          </p>
+        ) : (
+          <RowList>
+            {subnets.map((route) => (
+              <Row
+                action={
+                  <Switch
+                    defaultChecked={node.approvedRoutes.includes(route)}
+                    label={`Approve ${route}`}
+                    onCheckedChange={(checked) => submit([route], checked)}
+                  />
+                }
+                key={route}
+              >
+                <span className="font-mono text-xs break-all">{route}</span>
+              </Row>
+            ))}
+          </RowList>
+        )}
       </section>
       <section className="flex flex-col gap-2">
         <h3 className="font-medium">Exit node</h3>
@@ -72,22 +76,25 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
             Learn more
           </Link>
         </p>
-        <List>
-          {node.customRouting.exitRoutes.length === 0 ? (
-            <List.Item className="text-muted justify-center py-3">
-              This machine isn&apos;t advertised as an exit node
-            </List.Item>
-          ) : (
-            <List.Item>
-              <span>Use as exit node</span>
-              <Switch
-                defaultChecked={node.customRouting.exitApproved}
-                label="Use as exit node"
-                onCheckedChange={(checked) => submit(node.customRouting.exitRoutes, checked)}
-              />
-            </List.Item>
-          )}
-        </List>
+        {node.customRouting.exitRoutes.length === 0 ? (
+          <p className="text-muted py-2.5 text-sm">
+            This machine isn&apos;t advertised as an exit node
+          </p>
+        ) : (
+          <RowList>
+            <Row
+              action={
+                <Switch
+                  defaultChecked={node.customRouting.exitApproved}
+                  label="Use as exit node"
+                  onCheckedChange={(checked) => submit(node.customRouting.exitRoutes, checked)}
+                />
+              }
+            >
+              Use as exit node
+            </Row>
+          </RowList>
+        )}
       </section>
       {fetcher.data?.ok === false && (
         <Callout variant="error">{fetcher.data.errors.form ?? "Couldn't update routes."}</Callout>
