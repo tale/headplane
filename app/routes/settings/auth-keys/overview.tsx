@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import Callout from "~/components/callout";
 import FilterDropdown from "~/components/filter-dropdown";
 import Link from "~/components/link";
+import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import { Table, TableBody, TableHeader } from "~/components/table";
 import {
@@ -279,4 +280,8 @@ export default function Page({
       )}
     </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="auth keys" />;
 }

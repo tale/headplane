@@ -1,8 +1,8 @@
 import { CloudOff } from "lucide-react";
-import { Outlet, redirect, type ShouldRevalidateFunction } from "react-router";
+import { Outlet, redirect, type ShouldRevalidateFunction, useRouteLoaderData } from "react-router";
 
 import Callout from "~/components/callout";
-import { ErrorBanner } from "~/components/error-banner";
+import PageError from "~/components/page-error";
 import {
   appConfigContext,
   authContext,
@@ -18,6 +18,7 @@ import { Capabilities } from "~/server/web/roles";
 import log from "~/utils/log";
 
 import type { Route } from "./+types/app";
+import ErrorPage from "./error-page";
 import Footer from "./footer";
 import Header from "./header";
 import Scrollbar from "./scrollbar";
@@ -131,11 +132,10 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
           <Callout
             className="mb-4"
             icon={<CloudOff />}
-            title="Headscale is unreachable"
+            title="Can't reach Headscale"
             variant="error"
           >
-            Unable to connect to the Headscale server. Data shown may be stale and changes cannot be
-            saved until the connection is restored.
+            Some data may be out of date, and changes won't save until it's back.
           </Callout>
         )}
         <Outlet />
@@ -146,10 +146,22 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
   );
 }
 
+// Child routes without their own boundary land here. Keep the header when
+// the layout's data loaded, so a broken page doesn't take the app down.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  const data = useRouteLoaderData<typeof loader>("layout/app");
+  if (!data) {
+    return <ErrorPage error={error} />;
+  }
+
   return (
-    <div className="mx-auto my-24 max-w-2xl px-4">
-      <ErrorBanner className="max-w-2xl" error={error} />
-    </div>
+    <>
+      <Header access={data.access} configAvailable={data.configAvailable} user={data.user} />
+      <main className="container mt-4 mb-24">
+        <PageError error={error} />
+      </main>
+      <Footer baseUrl={data.baseUrl} isDebug={data.isDebug} />
+      <Scrollbar />
+    </>
   );
 }

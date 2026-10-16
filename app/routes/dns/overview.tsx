@@ -85,5 +85,5 @@ export default function Page() {
 }
 
 export function ErrorBoundary({ error }: { error: unknown }) {
-  return <PageError error={error} page="DNS" />;
+  return <PageError error={error} page="DNS settings" />;
 }

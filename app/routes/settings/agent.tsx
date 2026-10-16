@@ -3,12 +3,14 @@ import { useFetcher } from "react-router";
 import Button from "~/components/button";
 import Callout from "~/components/callout";
 import Link from "~/components/link";
+import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import Section, { Row, RowList, SettingList, SettingRow } from "~/components/section";
 import StatusCircle from "~/components/status-circle";
 import {
   agentsContext,
   authContext,
+  headscaleContext,
   headscaleLiveStoreContext,
   requestApiContext,
 } from "~/server/context";
@@ -23,6 +25,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const agents = context.get(agentsContext);
   const auth = context.get(authContext);
   const getRequestApi = context.get(requestApiContext);
+  const headscale = context.get(headscaleContext);
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
   await auth.requireCapability(request, Capabilities.read_machines);
@@ -31,8 +34,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return { enabled: false as const, reason: agents.reason };
   }
 
+  // The sync status matters most when Headscale is down, so the page still
+  // loads without the machine list.
   const { api } = await getRequestApi(request);
-  const nodes = (await headscaleLiveStore.get(nodesResource, api)).data;
+  const [isHealthy, fetched] = await Promise.all([
+    headscale.health(),
+    headscaleLiveStore
+      .get(nodesResource, api)
+      .then((snap) => snap.data)
+      .catch(() => undefined),
+  ]);
+  const nodes = fetched ?? [];
   const sync = agents.value.lastSync();
   const selfKey = agents.value.agentNodeKey();
   const self = nodes.find((node) => node.nodeKey === selfKey);
@@ -55,6 +67,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   return {
     enabled: true as const,
+    // The layout already shows a banner when Headscale is down.
+    isHeadscaleDown: !isHealthy,
+    hasMachines: fetched !== undefined,
     syncedAt: sync.syncedAt?.toISOString() ?? null,
     startedAt: sync.startedAt?.toISOString() ?? null,
     intervalMs: sync.intervalMs,
@@ -114,7 +129,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
     );
   }
 
-  const { self, missing, machineCount } = loaderData;
+  const { self, missing, machineCount, isHeadscaleDown, hasMachines } = loaderData;
+  const unavailable = <p className="text-muted py-2.5 text-sm">Unavailable</p>;
   const isPending = !loaderData.syncedAt && Boolean(loaderData.authUrl);
   const hasError = Boolean(loaderData.error);
   const intervalMinutes = Math.max(1, Math.round(loaderData.intervalMs / 60_000));
@@ -143,7 +159,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
           .
         </Callout>
       )}
-      {loaderData.error && (
+      {loaderData.error && !isHeadscaleDown && (
         <Callout className="mb-6" title="Sync failed" variant="error">
           {loaderData.error}
         </Callout>
@@ -191,7 +207,9 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         description="The node the agent uses to reach the rest of your tailnet."
         title="Agent machine"
       >
-        {self ? (
+        {!hasMachines ? (
+          unavailable
+        ) : self ? (
           <SettingList>
             <SettingRow label="Machine">
               <span className="flex items-center gap-2">
@@ -216,10 +234,14 @@ export default function Page({ loaderData }: Route.ComponentProps) {
         description="Machines missing from the last sync keep the details from the last time they were seen, usually because they're offline."
         title="Coverage"
       >
-        <p className="py-2.5 text-sm">
-          {machineCount - missing.length} of {machineCount}{" "}
-          {machineCount === 1 ? "machine" : "machines"} in the last sync
-        </p>
+        {!hasMachines ? (
+          unavailable
+        ) : (
+          <p className="py-2.5 text-sm">
+            {machineCount - missing.length} of {machineCount}{" "}
+            {machineCount === 1 ? "machine" : "machines"} in the last sync
+          </p>
+        )}
         {missing.length > 0 && (
           <RowList>
             {missing.map((node) => (
@@ -246,4 +268,8 @@ export default function Page({ loaderData }: Route.ComponentProps) {
       </Section>
     </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="the agent" />;
 }

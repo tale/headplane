@@ -12,6 +12,7 @@ import log from "~/utils/log";
 import { HeadplaneConfig } from "./config/config-schema";
 import { hostInfo } from "./db/schema";
 import type { HeadscaleClient } from "./headscale/api";
+import { headscaleErrorMessage } from "./headscale/api/error-client";
 
 export interface AgentManager {
   lookup(nodeKeys: string[]): Promise<Record<string, HostInfo>>;
@@ -319,7 +320,9 @@ export async function createAgentManager(
       log.info("agent", "Sync complete: %d nodes updated", keys.length);
     } catch (error) {
       consecutiveErrors++;
-      const message = error instanceof Error ? error.message : String(error);
+      // Headscale API failures are thrown as plain objects, not Errors.
+      const message =
+        headscaleErrorMessage(error) ?? (error instanceof Error ? error.message : String(error));
       state.error = message;
       log.error("agent", "Sync failed (%d/5): %s", consecutiveErrors, message);
 
@@ -333,7 +336,7 @@ export async function createAgentManager(
       isSyncing = false;
       if (pendingResync) {
         pendingResync = false;
-        sync();
+        syncInBackground();
       }
     }
   }
@@ -386,11 +389,21 @@ export async function createAgentManager(
     }
   }
 
-  sync();
+  // Background syncs have no caller to catch for them, and an unhandled
+  // rejection takes the whole server down.
+  function syncInBackground() {
+    sync().catch((error) => {
+      log.error(
+        "agent",
+        "Sync crashed: %s",
+        error instanceof Error ? error.message : String(error),
+      );
+    });
+  }
 
-  const interval = setInterval(() => {
-    sync();
-  }, cacheTtl);
+  syncInBackground();
+
+  const interval = setInterval(syncInBackground, cacheTtl);
 
   return {
     async lookup(nodeKeys) {

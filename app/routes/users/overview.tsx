@@ -293,5 +293,5 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  return <PageError error={error} page="Users" />;
+  return <PageError error={error} page="users" />;
 }

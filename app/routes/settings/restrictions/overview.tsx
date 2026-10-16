@@ -2,6 +2,7 @@ import { data } from "react-router";
 
 import Callout from "~/components/callout";
 import Link from "~/components/link";
+import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
 import { authContext, headscaleConfigContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
@@ -67,4 +68,8 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
       <RestrictionSection isDisabled={isDisabled} type="user" values={settings.users} />
     </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="sign-in restrictions" />;
 }

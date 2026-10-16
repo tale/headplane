@@ -388,5 +388,5 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  return <PageError error={error} page="Machines" />;
+  return <PageError error={error} page="machines" />;
 }

@@ -1,6 +1,7 @@
 import log from "~/utils/log";
 
 import type { HeadscaleClient } from "./api";
+import { isConnectionError } from "./api/error-client";
 
 /**
  * Defines a resource that can be fetched and polled by the live store.
@@ -53,6 +54,10 @@ interface Snapshot<T> {
 
 type ChangeListener = (resourceKey: string, version: string) => void;
 
+// Pseudo-resource whose version changes whenever Headscale goes down or comes
+// back, so open pages reload without waiting for a data change.
+export const HEALTH_KEY = "health";
+
 export interface LiveStore {
   get<T>(resource: ResourceDefinition<T>, apiClient: HeadscaleClient): Promise<Snapshot<T>>;
   refresh<T>(resource: ResourceDefinition<T>, apiClient: HeadscaleClient): Promise<void>;
@@ -68,6 +73,8 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
   const intervals = new Map<string, ReturnType<typeof setInterval>>();
   let storedApiClient: HeadscaleClient | undefined;
   let versionCounter = 0;
+  let isReachable = true;
+  let healthVersion = String(++versionCounter);
 
   function notifyListeners(resourceKey: string, version: string) {
     for (const listener of listeners) {
@@ -75,11 +82,36 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
     }
   }
 
+  function setReachable(next: boolean) {
+    if (next === isReachable) {
+      return;
+    }
+
+    isReachable = next;
+    healthVersion = String(++versionCounter);
+    log.info("api", "Live store: Headscale is %s", next ? "reachable again" : "unreachable");
+    notifyListeners(HEALTH_KEY, healthVersion);
+  }
+
   async function fetchResource(
     resource: ResourceDefinition<unknown>,
     apiClient: HeadscaleClient,
   ): Promise<void> {
-    const data = await resource.fetch(apiClient);
+    let data: unknown;
+    try {
+      data = await resource.fetch(apiClient);
+    } catch (error) {
+      // Thrown API failures carry the connection error in `data`.
+      if (typeof error === "object" && error !== null && "data" in error) {
+        if (isConnectionError(error.data)) {
+          setReachable(false);
+        }
+      }
+
+      throw error;
+    }
+
+    setReachable(true);
     const json = JSON.stringify(data);
     const previousJson = serializedCache.get(resource.key);
 
@@ -146,11 +178,13 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
         throw new Error(`LiveStore: unknown resource "${resource.key}"`);
       }
 
+      // Poll even if this first fetch fails, so a cold start with Headscale
+      // down still notices when it comes back.
+      ensurePolling(def);
       if (!snapshots.has(resource.key)) {
         await fetchResource(def, apiClient);
       }
 
-      ensurePolling(def);
       return snapshots.get(resource.key) as Snapshot<T>;
     },
 
@@ -165,7 +199,7 @@ export function createLiveStore(resources: ResourceDefinition<unknown>[]): LiveS
     },
 
     getVersions(): Record<string, string> {
-      const versions: Record<string, string> = {};
+      const versions: Record<string, string> = { [HEALTH_KEY]: healthVersion };
       for (const [key, snapshot] of snapshots) {
         versions[key] = snapshot.version;
       }

@@ -10,8 +10,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
   const { api } = await getRequestApi(request);
 
-  // Ensure resources are loaded before streaming
-  await Promise.all([
+  // Start polling before streaming. Failures are fine: the stream has to stay
+  // open while Headscale is down to tell pages when it's back.
+  await Promise.allSettled([
     headscaleLiveStore.get(nodesResource, api),
     headscaleLiveStore.get(usersResource, api),
   ]);
