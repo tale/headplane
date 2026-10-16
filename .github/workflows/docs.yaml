@@ -49,11 +49,32 @@ jobs:
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
           command: pages deploy docs/.vitepress/dist --project-name=headplane-docs-beta
 
+  channel:
+    name: Release Channel
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.check.outputs.latest }}
+    steps:
+      # Patch releases on older lines must not replace the stable docs.
+      - name: Check if this is the newest stable release
+        id: check
+        env:
+          TAG: ${{ github.ref_name }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          NEWEST=$(git ls-remote --tags --refs "$REPO_URL" 'v*' \
+            | sed 's|.*refs/tags/||' | grep -v -- - | sort -V | tail -n 1)
+          [[ "$TAG" == "$NEWEST" ]] && LATEST=true || LATEST=false
+          echo "Newest stable release is $NEWEST, latest=$LATEST"
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
   stable:
     name: Deploy Stable Docs
+    needs: channel
     if: >
-      (startsWith(github.ref, 'refs/tags/v') && !contains(github.ref_name, '-'))
-      || github.ref == 'refs/heads/release/docs'
+      !cancelled()
+      && (needs.channel.outputs.latest == 'true' || github.ref == 'refs/heads/release/docs')
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
