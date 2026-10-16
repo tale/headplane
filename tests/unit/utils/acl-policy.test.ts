@@ -109,13 +109,26 @@ describe("parsePolicy", () => {
       },
     ]);
     expect(policy.grants).toEqual([
-      { src: ["group:eng"], dst: ["tag:server"], ip: ["tcp:443"], extra: {} },
+      { src: ["group:eng"], dst: ["tag:server"], ip: ["tcp:443"], via: [], extra: {} },
     ]);
     expect(policy.autoApprovers).toEqual({
       routes: { "10.0.0.0/8": ["group:ops"] },
       exitNode: ["tag:exit"],
       extra: {},
     });
+  });
+
+  test("reads and writes grant via tags", () => {
+    const { policy } = parseOrThrow(`{
+      "grants": [{ "src": ["group:eng"], "dst": ["10.0.0.0/8"], "ip": ["*"], "via": ["tag:router"] }]
+    }`);
+
+    expect(policy.grants[0].via).toEqual(["tag:router"]);
+    expect(policy.grants[0].extra).toEqual({});
+    expect(serializePolicy(policy)).toContain(`"via": ["tag:router"]`);
+    expect(
+      serializePolicy({ ...policy, grants: [{ ...policy.grants[0], via: [] }] }),
+    ).not.toContain(`"via"`);
   });
 
   test("keeps grant app capabilities as they were written", () => {

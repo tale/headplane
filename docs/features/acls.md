@@ -35,8 +35,9 @@ The **Rules** tab renders the policy as five lists:
   appended, since Headscale rejects a destination that has no port.
 - **Grants**: the `grants` section. Grants work like access rules, but
   ports and protocols go in their own field, for example `tcp:443`, and
-  destinations have no port. App capabilities (`app`) are kept but can only be
-  edited in the file.
+  destinations have no port. **Via** routes the traffic through subnet routers
+  with the given tags. App capabilities (`app`) are kept but can only be edited
+  in the file.
 - **SSH rules** — the `ssh` section, including `check` mode and its check
   period.
 - **Hosts** — the `hosts` section, which names an IP address or CIDR range so

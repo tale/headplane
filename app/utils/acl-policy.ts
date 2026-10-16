@@ -28,6 +28,8 @@ export interface Grant {
   src: string[];
   dst: string[];
   ip: string[];
+  // Tags of the subnet routers the traffic must go through.
+  via: string[];
   extra: Record<string, unknown>;
 }
 
@@ -367,7 +369,7 @@ function toStringList(value: unknown): string[] {
 
 const ACL_RULE_KEYS = ["action", "src", "dst", "proto"];
 const SSH_RULE_KEYS = ["action", "src", "dst", "users", "checkPeriod"];
-const GRANT_KEYS = ["src", "dst", "ip"];
+const GRANT_KEYS = ["src", "dst", "ip", "via"];
 const AUTO_APPROVER_KEYS = ["routes", "exitNode"];
 
 function toAclRules(value: unknown): AclRule[] {
@@ -424,6 +426,7 @@ function toGrants(value: unknown): Grant[] {
       src: toStringList(entry.src),
       dst: toStringList(entry.dst),
       ip: toStringList(entry.ip),
+      via: toStringList(entry.via),
       extra: extraKeys(entry, GRANT_KEYS),
     }));
 }
@@ -472,6 +475,7 @@ function compactSshRule(rule: SshRule): Record<string, unknown> {
 function compactGrant(grant: Grant): Record<string, unknown> {
   const out: Record<string, unknown> = { src: grant.src, dst: grant.dst };
   if (grant.ip.length > 0) out.ip = grant.ip;
+  if (grant.via.length > 0) out.via = grant.via;
   return { ...out, ...grant.extra };
 }
 
