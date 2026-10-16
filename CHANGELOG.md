@@ -1,5 +1,7 @@
 # Next
 
+# 0.8.1 (October 16, 2026)
+
 This release fixes actions failing with "Bad Request" or "Unexpected Server Error" when Headplane runs behind a reverse proxy that terminates HTTPS. If you made proxy rules rewriting the `Origin` header as a workaround, it's safe to remove them now.
 
 ## Fixes
@@ -9,6 +11,8 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 - Single sign-on no longer fails with "Unexpected Server Error" when `server.base_url` is missing. Headplane now logs a warning at startup and turns off single sign-on until `server.base_url` is set to Headplane's public URL (closes [#585](https://github.com/tale/headplane/issues/585)).
 - Logs now explain why a request to Headscale failed, such as Headscale being unreachable or rejecting the API key, instead of printing `[object Object]`. This covers signing in with an API key, linking an account after single sign-on, and agent syncs (closes [#587](https://github.com/tale/headplane/issues/587), [#600](https://github.com/tale/headplane/issues/600)).
 - Deleting a Headscale user that's linked to a Headplane account now unlinks the account. Previously the account kept pointing at the deleted user, showed its raw single sign-on ID instead of a name, and wasn't marked as **Not linked** (closes [#625](https://github.com/tale/headplane/issues/625)).
+
+---
 
 # 0.8.0 (October 13, 2026)
 
