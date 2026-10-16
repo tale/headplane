@@ -6,6 +6,7 @@ import {
   hasPortSpec,
   isValidGroupName,
   isValidHostName,
+  isValidRoute,
   isValidTagName,
   parsePolicy,
   policyDestinations,
@@ -33,9 +34,14 @@ const POLICY = `{
   "ssh": [
     { "action": "check", "src": ["group:ops"], "dst": ["tag:server"], "users": ["root"], "checkPeriod": "12h" }
   ],
+  "grants": [
+    { "src": ["group:eng"], "dst": ["tag:server"], "ip": ["tcp:443"] }
+  ],
   "autoApprovers": {
-    "routes": { "10.0.0.0/8": ["group:ops"] }
-  }
+    "routes": { "10.0.0.0/8": ["group:ops"] },
+    "exitNode": ["tag:exit"]
+  },
+  "nodeAttrs": [{ "target": ["*"], "attr": ["funnel"] }]
 }`;
 
 function parseOrThrow(raw: string) {
@@ -55,6 +61,8 @@ describe("parsePolicy", () => {
       hosts: {},
       acls: [],
       ssh: [],
+      grants: [],
+      autoApprovers: { routes: {}, exitNode: [], extra: {} },
       extra: {},
       keyOrder: [],
     });
@@ -100,6 +108,42 @@ describe("parsePolicy", () => {
         extra: {},
       },
     ]);
+    expect(policy.grants).toEqual([
+      { src: ["group:eng"], dst: ["tag:server"], ip: ["tcp:443"], via: [], extra: {} },
+    ]);
+    expect(policy.autoApprovers).toEqual({
+      routes: { "10.0.0.0/8": ["group:ops"] },
+      exitNode: ["tag:exit"],
+      extra: {},
+    });
+  });
+
+  test("reads and writes grant via tags", () => {
+    const { policy } = parseOrThrow(`{
+      "grants": [{ "src": ["group:eng"], "dst": ["10.0.0.0/8"], "ip": ["*"], "via": ["tag:router"] }]
+    }`);
+
+    expect(policy.grants[0].via).toEqual(["tag:router"]);
+    expect(policy.grants[0].extra).toEqual({});
+    expect(serializePolicy(policy)).toContain(`"via": ["tag:router"]`);
+    expect(
+      serializePolicy({ ...policy, grants: [{ ...policy.grants[0], via: [] }] }),
+    ).not.toContain(`"via"`);
+  });
+
+  test("keeps grant app capabilities as they were written", () => {
+    const { policy } = parseOrThrow(`{
+      "grants": [
+        { "src": ["*"], "dst": ["tag:web"], "app": { "example.com/cap/web": [{ "admin": true }] } }
+      ]
+    }`);
+
+    expect(policy.grants[0].ip).toEqual([]);
+    expect(policy.grants[0].extra).toEqual({
+      app: { "example.com/cap/web": [{ admin: true }] },
+    });
+    expect(serializePolicy(policy)).toContain(`"example.com/cap/web"`);
+    expect(serializePolicy(policy)).not.toContain(`"ip"`);
   });
 
   test("keeps rule actions and unknown rule keys as they were written", () => {
@@ -128,7 +172,7 @@ describe("parsePolicy", () => {
   test("keeps unknown top-level keys in extra", () => {
     const { policy } = parseOrThrow(POLICY);
     expect(policy.extra).toEqual({
-      autoApprovers: { routes: { "10.0.0.0/8": ["group:ops"] } },
+      nodeAttrs: [{ target: ["*"], attr: ["funnel"] }],
     });
   });
 
@@ -179,7 +223,17 @@ describe("serializePolicy", () => {
 
   test("writes unknown keys back out", () => {
     const { policy } = parseOrThrow(POLICY);
-    expect(serializePolicy(policy)).toContain(`"autoApprovers"`);
+    expect(serializePolicy(policy)).toContain(`"nodeAttrs"`);
+  });
+
+  test("drops auto approvers once both lists are empty", () => {
+    const { policy } = parseOrThrow(POLICY);
+    const output = serializePolicy({
+      ...policy,
+      autoApprovers: { routes: {}, exitNode: [], extra: {} },
+    });
+
+    expect(output).not.toContain(`"autoApprovers"`);
   });
 
   test("keeps the original top-level section order", () => {
@@ -333,5 +387,16 @@ describe("validation", () => {
     expect(isValidGroupName("group:Eng")).toBe(false);
     expect(isValidTagName("group:eng")).toBe(false);
     expect(isValidHostName("tag:web")).toBe(false);
+  });
+
+  test("accepts only IP prefixes as routes", () => {
+    expect(isValidRoute("10.0.0.0/8")).toBe(true);
+    expect(isValidRoute("fd7a:115c:a1e0::/48")).toBe(true);
+    expect(isValidRoute("10.0.0.1")).toBe(false);
+    expect(isValidRoute("10.0.0.0/33")).toBe(false);
+    expect(isValidRoute("tag:router/8")).toBe(false);
+    expect(isValidRoute("10.0.0.999/8")).toBe(false);
+    expect(isValidRoute("fd7a::/129")).toBe(false);
+    expect(isValidRoute("fd7a::/999")).toBe(false);
   });
 });
