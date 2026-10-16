@@ -32,6 +32,7 @@
 - The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
 - Fields with an error keep their red border while focused instead of turning blue.
 - Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
+- The agent no longer creates a new auth key every time Headplane restarts, and on Headscale 0.28 it no longer registers a duplicate agent machine on restart. If the agent's machine is deleted from Headscale, the agent now registers again on its own instead of silently staying signed out.
 
 # 0.8.1 (October 16, 2026)
 

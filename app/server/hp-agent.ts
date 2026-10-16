@@ -116,6 +116,7 @@ export async function createAgentManager(
   let disposed = false;
   let consecutiveErrors = 0;
   let approvingAuthId: string | undefined;
+  let needsAuthKey = false;
 
   async function generateAuthKey(): Promise<string> {
     const expiration = new Date(Date.now() + 5 * 60_000);
@@ -210,7 +211,10 @@ export async function createAgentManager(
           signal,
         );
       }
-      proc = null;
+      if (proc === child) {
+        proc = null;
+      }
+
       state.startedAt = undefined;
 
       // Reject any pending sync request
@@ -226,24 +230,36 @@ export async function createAgentManager(
     return child;
   }
 
+  // Waits for the process to exit so a replacement (or a new manager after a
+  // dev reload) never shares the tsnet work dir with a dying one.
+  async function stopProcess(child: ChildProcess) {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      return;
+    }
+
+    const exited = once(child, "exit");
+    child.kill("SIGTERM");
+    const timeout = setTimeout(() => child.kill("SIGKILL"), 10_000);
+    await exited;
+    clearTimeout(timeout);
+  }
+
   async function ensureProcess(): Promise<ChildProcess> {
     if (proc && proc.exitCode === null) {
       return proc;
     }
 
+    // Passing a key alongside existing state makes some Headscale versions
+    // register a duplicate node, and leaves an unused key behind on others.
     const stateExists = await hasExistingState(workDir);
-    const authKey = await generateAuthKey();
-    if (stateExists) {
-      log.debug("agent", "Reusing existing tsnet identity");
-      log.info(
-        "agent",
-        "Existing state found; agent will use it and fall back to the pre-auth key if needed",
-      );
-    } else {
-      log.info("agent", "No tsnet state found, agent will register with a pre-auth key");
+    if (stateExists && !needsAuthKey) {
+      log.info("agent", "Existing state found, reusing the agent's identity");
+      return spawnAgent("");
     }
 
-    return spawnAgent(authKey);
+    needsAuthKey = false;
+    log.info("agent", "Registering the agent with a pre-auth key");
+    return spawnAgent(await generateAuthKey());
   }
 
   function sendSync(child: ChildProcess): Promise<string> {
@@ -281,11 +297,21 @@ export async function createAgentManager(
         state.error = output.error;
         log.error("agent", "Sync error from agent (%d/5): %s", consecutiveErrors, output.error);
 
-        if (consecutiveErrors >= 5 && proc) {
+        if (consecutiveErrors >= 5) {
           log.warn("agent", "Too many consecutive errors, killing agent process for retry");
-          proc.kill("SIGTERM");
-          proc = null;
+          await stopProcess(child);
         }
+        return;
+      }
+
+      // tsnet keeps reporting a stale identity (e.g. its node was deleted)
+      // as connected, so Headscale is the only reliable source of truth.
+      const nodes = await apiClient.nodes.list();
+      if (!nodes.some((node) => node.nodeKey === output.self)) {
+        log.warn("agent", "Headscale doesn't know the agent's node, re-registering it");
+        needsAuthKey = true;
+        pendingResync = true;
+        await stopProcess(child);
         return;
       }
 
@@ -455,26 +481,12 @@ export async function createAgentManager(
       await sync();
     },
 
-    // Waits for the process to exit so a new manager (e.g. after a dev
-    // reload) never shares the tsnet work dir with a dying one.
     async dispose() {
       disposed = true;
       clearInterval(interval);
-      if (!proc) {
-        return;
+      if (proc) {
+        await stopProcess(proc);
       }
-
-      const child = proc;
-      proc = null;
-      if (child.exitCode !== null || child.signalCode !== null) {
-        return;
-      }
-
-      const exited = once(child, "exit");
-      child.kill("SIGTERM");
-      const timeout = setTimeout(() => child.kill("SIGKILL"), 10_000);
-      await exited;
-      clearTimeout(timeout);
     },
   };
 }
