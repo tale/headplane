@@ -34,6 +34,7 @@
 - Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
 - The agent no longer creates a new auth key every time Headplane restarts, and on Headscale 0.28 it no longer registers a duplicate agent machine on restart. If the agent's machine is deleted from Headscale, the agent now registers again on its own instead of silently staying signed out.
 - If the agent's saved state is corrupt, it now registers again instead of failing on every start. Whenever the agent registers again, it removes its previous machine from Headscale and keeps its usual name, instead of leaving an offline duplicate and showing up as `headplane-agent-1`.
+- The agent recovers on its own when its process crashes, hangs, or can't be started, instead of staying down until the next sync a few minutes later. A Headscale that stops answering now fails the agent's sync after 20 seconds instead of blocking it indefinitely, and the agent page shows the error. Headplane also refuses an agent work directory it can't write to, instead of starting an agent that can never save its state.
 
 # 0.8.1 (October 16, 2026)
 
