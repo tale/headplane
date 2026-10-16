@@ -1,4 +1,5 @@
 import { type ChildProcess, spawn } from "node:child_process";
+import { once } from "node:events";
 import { access, constants, mkdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
@@ -29,7 +30,7 @@ export interface AgentManager {
   lastUpdated(nodeKeys: string[]): Promise<Record<string, Date>>;
   agentNodeKey(): string | undefined;
   triggerSync(): Promise<void>;
-  dispose(): void;
+  dispose(): Promise<void>;
 }
 
 interface AgentOutput {
@@ -454,13 +455,26 @@ export async function createAgentManager(
       await sync();
     },
 
-    dispose() {
+    // Waits for the process to exit so a new manager (e.g. after a dev
+    // reload) never shares the tsnet work dir with a dying one.
+    async dispose() {
       disposed = true;
       clearInterval(interval);
-      if (proc) {
-        proc.kill("SIGTERM");
-        proc = null;
+      if (!proc) {
+        return;
       }
+
+      const child = proc;
+      proc = null;
+      if (child.exitCode !== null || child.signalCode !== null) {
+        return;
+      }
+
+      const exited = once(child, "exit");
+      child.kill("SIGTERM");
+      const timeout = setTimeout(() => child.kill("SIGKILL"), 10_000);
+      await exited;
+      clearTimeout(timeout);
     },
   };
 }

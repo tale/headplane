@@ -47,6 +47,16 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "integration:agent",
+          include: ["tests/integration/agent/**/*.test.ts"],
+          globalSetup: ["tests/integration/agent/setup.ts"],
+          testTimeout: 180_000,
+          hookTimeout: 180_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "integration:oidc",
           include: ["tests/integration/oidc/**/*.test.ts"],
           testTimeout: 60_000,
