@@ -27,16 +27,23 @@ also requires the `write_policy` capability, which the `owner`, `admin` and
 
 ## Rules
 
-The **Rules** tab renders the policy as three lists:
+The **Rules** tab renders the policy as five lists:
 
 - **Access rules** — the `acls` section. Each rule allows traffic from a set of
   sources to a set of destinations. Destinations include a port range, for
   example `tag:web:80,443`. A destination entered without one gets `:*`
   appended, since Headscale rejects a destination that has no port.
+- **Grants**: the `grants` section. Grants work like access rules, but
+  ports and protocols go in their own field, for example `tcp:443`, and
+  destinations have no port. App capabilities (`app`) are kept but can only be
+  edited in the file.
 - **SSH rules** — the `ssh` section, including `check` mode and its check
   period.
 - **Hosts** — the `hosts` section, which names an IP address or CIDR range so
   rules can reference it.
+- **Auto approvers**: the `autoApprovers` section. Subnet routes and exit
+  nodes advertised by the listed users, groups or tags are approved without
+  manual review.
 
 Adding or editing an entry opens a dialog where sources and destinations are
 built from chips. Every group, tag, host and Headscale user already known to
@@ -78,6 +85,6 @@ and Tags & Groups tabs show a notice when the loaded policy contains comments �
 use the file editor if you want to keep them.
 :::
 
-Unknown top-level keys such as `autoApprovers` and `nodeAttrs` are preserved
+Unknown top-level keys such as `nodeAttrs` and `tests` are preserved
 untouched, so using the visual editor never silently drops parts of a policy
 that Headplane does not model.
