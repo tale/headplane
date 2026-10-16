@@ -51,8 +51,14 @@ export const userAction = createAction({
     },
     delete: {
       fields: { headscale_user_id: id },
-      async handler(input, { api, refresh }) {
+      async handler(input, { api, auth, refresh }) {
         await api.users.delete(input.headscale_user_id);
+        for (const user of await auth.listUsers()) {
+          if (user.headscale_user_id === input.headscale_user_id) {
+            await auth.unlinkHeadscaleUser(user.id);
+          }
+        }
+
         await refresh();
         return ok("User deleted");
       },

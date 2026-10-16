@@ -27,12 +27,25 @@
 
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
 - The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
-- Agent sync failures caused by Headscale now say what went wrong instead of showing `[object Object]`.
 - An unexpected error during a background agent sync no longer crashes Headplane.
 - Fixed the error page crashing on errors that bundle several failures together.
 - The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
 - Fields with an error keep their red border while focused instead of turning blue.
 - Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
+
+# 0.8.1 (October 16, 2026)
+
+This release fixes actions failing with "Bad Request" or "Unexpected Server Error" when Headplane runs behind a reverse proxy that terminates HTTPS. If you made proxy rules rewriting the `Origin` header as a workaround, it's safe to remove them now.
+
+## Fixes
+
+- Fixed several broken actions (such as creating auth keys) that began failing with "Bad Request" or "Unexpected Server Error" after Headplane 0.8.0 when sitting behind a reverse proxy that terminates TLS. If you added a proxy rule rewriting the `Origin` header as a workaround, it's safe to remove (closes [#657](https://github.com/tale/headplane/issues/657), [#658](https://github.com/tale/headplane/issues/658)).
+- Fixed a bug where the **Add nameserver** dialog would not show the **Restrict to domain** switch in the correct state when closing and reopening the dialog after adding or canceling a split DNS nameserver (closes [#635](https://github.com/tale/headplane/issues/635)).
+- Single sign-on no longer fails with "Unexpected Server Error" when `server.base_url` is missing. Headplane now logs a warning at startup and turns off single sign-on until `server.base_url` is set to Headplane's public URL (closes [#585](https://github.com/tale/headplane/issues/585)).
+- Logs now explain why a request to Headscale failed, such as Headscale being unreachable or rejecting the API key, instead of printing `[object Object]`. This covers signing in with an API key, linking an account after single sign-on, and agent syncs (closes [#587](https://github.com/tale/headplane/issues/587), [#600](https://github.com/tale/headplane/issues/600)).
+- Deleting a Headscale user that's linked to a Headplane account now unlinks the account. Previously the account kept pointing at the deleted user, showed its raw single sign-on ID instead of a name, and wasn't marked as **Not linked** (closes [#625](https://github.com/tale/headplane/issues/625)).
+
+---
 
 # 0.8.0 (October 13, 2026)
 

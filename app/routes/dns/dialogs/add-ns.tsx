@@ -17,6 +17,7 @@ export default function AddNameserver() {
   return (
     <ActionDialog
       intent="add_ns"
+      onOpenChange={(isOpen) => isOpen && setIsSplit(false)}
       submitLabel="Add nameserver"
       title="Add nameserver"
       trigger={

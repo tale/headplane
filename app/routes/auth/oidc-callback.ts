@@ -7,6 +7,7 @@ import {
   headscaleContext,
   oidcContext,
 } from "~/server/context";
+import { headscaleErrorMessage } from "~/server/headscale/api/error-client";
 import { logOidcError } from "~/server/oidc/provider";
 import { findHeadscaleUserBySubject } from "~/server/web/headscale-identity";
 import { Roles } from "~/server/web/roles";
@@ -92,7 +93,11 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
       isLinked = await auth.linkHeadscaleUser(userId, hsUser.id);
     }
   } catch (error) {
-    log.warn("auth", "Failed to link Headscale user: %s", String(error));
+    log.warn(
+      "auth",
+      "Failed to link Headscale user: %s",
+      headscaleErrorMessage(error) ?? String(error),
+    );
   }
 
   // Only persist the id_token when RP-initiated logout is enabled — otherwise
