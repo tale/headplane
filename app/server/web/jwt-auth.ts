@@ -93,7 +93,7 @@ export function createJwtAuthService(config: JwtAuthConfig): JwtAuthService {
 
   function toIdentity(payload: JWTPayload): Result<JwtAuthIdentity, JwtAuthError> {
     const sub = payload.sub;
-    if (typeof sub !== "string" || sub.length === 0) {
+    if (typeof sub !== "string" || sub.trim().length === 0) {
       return err({ code: "missing_subject", message: "Assertion has no `sub` claim" });
     }
 
