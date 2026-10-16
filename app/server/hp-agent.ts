@@ -1,7 +1,7 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { once } from "node:events";
 import { access, constants, mkdir, readFile, rename, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 
 import { inArray, notInArray } from "drizzle-orm";
@@ -91,6 +91,13 @@ async function hasExistingState(workDir: string): Promise<boolean> {
   }
 }
 
+declare global {
+  // Work dirs owned by a live manager, each mapped to a promise that settles
+  // once its owner has stopped the agent. Kept on globalThis so it survives
+  // this module being reloaded in development.
+  var __headplaneAgentWorkDirs: Map<string, Promise<void>> | undefined;
+}
+
 export async function createAgentManager(
   agentConfig: NonNullable<NonNullable<HeadplaneConfig["integration"]>["agent"]> | undefined,
   headscaleUrl: string,
@@ -137,6 +144,29 @@ export async function createAgentManager(
   const executablePath = agentConfig.executable_path;
   const workDir = agentConfig.work_dir;
   const tailscaleNetNS = agentConfig.tailscale_netns;
+
+  // Two agents on one work dir would share the tsnet state. A dev reload
+  // creates the new manager before disposing the old one, so a newcomer
+  // waits for the previous owner to stop and then takes over.
+  const owners = (globalThis.__headplaneAgentWorkDirs ??= new Map());
+  const ownerKey = resolve(workDir);
+  const previousOwner = owners.get(ownerKey);
+  let releaseWorkDir!: () => void;
+  const released = new Promise<void>((done) => {
+    releaseWorkDir = done;
+  });
+
+  const ownership = (previousOwner ?? Promise.resolve()).then(() => released);
+  owners.set(ownerKey, ownership);
+
+  let ownsWorkDir = false;
+  const ready = (previousOwner ?? Promise.resolve()).then(() => {
+    ownsWorkDir = true;
+  });
+
+  if (previousOwner) {
+    log.info("agent", "Waiting for the previous agent manager to release %s", workDir);
+  }
 
   const state: SyncState = {
     syncedAt: null,
@@ -372,6 +402,10 @@ export async function createAgentManager(
       throw new Error("The agent manager has been shut down");
     }
 
+    if (!ownsWorkDir) {
+      throw new Error("Another agent manager is still using the work dir");
+    }
+
     // Passing a key alongside existing state makes some Headscale versions
     // register a duplicate node, and leaves an unused key behind on others.
     const stateExists = await hasExistingState(workDir);
@@ -586,7 +620,11 @@ export async function createAgentManager(
     });
   }
 
-  syncInBackground();
+  void ready.then(() => {
+    if (!disposed) {
+      syncInBackground();
+    }
+  });
 
   const interval = setInterval(syncInBackground, cacheTtl);
 
@@ -645,6 +683,11 @@ export async function createAgentManager(
       clearTimeout(restartTimer);
       if (proc) {
         await stopProcess(proc);
+      }
+
+      releaseWorkDir();
+      if (owners.get(ownerKey) === ownership) {
+        owners.delete(ownerKey);
       }
     },
   };
