@@ -45,7 +45,7 @@ export default function AddNameserver({ nameservers }: Props) {
   const split = (form.values.split_name as string) !== "global";
 
   return (
-    <Dialog>
+    <Dialog onOpenChange={(isOpen) => !isOpen && form.reset()}>
       <Button>Add nameserver</Button>
       <DialogPanel>
         <Title className="mb-4">Add nameserver</Title>
@@ -73,6 +73,7 @@ export default function AddNameserver({ nameservers }: Props) {
           </div>
           <Switch
             label="Split DNS"
+            checked={split}
             onCheckedChange={(checked) => {
               form.setValue("split_name", checked ? "" : "global");
             }}

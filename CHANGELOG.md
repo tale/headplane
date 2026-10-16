@@ -3,6 +3,7 @@
 ## Fixes
 
 - Fixed several broken actions (such as creating auth keys) that began failing with "Bad Request" or "Unexpected Server Error" after Headplane 0.8.0 when sitting behind a reverse proxy that terminates TLS. If you added a proxy rule rewriting the `Origin` header as a workaround, it's safe to remove (closes [#657](https://github.com/tale/headplane/issues/657), [#658](https://github.com/tale/headplane/issues/658)).
+- Fixed a bug where the **Add nameserver** dialog would not show the **Restrict to domain** switch in the correct state when closing and reopening the dialog after adding or canceling a split DNS nameserver (closes [#635](https://github.com/tale/headplane/issues/635)).
 
 # 0.8.0 (October 13, 2026)
 
