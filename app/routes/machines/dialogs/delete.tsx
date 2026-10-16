@@ -1,8 +1,4 @@
-import { useNavigate } from "react-router";
-
-import Dialog, { DialogPanel } from "~/components/dialog";
-import Text from "~/components/text";
-import Title from "~/components/title";
+import ActionDialog from "~/components/action-dialog";
 import type { Machine } from "~/types";
 
 interface DeleteProps {
@@ -12,19 +8,16 @@ interface DeleteProps {
 }
 
 export default function Delete({ machine, isOpen, setIsOpen }: DeleteProps) {
-  const navigate = useNavigate();
-
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel onSubmit={() => navigate("/machines")} variant="destructive">
-        <Title>Remove {machine.givenName}</Title>
-        <Text>
-          This machine will be permanently removed from your network. To re-add it, you will need to
-          reauthenticate to your tailnet from the device.
-        </Text>
-        <input name="action_id" type="hidden" value="delete" />
-        <input name="node_id" type="hidden" value={machine.id} />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description="The machine is removed from your tailnet. To add it back, sign in to your tailnet from the device again."
+      fields={{ node_id: machine.id }}
+      intent="delete"
+      isDestructive
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Remove"
+      title={`Remove ${machine.givenName}?`}
+    />
   );
 }

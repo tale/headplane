@@ -2,7 +2,51 @@
 
 ## Changes
 
+- Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
+- Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.
+- The navigation bar is slimmer, and on small screens the pages now live in a menu instead of a second row of tabs.
+- The navigation bar stays at the top while you scroll. With a mouse or trackpad, the page scrollbar is now a thin overlay that fades in while scrolling, so pages no longer shift sideways when they become long enough to scroll.
+- The machines list is easier to scan: each machine shows its status next to its name, its tags and badges on one line, and both of its addresses. Badges only use color when something needs attention, like an expired key, a key expiring within a week, or routes waiting for approval. Click an address to copy it (via [#654](https://github.com/tale/headplane/issues/654)).
+- With the Headplane agent enabled, the machines list marks clients running an older Tailscale release than the latest stable one. Headplane checks pkgs.tailscale.com for the latest version once a day in the background.
+- The machine page uses the same layout as DNS and Settings, with its details split into Routing, Machine, Addresses, and Connectivity sections instead of boxed cards. Addresses, domains, and the node key copy when clicked.
+- The Users page matches the new machines list: each user shows their avatar, email, and groups on one line, along with when their machines were last seen. **Add user** now sits in the page header, and users whose profile picture fails to load get an initial instead of a broken image.
+- The DNS page is reorganized: the tailnet name, Magic DNS, and the local DNS override sit together under **General**, and each section has its heading and add button in a column beside its list. Split DNS nameservers now sit in the same list as global ones, marked with the domain they answer for, and nameservers can be reordered the same way as search domains.
+- Settings has a sidebar for **Auth keys**, **Sign-in restrictions**, and **Agent** instead of a page of links, and `/settings` opens auth keys directly. Auth keys are listed in a table, newest first, with filters like the machines list. Sign-in restrictions and the agent status use the same layout as the DNS page.
+- The agent page shows more of what the agent is doing: how many times in a row a sync has failed, how often it syncs, when its process started, its own machine and Tailscale version, and which machines were missing from the last sync and how old their details are.
+- The sign-in page is redesigned: the form sits on one side and an animated tailnet on the other, with machines coming and going and passing packets between them. Single sign-on sits above the API key field, sign-in errors are shorter and appear under the field, and the signed-out and single sign-on error pages share the same layout.
+- Accounts that sign in with single sign-on keep trying to link to a matching Headscale user (same subject or email) after sign-in, not only during it. With single sign-on set up on Headscale too, an account links by itself once its first device signs in.
+- Only admins can pick which Headscale user their account links to, on a page shown once after signing in that they can skip. Previously anyone signing in for the first time could claim any unlinked Headscale user, and with it that user's machines and auth keys wherever their role allowed. Everyone else is linked automatically or by an admin from the Users page.
+- People without dashboard access get a new home page that walks through installing Tailscale and connecting it to this network, and shows whether their account is linked yet. It updates live, so it notices as soon as their first device signs in.
+- Error pages are redesigned. Inside the app, an error keeps the navigation bar and explains what went wrong in a sentence, with raw details tucked under **Details** and a **Try again** button where retrying can help. Errors that stop the app from loading, and unknown addresses, use the sign-in layout.
+- The routes dialog and the lists in the tags, groups, auth key, and policy rule dialogs use the same rows as the DNS and Settings pages, with a **Remove** button on each entry instead of an X.
+- Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
+- Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
+- Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 - Added authentication from a signed assertion injected by an identity-aware proxy, via `server.jwt_auth`. Works with any proxy that signs a header — Google IAP, Cloudflare Access and Pomerium among them — by verifying the signature against the proxy's published keys, so identity does not depend on trusting the client address (closes [#606](https://github.com/tale/headplane/issues/606)).
+
+## Fixes
+
+- Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
+- The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
+- An unexpected error during a background agent sync no longer crashes Headplane.
+- Fixed the error page crashing on errors that bundle several failures together.
+- The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
+- Fields with an error keep their red border while focused instead of turning blue.
+- Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
+
+# 0.8.1 (October 16, 2026)
+
+This release fixes actions failing with "Bad Request" or "Unexpected Server Error" when Headplane runs behind a reverse proxy that terminates HTTPS. If you made proxy rules rewriting the `Origin` header as a workaround, it's safe to remove them now.
+
+## Fixes
+
+- Fixed several broken actions (such as creating auth keys) that began failing with "Bad Request" or "Unexpected Server Error" after Headplane 0.8.0 when sitting behind a reverse proxy that terminates TLS. If you added a proxy rule rewriting the `Origin` header as a workaround, it's safe to remove (closes [#657](https://github.com/tale/headplane/issues/657), [#658](https://github.com/tale/headplane/issues/658)).
+- Fixed a bug where the **Add nameserver** dialog would not show the **Restrict to domain** switch in the correct state when closing and reopening the dialog after adding or canceling a split DNS nameserver (closes [#635](https://github.com/tale/headplane/issues/635)).
+- Single sign-on no longer fails with "Unexpected Server Error" when `server.base_url` is missing. Headplane now logs a warning at startup and turns off single sign-on until `server.base_url` is set to Headplane's public URL (closes [#585](https://github.com/tale/headplane/issues/585)).
+- Logs now explain why a request to Headscale failed, such as Headscale being unreachable or rejecting the API key, instead of printing `[object Object]`. This covers signing in with an API key, linking an account after single sign-on, and agent syncs (closes [#587](https://github.com/tale/headplane/issues/587), [#600](https://github.com/tale/headplane/issues/600)).
+- Deleting a Headscale user that's linked to a Headplane account now unlinks the account. Previously the account kept pointing at the deleted user, showed its raw single sign-on ID instead of a name, and wasn't marked as **Not linked** (closes [#625](https://github.com/tale/headplane/issues/625)).
+
+---
 
 # 0.8.0 (October 13, 2026)
 

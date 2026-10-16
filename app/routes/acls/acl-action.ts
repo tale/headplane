@@ -1,90 +1,54 @@
-import { data } from "react-router";
+import * as v from "valibot";
 
 import { authContext, requestApiContext } from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
+import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
+import { invalid, ok } from "~/utils/form";
 
-import type { Route } from "./+types/overview";
+// Headscale prefixes policy parse errors with one of these, for HuJSON syntax
+// and for the policy structure respectively.
+const parseErrorPrefixes = ["parsing HuJSON:", "parsing policy from bytes:"];
 
-// We only check capabilities here and assume it is writable
-// If it isn't, it'll gracefully error anyways, since this means some
-// fishy client manipulation is happening.
-export async function aclAction({ request, context }: Route.ActionArgs) {
-  const auth = context.get(authContext);
-  const getRequestApi = context.get(requestApiContext);
+export const aclAction = createAction({
+  capability: Capabilities.write_policy,
+  async setup({ request, context }) {
+    const principal = await context.get(authContext).require(request);
+    const { api } = await context.get(requestApiContext)(request);
+    return { principal, api };
+  },
+  intents: {
+    save: {
+      fields: { policy: v.pipe(v.string(), v.nonEmpty("The policy can't be empty.")) },
+      async handler(input, { api }) {
+        try {
+          await api.policy.set(input.policy);
+        } catch (error) {
+          if (!isDataWithApiError(error)) {
+            throw error;
+          }
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.write_policy);
-  if (!check) {
-    throw data("You do not have permission to write to the ACL policy", {
-      status: 403,
-    });
-  }
+          if (error.data.rawData.includes("update is disabled")) {
+            throw new ActionError(
+              "The ACL policy is read-only. Set `policy.mode` to `database` in your Headscale configuration to edit it.",
+              403,
+            );
+          }
 
-  // Try to write to the ACL policy via the API or via config file (TODO).
-  const formData = await request.formData();
-  const policyData = formData.get("policy")?.toString();
-  if (!policyData) {
-    throw data("Missing `policy` in the form data.", {
-      status: 400,
-    });
-  }
+          const message = error.data.data?.message;
+          const prefix = parseErrorPrefixes.find(
+            (prefix) => typeof message === "string" && message.includes(prefix),
+          );
+          if (typeof message === "string" && prefix) {
+            const detail = message.slice(message.indexOf(prefix) + prefix.length).trim();
+            return invalid({ form: `Syntax error: ${detail}` });
+          }
 
-  const { api } = await getRequestApi(request);
-  try {
-    const { policy, updatedAt } = await api.policy.set(policyData);
-    return data({
-      success: true,
-      error: undefined,
-      policy,
-      updatedAt,
-    });
-  } catch (error) {
-    if (isDataWithApiError(error)) {
-      const rawData = error.data.rawData;
-      // https://github.com/juanfont/headscale/blob/c4600346f9c29b514dc9725ac103efb9d0381f23/hscontrol/types/policy.go#L11
-      if (rawData.includes("update is disabled")) {
-        throw data("Policy is not writable", { status: 403 });
-      }
+          throw error;
+        }
 
-      const message =
-        error.data.data != null &&
-        "message" in error.data.data &&
-        typeof error.data.data.message === "string"
-          ? error.data.data.message
-          : undefined;
-
-      if (message == null) {
-        throw error;
-      }
-
-      // Policy parse errors carry one of two prefixes (HuJSON syntax vs.
-      // structural unmarshal). Headscale 0.27.0+ uses these forms; older
-      // releases are no longer supported.
-      if (message.includes("parsing HuJSON:")) {
-        const cutIndex = message.indexOf("parsing HuJSON:");
-        const trimmed =
-          cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 16).trim()}` : message;
-
-        return data(
-          { success: false, error: trimmed, policy: undefined, updatedAt: undefined },
-          400,
-        );
-      }
-
-      if (message.includes("parsing policy from bytes:")) {
-        const cutIndex = message.indexOf("parsing policy from bytes:");
-        const trimmed =
-          cutIndex > -1 ? `Syntax error: ${message.slice(cutIndex + 26).trim()}` : message;
-
-        return data(
-          { success: false, error: trimmed, policy: undefined, updatedAt: undefined },
-          400,
-        );
-      }
-    }
-
-    // Otherwise, this is a Headscale error that we can just propagate.
-    throw error;
-  }
-}
+        return ok("Policy updated");
+      },
+    },
+  },
+});

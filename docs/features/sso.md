@@ -141,7 +141,7 @@ oidc:
 
 When a user signs in via OIDC, Headplane needs to link them to their
 corresponding Headscale user. This is important for features like showing a
-user's own machines, self-service pre-auth keys, and WebSSH.
+user's own machines, self-service auth keys, and WebSSH.
 
 ### Matching Strategy
 
@@ -157,26 +157,37 @@ Headplane uses a two-step matching strategy:
    back to comparing the user's email address from the OIDC `userinfo` endpoint
    against the email stored on the Headscale user record.
 
-Once a link is established, it's stored as a `headscale_user_id` in Headplane's
-database and reused on subsequent logins — so the matching only needs to succeed
-once.
+Only Headscale users that aren't already linked to another Headplane account
+are considered. Once a link is established, it's stored as a
+`headscale_user_id` in Headplane's database and reused on subsequent logins.
+
+Matching runs at sign-in and again whenever an unlinked user opens Headplane.
+If Headscale also uses OIDC, a user's Headscale account is created the first
+time one of their devices signs in, and Headplane links to it on its own. Users
+without dashboard access see a home page that waits for this and updates as
+soon as it happens.
 
 ### Headscale Without OIDC
 
 If your Headscale instance uses **local users** (created via
-`headscale users create`) rather than OIDC, automatic matching cannot work —
-local users have no `provider_id` or email to compare against.
+`headscale users create`) rather than OIDC, there's no `provider_id` to match.
+Email matching still works if the user was created with an email:
 
-In this case, Headplane will prompt the user during onboarding to manually
-select which Headscale user they are. This selection is persisted, so it only
-needs to happen once. After linking, all ownership-based features (viewing your
-own machines, self-service pre-auth keys, WebSSH) work normally.
+```sh
+headscale users create alice --email alice@example.com
+```
 
-::: tip
-If you skip the user selection during onboarding, you can still use Headplane
-— you just won't have ownership-based features. An admin can manage everything
-regardless of whether users are linked.
-:::
+Otherwise, users have to be linked by hand:
+
+- **Admins** (any role that can manage users) see a one-time screen after
+  signing in where they pick their own Headscale user. They can skip it and
+  link later from the **Users** page.
+- **Everyone else** is linked by an admin from the **Users** page. Until then,
+  their home page asks them to contact an administrator.
+
+Only admins can pick a user for themselves, because a link grants access to
+that user's machines and auth keys. Letting anyone pick would let a new account
+claim someone else's Headscale identity.
 
 ### Same Client vs. Different Clients
 
@@ -201,7 +212,7 @@ client application. In this case:
 If you use different clients **and** your IdP does not provide an `email` claim,
 Headplane will not be able to match users to their Headscale identity. Users
 will still be able to sign in, but they won't be linked to a Headscale user —
-meaning features like viewing their own machines or self-service pre-auth keys
+meaning features like viewing their own machines or self-service auth keys
 won't work.
 :::
 
@@ -216,10 +227,10 @@ determine what each user can do in the UI.
 | ----------------- | ------------------------------------------------------------------------------------------------------ |
 | **Owner**         | Full access to everything. Cannot be reassigned. Automatically granted to the first user who signs in. |
 | **Admin**         | Full access except the owner-specific flag. Can manage all users, machines, ACLs, DNS, and settings.   |
-| **Network Admin** | Can manage ACLs, DNS, and network settings. Can view machines and users. Can generate pre-auth keys.   |
+| **Network Admin** | Can manage ACLs, DNS, and network settings. Can view machines and users. Can generate auth keys.       |
 | **IT Admin**      | Can manage machines, users, and feature settings. Can configure IAM. Cannot modify ACLs or DNS.        |
-| **Auditor**       | Read-only access to everything. Can generate their own pre-auth keys.                                  |
-| **Viewer**        | Can view machines and users. Can generate their own pre-auth keys.                                     |
+| **Auditor**       | Read-only access to everything. Can generate their own auth keys.                                      |
+| **Viewer**        | Can view machines and users. Can generate their own auth keys.                                         |
 | **Member**        | No UI access. The user exists in Headplane's database but has not been granted any permissions.        |
 
 ### First Login (Owner Bootstrap)

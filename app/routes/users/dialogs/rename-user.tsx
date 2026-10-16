@@ -1,9 +1,10 @@
-import Dialog, { DialogPanel } from "~/components/dialog";
+import ActionDialog from "~/components/action-dialog";
 import Input from "~/components/input";
-import Text from "~/components/text";
-import Title from "~/components/title";
-import { User } from "~/types";
-import { USERNAME_PATTERN, USERNAME_RULE } from "~/utils/user";
+import type { User } from "~/types";
+import { fieldValidator } from "~/utils/form";
+import { USERNAME_RULE } from "~/utils/user";
+
+import { username } from "../schemas";
 
 interface RenameProps {
   user: User;
@@ -11,29 +12,27 @@ interface RenameProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+const validateUsername = fieldValidator(username);
+
 export default function RenameUser({ user, isOpen, setIsOpen }: RenameProps) {
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel>
-        <Title>Rename {user.name || user.displayName}?</Title>
-        <Text className="mb-6">
-          Enter a new username for {user.name || user.displayName}. Changing a username will not
-          update any ACL policies that may refer to this user by their old username.
-        </Text>
-        <input name="action_id" type="hidden" value="rename_user" />
-        <input name="headscale_user_id" type="hidden" value={user.id} />
-        <Input
-          defaultValue={user.name}
-          description={USERNAME_RULE}
-          minLength={2}
-          pattern={USERNAME_PATTERN}
-          required
-          title={USERNAME_RULE}
-          label="Username"
-          name="new_name"
-          placeholder="my-new-name"
-        />
-      </DialogPanel>
-    </Dialog>
+    <ActionDialog
+      description="ACL policies that refer to the old username aren't updated."
+      fields={{ headscale_user_id: user.id }}
+      intent="rename"
+      onOpenChange={setIsOpen}
+      open={isOpen}
+      submitLabel="Rename"
+      title={`Rename ${user.name || user.displayName}`}
+    >
+      <Input
+        defaultValue={user.name}
+        description={USERNAME_RULE}
+        label="Username"
+        name="name"
+        required
+        validate={validateUsername}
+      />
+    </ActionDialog>
   );
 }

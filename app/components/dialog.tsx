@@ -1,133 +1,101 @@
-import { AlertDialog } from "@base-ui/react/alert-dialog";
-import React, { cloneElement, useEffect, useRef } from "react";
-import { Form, type HTMLFormMethod } from "react-router";
+import { AlertDialog as BaseAlertDialog } from "@base-ui/react/alert-dialog";
+import { Dialog as BaseDialog } from "@base-ui/react/dialog";
+import React from "react";
 
-import Button, { type ButtonProps } from "~/components/button";
 import cn from "~/utils/cn";
-import { useLiveData } from "~/utils/live-data";
 
 export interface DialogProps {
-  children:
-    | [React.ReactElement<ButtonProps>, React.ReactElement<DialogPanelProps>]
-    | React.ReactElement<DialogPanelProps>;
-  isOpen?: boolean;
-  onOpenChange?: (isOpen: boolean) => void;
-}
-
-function Dialog(props: DialogProps) {
-  const { pause, resume } = useLiveData();
-  const { isOpen, onOpenChange } = props;
-
-  useEffect(() => {
-    if (isOpen) {
-      pause();
-    } else {
-      resume();
-    }
-  }, [isOpen]);
-
-  if (Array.isArray(props.children)) {
-    const [button, panel] = props.children;
-    return (
-      <AlertDialog.Root open={isOpen} onOpenChange={(open) => onOpenChange?.(open)}>
-        <AlertDialog.Trigger render={cloneElement(button)} />
-        <DialogOverlay>{panel}</DialogOverlay>
-      </AlertDialog.Root>
-    );
-  }
-
-  return (
-    <AlertDialog.Root open={isOpen} onOpenChange={(open) => onOpenChange?.(open)}>
-      <DialogOverlay>{props.children}</DialogOverlay>
-    </AlertDialog.Root>
-  );
-}
-
-export interface DialogPanelProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onOpenChangeComplete?: (open: boolean) => void;
+  trigger?: React.ReactElement;
+  className?: string;
   children: React.ReactNode;
-  variant?: "normal" | "destructive" | "unactionable";
-  onSubmit?: React.FormEventHandler<HTMLFormElement>;
-  method?: HTMLFormMethod;
-  isDisabled?: boolean;
 }
 
-function Panel(props: DialogPanelProps) {
-  const { children, onSubmit, isDisabled, variant, method = "POST" } = props;
-  const closeRef = useRef<HTMLButtonElement>(null);
+const backdropClass = cn(
+  "fixed inset-0 z-40 bg-backdrop",
+  "transition-opacity duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0",
+);
 
+const popupClass = cn(
+  "flex max-h-[90dvh] w-full max-w-lg flex-col gap-4 overflow-y-auto rounded-lg p-5",
+  "bg-raised border-overlay shadow-overlay outline-hidden",
+  "transition-[opacity,scale] duration-150",
+  "data-ending-style:scale-[0.98] data-ending-style:opacity-0",
+  "data-starting-style:scale-[0.98] data-starting-style:opacity-0",
+);
+
+export function Dialog({
+  open,
+  onOpenChange,
+  onOpenChangeComplete,
+  trigger,
+  className,
+  children,
+}: DialogProps) {
   return (
-    <AlertDialog.Popup
-      className={cn(
-        "flex w-full max-w-lg flex-col rounded-xl p-4",
-        "max-h-[90dvh]",
-        "outline-hidden",
-        "bg-white dark:bg-mist-900",
-        "border border-mist-200 dark:border-mist-800",
-        "shadow-overlay",
-      )}
+    <BaseDialog.Root
+      onOpenChange={(next) => onOpenChange?.(next)}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
     >
-      <Form
-        method={method ?? "POST"}
-        className="flex min-h-0 flex-1 flex-col"
-        onSubmit={(event) => {
-          if (onSubmit) {
-            onSubmit(event);
-          }
-
-          if (!event.defaultPrevented) {
-            closeRef.current?.click();
-          }
-        }}
-      >
-        {/* px-1 -mx-1 gives focus rings on inputs/buttons room to render
-            without being clipped by overflow-y-auto (which implicitly forces
-            overflow-x: auto per CSS spec). */}
-        <div className="-mx-1 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-1">
-          {children}
-        </div>
-        <div className="mt-5 flex shrink-0 justify-end gap-3">
-          {variant === "unactionable" ? (
-            <AlertDialog.Close render={<Button>Close</Button>} />
-          ) : (
-            <>
-              <AlertDialog.Close render={<Button>Cancel</Button>} />
-              <AlertDialog.Close ref={closeRef} className="hidden" aria-hidden tabIndex={-1} />
-              <Button
-                disabled={isDisabled}
-                type="submit"
-                variant={variant === "destructive" ? "danger" : "heavy"}
-              >
-                Confirm
-              </Button>
-            </>
-          )}
-        </div>
-      </Form>
-    </AlertDialog.Popup>
+      {trigger && <BaseDialog.Trigger render={trigger} />}
+      <BaseDialog.Portal>
+        <BaseDialog.Backdrop className={backdropClass} />
+        <BaseDialog.Viewport className="fixed inset-0 z-40 grid place-items-center p-4">
+          <BaseDialog.Popup className={cn(popupClass, className)}>{children}</BaseDialog.Popup>
+        </BaseDialog.Viewport>
+      </BaseDialog.Portal>
+    </BaseDialog.Root>
   );
 }
 
-function DialogOverlay({ children }: { children: React.ReactNode }) {
+export function AlertDialog({
+  open,
+  onOpenChange,
+  onOpenChangeComplete,
+  trigger,
+  className,
+  children,
+}: DialogProps) {
   return (
-    <AlertDialog.Portal>
-      <AlertDialog.Backdrop
-        className={cn(
-          "fixed inset-0 z-20 h-screen w-screen",
-          "bg-mist-900/30 dark:bg-mist-950/60",
-          "transition-opacity duration-100",
-        )}
-      />
-      <div
-        className={cn(
-          "fixed inset-0 z-20 h-screen w-screen",
-          "flex items-center justify-center p-4",
-        )}
-      >
-        {children}
-      </div>
-    </AlertDialog.Portal>
+    <BaseAlertDialog.Root
+      onOpenChange={(next) => onOpenChange?.(next)}
+      onOpenChangeComplete={onOpenChangeComplete}
+      open={open}
+    >
+      {trigger && <BaseAlertDialog.Trigger render={trigger} />}
+      <BaseAlertDialog.Portal>
+        <BaseAlertDialog.Backdrop className={backdropClass} />
+        <BaseAlertDialog.Viewport className="fixed inset-0 z-40 grid place-items-center p-4">
+          <BaseAlertDialog.Popup className={cn(popupClass, className)}>
+            {children}
+          </BaseAlertDialog.Popup>
+        </BaseAlertDialog.Viewport>
+      </BaseAlertDialog.Portal>
+    </BaseAlertDialog.Root>
   );
 }
 
-export { Panel as DialogPanel };
-export default Dialog;
+export function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof BaseDialog.Title>) {
+  return (
+    <BaseDialog.Title {...props} className={cn("text-lg font-semibold text-balance", className)} />
+  );
+}
+
+export function DialogDescription({
+  className,
+  ...props
+}: React.ComponentProps<typeof BaseDialog.Description>) {
+  return <BaseDialog.Description {...props} className={cn("-mt-2 text-muted", className)} />;
+}
+
+export function DialogActions({ className, ...props }: React.ComponentProps<"div">) {
+  return <div {...props} className={cn("mt-1 flex justify-end gap-2", className)} />;
+}
+
+export const DialogClose = BaseDialog.Close;

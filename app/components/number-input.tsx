@@ -1,10 +1,11 @@
 import { NumberField } from "@base-ui/react/number-field";
 import { Minus, Plus } from "lucide-react";
 
+import Field, { controlClass } from "~/components/field";
 import cn from "~/utils/cn";
 
 export interface NumberInputProps {
-  label?: string;
+  label: string;
   name?: string;
   description?: string;
   required?: boolean;
@@ -17,54 +18,42 @@ export interface NumberInputProps {
   onValueChange?: (value: number | null) => void;
 }
 
-export default function NumberInput(props: NumberInputProps) {
-  const { label, name, description } = props;
+const stepperClass = cn(
+  "grid size-7 place-items-center rounded-sm text-muted",
+  "hover:bg-hover hover:text-fg",
+);
 
+export default function NumberInput({
+  label,
+  name,
+  description,
+  disabled,
+  ...props
+}: NumberInputProps) {
+  // name goes on Root, which submits the raw number via a hidden input.
+  // The visible Input holds the locale-formatted string.
   return (
-    // `name` belongs on the Root, not the Input. The Input is a text field that
-    // holds the locale-formatted value ("365,000", "365 000", "365.000"), while
-    // the Root renders a hidden number input carrying the raw value. Naming the
-    // Input would submit the formatted string and break server-side parsing.
-    <NumberField.Root
-      className="flex flex-col gap-1"
-      name={name}
-      defaultValue={props.defaultValue}
-      value={props.value}
-      onValueChange={props.onValueChange}
-      min={props.min}
-      max={props.max}
-      step={props.step}
-      disabled={props.disabled}
-      required={props.required}
-    >
-      {label && (
-        <NumberField.ScrubArea>
-          <label className={cn("text-sm font-medium", "text-mist-700 dark:text-mist-200")}>
-            <NumberField.ScrubAreaCursor />
-            {label}
-          </label>
-        </NumberField.ScrubArea>
-      )}
-      <NumberField.Group
-        className={cn(
-          "flex items-center gap-1 rounded-md pr-1",
-          "focus-within:outline-hidden focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
-          "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
-          "bg-white dark:bg-mist-900",
-          "border border-mist-200 dark:border-mist-800",
-        )}
+    <Field description={description} disabled={disabled} label={label} name={name}>
+      <NumberField.Root
+        defaultValue={props.defaultValue}
+        max={props.max}
+        min={props.min}
+        name={name}
+        onValueChange={props.onValueChange}
+        required={props.required}
+        step={props.step}
+        value={props.value}
       >
-        <NumberField.Input className="w-full rounded-l-md bg-transparent py-2 pl-3 text-sm focus:outline-hidden" />
-        <NumberField.Decrement aria-label="Decrement" className="h-7.5 w-7.5 rounded-lg p-1">
-          <Minus className="h-4 w-4" />
-        </NumberField.Decrement>
-        <NumberField.Increment aria-label="Increment" className="h-7.5 w-7.5 rounded-lg p-1">
-          <Plus className="h-4 w-4" />
-        </NumberField.Increment>
-      </NumberField.Group>
-      {description && (
-        <div className={cn("text-xs", "text-mist-500 dark:text-mist-400")}>{description}</div>
-      )}
-    </NumberField.Root>
+        <NumberField.Group className={cn(controlClass, "flex items-center pr-0.5")}>
+          <NumberField.Input className="h-full w-full bg-transparent pl-2.5 outline-hidden" />
+          <NumberField.Decrement aria-label="Decrement" className={stepperClass}>
+            <Minus className="size-3.5" />
+          </NumberField.Decrement>
+          <NumberField.Increment aria-label="Increment" className={stepperClass}>
+            <Plus className="size-3.5" />
+          </NumberField.Increment>
+        </NumberField.Group>
+      </NumberField.Root>
+    </Field>
   );
 }

@@ -2,21 +2,22 @@ import cn from "~/utils/cn";
 
 export interface StatusCircleProps {
   isOnline: boolean;
+  isExpired?: boolean;
   className?: string;
 }
 
-export default function StatusCircle({ isOnline, className }: StatusCircleProps) {
+export default function StatusCircle({ isOnline, isExpired, className }: StatusCircleProps) {
+  const label = isExpired ? "Expired" : isOnline ? "Online" : "Offline";
+
   return (
-    <svg
+    <span
+      aria-label={label}
       className={cn(
-        isOnline ? "text-green-600 dark:text-green-500" : "text-mist-200 dark:text-mist-800",
+        "inline-block size-[7px] shrink-0 rounded-full",
+        isExpired ? "bg-bad" : isOnline ? "bg-ok" : "bg-faint",
         className,
       )}
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <title>{isOnline ? "Online" : "Offline"}</title>
-      <circle cx="12" cy="12" r="8" />
-    </svg>
+      role="img"
+    />
   );
 }

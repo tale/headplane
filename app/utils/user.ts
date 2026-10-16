@@ -1,7 +1,12 @@
 import type { User } from "~/types/User";
 
+// Headscale 0.28+ assigns tagged nodes to this placeholder user.
+export function isTaggedDevicesUser(user: User): boolean {
+  return user.name === "tagged-devices";
+}
+
 export function getUserDisplayName(user: User): string {
-  if (user.name === "tagged-devices") {
+  if (isTaggedDevicesUser(user)) {
     return "Tag-owned";
   }
 

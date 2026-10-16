@@ -1,23 +1,16 @@
+import { Check, CircleQuestionMark, Menu as MenuIcon, Monitor, Moon, Sun } from "lucide-react";
 import {
-  Check,
-  CircleQuestionMark,
-  CircleUser,
-  Globe,
-  Lock,
-  Monitor,
-  Moon,
-  Server,
-  Settings,
-  Sun,
-  Users,
-} from "lucide-react";
-import { NavLink, unstable_useRoute as useRoute, useLocation, useSubmit } from "react-router";
+  NavLink,
+  unstable_useRoute as useRoute,
+  useLocation,
+  useNavigate,
+  useSubmit,
+} from "react-router";
 
+import Avatar from "~/components/avatar";
 import Link from "~/components/link";
+import LogoMark from "~/components/logo-mark";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
-import logoBg from "~/logo/dark-bg.svg";
-import logoDark from "~/logo/dark.svg";
-import logoLight from "~/logo/light.svg";
 import cn from "~/utils/cn";
 import type { ColorScheme } from "~/utils/color-scheme";
 
@@ -41,11 +34,11 @@ export interface HeaderProps {
 }
 
 const tabs = [
-  { to: "/machines", icon: Server, label: "Machines", key: "machines" },
-  { to: "/users", icon: Users, label: "Users", key: "users" },
-  { to: "/acls", icon: Lock, label: "Access Control", key: "policy" },
-  { to: "/dns", icon: Globe, label: "DNS", key: "dns" },
-  { to: "/settings", icon: Settings, label: "Settings", key: "settings" },
+  { to: "/machines", label: "Machines", key: "machines" },
+  { to: "/users", label: "Users", key: "users" },
+  { to: "/acls", label: "Access controls", key: "policy" },
+  { to: "/dns", label: "DNS", key: "dns" },
+  { to: "/settings", label: "Settings", key: "settings" },
 ] as const;
 
 const colorSchemes = [
@@ -60,6 +53,7 @@ const colorSchemes = [
 
 export default function Header({ user, access, configAvailable }: HeaderProps) {
   const submit = useSubmit();
+  const navigate = useNavigate();
   const showTabs = access.ui;
   const rootRoute = useRoute("root");
   const currentColorScheme: ColorScheme = rootRoute?.loaderData?.colorScheme ?? "system";
@@ -68,59 +62,61 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
   // following the redirect on the client.
   const location = useLocation();
   const returnTo = location.pathname + location.search;
+  const visibleTabs = tabs.filter(
+    (tab) => access[tab.key] && ((tab.key !== "dns" && tab.key !== "settings") || configAvailable),
+  );
 
   return (
-    <header
-      className={cn(
-        "bg-mist-200 dark:bg-mist-950 text-mist-800 dark:text-mist-200",
-        "dark:border-b dark:border-mist-800 shadow-inner",
-      )}
-    >
-      <div className="container flex items-center gap-x-4 py-4">
-        <div className="flex min-w-0 items-center gap-x-4">
-          <div className="flex items-center gap-x-2">
-            <picture className="min-w-8">
-              <source srcSet={logoLight} media="(prefers-color-scheme: dark)" />
-              <source srcSet={logoDark} media="(prefers-color-scheme: light)" />
-              <img src={logoBg} alt="Headplane logo" />
-            </picture>
-            <h1 className="text-2xl font-semibold">headplane</h1>
-          </div>
-          {showTabs && (
-            <nav className="hidden items-center gap-x-2 overflow-x-auto p-1 text-sm font-medium md:flex">
-              {tabs.map((tab) => {
-                if (!access[tab.key]) return null;
-                if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
-
-                return (
-                  <NavLink
-                    key={tab.to}
-                    className={({ isActive }) =>
-                      cn(
-                        "px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                        "hover:bg-mist-300/50 dark:hover:bg-mist-800",
-                        "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                        "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-                        isActive
-                          ? "bg-mist-300/70 dark:bg-mist-800 text-mist-900 dark:text-mist-50"
-                          : "text-mist-600 dark:text-mist-300",
-                      )
-                    }
-                    prefetch="intent"
-                    to={tab.to}
-                  >
-                    <tab.icon className="w-4" />
-                    {tab.label}
-                  </NavLink>
-                );
-              })}
-            </nav>
-          )}
+    <header className={cn("sticky top-0 z-20 bg-surface text-fg", "border-b border-line")}>
+      <div className="container flex h-13 items-center gap-x-5">
+        <div className="flex items-center gap-x-2">
+          <LogoMark className="size-[18px] shrink-0" />
+          <span className="text-sm font-semibold tracking-tight">headplane</span>
         </div>
-        <div className="ml-auto grid shrink-0 grid-cols-2 gap-x-4">
+        {showTabs && (
+          <nav className="hidden h-full min-w-0 gap-x-0.5 overflow-x-auto text-[13px] font-medium md:flex">
+            {visibleTabs.map((tab) => (
+              <NavLink
+                key={tab.to}
+                className={({ isActive }) =>
+                  cn(
+                    "flex h-full items-center px-2.5 text-nowrap",
+                    "focus-ring hover:text-fg",
+                    isActive ? "text-fg shadow-[inset_0_-2px_0_var(--color-accent)]" : "text-muted",
+                  )
+                }
+                prefetch="intent"
+                to={tab.to}
+              >
+                {tab.label}
+              </NavLink>
+            ))}
+          </nav>
+        )}
+        <div className="ml-auto flex shrink-0 items-center gap-x-2">
+          {showTabs && (
+            <Menu>
+              <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-8 rounded-md md:hidden">
+                <MenuIcon aria-label="Navigation" className="size-4" />
+              </MenuTrigger>
+              <MenuContent align="end">
+                {visibleTabs.map((tab) => (
+                  <MenuItem key={tab.to} onClick={() => navigate(tab.to)}>
+                    <span
+                      className={cn(
+                        location.pathname.startsWith(tab.to) && "text-accent font-medium",
+                      )}
+                    >
+                      {tab.label}
+                    </span>
+                  </MenuItem>
+                ))}
+              </MenuContent>
+            </Menu>
+          )}
           <Menu>
-            <MenuTrigger className="size-8 rounded-full p-1">
-              <CircleQuestionMark className="w-5" />
+            <MenuTrigger className="text-muted hover:bg-hover hover:text-fg size-8 rounded-md">
+              <CircleQuestionMark aria-label="Help" className="size-4" />
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem>
@@ -141,24 +137,20 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
             </MenuContent>
           </Menu>
           <Menu>
-            <MenuTrigger className="size-8 overflow-hidden rounded-full">
-              {user.picture ? (
-                <img alt={user.name} className="size-8" src={user.picture} />
-              ) : (
-                <CircleUser className="size-8" />
-              )}
+            <MenuTrigger className="rounded-full">
+              <Avatar name={user.name} src={user.picture} />
             </MenuTrigger>
             <MenuContent align="end">
               <MenuItem disabled>
-                <div className="text-mist-900 dark:text-mist-50">
+                <div className="text-fg">
                   {user.subject === "api_key" ? (
                     <>
-                      <p className="font-bold">API Key</p>
+                      <p className="font-semibold">API Key</p>
                       <p>{user.name}</p>
                     </>
                   ) : (
                     <>
-                      <p className="font-bold">{user.name}</p>
+                      <p className="font-semibold">{user.name}</p>
                       {user.email && <p>{user.email}</p>}
                     </>
                   )}
@@ -193,38 +185,6 @@ export default function Header({ user, access, configAvailable }: HeaderProps) {
           </Menu>
         </div>
       </div>
-      {showTabs && (
-        <div className="block overflow-x-auto p-2 md:hidden">
-          <nav className="flex items-center gap-x-2 text-sm font-medium">
-            {tabs.map((tab) => {
-              if (!access[tab.key]) return null;
-              if ((tab.key === "dns" || tab.key === "settings") && !configAvailable) return null;
-
-              return (
-                <NavLink
-                  key={tab.to}
-                  className={({ isActive }) =>
-                    cn(
-                      "relative px-3 py-1.5 flex items-center gap-x-1.5 rounded-md text-nowrap",
-                      "hover:bg-mist-300/50 dark:hover:bg-mist-800",
-                      "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-                      "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-                      "text-mist-600 dark:text-mist-300",
-                      isActive &&
-                        "text-mist-900 dark:text-mist-50 after:content-[''] after:absolute after:-bottom-2 after:inset-x-1 after:h-0.5 after:rounded-full after:bg-indigo-500",
-                    )
-                  }
-                  prefetch="intent"
-                  to={tab.to}
-                >
-                  <tab.icon className="w-4" />
-                  {tab.label}
-                </NavLink>
-              );
-            })}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

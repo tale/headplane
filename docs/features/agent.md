@@ -104,7 +104,7 @@ Under normal circumstances, the agent connects headlessly using the auto-generat
 pre-auth key and no manual interaction is required. If your Headscale server is
 configured to require interactive approval, Headplane detects the auth URL the
 agent prints and automatically approves the request using the configured
-`headscale.api_key`. The Settings page still shows the approval link as a
+`headscale.api_key`. **Settings → Agent** still shows the approval link as a
 fallback in case auto-approval fails.
 
 ## Usage

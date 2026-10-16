@@ -9,7 +9,7 @@ export default function Code({ children, className }: CodeProps) {
   return (
     <code
       className={cn(
-        "bg-mist-100 dark:bg-mist-800 px-1.5 py-0.5 font-mono rounded-sm text-[0.875em]",
+        "bg-subtle border border-line px-1 py-0.5 font-mono rounded-sm text-[0.875em]",
         className,
       )}
     >

@@ -9,7 +9,7 @@ import { getBootstrapClient, getNode, getRuntimeClient, HS_VERSIONS } from "../s
 
 function registerRequest(registerKey: string) {
   const form = new FormData();
-  form.set("action_id", "register");
+  form.set("intent", "register");
   form.set("register_key", registerKey);
   form.set("user", "node-reg@");
 
