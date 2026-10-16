@@ -51,6 +51,23 @@ interface SyncState {
 
 const MIN_RESTART_DELAY_MS = 1_000;
 const MAX_RESTART_DELAY_MS = 60_000;
+const SYNC_STEP_TIMEOUT_MS = 20_000;
+
+class TimeoutError extends Error {}
+
+/**
+ * Rejects with a `TimeoutError` if `promise` doesn't settle in time. The work
+ * itself keeps running; this only stops a hung Headscale or agent from
+ * blocking every sync after it.
+ */
+function withTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new TimeoutError(message)), SYNC_STEP_TIMEOUT_MS);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
 
 async function hasExistingState(workDir: string): Promise<boolean> {
   const path = join(workDir, "tailscaled.state");
@@ -139,13 +156,16 @@ export async function createAgentManager(
 
   async function generateAuthKey(): Promise<string> {
     const expiration = new Date(Date.now() + 5 * 60_000);
-    const pak = await apiClient.preAuthKeys.create({
-      user: null,
-      ephemeral: false,
-      reusable: false,
-      expiration,
-      aclTags: [`tag:${hostName}`],
-    });
+    const pak = await withTimeout(
+      apiClient.preAuthKeys.create({
+        user: null,
+        ephemeral: false,
+        reusable: false,
+        expiration,
+        aclTags: [`tag:${hostName}`],
+      }),
+      "Headscale didn't create an auth key in time",
+    );
     return pak.key;
   }
 
@@ -306,11 +326,17 @@ export async function createAgentManager(
 
     if (previousId && nodes.some((node) => node.id === previousId)) {
       try {
-        await apiClient.nodes.delete(previousId);
+        await withTimeout(
+          apiClient.nodes.delete(previousId),
+          "Headscale didn't delete the previous node in time",
+        );
         log.info("agent", "Removed the agent's previous node %s", previousId);
 
         // Headscale suffixed the new node's name while the old one held it.
-        await apiClient.nodes.rename(currentId, hostName);
+        await withTimeout(
+          apiClient.nodes.rename(currentId, hostName),
+          "Headscale didn't rename the agent's node in time",
+        );
       } catch (error) {
         // Keep the record so the next sync retries the delete.
         log.warn(
@@ -326,11 +352,21 @@ export async function createAgentManager(
     await writeFile(recordPath, currentId);
   }
 
-  async function ensureProcess(): Promise<ChildProcess> {
+  // A start that outlives a sync's timeout is shared with the next sync
+  // instead of racing it, so a slow Headscale can't lead to two agents.
+  let starting: Promise<ChildProcess> | undefined;
+  function ensureProcess(): Promise<ChildProcess> {
     if (proc && proc.exitCode === null) {
-      return proc;
+      return Promise.resolve(proc);
     }
 
+    starting ??= startProcess().finally(() => {
+      starting = undefined;
+    });
+    return starting;
+  }
+
+  async function startProcess(): Promise<ChildProcess> {
     // A sync still in flight during dispose must not start a fresh agent.
     if (disposed) {
       throw new Error("The agent manager has been shut down");
@@ -344,13 +380,13 @@ export async function createAgentManager(
       return spawnAgent("");
     }
 
-    needsAuthKey = false;
     log.info("agent", "Registering the agent with a pre-auth key");
     const authKey = await generateAuthKey();
     if (disposed) {
       throw new Error("The agent manager has been shut down");
     }
 
+    needsAuthKey = false;
     return spawnAgent(authKey);
   }
 
@@ -381,8 +417,22 @@ export async function createAgentManager(
 
     isSyncing = true;
     try {
-      const child = await ensureProcess();
-      const output = await requestSync(child);
+      const child = await withTimeout(ensureProcess(), "The agent didn't start in time");
+
+      let output: AgentOutput;
+      try {
+        output = await withTimeout(requestSync(child), "The agent didn't answer in time");
+      } catch (error) {
+        // A hung agent never answers again, so replace it right away. An agent
+        // that exited is restarted with backoff by its exit handler instead.
+        if (error instanceof TimeoutError && proc === child) {
+          responseHandler = null;
+          pendingResync = true;
+          await stopProcess(child);
+        }
+
+        throw error;
+      }
 
       if (output.error) {
         consecutiveErrors++;
@@ -398,7 +448,10 @@ export async function createAgentManager(
 
       // tsnet keeps reporting a stale identity (e.g. its node was deleted)
       // as connected, so Headscale is the only reliable source of truth.
-      const nodes = await apiClient.nodes.list();
+      const nodes = await withTimeout(
+        apiClient.nodes.list(),
+        "Headscale didn't list nodes in time",
+      );
       const self = nodes.find((node) => node.nodeKey === output.self);
       if (!self) {
         log.warn("agent", "Headscale doesn't know the agent's node, re-registering it");
@@ -470,7 +523,10 @@ export async function createAgentManager(
    */
   async function pruneStaleHostInfo() {
     try {
-      const nodes = await apiClient.nodes.list();
+      const nodes = await withTimeout(
+        apiClient.nodes.list(),
+        "Headscale didn't list nodes in time",
+      );
       const activeKeys = nodes.map((n) => n.nodeKey);
 
       if (activeKeys.length === 0) {
@@ -496,11 +552,17 @@ export async function createAgentManager(
 
   async function pruneEphemeralNodes() {
     try {
-      const nodes = await apiClient.nodes.list();
+      const nodes = await withTimeout(
+        apiClient.nodes.list(),
+        "Headscale didn't list nodes in time",
+      );
       const toPrune = nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online);
 
       for (const node of toPrune) {
-        await apiClient.nodes.delete(node.id);
+        await withTimeout(
+          apiClient.nodes.delete(node.id),
+          "Headscale didn't delete a node in time",
+        );
         log.info("agent", "Pruned offline ephemeral node %s", node.givenName);
       }
     } catch (error) {
