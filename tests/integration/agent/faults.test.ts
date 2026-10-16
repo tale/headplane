@@ -208,6 +208,20 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(after.id).toBe(node.id);
   });
 
+  test("shutting down mid-sync never leaves an agent running", async () => {
+    harness = await createHarness(version);
+    harness.proxy.setLatency(3_000);
+
+    // The first sync is now waiting on Headscale for an auth key.
+    await harness.createManager();
+    await sleep(500);
+    await harness.stopAgent();
+
+    harness.proxy.setLatency(0);
+    await expectAtMostProcesses(0, 8_000);
+    expect(await harness.nodes()).toHaveLength(0);
+  });
+
   test("concurrent sync requests start a single agent", async () => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();

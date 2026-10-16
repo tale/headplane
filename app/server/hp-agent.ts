@@ -298,6 +298,11 @@ export async function createAgentManager(
       return proc;
     }
 
+    // A sync still in flight during dispose must not start a fresh agent.
+    if (disposed) {
+      throw new Error("The agent manager has been shut down");
+    }
+
     // Passing a key alongside existing state makes some Headscale versions
     // register a duplicate node, and leaves an unused key behind on others.
     const stateExists = await hasExistingState(workDir);
@@ -308,7 +313,12 @@ export async function createAgentManager(
 
     needsAuthKey = false;
     log.info("agent", "Registering the agent with a pre-auth key");
-    return spawnAgent(await generateAuthKey());
+    const authKey = await generateAuthKey();
+    if (disposed) {
+      throw new Error("The agent manager has been shut down");
+    }
+
+    return spawnAgent(authKey);
   }
 
   function sendSync(child: ChildProcess): Promise<string> {

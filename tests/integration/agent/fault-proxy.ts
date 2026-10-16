@@ -15,6 +15,7 @@ export type FaultMode = "up" | "down" | "blackhole";
  */
 export async function createFaultProxy(target: URL) {
   let mode: FaultMode = "up";
+  let latencyMs = 0;
   const sockets = new Set<Socket>();
 
   function track(socket: Socket) {
@@ -36,7 +37,20 @@ export async function createFaultProxy(target: URL) {
 
     const upstream = connect(Number(target.port), target.hostname);
     track(upstream);
-    client.pipe(upstream).pipe(client);
+    upstream.pipe(client);
+
+    // Requests are delayed per chunk rather than per connection, since API
+    // clients reuse keep-alive connections opened before the delay was set.
+    client.on("data", (chunk) => {
+      if (latencyMs === 0) {
+        upstream.write(chunk);
+        return;
+      }
+
+      setTimeout(() => upstream.write(chunk), latencyMs);
+    });
+
+    client.on("end", () => upstream.end());
     client.on("close", () => upstream.destroy());
     upstream.on("close", () => client.destroy());
   });
@@ -58,6 +72,11 @@ export async function createFaultProxy(target: URL) {
       for (const socket of sockets) {
         socket.destroy();
       }
+    },
+
+    /** Delays every request to Headscale by `ms`. */
+    setLatency(ms: number) {
+      latencyMs = ms;
     },
 
     async close() {
