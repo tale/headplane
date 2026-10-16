@@ -33,6 +33,7 @@
 - Fields with an error keep their red border while focused instead of turning blue.
 - Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
 - The agent no longer creates a new auth key every time Headplane restarts, and on Headscale 0.28 it no longer registers a duplicate agent machine on restart. If the agent's machine is deleted from Headscale, the agent now registers again on its own instead of silently staying signed out.
+- If the agent's saved state is corrupt, it now registers again instead of failing on every start. Whenever the agent registers again, it removes its previous machine from Headscale and keeps its usual name, instead of leaving an offline duplicate and showing up as `headplane-agent-1`.
 
 # 0.8.1 (October 16, 2026)
 

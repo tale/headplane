@@ -1,13 +1,13 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import { once } from "node:events";
-import { access, constants, mkdir, stat } from "node:fs/promises";
+import { access, constants, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createInterface } from "node:readline";
 
 import { inArray, notInArray } from "drizzle-orm";
 import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 
-import { HostInfo } from "~/types";
+import { HostInfo, type Machine } from "~/types";
 import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
@@ -50,10 +50,23 @@ interface SyncState {
 }
 
 async function hasExistingState(workDir: string): Promise<boolean> {
+  const path = join(workDir, "tailscaled.state");
+  let raw: string;
   try {
-    await stat(join(workDir, "tailscaled.state"));
+    raw = await readFile(path, "utf8");
+  } catch {
+    return false;
+  }
+
+  try {
+    JSON.parse(raw);
     return true;
   } catch {
+    // A truncated or corrupt state can never connect, so set it aside and
+    // register a fresh identity instead of crash looping on it.
+    const aside = `${path}.corrupt-${Date.now()}`;
+    await rename(path, aside);
+    log.warn("agent", "Agent state is corrupt, moved it to %s", aside);
     return false;
   }
 }
@@ -244,6 +257,42 @@ export async function createAgentManager(
     clearTimeout(timeout);
   }
 
+  // Re-registering leaves the agent's previous node behind in Headscale. Only
+  // a node this agent recorded as its own is ever deleted, never one matched
+  // by name or tag, so other Headplane instances' agents are left alone.
+  async function replacePreviousNode(currentId: string, nodes: Machine[]) {
+    const recordPath = join(workDir, "headplane-node-id");
+    const previousId = await readFile(recordPath, "utf8").then(
+      (id) => id.trim(),
+      () => undefined,
+    );
+
+    if (previousId === currentId) {
+      return;
+    }
+
+    if (previousId && nodes.some((node) => node.id === previousId)) {
+      try {
+        await apiClient.nodes.delete(previousId);
+        log.info("agent", "Removed the agent's previous node %s", previousId);
+
+        // Headscale suffixed the new node's name while the old one held it.
+        await apiClient.nodes.rename(currentId, hostName);
+      } catch (error) {
+        // Keep the record so the next sync retries the delete.
+        log.warn(
+          "agent",
+          "Failed to remove the agent's previous node %s: %s",
+          previousId,
+          headscaleErrorMessage(error) ?? String(error),
+        );
+        return;
+      }
+    }
+
+    await writeFile(recordPath, currentId);
+  }
+
   async function ensureProcess(): Promise<ChildProcess> {
     if (proc && proc.exitCode === null) {
       return proc;
@@ -307,13 +356,16 @@ export async function createAgentManager(
       // tsnet keeps reporting a stale identity (e.g. its node was deleted)
       // as connected, so Headscale is the only reliable source of truth.
       const nodes = await apiClient.nodes.list();
-      if (!nodes.some((node) => node.nodeKey === output.self)) {
+      const self = nodes.find((node) => node.nodeKey === output.self);
+      if (!self) {
         log.warn("agent", "Headscale doesn't know the agent's node, re-registering it");
         needsAuthKey = true;
         pendingResync = true;
         await stopProcess(child);
         return;
       }
+
+      await replacePreviousNode(self.id, nodes);
 
       consecutiveErrors = 0;
       const keys = Object.keys(output.hosts);
