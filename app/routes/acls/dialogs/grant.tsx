@@ -82,8 +82,8 @@ export default function GrantDialog({
         values={draft.ip}
       />
       <TokenList
-        description="Optional. Tags of the subnet routers the traffic must go through. Only tags are allowed."
-        emptyText="Traffic is not routed through a subnet router"
+        description="Optional. Tags of the subnet routers or exit nodes the traffic must go through. For exit nodes, use autogroup:internet as the destination. Only tags are allowed."
+        emptyText="Traffic is not routed through a specific node"
         label="Via"
         onChange={(via) => setDraft({ ...draft, via })}
         placeholder="tag:router"
