@@ -1,0 +1,36 @@
+name: Release Helm Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "kubernetes/headplane/**"
+
+jobs:
+  release:
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | nix shell nixpkgs#kubernetes-helm -c helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Package and Push Chart
+        run: |
+          nix shell nixpkgs#kubernetes-helm -c helm package kubernetes/headplane -d .helm-pkg
+          for pkg in .helm-pkg/*.tgz; do
+            nix shell nixpkgs#kubernetes-helm -c helm push "$pkg" oci://ghcr.io/${{ github.repository_owner }}
+          done
