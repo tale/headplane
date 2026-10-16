@@ -65,7 +65,7 @@ export default function AddAuthKey({
       submitLabel="Create key"
       success={({ key }) => (
         <>
-          <DialogTitle>Pre-auth key created</DialogTitle>
+          <DialogTitle>Auth key created</DialogTitle>
           <DialogDescription>Copy the key now. It won&apos;t be shown again.</DialogDescription>
           <CodeBlock>{key}</CodeBlock>
           <p className="text-muted">Register a device with it:</p>
@@ -170,7 +170,7 @@ function AuthKeyFields({ users, selfServiceOnly, currentUser }: AuthKeyFieldsPro
           <>
             Devices are removed once they go offline.{" "}
             <Link external styled to="https://tailscale.com/kb/1111/ephemeral-nodes">
-              Learn more
+              Docs
             </Link>
           </>
         }

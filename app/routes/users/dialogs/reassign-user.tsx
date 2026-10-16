@@ -29,7 +29,7 @@ export default function ReassignUser({
         <>
           Roles decide what the user can access in Headplane.{" "}
           <Link external styled to="https://tailscale.com/kb/1138/user-roles">
-            Learn more
+            Docs
           </Link>
         </>
       }

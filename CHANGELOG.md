@@ -19,6 +19,7 @@
 - People without dashboard access get a new home page that walks through installing Tailscale and connecting it to this network, and shows whether their account is linked yet. It updates live, so it notices as soon as their first device signs in.
 - Error pages are redesigned. Inside the app, an error keeps the navigation bar and explains what went wrong in a sentence, with raw details tucked under **Details** and a **Try again** button where retrying can help. Errors that stop the app from loading, and unknown addresses, use the sign-in layout.
 - The routes dialog and the lists in the tags, groups, auth key, and policy rule dialogs use the same rows as the DNS and Settings pages, with a **Remove** button on each entry instead of an X.
+- Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 

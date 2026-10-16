@@ -141,7 +141,7 @@ oidc:
 
 When a user signs in via OIDC, Headplane needs to link them to their
 corresponding Headscale user. This is important for features like showing a
-user's own machines, self-service pre-auth keys, and WebSSH.
+user's own machines, self-service auth keys, and WebSSH.
 
 ### Matching Strategy
 
@@ -212,7 +212,7 @@ client application. In this case:
 If you use different clients **and** your IdP does not provide an `email` claim,
 Headplane will not be able to match users to their Headscale identity. Users
 will still be able to sign in, but they won't be linked to a Headscale user —
-meaning features like viewing their own machines or self-service pre-auth keys
+meaning features like viewing their own machines or self-service auth keys
 won't work.
 :::
 
@@ -227,10 +227,10 @@ determine what each user can do in the UI.
 | ----------------- | ------------------------------------------------------------------------------------------------------ |
 | **Owner**         | Full access to everything. Cannot be reassigned. Automatically granted to the first user who signs in. |
 | **Admin**         | Full access except the owner-specific flag. Can manage all users, machines, ACLs, DNS, and settings.   |
-| **Network Admin** | Can manage ACLs, DNS, and network settings. Can view machines and users. Can generate pre-auth keys.   |
+| **Network Admin** | Can manage ACLs, DNS, and network settings. Can view machines and users. Can generate auth keys.       |
 | **IT Admin**      | Can manage machines, users, and feature settings. Can configure IAM. Cannot modify ACLs or DNS.        |
-| **Auditor**       | Read-only access to everything. Can generate their own pre-auth keys.                                  |
-| **Viewer**        | Can view machines and users. Can generate their own pre-auth keys.                                     |
+| **Auditor**       | Read-only access to everything. Can generate their own auth keys.                                      |
+| **Viewer**        | Can view machines and users. Can generate their own auth keys.                                         |
 | **Member**        | No UI access. The user exists in Headplane's database but has not been granted any permissions.        |
 
 ### First Login (Owner Bootstrap)

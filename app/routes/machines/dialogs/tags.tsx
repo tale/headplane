@@ -29,7 +29,7 @@ export default function Tags({ machine, isOpen, setIsOpen, existingTags, policyT
         <>
           Tags let your access control policy refer to machines by role.{" "}
           <Link external styled to="https://tailscale.com/kb/1068/acl-tags">
-            Learn more
+            Docs
           </Link>
         </>
       }

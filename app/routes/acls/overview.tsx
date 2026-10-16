@@ -228,7 +228,7 @@ export default function Page({
           setCodePolicy(policy);
         }}
       >
-        Discard Changes
+        Discard changes
       </Button>
     </div>
   );

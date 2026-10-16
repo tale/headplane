@@ -42,7 +42,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
         <p className="text-muted">
           Reach devices that can&apos;t run Tailscale through IP ranges this machine advertises.{" "}
           <Link external styled to="https://tailscale.com/kb/1019/subnets">
-            Learn more
+            Docs
           </Link>
         </p>
         {subnets.length === 0 ? (
@@ -73,7 +73,7 @@ export default function Routes({ node, isOpen, setIsOpen }: RoutesProps) {
         <p className="text-muted">
           Let devices send their internet traffic through this machine.{" "}
           <Link external styled to="https://tailscale.com/kb/1103/exit-nodes">
-            Learn more
+            Docs
           </Link>
         </p>
         {node.customRouting.exitRoutes.length === 0 ? (

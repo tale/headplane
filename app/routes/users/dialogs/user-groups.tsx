@@ -38,7 +38,7 @@ export default function UserGroups({
         <>
           Groups live in the ACL policy, so saving rewrites its <Code>groups</Code> section.{" "}
           <Link external styled to="https://tailscale.com/kb/1018/acls">
-            Learn more
+            Docs
           </Link>
         </>
       }

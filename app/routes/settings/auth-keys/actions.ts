@@ -34,7 +34,7 @@ export const authKeysAction = createAction({
     const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
     const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
     if (!canGenerateAny && !canGenerateOwn) {
-      throw new ActionError("You don't have permission to manage pre-auth keys.", 403);
+      throw new ActionError("You don't have permission to manage auth keys.", 403);
     }
 
     async function requireOwnUser(userId: string) {
@@ -49,7 +49,7 @@ export const authKeysAction = createAction({
         (principal.user.headscaleUserId === userId ||
           getOidcSubject(user) === principal.user.subject);
       if (!ownsUser) {
-        throw new ActionError("You can only manage your own pre-auth keys.", 403);
+        throw new ActionError("You can only manage your own auth keys.", 403);
       }
     }
 
