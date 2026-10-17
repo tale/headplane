@@ -4,7 +4,7 @@ import { access, constants, mkdir, readFile, rename, writeFile } from "node:fs/p
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 
-import { inArray, notInArray } from "drizzle-orm";
+import { inArray, notInArray, sql } from "drizzle-orm";
 import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 
 import { HostInfo, type Machine } from "~/types";
@@ -53,35 +53,13 @@ const MIN_RESTART_DELAY_MS = 1_000;
 const MAX_RESTART_DELAY_MS = 60_000;
 const SYNC_STEP_TIMEOUT_MS = 20_000;
 
-class TimeoutError extends Error {}
-
 function withTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new TimeoutError(message)), SYNC_STEP_TIMEOUT_MS);
+    timer = setTimeout(() => reject(new Error(message)), SYNC_STEP_TIMEOUT_MS);
   });
 
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
-
-async function hasExistingState(workDir: string): Promise<boolean> {
-  const path = join(workDir, "tailscaled.state");
-  let raw: string;
-  try {
-    raw = await readFile(path, "utf8");
-  } catch {
-    return false;
-  }
-
-  try {
-    JSON.parse(raw);
-    return true;
-  } catch {
-    const aside = `${path}.corrupt-${Date.now()}`;
-    await rename(path, aside);
-    log.warn("agent", "Agent state is corrupt, moved it to %s", aside);
-    return false;
-  }
 }
 
 declare global {
@@ -140,23 +118,19 @@ export async function createAgentManager(
   // Dev reloads create the next manager before disposing this one.
   const owners = (globalThis.__headplaneAgentWorkDirs ??= new Map());
   const ownerKey = resolve(workDir);
-  const previousOwner = owners.get(ownerKey);
+  if (owners.has(ownerKey)) {
+    log.info("agent", "Waiting for the previous agent manager to release %s", workDir);
+  }
+
+  const previousOwner = owners.get(ownerKey) ?? Promise.resolve();
   let releaseWorkDir!: () => void;
   const released = new Promise<void>((done) => {
     releaseWorkDir = done;
   });
-
-  const ownership = (previousOwner ?? Promise.resolve()).then(() => released);
-  owners.set(ownerKey, ownership);
-
-  let ownsWorkDir = false;
-  const ready = (previousOwner ?? Promise.resolve()).then(() => {
-    ownsWorkDir = true;
-  });
-
-  if (previousOwner) {
-    log.info("agent", "Waiting for the previous agent manager to release %s", workDir);
-  }
+  owners.set(
+    ownerKey,
+    previousOwner.then(() => released),
+  );
 
   const state: SyncState = {
     syncedAt: null,
@@ -172,24 +146,12 @@ export async function createAgentManager(
   let needsAuthKey = false;
   let restartTimer: ReturnType<typeof setTimeout> | undefined;
   let restartDelayMs = MIN_RESTART_DELAY_MS;
+  let ownsWorkDir = false;
+  let isSyncing = false;
+  let pendingResync = false;
   const stopping = new WeakSet<ChildProcess>();
 
-  async function generateAuthKey(): Promise<string> {
-    const expiration = new Date(Date.now() + 5 * 60_000);
-    const pak = await withTimeout(
-      apiClient.preAuthKeys.create({
-        user: null,
-        ephemeral: false,
-        reusable: false,
-        expiration,
-        aclTags: [`tag:${hostName}`],
-      }),
-      "Headscale didn't create an auth key in time",
-    );
-    return pak.key;
-  }
-
-  function spawnAgent(authKey: string): ChildProcess {
+  function spawnAgent(authKey?: string): ChildProcess {
     if (disposed) {
       throw new Error("The agent manager has been shut down");
     }
@@ -222,21 +184,6 @@ export async function createAgentManager(
 
     child.on("error", (error) => {
       log.error("agent", "Failed to run the agent: %s", error.message);
-      if (proc !== child || child.pid !== undefined) {
-        return;
-      }
-
-      proc = null;
-      state.startedAt = undefined;
-      if (responseHandler) {
-        const handler = responseHandler;
-        responseHandler = null;
-        handler("");
-      }
-
-      if (!disposed) {
-        scheduleRestart();
-      }
     });
 
     child.stderr?.on("data", (chunk: Buffer) => {
@@ -278,14 +225,12 @@ export async function createAgentManager(
 
     const rl = createInterface({ input: child.stdout! });
     rl.on("line", (line) => {
-      if (responseHandler) {
-        const handler = responseHandler;
-        responseHandler = null;
-        handler(line);
-      }
+      responseHandler?.(line);
+      responseHandler = null;
     });
 
-    child.on("exit", (code, signal) => {
+    // Unlike exit, close also fires when the spawn itself fails.
+    child.on("close", (code, signal) => {
       if (!disposed) {
         log.warn("agent", "Agent process exited (code=%s, signal=%s)", code, signal);
       } else {
@@ -303,12 +248,8 @@ export async function createAgentManager(
 
       proc = null;
       state.startedAt = undefined;
-
-      if (responseHandler) {
-        const handler = responseHandler;
-        responseHandler = null;
-        handler("");
-      }
+      responseHandler?.("");
+      responseHandler = null;
 
       if (!disposed && !stopping.has(child)) {
         scheduleRestart();
@@ -328,7 +269,7 @@ export async function createAgentManager(
     log.info("agent", "Restarting the agent in %ds", restartDelayMs / 1000);
     restartTimer = setTimeout(() => {
       restartTimer = undefined;
-      syncInBackground();
+      void sync();
     }, restartDelayMs);
 
     restartDelayMs = Math.min(restartDelayMs * 2, MAX_RESTART_DELAY_MS);
@@ -340,7 +281,7 @@ export async function createAgentManager(
     }
 
     stopping.add(child);
-    const exited = once(child, "exit").catch((error: Error) => {
+    const exited = once(child, "close").catch((error: Error) => {
       log.warn("agent", "Failed to stop the agent: %s", error.message);
     });
     child.kill("SIGTERM");
@@ -396,14 +337,6 @@ export async function createAgentManager(
     await writeFile(recordPath, currentId);
   }
 
-  async function ensureProcess(): Promise<ChildProcess> {
-    if (proc && proc.exitCode === null) {
-      return proc;
-    }
-
-    return startProcess();
-  }
-
   async function startProcess(): Promise<ChildProcess> {
     if (disposed) {
       throw new Error("The agent manager has been shut down");
@@ -413,36 +346,40 @@ export async function createAgentManager(
       throw new Error("Another agent manager is still using the work dir");
     }
 
+    const statePath = join(workDir, "tailscaled.state");
+    let hasState = false;
+    try {
+      JSON.parse(await readFile(statePath, "utf8"));
+      hasState = true;
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        const aside = `${statePath}.corrupt-${Date.now()}`;
+        await rename(statePath, aside);
+        log.warn("agent", "Agent state is corrupt, moved it to %s", aside);
+      }
+    }
+
     // A key alongside existing state makes Headscale 0.28 register a duplicate.
-    const stateExists = await hasExistingState(workDir);
-    if (stateExists && !needsAuthKey) {
+    if (hasState && !needsAuthKey) {
       log.info("agent", "Existing state found, reusing the agent's identity");
-      return spawnAgent("");
+      return spawnAgent();
     }
 
     log.info("agent", "Registering the agent with a pre-auth key");
-    const authKey = await generateAuthKey();
+    const authKey = await withTimeout(
+      apiClient.preAuthKeys.create({
+        user: null,
+        ephemeral: false,
+        reusable: false,
+        expiration: new Date(Date.now() + 5 * 60_000),
+        aclTags: [`tag:${hostName}`],
+      }),
+      "Headscale didn't create an auth key in time",
+    );
+
     needsAuthKey = false;
-    return spawnAgent(authKey);
+    return spawnAgent(authKey.key);
   }
-
-  function sendSync(child: ChildProcess): Promise<string> {
-    return new Promise((resolve) => {
-      responseHandler = resolve;
-      child.stdin?.write("sync\n");
-    });
-  }
-
-  async function requestSync(child: ChildProcess): Promise<AgentOutput> {
-    const line = await sendSync(child);
-    if (!line) {
-      throw new Error("Agent process closed unexpectedly");
-    }
-    return JSON.parse(line) as AgentOutput;
-  }
-
-  let isSyncing = false;
-  let pendingResync = false;
 
   async function sync() {
     if (isSyncing) {
@@ -453,20 +390,29 @@ export async function createAgentManager(
 
     isSyncing = true;
     try {
-      const child = await ensureProcess();
+      const child = proc?.exitCode === null ? proc : await startProcess();
 
-      let output: AgentOutput;
+      let line: string;
       try {
-        output = await withTimeout(requestSync(child), "The agent didn't answer in time");
+        line = await withTimeout(
+          new Promise<string>((resolve) => {
+            responseHandler = resolve;
+            child.stdin?.write("sync\n");
+          }),
+          "The agent didn't answer in time",
+        );
       } catch (error) {
-        if (error instanceof TimeoutError && proc === child) {
-          responseHandler = null;
-          pendingResync = true;
-          await stopProcess(child);
-        }
-
+        responseHandler = null;
+        pendingResync = true;
+        await stopProcess(child);
         throw error;
       }
+
+      if (!line) {
+        throw new Error("Agent process closed unexpectedly");
+      }
+
+      const output = JSON.parse(line) as AgentOutput;
 
       if (output.error) {
         consecutiveErrors++;
@@ -501,25 +447,46 @@ export async function createAgentManager(
       restartDelayMs = MIN_RESTART_DELAY_MS;
       const keys = Object.keys(output.hosts);
 
-      for (const [nodeKey, payload] of Object.entries(output.hosts)) {
+      if (keys.length > 0) {
+        const updatedAt = new Date();
         await db
           .insert(hostInfo)
-          .values({
-            host_id: nodeKey,
-            payload,
-            updated_at: new Date(),
-          })
+          .values(
+            Object.entries(output.hosts).map(([nodeKey, payload]) => ({
+              host_id: nodeKey,
+              payload,
+              updated_at: updatedAt,
+            })),
+          )
           .onConflictDoUpdate({
             target: hostInfo.host_id,
-            set: {
-              payload,
-              updated_at: new Date(),
-            },
+            set: { payload: sql`excluded.payload`, updated_at: sql`excluded.updated_at` },
           });
       }
 
-      await pruneStaleHostInfo(nodes);
-      await pruneEphemeralNodes(nodes);
+      await db.delete(hostInfo).where(
+        notInArray(
+          hostInfo.host_id,
+          nodes.map((node) => node.nodeKey),
+        ),
+      );
+
+      // Headscale doesn't remove ephemeral nodes when they disconnect.
+      for (const node of nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online)) {
+        await withTimeout(
+          apiClient.nodes.delete(node.id),
+          "Headscale didn't delete a node in time",
+        ).then(
+          () => log.info("agent", "Pruned offline ephemeral node %s", node.givenName),
+          (error) =>
+            log.warn(
+              "agent",
+              "Failed to prune ephemeral node %s: %s",
+              node.givenName,
+              headscaleErrorMessage(error) ?? String(error),
+            ),
+        );
+      }
 
       state.syncedAt = new Date();
       state.nodeCount = keys.length;
@@ -546,75 +513,19 @@ export async function createAgentManager(
       isSyncing = false;
       if (pendingResync) {
         pendingResync = false;
-        syncInBackground();
+        void sync();
       }
     }
   }
 
-  async function pruneStaleHostInfo(nodes: Machine[]) {
-    try {
-      const activeKeys = nodes.map((n) => n.nodeKey);
-
-      if (activeKeys.length === 0) {
-        return;
-      }
-
-      const deleted = await db
-        .delete(hostInfo)
-        .where(notInArray(hostInfo.host_id, activeKeys))
-        .returning();
-
-      if (deleted.length > 0) {
-        log.info("agent", "Pruned %d stale hostinfo entries", deleted.length);
-      }
-    } catch (error) {
-      log.debug(
-        "agent",
-        "Failed to prune stale hostinfo: %s",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-  }
-
-  // Headscale doesn't remove ephemeral nodes when they disconnect.
-  async function pruneEphemeralNodes(nodes: Machine[]) {
-    try {
-      const toPrune = nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online);
-
-      for (const node of toPrune) {
-        await withTimeout(
-          apiClient.nodes.delete(node.id),
-          "Headscale didn't delete a node in time",
-        );
-        log.info("agent", "Pruned offline ephemeral node %s", node.givenName);
-      }
-    } catch (error) {
-      log.debug(
-        "agent",
-        "Failed to prune ephemeral nodes: %s",
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-  }
-
-  // An unhandled rejection here would take down the server.
-  function syncInBackground() {
-    sync().catch((error) => {
-      log.error(
-        "agent",
-        "Sync crashed: %s",
-        error instanceof Error ? error.message : String(error),
-      );
-    });
-  }
-
-  void ready.then(() => {
+  void previousOwner.then(() => {
+    ownsWorkDir = true;
     if (!disposed) {
-      syncInBackground();
+      void sync();
     }
   });
 
-  const interval = setInterval(syncInBackground, cacheTtl);
+  const interval = setInterval(() => void sync(), cacheTtl);
 
   return {
     async lookup(nodeKeys) {
