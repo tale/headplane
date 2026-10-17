@@ -1,7 +1,9 @@
+import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
   vite: {
+    plugins: [tailwindcss()],
     define: {
       __HEADPLANE_BETA_DOCS__: JSON.stringify(process.env.HEADPLANE_BETA_DOCS === "true"),
     },

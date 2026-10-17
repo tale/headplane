@@ -1,0 +1,94 @@
+@import "../../../app/tokens.css";
+
+/* VitePress only toggles `.dark`, so skip the app's system-preference fallback. */
+html.dark {
+  @apply dark-tokens;
+}
+
+:root {
+  --vp-c-bg: var(--hp-canvas);
+  --vp-c-bg-alt: var(--hp-subtle);
+  --vp-c-bg-elv: var(--hp-raised);
+  --vp-c-bg-soft: var(--hp-subtle);
+
+  --vp-c-border: var(--hp-line-strong);
+  --vp-c-divider: var(--hp-line);
+  --vp-c-gutter: var(--hp-line);
+
+  --vp-c-text-1: var(--hp-fg);
+  --vp-c-text-2: var(--hp-muted);
+  --vp-c-text-3: var(--hp-faint);
+
+  --vp-c-default-1: var(--hp-line-strong);
+  --vp-c-default-2: var(--hp-line);
+  --vp-c-default-3: var(--hp-hover);
+  --vp-c-default-soft: var(--hp-subtle);
+
+  --vp-c-brand-1: var(--hp-accent);
+  --vp-c-brand-2: var(--hp-accent);
+  --vp-c-brand-3: var(--hp-accent);
+  --vp-c-brand-soft: var(--hp-accent-subtle);
+
+  --vp-c-tip-1: var(--hp-accent);
+  --vp-c-tip-2: var(--hp-accent);
+  --vp-c-tip-3: var(--hp-accent);
+  --vp-c-tip-soft: var(--hp-accent-subtle);
+
+  --vp-c-note-1: var(--hp-muted);
+  --vp-c-note-2: var(--hp-muted);
+  --vp-c-note-3: var(--hp-muted);
+  --vp-c-note-soft: var(--hp-subtle);
+
+  --vp-c-success-1: var(--hp-ok);
+  --vp-c-success-2: var(--hp-ok);
+  --vp-c-success-3: var(--hp-ok);
+  --vp-c-success-soft: var(--hp-ok-subtle);
+
+  --vp-c-warning-1: var(--hp-warn);
+  --vp-c-warning-2: var(--hp-warn);
+  --vp-c-warning-3: var(--hp-warn);
+  --vp-c-warning-soft: var(--hp-warn-subtle);
+
+  --vp-c-danger-1: var(--hp-bad);
+  --vp-c-danger-2: var(--hp-bad);
+  --vp-c-danger-3: var(--hp-bad);
+  --vp-c-danger-soft: var(--hp-bad-subtle);
+
+  --vp-c-caution-1: var(--hp-bad);
+  --vp-c-caution-2: var(--hp-bad);
+  --vp-c-caution-3: var(--hp-bad);
+  --vp-c-caution-soft: var(--hp-bad-subtle);
+
+  --vp-button-brand-text: var(--hp-ink-fg);
+  --vp-button-brand-bg: var(--hp-ink);
+  --vp-button-brand-hover-text: var(--hp-ink-fg);
+  --vp-button-brand-hover-bg: color-mix(in oklab, var(--hp-ink) 90%, transparent);
+  --vp-button-brand-active-text: var(--hp-ink-fg);
+  --vp-button-brand-active-bg: color-mix(in oklab, var(--hp-ink) 90%, transparent);
+
+  --vp-button-alt-border: var(--hp-line-strong);
+  --vp-button-alt-text: var(--hp-fg);
+  --vp-button-alt-bg: var(--hp-surface);
+  --vp-button-alt-hover-border: var(--hp-line-strong);
+  --vp-button-alt-hover-text: var(--hp-fg);
+  --vp-button-alt-hover-bg: var(--hp-hover);
+  --vp-button-alt-active-border: var(--hp-line-strong);
+  --vp-button-alt-active-text: var(--hp-fg);
+  --vp-button-alt-active-bg: var(--hp-hover);
+
+  --vp-code-block-bg: var(--hp-surface);
+  --vp-code-tab-divider: var(--hp-line);
+
+  --vp-shadow-3: var(--hp-shadow-overlay);
+  --vp-shadow-4: var(--hp-shadow-overlay);
+
+  --vp-c-neutral: var(--hp-fg);
+  --vp-c-neutral-inverse: var(--hp-canvas);
+
+  --vp-home-hero-name-color: var(--hp-fg);
+}
+
+/* Code blocks sit on canvas, so give them the app's card border. */
+.vp-doc div[class*="language-"] {
+  border: 1px solid var(--hp-line);
+}

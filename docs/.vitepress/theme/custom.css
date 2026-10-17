@@ -16,7 +16,7 @@ figcaption {
   margin-top: 0.5em;
 }
 
-:root {
+:root:has(.beta-banner) {
   --vp-layout-top-height: 36px;
 }
 
@@ -25,7 +25,9 @@ figcaption {
   background-image: linear-gradient(var(--vp-c-warning-soft), var(--vp-c-warning-soft));
   color: var(--vp-c-warning-1);
   text-align: center;
-  padding: 8px 16px;
+  height: var(--vp-layout-top-height);
+  line-height: var(--vp-layout-top-height);
+  padding: 0 16px;
   font-size: 14px;
   font-weight: 500;
   position: fixed;

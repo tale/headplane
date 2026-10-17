@@ -2,6 +2,7 @@ import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import { h } from "vue";
 
+import "./tokens.css";
 import "./custom.css";
 
 const beta = __HEADPLANE_BETA_DOCS__ ?? false;
