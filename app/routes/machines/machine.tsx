@@ -9,12 +9,14 @@ import Section, { SettingList } from "~/components/section";
 import StatusCircle from "~/components/status-circle";
 import {
   agentsContext,
+  authContext,
   headscaleConfigContext,
   headscaleContext,
   headscaleLiveStoreContext,
   requestApiContext,
 } from "~/server/context";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
+import { Capabilities } from "~/server/web/roles";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { extractTagOwnerTags, isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
 import { toastClientAction } from "~/utils/toast";
@@ -28,6 +30,7 @@ import { machineAction } from "./machine-actions";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const agentsFeature = context.get(agentsContext);
+  const auth = context.get(authContext);
   const getRequestApi = context.get(requestApiContext);
   const headscale = context.get(headscaleContext);
   const headscaleConfig = context.get(headscaleConfigContext);
@@ -41,6 +44,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     throw data(null, { status: 204 });
   }
 
+  await auth.requireCapability(request, Capabilities.read_machines);
   const magic = headscaleConfig.getMagicDNSBaseDomain();
 
   const { api } = await getRequestApi(request);
