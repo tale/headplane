@@ -25,6 +25,7 @@
 
 ## Fixes
 
+- The cookie that tracked SSO state was not signed. It is now signed with `server.cookie_secret` and cleared once SSO succeeds (closes [#659](https://github.com/tale/headplane/issues/659)).
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.

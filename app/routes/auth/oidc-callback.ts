@@ -41,10 +41,12 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     return redirect("/login?s=error_no_session");
   }
 
+  // The state cookie is single-use, so drop it whether the callback succeeds or not.
+  const clearState = await cookie.clear();
   const { state, nonce, redirect_uri, verifier } = oidcCookieState;
   if (!state || !nonce || !redirect_uri || !verifier) {
     log.warn("auth", "OIDC session cookie is missing required fields");
-    return redirect("/login?s=error_invalid_session");
+    return redirect("/login?s=error_invalid_session", { headers: { "Set-Cookie": clearState } });
   }
 
   const flowState = {
@@ -57,7 +59,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const result = await service.handleCallback(url.searchParams, flowState);
   if (!result.ok) {
     logOidcError("OIDC callback failed", result.error);
-    return redirect("/login?s=error_auth_failed");
+    return redirect("/login?s=error_auth_failed", { headers: { "Set-Cookie": clearState } });
   }
 
   const identity = result.value;
@@ -103,17 +105,20 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   // Only persist the id_token when RP-initiated logout is enabled — otherwise
   // we'd be storing a credential we never use.
   const idToken = config.oidc?.use_end_session ? identity.idToken : undefined;
-  return redirect(isLinked ? "/" : "/link", {
-    headers: {
-      "Set-Cookie": await auth.createOidcSession(
-        userId,
-        {
-          name: identity.name,
-          email: identity.email,
-          username: identity.username,
-        },
-        { idToken },
-      ),
-    },
-  });
+  const headers = new Headers();
+  headers.append("Set-Cookie", clearState);
+  headers.append(
+    "Set-Cookie",
+    await auth.createOidcSession(
+      userId,
+      {
+        name: identity.name,
+        email: identity.email,
+        username: identity.username,
+      },
+      { idToken },
+    ),
+  );
+
+  return redirect(isLinked ? "/" : "/link", { headers });
 }

@@ -16,12 +16,17 @@ export function createOidcStateCookie(config: HeadplaneConfig) {
     secure: config.server.cookie_secure,
     domain: config.server.cookie_domain,
     path: `${__PREFIX__}/oidc/callback`,
+    secrets: [config.server.cookie_secret],
   });
 
   return {
     ...cookie,
     serialize: async (value: OidcStateCookie): Promise<string> => {
       return cookie.serialize(value);
+    },
+
+    clear: async (): Promise<string> => {
+      return cookie.serialize("", { expires: new Date(0) });
     },
 
     parse: async (cookieHeader: string | null): Promise<OidcStateCookie | null> => {
