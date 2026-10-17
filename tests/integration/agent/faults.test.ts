@@ -208,6 +208,21 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(after.id).toBe(node.id);
   });
 
+  // The first sync of a new manager starts by reading the saved state, and a
+  // dispose that lands then has no process to stop yet.
+  test("shutting down while a restart reads its state never leaves an agent", async () => {
+    harness = await createHarness(version);
+    const agent = await harness.startAgent();
+    await waitForSync(agent);
+    await harness.expectSettled(agent, 1);
+    await harness.stopAgent();
+
+    const restarted = await harness.createManager();
+    await restarted!.dispose();
+
+    await expectAtMostProcesses(0, 5_000);
+  });
+
   test("shutting down mid-sync never leaves an agent running", async () => {
     harness = await createHarness(version);
     harness.proxy.setLatency(3_000);

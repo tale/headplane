@@ -201,6 +201,12 @@ export async function createAgentManager(
   }
 
   function spawnAgent(authKey: string): ChildProcess {
+    // Starting awaits the state file and Headscale, and a dispose that lands
+    // meanwhile has no process to stop, so it must be caught here.
+    if (disposed) {
+      throw new Error("The agent manager has been shut down");
+    }
+
     const env: Record<string, string> = {
       HOME: process.env.HOME ?? "",
       HEADPLANE_AGENT_WORK_DIR: workDir,
@@ -441,10 +447,6 @@ export async function createAgentManager(
 
     log.info("agent", "Registering the agent with a pre-auth key");
     const authKey = await generateAuthKey();
-    if (disposed) {
-      throw new Error("The agent manager has been shut down");
-    }
-
     needsAuthKey = false;
     return spawnAgent(authKey);
   }
