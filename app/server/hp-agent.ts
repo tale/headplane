@@ -92,9 +92,9 @@ async function hasExistingState(workDir: string): Promise<boolean> {
 }
 
 declare global {
-  // Work dirs owned by a live manager, each mapped to a promise that settles
-  // once its owner has stopped the agent. Kept on globalThis so it survives
-  // this module being reloaded in development.
+  // Each work dir maps to a promise that settles once every manager queued
+  // for it has stopped its agent. Kept on globalThis so it survives this
+  // module being reloaded in development.
   var __headplaneAgentWorkDirs: Map<string, Promise<void>> | undefined;
 }
 
@@ -712,10 +712,9 @@ export async function createAgentManager(
         await stopProcess(proc);
       }
 
+      // The entry stays: a manager disposed while still waiting must leave
+      // the next one waiting on the owner, and a settled entry costs nothing.
       releaseWorkDir();
-      if (owners.get(ownerKey) === ownership) {
-        owners.delete(ownerKey);
-      }
     },
   };
 }

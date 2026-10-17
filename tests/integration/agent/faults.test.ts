@@ -208,6 +208,28 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(after.id).toBe(node.id);
   });
 
+  // Only the manager that owns the work dir may release it. A waiting one
+  // that goes away must leave the next manager waiting on the owner.
+  test("disposing a waiting manager keeps the work dir with its owner", async () => {
+    harness = await createHarness(version);
+    const agent = await harness.startAgent();
+    await waitForSync(agent);
+    const node = await harness.expectSettled(agent, 1);
+
+    const abandoned = await harness.createManager();
+    await abandoned!.dispose();
+
+    const third = await harness.createManager();
+    await Promise.all([third!.triggerSync(), expectAtMostProcesses(1, 10_000)]);
+    expect(third!.lastSync().syncedAt).toBeNull();
+
+    await agent.dispose();
+    await waitForSync(third!);
+
+    const after = await harness.expectSettled(third!, 1);
+    expect(after.id).toBe(node.id);
+  });
+
   // The first sync of a new manager starts by reading the saved state, and a
   // dispose that lands then has no process to stop yet.
   test("shutting down while a restart reads its state never leaves an agent", async () => {
