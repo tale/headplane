@@ -359,12 +359,17 @@ export async function createAgentManager(
   // Waits for the process to exit so a replacement (or a new manager after a
   // dev reload) never shares the tsnet work dir with a dying one.
   async function stopProcess(child: ChildProcess) {
-    if (child.exitCode !== null || child.signalCode !== null) {
+    // A child that failed to spawn has no pid and never emits "exit".
+    if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) {
       return;
     }
 
+    // "error" rejects the wait, and a dispose that throws here would never
+    // release the work dir.
     stopping.add(child);
-    const exited = once(child, "exit");
+    const exited = once(child, "exit").catch((error: Error) => {
+      log.warn("agent", "Failed to stop the agent: %s", error.message);
+    });
     child.kill("SIGTERM");
     const timeout = setTimeout(() => child.kill("SIGKILL"), 10_000);
     await exited;
