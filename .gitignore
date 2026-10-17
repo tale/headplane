@@ -13,4 +13,5 @@ node_modules
 /docs/.vitepress/dist/
 /docs/.vitepress/cache/
 /.direnv
+/app/utils/cn-tables.ts
 /vendor
