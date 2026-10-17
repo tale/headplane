@@ -609,7 +609,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
         .set({
           name: profile?.name,
           email: profile?.email,
-          picture: profile?.picture,
+          picture: profile?.picture ?? null,
           ...(syncedRole && existing.role !== "owner"
             ? { role: syncedRole, caps: capsForRole(syncedRole) }
             : {}),

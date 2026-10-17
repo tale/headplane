@@ -1084,6 +1084,41 @@ describe("userinfo enrichment", () => {
     expect(userinfoCalledCount).toBe(0);
   });
 
+  test("fetches picture from userinfo when id token has profile claims without one", async () => {
+    const svc = createOidcService(testConfig({ usePkce: false }));
+    const flowResult = await svc.startFlow();
+    if (!flowResult.ok) {
+      throw new Error("startFlow failed");
+    }
+
+    const { flowState } = flowResult.value;
+    const idToken = await signIdToken(
+      { sub: "user-123", name: "From Token", email: "token@example.com" },
+      flowState.nonce,
+    );
+
+    tokenHandler = async (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ access_token: "at", id_token: idToken, token_type: "Bearer" }));
+    };
+
+    userinfoHandler = (_req, res) => {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ name: "Should Not Use", picture: "https://example.com/pic.jpg" }));
+    };
+
+    const params = new URLSearchParams({ code: "c", state: flowState.state });
+    const result = await svc.handleCallback(params, flowState);
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) {
+      return;
+    }
+
+    expect(result.value.name).toBe("From Token");
+    expect(result.value.picture).toBe("https://example.com/pic.jpg");
+  });
+
   test("userinfo failure does not block login", async () => {
     const svc = createOidcService(testConfig({ usePkce: false }));
     const flowResult = await svc.startFlow();

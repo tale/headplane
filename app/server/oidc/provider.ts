@@ -707,8 +707,12 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       !claims.name && !claims.email && !claims.picture && !!resolveSubject(claims);
     const needsSubjectEnrichment = !resolveSubject(claims);
     const needsRoleEnrichment = !!config.roleClaim && claims[config.roleClaim] === undefined;
+    const needsPictureEnrichment = !claims.picture && config.profilePictureSource !== "gravatar";
     if (
-      (!needsEnrichment && !needsSubjectEnrichment && !needsRoleEnrichment) ||
+      (!needsEnrichment &&
+        !needsSubjectEnrichment &&
+        !needsRoleEnrichment &&
+        !needsPictureEnrichment) ||
       !ep.userinfoEndpoint
     ) {
       return claims;
