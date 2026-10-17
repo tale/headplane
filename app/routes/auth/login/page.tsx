@@ -6,7 +6,7 @@ import Callout from "~/components/callout";
 import Code from "~/components/code";
 import Input from "~/components/input";
 import Link from "~/components/link";
-import { appConfigContext, authContext, oidcContext } from "~/server/context";
+import { appConfigContext, authContext, jwtAuthContext, oidcContext } from "~/server/context";
 import type { OidcError, OidcService } from "~/server/oidc/provider";
 import { useLiveData } from "~/utils/live-data";
 import log from "~/utils/log";
@@ -22,11 +22,16 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const config = context.get(appConfigContext);
   const oidc = context.get(oidcContext);
+  const jwtAuth = context.get(jwtAuthContext);
 
   try {
     await auth.require(request);
     return redirect("/machines");
   } catch {}
+
+  // The assertion was already verified and logged by auth.require; its
+  // presence here means it was rejected.
+  const jwtAuthRejected = jwtAuth !== undefined && request.headers.has(jwtAuth.header);
 
   const qp = url.searchParams;
   const urlState = qp.get("s") ?? undefined;
@@ -63,6 +68,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     isCookieSecureEnabled: config.server.cookie_secure,
     isOidcConnectorEnabled,
     oidcErrorCodes,
+    jwtAuthRejected,
     urlState,
   };
 }
@@ -77,7 +83,13 @@ function logLoginOidcError(context: string, error: OidcError): void {
 }
 
 export default function Page({ loaderData, actionData }: Route.ComponentProps) {
-  const { isCookieSecureEnabled, isOidcConnectorEnabled, oidcErrorCodes, urlState } = loaderData;
+  const {
+    isCookieSecureEnabled,
+    isOidcConnectorEnabled,
+    oidcErrorCodes,
+    jwtAuthRejected,
+    urlState,
+  } = loaderData;
 
   const [showCookieWarning, setShowCookieWarning] = useState(false);
   const [params] = useSearchParams();
@@ -116,7 +128,12 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     return <Logout />;
   }
 
-  const notice = urlState?.startsWith("error_") ? (
+  const notice = jwtAuthRejected ? (
+    <Callout className="mb-6" title="Proxy sign-in failed" variant="error">
+      The assertion from your identity-aware proxy was not accepted. The Headplane log has the
+      reason.
+    </Callout>
+  ) : urlState?.startsWith("error_") ? (
     <OidcErrorNotice code={urlState} />
   ) : oidcErrorCodes.includes("discovery_failed") ? (
     <OidcDiscoveryFailedNotice />

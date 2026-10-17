@@ -22,6 +22,7 @@
 - Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
+- Added authentication from a signed assertion injected by an identity-aware proxy, via `server.jwt_auth`. Works with any proxy that signs a header — Google IAP, Cloudflare Access and Pomerium among them — by verifying the signature against the proxy's published keys, so identity does not depend on trusting the client address (closes [#606](https://github.com/tale/headplane/issues/606)).
 
 ## Fixes
 

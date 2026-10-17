@@ -11,6 +11,11 @@ anyone to impersonate users and gain access to Headplane.
 It is recommended to use Headplane's built-in SSO integrations over proxy
 authentication if possible. No guarantees are made about the security of proxy
 authentication.
+
+If your proxy signs an assertion — Google IAP, Cloudflare Access, Pomerium —
+use [JWT Header Authentication](/features/jwt-auth) instead. It verifies a
+signature rather than trusting headers, so it does not depend on the client
+address being trustworthy.
 :::
 
 # Proxy Authentication

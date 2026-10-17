@@ -32,7 +32,20 @@
       builtins.removeAttrs settingsWithoutNulls ["oidc"]
     else
       settingsWithoutNulls;
-  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutEmptyOidc;
+  # A disabled jwt_auth block is dropped: the submodule materializes it with
+  # null required fields, which the schema would reject.
+  settingsWithoutDisabledJwtAuth =
+    if settingsWithoutEmptyOidc ? server
+       && settingsWithoutEmptyOidc.server ? jwt_auth
+       && !(settingsWithoutEmptyOidc.server.jwt_auth.enabled or false)
+    then
+      settingsWithoutEmptyOidc
+      // {
+        server = builtins.removeAttrs settingsWithoutEmptyOidc.server ["jwt_auth"];
+      }
+    else
+      settingsWithoutEmptyOidc;
+  settingsFile = settingsFormat.generate "headplane-config.yaml" settingsWithoutDisabledJwtAuth;
 in {
   imports = [./options.nix];
   config = mkIf cfg.enable {

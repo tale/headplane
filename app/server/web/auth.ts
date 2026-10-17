@@ -7,8 +7,10 @@ import { createCookie, data } from "react-router";
 import { ulid } from "ulidx";
 
 import type { Machine } from "~/types";
+import log from "~/utils/log";
 
 import { type HeadplaneUser, authSessions, users } from "../db/schema";
+import type { JwtAuthService } from "./jwt-auth";
 import { Capabilities, type Role, Roles, capsForRole } from "./roles";
 
 export type Principal =
@@ -21,7 +23,7 @@ export type Principal =
   | UserPrincipal;
 
 export type UserPrincipal = {
-  kind: "oidc" | "proxy";
+  kind: "oidc" | "proxy" | "jwt";
   sessionId: string;
   idToken?: string;
   user: {
@@ -49,6 +51,11 @@ interface ProxyAuthOptions {
   pictureHeader?: string;
 }
 
+interface JwtAuthOptions {
+  service: JwtAuthService;
+  defaultRole?: string;
+}
+
 interface CookiePayload {
   sid: string;
   api_key?: string;
@@ -63,6 +70,7 @@ export interface AuthServiceOptions {
   secret: string;
   headscaleApiKey?: string;
   proxyAuth?: ProxyAuthOptions;
+  jwtAuth?: JwtAuthOptions;
   db: NodeSQLiteDatabase;
   cookie: {
     name: string;
@@ -107,7 +115,7 @@ export interface AuthService {
 }
 
 export function isUserPrincipal(principal: Principal): principal is UserPrincipal {
-  return principal.kind === "oidc" || principal.kind === "proxy";
+  return principal.kind === "oidc" || principal.kind === "proxy" || principal.kind === "jwt";
 }
 
 interface CidrRange {
@@ -429,7 +437,48 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     });
   }
 
+  async function resolveJwtAuthPrincipal(request: Request): Promise<Principal | undefined> {
+    if (!opts.jwtAuth) {
+      return;
+    }
+
+    const result = await opts.jwtAuth.service.authenticate(request);
+    if (!result.ok) {
+      // Only a request with no assertion at all falls through to the other
+      // methods. A present but invalid one fails closed.
+      if (result.error.code === "missing_assertion") {
+        return;
+      }
+
+      log.error("auth", "Rejected JWT assertion [%s]: %s", result.error.code, result.error.message);
+      throw new Error(`JWT authentication failed: ${result.error.message}`);
+    }
+
+    const identity = result.value;
+    const userId = await findOrCreateUser(
+      identity.subject,
+      { name: identity.name, email: identity.email },
+      { initialRole: opts.jwtAuth.defaultRole },
+    );
+
+    return resolveUserPrincipal({
+      kind: "jwt",
+      sessionId: "jwt-auth",
+      userId,
+      profile: {
+        name: identity.name,
+        email: identity.email,
+        username: identity.email ?? identity.name,
+      },
+    });
+  }
+
   async function resolve(request: Request): Promise<Principal> {
+    const jwtPrincipal = await resolveJwtAuthPrincipal(request);
+    if (jwtPrincipal) {
+      return jwtPrincipal;
+    }
+
     const proxyPrincipal = await resolveProxyAuthPrincipal(request);
     if (proxyPrincipal) {
       return proxyPrincipal;
