@@ -24,7 +24,6 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["tests/unit/**/*.test.ts"],
-          setupFiles: ["tests/unit/setup/overlay-fs.ts"],
         },
       },
       {
@@ -69,6 +68,8 @@ export default defineConfig({
       HEADPLANE_DEBUG_LOG: "true",
     },
     environment: "node",
+    silent: "passed-only",
+    execArgv: ["--disable-warning=ExperimentalWarning"],
     exclude: ["node_modules/**", "build/**"],
   },
   resolve: {

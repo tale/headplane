@@ -15,35 +15,43 @@ export interface Logger extends Record<
   debugEnabled: boolean;
 }
 
-const rootLogger = createRootLogger();
-export default {
-  debugEnabled: rootLogger.isLevelEnabled("debug"),
-  info: (category, msg, ...args) => rootLogger.info({ component: category }, msg, ...args),
-  warn: (category, msg, ...args) => rootLogger.warn({ component: category }, msg, ...args),
-  error: (category, msg, ...args) => rootLogger.error({ component: category }, msg, ...args),
-  debug: (category, msg, ...args) => rootLogger.debug({ component: category }, msg, ...args),
-} as Logger;
+export default createLogger(process.env, defaultDestination());
 
-function createRootLogger() {
-  const options = {
-    level: getLogLevel(),
-    timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
-    formatters: {
-      level: (label: string) => ({ level: label }),
+export function createLogger(env: NodeJS.ProcessEnv, destination: pino.DestinationStream): Logger {
+  const root = pino(
+    {
+      level: getLogLevel(env),
+      timestamp: () => `,"timestamp":"${new Date().toISOString()}"`,
+      formatters: {
+        level: (label: string) => ({ level: label }),
+      },
     },
-  } satisfies pino.LoggerOptions;
+    destination,
+  );
 
+  return {
+    debugEnabled: root.isLevelEnabled("debug"),
+    info: (category, msg, ...args) => root.info({ component: category }, msg, ...args),
+    warn: (category, msg, ...args) => root.warn({ component: category }, msg, ...args),
+    error: (category, msg, ...args) => root.error({ component: category }, msg, ...args),
+    debug: (category, msg, ...args) => root.debug({ component: category }, msg, ...args),
+  };
+}
+
+function defaultDestination(): pino.DestinationStream {
+  // Vitest only captures console output, which lets it attach logs to the
+  // test that wrote them and hide them when the test passes.
   if (process.env.NODE_ENV === "test") {
-    return pino(options);
+    return { write: (line) => console.log(line.trimEnd()) };
   }
 
   const destination = pino.destination({ dest: 1, sync: false });
   process.on("exit", () => destination.flushSync());
-  return pino(options, destination);
+  return destination;
 }
 
-function getLogLevel(): Level {
-  const debugLog = process.env.HEADPLANE_DEBUG_LOG;
+function getLogLevel(env: NodeJS.ProcessEnv): Level {
+  const debugLog = env.HEADPLANE_DEBUG_LOG;
   if (debugLog == null) {
     return "info";
   }

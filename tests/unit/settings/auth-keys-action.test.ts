@@ -2,15 +2,6 @@ import { describe, expect, test, vi } from "vitest";
 
 import { authContext, requestApiContext } from "~/server/context";
 
-// Mock the log module to avoid console spam during tests
-vi.mock("~/utils/log", () => ({
-  default: {
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
-}));
-
 function mockFormData(expiry: string): FormData {
   const formData = new FormData();
   formData.set("intent", "create");

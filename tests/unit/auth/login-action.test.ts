@@ -54,15 +54,6 @@ function createMockContext({ headscale, auth }: { headscale: MockHeadscale; auth
   };
 }
 
-// Mock the log module to avoid console spam during tests
-vi.mock("~/utils/log", () => ({
-  default: {
-    warn: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-  },
-}));
-
 describe("Login action validation", () => {
   test("returns error when api_key field is missing", async () => {
     const { loginAction } = await import("~/routes/auth/login/action");
