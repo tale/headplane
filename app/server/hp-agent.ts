@@ -4,13 +4,12 @@ import { join } from "node:path";
 import { createInterface } from "node:readline";
 
 import { inArray, notInArray } from "drizzle-orm";
-import { NodeSQLiteDatabase } from "drizzle-orm/node-sqlite";
 
 import { HostInfo } from "~/types";
 import log from "~/utils/log";
 
 import { HeadplaneConfig } from "./config/config-schema";
-import { hostInfo } from "./db/schema";
+import type { HeadplaneDb } from "./db/client.server";
 import type { HeadscaleClient } from "./headscale/api";
 import { headscaleErrorMessage } from "./headscale/api/error-client";
 
@@ -62,8 +61,10 @@ export async function createAgentManager(
   headscaleUrl: string,
   apiClient: HeadscaleClient,
   supportsTagOnlyKeys: boolean,
-  db: NodeSQLiteDatabase,
+  headplaneDb: HeadplaneDb,
 ): Promise<AgentManager | undefined> {
+  const { client: db, tables } = headplaneDb;
+
   if (!agentConfig?.enabled) {
     return;
   }
@@ -293,14 +294,14 @@ export async function createAgentManager(
 
       for (const [nodeKey, payload] of Object.entries(output.hosts)) {
         await db
-          .insert(hostInfo)
+          .insert(tables.hostInfo)
           .values({
             host_id: nodeKey,
             payload,
             updated_at: new Date(),
           })
           .onConflictDoUpdate({
-            target: hostInfo.host_id,
+            target: tables.hostInfo.host_id,
             set: {
               payload,
               updated_at: new Date(),
@@ -355,8 +356,8 @@ export async function createAgentManager(
       }
 
       const deleted = await db
-        .delete(hostInfo)
-        .where(notInArray(hostInfo.host_id, activeKeys))
+        .delete(tables.hostInfo)
+        .where(notInArray(tables.hostInfo.host_id, activeKeys))
         .returning();
 
       if (deleted.length > 0) {
@@ -411,7 +412,10 @@ export async function createAgentManager(
         return {};
       }
 
-      const results = await db.select().from(hostInfo).where(inArray(hostInfo.host_id, nodeKeys));
+      const results = await db
+        .select()
+        .from(tables.hostInfo)
+        .where(inArray(tables.hostInfo.host_id, nodeKeys));
 
       return Object.fromEntries(
         results.filter((r) => r.payload).map((r) => [r.host_id, r.payload]),
@@ -437,9 +441,9 @@ export async function createAgentManager(
       }
 
       const results = await db
-        .select({ id: hostInfo.host_id, updatedAt: hostInfo.updated_at })
-        .from(hostInfo)
-        .where(inArray(hostInfo.host_id, nodeKeys));
+        .select({ id: tables.hostInfo.host_id, updatedAt: tables.hostInfo.updated_at })
+        .from(tables.hostInfo)
+        .where(inArray(tables.hostInfo.host_id, nodeKeys));
 
       return Object.fromEntries(
         results.flatMap((r) => (r.updatedAt ? [[r.id, r.updatedAt]] : [])),

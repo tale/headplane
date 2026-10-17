@@ -22,6 +22,9 @@
 - Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
+- Added PostgreSQL as an alternative to the embedded SQLite database, configured through `server.database`. SQLite remains the default and existing installs are unaffected (closes [#605](https://github.com/tale/headplane/issues/605)).
+- Added `server.database`, which allows the Headplane database to live somewhere other than `server.data_path`. Omitting it keeps the existing location.
+- Added a `scripts/db-copy.ts` helper that copies an existing SQLite database onto PostgreSQL, so switching backends keeps user roles, Headscale links and active sessions.
 
 ## Fixes
 
@@ -32,6 +35,8 @@
 - The logo in the navigation bar now follows the theme picked in Headplane instead of the system theme.
 - Fields with an error keep their red border while focused instead of turning blue.
 - Browser SSH no longer connects as a Headscale user that's already linked to someone else's account just because the email matches. An unlinked account now links the same way it does everywhere else first.
+- Fixed concurrent first logins leaving Headplane with no owner. The check for an existing owner is now part of the promoting update rather than a separate count, so two people signing in at the same moment can no longer both skip the promotion.
+- Headplane now closes its database handle on shutdown instead of leaving it open.
 
 # 0.8.1 (October 16, 2026)
 

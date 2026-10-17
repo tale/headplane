@@ -76,6 +76,39 @@ server:
   # PLEASE ensure this directory is mounted if running in Docker.
   data_path: "/var/lib/headplane"
 
+  # Where Headplane keeps its own database. When this block is omitted the
+  # database lives at `<data_path>/hp_persist.db`, which is where it has always
+  # been — existing installs need no change.
+  #
+  # Set `path` to keep the database somewhere other than `data_path`, for
+  # example on a separate volume with different backup or durability settings.
+  # database:
+  #   type: "sqlite"
+  #   path: "/var/lib/headplane/hp_persist.db"
+  #
+  # PostgreSQL is also supported, which is useful when Headplane runs on an
+  # ephemeral filesystem or you already operate a Postgres for Headscale.
+  # Headplane creates and migrates its own tables; point it at a database it
+  # owns rather than sharing Headscale's.
+  # database:
+  #   type: "postgres"
+  #   url: "postgres://headplane@10.0.0.5:5432/headplane"
+  #
+  #   # ...or give the parts separately instead of a URL.
+  #   host: "10.0.0.5"
+  #   port: 5432
+  #   name: "headplane"
+  #   user: "headplane"
+  #   password: "hunter2"
+  #
+  #   # Use password_path to read the password from a file instead, following
+  #   # the same convention as headscale.api_key_path.
+  #   password_path: "/run/secrets/headplane-db-password"
+  #
+  #   # disable | require (encrypt, do not verify) | verify-full
+  #   ssl_mode: "require"
+  #   max_connections: 10
+
   # The info secret is optional and allows access to certain debug endpoints
   # that may expose sensitive information about your Headplane instance.
   #
