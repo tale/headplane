@@ -78,8 +78,7 @@ describe.each(HS_VERSIONS)("agent lifecycle on Headscale %s", (version) => {
     const node = await harness.expectSettled(agent, 1);
     await harness.api.nodes.delete(node.id);
 
-    // tsnet keeps its node key when re-registering, so wait on Headscale
-    // creating a new node rather than on the key changing.
+    // tsnet keeps its node key when it re-registers.
     await agent.triggerSync();
     await vi.waitFor(
       async () => {

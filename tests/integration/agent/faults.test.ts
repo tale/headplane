@@ -7,12 +7,10 @@ import { afterEach, describe, expect, inject, test, vi } from "vitest";
 
 import type { AgentManager } from "~/server/hp-agent";
 
-import { agentProcessCount, createHarness, waitForSync } from "./harness";
+import { agentPids, agentProcessCount, createHarness, waitForSync } from "./harness";
 
 const HS_VERSIONS = ["0.28.0", "0.29.5"];
 
-// How long a sync may take to give up on a Headscale or agent that has
-// stopped answering. Anything longer leaves the agent page stuck.
 const SYNC_DEADLINE_MS = 45_000;
 
 async function syncWithin(agent: AgentManager, ms: number) {
@@ -34,7 +32,6 @@ async function waitForNextSync(agent: AgentManager, after: Date) {
   );
 }
 
-/** Asserts the agent process count never exceeds `max` for `ms`. */
 async function expectAtMostProcesses(max: number, ms: number) {
   const deadline = Date.now() + ms;
   while (Date.now() < deadline) {
@@ -96,16 +93,38 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();
     const { syncedAt } = await waitForSync(agent);
-    await harness.expectSettled(agent, 1);
+    const node = await harness.expectSettled(agent, 1);
 
     harness.proxy.setMode("blackhole");
     await syncWithin(agent, SYNC_DEADLINE_MS);
-    expect(agent.lastSync().error).toBeTruthy();
+    expect(agent.lastSync().error).toMatch(/Headscale didn't .* in time/);
     expect(agent.lastSync().syncedAt).toEqual(syncedAt);
+
+    harness.proxy.setMode("up");
+    await agent.triggerSync();
+    await waitForNextSync(agent, syncedAt!);
+    expect((await harness.nodes()).map((n) => n.id)).toEqual([node.id]);
+    expect(await harness.authKeys()).toHaveLength(1);
   });
 
-  // Nothing triggers a sync after the crash: the manager has to notice the
-  // agent died and bring it back by itself.
+  test("a hung Headscale during registration blames Headscale", async () => {
+    harness = await createHarness(version);
+    harness.proxy.setMode("blackhole");
+
+    const agent = await harness.startAgent();
+    await vi.waitFor(() => expect(agent.lastSync().error).toBeTruthy(), {
+      timeout: SYNC_DEADLINE_MS,
+    });
+
+    expect(agent.lastSync().error).toBe("Headscale didn't create an auth key in time");
+    expect(agentProcessCount()).toBe(0);
+
+    harness.proxy.setMode("up");
+    await agent.triggerSync();
+    await waitForSync(agent);
+    expect(await harness.nodes()).toHaveLength(1);
+  });
+
   test("a killed agent comes back on its own without re-registering", async () => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();
@@ -160,7 +179,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     await waitForSync(agent);
     const node = await harness.expectSettled(agent, 1);
 
-    // Another Headplane instance's agent, with the same host name and tag.
     const otherDir = await mkdtemp(join(tmpdir(), "hp-agent-other-"));
     try {
       const other = await harness.createManager({ workDir: otherDir });
@@ -188,8 +206,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     }
   });
 
-  // A dev reload creates the new manager before disposing the old one, so a
-  // second manager must wait for the first and then take over its identity.
   test("a second manager on the same work dir waits, then takes over", async () => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();
@@ -208,8 +224,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(after.id).toBe(node.id);
   });
 
-  // Only the manager that owns the work dir may release it. A waiting one
-  // that goes away must leave the next manager waiting on the owner.
   test("disposing a waiting manager keeps the work dir with its owner", async () => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();
@@ -230,8 +244,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(after.id).toBe(node.id);
   });
 
-  // The first sync of a new manager starts by reading the saved state, and a
-  // dispose that lands then has no process to stop yet.
   test("shutting down while a restart reads its state never leaves an agent", async () => {
     harness = await createHarness(version);
     const agent = await harness.startAgent();
@@ -249,7 +261,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     harness = await createHarness(version);
     harness.proxy.setLatency(3_000);
 
-    // The first sync is now waiting on Headscale for an auth key.
     await harness.createManager();
     await sleep(500);
     await harness.stopAgent();
@@ -285,7 +296,6 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
     expect(await harness.authKeys()).toHaveLength(0);
   });
 
-  // Like an upgrade swapping the binary out while the agent restarts.
   test("an agent binary that vanishes reports an error, then recovers", async () => {
     harness = await createHarness(version);
     const binDir = await mkdtemp(join(tmpdir(), "hp-agent-bin-copy-"));
@@ -306,6 +316,7 @@ describe.each(HS_VERSIONS)("agent faults on Headscale %s", (version) => {
       await rename(`${binary}.moved`, binary);
       await waitForNextSync(agent!, syncedAt!);
 
+      expect(agentPids(binary)).toHaveLength(1);
       expect(await harness.nodes()).toHaveLength(1);
       expect(await harness.authKeys()).toHaveLength(1);
     } finally {

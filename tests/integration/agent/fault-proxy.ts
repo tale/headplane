@@ -1,18 +1,7 @@
 import { type AddressInfo, connect, createServer, type Socket } from "node:net";
 
-/**
- * - `up` forwards traffic to Headscale.
- * - `down` resets every connection, like Headscale stopping.
- * - `blackhole` accepts connections and never answers, like a hung server
- *   or a dead network path.
- */
 export type FaultMode = "up" | "down" | "blackhole";
 
-/**
- * A TCP proxy in front of Headscale that tests can cut. Both Headplane's API
- * client and the agent's control connection go through it, so an outage hits
- * everything at once the way a real one would.
- */
 export async function createFaultProxy(target: URL) {
   let mode: FaultMode = "up";
   let latencyMs = 0;
@@ -39,8 +28,7 @@ export async function createFaultProxy(target: URL) {
     track(upstream);
     upstream.pipe(client);
 
-    // Requests are delayed per chunk rather than per connection, since API
-    // clients reuse keep-alive connections opened before the delay was set.
+    // Per chunk, since clients reuse keep-alive connections.
     client.on("data", (chunk) => {
       if (latencyMs === 0) {
         upstream.write(chunk);
@@ -61,8 +49,6 @@ export async function createFaultProxy(target: URL) {
   return {
     url: `http://127.0.0.1:${port}`,
 
-    // Open connections are dropped on any mode change away from `up`, so the
-    // agent's long-poll to Headscale breaks just like in a real outage.
     setMode(next: FaultMode) {
       mode = next;
       if (next === "up") {
@@ -74,7 +60,6 @@ export async function createFaultProxy(target: URL) {
       }
     },
 
-    /** Delays every request to Headscale by `ms`. */
     setLatency(ms: number) {
       latencyMs = ms;
     },

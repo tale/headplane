@@ -13,13 +13,9 @@ import { type AgentManager, createAgentManager } from "~/server/hp-agent";
 import { startHeadscale } from "../setup/start-headscale";
 import { createFaultProxy } from "./fault-proxy";
 
-export const HOST_NAME = "headplane-agent";
-export const AGENT_TAG = `tag:${HOST_NAME}`;
+const HOST_NAME = "headplane-agent";
+const AGENT_TAG = `tag:${HOST_NAME}`;
 
-/**
- * Lists running agent processes. Each test run builds the agent into its own
- * temp path, so the command line identifies our processes exactly.
- */
 export function agentPids(agentPath = inject("agentPath")) {
   const rows = execFileSync("ps", ["-A", "-o", "pid=,command="], { encoding: "utf8" });
   return rows
@@ -34,7 +30,6 @@ export function agentProcessCount() {
 }
 
 export interface HarnessOptions {
-  /** API key Headplane uses. Defaults to a valid admin key. */
   managerApiKey?: string;
 }
 
@@ -43,18 +38,6 @@ export interface AgentOverrides {
   workDir?: string;
 }
 
-/**
- * A fresh Headscale plus a work dir for one agent identity. The agent can be
- * started and stopped repeatedly against the same work dir to exercise
- * restarts, and Headscale can be inspected, mutated, or cut off between runs.
- *
- * Headplane and the agent reach Headscale through a fault proxy. The test's
- * own view of Headscale (`api`) uses a separate key and connects directly, so
- * assertions keep working during an injected outage.
- *
- * Each harness owns its Headscale, so every node and auth key in it belongs
- * to the agent. Assertions count everything instead of filtering by name.
- */
 export async function createHarness(version: string, options: HarnessOptions = {}) {
   const hs = await startHeadscale(version);
   const proxy = await createFaultProxy(new URL(hs.apiUrl));
@@ -69,13 +52,10 @@ export async function createHarness(version: string, options: HarnessOptions = {
 
   const managers = new Set<AgentManager>();
 
-  /** Creates a manager without any guards. Returns undefined if it refuses. */
   async function createManager(overrides: AgentOverrides = {}) {
     const db = drizzle(":memory:");
     migrate(db, { migrationsFolder: "./drizzle" });
 
-    // A long TTL keeps the background interval out of the way, so syncs
-    // only happen when a scenario asks for one.
     const manager = await createAgentManager(
       {
         enabled: true,
@@ -137,11 +117,6 @@ export async function createHarness(version: string, options: HarnessOptions = {
     return api.preAuthKeys.listAll();
   }
 
-  /**
-   * Asserts the steady state from Headscale's side: exactly one agent node,
-   * online under the identity the manager reports, created from `keyCount`
-   * auth keys that were all used, and exactly one agent process.
-   */
   async function expectSettled(agent: AgentManager, keyCount: number) {
     const node = await vi.waitFor(
       async () => {
@@ -203,11 +178,6 @@ async function createApiKey(container: Awaited<ReturnType<typeof startHeadscale>
   return JSON.parse(exec.stdout.toString()) as string;
 }
 
-/**
- * Waits until the agent reports a successful sync, failing with the agent's
- * own error or auth URL if it gets stuck. This only means the manager thinks
- * it's healthy; pair it with `expectSettled` to check Headscale agrees.
- */
 export async function waitForSync(manager: AgentManager, timeoutMs = 60_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {

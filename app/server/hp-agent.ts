@@ -55,11 +55,6 @@ const SYNC_STEP_TIMEOUT_MS = 20_000;
 
 class TimeoutError extends Error {}
 
-/**
- * Rejects with a `TimeoutError` if `promise` doesn't settle in time. The work
- * itself keeps running; this only stops a hung Headscale or agent from
- * blocking every sync after it.
- */
 function withTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
@@ -82,8 +77,6 @@ async function hasExistingState(workDir: string): Promise<boolean> {
     JSON.parse(raw);
     return true;
   } catch {
-    // A truncated or corrupt state can never connect, so set it aside and
-    // register a fresh identity instead of crash looping on it.
     const aside = `${path}.corrupt-${Date.now()}`;
     await rename(path, aside);
     log.warn("agent", "Agent state is corrupt, moved it to %s", aside);
@@ -92,9 +85,7 @@ async function hasExistingState(workDir: string): Promise<boolean> {
 }
 
 declare global {
-  // Each work dir maps to a promise that settles once every manager queued
-  // for it has stopped its agent. Kept on globalThis so it survives this
-  // module being reloaded in development.
+  // On globalThis so it survives module reloads in development.
   var __headplaneAgentWorkDirs: Map<string, Promise<void>> | undefined;
 }
 
@@ -128,7 +119,7 @@ export async function createAgentManager(
       log.info("agent", "Created agent work dir at %s", agentConfig.work_dir);
     }
 
-    // mkdir succeeds on an existing read-only directory, so check it too.
+    // mkdir succeeds on an existing read-only directory.
     await access(agentConfig.work_dir, constants.R_OK | constants.W_OK);
   } catch (error) {
     log.error(
@@ -146,9 +137,7 @@ export async function createAgentManager(
   const workDir = agentConfig.work_dir;
   const tailscaleNetNS = agentConfig.tailscale_netns;
 
-  // Two agents on one work dir would share the tsnet state. A dev reload
-  // creates the new manager before disposing the old one, so a newcomer
-  // waits for the previous owner to stop and then takes over.
+  // Dev reloads create the next manager before disposing this one.
   const owners = (globalThis.__headplaneAgentWorkDirs ??= new Map());
   const ownerKey = resolve(workDir);
   const previousOwner = owners.get(ownerKey);
@@ -201,8 +190,6 @@ export async function createAgentManager(
   }
 
   function spawnAgent(authKey: string): ChildProcess {
-    // Starting awaits the state file and Headscale, and a dispose that lands
-    // meanwhile has no process to stop, so it must be caught here.
     if (disposed) {
       throw new Error("The agent manager has been shut down");
     }
@@ -228,18 +215,14 @@ export async function createAgentManager(
       stdio: ["pipe", "pipe", "pipe"],
     });
 
-    // Writing to an agent that just died raises EPIPE here, and an unhandled
-    // stream error would take down Headplane. The exit handler cleans up.
+    // A dead agent's EPIPE would otherwise crash Headplane.
     child.stdin?.on("error", (error) => {
       log.debug("agent", "Agent stdin closed: %s", error.message);
     });
 
-    // A failed spawn (e.g. the binary was replaced mid-upgrade) emits "error"
-    // and may never emit "exit", so treat it as an exit or the manager would
-    // wait on a process that never started.
     child.on("error", (error) => {
       log.error("agent", "Failed to run the agent: %s", error.message);
-      if (proc !== child) {
+      if (proc !== child || child.pid !== undefined) {
         return;
       }
 
@@ -265,8 +248,6 @@ export async function createAgentManager(
       log.debug("agent", "%s", text);
 
       // tsnet prints an auth URL when it falls back to interactive login.
-      // Capture it so the UI can surface the approval link if needed, and try
-      // to auto-approve the agent using Headplane's admin API access.
       const authMatch = text.match(
         /To start this tsnet server, restart with TS_AUTHKEY set, or go to: (https:\/\/\S+)/,
       );
@@ -315,7 +296,7 @@ export async function createAgentManager(
           signal,
         );
       }
-      // A replaced agent's late exit must not fail its successor's request.
+
       if (proc !== child) {
         return;
       }
@@ -323,7 +304,6 @@ export async function createAgentManager(
       proc = null;
       state.startedAt = undefined;
 
-      // Reject any pending sync request
       if (responseHandler) {
         const handler = responseHandler;
         responseHandler = null;
@@ -340,8 +320,6 @@ export async function createAgentManager(
     return child;
   }
 
-  // An agent that dies on its own (crash, OOM, killed) is brought back with
-  // backoff, so a binary that crashes on every start can't spin.
   function scheduleRestart() {
     if (restartTimer) {
       return;
@@ -356,16 +334,11 @@ export async function createAgentManager(
     restartDelayMs = Math.min(restartDelayMs * 2, MAX_RESTART_DELAY_MS);
   }
 
-  // Waits for the process to exit so a replacement (or a new manager after a
-  // dev reload) never shares the tsnet work dir with a dying one.
   async function stopProcess(child: ChildProcess) {
-    // A child that failed to spawn has no pid and never emits "exit".
     if (child.pid === undefined || child.exitCode !== null || child.signalCode !== null) {
       return;
     }
 
-    // "error" rejects the wait, and a dispose that throws here would never
-    // release the work dir.
     stopping.add(child);
     const exited = once(child, "exit").catch((error: Error) => {
       log.warn("agent", "Failed to stop the agent: %s", error.message);
@@ -376,9 +349,7 @@ export async function createAgentManager(
     clearTimeout(timeout);
   }
 
-  // Re-registering leaves the agent's previous node behind in Headscale. Only
-  // a node this agent recorded as its own is ever deleted, never one matched
-  // by name or tag, so other Headplane instances' agents are left alone.
+  // Only delete a node this agent recorded, others share its name and tag.
   async function replacePreviousNode(currentId: string, nodes: Machine[]) {
     const recordPath = join(workDir, "headplane-node-id");
     const previousId = await readFile(recordPath, "utf8").then(
@@ -397,14 +368,7 @@ export async function createAgentManager(
           "Headscale didn't delete the previous node in time",
         );
         log.info("agent", "Removed the agent's previous node %s", previousId);
-
-        // Headscale suffixed the new node's name while the old one held it.
-        await withTimeout(
-          apiClient.nodes.rename(currentId, hostName),
-          "Headscale didn't rename the agent's node in time",
-        );
       } catch (error) {
-        // Keep the record so the next sync retries the delete.
         log.warn(
           "agent",
           "Failed to remove the agent's previous node %s: %s",
@@ -413,27 +377,34 @@ export async function createAgentManager(
         );
         return;
       }
+
+      try {
+        await withTimeout(
+          apiClient.nodes.rename(currentId, hostName),
+          "Headscale didn't rename the agent's node in time",
+        );
+      } catch (error) {
+        log.warn(
+          "agent",
+          "Failed to rename the agent's node to %s: %s",
+          hostName,
+          headscaleErrorMessage(error) ?? String(error),
+        );
+      }
     }
 
     await writeFile(recordPath, currentId);
   }
 
-  // A start that outlives a sync's timeout is shared with the next sync
-  // instead of racing it, so a slow Headscale can't lead to two agents.
-  let starting: Promise<ChildProcess> | undefined;
-  function ensureProcess(): Promise<ChildProcess> {
+  async function ensureProcess(): Promise<ChildProcess> {
     if (proc && proc.exitCode === null) {
-      return Promise.resolve(proc);
+      return proc;
     }
 
-    starting ??= startProcess().finally(() => {
-      starting = undefined;
-    });
-    return starting;
+    return startProcess();
   }
 
   async function startProcess(): Promise<ChildProcess> {
-    // A sync still in flight during dispose must not start a fresh agent.
     if (disposed) {
       throw new Error("The agent manager has been shut down");
     }
@@ -442,8 +413,7 @@ export async function createAgentManager(
       throw new Error("Another agent manager is still using the work dir");
     }
 
-    // Passing a key alongside existing state makes some Headscale versions
-    // register a duplicate node, and leaves an unused key behind on others.
+    // A key alongside existing state makes Headscale 0.28 register a duplicate.
     const stateExists = await hasExistingState(workDir);
     if (stateExists && !needsAuthKey) {
       log.info("agent", "Existing state found, reusing the agent's identity");
@@ -483,14 +453,12 @@ export async function createAgentManager(
 
     isSyncing = true;
     try {
-      const child = await withTimeout(ensureProcess(), "The agent didn't start in time");
+      const child = await ensureProcess();
 
       let output: AgentOutput;
       try {
         output = await withTimeout(requestSync(child), "The agent didn't answer in time");
       } catch (error) {
-        // A hung agent never answers again, so replace it right away. An agent
-        // that exited is restarted with backoff by its exit handler instead.
         if (error instanceof TimeoutError && proc === child) {
           responseHandler = null;
           pendingResync = true;
@@ -508,12 +476,12 @@ export async function createAgentManager(
         if (consecutiveErrors >= 5) {
           log.warn("agent", "Too many consecutive errors, killing agent process for retry");
           await stopProcess(child);
+          scheduleRestart();
         }
         return;
       }
 
-      // tsnet keeps reporting a stale identity (e.g. its node was deleted)
-      // as connected, so Headscale is the only reliable source of truth.
+      // tsnet reports a deleted node as connected, so ask Headscale.
       const nodes = await withTimeout(
         apiClient.nodes.list(),
         "Headscale didn't list nodes in time",
@@ -550,8 +518,8 @@ export async function createAgentManager(
           });
       }
 
-      await pruneStaleHostInfo();
-      await pruneEphemeralNodes();
+      await pruneStaleHostInfo(nodes);
+      await pruneEphemeralNodes(nodes);
 
       state.syncedAt = new Date();
       state.nodeCount = keys.length;
@@ -583,16 +551,8 @@ export async function createAgentManager(
     }
   }
 
-  /**
-   * Prunes any offline nodes marked as ephemeral. This is due to a Headscale
-   * bug where ephemeral nodes wouldn't be automatically removed on disconnect.
-   */
-  async function pruneStaleHostInfo() {
+  async function pruneStaleHostInfo(nodes: Machine[]) {
     try {
-      const nodes = await withTimeout(
-        apiClient.nodes.list(),
-        "Headscale didn't list nodes in time",
-      );
       const activeKeys = nodes.map((n) => n.nodeKey);
 
       if (activeKeys.length === 0) {
@@ -616,12 +576,9 @@ export async function createAgentManager(
     }
   }
 
-  async function pruneEphemeralNodes() {
+  // Headscale doesn't remove ephemeral nodes when they disconnect.
+  async function pruneEphemeralNodes(nodes: Machine[]) {
     try {
-      const nodes = await withTimeout(
-        apiClient.nodes.list(),
-        "Headscale didn't list nodes in time",
-      );
       const toPrune = nodes.filter((n) => n.preAuthKey?.ephemeral && !n.online);
 
       for (const node of toPrune) {
@@ -640,8 +597,7 @@ export async function createAgentManager(
     }
   }
 
-  // Background syncs have no caller to catch for them, and an unhandled
-  // rejection takes the whole server down.
+  // An unhandled rejection here would take down the server.
   function syncInBackground() {
     sync().catch((error) => {
       log.error(
@@ -717,8 +673,7 @@ export async function createAgentManager(
         await stopProcess(proc);
       }
 
-      // The entry stays: a manager disposed while still waiting must leave
-      // the next one waiting on the owner, and a settled entry costs nothing.
+      // Deleting the entry would let the next manager skip a live owner.
       releaseWorkDir();
     },
   };
