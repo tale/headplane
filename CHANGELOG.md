@@ -2,6 +2,7 @@
 
 ## Fixes
 
+- A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
 - The agent no longer creates a new auth key everytime it starts, which caused duplicate machines to be registered on Headscale 0.28.
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.

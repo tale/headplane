@@ -11,12 +11,14 @@ import StatusCircle from "~/components/status-circle";
 import Tooltip from "~/components/tooltip";
 import {
   agentsContext,
+  authContext,
   headscaleConfigContext,
   headscaleContext,
   headscaleLiveStoreContext,
   requestApiContext,
 } from "~/server/context";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
+import { Capabilities } from "~/server/web/roles";
 import cn from "~/utils/cn";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { extractTagOwnerTags, isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
@@ -30,6 +32,7 @@ import { machineAction } from "./machine-actions";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const agentsFeature = context.get(agentsContext);
+  const auth = context.get(authContext);
   const getRequestApi = context.get(requestApiContext);
   const headscale = context.get(headscaleContext);
   const headscaleConfig = context.get(headscaleConfigContext);
@@ -41,6 +44,14 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   if (params.id.endsWith(".ico")) {
     throw data(null, { status: 204 });
+  }
+
+  const principal = await auth.require(request);
+
+  if (!auth.can(principal, Capabilities.read_machines)) {
+    throw new Error(
+      "You do not have permission to view this page. Please contact your administrator.",
+    );
   }
 
   const magic = headscaleConfig.getMagicDNSBaseDomain();
