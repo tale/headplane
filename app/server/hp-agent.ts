@@ -52,6 +52,7 @@ interface SyncState {
 const MIN_RESTART_DELAY_MS = 1_000;
 const MAX_RESTART_DELAY_MS = 60_000;
 const SYNC_STEP_TIMEOUT_MS = 20_000;
+const REGISTER_GRACE_MS = 15_000;
 
 function withTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -150,6 +151,7 @@ export async function createAgentManager(
   let isSyncing = false;
   let pendingResync = false;
   const stopping = new WeakSet<ChildProcess>();
+  const registering = new WeakSet<ChildProcess>();
 
   function spawnAgent(authKey?: string): ChildProcess {
     if (disposed) {
@@ -176,6 +178,10 @@ export async function createAgentManager(
       env,
       stdio: ["pipe", "pipe", "pipe"],
     });
+
+    if (authKey) {
+      registering.add(child);
+    }
 
     // A dead agent's EPIPE would otherwise crash Headplane.
     child.stdin?.on("error", (error) => {
@@ -337,6 +343,24 @@ export async function createAgentManager(
     await writeFile(recordPath, currentId);
   }
 
+  async function findSelf(child: ChildProcess, nodeKey: string) {
+    const deadline = registering.has(child) ? Date.now() + REGISTER_GRACE_MS : 0;
+    while (true) {
+      const nodes = await withTimeout(
+        apiClient.nodes.list(),
+        "Headscale didn't list nodes in time",
+      );
+
+      const self = nodes.find((node) => node.nodeKey === nodeKey);
+      if (self || Date.now() >= deadline || child.exitCode !== null) {
+        registering.delete(child);
+        return { nodes, self };
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
   async function startProcess(): Promise<ChildProcess> {
     if (disposed) {
       throw new Error("The agent manager has been shut down");
@@ -428,11 +452,7 @@ export async function createAgentManager(
       }
 
       // tsnet reports a deleted node as connected, so ask Headscale.
-      const nodes = await withTimeout(
-        apiClient.nodes.list(),
-        "Headscale didn't list nodes in time",
-      );
-      const self = nodes.find((node) => node.nodeKey === output.self);
+      const { nodes, self } = await findSelf(child, output.self);
       if (!self) {
         log.warn("agent", "Headscale doesn't know the agent's node, re-registering it");
         needsAuthKey = true;
