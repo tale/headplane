@@ -47,6 +47,18 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "integration:agent",
+          include: ["tests/integration/agent/**/*.test.ts"],
+          globalSetup: ["tests/integration/agent/setup.ts"],
+          // Agents are counted by their binary path, which every file shares.
+          fileParallelism: false,
+          testTimeout: 180_000,
+          hookTimeout: 180_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "integration:oidc",
           include: ["tests/integration/oidc/**/*.test.ts"],
           testTimeout: 60_000,
