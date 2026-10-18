@@ -1,0 +1,161 @@
+import { type } from "arktype";
+import { drizzle } from "drizzle-orm/node-sqlite";
+import { migrate } from "drizzle-orm/node-sqlite/migrator";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
+
+import { headplaneConfig } from "~/server/config/config-schema";
+import { createAppContext, createRouterContext } from "~/server/context";
+import type { Headscale } from "~/server/headscale/api";
+import type { Role } from "~/server/web/roles";
+
+import type { HeadscaleVersion } from "../harness/versions";
+import { createFakeHeadscale, type FakeHeadscale } from "./fake-headscale";
+
+export interface TestAppOptions {
+  // Defaults to a fake Headscale of the latest version.
+  headscale?: { headscale: Headscale; apiKey: string };
+  version?: HeadscaleVersion;
+  // Merged over the minimal config, one top-level key at a time.
+  config?: Record<string, Record<string, unknown>>;
+}
+
+export type TestApp = Awaited<ReturnType<typeof createTestApp>>;
+
+type RouteFunction = (args: LoaderFunctionArgs & ActionFunctionArgs) => unknown;
+
+export interface CallOptions {
+  as?: string;
+  params?: Record<string, string>;
+  form?: Record<string, string | string[]>;
+  search?: string;
+}
+
+// The real app context and auth service around a fake or real Headscale.
+// Sign in as a role to get a session cookie, then call loaders and actions
+// the way React Router would.
+export async function createTestApp(options: TestAppOptions = {}) {
+  let fake: FakeHeadscale | undefined;
+  let headscale = options.headscale;
+  if (!headscale) {
+    const created = await createFakeHeadscale(options.version);
+    fake = created.server;
+    headscale = { headscale: created.headscale, apiKey: created.server.apiKey };
+  }
+
+  const config = headplaneConfig({
+    ...options.config,
+    server: {
+      cookie_secret: "test-cookie-secret-thirty-two-ch",
+      cookie_secure: false,
+      ...options.config?.server,
+    },
+    headscale: {
+      url: "http://headscale.test",
+      api_key: headscale.apiKey,
+      ...options.config?.headscale,
+    },
+  });
+
+  if (config instanceof type.errors) {
+    throw new Error(`Invalid test config: ${config.summary}`);
+  }
+
+  const db = drizzle(":memory:");
+  migrate(db, { migrationsFolder: "./drizzle" });
+
+  const ctx = await createAppContext(config, { db, headscale: headscale.headscale });
+  const api = headscale.headscale.client(headscale.apiKey);
+  let users = 0;
+
+  async function signIn(role: Role, profile: { name?: string; email?: string } = {}) {
+    // The first user always becomes the owner, so make sure one exists.
+    if (role !== "owner" && (await ctx.auth.listUsers()).length === 0) {
+      await ctx.auth.findOrCreateUser("test-owner", { name: "Owner" });
+    }
+
+    users += 1;
+    const subject = `test-${role}-${users}`;
+    const name = profile.name ?? `${role} ${users}`;
+    const userId = await ctx.auth.findOrCreateUser(subject, { name, email: profile.email });
+    if (role !== "owner") {
+      await ctx.auth.reassignUser(userId, role);
+    }
+
+    const setCookie = await ctx.auth.createOidcSession(userId, { name, email: profile.email });
+    return { userId, subject, cookie: setCookie.split(";")[0] };
+  }
+
+  async function signInWithApiKey(apiKey = headscale!.apiKey) {
+    const setCookie = await ctx.auth.createApiKeySession(apiKey, "API key", 3_600_000);
+    return { cookie: setCookie.split(";")[0] };
+  }
+
+  function request(path: string, call: CallOptions = {}) {
+    const headers = new Headers();
+    if (call.as) headers.set("cookie", call.as);
+
+    const url = `http://headplane.test${__PREFIX__}${path}${call.search ?? ""}`;
+    if (!call.form) {
+      return new Request(url, { headers });
+    }
+
+    const body = new FormData();
+    for (const [key, value] of Object.entries(call.form)) {
+      for (const item of [value].flat()) body.append(key, item);
+    }
+
+    return new Request(url, { method: "POST", headers, body });
+  }
+
+  // Runs a loader or action and returns what it returned or threw, since
+  // React Router treats a thrown Response the same as a returned one.
+  async function call(fn: RouteFunction, path: string, callOptions: CallOptions = {}) {
+    const args = {
+      request: request(path, callOptions),
+      params: callOptions.params ?? {},
+      context: createRouterContext(ctx),
+      url: new URL(`http://headplane.test${__PREFIX__}${path}${callOptions.search ?? ""}`),
+      pattern: path,
+      unstable_pattern: path,
+    };
+
+    try {
+      return await fn(args as unknown as LoaderFunctionArgs & ActionFunctionArgs);
+    } catch (error) {
+      return error;
+    }
+  }
+
+  return {
+    ctx,
+    api,
+    fake,
+    signIn,
+    signInWithApiKey,
+    request,
+    call,
+    async dispose() {
+      await ctx.dispose();
+    },
+    [Symbol.asyncDispose]() {
+      return ctx.dispose();
+    },
+  };
+}
+
+// The HTTP status a loader or action result maps to, so tests can assert on
+// outcomes without caring whether the route returned or threw.
+export function statusOf(result: unknown): number {
+  if (result instanceof Response) return result.status;
+  if (result instanceof Error) return 500;
+  if (
+    result &&
+    typeof result === "object" &&
+    "type" in result &&
+    result.type === "DataWithResponseInit"
+  ) {
+    return (result as { init?: { status?: number } | null }).init?.status ?? 200;
+  }
+
+  return 200;
+}
