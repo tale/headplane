@@ -3,6 +3,7 @@ import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 
 import { CalloutContainer, CalloutDescription, CalloutTitle } from "@/components/callout";
+import DynamicCodeBlock from "@/components/dynamic-code-block";
 import Figure from "@/components/figure";
 
 export function useMDXComponents(components?: MDXComponents) {
@@ -16,6 +17,7 @@ export function useMDXComponents(components?: MDXComponents) {
     CalloutContainer,
     CalloutTitle,
     CalloutDescription,
+    DynamicCodeBlock,
     Figure,
     ...components,
   } satisfies MDXComponents;

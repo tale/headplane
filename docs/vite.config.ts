@@ -1,11 +1,11 @@
+import path from "node:path";
+
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { remarkDirectiveAdmonition } from "fumadocs-core/mdx-plugins";
 import { fumadocsMdx } from "fumadocs-mdx/vite";
 import remarkDirective from "remark-directive";
 import { defineConfig } from "vite";
-
-import { remarkLinks } from "./app/lib/remark-links";
 
 // Callout variants from docs/app/components/callout.tsx
 const admonitionTypes = {
@@ -28,7 +28,6 @@ export default defineConfig({
           remarkPlugins: (plugins) => [
             remarkDirective,
             [remarkDirectiveAdmonition, { types: admonitionTypes }],
-            remarkLinks,
             ...plugins,
           ],
           rehypeCodeOptions: {
@@ -42,6 +41,8 @@ export default defineConfig({
     reactRouter(),
   ],
   resolve: {
-    tsconfigPaths: true,
+    // Not `tsconfigPaths`: that only applies to TypeScript files, and MDX pages
+    // import from `@/` too.
+    alias: { "@": path.resolve(import.meta.dirname, "app") },
   },
 });

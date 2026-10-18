@@ -24,7 +24,7 @@ is available to use as a starting point. Some of the important fields include:
 | **`server.data_path`**     | Just a path to keep in mind, especially if you're using Docker.                                             |
 
 The configuration file is rather complicated and has many more options. Refer to
-the [Configuration](../configuration/index.md) guide for a detailed explanation of all
+the [Configuration](/configuration) guide for a detailed explanation of all
 the available options, as well as guidance on securely setting up your values
 through secret path options and environment variables.
 
@@ -33,7 +33,7 @@ through secret path options and environment variables.
 Headplane can be deployed in several different ways, each with its own set of
 advantages and trade-offs. Choose the method that best fits your needs:
 
-### [Docker](./docker.md): Fast and easy deployment using Docker
+### [Docker](/install/docker): Fast and easy deployment using Docker
 
 - Recommended for most users due to its simplicity and ease of use.
 - Allows for advanced features like network management and remote web SSH.
@@ -41,7 +41,7 @@ advantages and trade-offs. Choose the method that best fits your needs:
 
 ---
 
-### [Native Mode](./native-mode.md): Direct installation on a server
+### [Native Mode](/install/native-mode): Direct installation on a server
 
 - Suitable for users who prefer not to use Docker.
 - Allows for advanced features like network management and remote web SSH.
@@ -49,7 +49,7 @@ advantages and trade-offs. Choose the method that best fits your needs:
 
 ---
 
-### [Limited Mode](./limited-mode.md): Quick and easy deployment with minimal features
+### [Limited Mode](/install/limited-mode): Quick and easy deployment with minimal features
 
 - Ideal for testing or simple environments and not intended for production use.
 - Lacks any advanced functionality or integrations such as network management

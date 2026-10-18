@@ -60,8 +60,10 @@ to a silent no-op.
 
 The project has a documentation site available at the `docs/` directory built
 with Fumadocs on React Router (`pnpm docs:dev`). Pages are Markdown, or MDX when
-they need components, and the sidebar order lives in each folder's `meta.json`.
-Link between pages by file (`./docker.md`) so links work on GitHub too. The site
+they use components or expressions, and the sidebar order lives in each folder's
+`meta.json`. Link between pages by site path (`/install/docker`). Version
+numbers (Headscale minimums, Node, pnpm) come from `docs/app/lib/versions.ts`:
+import it in an MDX page and write `{versions.headscale.minimum}`. The site
 shares the app's color tokens through `app/tokens.css`. If making changes to
 staple features, please take care to also update the documentation to reflect
 any changes in functionality or usage.

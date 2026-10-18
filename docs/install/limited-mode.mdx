@@ -3,6 +3,8 @@ title: Limited Mode
 description: Install Headplane in Limited Mode.
 ---
 
+import { versions } from "@/lib/versions";
+
 # Limited Mode
 
 :::warning
@@ -19,14 +21,14 @@ advanced features, making it suitable for local testing and development.
 ## Prerequisites
 
 - Docker (and optionally Docker Compose)
-- Headscale version 0.27.0 or later installed and running
-- A [completed configuration file](./index.md#configuration) for Headplane.
+- Headscale version {versions.headscale.minimum} or later installed and running
+- A [completed configuration file](/install#configuration) for Headplane.
 
 ## Installation
 
 :::tip
 If you want to test Limited Mode without Docker, you can follow the
-[Native Mode](./native-mode.md) installation guide and simply avoid setting
+[Native Mode](/install/native-mode) installation guide and simply avoid setting
 up any of the advanced features.
 :::
 
@@ -84,6 +86,6 @@ one of the other installation methods that will provide both the advanced
 features of Headplane and a more robust deployment.
 
 Limited Mode also technically supports
-[Single Sign-On (SSO) authentication](../features/sso.md), but some parts of it
+[Single Sign-On (SSO) authentication](/features/sso), but some parts of it
 may not work as expected. For a full-featured experience with SSO, please use
 one of the other installation methods.

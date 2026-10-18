@@ -3,6 +3,7 @@ title: Browser SSH
 description: Open SSH sessions to your Tailnet nodes directly from the browser.
 ---
 
+import { versions } from "@/lib/versions";
 import sshBtop from "../assets/ssh-btop.png";
 import sshFastfetch from "../assets/ssh-fastfetch.png";
 
@@ -34,7 +35,7 @@ joins the tailnet for the duration of the SSH session.
 
 ## Prerequisites
 
-- **Headscale 0.28 or newer** is required. Browser SSH is broken in the
+- **Headscale {versions.headscale.ssh} or newer** is required. Browser SSH is broken in the
   Headscale 0.29 beta releases through 0.29.1; use Headscale 0.28.x or 0.29.2
   and newer.
 - Target nodes must have **Tailscale SSH** enabled (`tailscale up --ssh`).

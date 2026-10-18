@@ -18,7 +18,7 @@ users sign in through your IdP and Headplane automatically links them to their
 Headscale identity, assigns a role, and manages their session.
 
 If your reverse proxy already performs authentication and can pass trusted user
-headers to Headplane, see [Proxy Authentication](./proxy-auth.md) instead.
+headers to Headplane, see [Proxy Authentication](/features/proxy-auth) instead.
 
 ## Getting Started
 

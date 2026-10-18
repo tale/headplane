@@ -4,11 +4,13 @@ description: Install Headplane without Docker.
 outline: [2, 3]
 ---
 
+import { versions } from "@/lib/versions";
+
 # Native Mode
 
 :::tip
 If you are looking to deploy with Docker, follow the
-[**Docker**](./docker.md) deployment guide.
+[**Docker**](/install/docker) deployment guide.
 :::
 
 Headplane can be installed and run directly on your host system without the need
@@ -21,10 +23,10 @@ or prefer to avoid containers.
 - Go matching the `go` directive in the checked-out release's `go.mod`
   (only needed to build Headplane)
 - Node.js and [pnpm](https://pnpm.io/) matching the `engines` field in the
-  checked-out release's `package.json`. For v0.8.0, use Node.js `>=24.2 <25`
-  and pnpm `>=10.4 <11`; `packageManager` pins pnpm to `10.4.0`.
-- Headscale version 0.27.0 or later installed and running
-- A [completed configuration file](./index.md#configuration) for Headplane.
+  checked-out release's `package.json`. Currently that's Node.js <code>{versions.node}</code> and
+  pnpm <code>{versions.pnpm}</code>; `packageManager` pins pnpm to <code>{versions.pnpmPinned}</code>.
+- Headscale version {versions.headscale.minimum} or later installed and running
+- A [completed configuration file](/install#configuration) for Headplane.
 
 Before building and running Headplane, ensure that the directory defined in
 `server.data_path` in your configuration exists and is writable by the user who
@@ -153,10 +155,10 @@ directly from the Headplane web interface via
 requires that Tailscale SSH is running on your nodes (done via
 `tailscale up --ssh`).
 
-This feature uses the [Headplane Agent](../features/agent.md) to facilitate the
-SSH connections. Refer to the [Agent documentation](../features/agent.md) for
+This feature uses the [Headplane Agent](/features/agent) to facilitate the
+SSH connections. Refer to the [Agent documentation](/features/agent) for
 setup instructions and specifically follow the
-[native mode configuration](../features/agent.md#native-mode-configuration)
+[native mode configuration](/features/agent#native-mode-configuration)
 section to point Headplane to the correct agent location.
 
 ### Single Sign-On (SSO)
@@ -165,7 +167,7 @@ Single Sign-On (SSO) authentication allows users to log in to Headplane using
 external identity providers such as Google, GitHub, or any provider that
 supports OpenID Connect (OIDC).
 
-To get started with SSO, refer to the [SSO documentation](../features/sso.md)
+To get started with SSO, refer to the [SSO documentation](/features/sso)
 for detailed setup instructions.
 
 ## Reverse Proxying
@@ -186,7 +188,7 @@ Headscale supports integrating with
 such as Nginx, Caddy, Apache, etc. Deploying Headplane is as simple as adding
 a handler to route any requests to `/admin` to the Headplane service. Refer
 to the Nginx example below for a reference configuration. A similar setup via
-Traefik in Docker is available in the [Docker](./docker.md#reverse-proxying)
+Traefik in Docker is available in the [Docker](/install/docker#reverse-proxying)
 installation documentation.
 
 #### Example Nginx Configuration

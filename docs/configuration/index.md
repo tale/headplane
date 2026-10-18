@@ -95,7 +95,7 @@ This is not recommended in production environments.
 Anything to do with TLS — terminating HTTPS in-process, trusting a private
 CA for outbound connections to Headscale or your OIDC provider, the
 interaction with `cookie_secure` and the Docker healthcheck — lives on its
-own page: [TLS & Certificates](./tls).
+own page: [TLS & Certificates](/configuration/tls).
 
 ## Reverse Proxying
 

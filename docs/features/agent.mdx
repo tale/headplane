@@ -3,6 +3,13 @@ title: Headplane Agent
 description: Configure the Headplane Agent for enhanced functionality.
 ---
 
+import { versions } from "@/lib/versions";
+
+import machineDark from "../assets/machine-dark.png";
+import machineLight from "../assets/machine-light.png";
+import previewDark from "../assets/preview-dark.png";
+import previewLight from "../assets/preview-light.png";
+
 # Headplane Agent
 
 The Headplane Agent is an optional component that periodically syncs node
@@ -15,8 +22,8 @@ agent's existing Tailnet state across restarts.
 
 Before enabling the agent, ensure the following:
 
-1. **Headscale 0.28 or newer** is required. The agent uses tag-only pre-auth
-   keys which are only available in Headscale 0.28+.
+1. **Headscale {versions.headscale.agent} or newer** is required. The agent uses tag-only pre-auth
+   keys which are only available in Headscale {versions.headscale.agent}+.
 
 2. **`headscale.api_key`** must be set in your Headplane configuration file.
    The agent uses this key to auto-generate pre-auth keys for connecting to the
@@ -109,19 +116,16 @@ fallback in case auto-approval fails.
 
 ## Usage
 
-<figure>
-    <img class="dark-only" src="../assets/preview-dark.png" />
-    <img class="light-only" src="../assets/preview-light.png" />
-    <figcaption>Headplane Dashboard</figcaption>
-</figure>
+<Figure
+  alt="Headplane Dashboard"
+  light={previewLight}
+  dark={previewDark}
+  caption="Headplane Dashboard"
+/>
 
 After enabling and configuring the Headplane Agent, restart your Headplane
 instance. You should now see additional options in the UI, such as host
 information about each node and the ability to open SSH sessions directly from
 the browser if the nodes have Tailscale SSH enabled.
 
-<figure>
-    <img class="dark-only" src="../assets/machine-dark.png" />
-    <img class="light-only" src="../assets/machine-light.png" />
-    <figcaption>Machine page</figcaption>
-</figure>
+<Figure alt="Machine page" light={machineLight} dark={machineDark} caption="Machine page" />

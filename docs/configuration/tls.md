@@ -67,7 +67,7 @@ refuse `Secure`-less cookies over HTTPS); a warning is logged if your config
 had it set to `false`.
 
 For most deployments we still recommend terminating TLS at a reverse proxy
-(see [Reverse Proxying](./#reverse-proxying)) so you can share certificates
+(see [Reverse Proxying](/configuration#reverse-proxying)) so you can share certificates
 with Headscale and other services. Built-in TLS is meant for the simpler
 "Headplane on a single box" scenarios.
 
