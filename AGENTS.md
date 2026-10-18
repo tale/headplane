@@ -84,62 +84,79 @@ counts as part of the change.
 
 Most coverage belongs here. A unit test runs in milliseconds, does no network
 or container IO, and uses real implementations wherever they're cheap: a
-`:memory:` SQLite database, real `createAuthService`, real role checks, real
-valibot schemas.
+`:memory:` SQLite database, the real auth service, real role checks, real
+valibot schemas, and Headplane's real Headscale client.
 
+- Test routes through `createTestApp()` (`tests/support/app.ts`). It builds the
+  production app context around a fake Headscale. `app.signIn(role)` returns a
+  real session cookie and `app.call(loader, path, { as, form, params })` runs a
+  loader or action the way React Router does. Don't hand-write `context.get`
+  switches or cast route arguments.
+- For anything that talks to Headscale, use `createFakeHeadscale(version)`
+  (`tests/support/fake-headscale.ts`), not stubs of individual methods. It
+  answers at the HTTP level for every supported version. `app.fake.join()`,
+  `pendingNode()`, `setOnline()`, and `setReachable()` set up state a real
+  tailnet would produce.
+- `tests/unit/routes/permissions.test.ts` calls every loader and action intent
+  in `app/routes.ts` as each role. A new route is covered automatically. Only
+  add it to `PUBLIC` or `MEMBER_VISIBLE` if it truly returns no tailnet data to
+  those callers, and say why.
 - Don't use `vi.mock` on app modules. If code can't be tested without it, change
   the code: pass the dependency in, return a value instead of calling `exit`,
   read files at the edge. We change app code for testability; we don't contort
   tests around it.
-- Route loaders and actions are plain functions. Call them with a real
-  `RouterContextProvider` that holds real services. Don't hand-write
-  `context.get` switches or cast to `any` or `never`.
-- To test Headscale-dependent logic, use the in-memory Headscale fake rather
-  than stubbing individual methods. The fake must pass the same contract suite
-  as real Headscale (see below). If it can't model a behavior, extend the fake
-  and its contract test together.
 - Use fake timers for polling, retry, and expiry logic instead of sleeping.
-- When a test needs files, write them to a real temp directory. Don't mock
-  `node:fs`.
+- When a test needs files, use `tempDir()` or `tempFile()` from
+  `tests/support/temp.ts`. Don't mock `node:fs`.
+- Logs only print for failing tests. Don't mock the logger to quiet them.
+
+### The Headscale contract (`tests/contract/`)
+
+`headscale.ts` is what Headplane relies on from Headscale's API, asserted
+through Headplane's client. It runs against the fake in `tests/unit` and against
+real Headscale in `tests/integration`, so the fake can't drift. When you need
+the fake to do something new, write the contract test first, run it against
+real Headscale (`HP_HEADSCALE_VERSIONS=all`), then make the fake match. Record
+real quirks there too, like 0.28.0 deleting every auth key along with any user.
 
 ### Integration tests (`tests/integration/`)
 
 Use these for anything that needs real Headscale, a real tailnet, real
 containers, or a real identity provider. They're how we know Headplane works
 against the versions we claim to support. Prefer a few broad, scenario-shaped
-tests over many narrow ones.
+tests that drive Headplane and check what real nodes see, over many narrow ones.
 
-- Headscale client contract: one suite runs against every supported version and
-  against the in-memory fake.
-- Agent lifecycle and faults, Docker, Kubernetes, and `/proc` integrations, and
-  OIDC against Dex.
+- `headscale/` runs the contract. `headplane/` drives routes against a real
+  tailnet. `agent/`, `platform/` (Docker, `/proc`), and `oidc/` (Dex) cover the
+  rest.
 - Each file creates its own environment. Never depend on state left behind by
   another test or file, such as a count of API keys or a node created in an
   earlier test.
-- Wait for conditions with `vi.waitFor`. Never sleep for a fixed time.
+- Wait for conditions with `vi.waitFor` or the harness's `waitFor`. Never sleep
+  for a fixed time.
 
 ### Harness (`tests/harness/`)
 
-All container setup goes through one harness, built on `testcontainers`. It
-starts disposable tailnets: a Headscale container on its own Docker network,
-any number of Tailscale nodes (with or without SSH, tags, routes, or exit
-nodes), the agent, Dex, and Headplane in-process, all controlled from test code.
-The same harness backs the `pnpm harness` CLI, which keeps a named scenario
-running for manual testing, reproducing user setups, and taking docs
-screenshots.
+All container setup goes through the harness, built on `testcontainers`.
 
-- Supported Headscale versions and the pinned Tailscale image live only in
-  `tests/harness/versions.ts`. Never hardcode a version in a test.
-- Nodes join on the tailnet's network using pre-auth keys. No host networking.
+- `createTailnet({ version, policy, headscaleConfig })` starts Headscale on its
+  own Docker network, served over HTTPS with a generated certificate. Dispose it
+  with `await using` or `tailnet.dispose()`.
+- `tailnet.node({ name, user, tags, ssh, routes, exitNode })` starts a real
+  Tailscale node that joins with a pre-auth key. `node.down()`, `node.up()`,
+  `node.status()`, and `node.tailscale([...])` control it.
+  `tailnet.pendingNode()` waits for interactive registration.
+- `tailnet.headplane()` runs Headplane in-process against the tailnet and
+  returns the same test app as `createTestApp()`.
+- Supported Headscale versions and the pinned Tailscale and Dex images live only
+  in `versions.ts`. Never hardcode a version in a test; use `testedVersions()`.
+  Locally only the latest runs; CI sets `HP_HEADSCALE_VERSIONS=all`.
 - If you need a container the harness can't create yet, add it to the harness.
   Don't start containers ad hoc in test files.
-- Scenarios in `tests/harness/scenarios/` are declarative seed data (users,
-  nodes, policy, DNS). Write them to look like real deployments, since they
-  appear in screenshots.
-
-The harness is being built. Until it lands, extend the existing setup in
-`tests/integration/setup/` and `tests/integration/agent/harness.ts`, and don't
-add new one-off setups.
+- Scenarios in `scenarios/` are declarative seed data (users, nodes, policy,
+  DNS). `pnpm harness up <scenario> --headplane` keeps one running for manual
+  testing, reproducing user setups, and docs screenshots. Write them to look
+  like real deployments.
 
 ## Docs
 
