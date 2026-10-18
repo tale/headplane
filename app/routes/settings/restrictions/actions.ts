@@ -37,7 +37,12 @@ export const restrictionAction = createAction({
 
     async function save(type: RestrictionType, values: string[]) {
       await config.patch([{ path: configPaths[type].path, value: values }]);
-      await integration?.onConfigChange(headscale);
+      if (integration && !(await integration.onConfigChange(headscale))) {
+        throw new ActionError(
+          "Saved, but Headscale didn't come back after restarting. Check its logs.",
+          502,
+        );
+      }
     }
 
     return { principal, current, save };

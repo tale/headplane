@@ -119,6 +119,12 @@ Headplane and Headscale both run on the same machine because Headplane needs
 
 - Access to read and write the Head**scale** configuration file
 - Access to read the `/proc` filesystem on Linux to locate Headscale's process
+- Permission to send `SIGTERM` to Headscale, and a supervisor that restarts it
+
+Headscale only reloads its ACL policy on `SIGHUP`, so Headplane applies every
+other change by stopping Headscale and waiting for it to come back. Headscale's
+own systemd unit sets `Restart=always`, which is all this needs. Without a
+supervisor, Headscale stays down after the first change.
 
 #### Configuration
 
@@ -130,6 +136,10 @@ your Headplane configuration file:
 | **`integration.proc.enabled`** | Set to `true` to enable process inspection.                                                                                    |
 | **`headscale.config_path`**    | Path to your Head**scale** configuration file (e.g., `/etc/headscale/config.yaml`).                                            |
 | `headscale.dns_records_path`   | _Optional_. Refer to the [example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml) for details. |
+
+To edit DNS records, set `dns.extra_records_path` in your Headscale
+configuration and make the file writable by Headplane. Records listed inline
+under `dns.extra_records` are shown read-only.
 
 With these settings in place, restart Headplane. You should now see additional
 options in the UI navbar such as "DNS" and "Settings" where you can manage your

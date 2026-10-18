@@ -47,6 +47,15 @@ the respective `lint` and `format` scripts, you can pass flags to them. You can
 also run Headscale CLI commands with `docker exec headscale headscale <command>`
 when the dev environment is running.
 
+## Action errors
+
+Throw `ActionError` (`app/server/web/actions.ts`) for any state of the world an
+action can run into: config, permissions, data, Headscale's version or health.
+It shows its message in the form. Use it even when the UI already hides the
+action, since what the UI prevents changes over time. Throw a plain `Error`
+only for programmer bugs, code paths that should be impossible. Never fall back
+to a silent no-op.
+
 ## Docs
 
 The project has a documentation site available at the `docs/` directory built

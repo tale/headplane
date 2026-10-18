@@ -1,4 +1,5 @@
 import ActionDialog from "~/components/action-dialog";
+import Code from "~/components/code";
 import Link from "~/components/link";
 import Section, { RemoveButton, Row, RowList } from "~/components/section";
 
@@ -7,12 +8,15 @@ import AddRecord from "../dialogs/add-record";
 interface Props {
   records: { name: string; type: "A" | string; value: string }[];
   isDisabled: boolean;
+  isReadOnly: boolean;
 }
 
-export default function ManageRecords({ records, isDisabled }: Props) {
+export default function ManageRecords({ records, isDisabled, isReadOnly }: Props) {
+  const isLocked = isDisabled || isReadOnly;
+
   return (
     <Section
-      action={isDisabled ? undefined : <AddRecord />}
+      action={isLocked ? undefined : <AddRecord />}
       description={
         <>
           Point a name at an address for every device on the tailnet. Headscale supports A and AAAA
@@ -20,6 +24,13 @@ export default function ManageRecords({ records, isDisabled }: Props) {
           <Link external styled to="https://headscale.net/stable/ref/dns">
             Docs
           </Link>
+          {!isDisabled && isReadOnly && (
+            <>
+              {" "}
+              To edit records here, give Headplane write access to the file at{" "}
+              <Code>dns.extra_records_path</Code>.
+            </>
+          )}
         </>
       }
       title="DNS records"
@@ -38,7 +49,7 @@ export default function ManageRecords({ records, isDisabled }: Props) {
                   isDestructive
                   submitLabel="Remove"
                   title={`Remove the ${record.type} record for ${record.name}?`}
-                  trigger={<RemoveButton disabled={isDisabled} />}
+                  trigger={<RemoveButton disabled={isLocked} />}
                 />
               }
               key={`${record.name}-${record.type}-${record.value}`}

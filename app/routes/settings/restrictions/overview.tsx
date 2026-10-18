@@ -4,7 +4,7 @@ import Callout from "~/components/callout";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
-import { authContext, headscaleConfigContext } from "~/server/context";
+import { authContext, headscaleConfigContext, integrationContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 import { toastClientAction } from "~/utils/toast";
 
@@ -33,13 +33,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       users: [...new Set(oidc.allowedUsers)],
     },
     writable: headscaleConfig.writable(),
+    isAutoApplied: context.get(integrationContext) !== undefined,
   };
 }
 
 export const action = restrictionAction;
 export const clientAction = toastClientAction;
 
-export default function Page({ loaderData: { access, writable, settings } }: Route.ComponentProps) {
+export default function Page({
+  loaderData: { access, writable, isAutoApplied, settings },
+}: Route.ComponentProps) {
   const isDisabled = !writable || !access;
 
   return (
@@ -61,6 +64,16 @@ export default function Page({ loaderData: { access, writable, settings } }: Rou
           {access
             ? "The Headscale configuration is read-only, so restrictions can't be changed here."
             : "Your permissions don't allow changes to sign-in restrictions."}
+        </Callout>
+      )}
+      {!isDisabled && !isAutoApplied && (
+        <Callout className="mb-6" variant="warning">
+          Changes are saved to the Headscale configuration but only take effect once Headscale
+          restarts. Set up an{" "}
+          <Link external styled to="https://headplane.net/configuration/integrations">
+            integration
+          </Link>{" "}
+          to restart it automatically.
         </Callout>
       )}
       <RestrictionSection isDisabled={isDisabled} type="domain" values={settings.domains} />

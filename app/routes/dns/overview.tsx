@@ -4,7 +4,7 @@ import Callout from "~/components/callout";
 import Link from "~/components/link";
 import PageError from "~/components/page-error";
 import PageHeader from "~/components/page-header";
-import { authContext, headscaleConfigContext } from "~/server/context";
+import { authContext, headscaleConfigContext, integrationContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
 import { toastClientAction } from "~/utils/toast";
 
@@ -34,6 +34,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...dns,
     access: writablePermission,
     writable: headscaleConfig.writable(),
+    recordsWritable: headscaleConfig.recordsWritable(),
+    isAutoApplied: context.get(integrationContext) !== undefined,
   };
 }
 
@@ -66,6 +68,16 @@ export default function Page() {
               : "The Headscale configuration is read-only, so DNS settings can't be changed here."}
           </Callout>
         )}
+        {!isDisabled && !data.isAutoApplied && (
+          <Callout className="mb-6" variant="warning">
+            Changes are saved to the Headscale configuration but only take effect once Headscale
+            restarts. Set up an{" "}
+            <Link external styled to="https://headplane.net/configuration/integrations">
+              integration
+            </Link>{" "}
+            to restart it automatically.
+          </Callout>
+        )}
         <General
           baseDomain={data.baseDomain}
           isDisabled={isDisabled}
@@ -73,7 +85,11 @@ export default function Page() {
           isOverrideDns={data.overrideDns}
         />
         <ManageNS global={data.nameservers} isDisabled={isDisabled} split={data.splitDns} />
-        <ManageRecords isDisabled={isDisabled} records={data.extraRecords} />
+        <ManageRecords
+          isDisabled={isDisabled}
+          isReadOnly={!data.recordsWritable}
+          records={data.extraRecords}
+        />
         <ManageDomains
           isDisabled={isDisabled}
           magic={data.magicDns ? data.baseDomain : undefined}
