@@ -575,6 +575,12 @@ export function createFakeHeadscaleServer(version: HeadscaleVersion = LATEST_HEA
           return { node: serializeNode(record) };
         }
 
+        const expiry = query.get("expiry");
+        if (expiry && new Date(expiry).getTime() > Date.now()) {
+          record.expiry = expiry;
+          return { node: serializeNode(record) };
+        }
+
         record.expiry = now();
         if (gte(version, "0.29.0")) record.online = false;
         return { node: serializeNode(record) };

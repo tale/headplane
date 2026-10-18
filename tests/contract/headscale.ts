@@ -380,12 +380,18 @@ export function headscaleContract(
         expect(new Date(node.expiry!).getTime()).toBeLessThanOrEqual(Date.now());
       });
 
-      test.runIf(canDisableExpiry)("key expiry can be disabled", async () => {
+      test.runIf(canDisableExpiry)("key expiry can be disabled and enabled again", async () => {
         const user = await api.users.create({ name: unique("noexpiry") });
         const { id } = await backend.join({ name: unique("forever"), user: user.name });
 
         await api.nodes.toggleExpiry(id, true);
         expect((await api.nodes.get(id)).expiry).toBeNull();
+
+        // Turning it back on must not sign the machine out.
+        await api.nodes.toggleExpiry(id, false);
+        const node = await api.nodes.get(id);
+        expect(new Date(node.expiry!).getTime()).toBeGreaterThan(Date.now() + 170 * 86_400_000);
+        expect(node.online).toBe(true);
       });
 
       test.runIf(!canDisableExpiry)("disabling expiry expires the node instead", async () => {

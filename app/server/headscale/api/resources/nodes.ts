@@ -10,6 +10,9 @@ interface RawMachine extends Omit<Machine, "tags"> {
   invalidTags?: string[];
 }
 
+// Matches Tailscale's default key lifetime.
+export const KEY_EXPIRY_DAYS = 180;
+
 export interface NodeApi {
   list(): Promise<Machine[]>;
   get(id: string): Promise<Machine>;
@@ -105,10 +108,13 @@ export function makeNodeApi(
         body: { tags },
       });
     },
+    // Without a future expiry, Headscale expires the node immediately.
     toggleExpiry: async (nodeId, disableExpiry) => {
+      const expiry = new Date(Date.now() + KEY_EXPIRY_DAYS * 86_400_000).toISOString();
+      const query = disableExpiry ? "disableExpiry=true" : `expiry=${encodeURIComponent(expiry)}`;
       await transport.request({
         method: "POST",
-        path: `v1/node/${nodeId}/expire?disableExpiry=${disableExpiry}`,
+        path: `v1/node/${nodeId}/expire?${query}`,
         apiKey,
       });
     },
