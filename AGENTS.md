@@ -47,9 +47,9 @@ to a silent no-op.
 Correctness is the goal. Test count is not. Every test has to earn its place,
 and a change that doesn't need a new test shouldn't get one.
 
-Run `pnpm test:unit` (about 2s, no Docker) for every change. Run
-`pnpm test:integration` when you touch the Headscale client, the agent, the
-platform integrations, or OIDC. It needs Docker.
+Run `pnpm test:unit` (about a second, no Docker) for every change. Run
+`pnpm test:integration` when you touch a route, the Headscale client, the
+agent, the platform integrations, or OIDC. It needs Docker.
 
 ### What earns a test
 
@@ -82,26 +82,14 @@ counts as part of the change.
 
 ### Unit tests (`tests/unit/`)
 
-Most coverage belongs here. A unit test runs in milliseconds, does no network
-or container IO, and uses real implementations wherever they're cheap: a
-`:memory:` SQLite database, the real auth service, real role checks, real
-valibot schemas, and Headplane's real Headscale client.
+Logic that doesn't touch Headscale belongs here: config, auth sessions, roles,
+parsing, and form schemas. A unit test runs in milliseconds, does no network or
+container IO, and uses real implementations wherever they're cheap: a
+`:memory:` SQLite database, the real auth service, real role checks, and real
+valibot schemas. Anything that talks to Headscale is an integration test
+against the real thing. There is no fake Headscale; don't write one, and don't
+stub the client.
 
-- Test routes through `createTestApp()` (`tests/support/app.ts`). It builds the
-  production app context around a fake Headscale. `app.signIn(role)` returns a
-  real session cookie and `app.call(loader, path, { as, form, params })` runs a
-  loader or action the way React Router does. Don't hand-write `context.get`
-  switches or cast route arguments.
-- For anything that talks to Headscale, use `createFakeHeadscale(version)`
-  (`tests/support/fake-headscale.ts`), not stubs of individual methods. It
-  answers at the HTTP level, so Headplane's real client runs on it.
-  `app.fake.join()` and `setReachable()` set up the rest. It only models what
-  unit tests use. An endpoint it doesn't model throws, so a route that needs
-  more fails loudly instead of passing on made-up data.
-- `tests/unit/routes/permissions.test.ts` calls every loader and action intent
-  in `app/routes.ts` as each role. A new route is covered automatically. Only
-  add it to `PUBLIC` or `MEMBER_VISIBLE` if it truly returns no tailnet data to
-  those callers, and say why.
 - Don't use `vi.mock` on app modules. If code can't be tested without it, change
   the code: pass the dependency in, return a value instead of calling `exit`,
   read files at the edge. We change app code for testability; we don't contort
@@ -111,17 +99,6 @@ valibot schemas, and Headplane's real Headscale client.
   `tests/support/temp.ts`. Don't mock `node:fs`.
 - Logs only print for failing tests. Don't mock the logger to quiet them.
 
-### The Headscale contract (`tests/contract/`)
-
-`headscale.ts` is what Headplane relies on from Headscale's API, asserted
-through Headplane's client. All of it runs against real Headscale in
-`tests/integration`. The part outside `if (isReal)` also runs against the fake
-in `tests/unit`, so the fake can't drift. Grow the fake only when a unit test
-needs it: move the contract test for that behavior out of `if (isReal)` (or
-write one and run it against real Headscale with `HP_HEADSCALE_VERSIONS=all`),
-then make the fake pass it. Record real quirks in the real-only part, like
-0.28.0 deleting every auth key along with any user.
-
 ### Integration tests (`tests/integration/`)
 
 Use these for anything that needs real Headscale, a real tailnet, real
@@ -129,12 +106,23 @@ containers, or a real identity provider. They're how we know Headplane works
 against the versions we claim to support. Prefer a few broad, scenario-shaped
 tests that drive Headplane and check what real nodes see, over many narrow ones.
 
-- `headscale/` runs the contract. `headplane/` drives routes against a real
-  tailnet. `agent/`, `platform/` (Docker, `/proc`), and `oidc/` (Dex) cover the
-  rest.
-- Each file creates its own environment. Never depend on state left behind by
-  another test or file, such as a count of API keys or a node created in an
-  earlier test.
+- `headscale/contract.test.ts` is what Headplane relies on from Headscale's
+  API, asserted through Headplane's client on every supported version. When
+  Headplane starts depending on a new behavior or a version quirk (like 0.28.0
+  deleting every auth key along with any user), add it there.
+- `headplane/` drives routes against a real tailnet. Get the app from
+  `tailnet.headplane()`: `app.signIn(role)` returns a real session cookie and
+  `app.call(loader, path, { as, form, params })` runs a loader or action the
+  way React Router does. Don't hand-write `context.get` switches or cast route
+  arguments.
+- `headplane/permissions.test.ts` calls every loader and action intent in
+  `app/routes.ts` as each role. A new route is covered automatically. Only add
+  it to `PUBLIC` or `MEMBER_VISIBLE` if it truly returns no tailnet data to
+  those callers, and say why.
+- `agent/`, `platform/` (Docker, `/proc`), and `oidc/` (Dex) cover the rest.
+- Each file creates its own tailnet. Tests in a file may share it, so give
+  each test its own users, tags, and names, and never assert on totals like a
+  count of API keys.
 - Wait for conditions with `vi.waitFor` or the harness's `waitFor`. Never sleep
   for a fixed time.
 
@@ -149,8 +137,9 @@ All container setup goes through the harness, built on `testcontainers`.
   Tailscale node that joins with a pre-auth key. `node.down()`, `node.up()`,
   `node.status()`, and `node.tailscale([...])` control it.
   `tailnet.pendingNode()` waits for interactive registration.
-- `tailnet.headplane()` runs Headplane in-process against the tailnet and
-  returns the same test app as `createTestApp()`.
+- `tailnet.headplane()` runs Headplane in-process against the tailnet, with a
+  fresh database each call. It's built on `createTestApp()`
+  (`tests/support/app.ts`).
 - Supported Headscale versions and the pinned Tailscale and Dex images live only
   in `versions.ts`. Never hardcode a version in a test; use `testedVersions()`.
   Locally only the latest runs; CI sets `HP_HEADSCALE_VERSIONS=all`.

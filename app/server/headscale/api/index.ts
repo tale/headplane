@@ -28,7 +28,7 @@ import { makePolicyApi, type PolicyApi } from "./resources/policy";
 import { makePreAuthKeyApi, type PreAuthKeyApi } from "./resources/pre-auth-keys";
 import { makeUserApi, type UserApi } from "./resources/users";
 import { formatServerVersion, parseServerVersion, type ServerVersion } from "./server-version";
-import { createTransport, type Transport } from "./transport";
+import { createTransport } from "./transport";
 
 const MIN_SUPPORTED_VERSION = "0.27.0";
 
@@ -60,15 +60,12 @@ export interface CreateHeadscaleOptions {
    * Defaults to 30 seconds. Exposed for tests.
    */
   retryIntervalMs?: number;
-  // Replaces the HTTP transport, which makes `url` and `certPath` unused.
-  transport?: Transport;
 }
 
 const DEFAULT_RETRY_INTERVAL_MS = 30_000;
 
 export async function createHeadscale(opts: CreateHeadscaleOptions): Promise<Headscale> {
-  const transport =
-    opts.transport ?? (await createTransport({ url: opts.url, certPath: opts.certPath }));
+  const transport = await createTransport({ url: opts.url, certPath: opts.certPath });
   const retryIntervalMs = opts.retryIntervalMs ?? DEFAULT_RETRY_INTERVAL_MS;
 
   let version: ServerVersion = parseServerVersion("unreachable");

@@ -8,13 +8,8 @@ import { createAppContext, createRouterContext } from "~/server/context";
 import type { Headscale } from "~/server/headscale/api";
 import type { Role } from "~/server/web/roles";
 
-import type { HeadscaleVersion } from "../harness/versions";
-import { createFakeHeadscale, type FakeHeadscale } from "./fake-headscale";
-
 export interface TestAppOptions {
-  // Defaults to a fake Headscale of the latest version.
-  headscale?: { headscale: Headscale; apiKey: string };
-  version?: HeadscaleVersion;
+  headscale: { headscale: Headscale; apiKey: string };
   // Merged over the minimal config, one top-level key at a time.
   config?: Record<string, Record<string, unknown>>;
 }
@@ -31,15 +26,8 @@ export interface CallOptions {
   search?: string;
 }
 
-export async function createTestApp(options: TestAppOptions = {}) {
-  let fake: FakeHeadscale | undefined;
-  let headscale = options.headscale;
-  if (!headscale) {
-    const created = await createFakeHeadscale(options.version);
-    fake = created.server;
-    headscale = { headscale: created.headscale, apiKey: created.server.apiKey };
-  }
-
+export async function createTestApp(options: TestAppOptions) {
+  const { headscale } = options;
   const config = headplaneConfig({
     ...options.config,
     server: {
@@ -83,7 +71,7 @@ export async function createTestApp(options: TestAppOptions = {}) {
     return { userId, subject, cookie: setCookie.split(";")[0] };
   }
 
-  async function signInWithApiKey(apiKey = headscale!.apiKey) {
+  async function signInWithApiKey(apiKey = headscale.apiKey) {
     const setCookie = await ctx.auth.createApiKeySession(apiKey, "API key", 3_600_000);
     return { cookie: setCookie.split(";")[0] };
   }
@@ -129,7 +117,6 @@ export async function createTestApp(options: TestAppOptions = {}) {
   return {
     ctx,
     api,
-    fake,
     signIn,
     signInWithApiKey,
     request,

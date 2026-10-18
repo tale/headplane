@@ -1,23 +1,38 @@
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 
 import { action, loader } from "~/routes/settings/auth-keys/overview";
 import type { User } from "~/types";
 
-import { createTestApp, statusOf, type TestApp } from "../../support/app";
+import { createTailnet, type Tailnet } from "../../harness/tailnet";
+import { statusOf, type TestApp } from "../../support/app";
 
+// One Headscale for the file, so each test gets its own users and tags.
+let tailnet: Tailnet;
 let app: TestApp;
 let alice: User;
 let bob: User;
+let tag: string;
+let counter = 0;
+
+beforeAll(async () => {
+  tailnet = await createTailnet();
+});
+
+afterAll(async () => {
+  await tailnet?.dispose();
+});
 
 beforeEach(async () => {
-  app = await createTestApp();
-  alice = await app.api.users.create({ name: "alice@" });
-  bob = await app.api.users.create({ name: "bob@" });
+  counter += 1;
+  app = await tailnet.headplane();
+  alice = await tailnet.user(`alice${counter}@`);
+  bob = await tailnet.user(`bob${counter}@`);
+  tag = `tag:prod${counter}`;
 });
 
-afterEach(async () => {
-  await app.dispose();
-});
+async function tagOnlyKeys() {
+  return (await app.api.preAuthKeys.listAll!()).filter((key) => key.aclTags.includes(tag));
+}
 
 function create(as: string, form: Record<string, string | string[]>) {
   return app.call(action, "/settings/auth-keys", {
@@ -80,15 +95,15 @@ describe("self-service auth keys", () => {
   test("a viewer can't create a tag-only key", async () => {
     const cookie = await signInAsAlice();
 
-    expect(statusOf(await create(cookie, { tags: "tag:prod" }))).toBe(403);
-    expect(await app.api.preAuthKeys.listAll!()).toEqual([]);
+    expect(statusOf(await create(cookie, { tags: tag }))).toBe(403);
+    expect(await tagOnlyKeys()).toEqual([]);
   });
 
   test("a viewer only sees their own user and keys", async () => {
     const { cookie: admin } = await app.signIn("admin");
     await create(admin, { user_id: alice.id });
     await create(admin, { user_id: bob.id });
-    await create(admin, { tags: "tag:prod" });
+    await create(admin, { tags: tag });
 
     const data = (await app.call(loader, "/settings/auth-keys", {
       as: await signInAsAlice(),
@@ -102,12 +117,16 @@ describe("self-service auth keys", () => {
     const { cookie } = await app.signIn("admin");
     await create(cookie, { user_id: alice.id });
     await create(cookie, { user_id: bob.id });
-    await create(cookie, { tags: "tag:prod" });
+    await create(cookie, { tags: tag });
 
     const data = (await app.call(loader, "/settings/auth-keys", {
       as: cookie,
     })) as Awaited<ReturnType<typeof loader>>;
 
-    expect(data.keys.map(({ user }) => user?.id ?? null)).toEqual([null, alice.id, bob.id]);
+    const owners = data.keys.map(({ user }) => user?.id ?? null);
+    expect(owners).toEqual(expect.arrayContaining([null, alice.id, bob.id]));
+
+    const tagOnly = data.keys.find(({ user }) => user === null)!.preAuthKeys;
+    expect(tagOnly.filter((key) => key.aclTags.includes(tag))).toHaveLength(1);
   });
 });

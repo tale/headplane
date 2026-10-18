@@ -4,7 +4,7 @@ Headplane has two test suites. Both run with [Vitest](https://vitest.dev).
 
 | Command                 | What it runs                                          | Needs  |
 | ----------------------- | ----------------------------------------------------- | ------ |
-| `pnpm test:unit`        | `tests/unit`, in a couple of seconds                  | Node   |
+| `pnpm test:unit`        | `tests/unit`, in about a second                       | Node   |
 | `pnpm test:integration` | `tests/integration`, against real Headscale and nodes | Docker |
 | `pnpm harness up`       | A seeded tailnet that keeps running until you stop it | Docker |
 
@@ -14,45 +14,11 @@ that only restate the code, or check that something exists, get deleted. See
 
 ## Unit tests
 
-Unit tests use Headplane's real code wherever it's cheap to: the real auth
-service on an in-memory SQLite database, the real Headscale API client, and real
-route loaders and actions. Two helpers in `tests/support` make that possible.
-
-`createTestApp()` builds the same app context production does, around a fake
-Headscale. Sign in as any role and call a route the way React Router would:
-
-```ts
-import { action } from "~/routes/settings/auth-keys/overview";
-
-import { createTestApp, statusOf } from "../../support/app";
-
-test("a viewer can't create a tag-only key", async () => {
-  await using app = await createTestApp();
-  const { cookie } = await app.signIn("viewer");
-
-  const result = await app.call(action, "/settings/auth-keys", {
-    as: cookie,
-    form: { intent: "create", tags: "tag:prod", expiry: "90" },
-  });
-
-  expect(statusOf(result)).toBe(403);
-});
-```
-
-`createFakeHeadscale(version)` is an in-memory Headscale that answers at the
-HTTP level, so Headplane's own API client runs against it unchanged. It only
-models the parts of Headscale the unit tests use: users, pre-auth keys, API
-keys, and nodes joined with a key. Anything else throws, so a test that needs
-more fails instead of passing on made-up data.
-
-### The Headscale contract
-
-`tests/contract/headscale.ts` describes what Headplane relies on from
-Headscale's API. All of it runs against real Headscale in the integration
-tests. The part the fake models also runs against the fake in the unit tests,
-so the two can't drift apart. When a unit test needs the fake to do more, move
-the contract test for that behavior into the shared part, check it against real
-Headscale, then make the fake pass it.
+Unit tests cover the logic that doesn't need Headscale: config loading, auth
+sessions, roles, parsing, and form schemas. They use real implementations
+wherever they're cheap, such as the auth service on an in-memory SQLite
+database. Anything that talks to Headscale runs against the real thing in the
+integration tests instead of a fake or a stubbed client.
 
 ## Integration tests
 
@@ -78,8 +44,35 @@ Each tailnet has its own Docker network, a Headscale served over HTTPS with a
 generated certificate, and Tailscale nodes that join with pre-auth keys. A node
 can advertise routes, an exit node, tags, or SSH. `node.down()` and `node.up()`
 switch it off and on. `tailnet.pendingNode()` starts one that waits for
-interactive registration, and `tailnet.headplane()` runs Headplane in-process
-against the tailnet.
+interactive registration.
+
+`tailnet.headplane()` runs Headplane in-process against the tailnet, built from
+the same app context production uses. Sign in as any role and call a route the
+way React Router would:
+
+```ts
+import { action } from "~/routes/settings/auth-keys/overview";
+
+import { statusOf } from "../../support/app";
+
+test("a viewer can't create a tag-only key", async () => {
+  await using tailnet = await createTailnet();
+  const app = await tailnet.headplane();
+  const { cookie } = await app.signIn("viewer");
+
+  const result = await app.call(action, "/settings/auth-keys", {
+    as: cookie,
+    form: { intent: "create", tags: "tag:prod", expiry: "90" },
+  });
+
+  expect(statusOf(result)).toBe(403);
+});
+```
+
+`tests/integration/headscale/contract.test.ts` describes what Headplane relies
+on from Headscale's API, including the quirks of each version, and checks it
+through Headplane's own client. `permissions.test.ts` calls every route as each
+role, so a new route is covered as soon as it's added.
 
 The supported Headscale versions live in `tests/harness/versions.ts`. Locally,
 integration tests run against the latest one. Set

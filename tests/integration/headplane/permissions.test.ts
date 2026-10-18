@@ -1,13 +1,11 @@
 import type { RouteConfigEntry } from "@react-router/dev/routes";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { stringify } from "yaml";
 
 import routes from "~/routes";
 import type { Role } from "~/server/web/roles";
 
-import { headscaleConfig } from "../../harness/headscale";
-import { createTestApp, statusOf, type TestApp } from "../../support/app";
-import { tempFile } from "../../support/temp";
+import { createTailnet, type Tailnet } from "../../harness/tailnet";
+import { statusOf, type TestApp } from "../../support/app";
 
 type Handler = ((args: never) => unknown) & { intents?: string[] };
 interface RouteModule {
@@ -76,13 +74,14 @@ const actions = guarded
 const label = (entry: Entry) => `${entry.file} ${entry.intent ?? ""}`.trim();
 
 describe("route permissions", () => {
+  let tailnet: Tailnet;
   let app: TestApp;
   let form: Record<string, string>;
   const cookies = new Map<Role, string>();
 
   beforeAll(async () => {
-    const configPath = await tempFile("headscale.yaml", stringify(headscaleConfig()));
-    app = await createTestApp({ config: { headscale: { config_path: configPath } } });
+    tailnet = await createTailnet();
+    app = await tailnet.headplane();
 
     for (const role of ["owner", "member", "viewer", "auditor"] as const) {
       cookies.set(role, (await app.signIn(role)).cookie);
@@ -90,8 +89,8 @@ describe("route permissions", () => {
 
     // Valid enough for every intent, so checks inside handlers run too. The
     // machine belongs to a Headscale user none of the test users are.
-    const other = await app.api.users.create({ name: "someone-else@" });
-    const node = app.fake!.join({ name: "theirs", user: other.name, routes: ["10.0.0.0/24"] });
+    const other = await tailnet.user("someone-else@");
+    const node = await tailnet.node({ name: "theirs", user: other.name, routes: ["10.0.0.0/24"] });
     form = {
       node_id: node.id,
       user_id: other.id,
@@ -106,7 +105,7 @@ describe("route permissions", () => {
   });
 
   afterAll(async () => {
-    await app?.dispose();
+    await tailnet?.dispose();
   });
 
   function callAction(entry: Entry, as?: string) {
