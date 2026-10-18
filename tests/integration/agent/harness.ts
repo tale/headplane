@@ -10,7 +10,8 @@ import { expect, inject, vi } from "vitest";
 import { createHeadscale } from "~/server/headscale/api";
 import { type AgentManager, createAgentManager } from "~/server/hp-agent";
 
-import { startHeadscale } from "../setup/start-headscale";
+import { startHeadscale } from "../../harness/headscale";
+import type { HeadscaleVersion } from "../../harness/versions";
 import { createFaultProxy } from "./fault-proxy";
 
 const HOST_NAME = "headplane-agent";
@@ -38,12 +39,12 @@ export interface AgentOverrides {
   workDir?: string;
 }
 
-export async function createHarness(version: string, options: HarnessOptions = {}) {
-  const hs = await startHeadscale(version);
-  const proxy = await createFaultProxy(new URL(hs.apiUrl));
+export async function createHarness(version: HeadscaleVersion, options: HarnessOptions = {}) {
+  const hs = await startHeadscale({ version, id: `agent-${process.pid}` });
+  const proxy = await createFaultProxy(new URL(hs.url));
 
-  const inspectorKey = await createApiKey(hs.container);
-  const inspector = await createHeadscale({ url: hs.apiUrl });
+  const inspectorKey = await hs.createApiKey();
+  const inspector = await createHeadscale({ url: hs.url });
   const api = inspector.client(inspectorKey);
 
   const headscale = await createHeadscale({ url: proxy.url, retryIntervalMs: 500 });
@@ -150,7 +151,7 @@ export async function createHarness(version: string, options: HarnessOptions = {
     await proxy.close();
     await headscale.dispose();
     await inspector.dispose();
-    await hs.container.stop({ remove: true, removeVolumes: true });
+    await hs.stop();
     await rm(workDir, { recursive: true, force: true });
   }
 
@@ -167,15 +168,6 @@ export async function createHarness(version: string, options: HarnessOptions = {
     expectSettled,
     dispose,
   };
-}
-
-async function createApiKey(container: Awaited<ReturnType<typeof startHeadscale>>["container"]) {
-  const exec = await container.exec(["headscale", "apikeys", "create", "-o", "json"]);
-  if (exec.exitCode !== 0) {
-    throw new Error(`headscale apikeys create failed:\n${exec.stderr}`);
-  }
-
-  return JSON.parse(exec.stdout.toString()) as string;
 }
 
 export async function waitForSync(manager: AgentManager, timeoutMs = 60_000) {

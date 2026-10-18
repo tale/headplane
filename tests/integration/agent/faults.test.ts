@@ -7,9 +7,11 @@ import { afterEach, describe, expect, inject, test, vi } from "vitest";
 
 import type { AgentManager } from "~/server/hp-agent";
 
+import { testedVersions } from "../../harness/versions";
 import { agentPids, agentProcessCount, createHarness, waitForSync } from "./harness";
 
-const HS_VERSIONS = ["0.28.0", "0.29.5"];
+// The agent needs tag-only keys, which arrived in 0.28.
+const HS_VERSIONS = testedVersions().filter((version) => version !== "0.27.1");
 
 const SYNC_DEADLINE_MS = 45_000;
 

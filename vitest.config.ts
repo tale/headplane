@@ -29,27 +29,11 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: "integration:api",
-          include: ["tests/integration/api/**/*.test.ts"],
-          setupFiles: ["tests/integration/setup/vitest-hook.ts"],
-          testTimeout: 60_000,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: "integration:harness",
-          include: ["tests/integration/{harness,headscale,headplane}/**/*.test.ts"],
+          name: "integration",
+          include: ["tests/integration/**/*.test.ts"],
+          exclude: ["node_modules/**", "build/**", "tests/integration/agent/**"],
           testTimeout: 120_000,
           hookTimeout: 120_000,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: "integration:platform",
-          include: ["tests/integration/platform/**/*.test.ts"],
-          testTimeout: 60_000,
         },
       },
       {
@@ -62,14 +46,6 @@ export default defineConfig({
           fileParallelism: false,
           testTimeout: 180_000,
           hookTimeout: 180_000,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: "integration:oidc",
-          include: ["tests/integration/oidc/**/*.test.ts"],
-          testTimeout: 60_000,
         },
       },
     ],

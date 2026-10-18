@@ -14,7 +14,7 @@
     "pretypecheck": "cn build -q --content 'app/**/*.{ts,tsx}' --css app/tailwind.css -o app/utils/cn-tables.ts",
     "typecheck": "react-router typegen && tsc",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration:*",
+    "test:integration": "vitest run --project integration --project integration:agent",
     "docs:dev": "cd docs && react-router dev",
     "docs:build": "cd docs && react-router build && node scripts/finish-build.ts",
     "lint": "oxlint",

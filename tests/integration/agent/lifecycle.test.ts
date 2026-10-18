@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 
+import { testedVersions } from "../../harness/versions";
 import { createHarness, waitForSync } from "./harness";
 
-const HS_VERSIONS = ["0.28.0", "0.29.5"];
+// The agent needs tag-only keys, which arrived in 0.28.
+const HS_VERSIONS = testedVersions().filter((version) => version !== "0.27.1");
 
 describe.each(HS_VERSIONS)("agent lifecycle on Headscale %s", (version) => {
   let harness: Awaited<ReturnType<typeof createHarness>> | undefined;

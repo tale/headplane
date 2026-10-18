@@ -1,12 +1,14 @@
 import tc from "testcontainers";
 
+import { DEX_IMAGE } from "./versions";
+
 export interface DexEnv {
   container: tc.StartedTestContainer;
   issuerUrl: string;
 }
 
 export async function startDex(): Promise<DexEnv> {
-  const container = await new tc.GenericContainer("dexidp/dex:v2.41.1")
+  const container = await new tc.GenericContainer(DEX_IMAGE)
     .withExposedPorts(5556)
     .withEnvironment({
       DEX_ISSUER: "http://0.0.0.0:5556",

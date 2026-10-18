@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createOidcService, type OidcConfig } from "~/server/oidc/provider";
 
-import { type DexEnv, startDex } from "./start-dex";
+import { type DexEnv, startDex } from "../../harness/dex";
 
 let dex: DexEnv;
 
