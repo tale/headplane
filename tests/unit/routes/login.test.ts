@@ -43,6 +43,24 @@ describe("API key sign-in", () => {
     },
   );
 
+  test("ignores whitespace pasted around the key", async () => {
+    await using app = await createTestApp();
+    const apiKey = app.fake!.createApiKey();
+
+    const result = await signIn(app, { api_key: `  ${apiKey}\n` });
+    expect((result as Response).headers.get("Location")).toBe("/machines");
+  });
+
+  test("calls a key with stray characters invalid rather than blaming Headscale", async () => {
+    await using app = await createTestApp();
+    const apiKey = app.fake!.createApiKey();
+
+    expect(await signIn(app, { api_key: `${apiKey.slice(0, 10)}\n${apiKey.slice(10)}` })).toEqual({
+      success: false,
+      message: "That API key is invalid or has expired.",
+    });
+  });
+
   test("explains when Headscale can't be reached", async () => {
     await using app = await createTestApp();
     const apiKey = app.fake!.createApiKey();

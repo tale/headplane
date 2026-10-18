@@ -11,7 +11,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
   const headscale = context.get(headscaleContext);
 
   const formData = await request.formData();
-  const apiKey = formData.has("api_key") ? String(formData.get("api_key")) : undefined;
+  const apiKey = formData.has("api_key") ? String(formData.get("api_key")).trim() : undefined;
 
   if (apiKey === undefined) {
     log.warn("auth", "Request made without API key");
@@ -34,6 +34,15 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     return {
       success: false,
       message: "Enter an API key.",
+    };
+  }
+
+  // It goes in a header, so anything else fails before reaching Headscale and
+  // would read as Headscale being down.
+  if (!/^[\x21-\x7e]+$/.test(apiKey)) {
+    return {
+      success: false,
+      message: "That API key is invalid or has expired.",
     };
   }
 

@@ -42,6 +42,7 @@
 - The auth keys page only shows people with self-service keys (like auditors and viewers) their own keys. Previously it sent every user's keys to anyone signed in, in full on Headscale 0.27, even when the page itself said they had no access. Self-service users also can no longer create tag-only keys by submitting the form directly.
 - Syncing the agent now requires permission to view machines, like the agent page itself. Previously anyone signed in could trigger a sync.
 - Enabling key expiry on a machine no longer signs it out on the spot. Its key now expires in 180 days, matching Tailscale. On Headscale 0.29, where machines added with an auth key start with key expiry off, this affected every machine the first time expiry was turned on.
+- Signing in ignores spaces and line breaks pasted around an API key. A key with stray characters inside it is reported as invalid instead of "Couldn't reach Headscale."
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
 - The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
 - An unexpected error during a background agent sync no longer crashes Headplane.
