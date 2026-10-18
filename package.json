@@ -15,6 +15,7 @@
     "typecheck": "react-router typegen && tsc",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration --project integration:agent",
+    "harness": "node --disable-warning=ExperimentalWarning --import tsx tests/harness/cli.ts",
     "docs:dev": "cd docs && react-router dev",
     "docs:build": "cd docs && react-router build && node scripts/finish-build.ts",
     "lint": "oxlint",
