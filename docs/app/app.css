@@ -16,8 +16,8 @@
   --color-fd-card: var(--hp-surface);
   --color-fd-card-foreground: var(--hp-fg);
   --color-fd-border: var(--hp-line);
-  --color-fd-primary: var(--hp-accent);
-  --color-fd-primary-foreground: var(--hp-accent-fg);
+  --color-fd-primary: var(--hp-ink);
+  --color-fd-primary-foreground: var(--hp-ink-fg);
   --color-fd-secondary: var(--hp-subtle);
   --color-fd-secondary-foreground: var(--hp-fg);
   --color-fd-accent: var(--hp-hover);
@@ -39,12 +39,6 @@
 /* Fumadocs toggles `.dark` itself, so skip the app's system-preference fallback. */
 html.dark {
   @apply dark-tokens;
-}
-
-/* The TOC marks the active heading in ink, like the sidebar, instead of accent. */
-#nd-toc,
-[data-toc-popover] {
-  --hp-accent: var(--hp-fg);
 }
 
 body {
