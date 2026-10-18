@@ -2,6 +2,7 @@
   "pages": [
     "---Getting Started---",
     "introduction",
+    "quickstart",
     "install",
     "configuration",
     "---Features---",

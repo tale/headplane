@@ -10,7 +10,7 @@ export const versions = {
     minimum: "0.27.0",
     agent: "0.28",
     ssh: "0.28",
-    example: "0.27.1",
+    example: "0.29.5",
   },
 };
 
