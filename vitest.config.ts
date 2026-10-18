@@ -39,7 +39,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "integration:harness",
-          include: ["tests/integration/harness/**/*.test.ts"],
+          include: ["tests/integration/{harness,headscale}/**/*.test.ts"],
           testTimeout: 120_000,
           hookTimeout: 120_000,
         },

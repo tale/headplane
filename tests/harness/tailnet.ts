@@ -55,9 +55,10 @@ export async function createTailnet(options: TailnetOptions = {}) {
       return existing;
     }
 
-    const created = await api.users.create({ name, ...profile });
-    users.set(name, created);
-    return created;
+    const [found] = await api.users.list({ name });
+    const resolved = found ?? (await api.users.create({ name, ...profile }));
+    users.set(name, resolved);
+    return resolved;
   }
 
   async function authKey(keyOptions: AuthKeyOptions = {}) {
