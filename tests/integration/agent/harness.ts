@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { chmodSync, copyFileSync, rmSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -17,7 +18,14 @@ import { createFaultProxy } from "./fault-proxy";
 const HOST_NAME = "headplane-agent";
 const AGENT_TAG = `tag:${HOST_NAME}`;
 
-export function agentPids(agentPath = inject("agentPath")) {
+// Agents are counted by binary path, so each test file gets its own copy and
+// files can run in parallel.
+const workerBinary = join(tmpdir(), `hp_agent-${process.pid}`);
+copyFileSync(inject("agentPath"), workerBinary);
+chmodSync(workerBinary, 0o755);
+process.once("exit", () => rmSync(workerBinary, { force: true }));
+
+export function agentPids(agentPath = workerBinary) {
   const rows = execFileSync("ps", ["-A", "-o", "pid=,command="], { encoding: "utf8" });
   return rows
     .split("\n")
@@ -62,7 +70,7 @@ export async function createHarness(version: HeadscaleVersion, options: HarnessO
         enabled: true,
         host_name: HOST_NAME,
         cache_ttl: 10 * 60_000,
-        executable_path: overrides.executablePath ?? inject("agentPath"),
+        executable_path: overrides.executablePath ?? workerBinary,
         work_dir: overrides.workDir ?? workDir,
         tailscale_netns: false,
       },
