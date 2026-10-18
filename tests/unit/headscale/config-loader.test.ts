@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { parse } from "yaml";
 
+import { ConfigError } from "~/server/config/error";
 import { loadHeadscaleConfig } from "~/server/headscale/config-loader";
 
 describe("Headscale config loader", () => {
@@ -171,6 +172,17 @@ describe("Headscale config loader", () => {
     await expect(config.removeDNS({ name: "yaml", type: "A", value: "" })).rejects.toThrow();
 
     expect(await readFile(path, "utf8")).toBe(yaml);
+  });
+
+  test("a separate DNS records file needs dns.extra_records_path in Headscale", async () => {
+    const path = join(dir, "config.yaml");
+    const recordsPath = join(dir, "extra-records.json");
+    await writeFile(recordsPath, "[]");
+    await writeFile(path, "server_url: http://localhost:8080\n");
+
+    await expect(loadHeadscaleConfig(path, recordsPath)).rejects.toEqual(
+      ConfigError.from("DNS_RECORDS_PATH_UNSET", {}),
+    );
   });
 
   test("reads OIDC restrictions as empty arrays when unset", async () => {

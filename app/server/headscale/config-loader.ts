@@ -1,9 +1,9 @@
 import { constants, access, readFile, writeFile } from "node:fs/promises";
-import { exit } from "node:process";
 
 import * as v from "valibot";
 import { Document, parseDocument } from "yaml";
 
+import { ConfigError } from "~/server/config/error";
 import log from "~/utils/log";
 
 import { DNSRecord, HeadscaleDNSConfig, loadHeadscaleDNS } from "./config-dns";
@@ -346,14 +346,7 @@ export async function loadHeadscaleConfig(path?: string, dnsPath?: string) {
 
   const dns = await loadHeadscaleDNS(dnsPath ?? extraRecordsPath);
   if (dns && !extraRecordsPath) {
-    log.error(
-      "config",
-      "Using separate DNS config file but dns.extra_records_path is not set in Headscale config",
-    );
-    log.error("config", "Please set `dns.extra_records_path` in the Headscale config");
-    log.error("config", "Or remove `headscale.dns_records_path` from the Headplane config");
-
-    exit(1);
+    throw ConfigError.from("DNS_RECORDS_PATH_UNSET", {});
   }
 
   return createHeadscaleConfig(w ? "rw" : "ro", dns, document, path);

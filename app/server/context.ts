@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import { createContext } from "react-router";
+import { createContext, RouterContextProvider } from "react-router";
 
 import log from "~/utils/log";
 
@@ -8,7 +8,7 @@ import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
-import { createHeadscale, type HeadscaleClient } from "./headscale/api";
+import { createHeadscale, type Headscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
 import { type AgentManager, createAgentManager } from "./hp-agent";
@@ -28,12 +28,22 @@ export const integrationContext = createContext<AppContext["integration"]>();
 export const oidcContext = createContext<AppContext["oidc"]>();
 export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
-export async function createAppContext(config: HeadplaneConfig) {
-  const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
-  const headscale = await createHeadscale({
-    url: config.headscale.url,
-    certPath: config.headscale.tls_cert_path,
-  });
+export interface AppContextOverrides {
+  db?: Awaited<ReturnType<typeof createDbClient>>;
+  headscale?: Headscale;
+}
+
+export async function createAppContext(
+  config: HeadplaneConfig,
+  overrides: AppContextOverrides = {},
+) {
+  const db = overrides.db ?? (await createDbClient(join(config.server.data_path, "hp_persist.db")));
+  const headscale =
+    overrides.headscale ??
+    (await createHeadscale({
+      url: config.headscale.url,
+      certPath: config.headscale.tls_cert_path,
+    }));
 
   // Resolve the Headscale API key: headscale.api_key takes precedence,
   // falling back to the deprecated oidc.headscale_api_key for compatibility.
@@ -126,6 +136,22 @@ export async function createAppContext(config: HeadplaneConfig) {
     startServices,
     dispose,
   };
+}
+
+export function createRouterContext(ctx: AppContext) {
+  const context = new RouterContextProvider();
+  context.set(agentsContext, ctx.agents);
+  context.set(appConfigContext, ctx.config);
+  context.set(authContext, ctx.auth);
+  context.set(dbContext, ctx.db);
+  context.set(headscaleContext, ctx.headscale);
+  context.set(headscaleApiKeyContext, ctx.headscaleApiKey);
+  context.set(headscaleConfigContext, ctx.hs);
+  context.set(headscaleLiveStoreContext, ctx.hsLive);
+  context.set(integrationContext, ctx.integration);
+  context.set(oidcContext, ctx.oidc);
+  context.set(requestApiContext, ctx.apiForRequest);
+  return context;
 }
 
 function buildOidc(
