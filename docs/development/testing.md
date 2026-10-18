@@ -40,16 +40,19 @@ test("a viewer can't create a tag-only key", async () => {
 ```
 
 `createFakeHeadscale(version)` is an in-memory Headscale that answers at the
-HTTP level, so Headplane's own API client runs against it unchanged. It copies
-real Headscale's responses for each supported version, including their quirks.
+HTTP level, so Headplane's own API client runs against it unchanged. It only
+models the parts of Headscale the unit tests use: users, pre-auth keys, API
+keys, and nodes joined with a key. Anything else throws, so a test that needs
+more fails instead of passing on made-up data.
 
 ### The Headscale contract
 
-The fake is only useful if it behaves like the real thing. `tests/contract/headscale.ts`
-describes what Headplane relies on from Headscale's API. The same suite runs
-against the fake in the unit tests and against real Headscale in the
-integration tests, so the two can't drift apart. When the fake needs a new
-behavior, add it to the contract first and check it against real Headscale.
+`tests/contract/headscale.ts` describes what Headplane relies on from
+Headscale's API. All of it runs against real Headscale in the integration
+tests. The part the fake models also runs against the fake in the unit tests,
+so the two can't drift apart. When a unit test needs the fake to do more, move
+the contract test for that behavior into the shared part, check it against real
+Headscale, then make the fake pass it.
 
 ## Integration tests
 

@@ -94,9 +94,10 @@ valibot schemas, and Headplane's real Headscale client.
   switches or cast route arguments.
 - For anything that talks to Headscale, use `createFakeHeadscale(version)`
   (`tests/support/fake-headscale.ts`), not stubs of individual methods. It
-  answers at the HTTP level for every supported version. `app.fake.join()`,
-  `pendingNode()`, `setOnline()`, and `setReachable()` set up state a real
-  tailnet would produce.
+  answers at the HTTP level, so Headplane's real client runs on it.
+  `app.fake.join()` and `setReachable()` set up the rest. It only models what
+  unit tests use. An endpoint it doesn't model throws, so a route that needs
+  more fails loudly instead of passing on made-up data.
 - `tests/unit/routes/permissions.test.ts` calls every loader and action intent
   in `app/routes.ts` as each role. A new route is covered automatically. Only
   add it to `PUBLIC` or `MEMBER_VISIBLE` if it truly returns no tailnet data to
@@ -113,11 +114,13 @@ valibot schemas, and Headplane's real Headscale client.
 ### The Headscale contract (`tests/contract/`)
 
 `headscale.ts` is what Headplane relies on from Headscale's API, asserted
-through Headplane's client. It runs against the fake in `tests/unit` and against
-real Headscale in `tests/integration`, so the fake can't drift. When you need
-the fake to do something new, write the contract test first, run it against
-real Headscale (`HP_HEADSCALE_VERSIONS=all`), then make the fake match. Record
-real quirks there too, like 0.28.0 deleting every auth key along with any user.
+through Headplane's client. All of it runs against real Headscale in
+`tests/integration`. The part outside `if (isReal)` also runs against the fake
+in `tests/unit`, so the fake can't drift. Grow the fake only when a unit test
+needs it: move the contract test for that behavior out of `if (isReal)` (or
+write one and run it against real Headscale with `HP_HEADSCALE_VERSIONS=all`),
+then make the fake pass it. Record real quirks in the real-only part, like
+0.28.0 deleting every auth key along with any user.
 
 ### Integration tests (`tests/integration/`)
 
