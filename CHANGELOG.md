@@ -295,7 +295,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 - Support Docker container discovery through labels (via [#194](https://github.com/tale/headplane/pull/194)).
 - AAAA records are now supported on the DNS page (closes [#189](https://github.com/tale/headplane/issues/189)).
 - Add support for `dns.extra_records_path` in the Headscale config (closes [#144](https://github.com/tale/headplane/issues/144)).
-- Tighten `proc` integration logic by checking for the `headscale serve` command (via #[195](https://github.com/tale/headplane/pull/195)).
+- Tighten `proc` integration logic by checking for the `headscale serve` command (via [#195](https://github.com/tale/headplane/pull/195)).
 - Strip newlines in the OIDC `client_secret_path` file if provided (closes [#199](https://github.com/tale/headplane/issues/199)).
 
 ---
@@ -404,10 +404,10 @@ If there are no users, the first user will be given an `owner` role which cannot
 
 > This release is a major overhaul and contains a significant breaking change.
 > We now use a config file for all settings instead of environment variables.
-> Please see [config.example.yaml](/config.example.yaml) for the new format.
+> Please see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format.
 
 - Completely redesigned the UI from the ground up for accessibility and performance.
-- Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
+- Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format).
 - If the config is read-only, the options are still visible, just disabled (fixes [#48](https://github.com/tale/headplane/issues/48))
 - Added support for Headscale 0.25.0 (this drops support for any older versions).
 - Fixed issues where renaming, deleting, and changing node owners via users was not possible (fixes [#91](https://github.com/tale/headplane/issues/91))

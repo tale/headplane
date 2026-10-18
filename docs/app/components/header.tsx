@@ -12,13 +12,13 @@ export const iconButtonClass =
 
 const links = [
   { to: "/introduction", label: "Docs" },
-  { to: "/CHANGELOG", label: "Changelog" },
+  { to: "/changelog", label: "Changelog" },
 ];
 
 export default function Header({ menu }: { menu?: ReactNode }) {
   const { pathname } = useLocation();
   const { resolvedTheme, setTheme } = useTheme();
-  const isChangelog = pathname.startsWith("/CHANGELOG");
+  const isChangelog = pathname.startsWith("/changelog");
 
   return (
     <header className="bg-surface border-line sticky top-[var(--fd-banner-height,0px)] z-30 h-13 border-b [contain:inline-size] [grid-area:header]">
@@ -30,7 +30,7 @@ export default function Header({ menu }: { menu?: ReactNode }) {
         <nav className="hidden items-center gap-x-0.5 text-[13px] font-medium md:flex">
           {links.map((link) => {
             const isActive =
-              link.to === "/CHANGELOG" ? isChangelog : pathname !== "/" && !isChangelog;
+              link.to === "/changelog" ? isChangelog : pathname !== "/" && !isChangelog;
 
             return (
               <Link

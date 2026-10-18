@@ -115,3 +115,39 @@ body {
   font-size: 0.875em;
   font-weight: inherit;
 }
+
+/* Changelog: releases list tighter than prose. */
+.release-notes > :first-child {
+  margin-top: 0;
+}
+
+.release-notes > :last-child {
+  margin-bottom: 0;
+}
+
+.release-section {
+  margin-top: 2rem;
+}
+
+.release-section > :nth-child(2) {
+  margin-top: 0.625rem;
+}
+
+.release-section > :last-child {
+  margin-bottom: 0;
+}
+
+.release-notes :where(h3):not(:where(.not-prose *)) {
+  margin-top: 2rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--hp-muted);
+}
+
+.release-notes :where(li) {
+  margin-block: 0.375rem;
+  line-height: 1.625;
+}

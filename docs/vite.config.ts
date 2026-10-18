@@ -7,6 +7,7 @@ import { fumadocsMdx } from "fumadocs-mdx/vite";
 import remarkDirective from "remark-directive";
 import { defineConfig } from "vite";
 
+import { remarkChangelog } from "./app/lib/remark-changelog";
 // Callout variants from docs/app/components/callout.tsx
 const admonitionTypes = {
   note: "neutral",
@@ -29,6 +30,7 @@ export default defineConfig({
             remarkDirective,
             [remarkDirectiveAdmonition, { types: admonitionTypes }],
             ...plugins,
+            remarkChangelog,
           ],
           rehypeCodeOptions: {
             themes: { light: "github-light", dark: "github-dark" },

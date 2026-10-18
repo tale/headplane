@@ -5,6 +5,7 @@ import type { MDXComponents } from "mdx/types";
 import { CalloutContainer, CalloutDescription, CalloutTitle } from "@/components/callout";
 import DynamicCodeBlock from "@/components/dynamic-code-block";
 import Figure from "@/components/figure";
+import { Reference, Release, ReleaseList, ReleaseSection } from "@/components/release";
 
 export function useMDXComponents(components?: MDXComponents) {
   return {
@@ -19,6 +20,10 @@ export function useMDXComponents(components?: MDXComponents) {
     CalloutDescription,
     DynamicCodeBlock,
     Figure,
+    Release,
+    ReleaseList,
+    ReleaseSection,
+    Reference,
     ...components,
   } satisfies MDXComponents;
 }
