@@ -32,7 +32,9 @@ through secret path options and environment variables.
 Headplane can be deployed in several different ways, each with its own set of
 advantages and trade-offs. Choose the method that best fits your needs:
 
-### [Docker](/install/docker): Fast and easy deployment using Docker
+### Docker
+
+Fast and easy deployment using Docker. [Install with Docker](/install/docker).
 
 - Recommended for most users due to its simplicity and ease of use.
 - Allows for advanced features like network management and remote web SSH.
@@ -40,7 +42,9 @@ advantages and trade-offs. Choose the method that best fits your needs:
 
 ---
 
-### [Native Mode](/install/native-mode): Direct installation on a server
+### Native Mode
+
+Direct installation on a server. [Install in Native Mode](/install/native-mode).
 
 - Suitable for users who prefer not to use Docker.
 - Allows for advanced features like network management and remote web SSH.
@@ -48,7 +52,9 @@ advantages and trade-offs. Choose the method that best fits your needs:
 
 ---
 
-### [Limited Mode](/install/limited-mode): Quick and easy deployment with minimal features
+### Limited Mode
+
+Quick and easy deployment with minimal features. [Install in Limited Mode](/install/limited-mode).
 
 - Ideal for testing or simple environments and not intended for production use.
 - Lacks any advanced functionality or integrations such as network management
