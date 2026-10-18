@@ -22,6 +22,7 @@
 - Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
+- The **Rules** tab on the Access Control page can now edit grants and auto approvers. Grants set ports and protocols separately from the destination, can route traffic through tagged subnet routers or exit nodes with `via`, and keep app capabilities as written. Auto approvers cover both subnet routes and exit nodes.
 
 ## Fixes
 
