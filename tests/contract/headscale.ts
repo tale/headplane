@@ -140,20 +140,6 @@ export function headscaleContract(
         expect(await rejection(api.users.rename("999999", "x"))).toBe("User not found");
         expect(await rejection(api.users.delete("999999"))).toBe("User not found");
       });
-
-      test("a user who owns a node can't be deleted", async () => {
-        const user = await api.users.create({ name: unique("owner") });
-        await backend.join({ name: unique("owned"), user: user.name });
-
-        expect(await rejection(api.users.delete(user.id))).toBe("User not empty: node(s) found");
-      });
-
-      test("deleted users are gone", async () => {
-        const user = await api.users.create({ name: unique("gone") });
-        await api.users.delete(user.id);
-
-        expect(await api.users.list({ id: user.id })).toEqual([]);
-      });
     });
 
     describe("pre-auth keys", () => {
@@ -457,6 +443,53 @@ export function headscaleContract(
             : "Registration ID must be 24 characters long",
         );
       });
+    });
+  });
+
+  // Deleting a user on 0.28.0 deletes every user's auth keys, which would
+  // break the tests running alongside, so these get a tailnet of their own.
+  describe(`Headscale ${version} user deletion contract`, () => {
+    let backend: ContractBackend;
+
+    beforeAll(async () => {
+      backend = await createBackend();
+    });
+
+    afterAll(async () => {
+      await backend?.dispose();
+    });
+
+    test("a user who owns a node can't be deleted", async () => {
+      const user = await backend.api.users.create({ name: "owner" });
+      await backend.join({ name: "owned", user: user.name });
+
+      expect(await rejection(backend.api.users.delete(user.id))).toBe(
+        "User not empty: node(s) found",
+      );
+    });
+
+    test("deleted users are gone", async () => {
+      const user = await backend.api.users.create({ name: "gone" });
+      await backend.api.users.delete(user.id);
+
+      expect(await backend.api.users.list({ id: user.id })).toEqual([]);
+    });
+
+    test(`deleting a user ${version === "0.28.0" ? "deletes" : "keeps"} everyone else's auth keys`, async () => {
+      const kept = await backend.api.users.create({ name: "kept" });
+      await backend.api.preAuthKeys.create({
+        user: kept.id,
+        reusable: false,
+        ephemeral: false,
+        expiration: null,
+        aclTags: null,
+      });
+
+      const deleted = await backend.api.users.create({ name: "deleted" });
+      await backend.api.users.delete(deleted.id);
+
+      const keys = await backend.api.preAuthKeys.listForUser(kept.id);
+      expect(keys).toHaveLength(version === "0.28.0" ? 0 : 1);
     });
   });
 

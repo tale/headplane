@@ -404,6 +404,8 @@ export function createFakeHeadscaleServer(version: HeadscaleVersion = LATEST_HEA
         if (blocking.length > 0) fail(500, 2, "user not empty: node(s) found");
 
         users.delete(id);
+        // An upstream 0.28.0 bug: deleting any user deletes every auth key.
+        if (version === "0.28.0") keys.clear();
         return {};
       },
     ],
