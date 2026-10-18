@@ -6,9 +6,7 @@ import type { Machine, User } from "~/types";
 
 import type { HeadscaleVersion } from "../harness/versions";
 
-// What Headplane relies on from Headscale's API, asserted through Headplane's
-// own client. It runs against real Headscale in tests/integration and against
-// the fake in tests/unit, so the fake can't drift from the real thing.
+// Runs against real Headscale and the fake, so the fake can't drift.
 
 export interface JoinOptions {
   name: string;
@@ -28,8 +26,7 @@ export interface ContractBackend {
   dispose(): Promise<void>;
 }
 
-// Tagged nodes belong to "tagged-devices" in 0.28+ lists, but a single-node
-// read still names the user whose key registered it (0.28) or nobody (0.29).
+// 0.28+ lists show "tagged-devices"; a single read shows the old user or none.
 function expectTaggedOwner(version: HeadscaleVersion, listed: Machine, read: Machine, user: User) {
   if (!gte(version, "0.28.0")) {
     expect(listed.user?.id).toBe(user.id);

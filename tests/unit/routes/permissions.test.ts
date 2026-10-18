@@ -31,16 +31,14 @@ const PUBLIC = new Set([
   "routes/home.tsx",
 ]);
 
-// These answer members too, but carry no tailnet data: the layouts gate what
-// renders on their access flags, and the live stream only says what changed.
+// Members get only access flags or change notifications from these.
 const MEMBER_VISIBLE = new Set([
   "layout/app.tsx",
   "routes/settings/layout.tsx",
   "routes/util/live.ts",
 ]);
 
-// Read-only roles may still manage their own auth keys, and ask the agent to
-// sync, which refreshes what they can already see.
+// Read-only roles manage their own auth keys and may refresh the agent.
 const SELF_SERVICE = new Set([
   "routes/settings/auth-keys/overview.tsx",
   "routes/settings/agent.tsx",

@@ -5,8 +5,7 @@ import { join } from "node:path";
 
 import { onTestFinished } from "vitest";
 
-// Removed when the test finishes, or when the worker exits if it was made in
-// a hook rather than a test.
+// Hooks can't use onTestFinished, so those fall back to worker exit.
 export async function tempDir() {
   const dir = await mkdtemp(join(tmpdir(), "headplane-test-"));
   try {

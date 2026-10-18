@@ -1,8 +1,4 @@
-// Keeps a scenario's tailnet running for manual testing, reproducing user
-// setups, and docs screenshots. Usage:
-//
-//   pnpm harness up [scenario] [--version 0.29.5] [--headplane]
-//   pnpm harness list
+// pnpm harness up [scenario] [--version 0.29.5] [--headplane] | pnpm harness list
 
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";

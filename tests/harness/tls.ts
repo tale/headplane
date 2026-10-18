@@ -6,9 +6,7 @@ import { join } from "node:path";
 
 import { HEADSCALE_ALIAS } from "./constants";
 
-// One self-signed certificate for every harness Headscale, kept between runs.
-// Tailscale clients retry control over TLS on 443 after a quick reconnect,
-// so a plain HTTP Headscale strands them whenever it restarts.
+// Nodes retry control over TLS on 443 after a reconnect, so Headscale needs TLS.
 const DIR = join(tmpdir(), "headplane-harness-tls");
 const CERT = join(DIR, "cert.pem");
 const KEY = join(DIR, "key.pem");

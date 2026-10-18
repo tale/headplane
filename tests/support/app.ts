@@ -31,9 +31,6 @@ export interface CallOptions {
   search?: string;
 }
 
-// The real app context and auth service around a fake or real Headscale.
-// Sign in as a role to get a session cookie, then call loaders and actions
-// the way React Router would.
 export async function createTestApp(options: TestAppOptions = {}) {
   let fake: FakeHeadscale | undefined;
   let headscale = options.headscale;
@@ -146,8 +143,6 @@ export async function createTestApp(options: TestAppOptions = {}) {
   };
 }
 
-// The HTTP status a loader or action result maps to, so tests can assert on
-// outcomes without caring whether the route returned or threw.
 export function statusOf(result: unknown): number {
   if (result instanceof Response) return result.status;
   if (result instanceof Error) return 500;

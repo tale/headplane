@@ -6,8 +6,7 @@ export const LATEST_HEADSCALE: HeadscaleVersion = "0.29.5";
 export const TAILSCALE_IMAGE = "tailscale/tailscale:v1.104.1";
 export const DEX_IMAGE = "dexidp/dex:v2.41.1";
 
-// HP_HEADSCALE_VERSIONS=all runs the whole matrix, a comma-separated list runs
-// those versions, and unset runs only the latest so local runs stay fast.
+// HP_HEADSCALE_VERSIONS: "all", a comma-separated list, or unset for the latest.
 export function testedVersions(
   env = process.env.HP_HEADSCALE_VERSIONS,
 ): readonly HeadscaleVersion[] {

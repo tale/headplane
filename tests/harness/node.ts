@@ -111,8 +111,7 @@ export async function startNode(options: StartNodeOptions) {
   }
 }
 
-// Starts a node without an auth key and resolves with the URL it prints for
-// interactive registration, as a user would see it.
+// Resolves with the register URL a node without an auth key prints.
 export async function startPendingNode(options: StartNodeOptions) {
   const daemon = await startDaemon(options);
   const command = ["tailscale", `--socket=${SOCKET}`, "up", ...upArgs(options)].join(" ");

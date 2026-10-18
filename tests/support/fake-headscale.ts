@@ -9,10 +9,7 @@ import type { Transport, TransportRequest } from "~/server/headscale/api/transpo
 import type { HeadscaleVersion } from "../harness/versions";
 import { LATEST_HEADSCALE } from "../harness/versions";
 
-// An in-memory Headscale that answers at the wire level, so Headplane's real
-// API client runs against it. It copies the responses and errors recorded
-// from real Headscale, and the contract suite in tests/contract keeps the two
-// in step. Anything it can't do should fail loudly, not guess.
+// Wire-level, so Headplane's real client runs on it; tests/contract keeps it honest.
 
 const ZERO_TIME = "0001-01-01T00:00:00Z";
 const TAGGED_DEVICES = {
