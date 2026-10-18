@@ -19,7 +19,7 @@ import sshFastfetch from "../assets/ssh-fastfetch.png";
   }
 />
 
-Browser SSH allows a user to open an SSH session to any accesible node in the
+Browser SSH allows a user to open an SSH session to any accessible node in the
 Tailnet directly from the browser. It spins up an ephemeral Tailscale node that
 joins the tailnet for the duration of the SSH session.
 
@@ -39,7 +39,9 @@ joins the tailnet for the duration of the SSH session.
   Headscale 0.29 beta releases through 0.29.1; use Headscale 0.28.x or 0.29.2
   and newer.
 - Target nodes must have **Tailscale SSH** enabled (`tailscale up --ssh`).
-- Users must be logged-in via **OIDC** (API key logins cannot use browser SSH).
+- Users must sign in with [SSO](/features/sso) or
+  [proxy authentication](/features/proxy-auth). API key sessions can't use
+  Browser SSH.
 - The **Headplane Agent** must be [enabled and configured](/features/agent).
 
 :::warning[Headscale 0.29.0 beta through 0.29.1]
@@ -68,79 +70,13 @@ When a user opens an SSH session from the UI, the browser:
    the browser renders a full-featured terminal and proxies the SSH session
    to it.
 
-## Reverse Proxy Configuration
+## Reverse proxy
 
-Browser SSH requires that the browser can reach both **Headplane** and
-**Headscale** directly. If either is behind a reverse proxy, the proxy must be
-configured to support WebSocket connections — this is how the WASM node
-communicates with DERP relay servers.
-
-### Required Headers
-
-Your reverse proxy must forward these headers for Headscale's DERP endpoint:
-
-| Header                   | Value                                   |
-| ------------------------ | --------------------------------------- |
-| `Upgrade`                | `websocket`                             |
-| `Connection`             | `Upgrade`                               |
-| `Sec-WebSocket-Protocol` | forwarded as-is (Tailscale uses `derp`) |
-
-### CORS Headers
-
-Headscale must be accessible from the origin where Headplane is served. If
-Headplane and Headscale are on different origins (different hosts or ports),
-your reverse proxy must add CORS headers to Headscale responses:
-
-| Header                         | Value                                           |
-| ------------------------------ | ----------------------------------------------- |
-| `Access-Control-Allow-Origin`  | The origin of your Headplane instance           |
-| `Access-Control-Allow-Methods` | `GET, POST, OPTIONS`                            |
-| `Access-Control-Allow-Headers` | `Content-Type, Upgrade, Sec-WebSocket-Protocol` |
-
-### Example: Caddy
-
-```caddyfile
-# Headscale
-hs.example.com {
-    reverse_proxy localhost:8080
-
-    # If Headplane is on a different origin:
-    header Access-Control-Allow-Origin "https://headplane.example.com"
-    header Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    header Access-Control-Allow-Headers "Content-Type, Upgrade, Sec-WebSocket-Protocol"
-}
-```
-
-Caddy handles WebSocket upgrades automatically — no extra configuration needed.
-
-### Example: nginx
-
-```nginx
-# Headscale
-server {
-    listen 443 ssl;
-    server_name hs.example.com;
-
-    location / {
-        proxy_pass http://localhost:8080;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-
-        # If Headplane is on a different origin:
-        add_header Access-Control-Allow-Origin "https://headplane.example.com" always;
-        add_header Access-Control-Allow-Methods "GET, POST, OPTIONS" always;
-        add_header Access-Control-Allow-Headers "Content-Type, Upgrade, Sec-WebSocket-Protocol" always;
-    }
-}
-```
-
-### Same-Origin Setup
-
-If Headplane and Headscale share the same origin (e.g. a single reverse proxy
-routing `/admin` to Headplane and everything else to Headscale), CORS headers
-are not needed. WebSocket upgrade forwarding is still required.
+The browser connects straight to Headscale, so Headscale has to be reachable
+from your users' browsers, and any proxy in front of it has to forward
+WebSocket upgrades. If Headplane and Headscale are on different domains,
+Headscale's responses also need CORS headers.
+[Reverse proxy](/configuration/reverse-proxy) has examples for both.
 
 ## Troubleshooting
 
@@ -164,18 +100,17 @@ Tailnet connectivity and ephemeral node cleanup. See the
 
 **Error:** "Sign in with SSO to use browser SSH."
 
-Browser SSH requires OIDC authentication to generate pre-auth keys tied to a
-Headscale user. API key logins do not have an associated Headscale user
-identity. Log in via your configured OIDC provider instead.
+Browser SSH creates its auth key for your linked Headscale user, and API key
+sessions don't have one. Sign in with SSO or proxy authentication instead.
 
 ### User Not Linked
 
 **Error:** "Browser SSH connects as your Headscale user."
 
-Your OIDC account does not match any user in Headscale. You must authenticate
-with Headscale at least once before using Browser SSH, so that a Headscale
-user is created and linked to your OIDC identity. If Headscale doesn't use
-OIDC, ask an administrator to link your account from the **Users** page.
+Your account isn't linked to a Headscale user yet. If Headscale uses SSO too,
+sign in to Headscale from a device once so it creates your user, and Headplane
+links it. Otherwise, ask an administrator to link your account from the
+**Users** page. See [Linking to Headscale users](/features/users-roles#linking-to-headscale-users).
 
 ### Node Not Found
 

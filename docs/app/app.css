@@ -63,6 +63,10 @@ body {
   --tw-prose-td-borders: var(--hp-line);
 }
 
+.prose :where(h1, h2, h3, h4):not(:where(.not-prose *)) {
+  overflow-wrap: anywhere;
+}
+
 .prose :where(h1):not(:where(.not-prose *)) {
   margin-bottom: 1rem;
   font-size: 1.875rem;
@@ -101,6 +105,7 @@ body {
   text-decoration-line: underline;
   text-decoration-color: color-mix(in oklab, var(--hp-accent) 35%, transparent);
   text-underline-offset: 3px;
+  overflow-wrap: anywhere;
 }
 
 .prose :where(a):not(:where(.not-prose *, h1 *, h2 *, h3 *, h4 *, h5 *, h6 *)):hover {
@@ -114,6 +119,7 @@ body {
   background-color: var(--hp-subtle);
   font-size: 0.875em;
   font-weight: inherit;
+  overflow-wrap: anywhere;
 }
 
 /* Changelog: releases list tighter than prose. */

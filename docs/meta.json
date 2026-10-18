@@ -4,11 +4,10 @@
     "introduction",
     "install",
     "configuration",
-    "Nix",
-    "NixOS-options",
     "---Features---",
     "...features",
-    "---Development---",
-    "...development"
+    "reference",
+    "---Help---",
+    "troubleshooting"
   ]
 }

@@ -125,11 +125,7 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
   ) : showCookieWarning ? (
     <Callout className="mb-6" title="Sign-in won't work over HTTP" variant="error">
       Headplane is set to use secure cookies, but this page was loaded over an insecure connection.{" "}
-      <Link
-        external
-        styled
-        to="https://headplane.net/configuration/common-issues#issue-logging-in-does-not-do-anything"
-      >
+      <Link external styled to="https://headplane.net/troubleshooting#signing-in-does-nothing">
         Docs
       </Link>
     </Callout>

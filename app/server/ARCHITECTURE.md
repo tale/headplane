@@ -1,8 +1,3 @@
----
-title: Architecture
-description: Service architecture patterns used in Headplane's server code.
----
-
 # Architecture
 
 Headplane's server code is organized as independent service modules within a

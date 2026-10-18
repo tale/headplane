@@ -1,5 +1,5 @@
 {
   "title": "Configuration",
   "collapsible": false,
-  "pages": ["common-issues", "tls", "[Sensitive Values](/configuration#sensitive-values)"]
+  "pages": ["integrations", "sensitive-values", "reverse-proxy", "tls"]
 }
