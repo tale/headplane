@@ -65,7 +65,7 @@ const PageTree = createPageTreeRenderer({
 function SidebarLinks() {
   return (
     <SidebarViewport>
-      <nav className="flex flex-col gap-0.5 px-3 py-6">
+      <nav className="flex flex-col gap-0.5 py-2">
         <PageTree />
       </nav>
     </SidebarViewport>
@@ -88,7 +88,10 @@ function SidebarFooter() {
 export default function Sidebar() {
   return (
     <>
-      <aside className="border-line md:layout:[--fd-sidebar-width:16rem] sticky top-(--fd-docs-row-1) flex h-[calc(var(--fd-docs-height)-var(--fd-docs-row-1))] flex-col items-end border-r [grid-area:sidebar] *:w-(--fd-sidebar-width) max-md:hidden">
+      <aside
+        className="border-line md:layout:[--fd-sidebar-width:16rem] sticky top-(--fd-docs-row-1) flex h-[calc(var(--fd-docs-height)-var(--fd-docs-row-1))] flex-col items-end border-r [grid-area:sidebar] *:w-(--fd-sidebar-width) max-md:hidden"
+        id="nd-sidebar"
+      >
         <SidebarLinks />
         <SidebarFooter />
       </aside>

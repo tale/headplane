@@ -1,11 +1,21 @@
+import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 
+import { CalloutContainer, CalloutDescription, CalloutTitle } from "@/components/callout";
 import Figure from "@/components/figure";
 
 export function useMDXComponents(components?: MDXComponents) {
   return {
     ...defaultMdxComponents,
+    pre: (props) => (
+      <CodeBlock {...props} className="border-line bg-subtle my-5 rounded-lg">
+        <Pre>{props.children}</Pre>
+      </CodeBlock>
+    ),
+    CalloutContainer,
+    CalloutTitle,
+    CalloutDescription,
     Figure,
     ...components,
   } satisfies MDXComponents;

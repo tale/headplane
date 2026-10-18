@@ -7,6 +7,16 @@ import { defineConfig } from "vite";
 
 import { remarkLinks } from "./app/lib/remark-links";
 
+// Callout variants from docs/app/components/callout.tsx
+const admonitionTypes = {
+  note: "neutral",
+  info: "neutral",
+  tip: "info",
+  warning: "warning",
+  danger: "error",
+  success: "success",
+};
+
 export default defineConfig({
   define: {
     __HEADPLANE_BETA_DOCS__: JSON.stringify(process.env.HEADPLANE_BETA_DOCS === "true"),
@@ -17,7 +27,7 @@ export default defineConfig({
         mdxOptions: {
           remarkPlugins: (plugins) => [
             remarkDirective,
-            remarkDirectiveAdmonition,
+            [remarkDirectiveAdmonition, { types: admonitionTypes }],
             remarkLinks,
             ...plugins,
           ],
