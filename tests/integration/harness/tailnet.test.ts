@@ -23,6 +23,7 @@ describe("harness tailnet", () => {
 
     await web.down();
     expect((await web.machine()).online).toBe(false);
+
     await web.up();
     expect((await web.machine()).online).toBe(true);
   });

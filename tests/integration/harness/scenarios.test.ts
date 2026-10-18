@@ -5,7 +5,6 @@ import homelab from "../../harness/scenarios/homelab";
 import minimal from "../../harness/scenarios/minimal";
 import { createTailnet } from "../../harness/tailnet";
 
-// The docs screenshots depend on these, so they shouldn't rot.
 test.concurrent.for<[string, Scenario]>([
   ["homelab", homelab],
   ["minimal", minimal],

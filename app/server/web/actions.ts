@@ -74,6 +74,6 @@ export function createAction<
     }
   };
 
-  // Lets tests enumerate every intent.
+  // Allows the testing harness to iterate all the intents
   return Object.assign(action, { intents: Object.keys(options.intents) });
 }

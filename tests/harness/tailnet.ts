@@ -118,13 +118,11 @@ export async function createTailnet(options: TailnetOptions = {}) {
   // Headplane in-process, pointed at this tailnet's Headscale and its config
   // file. Disposed with the tailnet.
   async function headplane(appOptions: Pick<TestAppOptions, "config"> = {}) {
-    const client = await createHeadscale({ url: headscale.url, certPath: headscale.certPath });
     const app = await createTestApp({
-      headscale: { headscale: client, apiKey: headscale.apiKey },
+      headscale: { url: headscale.url, apiKey: headscale.apiKey },
       config: {
         ...appOptions.config,
         headscale: {
-          url: headscale.url,
           tls_cert_path: headscale.certPath,
           config_path: headscale.configPath,
           ...appOptions.config?.headscale,

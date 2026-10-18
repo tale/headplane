@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { action } from "~/routes/auth/login/page";
-import { createHeadscale } from "~/server/headscale/api";
 
 import { createTailnet, type Tailnet } from "../../harness/tailnet";
 import { testedVersions } from "../../harness/versions";
@@ -68,8 +67,9 @@ describe.for(testedVersions())("API key sign-in on Headscale %s", (version) => {
 });
 
 test("explains when Headscale can't be reached", async () => {
-  const headscale = await createHeadscale({ url: "http://127.0.0.1:1" });
-  await using app = await createTestApp({ headscale: { headscale, apiKey: "unused" } });
+  await using app = await createTestApp({
+    headscale: { url: "http://127.0.0.1:1", apiKey: "unused" },
+  });
 
   expect(await signIn(app, { api_key: "hskey-api-anything" })).toEqual({
     success: false,

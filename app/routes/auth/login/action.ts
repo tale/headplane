@@ -37,8 +37,7 @@ export async function loginAction({ request, context }: Route.LoaderArgs) {
     };
   }
 
-  // It goes in a header, so anything else fails before reaching Headscale and
-  // would read as Headscale being down.
+  // We need to make sure this is safe for HTTP headers
   if (!/^[\x21-\x7e]+$/.test(apiKey)) {
     return {
       success: false,

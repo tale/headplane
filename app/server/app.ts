@@ -1,14 +1,3 @@
-// MARK: Headplane Application
-//
-// Loads configuration, builds the per-process app context, and exports
-// the React Router request listener as the default export.
-//
-// This module is consumed in two places:
-//   - `app/server/main.ts` — the production bootstrap; wraps the
-//     listener with static-asset serving and binds an http(s) server.
-//   - `runtime/vite-plugin.ts` — the dev-mode Vite middleware; loads
-//     this module through `ssrLoadModule` and dispatches each request.
-
 import { exit, versions } from "node:process";
 
 import { createRequestListener } from "@react-router/node";
@@ -16,25 +5,27 @@ import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
 
-import type { HeadplaneConfig } from "./config/config-schema";
 import { ConfigError } from "./config/error";
 import { loadConfig } from "./config/load";
 import { createAppContext, createRouterContext } from "./context";
 
+log.info("server", "Headplane is booting up (PID %d)", process.pid);
 log.info("server", "Running Node.js %s", versions.node);
+log.info(
+  "server",
+  "OS %s %s %s",
+  process.platform,
+  process.arch,
+  process.release?.name ?? "unknown",
+);
 
-let config: HeadplaneConfig;
-try {
-  config = await loadConfig();
-} catch (error) {
-  if (error instanceof ConfigError) {
-    log.error("server", "Unable to load configuration: %s", error.message);
-  } else {
-    log.error("server", "Failed to load configuration: %s", error);
-  }
+const config = await loadConfig().catch((error) => {
+  const message = error instanceof ConfigError ? error.message : error;
+  log.error("server", "Failed to load configuration: %s", message);
   exit(1);
-}
+});
 
+// TODO: This probably doesn't belong in app.ts, move it to loadConfig()
 if ((config.server.tls_cert_path || config.server.tls_key_path) && !config.server.cookie_secure) {
   log.warn(
     "server",
@@ -45,28 +36,22 @@ if ((config.server.tls_cert_path || config.server.tls_key_path) && !config.serve
 
 const ctx = await createAppContext(config).catch((error) => {
   const message = error instanceof ConfigError ? error.message : error;
-  log.error("server", "Unable to start Headplane: %s", message);
+  log.error("server", "Failed to start Headplane: %s", message);
   exit(1);
 });
-ctx.startServices();
 
+ctx.startServices();
 export { config };
 
-/**
- * Disposes the per-process context. Invoked by the production
- * supervisor on SIGTERM/SIGINT and by the dev Vite plugin on HMR
- * reload.
- */
+// Handles SIGTERM/SIGINT and testing signals for shutdown
 export async function dispose(): Promise<void> {
   await ctx.dispose();
 }
 
-// TODO: `getLoadContext` is the right place to handle reverse proxy
-// translation — better than doing it in the OIDC client because it
-// applies to all requests, not just OIDC ones.
+// TODO: Move reverse proxy translation from OIDC logic to here. That kind of
+// translation is needed for other things too, we should have it here.
 function getLoadContext(request: Request, client: ClientAddress) {
   ctx.auth.registerRequestClientAddress(request, client.address);
-
   return createRouterContext(ctx);
 }
 

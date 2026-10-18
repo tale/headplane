@@ -7,7 +7,7 @@ import { createTailnet, type Tailnet } from "../../harness/tailnet";
 import { waitFor } from "../../harness/wait";
 import { statusOf, type TestApp } from "../../support/app";
 
-const ALLOW_ALL = { acls: [{ action: "accept", src: ["*"], dst: ["*:*"] }] };
+const ALLOW_ALL_ACL_POLICY = { acls: [{ action: "accept", src: ["*"], dst: ["*:*"] }] };
 
 describe("machines on a real tailnet", () => {
   let tailnet: Tailnet;
@@ -15,7 +15,7 @@ describe("machines on a real tailnet", () => {
   let owner: string;
 
   beforeAll(async () => {
-    tailnet = await createTailnet({ policy: ALLOW_ALL });
+    tailnet = await createTailnet({ policy: ALLOW_ALL_ACL_POLICY });
     app = await tailnet.headplane();
     owner = (await app.signIn("owner")).cookie;
     await tailnet.user("alice@");
@@ -31,7 +31,6 @@ describe("machines on a real tailnet", () => {
 
   test("a waiting machine registered from its URL comes online for that user", async () => {
     const pending = await tailnet.pendingNode({ name: "laptop" });
-
     const result = await machine({
       intent: "register",
       register_key: pending.registerUrl,
@@ -87,7 +86,7 @@ describe("DNS on a real tailnet", () => {
   let tailnet: Tailnet;
 
   beforeAll(async () => {
-    tailnet = await createTailnet({ policy: ALLOW_ALL });
+    tailnet = await createTailnet({ policy: ALLOW_ALL_ACL_POLICY });
   });
 
   afterAll(async () => {

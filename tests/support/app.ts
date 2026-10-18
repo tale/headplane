@@ -1,15 +1,14 @@
 import { type } from "arktype";
-import { drizzle } from "drizzle-orm/node-sqlite";
-import { migrate } from "drizzle-orm/node-sqlite/migrator";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 import { headplaneConfig } from "~/server/config/config-schema";
 import { createAppContext, createRouterContext } from "~/server/context";
-import type { Headscale } from "~/server/headscale/api";
 import type { Role } from "~/server/web/roles";
 
+import { tempDir } from "./temp";
+
 export interface TestAppOptions {
-  headscale: { headscale: Headscale; apiKey: string };
+  headscale: { url: string; apiKey: string };
   // Merged over the minimal config, one top-level key at a time.
   config?: Record<string, Record<string, unknown>>;
 }
@@ -33,10 +32,11 @@ export async function createTestApp(options: TestAppOptions) {
     server: {
       cookie_secret: "test-cookie-secret-thirty-two-ch",
       cookie_secure: false,
+      data_path: await tempDir(),
       ...options.config?.server,
     },
     headscale: {
-      url: "http://headscale.test",
+      url: headscale.url,
       api_key: headscale.apiKey,
       ...options.config?.headscale,
     },
@@ -46,11 +46,8 @@ export async function createTestApp(options: TestAppOptions) {
     throw new Error(`Invalid test config: ${config.summary}`);
   }
 
-  const db = drizzle(":memory:");
-  migrate(db, { migrationsFolder: "./drizzle" });
-
-  const ctx = await createAppContext(config, { db, headscale: headscale.headscale });
-  const api = headscale.headscale.client(headscale.apiKey);
+  const ctx = await createAppContext(config);
+  const api = ctx.headscale.client(headscale.apiKey);
   let users = 0;
 
   async function signIn(role: Role, profile: { name?: string; email?: string } = {}) {

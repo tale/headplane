@@ -47,9 +47,6 @@ export default defineConfig({
         },
       },
     ],
-    env: {
-      HEADPLANE_DEBUG_LOG: "true",
-    },
     environment: "node",
     silent: "passed-only",
     execArgv: ["--disable-warning=ExperimentalWarning"],

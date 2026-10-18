@@ -8,7 +8,7 @@ import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
-import { createHeadscale, type Headscale, type HeadscaleClient } from "./headscale/api";
+import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
 import { type AgentManager, createAgentManager } from "./hp-agent";
@@ -28,27 +28,15 @@ export const integrationContext = createContext<AppContext["integration"]>();
 export const oidcContext = createContext<AppContext["oidc"]>();
 export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
-export interface AppContextOverrides {
-  db?: Awaited<ReturnType<typeof createDbClient>>;
-  headscale?: Headscale;
-}
+export async function createAppContext(config: HeadplaneConfig) {
+  const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
+  const headscale = await createHeadscale({
+    url: config.headscale.url,
+    certPath: config.headscale.tls_cert_path,
+  });
 
-export async function createAppContext(
-  config: HeadplaneConfig,
-  overrides: AppContextOverrides = {},
-) {
-  const db = overrides.db ?? (await createDbClient(join(config.server.data_path, "hp_persist.db")));
-  const headscale =
-    overrides.headscale ??
-    (await createHeadscale({
-      url: config.headscale.url,
-      certPath: config.headscale.tls_cert_path,
-    }));
-
-  // Resolve the Headscale API key: headscale.api_key takes precedence,
-  // falling back to the deprecated oidc.headscale_api_key for compatibility.
+  // TODO: Remove this fallback on Headplane 1.0.0
   const headscaleApiKey = config.headscale.api_key ?? config.oidc?.headscale_api_key;
-
   const agents = await buildAgents(
     config,
     headscale.capabilities.preAuthKeysHaveStableIds,
@@ -81,20 +69,19 @@ export async function createAppContext(
   });
 
   const oidc = buildOidc(config, headscaleApiKey);
-
   const hsLive = createLiveStore([nodesResource, usersResource]);
   const hs = await loadHeadscaleConfig(
     config.headscale.config_path,
     config.headscale.dns_records_path,
   );
-  const integration = await loadIntegration(config.integration);
 
-  // Disposers run in reverse-registration order on shutdown.
+  const integration = await loadIntegration(config.integration);
   const disposers: Array<() => Promise<void> | void> = [
     () => auth.stop(),
     () => hsLive.dispose(),
     () => headscale.dispose(),
   ];
+
   if (agents.state === "enabled") {
     disposers.push(() => agents.value.dispose());
   }
@@ -161,12 +148,15 @@ function buildOidc(
   if (!config.oidc) {
     return disabled("OIDC is not configured");
   }
+
   if (config.oidc.enabled === false) {
     return disabled("OIDC is disabled in the configuration");
   }
+
   if (!headscaleApiKey) {
     return disabled("OIDC requires headscale.api_key to be configured");
   }
+
   if (!config.server.base_url) {
     log.warn("config", "OIDC is disabled because `server.base_url` is not set");
     return disabled("OIDC requires server.base_url to be configured");
@@ -187,6 +177,7 @@ function buildOidc(
         config.oidc.token_endpoint_auth_method === "client_secret_jwt"
           ? undefined
           : config.oidc.token_endpoint_auth_method,
+
       usePkce: config.oidc.use_pkce,
       scope: config.oidc.scope,
       subjectClaims: config.oidc.subject_claims,
@@ -209,9 +200,11 @@ async function buildAgents(
   if (!agentConfig?.enabled) {
     return disabled("Agent is not enabled in the configuration");
   }
+
   if (!apiClient) {
     return disabled("Agent requires headscale.api_key to be configured");
   }
+
   if (!supportsTagOnlyKeys) {
     return disabled("Agent requires Headscale 0.28 or newer");
   }
@@ -223,8 +216,10 @@ async function buildAgents(
     supportsTagOnlyKeys,
     db,
   );
+
   if (!manager) {
     return disabled("Agent failed to initialize (see logs)");
   }
+
   return enabled(manager);
 }
