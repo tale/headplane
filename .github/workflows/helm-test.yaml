@@ -1,0 +1,148 @@
+name: Helm Lint and Test
+
+on:
+  pull_request:
+    paths:
+      - "kubernetes/headplane/**"
+      - ".github/workflows/helm-test.yaml"
+  push:
+    branches:
+      - main
+    paths:
+      - "kubernetes/headplane/**"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Lint Chart
+        run: nix shell nixpkgs#kubernetes-helm -c helm lint kubernetes/headplane
+
+      - name: Template Chart
+        run: nix shell nixpkgs#kubernetes-helm -c helm template headplane kubernetes/headplane --set headscale.url=http://headscale:8080
+
+  integration:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          determinate: true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Create Kind cluster
+        run: nix shell nixpkgs#kind -c kind create cluster --name helm-test --wait 60s
+
+      - name: Deploy standalone Headscale
+        run: |
+          nix shell nixpkgs#kubectl -c kubectl apply -f - <<'EOF'
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: headscale-config
+          data:
+            config.yaml: |
+              server_url: http://headscale:8080
+              listen_addr: 0.0.0.0:8080
+              database:
+                type: sqlite
+                sqlite:
+                  path: /var/lib/headscale/db.sqlite
+              prefixes:
+                v4: 100.64.0.0/10
+                v6: fd7a:115c:a1e0::/48
+              noise:
+                private_key_path: /var/lib/headscale/noise_private.key
+              dns:
+                base_domain: headscale.local
+                nameservers:
+                  global:
+                    - 1.1.1.1
+              derp:
+                server:
+                  enabled: false
+                urls:
+                  - https://controlplane.tailscale.com/derpmap/default
+          ---
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: headscale
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: headscale
+            template:
+              metadata:
+                labels:
+                  app: headscale
+              spec:
+                containers:
+                  - name: headscale
+                    image: headscale/headscale:0.25.1
+                    args: ["serve"]
+                    ports:
+                      - containerPort: 8080
+                    volumeMounts:
+                      - name: config
+                        mountPath: /etc/headscale
+                      - name: data
+                        mountPath: /var/lib/headscale
+                volumes:
+                  - name: config
+                    configMap:
+                      name: headscale-config
+                  - name: data
+                    emptyDir: {}
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: headscale
+          spec:
+            selector:
+              app: headscale
+            ports:
+              - port: 8080
+                targetPort: 8080
+          EOF
+          nix shell nixpkgs#kubectl -c kubectl wait --for=condition=available deployment/headscale --timeout=90s
+
+      - name: Install Chart
+        run: |
+          nix shell nixpkgs#kubernetes-helm -c helm install headplane kubernetes/headplane \
+            --set headscale.url=http://headscale:8080 \
+            --set integration.kubernetes.enabled=false \
+            --wait --timeout 120s
+
+      - name: Debug on failure
+        if: failure()
+        run: |
+          nix shell nixpkgs#kubectl -c kubectl get pods -o wide
+          nix shell nixpkgs#kubectl -c kubectl describe pods -l app.kubernetes.io/name=headplane
+          nix shell nixpkgs#kubectl -c kubectl logs -l app.kubernetes.io/name=headplane --tail=100
+
+      - name: Run Helm Tests
+        run: nix shell nixpkgs#kubernetes-helm -c helm test headplane
+
+      - name: Cleanup
+        if: always()
+        run: nix shell nixpkgs#kind -c kind delete cluster --name helm-test
