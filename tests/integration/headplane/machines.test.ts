@@ -26,7 +26,7 @@ describe("machines on a real tailnet", () => {
   });
 
   function machine(form: Record<string, string>) {
-    return app.call(machineAction as never, "/machines", { as: owner, form });
+    return app.call(machineAction, "/machines", { as: owner, form });
   }
 
   test("a waiting machine registered from its URL comes online for that user", async () => {
@@ -110,7 +110,7 @@ describe("DNS on a real tailnet", () => {
 
     const node = await tailnet.node({ name: "dns-client", user: "alice@" });
     const { cookie } = await app.signIn("owner");
-    const result = await app.call(dnsAction as never, "/dns", {
+    const result = await app.call(dnsAction, "/dns", {
       as: cookie,
       form: {
         intent: "add_record",

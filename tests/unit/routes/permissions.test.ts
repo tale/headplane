@@ -112,7 +112,7 @@ describe("route permissions", () => {
   });
 
   function callAction(entry: Entry, as?: string) {
-    return app.call(entry.module.action! as never, entry.path, {
+    return app.call(entry.module.action!, entry.path, {
       as,
       form: { ...form, ...(entry.intent ? { intent: entry.intent } : {}) },
       params: { id: form.node_id },
@@ -129,7 +129,7 @@ describe("route permissions", () => {
     async ([, entry]) => {
       const callers = MEMBER_VISIBLE.has(entry.file) ? [undefined] : [undefined, "member" as const];
       for (const role of callers) {
-        const result = await app.call(entry.module.loader! as never, entry.path, {
+        const result = await app.call(entry.module.loader!, entry.path, {
           as: role && cookies.get(role),
           params: { id: form.node_id },
         });

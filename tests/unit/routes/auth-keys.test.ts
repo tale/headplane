@@ -20,7 +20,7 @@ afterEach(async () => {
 });
 
 function create(as: string, form: Record<string, string | string[]>) {
-  return app.call(action as never, "/settings/auth-keys", {
+  return app.call(action, "/settings/auth-keys", {
     as,
     form: { intent: "create", expiry: "90", ...form },
   });
@@ -90,7 +90,7 @@ describe("self-service auth keys", () => {
     await create(admin, { user_id: bob.id });
     await create(admin, { tags: "tag:prod" });
 
-    const data = (await app.call(loader as never, "/settings/auth-keys", {
+    const data = (await app.call(loader, "/settings/auth-keys", {
       as: await signInAsAlice(),
     })) as Awaited<ReturnType<typeof loader>>;
 
@@ -104,7 +104,7 @@ describe("self-service auth keys", () => {
     await create(cookie, { user_id: bob.id });
     await create(cookie, { tags: "tag:prod" });
 
-    const data = (await app.call(loader as never, "/settings/auth-keys", {
+    const data = (await app.call(loader, "/settings/auth-keys", {
       as: cookie,
     })) as Awaited<ReturnType<typeof loader>>;
 

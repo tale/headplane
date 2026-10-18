@@ -21,7 +21,8 @@ export interface TestAppOptions {
 
 export type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 
-type RouteFunction = (args: LoaderFunctionArgs & ActionFunctionArgs) => unknown;
+// Any loader or action, whatever its generated argument types.
+type RouteFunction = (args: never) => unknown;
 
 export interface CallOptions {
   as?: string;
@@ -120,7 +121,9 @@ export async function createTestApp(options: TestAppOptions = {}) {
     };
 
     try {
-      return await fn(args as unknown as LoaderFunctionArgs & ActionFunctionArgs);
+      return await (fn as (args: LoaderFunctionArgs & ActionFunctionArgs) => unknown)(
+        args as unknown as LoaderFunctionArgs & ActionFunctionArgs,
+      );
     } catch (error) {
       return error;
     }

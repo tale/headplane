@@ -6,7 +6,7 @@ import { HEADSCALE_VERSIONS } from "../../harness/versions";
 import { createTestApp, type TestApp } from "../../support/app";
 
 async function signIn(app: TestApp, form: Record<string, string>) {
-  return app.call(action as never, "/login", { form });
+  return app.call(action, "/login", { form });
 }
 
 describe.for(HEADSCALE_VERSIONS)("API key sign-in on Headscale %s", (version) => {
