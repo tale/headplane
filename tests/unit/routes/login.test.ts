@@ -34,11 +34,14 @@ describe.for(HEADSCALE_VERSIONS)("API key sign-in on Headscale %s", (version) =>
 });
 
 describe("API key sign-in", () => {
-  test.for([{}, { api_key: "" }])("asks for a key when none is given (%o)", async (form) => {
-    await using app = await createTestApp();
+  test.for<Record<string, string>>([{}, { api_key: "" }])(
+    "asks for a key when none is given (%o)",
+    async (form) => {
+      await using app = await createTestApp();
 
-    expect(await signIn(app, form)).toEqual({ success: false, message: "Enter an API key." });
-  });
+      expect(await signIn(app, form)).toEqual({ success: false, message: "Enter an API key." });
+    },
+  );
 
   test("explains when Headscale can't be reached", async () => {
     await using app = await createTestApp();
