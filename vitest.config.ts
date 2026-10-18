@@ -38,6 +38,15 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "integration:harness",
+          include: ["tests/integration/harness/**/*.test.ts"],
+          testTimeout: 120_000,
+          hookTimeout: 120_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "integration:platform",
           include: ["tests/integration/platform/**/*.test.ts"],
           testTimeout: 60_000,

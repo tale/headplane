@@ -1,0 +1,32 @@
+// The newest patch of every Headscale minor Headplane supports.
+export const HEADSCALE_VERSIONS = ["0.27.1", "0.28.0", "0.29.5"] as const;
+export type HeadscaleVersion = (typeof HEADSCALE_VERSIONS)[number];
+export const LATEST_HEADSCALE: HeadscaleVersion = "0.29.5";
+
+export const TAILSCALE_IMAGE = "tailscale/tailscale:v1.104.1";
+export const DEX_IMAGE = "dexidp/dex:v2.41.1";
+
+// HP_HEADSCALE_VERSIONS=all runs the whole matrix, a comma-separated list runs
+// those versions, and unset runs only the latest so local runs stay fast.
+export function testedVersions(
+  env = process.env.HP_HEADSCALE_VERSIONS,
+): readonly HeadscaleVersion[] {
+  if (!env) {
+    return [LATEST_HEADSCALE];
+  }
+
+  if (env === "all") {
+    return HEADSCALE_VERSIONS;
+  }
+
+  const requested = env.split(",").map((version) => version.trim());
+  for (const version of requested) {
+    if (!HEADSCALE_VERSIONS.includes(version as HeadscaleVersion)) {
+      throw new Error(
+        `HP_HEADSCALE_VERSIONS: ${version} isn't in ${HEADSCALE_VERSIONS.join(", ")}`,
+      );
+    }
+  }
+
+  return requested as HeadscaleVersion[];
+}
