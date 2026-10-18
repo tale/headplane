@@ -637,6 +637,19 @@ export function createFakeHeadscaleServer(version: HeadscaleVersion = LATEST_HEA
         );
       }
 
+      // Undici refuses to send a header with these, as the real transport does.
+      if (!/^[\x20-\x7e]*$/.test(request.apiKey)) {
+        throw data(
+          {
+            requestUrl: label,
+            errorCode: "UND_ERR_INVALID_ARG",
+            errorMessage: "invalid Authorization header",
+            extraData: null,
+          },
+          { status: 502, statusText: "Bad Gateway" },
+        );
+      }
+
       if (!apiKeys.has(request.apiKey)) {
         throw apiError(label, 401, "Unauthorized", null);
       }

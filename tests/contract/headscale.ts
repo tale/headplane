@@ -96,6 +96,11 @@ export function headscaleContract(
       expect(message).toBe("Unauthorized");
     });
 
+    test("an API key that can't be a header never reaches Headscale", async () => {
+      const message = await rejection(backend.headscale.client("not\na-key").users.list());
+      expect(message).toBe("Couldn't reach Headscale. Check that it's running and try again.");
+    });
+
     describe("users", () => {
       test("created users keep their profile and can be filtered", async () => {
         const name = `${unique("bob")}@`;
