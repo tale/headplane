@@ -2,15 +2,9 @@ import "@fontsource-variable/inter/opsz.css";
 import { Banner } from "fumadocs-ui/components/banner";
 import { RootProvider } from "fumadocs-ui/provider/react-router";
 import type { ReactNode } from "react";
-import {
-  isRouteErrorResponse,
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "react-router";
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
+import Header from "@/components/header";
 import DocsSearchDialog from "@/components/search";
 
 import type { Route } from "./+types/root";
@@ -52,17 +46,21 @@ export default function App() {
   return <Outlet />;
 }
 
+// Pages are prerendered, so any error here means the page doesn't exist: a
+// missing page fails to load its data rather than returning a 404 response.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  const isNotFound = isRouteErrorResponse(error) && error.status === 404;
-
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-2 px-6 py-24">
-      <h1 className="text-2xl font-semibold">
-        {isNotFound ? "Page not found" : "Something went wrong"}
-      </h1>
-      <a className="text-accent" href="/">
-        Back to the docs
-      </a>
-    </main>
+    <>
+      <Header />
+      <main className="mx-auto flex max-w-xl flex-col gap-2 px-6 py-24">
+        <h1 className="text-2xl font-semibold">Page not found</h1>
+        {import.meta.env.DEV && error instanceof Error && (
+          <pre className="text-muted text-xs">{error.message}</pre>
+        )}
+        <a className="text-accent" href="/">
+          Back to the docs
+        </a>
+      </main>
+    </>
   );
 }
