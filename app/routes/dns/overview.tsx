@@ -34,6 +34,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...dns,
     access: writablePermission,
     writable: headscaleConfig.writable(),
+    hasRecordsFile: headscaleConfig.hasRecordsFile(),
     recordsWritable: headscaleConfig.recordsWritable(),
     isAutoApplied: context.get(integrationContext) !== undefined,
   };
@@ -86,6 +87,7 @@ export default function Page() {
         />
         <ManageNS global={data.nameservers} isDisabled={isDisabled} split={data.splitDns} />
         <ManageRecords
+          hasRecordsFile={data.hasRecordsFile}
           isDisabled={isDisabled}
           isReadOnly={!data.recordsWritable}
           records={data.extraRecords}

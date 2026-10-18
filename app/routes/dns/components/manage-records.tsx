@@ -7,11 +7,12 @@ import AddRecord from "../dialogs/add-record";
 
 interface Props {
   records: { name: string; type: "A" | string; value: string }[];
+  hasRecordsFile: boolean;
   isDisabled: boolean;
   isReadOnly: boolean;
 }
 
-export default function ManageRecords({ records, isDisabled, isReadOnly }: Props) {
+export default function ManageRecords({ records, hasRecordsFile, isDisabled, isReadOnly }: Props) {
   const isLocked = isDisabled || isReadOnly;
 
   return (
@@ -24,11 +25,18 @@ export default function ManageRecords({ records, isDisabled, isReadOnly }: Props
           <Link external styled to="https://headscale.net/stable/ref/dns">
             Docs
           </Link>
-          {!isDisabled && isReadOnly && (
+          {!isDisabled && isReadOnly && hasRecordsFile && (
             <>
               {" "}
               To edit records here, give Headplane write access to the file at{" "}
               <Code>dns.extra_records_path</Code>.
+            </>
+          )}
+          {!isDisabled && isReadOnly && !hasRecordsFile && (
+            <>
+              {" "}
+              To edit records here, move them from <Code>dns.extra_records</Code> into a JSON file
+              set as <Code>dns.extra_records_path</Code>.
             </>
           )}
         </>

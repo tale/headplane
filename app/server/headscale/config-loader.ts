@@ -144,6 +144,7 @@ interface HeadscaleConfig {
   getOIDCConfig: () => OIDCConfigView | undefined;
   hasOIDCConfig: () => boolean;
   dnsRecords: () => DNSRecord[];
+  hasRecordsFile: () => boolean;
   recordsWritable: () => boolean;
   patch: (patches: PatchConfig[]) => Promise<void>;
   addDNS: (record: DNSRecord) => Promise<void>;
@@ -173,6 +174,7 @@ function createHeadscaleConfig(
     getOIDCConfig: () => getOIDCConfig(state),
     hasOIDCConfig: () => hasOIDCConfig(state),
     dnsRecords: () => dnsRecords(state),
+    hasRecordsFile: () => state.dns !== undefined,
     recordsWritable: () => state.dns?.writable() ?? false,
     patch: (patches) => patchHeadscaleConfig(state, patches),
     addDNS: (record) => addDNS(state, record),

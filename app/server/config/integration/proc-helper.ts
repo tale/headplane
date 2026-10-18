@@ -76,7 +76,7 @@ export async function restartAndWaitHealthy(headscale: Headscale, pid: number): 
     return false;
   }
 
-  for (let attempt = 0; attempt < 30; attempt++) {
+  for (let attempt = 0; attempt < 60; attempt++) {
     await setTimeout(1000);
     const current = await findHeadscaleServe();
     if (current && current !== pid && (await headscale.health().catch(() => false))) {
