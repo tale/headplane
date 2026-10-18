@@ -97,24 +97,39 @@ export async function startHeadscale(options: HeadscaleOptions) {
 
   // A fixed host port survives restarts, which Headplane's Docker
   // integration does after editing the config.
-  const port = await freePort();
-  let builder = new tc.GenericContainer(`headscale/headscale:${options.version}`)
-    .withCommand(["serve"])
-    .withExposedPorts({ container: containerPort, host: port })
-    .withBindMounts([{ source: configDir, target: "/etc/headscale" }])
-    .withLabels({ [HARNESS_LABEL]: options.id, ...options.labels })
-    .withWaitStrategy(
-      certificate
-        ? tc.Wait.forHttp("/health", containerPort).usingTls().allowInsecure().forStatusCode(200)
-        : tc.Wait.forHttp("/health", containerPort).forStatusCode(200),
-    )
-    .withStartupTimeout(30_000);
+  async function start(port: number) {
+    let builder = new tc.GenericContainer(`headscale/headscale:${options.version}`)
+      .withCommand(["serve"])
+      .withExposedPorts({ container: containerPort, host: port })
+      .withBindMounts([{ source: configDir, target: "/etc/headscale" }])
+      .withLabels({ [HARNESS_LABEL]: options.id, ...options.labels })
+      .withWaitStrategy(
+        certificate
+          ? tc.Wait.forHttp("/health", containerPort).usingTls().allowInsecure().forStatusCode(200)
+          : tc.Wait.forHttp("/health", containerPort).forStatusCode(200),
+      )
+      .withStartupTimeout(30_000);
 
-  if (options.network) {
-    builder = builder.withNetwork(options.network).withNetworkAliases(HEADSCALE_ALIAS);
+    if (options.network) {
+      builder = builder.withNetwork(options.network).withNetworkAliases(HEADSCALE_ALIAS);
+    }
+
+    return builder.start();
   }
 
-  const container = await builder.start();
+  // Another process can take the free port before Docker binds it.
+  let port = await freePort();
+  async function startWithRetry(attempt = 1): Promise<tc.StartedTestContainer> {
+    try {
+      return await start(port);
+    } catch (error) {
+      if (attempt === 3 || !String(error).includes("address already in use")) throw error;
+      port = await freePort();
+      return startWithRetry(attempt + 1);
+    }
+  }
+
+  const container = await startWithRetry();
 
   async function exec(args: string[]) {
     const result = await container.exec(["headscale", ...args]);
