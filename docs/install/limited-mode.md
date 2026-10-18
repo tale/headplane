@@ -5,7 +5,7 @@ description: Install Headplane in Limited Mode.
 
 # Limited Mode
 
-::: warning
+:::warning
 **Limited Mode is not recommended for production use.**
 Please consider using one of the other installation methods for a production
 deployment. Limited mode lacks advanced features such as network management,
@@ -20,11 +20,11 @@ advanced features, making it suitable for local testing and development.
 
 - Docker (and optionally Docker Compose)
 - Headscale version 0.27.0 or later installed and running
-- A [completed configuration file](/index.md#configuration) for Headplane.
+- A [completed configuration file](./index.md#configuration) for Headplane.
 
 ## Installation
 
-::: tip
+:::tip
 If you want to test Limited Mode without Docker, you can follow the
 [Native Mode](./native-mode.md) installation guide and simply avoid setting
 up any of the advanced features.

@@ -1,0 +1,48 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/preset.css";
+@import "../../app/tokens.css";
+
+@theme {
+  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+@theme inline {
+  --color-fd-background: var(--hp-canvas);
+  --color-fd-foreground: var(--hp-fg);
+  --color-fd-muted: var(--hp-subtle);
+  --color-fd-muted-foreground: var(--hp-muted);
+  --color-fd-popover: var(--hp-raised);
+  --color-fd-popover-foreground: var(--hp-fg);
+  --color-fd-card: var(--hp-surface);
+  --color-fd-card-foreground: var(--hp-fg);
+  --color-fd-border: var(--hp-line);
+  --color-fd-primary: var(--hp-accent);
+  --color-fd-primary-foreground: var(--hp-accent-fg);
+  --color-fd-secondary: var(--hp-subtle);
+  --color-fd-secondary-foreground: var(--hp-fg);
+  --color-fd-accent: var(--hp-hover);
+  --color-fd-accent-foreground: var(--hp-fg);
+  --color-fd-ring: var(--hp-accent);
+  --color-fd-overlay: var(--hp-backdrop);
+
+  --color-fd-info: var(--hp-accent);
+  --color-fd-warning: var(--hp-warn);
+  --color-fd-error: var(--hp-bad);
+  --color-fd-success: var(--hp-ok);
+  --color-fd-idea: var(--hp-warn);
+  --color-fd-diff-add: var(--hp-ok-subtle);
+  --color-fd-diff-add-symbol: var(--hp-ok);
+  --color-fd-diff-remove: var(--hp-bad-subtle);
+  --color-fd-diff-remove-symbol: var(--hp-bad);
+}
+
+/* Fumadocs toggles `.dark` itself, so skip the app's system-preference fallback. */
+html.dark {
+  @apply dark-tokens;
+}
+
+body {
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

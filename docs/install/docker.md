@@ -6,7 +6,7 @@ outline: [2, 3]
 
 # Docker Installation
 
-::: tip
+:::tip
 If you are not looking to deploy with Docker, follow the
 [**Native Mode**](./native-mode.md) deployment guide.
 :::
@@ -155,7 +155,7 @@ services:
       - "/path/to/headscale/data/storage:/var/lib/headscale"
 ```
 
-::: info
+:::info
 With some effort, you can technically run Headscale and Headplane in separate
 Docker hosts and remotely connect to a Docker daemon. This is an advanced setup
 that is not covered in this documentation. Refer to the

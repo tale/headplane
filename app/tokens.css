@@ -1,4 +1,32 @@
-/* Color tokens, also imported by the docs theme (docs/.vitepress/theme). */
+/* Color tokens, shared by the app and the docs site (docs/app/app.css). */
+
+@theme inline {
+  --color-canvas: var(--hp-canvas);
+  --color-surface: var(--hp-surface);
+  --color-raised: var(--hp-raised);
+  --color-subtle: var(--hp-subtle);
+  --color-hover: var(--hp-hover);
+  --color-line: var(--hp-line);
+  --color-line-strong: var(--hp-line-strong);
+  --color-fg: var(--hp-fg);
+  --color-muted: var(--hp-muted);
+  --color-faint: var(--hp-faint);
+  --color-ink: var(--hp-ink);
+  --color-ink-fg: var(--hp-ink-fg);
+  --color-accent: var(--hp-accent);
+  --color-accent-fg: var(--hp-accent-fg);
+  --color-accent-subtle: var(--hp-accent-subtle);
+  --color-ok: var(--hp-ok);
+  --color-ok-subtle: var(--hp-ok-subtle);
+  --color-warn: var(--hp-warn);
+  --color-warn-subtle: var(--hp-warn-subtle);
+  --color-bad: var(--hp-bad);
+  --color-bad-subtle: var(--hp-bad-subtle);
+  --color-danger: var(--hp-danger);
+  --color-backdrop: var(--hp-backdrop);
+
+  --shadow-overlay: var(--hp-shadow-overlay);
+}
 
 @utility dark-tokens {
   --hp-canvas: #141313;

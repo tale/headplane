@@ -115,14 +115,14 @@ oidc:
   allow_weak_rsa_keys: true
 ```
 
-::: warning
+:::warning
 This weakens ID token verification security and should only be used as a
 temporary workaround while your provider rotates to a 2048-bit-or-larger key.
 :::
 
 ### PKCE
 
-::: warning
+:::warning
 Headplane currently only supports the **`S256`** code challenge method for PKCE.
 You may need to ensure that your Identity Provider is configured to accept this
 method.
@@ -191,7 +191,7 @@ claim someone else's Headscale identity.
 
 ### Same Client vs. Different Clients
 
-::: tip Recommended
+:::tip[Recommended]
 Using the **same OIDC client** for both Headscale and Headplane is the simplest
 and most reliable setup. The `sub` claim will be identical for both services,
 so subject matching always works.
@@ -208,7 +208,7 @@ client application. In this case:
 - Once the link is established, subsequent logins will work regardless because
   the link is persisted.
 
-::: warning
+:::warning
 If you use different clients **and** your IdP does not provide an `email` claim,
 Headplane will not be able to match users to their Headscale identity. Users
 will still be able to sign in, but they won't be linked to a Headscale user —
@@ -325,7 +325,7 @@ If your provider exposes `end_session_endpoint` in its discovery document
 (Keycloak, Authentik, Auth0, Azure AD, …) Headplane picks it up automatically
 once `use_end_session` is `true`.
 
-::: tip
+:::tip
 Make sure the redirect URI you supply (or the default one Headplane builds) is
 listed under the post-logout / valid redirect URIs in your IdP's client
 configuration, otherwise the provider will refuse to redirect back.

@@ -71,7 +71,7 @@ file editor and in the diff before it is saved.
 
 Nothing is sent to Headscale until **Save** is pressed.
 
-::: warning Comments are not preserved
+:::warning[Comments are not preserved]
 HuJSON allows comments and trailing commas. Headplane reads them, but the
 structured editors regenerate the policy text, which drops comments. The Rules
 and Tags & Groups tabs show a notice when the loaded policy contains comments —

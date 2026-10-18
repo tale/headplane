@@ -78,7 +78,7 @@ server:
       - "10.0.0.0/8"
 ```
 
-::: warning
+:::warning
 Only enable proxy authentication when Headplane is not directly reachable by
 untrusted clients. Anyone who can connect to Headplane from an allowed CIDR will
 be able to spoof the configured identity headers. Only configure `ip_header`

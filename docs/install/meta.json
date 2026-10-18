@@ -1,0 +1,5 @@
+{
+  "title": "Installation",
+  "defaultOpen": true,
+  "pages": ["limited-mode", "native-mode", "docker"]
+}

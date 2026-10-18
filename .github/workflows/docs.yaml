@@ -47,7 +47,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy docs/.vitepress/dist --project-name=headplane-docs-beta
+          command: pages deploy docs/build/client --project-name=headplane-docs-beta
 
   channel:
     name: Release Channel
@@ -102,4 +102,4 @@ jobs:
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           accountId: ${{ secrets.CF_ACCOUNT_ID }}
-          command: pages deploy docs/.vitepress/dist --project-name=headplane-docs
+          command: pages deploy docs/build/client --project-name=headplane-docs

@@ -3,21 +3,25 @@ title: Common Issues
 description: Common issues and their solutions
 ---
 
+import loginBannerLight from "../assets/login-banner-light.png";
+import loginBannerDark from "../assets/login-banner-dark.png";
+
 # Common Issues and Their Solutions
 
 This document outlines some common issues users may encounter while using Headplane, along with their solutions.
 
 ## Login does not work
 
-::: tip
+:::tip
 Headplane tries to detect misconfigurations and will surface a warning banner on
 the login page if it detects any abnormalities. You may see a banner like this:
 
-<figure>
-    <img class="dark-only" src="../assets/login-banner-dark.png" />
-    <img class="light-only" src="../assets/login-banner-light.png" />
-    <figcaption>Login Warning Banner</figcaption>
-</figure>
+<Figure
+  alt="Login Warning Banner"
+  light={loginBannerLight}
+  dark={loginBannerDark}
+  caption="Login Warning Banner"
+/>
 :::
 
 If you attempt to log in to Headplane but nothing happens, it may be due to a

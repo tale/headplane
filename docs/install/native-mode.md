@@ -6,7 +6,7 @@ outline: [2, 3]
 
 # Native Mode
 
-::: tip
+:::tip
 If you are looking to deploy with Docker, follow the
 [**Docker**](./docker.md) deployment guide.
 :::
@@ -176,7 +176,7 @@ you to access both services via the same domain and TLS certificate.
 
 #### Configuration
 
-::: tip
+:::tip
 If you are using a [custom path prefix](#custom-path-prefix) for Headplane,
 adjust the `/admin` paths in the examples below accordingly.
 :::
@@ -241,7 +241,7 @@ server {
 
 ## Custom Path Prefix
 
-::: warning
+:::warning
 The only officially supported path prefix for Headplane is `/admin`. Using a
 custom path prefix may lead to unexpected issues and is not recommended.
 :::

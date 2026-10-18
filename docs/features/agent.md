@@ -46,7 +46,7 @@ Once you've built Headplane locally, there will be a binary in the `./build`
 folder called `hp_agent`. Please move this binary to
 `/usr/libexec/headplane/agent` and ensure that it is executable.
 
-::: tip
+:::tip
 If for some reason you cannot move the binary to the intended location, you can
 define **`integration.agent.executable_path`** in your Headplane configuration
 file to point to the correct location of the agent binary.

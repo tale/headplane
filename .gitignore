@@ -10,8 +10,8 @@ node_modules
 /public/hp_ssh.wasm
 /public/wasm_exec.js
 
-/docs/.vitepress/dist/
-/docs/.vitepress/cache/
+/docs/build/
+/docs/.react-router/
 /.direnv
 /app/utils/cn-tables.ts
 /vendor

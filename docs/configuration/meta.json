@@ -1,0 +1,5 @@
+{
+  "title": "Configuration",
+  "defaultOpen": true,
+  "pages": ["common-issues", "tls", "[Sensitive Values](/configuration#sensitive-values)"]
+}
