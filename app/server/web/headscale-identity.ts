@@ -1,5 +1,7 @@
 import type { User } from "~/types/User";
 
+import { isUserPrincipal, type Principal } from "./auth";
+
 /**
  * Extracts the OIDC subject from a Headscale user's providerId.
  * Headscale stores providerId as a URL where the last path segment
@@ -37,4 +39,15 @@ export function findHeadscaleUserBySubject(
   }
 
   return users.find((u) => u.email === email);
+}
+
+// Whether the principal is the Headscale user, by link or by OIDC subject.
+export function ownsHeadscaleUser(principal: Principal, user: User): boolean {
+  if (!isUserPrincipal(principal)) {
+    return false;
+  }
+
+  return (
+    principal.user.headscaleUserId === user.id || getOidcSubject(user) === principal.user.subject
+  );
 }
