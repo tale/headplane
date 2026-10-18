@@ -1,3 +1,7 @@
+---
+description: Run Headplane on NixOS with the flake and its NixOS module.
+---
+
 # Nix
 
 [flake.nix](https://github.com/tale/headplane/blob/main/flake.nix) provided:

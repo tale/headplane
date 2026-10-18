@@ -1,7 +1,6 @@
 ---
 title: Architecture
 description: Service architecture patterns used in Headplane's server code.
-outline: [2, 3]
 ---
 
 # Architecture

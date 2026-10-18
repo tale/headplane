@@ -1,16 +1,19 @@
 ---
 title: Single Sign-On (SSO)
 description: Configure Single Sign-On (SSO) authentication for Headplane.
-outline: [2, 3]
 ---
+
+import ssoDark from "../assets/sso-dark.png";
+import ssoLight from "../assets/sso-light.png";
 
 # Single Sign-On (SSO)
 
-<figure>
-    <img class="dark-only" src="../assets/sso-dark.png" />
-    <img class="light-only" src="../assets/sso-light.png" />
-    <figcaption>SSO Configuration Page</figcaption>
-</figure>
+<Figure
+  alt="SSO Configuration Page"
+  light={ssoLight}
+  dark={ssoDark}
+  caption="SSO Configuration Page"
+/>
 
 Single Sign-On allows users to authenticate with Headplane through an external
 Identity Provider (IdP) using the OpenID Connect (OIDC) protocol. When enabled,

@@ -1,3 +1,7 @@
+---
+description: Configure Headplane with its config file and environment variables.
+---
+
 # Configuration
 
 > Previous versions of Headplane used environment variables without a configuration file.

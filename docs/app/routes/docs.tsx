@@ -28,10 +28,12 @@ export async function loader({ params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: `${loaderData.title} | Headplane` },
-    { name: "description", content: loaderData.description },
-  ];
+  const title = { title: `${loaderData.title} | Headplane` };
+  if (!loaderData.description) {
+    return [title];
+  }
+
+  return [title, { name: "description", content: loaderData.description }];
 }
 
 function Content({ path }: { path: string }) {

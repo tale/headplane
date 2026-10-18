@@ -1,3 +1,7 @@
+---
+description: Every option of the Headplane NixOS module.
+---
+
 # NixOS module options
 
 All options must be under `services.headplane`.

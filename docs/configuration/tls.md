@@ -1,3 +1,7 @@
+---
+description: Serve Headplane over HTTPS and trust private certificate authorities.
+---
+
 # TLS & Certificates
 
 Everything Headplane does with TLS lives on this page: terminating HTTPS

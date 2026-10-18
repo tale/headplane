@@ -46,7 +46,7 @@ PR is opened and actively in testing.
 
 Headplane is an open-source project and contributions are welcome! If you have
 any suggestions, bug reports, or feature requests, please open an issue. Also
-refer to the [contributor guidelines](./docs/CONTRIBUTING.md) for more info.
+refer to the [contributor guidelines](./.github/CONTRIBUTING.md) for more info.
 
 ---
 

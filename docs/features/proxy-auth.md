@@ -1,7 +1,6 @@
 ---
 title: Proxy Authentication
 description: Delegate Headplane authentication to a trusted reverse proxy.
-outline: [2, 3]
 ---
 
 :::warning
