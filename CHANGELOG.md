@@ -40,6 +40,7 @@
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
 - The auth keys page only shows people with self-service keys (like auditors and viewers) their own keys. Previously it sent every user's keys to anyone signed in, in full on Headscale 0.27, even when the page itself said they had no access. Self-service users also can no longer create tag-only keys by submitting the form directly.
+- Syncing the agent now requires permission to view machines, like the agent page itself. Previously anyone signed in could trigger a sync.
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
 - The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
 - An unexpected error during a background agent sync no longer crashes Headplane.

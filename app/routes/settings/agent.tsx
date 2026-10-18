@@ -94,7 +94,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const agents = context.get(agentsContext);
   const auth = context.get(authContext);
 
-  await auth.require(request);
+  await auth.requireCapability(request, Capabilities.read_machines);
 
   if (agents.state !== "enabled") {
     return { success: false, error: agents.reason };
