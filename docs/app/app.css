@@ -122,6 +122,11 @@ body {
   overflow-wrap: anywhere;
 }
 
+/* Unhighlighted languages wrap blank lines in an empty span, which Fumadocs' `.line:empty` misses. */
+.shiki .line {
+  min-height: 1lh;
+}
+
 /* Changelog: releases list tighter than prose. */
 .release-notes > :first-child {
   margin-top: 0;
