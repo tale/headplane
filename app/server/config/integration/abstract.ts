@@ -11,6 +11,6 @@ export abstract class Integration<T> {
   }
 
   abstract isAvailable(): Promise<boolean> | boolean;
-  abstract onConfigChange(headscale: Headscale): Promise<void> | void;
+  abstract onConfigChange(headscale: Headscale): Promise<boolean>;
   abstract get name(): string;
 }

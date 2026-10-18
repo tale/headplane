@@ -43,7 +43,12 @@ export const dnsAction = createAction({
       config,
       dns: config.getDNSConfig(),
       restart: async () => {
-        await integration?.onConfigChange(headscale);
+        if (integration && !(await integration.onConfigChange(headscale))) {
+          throw new ActionError(
+            "Saved, but Headscale didn't come back after restarting. Check its logs.",
+            502,
+          );
+        }
       },
     };
   },
@@ -175,7 +180,14 @@ export const dnsAction = createAction({
         name: text("Enter a domain."),
         value: v.string(),
       },
-      async handler(input, { config, dns, restart }) {
+      async handler(input, { config, dns }) {
+        if (!config.recordsWritable()) {
+          throw new ActionError(
+            "DNS records can only be changed through dns.extra_records_path.",
+            403,
+          );
+        }
+
         const value = parseValues(recordValue[input.type], input.value);
         if (!value.ok) {
           return invalid({ value: value.errors.form });
@@ -185,22 +197,21 @@ export const dnsAction = createAction({
           return invalid({ name: `This domain already has an ${input.type} record.` });
         }
 
-        // A separate records file is watched by Headscale, so only records in
-        // the main config need a restart.
-        if (await config.addDNS({ name: input.name, type: input.type, value: value.data })) {
-          await restart();
-        }
-
+        await config.addDNS({ name: input.name, type: input.type, value: value.data });
         return ok("Record added");
       },
     },
     remove_record: {
       fields: { type: v.string(), name: v.string() },
-      async handler(input, { config, restart }) {
-        if (await config.removeDNS({ name: input.name, type: input.type, value: "" })) {
-          await restart();
+      async handler(input, { config }) {
+        if (!config.recordsWritable()) {
+          throw new ActionError(
+            "DNS records can only be changed through dns.extra_records_path.",
+            403,
+          );
         }
 
+        await config.removeDNS({ name: input.name, type: input.type, value: "" });
         return ok("Record removed");
       },
     },

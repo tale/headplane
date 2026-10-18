@@ -128,8 +128,9 @@ headscale:
   # different path, such as in Docker bind mounts.
   #
   # Ensure that the file is both readable and writable to the Headplane process.
-  # When using this, Headplane will no longer need to automatically
-  # restart Headscale for DNS record changes.
+  # Headplane only edits DNS records through `dns.extra_records_path`, which
+  # Headscale watches. Records set inline under `dns.extra_records` are shown
+  # as read-only.
   # dns_records_path: "/var/lib/headscale/extra_records.json"
 
 # Integration configurations for Headplane to interact with Headscale
@@ -170,7 +171,7 @@ integration:
     enabled: false
 
     # By default we check for the presence of a container label (see the docs)
-    # to determine the container to signal when changes are made to DNS settings.
+    # to determine the container to restart when changes are made to settings.
     container_label: "me.tale.headplane.target=headscale"
 
     # HOWEVER, you can fallback to a container name if you desire, but this is
@@ -204,7 +205,9 @@ integration:
   # but you need to ensure that the Headplane process can terminate the
   # Headscale process.
   #
-  # (If they are both running under systemd as sudo, this will work).
+  # Headplane applies changes by sending SIGTERM to Headscale, so Headscale
+  # must run under a supervisor that restarts it, such as systemd with
+  # `Restart=always` (the default in Headscale's own unit file).
   proc:
     enabled: false
 

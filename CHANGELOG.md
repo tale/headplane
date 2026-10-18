@@ -1,5 +1,8 @@
 # Next
 
+Going forward, Headplane only works with DNS records defined in `dns.extra_records_path` in your Headscale configuration.
+If you have any records defined inline under `dns.extra_records`, they will be read-only in Headplane.
+
 ## Changes
 
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
@@ -22,9 +25,13 @@
 - Pre-auth keys are called auth keys everywhere in Headplane, matching Tailscale. **Generate Pre-auth Key** in the **Add machine** menu is now **Create auth key**.
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
+- When the Headscale configuration is writable but no integration is set up to restart Headscale, the DNS and sign-in restrictions pages now say that changes only take effect once Headscale restarts.
 
 ## Fixes
 
+- Changes to DNS settings and sign-in restrictions now actually apply with the `proc` and `kubernetes` integrations. Both sent `SIGHUP`, which only makes Headscale reload its ACL policy. They now stop Headscale with `SIGTERM` and wait for systemd or Kubernetes to restart it, so Headscale needs a supervisor that restarts it.
+- If Headscale doesn't come back after a change, Headplane now shows an error instead of reporting success.
+- Enabling two integrations at once is now caught at startup. Previously Headplane only refused when all three were on, and otherwise silently picked Docker.
 - The cookie that tracked SSO state was not signed. It is now signed with `server.cookie_secret` and cleared once SSO succeeds (closes [#659](https://github.com/tale/headplane/issues/659)).
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.

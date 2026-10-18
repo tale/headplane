@@ -150,6 +150,29 @@ describe("Headscale config loader", () => {
     ]);
   });
 
+  test("leaves inline YAML records read-only", async () => {
+    const path = join(dir, "config.yaml");
+    const yaml = [
+      "server_url: http://localhost:8080",
+      "dns:",
+      "  extra_records:",
+      "    - name: yaml",
+      "      type: A",
+      "      value: 2.2.2.2",
+    ].join("\n");
+    await writeFile(path, yaml);
+
+    const config = await loadHeadscaleConfig(path);
+    expect(config.writable()).toBe(true);
+    expect(config.recordsWritable()).toBe(false);
+    expect(config.dnsRecords()).toEqual([{ name: "yaml", type: "A", value: "2.2.2.2" }]);
+
+    await expect(config.addDNS({ name: "new", type: "A", value: "3.3.3.3" })).rejects.toThrow();
+    await expect(config.removeDNS({ name: "yaml", type: "A", value: "" })).rejects.toThrow();
+
+    expect(await readFile(path, "utf8")).toBe(yaml);
+  });
+
   test("reads OIDC restrictions as empty arrays when unset", async () => {
     const path = join(dir, "config.yaml");
     await writeFile(

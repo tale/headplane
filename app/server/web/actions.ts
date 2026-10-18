@@ -7,7 +7,7 @@ import type { Principal } from "~/server/web/auth";
 import type { Capabilities } from "~/server/web/roles";
 import { type ActionResult, formValues, invalid, parseValues } from "~/utils/form";
 
-// Thrown in setup or a handler to show the message in the actual form
+// Every possible action state. If a regular Error is thrown it's a bug
 export class ActionError extends Error {
   constructor(
     message: string,

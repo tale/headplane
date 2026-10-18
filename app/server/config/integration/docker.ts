@@ -253,7 +253,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
 
   async onConfigChange(headscale: Headscale) {
     if (!this.client || !this.apiVersion) {
-      return;
+      return false;
     }
 
     log.info("config", "Restarting Headscale via Docker");
@@ -274,9 +274,15 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
           continue;
         }
 
-        const stringCode = response.statusCode.toString();
         const body = await response.body.text();
-        throw new Error(`API request failed: ${stringCode} ${body}`);
+        log.error(
+          "config",
+          "Failed to restart %s: %d %s",
+          this.containerId,
+          response.statusCode,
+          body,
+        );
+        return false;
       }
 
       break;
@@ -292,7 +298,7 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
         }
 
         log.info("config", "Headscale is up and running");
-        return;
+        return true;
       } catch {
         if (attempts < this.maxAttempts) {
           attempts++;
@@ -301,8 +307,10 @@ export default class DockerIntegration extends Integration<typeof configSchema.f
         }
 
         log.error("config", "Missed restart deadline for %s", this.containerId);
-        return;
+        return false;
       }
     }
+
+    return false;
   }
 }
