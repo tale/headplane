@@ -1,10 +1,13 @@
 import { useFumadocsLoader } from "fumadocs-core/source/client";
+import { SidebarProvider, SidebarTrigger, useSidebar } from "fumadocs-ui/components/sidebar/base";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { DocsBody, DocsPage } from "fumadocs-ui/layouts/docs/page";
+import { Menu } from "lucide-react";
 import { use } from "react";
 
+import Header, { iconButtonClass } from "@/components/header";
 import { useMDXComponents } from "@/components/mdx";
-import { baseOptions } from "@/lib/layout";
+import Sidebar from "@/components/sidebar";
 import { docs, source } from "@/lib/source";
 
 import type { Route } from "./+types/docs";
@@ -49,11 +52,38 @@ function Content({ path }: { path: string }) {
   );
 }
 
+function DocsHeader() {
+  return (
+    <Header
+      menu={
+        <SidebarTrigger aria-label="Navigation" className={`${iconButtonClass} md:hidden`}>
+          <Menu />
+        </SidebarTrigger>
+      }
+    />
+  );
+}
+
+// Fumadocs puts its header beside the sidebar; ours spans the full width like
+// the app's, so the sidebar and TOC stick below it.
+const containerStyle = {
+  gridTemplate: `"header header header header header"
+"sidebar sidebar toc-popover toc toc"
+"sidebar sidebar tabs toc toc"
+"sidebar sidebar main toc toc" 1fr / minmax(min-content, 1fr) var(--fd-sidebar-col) minmax(0, calc(var(--fd-layout-width,97rem) - var(--fd-sidebar-width) - var(--fd-toc-width))) var(--fd-toc-width) minmax(min-content, 1fr)`,
+  "--fd-docs-row-1": "calc(var(--fd-banner-height, 0px) + 3.25rem)",
+};
+
+const slots = {
+  header: DocsHeader,
+  sidebar: { provider: SidebarProvider, root: Sidebar, trigger: SidebarTrigger, useSidebar },
+};
+
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { path, pageTree } = useFumadocsLoader(loaderData);
 
   return (
-    <DocsLayout {...baseOptions} tree={pageTree}>
+    <DocsLayout containerProps={{ style: containerStyle }} slots={slots} tree={pageTree}>
       <Content path={path} />
     </DocsLayout>
   );

@@ -67,6 +67,7 @@
     "fumadocs-ui": "npm:@fumadocs/base-ui@16.17.5",
     "lefthook": "^2.2.2",
     "mdast-util-directive": "^3.1.1",
+    "next-themes": "^0.4.6",
     "oxfmt": "^0.73.0",
     "oxlint": "^1.88.0",
     "oxlint-tsgolint": "^7.0.2004",

@@ -1,7 +1,6 @@
-import { HomeLayout } from "fumadocs-ui/layouts/home";
 import { Link } from "react-router";
 
-import { baseOptions } from "@/lib/layout";
+import Header from "@/components/header";
 
 const features = [
   {
@@ -31,7 +30,8 @@ export function meta() {
 
 export default function Home() {
   return (
-    <HomeLayout {...baseOptions}>
+    <>
+      <Header />
       <main className="mx-auto flex w-full max-w-5xl flex-col gap-16 px-6 py-24">
         <div className="flex max-w-2xl flex-col gap-4">
           <h1 className="text-4xl font-semibold tracking-tight">Headplane</h1>
@@ -60,6 +60,6 @@ export default function Home() {
           ))}
         </div>
       </main>
-    </HomeLayout>
+    </>
   );
 }
