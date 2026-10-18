@@ -5,8 +5,10 @@ import tc from "testcontainers";
 import { createHeadscale } from "~/server/headscale/api";
 import type { User } from "~/types";
 
+import { createTestApp, type TestAppOptions } from "../support/app";
 import { startHeadscale } from "./headscale";
 import { type NodeOptions, startNode, startPendingNode, type TailnetNode } from "./node";
+import { harnessCertificate } from "./tls";
 import { type HeadscaleVersion, LATEST_HEADSCALE } from "./versions";
 
 export interface TailnetOptions {
@@ -32,10 +34,12 @@ export async function createTailnet(options: TailnetOptions = {}) {
     version,
     network,
     config: options.headscaleConfig,
+    tls: true,
     id,
   });
 
-  const hs = await createHeadscale({ url: headscale.url });
+  const caCert = (await harnessCertificate()).cert;
+  const hs = await createHeadscale({ url: headscale.url, certPath: headscale.certPath });
   const api = hs.client(headscale.apiKey);
   const users = new Map<string, User>();
   const nodes: TailnetNode[] = [];
@@ -85,19 +89,56 @@ export async function createTailnet(options: TailnetOptions = {}) {
       ephemeral: nodeOptions.ephemeral,
     });
 
-    const started = await startNode({ ...nodeOptions, id, network, api, authKey: key });
+    const started = await startNode({
+      ...nodeOptions,
+      id,
+      network,
+      api,
+      controlUrl: headscale.controlUrl,
+      caCert,
+      authKey: key,
+    });
     nodes.push(started);
     return started;
   }
 
   async function pendingNode(nodeOptions: NodeOptions) {
-    const pending = await startPendingNode({ ...nodeOptions, id, network, api });
+    const pending = await startPendingNode({
+      ...nodeOptions,
+      id,
+      network,
+      api,
+      controlUrl: headscale.controlUrl,
+      caCert,
+    });
     disposers.push(() => pending.container.stop({ remove: true, removeVolumes: true }));
     return pending;
   }
 
+  // Headplane in-process, pointed at this tailnet's Headscale and its config
+  // file. Disposed with the tailnet.
+  async function headplane(appOptions: Pick<TestAppOptions, "config"> = {}) {
+    const client = await createHeadscale({ url: headscale.url, certPath: headscale.certPath });
+    const app = await createTestApp({
+      headscale: { headscale: client, apiKey: headscale.apiKey },
+      config: {
+        ...appOptions.config,
+        headscale: {
+          url: headscale.url,
+          tls_cert_path: headscale.certPath,
+          config_path: headscale.configPath,
+          ...appOptions.config?.headscale,
+        },
+      },
+    });
+
+    disposers.push(() => app.dispose());
+    return app;
+  }
+
   async function dispose() {
-    await Promise.allSettled([...nodes.map((n) => n.stop()), ...disposers.map((d) => d())]);
+    await Promise.allSettled(disposers.map((d) => d()));
+    await Promise.allSettled(nodes.map((n) => n.stop()));
     await hs.dispose();
     await headscale.stop();
     await network.stop();
@@ -116,6 +157,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
     authKey,
     node,
     pendingNode,
+    headplane,
     onDispose(disposer: () => Promise<unknown>) {
       disposers.push(disposer);
     },

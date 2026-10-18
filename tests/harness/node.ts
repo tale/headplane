@@ -2,7 +2,7 @@ import tc, { getContainerRuntimeClient } from "testcontainers";
 
 import type { HeadscaleClient } from "~/server/headscale/api";
 
-import { HARNESS_LABEL, HEADSCALE_ALIAS } from "./headscale";
+import { HARNESS_LABEL } from "./constants";
 import { TAILSCALE_IMAGE } from "./versions";
 import { waitFor } from "./wait";
 
@@ -23,6 +23,9 @@ interface StartNodeOptions extends NodeOptions {
   id: string;
   network: tc.StartedNetwork;
   api: HeadscaleClient;
+  controlUrl: string;
+  // Trusted by tailscaled so it can reach an HTTPS Headscale.
+  caCert?: string;
   // Omitted to have the node wait for interactive registration.
   authKey?: string;
 }
@@ -32,7 +35,7 @@ const SOCKET = "/var/run/tailscale/tailscaled.sock";
 // Tags ride on the auth key when there is one, which skips tagOwners checks.
 function upArgs(options: StartNodeOptions) {
   const args = [
-    `--login-server=http://${HEADSCALE_ALIAS}:8080`,
+    `--login-server=${options.controlUrl}`,
     `--hostname=${options.name}`,
     "--accept-dns=false",
   ];
@@ -49,19 +52,26 @@ function upArgs(options: StartNodeOptions) {
 
 async function startDaemon(options: StartNodeOptions) {
   // Runs tailscaled directly instead of containerboot, which exits on
-  // `tailscale down` and so can't model a node going offline.
-  const container = await new tc.GenericContainer(TAILSCALE_IMAGE)
+  // `tailscale down`.
+  let builder = new tc.GenericContainer(TAILSCALE_IMAGE)
     .withNetwork(options.network)
     .withName(`hp-harness-${options.id}-${options.name}`)
-    .withLabels({ [HARNESS_LABEL]: options.id })
+    .withLabels({ [`${HARNESS_LABEL}.node`]: options.id })
     .withEntrypoint(["tailscaled"])
     .withCommand([
       "--tun=userspace-networking",
       "--statedir=/var/lib/tailscale",
       `--socket=${SOCKET}`,
     ])
-    .withStartupTimeout(30_000)
-    .start();
+    .withStartupTimeout(30_000);
+
+  if (options.caCert) {
+    builder = builder
+      .withEnvironment({ SSL_CERT_FILE: "/etc/ssl/harness.pem" })
+      .withCopyContentToContainer([{ content: options.caCert, target: "/etc/ssl/harness.pem" }]);
+  }
+
+  const container = await builder.start();
 
   async function exec(args: string[]) {
     const result = await container.exec(args);
@@ -91,9 +101,14 @@ async function waitForNode(options: StartNodeOptions, online = true) {
 
 export async function startNode(options: StartNodeOptions) {
   const daemon = await startDaemon(options);
-  await daemon.tailscale(["up", `--auth-key=${options.authKey}`, ...upArgs(options)]);
-  const machine = await waitForNode(options);
-  return nodeHandle(daemon, machine.id, options);
+  try {
+    await daemon.tailscale(["up", `--auth-key=${options.authKey}`, ...upArgs(options)]);
+    const machine = await waitForNode(options);
+    return nodeHandle(daemon, machine.id, options);
+  } catch (error) {
+    await daemon.container.stop({ remove: true, removeVolumes: true });
+    throw error;
+  }
 }
 
 // Starts a node without an auth key and resolves with the URL it prints for
@@ -103,7 +118,7 @@ export async function startPendingNode(options: StartNodeOptions) {
   const command = ["tailscale", `--socket=${SOCKET}`, "up", ...upArgs(options)].join(" ");
   await daemon.exec(["sh", "-c", `${command} > /tmp/up.log 2>&1 &`]);
 
-  const pattern = new RegExp(`http://${HEADSCALE_ALIAS}:8080/register/\\S+`);
+  const pattern = new RegExp(`${options.controlUrl}/register/\\S+`);
   const registerUrl = await waitFor("a registration URL", async () => {
     const match = (await daemon.exec(["cat", "/tmp/up.log"])).match(pattern);
     if (!match) throw new Error("not printed yet");
@@ -141,9 +156,7 @@ function nodeHandle(
       return JSON.parse(await daemon.tailscale(["status", "--json"])) as Record<string, unknown>;
     },
 
-    // Stops tailscaled rather than running `tailscale down`: a quick
-    // down/up makes the client retry control over TLS on 443, which a
-    // plain HTTP Headscale can't answer.
+    // Stops the container, like a machine that's switched off.
     async down() {
       const client = await getContainerRuntimeClient();
       await client.container.stop(client.container.getById(daemon.container.getId()), {

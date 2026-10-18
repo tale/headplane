@@ -1,20 +1,25 @@
 import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { type AddressInfo, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import tc from "testcontainers";
 import { stringify } from "yaml";
 
+import { HARNESS_LABEL, HEADSCALE_ALIAS } from "./constants";
+import { harnessCertificate } from "./tls";
 import type { HeadscaleVersion } from "./versions";
 
-export const HEADSCALE_ALIAS = "headscale";
-export const HARNESS_LABEL = "me.tale.headplane.harness";
+export { HARNESS_LABEL, HEADSCALE_ALIAS };
 
 export interface HeadscaleOptions {
   version: HeadscaleVersion;
   network?: tc.StartedNetwork;
   // Merged over the defaults one top-level key at a time.
   config?: Record<string, unknown>;
+  labels?: Record<string, string>;
+  // Serves HTTPS on 443 with the harness certificate, as nodes need.
+  tls?: boolean;
   id: string;
 }
 
@@ -57,19 +62,52 @@ export function headscaleConfig(overrides: Record<string, unknown> = {}) {
   };
 }
 
+async function freePort() {
+  const server = createServer();
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const { port } = server.address() as AddressInfo;
+  await new Promise((resolve) => server.close(resolve));
+  return port;
+}
+
 export async function startHeadscale(options: HeadscaleOptions) {
   // Mounted rather than copied so Headplane can edit it like a real deployment.
   const configDir = await mkdtemp(join(tmpdir(), "hp-harness-headscale-"));
   const configPath = join(configDir, "config.yaml");
-  await writeFile(configPath, stringify(headscaleConfig(options.config)), { mode: 0o644 });
-  await chmod(configDir, 0o755);
+  const certificate = options.tls ? await harnessCertificate() : undefined;
+  const listen = certificate
+    ? {
+        server_url: `https://${HEADSCALE_ALIAS}`,
+        listen_addr: "0.0.0.0:443",
+        tls_cert_path: "/etc/headscale/tls.crt",
+        tls_key_path: "/etc/headscale/tls.key",
+      }
+    : {};
 
+  if (certificate) {
+    await writeFile(join(configDir, "tls.crt"), certificate.cert, { mode: 0o644 });
+    await writeFile(join(configDir, "tls.key"), certificate.key, { mode: 0o644 });
+  }
+
+  await writeFile(configPath, stringify(headscaleConfig({ ...listen, ...options.config })), {
+    mode: 0o644,
+  });
+  await chmod(configDir, 0o755);
+  const containerPort = certificate ? 443 : 8080;
+
+  // A fixed host port survives restarts, which Headplane's Docker
+  // integration does after editing the config.
+  const port = await freePort();
   let builder = new tc.GenericContainer(`headscale/headscale:${options.version}`)
     .withCommand(["serve"])
-    .withExposedPorts(8080)
+    .withExposedPorts({ container: containerPort, host: port })
     .withBindMounts([{ source: configDir, target: "/etc/headscale" }])
-    .withLabels({ [HARNESS_LABEL]: options.id })
-    .withWaitStrategy(tc.Wait.forHttp("/health", 8080).forStatusCode(200))
+    .withLabels({ [HARNESS_LABEL]: options.id, ...options.labels })
+    .withWaitStrategy(
+      certificate
+        ? tc.Wait.forHttp("/health", containerPort).usingTls().allowInsecure().forStatusCode(200)
+        : tc.Wait.forHttp("/health", containerPort).forStatusCode(200),
+    )
     .withStartupTimeout(30_000);
 
   if (options.network) {
@@ -95,7 +133,9 @@ export async function startHeadscale(options: HeadscaleOptions) {
     version: options.version,
     container,
     configPath,
-    url: `http://${container.getHost()}:${container.getMappedPort(8080)}`,
+    url: certificate ? `https://localhost:${port}` : `http://${container.getHost()}:${port}`,
+    controlUrl: certificate ? `https://${HEADSCALE_ALIAS}` : `http://${HEADSCALE_ALIAS}:8080`,
+    certPath: certificate?.certPath,
     exec,
     createApiKey,
     apiKey: await createApiKey(),
