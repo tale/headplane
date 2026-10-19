@@ -104,6 +104,7 @@ jobs:
     needs: [channel, docker]
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
     steps:
       - name: Check out the repo
@@ -125,4 +126,5 @@ jobs:
             gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
           else
             gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --latest="$LATEST"
+            gh workflow run docs-build.yaml --ref "$TAG"
           fi
