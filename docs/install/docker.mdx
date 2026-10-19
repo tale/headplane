@@ -16,11 +16,11 @@ all prebuilt.
 - Docker with Docker Compose
 - Headscale {versions.headscale.minimum} or newer, already running
 - A Headplane config file with at least `headscale.url` and
-  `server.cookie_secret` set (see [Before you start](/install#before-you-start))
+  `server.cookie_secret` set (see [Before installing](/install#before-installing))
 
 ## Installation
 
-Mount your config file and a directory for Headplane's own data, which holds
+Mount the config file and a directory for Headplane's own data, which holds
 its database and the agent's state:
 
 ```yaml
@@ -57,7 +57,7 @@ See [API keys](/configuration/api-keys) for how keys and sessions work.
 
 The image has a built-in healthcheck, so `docker ps` reports whether Headplane
 is up without any extra configuration. It follows Headplane's port and TLS
-settings on its own. To change its timing, override it in your compose file:
+settings on its own. To change its timing, override it in the compose file:
 
 ```yaml
 services:
@@ -72,7 +72,7 @@ services:
 
 ## Debugging
 
-The image has no shell. When you need one, switch to the matching `-shell` tag,
+The image has no shell. For one, switch to the matching `-shell` tag,
 such as `ghcr.io/tale/headplane:latest-shell`. It's the same build on Alpine,
 with `bash` and `curl`.
 

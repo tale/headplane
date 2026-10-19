@@ -39,9 +39,9 @@ names the problem:
   caption="Headplane warns about likely misconfigurations on the sign-in page"
 />
 
-If signing in sends you straight back to the sign-in page, the browser is
-probably dropping Headplane's cookie. Match `server.cookie_secure` to how you
-reach Headplane: `true` over HTTPS, `false` over plain HTTP. Behind a reverse
+If signing in lands back on the sign-in page, the browser is probably
+dropping Headplane's cookie. Match `server.cookie_secure` to how Headplane is
+reached: `true` over HTTPS, `false` over plain HTTP. Behind a reverse
 proxy that serves HTTPS, leave it at `true`.
 
 ## DNS is missing from the navigation
@@ -54,14 +54,14 @@ inside its container if it runs in one. See
 ## Changes only take effect after restarting Headscale
 
 The DNS and sign-in restrictions pages say this when no integration is running.
-Either none is enabled, or the one you enabled failed its startup check. In
+Either none is enabled, or the enabled one failed its startup check. In
 that case the log says the integration is not available, with the reason just
 above it. The [integration's section](/configuration/integrations) lists what
 it needs.
 
 ## "Headscale didn't come back after restarting"
 
-Your change was saved, but Headscale wasn't healthy again within the time
+The change was saved, but Headscale wasn't healthy again within the time
 limit. Check Headscale's own logs first, since the saved change may be what
 stops it from starting. With the proc or Kubernetes integration, also check
 that something restarts Headscale after it stops: a systemd unit with

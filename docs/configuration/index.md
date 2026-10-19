@@ -12,9 +12,8 @@ documents every option. Only `headscale.url` and `server.cookie_secret` are
 required; everything else has a default.
 
 :::note
-Before 0.5, Headplane was configured only through environment variables. If
-you're upgrading from one of those versions, move your settings into a config
-file.
+Before 0.5, Headplane was configured only through environment variables. When
+upgrading from one of those versions, move the settings into a config file.
 :::
 
 ## Data directory
@@ -44,8 +43,7 @@ also loaded a `.env` file. Environment variables are now always read, that
 variable is deprecated, and `.env` files are no longer loaded.
 :::
 
-For secrets, you can point Headplane at a file instead of putting the value in
-the config or the environment. See [Sensitive values](/configuration/sensitive-values).
+Secrets can also come from a file instead of the config or the environment. See [Sensitive values](/configuration/sensitive-values).
 
 ## Debug logging
 

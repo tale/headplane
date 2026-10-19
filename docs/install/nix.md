@@ -72,7 +72,7 @@ which restarts Headscale through systemd when settings change in the UI.
 Generating `headscale.config_path` from `services.headscale.settings`, as
 above, puts the file in the Nix store, which is read-only. Headplane shows
 Headscale's DNS settings and sign-in restrictions but can't change them, so
-keep managing those in your Nix configuration. DNS records are the exception:
+keep managing those in the Nix configuration. DNS records are the exception:
 point Headscale's `dns.extra_records_path` at a writable file outside the store
 and Headplane can edit them.
 

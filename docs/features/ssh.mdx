@@ -1,6 +1,6 @@
 ---
 title: Browser SSH
-description: Open SSH sessions to your Tailnet nodes directly from the browser.
+description: Open an SSH session to any machine on the tailnet from the browser.
 ---
 
 import { versions } from "@/lib/versions";
@@ -19,9 +19,28 @@ import sshFastfetch from "../assets/ssh-fastfetch.png";
   }
 />
 
-Browser SSH allows a user to open an SSH session to any accessible node in the
-Tailnet directly from the browser. It spins up an ephemeral Tailscale node that
-joins the tailnet for the duration of the SSH session.
+Browser SSH opens a terminal to any machine on the tailnet, straight from
+Headplane, with nothing to install. For each session, the browser runs a
+temporary Tailscale node of its own that joins the tailnet and connects to the
+machine with Tailscale SSH.
+
+## Requirements
+
+- **Headscale {versions.headscale.ssh} or newer.** Headscale 0.29.0 through
+  0.29.1 break it; use 0.28.x or 0.29.2 and newer.
+- **Tailscale SSH on the target machine**, turned on with `tailscale up --ssh`.
+  A regular SSH server doesn't work, because the browser signs in through
+  Tailscale, not with a password or key.
+- **The [Headplane Agent](/features/agent)**, turned on.
+- **An account linked to a Headscale user.** The session connects as that
+  user, so it needs [SSO](/features/sso) or
+  [proxy authentication](/features/proxy-auth). API key sessions can't use
+  Browser SSH.
+- **Headscale reachable from people's browsers**, with WebSocket upgrades
+  forwarded, and CORS headers if Headplane is on another domain. See
+  [Reverse proxy](/configuration/reverse-proxy).
+
+## How it works
 
 <Figure
   alt="fastfetch with Nerd Font icons"
@@ -33,156 +52,95 @@ joins the tailnet for the duration of the SSH session.
   }
 />
 
-## Prerequisites
+1. The browser loads a Tailscale client built for WebAssembly, which joins the
+   tailnet with a pre-auth key for the person's Headscale user.
+2. It connects to the machine over the tailnet, and Tailscale SSH on the
+   machine checks the `ssh` rules in the ACL policy to decide whether that user
+   may log in as the requested Linux user.
+3. The terminal is drawn by [restty](https://restty.pages.dev), a Ghostty-based
+   terminal emulator. Sessions use `TERM=xterm-256color`, and a JetBrains Mono
+   Nerd Font is included, so icons render without setup.
 
-- **Headscale {versions.headscale.ssh} or newer** is required. Browser SSH is broken in the
-  Headscale 0.29 beta releases through 0.29.1; use Headscale 0.28.x or 0.29.2
-  and newer.
-- Target nodes must have **Tailscale SSH** enabled (`tailscale up --ssh`).
-- Users must sign in with [SSO](/features/sso) or
-  [proxy authentication](/features/proxy-auth). API key sessions can't use
-  Browser SSH.
-- The **Headplane Agent** must be [enabled and configured](/features/agent).
-
-:::warning[Headscale 0.29.0 beta through 0.29.1]
-Browser SSH does not work with Headscale 0.29 beta releases through 0.29.1 due
-to a `/ts2021` WebSocket routing regression. These versions reject Tailscale's
-browser/WASM control-plane WebSocket request with `405 Method Not Allowed`.
-Upgrade Headscale to 0.29.2 or newer, or use Headscale 0.28.x.
-:::
-
-## How It Works
-
-:::tip
-While we use Ghostty (via [restty](https://restty.pages.dev)) to render the terminal,
-the SSH connection is opened with a `TERM` value of `xterm-256color` for maximum
-compatibility. Nerd Font glyphs are supported out of the box — the terminal
-ships with a self-hosted JetBrains Mono Nerd Font.
-:::
-
-When a user opens an SSH session from the UI, the browser:
-
-1. Loads a WASM module that runs a minimal Tailscale node using userspace
-   WireGuard. This node will connect to the tailnet via a pre-auth key.
-2. Opens an SSH session to the target node's Tailscale IP address over the
-   tunnel and passes it to the browser.
-3. Using [restty](https://restty.pages.dev) (a Ghostty-based WASM terminal emulator),
-   the browser renders a full-featured terminal and proxies the SSH session
-   to it.
-
-## Reverse proxy
-
-The browser connects straight to Headscale, so Headscale has to be reachable
-from your users' browsers, and any proxy in front of it has to forward
-WebSocket upgrades. If Headplane and Headscale are on different domains,
-Headscale's responses also need CORS headers.
-[Reverse proxy](/configuration/reverse-proxy) has examples for both.
+The agent removes the temporary machines once they go offline.
 
 ## Troubleshooting
 
-### SSH Not Available
+### SSH not available
 
 **Error:** "This build of Headplane doesn't include browser SSH."
 
-The WASM assets (`hp_ssh.wasm` and `wasm_exec.js`) are missing. Rebuild with
-`./build.sh --wasm` or ensure your Docker image was built with the `--wasm`
-flag.
+The build is missing the WebAssembly files, `hp_ssh.wasm` and `wasm_exec.js`.
+The official Docker images include them. For a native install, `./build.sh`
+builds them unless other parts are picked with flags; `./build.sh --wasm`
+builds only them.
 
-### Agent Required
+### Agent required
 
 **Error:** "Turn on the Headplane agent to use browser SSH."
 
-The Headplane Agent is not enabled. Browser SSH depends on the agent for
-Tailnet connectivity and ephemeral node cleanup. See the
-[Agent documentation](/features/agent) for setup instructions.
+Browser SSH needs the agent to join the tailnet and clean up after sessions.
+See [Headplane Agent](/features/agent).
 
-### OIDC Required
+### OIDC required
 
 **Error:** "Sign in with SSO to use browser SSH."
 
-Browser SSH creates its auth key for your linked Headscale user, and API key
-sessions don't have one. Sign in with SSO or proxy authentication instead.
+The session connects as the signed-in person's Headscale user, and an API key
+session has none. Sign in with SSO or proxy authentication instead.
 
-### User Not Linked
+### User not linked
 
 **Error:** "Browser SSH connects as your Headscale user."
 
-Your account isn't linked to a Headscale user yet. If Headscale uses SSO too,
-sign in to Headscale from a device once so it creates your user, and Headplane
-links it. Otherwise, ask an administrator to link your account from the
-**Users** page. See [Linking to Headscale users](/features/users-roles#linking-to-headscale-users).
+The account isn't linked to a Headscale user yet. If Headscale uses SSO too,
+signing in to Headscale from a device creates the user, and Headplane links it
+on its own. Otherwise, an admin links it from the **Users** page. See
+[Linking by hand](/features/users-roles#linking-by-hand).
 
-### Node Not Found
+### Node not found
 
-**Error:** "There's no machine named ..."
+**Error:** "There's no machine named …"
 
-The node name in the URL does not match any node registered in Headscale. The
-node may have been renamed or removed. Navigate back to the machines list and
-try again.
+No machine in Headscale has the name in the URL. It may have been renamed or
+removed, so go back to the machine list and open it again.
 
-### Node Offline
+### Node offline
 
-Headplane checks whether the target node is connected to the Tailnet before
-attempting an SSH session. If the node is offline, you'll see an error page
-with a **Try again** button. Ensure the node is running and connected
-to Headscale, then retry.
+Headplane checks that the machine is connected before starting a session. If
+it isn't, an error page offers **Try again** once the machine is back online.
 
-### Connection fails with EOF or hangs
+### Connection fails or hangs
 
-- **Check your Headscale version.** Browser SSH is broken in Headscale 0.29 beta
-  releases through 0.29.1 due to a `/ts2021` WebSocket routing regression. If
-  the browser console shows `405 Method Not Allowed` for `/ts2021`, upgrade to
-  Headscale 0.29.2 or newer, or use Headscale 0.28.x.
-- **Check `server_url` in your Headscale config.** If Headscale runs on a
-  non-standard port, `server_url` must include it (e.g.
-  `https://hs.example.com:8443`). The embedded DERP server derives its
-  advertised port from this value. Do **not** put the DERP port in Headplane's
-  `headscale.public_url` — that setting is used for display in the UI and
-  changing it will break registration commands and auth key instructions.
-- **Verify reverse proxy WebSocket support.** The proxy in front of Headscale
-  must forward `Upgrade: websocket` headers. Without this, the DERP connection
-  will fail immediately.
-- **Check CORS if on different origins.** Open the browser console and look for
-  CORS errors. If Headplane and Headscale are on different origins, CORS headers
-  must be configured on Headscale's proxy.
-- Verify that the target node has Tailscale SSH enabled (`tailscale up --ssh`).
-- Check the browser console for WASM errors or DERP connection failures.
+- **Headscale 0.29.0 through 0.29.1** reject the browser's connection. The
+  browser console shows `405 Method Not Allowed` for `/ts2021`. Upgrade
+  Headscale to 0.29.2 or newer.
+- **`server_url` in Headscale's config** has to include the port when it isn't
+  443, such as `https://hs.example.com:8443`, since the embedded DERP server
+  advertises its port from it. Don't change Headplane's `headscale.public_url`
+  for this; it only affects what the UI shows.
+- **The proxy in front of Headscale** has to forward WebSocket upgrades.
+- **On separate domains**, the browser console shows CORS errors when
+  Headscale's responses lack the CORS headers.
+
+### "unable to authenticate, attempted methods [none]"
+
+The machine answered with a regular SSH server instead of Tailscale SSH. Turn
+on Tailscale SSH on the machine with `tailscale up --ssh`.
 
 ### "failed to look up local user \*"
 
-This error appears in the terminal when Headscale SSH ACLs use
-`"users": ["*"]`, which some Tailscale versions interpret as a literal
-username rather than a wildcard. To fix this, change your ACL SSH rules to
-use `"autogroup:nonroot"` or explicit usernames instead:
+Some Tailscale versions read `"users": ["*"]` in an SSH rule as a user literally
+named `*`. Use `autogroup:nonroot` or explicit usernames instead:
 
 ```jsonc
-// Before (broken on some versions)
+// Before
 { "action": "accept", "src": ["autogroup:member"], "dst": ["autogroup:self"], "users": ["*"] }
 
-// After (recommended)
+// After
 { "action": "accept", "src": ["autogroup:member"], "dst": ["autogroup:self"], "users": ["autogroup:nonroot"] }
 ```
 
-### Terminal opens but input doesn't work
+### The session closes right away
 
-- Ensure the target node's Tailscale SSH ACLs permit the user. The SSH
-  connection succeeds at the transport level but the session may be rejected
-  by the node's SSH policy.
-- Check that the username you entered is a valid Linux user on the target
-  node. If the user doesn't exist, the SSH session will appear to connect
-  but immediately fail.
-
-### "SSH error: ssh: handshake failed: ssh: no common algorithm"
-
-The target node's SSH server doesn't support any of the algorithms offered
-by the Go SSH client. This usually means the target node is running a very
-old or very new version of OpenSSH with non-default algorithm configuration.
-Updating Tailscale on the target node typically resolves this.
-
-### SSH session connects but immediately disconnects
-
-- The target node may not have an SSH server installed or running. Tailscale
-  SSH (`tailscale up --ssh`) runs its own SSH server, but if Tailscale SSH
-  is not enabled, the node needs a standard SSH server (e.g. `openssh-server`)
-  listening on port 22.
-- The node may have a firewall blocking port 22 even for Tailnet connections.
+Either the `ssh` rules in the ACL policy don't let this person log in as the
+chosen user, or that Linux user doesn't exist on the machine.

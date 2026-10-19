@@ -11,17 +11,16 @@ export const dockerCompose = `services:
     ports:
       - "3000:3000"
     volumes:
-      - "/path/to/your/config.yaml:/etc/headplane/config.yaml"
+      - "/path/to/headplane/config.yaml:/etc/headplane/config.yaml"
       - "/path/to/data/storage:/var/lib/headplane"
 
-      # A shared path to the Headscale config file. It is important that the
-      # path you mount this on matches \`headscale.config_path\` in your
-      # Headplane config.yaml file.
+      # Headscale's config file. The path inside this container must match
+      # \`headscale.config_path\` in Headplane's config.
       - "/path/to/headscale/config.yaml:/etc/headscale/config.yaml"
 
       # To edit DNS records, mount the file from Headscale's
       # dns.extra_records_path too. If the path in this container differs,
-      # set \`headscale.dns_records_path\` in your Headplane config.yaml file.
+      # set \`headscale.dns_records_path\` in Headplane's config.
       - "/path/to/headscale/dns_records.json:/etc/headscale/dns_records.json"
 
       # The Docker socket (or a socket proxy), used to restart Headscale
@@ -32,13 +31,12 @@ export const dockerCompose = `services:
     restart: unless-stopped
     command: serve
     labels:
-      # This label is absolutely necessary to help Headplane find Headscale.
+      # How Headplane finds the Headscale container
       me.tale.headplane.target: headscale
     ports:
       - "8080:8080"
     volumes:
-      # Notice how these are on the exact same path as the host for both
-      # Headscale and Headplane! This is very important.
+      # The same files, at the same paths, as in Headplane's container
       - "/path/to/headscale/config.yaml:/etc/headscale/config.yaml"
       - "/path/to/headscale/dns_records.json:/etc/headscale/dns_records.json"
 
@@ -51,7 +49,7 @@ export const traefikCompose = `services:
     container_name: headplane
     restart: unless-stopped
     volumes:
-      - "/path/to/your/config.yaml:/etc/headplane/config.yaml"
+      - "/path/to/headplane/config.yaml:/etc/headplane/config.yaml"
       - "/path/to/data/storage:/var/lib/headplane"
     labels:
       - "traefik.enable=true"

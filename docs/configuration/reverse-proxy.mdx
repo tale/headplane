@@ -12,7 +12,7 @@ admin console: Headplane under `/admin`, Headscale on everything else. Both
 then share one certificate, and because the browser sees a single origin, no
 CORS headers are needed.
 
-Whatever proxy you use:
+Whatever the proxy:
 
 - Route `/admin` to Headplane (port 3000) and everything else to Headscale
   (port 8080).
@@ -23,7 +23,7 @@ Whatever proxy you use:
   callback URL.
 
 Leave `server.cookie_secure` at its default of `true` when the proxy serves
-HTTPS. Set it to `false` only if you reach Headplane over plain HTTP, or
+HTTPS. Set it to `false` only when Headplane is reached over plain HTTP, or
 sign-in won't stick.
 
 ## Caddy
@@ -90,8 +90,8 @@ server {
 
 ## Traefik
 
-With Traefik's Docker provider, the routing goes in container labels. Add your
-own certificate setup to the `traefik` service; it forwards WebSocket upgrades
+With Traefik's Docker provider, the routing goes in container labels. Add a
+certificate setup to the `traefik` service; it forwards WebSocket upgrades
 on its own.
 
 <DynamicCodeBlock lang="yaml" code={traefikCompose} />
