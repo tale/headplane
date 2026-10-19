@@ -34,7 +34,7 @@ export default function VersionPicker({ className = "" }: { className?: string }
   return (
     <Menu.Root>
       <Menu.Trigger
-        className={`text-muted hover:bg-hover hover:text-fg data-popup-open:bg-hover data-popup-open:text-fg focus-visible:outline-accent inline-flex h-7 items-center gap-1 rounded-md px-2 text-[13px] font-medium focus-visible:outline-2 ${className}`}
+        className={`text-muted hover:bg-hover hover:text-fg data-popup-open:bg-hover data-popup-open:text-fg focus-visible:outline-accent inline-flex h-8 items-center gap-1 rounded-md px-2 text-[13px] font-medium focus-visible:outline-2 ${className}`}
       >
         {isBeta ? "Beta" : docsBuild.version}
         <ChevronDown className="size-3.5" />

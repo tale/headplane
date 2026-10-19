@@ -36,7 +36,6 @@ export default function Header({ menu }: { menu?: ReactNode }) {
           <LogoMark className="size-[18px] shrink-0" />
           <span className="text-sm font-semibold tracking-tight">headplane</span>
         </Link>
-        <VersionPicker className="-ml-3 max-sm:hidden" />
         <nav className="hidden items-center gap-x-0.5 text-[13px] font-medium md:flex">
           {links.map((link) => {
             const isActive =
@@ -59,6 +58,7 @@ export default function Header({ menu }: { menu?: ReactNode }) {
         </nav>
         <div className="ml-auto flex items-center gap-x-1">
           <SearchButton />
+          <VersionPicker className="max-sm:hidden" />
           <a
             aria-label="GitHub"
             className={iconButtonClass}
@@ -103,7 +103,7 @@ function ThemePicker() {
       </button>
       <div
         aria-label="Theme"
-        className="border-line hidden items-center gap-0.5 rounded-md border p-0.5 sm:flex"
+        className="border-line hidden h-8 items-center gap-0.5 rounded-md border p-0.5 sm:flex"
         role="radiogroup"
       >
         {themeList.map(({ value, label, Icon }) => {
