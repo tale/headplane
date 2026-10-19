@@ -123,12 +123,28 @@ export async function startHeadscale(options: {
   const configPath = join(configDir, "config.yaml");
   const recordsPath = join(configDir, "extra-records.json");
   const tls = options.tls ? await certificate() : undefined;
+  // Tailnets relay through Headscale's own DERP server rather than
+  // Tailscale's, which browser clients reach over WebSockets.
   const listen = tls
     ? {
         server_url: `https://${ALIAS}`,
         listen_addr: "0.0.0.0:443",
         tls_cert_path: "/etc/headscale/tls.crt",
         tls_key_path: "/etc/headscale/tls.key",
+        derp: {
+          server: {
+            enabled: true,
+            region_id: 999,
+            region_code: "headscale",
+            region_name: "Headscale",
+            stun_listen_addr: "0.0.0.0:3478",
+            private_key_path: "/var/lib/headscale/derp_server_private.key",
+            automatically_add_embedded_derp_region: true,
+          },
+          urls: [],
+          paths: [],
+          auto_update_enabled: false,
+        },
       }
     : {};
 
