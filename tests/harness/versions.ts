@@ -5,6 +5,8 @@ export const LATEST_HEADSCALE = HEADSCALE_VERSIONS[HEADSCALE_VERSIONS.length - 1
 
 export const TAILSCALE_IMAGE = "tailscale/tailscale:v1.104.1";
 export const DEX_IMAGE = "dexidp/dex:v2.41.1";
+// Stands in for the browser, on the Node version Headplane runs on.
+export const NODE_IMAGE = "node:24-slim";
 
 // HP_HEADSCALE_VERSIONS: "all", a comma-separated list, or unset for the latest.
 export function testedVersions(): readonly HeadscaleVersion[] {

@@ -63,6 +63,10 @@
 - Turning off key expiry on Headscale 0.27 or 0.28 no longer signs the machine out. Headplane now explains that this needs Headscale 0.29 or newer.
 - Acting on a machine that was deleted elsewhere now says the machine no longer exists.
 - The ACL page no longer shows an empty, editable policy when Headscale can't load it. With Headscale's default file-mode configuration it now shows the policy as read-only, and other errors are reported instead of offering to overwrite the policy.
+- Browser SSH shows why a session couldn't open, such as SSH rules that don't allow the chosen user, instead of a spinner that never ends. A session that stalls while connecting now gives up after 30 seconds.
+- Browser SSH works with SSH rules that use the `check` action on Headscale 0.29. The page links to the sign-in Headscale asks for, and the session opens once it's done (closes [#591](https://github.com/tale/headplane/issues/591)).
+- Browser SSH no longer opens a second SSH session right after the first one connects.
+- Browser SSH no longer says it isn't available when Headplane can't reach its own public address, as happens behind some reverse proxies. The page checks for its files when it loads them instead.
 
 # 0.8.1 (October 16, 2026)
 

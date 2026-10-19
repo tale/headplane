@@ -1,4 +1,4 @@
-const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
+export const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
 const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
 
 export interface TailnetConfig {
@@ -7,6 +7,9 @@ export interface TailnetConfig {
   hostname: string;
   onPanic: (error: string) => void;
 }
+
+// The build doesn't include Browser SSH, or a proxy doesn't serve its files.
+export class MissingWasmError extends Error {}
 
 let goHelper: Promise<void> | null = null;
 
@@ -19,8 +22,10 @@ function loadGoHelper(): Promise<void> {
     const script = document.createElement("script");
     script.src = WASM_HELPER_URL;
     script.crossOrigin = "anonymous";
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Failed to load Go WASM helper"));
+    // A proxy may answer with an HTML page, which loads but defines nothing.
+    script.onload = () =>
+      typeof globalThis.Go === "undefined" ? reject(new MissingWasmError()) : resolve();
+    script.onerror = () => reject(new MissingWasmError());
     document.head.appendChild(script);
   });
 
@@ -34,8 +39,13 @@ function loadGoHelper(): Promise<void> {
 export async function connectTailnet(config: TailnetConfig): Promise<IPN> {
   await loadGoHelper();
 
+  const response = await fetch(WASM_MODULE_URL);
+  if (!response.ok) {
+    throw new MissingWasmError();
+  }
+
   const go = new Go();
-  const module = await WebAssembly.instantiateStreaming(fetch(WASM_MODULE_URL), go.importObject);
+  const module = await WebAssembly.instantiateStreaming(response, go.importObject);
 
   // The Go process parks on a channel forever, so returning means it died.
   go.run(module.instance).then(() => config.onPanic("Unexpected shutdown"));

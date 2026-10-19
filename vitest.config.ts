@@ -31,7 +31,12 @@ export default defineConfig({
         test: {
           name: "integration:app",
           include: ["tests/integration/**/*.test.ts"],
-          exclude: ["node_modules/**", "build/**", "tests/integration/agent/**"],
+          exclude: [
+            "node_modules/**",
+            "build/**",
+            "tests/integration/agent/**",
+            "tests/integration/ssh/**",
+          ],
           testTimeout: 120_000,
           hookTimeout: 120_000,
         },
@@ -42,6 +47,16 @@ export default defineConfig({
           name: "integration:agent",
           include: ["tests/integration/agent/**/*.test.ts"],
           globalSetup: ["tests/integration/agent/setup.ts"],
+          testTimeout: 180_000,
+          hookTimeout: 180_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "integration:ssh",
+          include: ["tests/integration/ssh/**/*.test.ts"],
+          globalSetup: ["tests/integration/ssh/setup.ts"],
           testTimeout: 180_000,
           hookTimeout: 180_000,
         },

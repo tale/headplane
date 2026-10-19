@@ -41,10 +41,16 @@ test("peers see a renamed machine", async () => {
 ```
 
 Each tailnet has its own Docker network, a Headscale served over HTTPS with a
-generated certificate, and Tailscale nodes that join with pre-auth keys. A node
-can advertise routes, an exit node, tags, or SSH. `node.down()` and `node.up()`
-switch it off and on. `tailnet.pendingNode()` starts one that waits for
-interactive registration.
+generated certificate and its own DERP server, and Tailscale nodes that join
+with pre-auth keys. A node can advertise routes, an exit node, tags, or SSH.
+`node.down()` and `node.up()` switch it off and on. `tailnet.pendingNode()`
+starts one that waits for interactive registration.
+
+Browser SSH tests in `tests/integration/ssh` build `hp_ssh.wasm` and run it in
+a Node container on the tailnet's network, standing in for the browser
+(`tests/harness/browser-ssh.ts`). It joins and opens a session the same way the
+page does, so they catch problems in the WebAssembly client, Headscale's
+WebSocket and DERP handling, and the SSH rules.
 
 `tailnet.headplane()` runs Headplane in-process against the tailnet, built from
 the same app context production uses. Sign in as any role and call a route the

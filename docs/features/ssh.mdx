@@ -141,6 +141,13 @@ named `*`. Use `autogroup:nonroot` or explicit usernames instead:
 { "action": "accept", "src": ["autogroup:member"], "dst": ["autogroup:self"], "users": ["autogroup:nonroot"] }
 ```
 
+### Sign in to continue
+
+SSH rules with `"action": "check"` make people sign in again before a session
+opens. Headplane shows a **Sign in** link above the terminal, and the session
+opens once that sign-in is done. Headscale 0.28 treats `check` like `accept`,
+so this starts with Headscale 0.29.
+
 ### The session closes right away
 
 Either the `ssh` rules in the ACL policy don't let this person log in as the
