@@ -79,35 +79,50 @@ function ThemePicker() {
     () => false,
   );
 
-  return (
-    <div
-      aria-label="Theme"
-      className="border-line flex items-center rounded-full border p-0.5"
-      role="radiogroup"
-    >
-      {themeList.map(({ value, label, Icon }) => {
-        const isActive = isMounted && theme === value;
+  const currentIndex = themeList.findIndex((item) => isMounted && item.value === theme);
+  const current = themeList[currentIndex] ?? themeList[2];
+  const next = themeList[(themeList.indexOf(current) + 1) % themeList.length];
 
-        return (
-          <button
-            aria-checked={isActive}
-            aria-label={label}
-            className={
-              isActive
-                ? "bg-hover text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-full focus-visible:outline-2 [&_svg]:size-3.5"
-                : "text-muted hover:text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-full focus-visible:outline-2 [&_svg]:size-3.5"
-            }
-            key={value}
-            onClick={() => setTheme(value)}
-            role="radio"
-            title={label}
-            type="button"
-          >
-            <Icon />
-          </button>
-        );
-      })}
-    </div>
+  return (
+    <>
+      <button
+        aria-label={`Theme: ${current.label}`}
+        className={`${iconButtonClass} sm:hidden`}
+        onClick={() => setTheme(next.value)}
+        title={`Theme: ${current.label}`}
+        type="button"
+      >
+        <current.Icon />
+      </button>
+      <div
+        aria-label="Theme"
+        className="border-line hidden items-center gap-0.5 rounded-md border p-0.5 sm:flex"
+        role="radiogroup"
+      >
+        {themeList.map(({ value, label, Icon }) => {
+          const isActive = isMounted && theme === value;
+
+          return (
+            <button
+              aria-checked={isActive}
+              aria-label={label}
+              className={
+                isActive
+                  ? "bg-hover text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-[4px] focus-visible:outline-2 [&_svg]:size-3.5"
+                  : "text-muted hover:text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-[4px] focus-visible:outline-2 [&_svg]:size-3.5"
+              }
+              key={value}
+              onClick={() => setTheme(value)}
+              role="radio"
+              title={label}
+              type="button"
+            >
+              <Icon />
+            </button>
+          );
+        })}
+      </div>
+    </>
   );
 }
 

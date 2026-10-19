@@ -26,7 +26,10 @@ export function Layout({ children }: { children: ReactNode }) {
         <RootProvider search={{ SearchDialog: DocsSearchDialog }}>
           {__HEADPLANE_BETA_DOCS__ && (
             <Banner className="bg-warn-subtle text-warn h-9 text-sm">
-              <span>
+              <span className="sm:hidden">
+                <strong>Beta</strong> docs.
+              </span>
+              <span className="max-sm:hidden">
                 You're viewing the <strong>beta</strong> docs.
               </span>
               <a className="ml-2 underline" href="https://headplane.net">
