@@ -1,5 +1,5 @@
 ---
-title: Agent
+title: Machine details
 description: Show each machine's Tailscale version and OS, and enable Browser SSH.
 ---
 
@@ -8,12 +8,13 @@ import { versions } from "@/lib/versions";
 import machineDark from "../assets/machine-dark.png";
 import machineLight from "../assets/machine-light.png";
 
-# Agent
+# Machine details
 
 Headscale's API doesn't report which Tailscale version or OS a machine runs.
-The agent fills that in: Headplane runs a small Tailscale node that joins the
-tailnet and reads each machine's details from its view of the network, every
-three minutes by default. [Browser SSH](/features/ssh) needs it too.
+To fill that in, Headplane runs a small Tailscale node, called the agent in
+its settings and config. The agent joins the tailnet and reads each machine's
+details from its view of the network, every three minutes by default.
+[Browser SSH](/features/ssh) needs it too.
 
 <Figure
   alt="A machine's details in Headplane"

@@ -14,7 +14,7 @@ const channelList = [
     need: "Optional",
   },
   {
-    via: "Agent",
+    via: "Tailscale node",
     target: "The tailnet",
     powers: "Machine versions and Browser SSH",
     need: "Optional",
@@ -31,7 +31,7 @@ export default function Architecture() {
         {channelList.map((channel) => (
           <li
             key={channel.via}
-            className="grid items-center gap-1 sm:grid-cols-[6.5rem_1fr] sm:gap-3"
+            className="grid items-center gap-1 sm:grid-cols-[8rem_1fr] sm:gap-3"
           >
             <div className="text-muted flex items-center gap-1.5 text-xs">
               <span className="bg-line-strong hidden h-px flex-1 sm:block" />

@@ -19,7 +19,8 @@ file.
 
 ## Data directory
 
-Headplane keeps its database and the agent's state in `server.data_path`,
+Headplane keeps its database, and the Tailscale state for
+[machine details](/features/machine-details), in `server.data_path`,
 `/var/lib/headplane` by default. It must be persistent and writable by
 Headplane. In Docker, mount it as a volume.
 

@@ -60,8 +60,9 @@ Add the flake as an input, then import its module and overlay:
 The module writes `settings` to `/etc/headplane/config.yaml`, so every option
 from the [configuration file](/configuration) is available under
 `services.headplane.settings`. The [NixOS options](/reference/nixos-options)
-reference lists them all. It also points the agent at its Nix package on its
-own, so enabling it is all the agent needs.
+reference lists them all. It also points the agent behind
+[machine details](/features/machine-details) at its Nix package, so
+`integration.agent.enabled` is all it needs.
 
 ## How it runs
 
