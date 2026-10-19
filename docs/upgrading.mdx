@@ -19,16 +19,3 @@ To get patch releases without moving to a new minor version by surprise, pin
 the Docker image to a minor tag, such as `ghcr.io/tale/headplane:0.8`.
 
 <UpgradeNotes />
-
-## Deprecated options
-
-These still load, but log a warning at startup.
-
-| Option                          | Instead                                           |
-| ------------------------------- | ------------------------------------------------- |
-| `oidc.headscale_api_key`        | `headscale.api_key`                               |
-| `oidc.redirect_uri`             | `server.base_url`                                 |
-| `HEADPLANE_LOAD_ENV_OVERRIDES`  | Nothing. Environment variables are always read.   |
-| `integration.agent.pre_authkey` | Nothing. The agent creates its own key.           |
-| `integration.agent.cache_path`  | Nothing. The agent keeps its state in `work_dir`. |
-| `oidc.strict_validation`        | Nothing. It has no effect.                        |

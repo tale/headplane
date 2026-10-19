@@ -221,6 +221,8 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 - `oidc.redirect_uri` is replaced by `server.base_url`. Headplane logs the value to use when it finds the old option.
 - PKCE is opt-in. If the identity provider requires it, set `oidc.use_pkce: true`.
+- Environment variables are always read, so remove `HEADPLANE_LOAD_ENV_OVERRIDES`. `.env` files are no longer loaded.
+- Remove `oidc.strict_validation`. It has no effect.
 
 ## Changes
 
