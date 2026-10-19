@@ -1,0 +1,78 @@
+---
+title: Docker
+description: Install Headplane with Docker.
+---
+
+# Docker
+
+The Docker image is the recommended way to run Headplane. It includes the web
+UI, the [agent](/features/agent) and the [Browser SSH](/features/ssh) module,
+all prebuilt.
+
+## Prerequisites
+
+- Docker with Docker Compose
+- Headscale and a Headplane config file, as described in
+  [Before installing](/install#before-installing)
+
+## Installation
+
+Mount the config file and a directory for Headplane's own data, which holds
+its database and the agent's state:
+
+```yaml
+services:
+  headplane:
+    image: ghcr.io/tale/headplane:latest
+    container_name: headplane
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./config.yaml:/etc/headplane/config.yaml"
+      - "./headplane-data:/var/lib/headplane"
+```
+
+If Headscale runs in Docker too, put both containers on the same network and
+point `headscale.url` at the container, for example `http://headscale:8080`.
+
+Run `docker compose up -d`, then open `http://localhost:3000/admin`.
+
+## Signing in
+
+Until [SSO](/features/sso) or [proxy authentication](/features/proxy-auth) is
+set up, sign in with a Headscale API key, created inside the Headscale
+container:
+
+```bash
+docker exec headscale headscale apikeys create --expiration 90d
+```
+
+See [API keys](/configuration/api-keys) for how keys and sessions work.
+
+## Health checks
+
+The image has a built-in healthcheck, so `docker ps` reports whether Headplane
+is up. It follows Headplane's port and TLS settings, and runs every 30 seconds
+with a 5 second timeout and 3 retries. To change the timing, override it in the
+compose file:
+
+```yaml
+services:
+  headplane:
+    healthcheck:
+      interval: 2m
+```
+
+## Debugging
+
+The image has no shell. For one, switch to the matching `-shell` tag,
+such as `ghcr.io/tale/headplane:latest-shell`. It's the same build on Alpine,
+with `bash` and `curl`.
+
+## Next steps
+
+- To edit DNS and sign-in restrictions from the UI, set up the
+  [Docker integration](/configuration/integrations#docker).
+- Put Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- See [After installing](/install#after-installing) for the rest.

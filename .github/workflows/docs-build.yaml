@@ -1,0 +1,93 @@
+name: Docs (release build)
+on:
+  # The release workflow starts this for every stable tag.
+  workflow_dispatch:
+  # Docs hotfixes for a release line, without a new release.
+  push:
+    branches:
+      - "release/*"
+    paths:
+      - "docs/**"
+      - "CHANGELOG.md"
+      # Docs read version numbers from package.json and share the app's colors.
+      - "package.json"
+      - "app/tokens.css"
+
+concurrency:
+  group: docs-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  build:
+    name: Build Release Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # A hotfix keeps the label of the release it fixes, since Headplane
+      # itself didn't change.
+      - name: Find the release
+        id: release
+        run: |
+          TAG=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*-*')
+          VERSION=${TAG#v}
+          {
+            echo "tag=$TAG"
+            echo "version=$VERSION"
+            echo "minor=${VERSION%.*}"
+          } >> "$GITHUB_OUTPUT"
+
+      # Served at the site root while this release line is the newest.
+      - name: Build the root docs
+        run: |
+          pnpm docs:build
+          tar -czf "$RUNNER_TEMP/docs-root.tar.gz" -C docs/build/client .
+        env:
+          HEADPLANE_DOCS_CHANNEL: latest
+          HEADPLANE_DOCS_VERSION: ${{ steps.release.outputs.version }}
+
+      # Served at /<minor>/ once a newer release line takes over the root.
+      - name: Build the archived docs
+        run: |
+          pnpm docs:build
+          tar -czf "$RUNNER_TEMP/docs-archive.tar.gz" -C "docs/build/client/$MINOR" .
+        env:
+          MINOR: ${{ steps.release.outputs.minor }}
+          HEADPLANE_DOCS_BASE: /${{ steps.release.outputs.minor }}/
+          HEADPLANE_DOCS_CHANNEL: archived
+          HEADPLANE_DOCS_VERSION: ${{ steps.release.outputs.version }}
+
+      - name: Attach the docs to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          gh release upload "$TAG" --clobber \
+            "$RUNNER_TEMP/docs-root.tar.gz" \
+            "$RUNNER_TEMP/docs-archive.tar.gz"
+
+      - name: Publish the docs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run docs-publish.yaml --ref main

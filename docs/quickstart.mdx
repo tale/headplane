@@ -1,0 +1,120 @@
+---
+title: Quickstart
+description: Run Headscale and Headplane together on one server with Docker Compose.
+---
+
+import { quickstartCompose, quickstartFetch } from "./quickstart-examples";
+
+# Quickstart
+
+This sets up a complete server from scratch: Headscale, Headplane and Caddy in
+one Compose project, on one domain. Caddy handles HTTPS, Headplane is served
+under `/admin`, and Headplane can edit Headscale's settings, including DNS.
+
+Already running Headscale? Skip to [Installation](/install) instead.
+
+## Requirements
+
+- A Linux server with Docker and Docker Compose
+- A domain name pointing at the server, `headscale.example.com` below
+- Ports 80 and 443 open, so Caddy can get a certificate
+
+## 1. Get Headscale's config
+
+Start from Headscale's example config, plus an empty file for DNS records:
+
+<DynamicCodeBlock lang="bash" code={quickstartFetch} />
+
+Then change these keys in `headscale/config.yaml`:
+
+```yaml
+server_url: https://headscale.example.com
+listen_addr: 0.0.0.0:8080
+
+policy:
+  # Store the ACL policy in the database so Headplane can edit it
+  mode: database
+
+dns:
+  # Not the server's domain, and not a domain it ends in, such as example.com
+  base_domain: tailnet.example.com
+  extra_records_path: /etc/headscale/extra-records.json
+```
+
+## 2. Configure Headplane
+
+Generate a cookie secret with `openssl rand -hex 16`, then save this as
+`headplane/config.yaml`:
+
+```yaml
+server:
+  base_url: "https://headscale.example.com"
+  cookie_secret: "<output of openssl rand -hex 16>"
+
+headscale:
+  url: "http://headscale:8080"
+  public_url: "https://headscale.example.com"
+  config_path: "/etc/headscale/config.yaml"
+
+integration:
+  docker:
+    enabled: true
+```
+
+`url` is how Headplane reaches Headscale inside Docker, and `public_url` is the
+address shown to people connecting devices. With `config_path` and the Docker
+integration, Headplane can edit Headscale's settings and restart it to apply
+them.
+
+## 3. Route traffic with Caddy
+
+Save this as `Caddyfile`:
+
+```caddyfile
+headscale.example.com {
+    redir / /admin/
+
+    handle /admin* {
+        reverse_proxy headplane:3000
+    }
+
+    handle {
+        reverse_proxy headscale:8080
+    }
+}
+```
+
+## 4. Start everything
+
+Save this as `compose.yaml`:
+
+<DynamicCodeBlock lang="yaml" code={quickstartCompose} />
+
+Both containers mount the `headscale` folder at the same path, which is how
+Headplane edits the file Headscale reads. The label lets Headplane find the
+Headscale container through the Docker socket.
+
+```bash
+docker compose up -d
+```
+
+## 5. Sign in
+
+Create an API key to sign in with:
+
+```bash
+docker exec headscale headscale apikeys create --expiration 90d
+```
+
+Open `https://headscale.example.com/admin` and paste the key.
+
+## Next steps
+
+- Let people sign in with their own accounts through [SSO](/features/sso).
+- Turn on the [agent](/features/agent) to see each machine's Tailscale version
+  and open [SSH sessions in the browser](/features/ssh).
+- Write access rules on the [Access Control](/features/acls) page.
+
+Each piece of this setup has its own page with more options:
+[Docker](/install/docker), [Integrations](/configuration/integrations) and
+[Reverse proxy](/configuration/reverse-proxy).

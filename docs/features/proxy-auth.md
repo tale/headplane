@@ -1,35 +1,30 @@
 ---
-title: Proxy Authentication
-description: Delegate Headplane authentication to a trusted reverse proxy.
-outline: [2, 3]
+title: Proxy authentication
+description: Let a trusted reverse proxy sign people in to Headplane.
 ---
 
-:::warning
-Proxy authentication is **dangerously powerful**. If misconfigured, it can allow
-anyone to impersonate users and gain access to Headplane.
+# Proxy authentication
 
-It is recommended to use Headplane's built-in SSO integrations over proxy
-authentication if possible. No guarantees are made about the security of proxy
-authentication.
+With proxy authentication, a reverse proxy that already signs people in, such
+as Authelia, Authentik or nginx with basic auth, tells Headplane who each
+request is from through a header. People then sign in once, at the proxy.
+
+:::warning
+Headplane trusts the identity header from any address allowed below. If anyone
+else can reach Headplane from one of those addresses, they can sign in as
+anyone. When an OIDC provider is available, [SSO](/features/sso) is the safer
+choice.
 :::
 
-# Proxy Authentication
+## Setting it up
 
-Proxy authentication lets Headplane delegate user authentication to a trusted
-reverse proxy. This is useful when Headplane is already protected by middleware
-such as nginx basic auth, Authelia, Authentik, or another SSO-aware proxy and
-you do not want users to log in to Headplane separately.
-
-Proxy authentication is intentionally opt-in and requires `headscale.api_key`.
-When enabled, Headplane trusts identity headers only on requests whose client IP
-matches `server.proxy_auth.allowed_cidrs`; all Headscale API calls then use the
-configured `headscale.api_key`.
-
-## Basic Configuration
+Proxy authentication needs
+[`headscale.api_key`](/configuration/api-keys#the-servers-key), which Headplane
+uses on behalf of signed-in people:
 
 ```yaml
 headscale:
-  api_key: "<your-headscale-api-key>"
+  api_key: "<key>"
 
 server:
   proxy_auth:
@@ -42,30 +37,26 @@ server:
       - "::1/128"
 ```
 
-`user_header` is required for a request to authenticate and defaults to
-`Remote-User`. The value becomes the stable proxy identity in Headplane as
-`proxy:<value>`. `email_header`, `name_header`, and `picture_header` are
-optional profile metadata headers.
+Each request needs `user_header`, `Remote-User` by default. Its value becomes
+the account's identity in Headplane, as `proxy:<value>`, so it has to stay the
+same for each person. The email, name and `picture_header` headers are
+optional and fill in the profile.
 
-The first proxy-authenticated user is created as the Headplane owner, matching
-the normal SSO first-user behavior. Subsequent users are created as members and
-can be reassigned from the Users page.
+Roles and account linking work as described in
+[Users & roles](/features/users-roles).
 
-## Client IP Checks
+## Which requests are trusted
 
-If `allowed_cidrs` is omitted, Headplane trusts only localhost. By default, this
-CIDR check uses the socket address connected to Headplane, not
-`X-Forwarded-For`, `X-Real-IP`, or other forwarded headers. Configure
-`allowed_cidrs` for the direct address range your proxy uses to connect to
-Headplane.
+Headplane only reads the identity headers on requests from `allowed_cidrs`,
+which defaults to localhost. It checks the address of the connection itself,
+not `X-Forwarded-For` or similar headers, so set `allowed_cidrs` to the
+addresses the proxy connects from.
 
-## Forwarded Client IP Headers
-
-If you need to check the original client IP from a proxy header, set `ip_header`
-to `X-Forwarded-For`, `X-Real-IP`, or another header your proxy controls. When
-`ip_header` is set, Headplane only reads that header if the direct socket peer
-matches `trusted_proxy_cidrs` (default localhost). The first IP in the header is
-then checked against `allowed_cidrs`:
+When another proxy sits in front, and the check should use the original
+client's address instead, set `ip_header` to a header the trusted proxy sets
+or overwrites, such as `X-Forwarded-For`. Headplane then reads it only on
+connections from `trusted_proxy_cidrs`, also localhost by default, and checks
+the first address in it against `allowed_cidrs`:
 
 ```yaml
 server:
@@ -78,22 +69,17 @@ server:
       - "10.0.0.0/8"
 ```
 
-::: warning
-Only enable proxy authentication when Headplane is not directly reachable by
-untrusted clients. Anyone who can connect to Headplane from an allowed CIDR will
-be able to spoof the configured identity headers. Only configure `ip_header`
-for headers set or overwritten by your trusted reverse proxy.
-:::
+## Options
 
-## Header Reference
+All options sit under `server.proxy_auth`.
 
-| Field                                   | Description                                                                          |
-| --------------------------------------- | ------------------------------------------------------------------------------------ |
-| `server.proxy_auth.enabled`             | Enables proxy authentication.                                                        |
-| `server.proxy_auth.user_header`         | Header containing the stable authenticated user identity. Defaults to `Remote-User`. |
-| `server.proxy_auth.email_header`        | Optional header containing the authenticated user's email address.                   |
-| `server.proxy_auth.name_header`         | Optional header containing the authenticated user's display name.                    |
-| `server.proxy_auth.picture_header`      | Optional header containing the authenticated user's profile picture URL.             |
-| `server.proxy_auth.allowed_cidrs`       | Client CIDRs allowed to authenticate. Defaults to localhost.                         |
-| `server.proxy_auth.ip_header`           | Optional original-client-IP header such as `X-Forwarded-For` or `X-Real-IP`.         |
-| `server.proxy_auth.trusted_proxy_cidrs` | Direct proxy CIDRs trusted to supply `ip_header`. Defaults to localhost.             |
+| Option                | Default       | Description                                           |
+| --------------------- | ------------- | ----------------------------------------------------- |
+| `enabled`             |               | Turns proxy authentication on                         |
+| `user_header`         | `Remote-User` | The header with each person's stable identity         |
+| `email_header`        |               | The header with their email address                   |
+| `name_header`         |               | The header with their display name                    |
+| `picture_header`      |               | The header with a profile picture URL                 |
+| `allowed_cidrs`       | localhost     | Addresses allowed to authenticate                     |
+| `ip_header`           |               | A header with the original client address, if checked |
+| `trusted_proxy_cidrs` | localhost     | Proxy addresses trusted to set `ip_header`            |

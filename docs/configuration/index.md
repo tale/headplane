@@ -1,157 +1,51 @@
+---
+title: Configuration
+description: Configure Headplane with its config file and environment variables.
+---
+
 # Configuration
 
-> Previous versions of Headplane used environment variables without a configuration file.
-> Since 0.5, you will need to manually migrate your configuration to the new format.
+Headplane reads its settings from a YAML file, `/etc/headplane/config.yaml`
+unless `HEADPLANE_CONFIG_PATH` points somewhere else. The
+[example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml)
+documents every option. Only `headscale.url` and `server.cookie_secret` are
+required; everything else has a default.
 
-Headplane uses a configuration file to manage its settings
-([**config.example.yaml**](https://github.com/tale/headplane/blob/main/config.example.yaml)). By default, Headplane looks
-for a the file at `/etc/headplane/config.yaml`. This can be changed using the
-**`HEADPLANE_CONFIG_PATH`** environment variable to point to a different location.
+Upgrading from an older version? See [Upgrading](/upgrading) for what changed.
 
-Headplane also stores stuff in the `/var/lib/headplane` directory by default.
-This can be configured on a per-section basis in the configuration file, but
-it is very important this directory is persistent and writable by Headplane.
+## Data directory
 
-## Environment Variables
+Headplane keeps its database and the agent's state in `server.data_path`,
+`/var/lib/headplane` by default. It must be persistent and writable by
+Headplane. In Docker, mount it as a volume.
 
-It is also possible to override the configuration file using environment variables.
-These changes get merged _after_ the configuration file is loaded, so they will take precedence.
-Environment variables follow this pattern: **`HEADPLANE_<SECTION>__<KEY_NAME>`**.
-For example, to override `oidc.client_secret`, you would set `HEADPLANE_OIDC__CLIENT_SECRET`
-to the value that you want.
+## Environment variables
 
-Here are a few more examples:
+Any option that takes a single value can also be set with an environment
+variable, which overrides the config file. Lists and maps, such as
+`server.proxy_auth.allowed_cidrs`, only work in the file. Take the option's path, join the parts with double underscores,
+uppercase it and prefix it with `HEADPLANE_`:
 
-- `HEADPLANE_HEADSCALE__URL`: `headscale.url`
-- `HEADPLANE_SERVER__PORT`: `server.port`
+| Option               | Environment variable            |
+| -------------------- | ------------------------------- |
+| `headscale.url`      | `HEADPLANE_HEADSCALE__URL`      |
+| `server.port`        | `HEADPLANE_SERVER__PORT`        |
+| `oidc.client_secret` | `HEADPLANE_OIDC__CLIENT_SECRET` |
 
-**This functionality is NOT enabled by default!**
-To enable it, set the environment variable **`HEADPLANE_LOAD_ENV_OVERRIDES=true`**.
-Setting this also tells Headplane to load the relative `.env` file into the environment.
+`true`, `false` and numbers are converted to their types. If no config file
+exists at all, Headplane runs on environment variables alone.
 
-> Also note that this is **only** for configuration overrides, not for general
-> environment variables meaning you cannot specify variables such as
-> `HEADPLANE_DEBUG_LOG=true` or `HEADPLANE_CONFIG_PATH=/etc/headplane/config.yaml`.
+:::note
+Older versions only read these when `HEADPLANE_LOAD_ENV_OVERRIDES` was set, and
+also loaded a `.env` file. Environment variables are now always read, that
+variable is deprecated, and `.env` files are no longer loaded.
+:::
 
-## Sensitive Values
+Secrets can also come from a file instead of the config or the environment. See [Sensitive values](/configuration/sensitive-values).
 
-Headplane supports a dual-mode pattern for providing certain sensitive configuration values, such as secrets, keys, and private certificates. For each such field, you can either:
+## Debug logging
 
-1. Set the value directly in the configuration file (e.g., `cookie_secret: "your-32-character-long-secret"`)
-2. Provide a path to a file containing the value using the `_path` suffixed key (e.g., `cookie_secret_path: "/path/to/your/cookie_secret_file"`)
-
-When using a `_path` option, the content of the specified file will be read and used as the value for the setting. These paths can include environment variable interpolation (e.g., `${CREDENTIALS_DIRECTORY}/my_secret_file`), which is useful for integration with tools like systemd's `LoadCredential`.
-
-**Important Rules for Dual-Mode Fields:**
-
-- You **cannot** set both the direct value (e.g., `cookie_secret`) and its corresponding `_path` (e.g., `cookie_secret_path`) simultaneously. Doing so will result in a configuration error.
-- If a `_path` is provided, the corresponding direct value field (if also present and not null) will usually be ignored or may cause validation errors depending on the specific field and loader logic. It's best to provide only one.
-- The same dual-mode pattern works with environment variables. You can set `HEADPLANE_OIDC__CLIENT_SECRET` for a direct value or `HEADPLANE_OIDC__CLIENT_SECRET_PATH` to specify a path to a file containing the secret.
-
-**Note on Path Processing:**
-Headplane uses a whitelist approach to determine which `_path` fields should have their content loaded as secrets. Only the explicitly whitelisted paths below will have their file content read and used as configuration values. All other paths with a `_path` suffix will have environment variables interpolated but will not have their content loaded.
-
-The following configuration options in Headplane are treated as secret paths:
-
-- **Server Settings (`server.*`):**
-  - `cookie_secret_path` (for web session encoding)
-    - _Note:_ Either `cookie_secret` or `cookie_secret_path` must be provided for web session security.
-
-- **Headscale Connection Settings (`headscale.*`):**
-  - `api_key_path` (Headscale API key for server-side operations like OIDC, proxy authentication, and agent sync)
-    - _Note:_ Either `api_key` or `api_key_path` must be provided when using OIDC, proxy authentication, or the agent.
-  - `tls_cert_path` (custom TLS certificate for connecting to Headscale)
-    - _Note:_ This is treated as a regular path, not a secret path, so it will not have its content loaded.
-
-- **OIDC Settings (`oidc.*`):**
-  - `client_secret_path` (OIDC client secret)
-    - _Note:_ Either `client_secret` or `client_secret_path` must be provided for OIDC authentication.
-  - `headscale_api_key_path` (**deprecated**, use `headscale.api_key_path` instead)
-
-**Distinction for Non-Secret Paths:**
-Other configuration fields that end with `_path` are treated as regular paths and will not have their content loaded. For example:
-
-- `headscale.config_path`: This is an optional path to Headscale's `config.yaml` file, which Headplane might read or use for validation.
-
-All path fields (both secret and non-secret) support environment variable interpolation using the `${VAR_NAME}` syntax.
-
-The path-based secret loading mechanism also works with environment variables. For instance:
-
-- `HEADPLANE_OIDC__CLIENT_SECRET_PATH=/path/to/secret/file` will load the OIDC client secret from the specified file
-- `HEADPLANE_SERVER__COOKIE_SECRET_PATH=${CREDENTIALS_DIRECTORY}/cookie_secret` will use environment variable interpolation in the path
-
-## Debugging
-
-Headplane writes server logs as newline-delimited JSON using Pino. Each entry
-includes a timestamp, level, component, and message (`msg`) so log aggregation
-tools can filter and index it directly.
-
-To enable debug logging, set the **`HEADPLANE_DEBUG_LOG=true`** environment variable.
-This will enable all debug logs for Headplane, which could fill up log space very quickly.
-This is not recommended in production environments.
-
-## TLS & Certificates
-
-Anything to do with TLS — terminating HTTPS in-process, trusting a private
-CA for outbound connections to Headscale or your OIDC provider, the
-interaction with `cookie_secure` and the Docker healthcheck — lives on its
-own page: [TLS & Certificates](./tls).
-
-## Reverse Proxying
-
-Reverse proxying is very common when deploying web applications. Headscale and
-Headplane are very similar in this regard. You can use the same configuration
-of any reverse proxy you are familiar with. Here is an example of how to do it
-using Traefik:
-
-> The important part here is the CORS middleware. This is required for the
-> frontend to communicate with the backend. If you are using a different reverse
-> proxy, make sure to add the necessary headers to allow the frontend to communicate
-> with the backend.
-
-```yaml
-http:
-  routers:
-    headscale:
-      rule: "Host(`headscale.tale.me`)"
-      service: "headscale"
-      middlewares:
-        - "cors"
-
-    rewrite:
-      rule: "Host(`headscale.tale.me`) && Path(`/`)"
-      service: "headscale"
-      middlewares:
-        - "rewrite"
-
-    headplane:
-      rule: "Host(`headscale.tale.me`) && PathPrefix(`/admin`)"
-      service: "headplane"
-
-  services:
-    headscale:
-      loadBalancer:
-        servers:
-          - url: "http://headscale:8080"
-
-    headplane:
-      loadBalancer:
-        servers:
-          - url: "http://headplane:3000"
-
-  middlewares:
-    rewrite:
-      addPrefix:
-        prefix: "/admin"
-    cors:
-      headers:
-        accessControlAllowHeaders: "*"
-        accessControlAllowMethods:
-          - "GET"
-          - "POST"
-          - "PUT"
-        accessControlAllowOriginList:
-          - "https://headscale.tale.me"
-        accessControlMaxAge: 100
-        addVaryHeader: true
-```
+Headplane logs newline-delimited JSON, with a timestamp, level, component and
+message on each line, so log tools can index it directly. Set
+`HEADPLANE_DEBUG_LOG=true` for debug logs. They're verbose, so avoid leaving
+them on in production.

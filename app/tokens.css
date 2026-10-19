@@ -1,0 +1,87 @@
+/* Color tokens, shared by the app and the docs site (docs/app/app.css). */
+
+@theme inline {
+  --color-canvas: var(--hp-canvas);
+  --color-surface: var(--hp-surface);
+  --color-raised: var(--hp-raised);
+  --color-subtle: var(--hp-subtle);
+  --color-hover: var(--hp-hover);
+  --color-line: var(--hp-line);
+  --color-line-strong: var(--hp-line-strong);
+  --color-fg: var(--hp-fg);
+  --color-muted: var(--hp-muted);
+  --color-faint: var(--hp-faint);
+  --color-ink: var(--hp-ink);
+  --color-ink-fg: var(--hp-ink-fg);
+  --color-accent: var(--hp-accent);
+  --color-accent-fg: var(--hp-accent-fg);
+  --color-accent-subtle: var(--hp-accent-subtle);
+  --color-ok: var(--hp-ok);
+  --color-ok-subtle: var(--hp-ok-subtle);
+  --color-warn: var(--hp-warn);
+  --color-warn-subtle: var(--hp-warn-subtle);
+  --color-bad: var(--hp-bad);
+  --color-bad-subtle: var(--hp-bad-subtle);
+  --color-danger: var(--hp-danger);
+  --color-backdrop: var(--hp-backdrop);
+
+  --shadow-overlay: var(--hp-shadow-overlay);
+}
+
+@utility dark-tokens {
+  --hp-canvas: #141313;
+  --hp-surface: #1a1919;
+  --hp-raised: #222120;
+  --hp-subtle: #201f1e;
+  --hp-hover: #262423;
+  --hp-line: #2c2a29;
+  --hp-line-strong: #3b3836;
+  --hp-fg: #ebe8e6;
+  --hp-muted: #a8a29d;
+  --hp-faint: #8a847f;
+  --hp-ink: #ebe8e6;
+  --hp-ink-fg: #1f1e1e;
+  --hp-accent: #86a8ec;
+  --hp-accent-fg: #10151f;
+  --hp-accent-subtle: #1d2536;
+  --hp-ok: #5dbf7c;
+  --hp-ok-subtle: #1c2c21;
+  --hp-warn: #e0a548;
+  --hp-warn-subtle: #33281a;
+  --hp-bad: #ef7a70;
+  --hp-bad-subtle: #3a201e;
+  --hp-danger: #c23b32;
+  --hp-backdrop: rgb(0 0 0 / 0.6);
+  --hp-shadow-overlay: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -12px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    --hp-canvas: #fbfaf9;
+    --hp-surface: #ffffff;
+    --hp-raised: #ffffff;
+    --hp-subtle: #f4f2f1;
+    --hp-hover: #f1efed;
+    --hp-line: #e9e6e4;
+    --hp-line-strong: #d6d2cf;
+    --hp-fg: #1f1e1e;
+    --hp-muted: #6e6864;
+    --hp-faint: #9b9590;
+    --hp-ink: #1f1e1e;
+    --hp-ink-fg: #f7f5f4;
+    --hp-accent: #3461b8;
+    --hp-accent-fg: #ffffff;
+    --hp-accent-subtle: #edf1f9;
+    --hp-ok: #2b8a4a;
+    --hp-ok-subtle: #e8f4eb;
+    --hp-warn: #a5640a;
+    --hp-warn-subtle: #fbf1e1;
+    --hp-bad: #c23b32;
+    --hp-bad-subtle: #fbeceb;
+    --hp-danger: #c23b32;
+    --hp-backdrop: rgb(31 30 30 / 0.3);
+    --hp-shadow-overlay: 0 1px 2px rgb(31 30 30 / 0.05), 0 8px 24px -6px rgb(31 30 30 / 0.12);
+    color-scheme: light;
+  }
+}

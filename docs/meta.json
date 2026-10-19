@@ -1,0 +1,15 @@
+{
+  "pages": [
+    "---Getting Started---",
+    "introduction",
+    "quickstart",
+    "install",
+    "configuration",
+    "---Features---",
+    "...features",
+    "reference",
+    "---Help---",
+    "troubleshooting",
+    "upgrading"
+  ]
+}

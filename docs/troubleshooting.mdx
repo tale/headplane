@@ -1,0 +1,75 @@
+---
+title: Troubleshooting
+description: Fixes for common problems with Headplane.
+---
+
+import loginBannerLight from "./assets/login-banner-light.png";
+import loginBannerDark from "./assets/login-banner-dark.png";
+
+# Troubleshooting
+
+Start with Headplane's logs. Most problems leave an error there, and
+`HEADPLANE_DEBUG_LOG=true` adds more detail. Problems specific to one feature
+are covered on its page:
+
+- [Single sign-on](/features/sso#troubleshooting)
+- [Browser SSH](/features/ssh#troubleshooting)
+
+## Headplane won't start
+
+Headplane checks its configuration at startup and exits with an error that
+names the problem:
+
+- **"The configuration is missing required fields or has invalid values"**: the
+  list below it names each field. `headscale.url` and `server.cookie_secret`
+  are required, and the cookie secret must be exactly 32 characters.
+- **"Both … and …\_path are set"**: set a [sensitive value](/configuration/sensitive-values)
+  or its `_path`, not both.
+- **"The secret file specified in … could not be accessed"**: the file from a
+  `_path` option doesn't exist or isn't readable by Headplane.
+- **"Could not resolve environment variable"**: a `${NAME}` in a `_path` option
+  isn't set.
+
+## Signing in does nothing
+
+<Figure
+  alt="Login warning banner"
+  light={loginBannerLight}
+  dark={loginBannerDark}
+  caption="Headplane warns about likely misconfigurations on the sign-in page"
+/>
+
+If signing in lands back on the sign-in page, the browser is probably
+dropping Headplane's cookie. Match `server.cookie_secure` to how Headplane is
+reached: `true` over HTTPS, `false` over plain HTTP. Behind a reverse
+proxy that serves HTTPS, leave it at `true`.
+
+## DNS is missing from the navigation
+
+Headplane can't read Headscale's config file. Check that
+`headscale.config_path` is set and points to the file as Headplane sees it,
+inside its container if it runs in one. See
+[Integrations](/configuration/integrations).
+
+## Changes only take effect after restarting Headscale
+
+The DNS and sign-in restrictions pages say this when no integration is running.
+Either none is enabled, or the enabled one failed its startup check. In
+that case the log says the integration is not available, with the reason just
+above it. The [integration's section](/configuration/integrations) lists what
+it needs.
+
+## "Headscale didn't come back after restarting"
+
+The change was saved, but Headscale wasn't healthy again within the time
+limit. Check Headscale's own logs first, since the saved change may be what
+stops it from starting. With the proc or Kubernetes integration, also check
+that something restarts Headscale after it stops: a systemd unit with
+`Restart=always`, or the kubelet.
+
+## DNS records can't be edited
+
+Headplane only edits records in the file from Headscale's
+`dns.extra_records_path`, and needs write access to it. Records listed inline
+under `dns.extra_records` are read-only. See
+[DNS records](/configuration/integrations#dns-records).

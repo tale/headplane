@@ -1,0 +1,8 @@
+/CHANGELOG /changelog 301
+/install/limited-mode /configuration/integrations 301
+/Nix /install/nix 301
+/NixOS-options /reference/nixos-options 301
+/configuration/common-issues /troubleshooting 301
+/development/architecture https://github.com/tale/headplane/blob/main/app/server/ARCHITECTURE.md 301
+/CONTRIBUTING https://github.com/tale/headplane/blob/main/.github/CONTRIBUTING.md 301
+/SECURITY https://github.com/tale/headplane/blob/main/.github/SECURITY.md 301

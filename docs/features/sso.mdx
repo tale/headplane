@@ -1,0 +1,215 @@
+---
+title: Single sign-on
+description: Let people sign in to Headplane with an OpenID Connect provider.
+---
+
+# Single sign-on
+
+With single sign-on, people sign in to Headplane through an OpenID Connect
+(OIDC) provider such as Authentik, Keycloak or Google. Each person gets their
+own Headplane account with a [role](/features/users-roles), linked to their
+Headscale user.
+
+If a reverse proxy already authenticates everyone, [proxy authentication](/features/proxy-auth)
+does the same job without a second sign-in.
+
+## Setting it up
+
+SSO needs two settings outside the `oidc` section:
+
+- `server.base_url`, the public URL Headplane is reached at, such as
+  `https://headscale.example.com`
+- `headscale.api_key`, a long-lived key Headplane uses on behalf of signed-in
+  people. See [API keys](/configuration/api-keys#the-servers-key).
+
+### 1. Create a client
+
+Create an OIDC client in the provider, and register this redirect URI, with
+`server.base_url` in front:
+
+```
+https://headscale.example.com/admin/oidc/callback
+```
+
+If Headscale already signs people in through the same provider, add the URI to
+Headscale's client instead of creating a new one. With one shared client, the
+provider gives each person the same ID in both places, so Headplane can link
+accounts to Headscale users automatically.
+
+### 2. Configure Headplane
+
+Add the client's details to Headplane's config:
+
+```yaml
+oidc:
+  issuer: "https://idp.example.com"
+  client_id: "headplane"
+  client_secret: "<client secret>"
+```
+
+Headplane finds the provider's endpoints from the issuer's
+`/.well-known/openid-configuration`. The [providers](#providers) table lists
+the issuer URL for common providers. To keep the secret out of the config file,
+use `client_secret_path`, as described in
+[Sensitive values](/configuration/sensitive-values).
+
+### 3. Sign in
+
+Restart Headplane and choose **Continue with SSO** on the sign-in page. The
+first person to sign in becomes the owner, so whoever set it up should sign in
+before sharing the link.
+
+The sign-in page keeps its API key form alongside SSO. With
+`oidc.disable_api_key_login: true`, it sends people straight to the provider
+instead, and only shows the form after signing out or while SSO is unavailable.
+
+## Providers
+
+Any OIDC provider works. These are the issuer URLs for common ones:
+
+| Provider  | Issuer                                                |
+| --------- | ----------------------------------------------------- |
+| Authelia  | `https://auth.example.com`                            |
+| Authentik | `https://authentik.example.com/application/o/<slug>/` |
+| Google    | `https://accounts.google.com`                         |
+| Entra ID  | `https://login.microsoftonline.com/<tenant-id>/v2.0`  |
+| Kanidm    | `https://idm.example.com/oauth2/openid/<client-name>` |
+| Keycloak  | `https://keycloak.example.com/realms/<realm>`         |
+| Pocket ID | `https://id.example.com`                              |
+
+A few need extra settings:
+
+- **Entra ID** gives each person a different ID in every app registration, so
+  sharing Headscale's client matters more than usual. See
+  [same client or separate clients](#same-client-or-separate-clients).
+- **Kanidm** requires PKCE by default. Set `oidc.use_pkce: true`.
+- **Providers without a `sub` claim**, such as Feishu/Lark, need
+  `oidc.subject_claims`. See [other options](#other-options).
+
+## How accounts match Headscale users
+
+Each account is linked to a Headscale user, as described in
+[Users & roles](/features/users-roles#linking-to-headscale-users). For SSO
+accounts, Headplane tries two matches in order:
+
+1. **Subject**: Headscale stores each OIDC user's `provider_id`, such as
+   `https://idp.example.com/3d6f6e3f-...`. Its last path segment is compared
+   with the account's subject, which is the `sub` claim or the first of
+   `oidc.subject_claims` that's present.
+2. **Email**: otherwise, the account's email, from the ID token or the
+   provider's `userinfo` endpoint, is compared with the email on the Headscale
+   user.
+
+Headscale users created with `headscale users create` have no `provider_id`, so
+only email can match them. Create them with an email to allow it:
+
+```sh
+headscale users create alice --email alice@example.com
+```
+
+### Same client or separate clients
+
+Sharing one OIDC client between Headscale and Headplane is the most reliable
+setup, since the subject is then always identical.
+
+With separate clients, some providers, notably Entra ID, issue a different
+subject to each client. The first sign-in then falls back to email, which
+needs the email on both sides. Once an account is linked, the link is stored
+and later sign-ins don't need to match again.
+
+If the clients are separate and the provider sends no email, accounts can't be
+matched at all. People can still sign in, but they can't create auth keys for
+themselves or use Browser SSH until their account is linked.
+
+### When nothing matches
+
+An account that matches no Headscale user stays unlinked. Owners, admins and
+IT admins see a **Link your account** screen after signing in, where they pick
+their own Headscale user. Everyone else has to be linked from the **Users**
+page by one of them. [Linking by hand](/features/users-roles#linking-by-hand)
+walks through both.
+
+## Roles from the identity provider
+
+New accounts start as members. To give new SSO accounts a different starting
+role, set `oidc.default_role`:
+
+```yaml
+oidc:
+  # admin, network_admin, it_admin, auditor, viewer or member
+  default_role: "viewer"
+```
+
+This fits when Headscale already limits who can sign in, for example to one
+email domain, and everyone allowed in should be able to view Headplane.
+
+For a role per person, set `oidc.role_claim` to a claim the provider fills
+with a Headplane role, as a string such as `"admin"` or an array that contains
+one. In Keycloak or Authentik, map a group or client role to that claim.
+
+```yaml
+oidc:
+  role_claim: "headplane_role"
+```
+
+A valid role claim wins over `default_role`, and it's applied again at every
+sign-in, so a change at the provider reaches Headplane the next time that
+person signs in. `default_role` only applies when an account is created.
+Neither setting can grant or remove the owner role.
+
+## Signing out of the provider
+
+By default, signing out only ends the Headplane session, and the provider still
+considers the person signed in. With `oidc.use_end_session: true`, signing out
+also sends the browser to the provider's sign-out page, which then returns to
+Headplane.
+
+```yaml
+oidc:
+  use_end_session: true
+```
+
+The provider has to allow the return address, or it shows an error after
+signing out. Add `https://headscale.example.com/admin/login?s=logout` to the
+client's allowed post-logout redirect URIs, or set
+`oidc.post_logout_redirect_uri` to a different one. If the provider doesn't
+advertise its sign-out page through discovery, set
+`oidc.end_session_endpoint`.
+
+## Other options
+
+| Option                       | Use it to                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `use_pkce`                   | Turn on PKCE, which some providers require. Only the `S256` method is supported.                                                                       |
+| `scope`                      | Request different scopes. The default is `openid email profile`.                                                                                       |
+| `subject_claims`             | Fall back to other claims, in order, when the provider sends no `sub`. For Feishu/Lark, use `["open_id", "email"]`.                                    |
+| `extra_params`               | Add query parameters to the authorization request, such as `prompt: login`.                                                                            |
+| `token_endpoint_auth_method` | Force `client_secret_basic` or `client_secret_post`. Detected automatically otherwise.                                                                 |
+| `profile_picture_source`     | Take profile pictures from `gravatar` instead of the provider.                                                                                         |
+| `allow_weak_rsa_keys`        | Accept ID tokens signed with RSA keys under 2048 bits. This weakens verification, so use it only until the provider rotates its key.                   |
+| `authorization_endpoint`     | Set endpoints by hand, along with `token_endpoint`, `userinfo_endpoint` and `jwks_endpoint`, for providers without discovery or to override discovery. |
+
+## Troubleshooting
+
+The sign-in page shows what went wrong, and Headplane's logs have the details.
+
+- **"Single sign-on is unavailable"**: Headplane can't reach the issuer. Check
+  that the issuer URL is right and reachable from Headplane's server or
+  container. It retries on the next sign-in.
+- **"Single sign-on is misconfigured"**: the page lists the cause. Usually
+  `headscale.api_key` is invalid or expired (see
+  [rotating the server's key](/configuration/api-keys#rotating-the-servers-key)),
+  or the provider doesn't support discovery and the endpoints need setting by
+  hand.
+- **The provider shows a redirect URI error**: the registered redirect URI
+  doesn't match `server.base_url` followed by `/admin/oidc/callback` exactly,
+  including the scheme.
+- **Errors that mention `code_verifier` or PKCE**: the provider requires PKCE.
+  Set `oidc.use_pkce: true`.
+- **"The SSO provider did not return a valid user identifier"**: the provider
+  sends no `sub` claim. Set `oidc.subject_claims` to a stable claim, and only
+  fall back to `email` if emails never change.
+- **Signing in returns to the sign-in page**: the browser is dropping the
+  session cookie. See [Signing in does nothing](/troubleshooting#signing-in-does-nothing).
+- **Someone signs in but has no machines**: their account isn't linked to a
+  Headscale user. See [how accounts match](#how-accounts-match-headscale-users).

@@ -1,0 +1,21 @@
+---
+title: Upgrading
+description: What to change when upgrading Headplane from an older version.
+---
+
+import UpgradeNotes from "@/components/upgrade-notes";
+
+# Upgrading
+
+Most upgrades only need the new image or a rebuild. The versions below also
+need a change on the operator's side, taken from the Upgrading section of each
+release in the [changelog](/changelog). When skipping versions, apply every
+section between the old version and the new one, oldest first.
+
+Back up `server.data_path`, `/var/lib/headplane` by default, before
+upgrading. It holds Headplane's database.
+
+To get patch releases without moving to a new minor version by surprise, pin
+the Docker image to a minor tag, such as `ghcr.io/tale/headplane:0.8`.
+
+<UpgradeNotes />

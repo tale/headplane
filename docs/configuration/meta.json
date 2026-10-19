@@ -1,0 +1,5 @@
+{
+  "title": "Configuration",
+  "collapsible": false,
+  "pages": ["api-keys", "integrations", "sensitive-values", "reverse-proxy", "tls"]
+}

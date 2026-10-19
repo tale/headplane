@@ -1,0 +1,117 @@
+---
+title: Native
+description: Build and run Headplane directly on a Linux host.
+---
+
+import { versions } from "@/lib/versions";
+
+# Native
+
+Headplane can run straight on the host, which suits setups where Headscale
+already runs there, usually under systemd. It's built from source once, then
+runs on Node.js.
+
+## Prerequisites
+
+- Linux
+- Headscale and a Headplane config file, as described in
+  [Before installing](/install#before-installing)
+- To build: Go matching the `go` directive in `go.mod`, and pnpm{" "}
+  <code>{versions.pnpm}</code>
+- To run: Node.js <code>{versions.node}</code>
+
+Go and pnpm are only needed to build. The result runs on Node.js alone.
+
+## Building
+
+```bash
+# Optionally check out a release tag first
+git clone https://github.com/tale/headplane.git
+cd headplane
+./build.sh
+```
+
+`build.sh` installs locked dependencies and builds the web UI, the Browser SSH
+module, the [agent](/features/agent) and the healthcheck binary. The agent
+lands in `build/hp_agent`. Copy it to `/usr/libexec/headplane/agent` to
+use it, or see [the agent page](/features/agent#turning-it-on)
+for another location.
+
+## Running
+
+Create the data directory from `server.data_path` (`/var/lib/headplane` by
+default) and make it writable by the user that runs Headplane:
+
+```bash
+sudo mkdir -p /var/lib/headplane
+sudo chown -R headplane:headplane /var/lib/headplane
+```
+
+Then start Headplane from the repository directory, so it can find `build/`:
+
+```bash
+node build/server/index.js
+```
+
+It reads `/etc/headplane/config.yaml` unless `HEADPLANE_CONFIG_PATH` points
+elsewhere. Open `http://localhost:3000/admin` once it's up.
+
+### systemd
+
+Save this as `/etc/systemd/system/headplane.service`, adjusting the user and
+paths, then run `sudo systemctl daemon-reload` and
+`sudo systemctl enable --now headplane`:
+
+```ini
+[Unit]
+Description=Headplane
+# Use headscale.service here instead if Headscale runs under systemd
+After=network.target
+
+[Service]
+Type=simple
+User=headplane
+WorkingDirectory=/opt/headplane
+ExecStart=/usr/bin/node /opt/headplane/build/server/index.js
+Restart=on-failure
+RestartSec=5s
+# Environment=HEADPLANE_CONFIG_PATH=/path/to/config.yaml
+
+[Install]
+WantedBy=multi-user.target
+```
+
+## Signing in
+
+Until [SSO](/features/sso) or [proxy authentication](/features/proxy-auth) is
+set up, sign in with a Headscale API key:
+
+```bash
+headscale apikeys create --expiration 90d
+```
+
+See [API keys](/configuration/api-keys) for how keys and sessions work.
+
+## Custom path prefix
+
+:::warning
+`/admin` is the only supported prefix. Other prefixes aren't tested and may
+break.
+:::
+
+The prefix is fixed at build time. To serve Headplane somewhere else, such as
+`/headplane`, build it with `__INTERNAL_PREFIX`:
+
+```bash
+__INTERNAL_PREFIX=/headplane ./build.sh
+```
+
+Changing it again means rebuilding, and the reverse proxy has to route the new
+path.
+
+## Next steps
+
+- To edit DNS and sign-in restrictions from the UI, set up the
+  [proc integration](/configuration/integrations#proc).
+- Put Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- See [After installing](/install#after-installing) for the rest.

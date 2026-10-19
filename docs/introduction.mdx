@@ -1,0 +1,69 @@
+---
+title: Introduction
+description: What is Headplane?
+---
+
+import previewLight from "./assets/preview-light.png";
+import previewDark from "./assets/preview-dark.png";
+import dnsLight from "./assets/dns-light.png";
+import dnsDark from "./assets/dns-dark.png";
+import machineLight from "./assets/machine-light.png";
+import machineDark from "./assets/machine-dark.png";
+
+# What is Headplane?
+
+[Headscale](https://headscale.net) is a self-hosted implementation of the
+Tailscale control server: it lets Tailscale clients form a private network
+without Tailscale's servers. It doesn't come with a web interface, and Headplane
+is one, modeled on Tailscale's admin console.
+
+<Figure
+  alt="Headplane Dashboard"
+  light={previewLight}
+  dark={previewDark}
+  caption="Headplane Dashboard"
+/>
+
+Headplane manages:
+
+- **Machines**: rename them, change their owner, approve routes and exit nodes,
+  manage tags, and expire or remove them
+- **Users and auth keys**, including what each person can do in Headplane
+- **Access control**: edit the ACL policy visually or as a file
+- **DNS**: the tailnet name, Magic DNS, nameservers, search domains and records
+
+<Figure
+  alt="DNS management in Headplane"
+  light={dnsLight}
+  dark={dnsDark}
+  caption="DNS management in Headplane"
+/>
+
+It also adds features Headscale doesn't have:
+
+- **Single sign-on** through any OpenID Connect provider, or through a
+  reverse proxy, with roles for each person
+- **Browser SSH** into any machine on the tailnet, with no client installed
+- **The Headplane Agent**, which shows each machine's Tailscale version, OS and
+  connectivity
+
+<Figure
+  alt="Machine management in Headplane"
+  light={machineLight}
+  dark={machineDark}
+  caption="Machine management in Headplane"
+/>
+
+## How it connects
+
+Headplane is a separate server that runs next to Headscale. It reaches
+Headscale three ways, and each one unlocks part of the UI:
+
+<Architecture />
+
+Only the API is required. Access to Headscale's config file is covered under
+[Integrations](/configuration/integrations), and the agent has
+[its own page](/features/agent).
+
+To get started, follow the [Quickstart](/quickstart) for a new server, or
+[Installation](/install) to add Headplane to an existing Headscale.

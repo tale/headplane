@@ -1,0 +1,85 @@
+name: Docs (publish)
+on:
+  # Started by the release build after it attaches new docs to a release.
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Upload the assembled site as an artifact instead of deploying it
+        type: boolean
+        default: false
+
+concurrency:
+  group: docs-publish
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish Docs
+    runs-on: ubuntu-latest
+    steps:
+      # The newest release line is served from the root, and every older line
+      # from /<minor>/, each from the newest patch release of that line.
+      - name: Assemble the site
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir site
+
+          RELEASES=$(gh release list -R "$REPO" --limit 500 --exclude-drafts --exclude-pre-releases \
+            --json tagName --jq '.[].tagName' \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V \
+            | awk -F. '{ line = $1 "." $2; newest[line] = $0 } END { for (l in newest) print newest[l] }' \
+            | sort -rV)
+
+          LATEST=$(head -n 1 <<< "$RELEASES")
+          LATEST_VERSION=${LATEST#v}
+          if ! gh release download "$LATEST" -R "$REPO" -p docs-root.tar.gz -O "$RUNNER_TEMP/root.tar.gz"; then
+            echo "::error::$LATEST has no docs-root.tar.gz. Run docs-build.yaml for its release line first."
+            exit 1
+          fi
+
+          tar -xzf "$RUNNER_TEMP/root.tar.gz" -C site
+
+          # The newest line's path points back to the root until it's archived.
+          echo "/${LATEST_VERSION%.*}/* /:splat 302" >> site/_redirects
+          printf '/versions.json\n  Access-Control-Allow-Origin: *\n' > site/_headers
+          VERSIONS=$(jq -n --arg version "$LATEST_VERSION" '[{ version: $version, path: "/" }]')
+
+          for TAG in $(tail -n +2 <<< "$RELEASES"); do
+            VERSION=${TAG#v}
+            MINOR=${VERSION%.*}
+            if ! gh release download "$TAG" -R "$REPO" -p docs-archive.tar.gz -O "$RUNNER_TEMP/archive.tar.gz"; then
+              echo "::notice::$TAG has no docs archive, so /$MINOR/ isn't published"
+              continue
+            fi
+
+            mkdir "site/$MINOR"
+            tar -xzf "$RUNNER_TEMP/archive.tar.gz" -C "site/$MINOR"
+            rm "$RUNNER_TEMP/archive.tar.gz"
+            printf '/%s/*\n  X-Robots-Tag: noindex\n' "$MINOR" >> site/_headers
+            VERSIONS=$(jq --arg version "$VERSION" --arg path "/$MINOR/" '. + [{ version: $version, path: $path }]' <<< "$VERSIONS")
+          done
+
+          echo "$VERSIONS" > site/versions.json
+          cat site/versions.json
+
+      - name: Upload the site
+        if: inputs.dry-run
+        uses: actions/upload-artifact@v4
+        with:
+          name: docs-site
+          path: site
+          include-hidden-files: true
+
+      - name: Deploy to Cloudflare Pages
+        if: ${{ !inputs.dry-run }}
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy site --project-name=headplane-docs --branch=main
