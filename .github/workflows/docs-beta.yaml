@@ -1,0 +1,54 @@
+name: Docs (beta)
+on:
+  push:
+    branches:
+      - "main"
+
+concurrency:
+  group: docs-beta
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Beta Docs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Describe the commit
+        id: commit
+        run: |
+          echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          echo "date=$(git show -s --format=%cI HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build docs
+        run: pnpm docs:build
+        env:
+          HEADPLANE_DOCS_CHANNEL: beta
+          HEADPLANE_DOCS_VERSION: ${{ steps.commit.outputs.sha }}
+          HEADPLANE_DOCS_DATE: ${{ steps.commit.outputs.date }}
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          accountId: ${{ secrets.CF_ACCOUNT_ID }}
+          command: pages deploy docs/build/client --project-name=headplane-docs-beta

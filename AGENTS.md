@@ -101,3 +101,14 @@ patch releases for that minor are cut from there.
   `# Next`, so the beta docs keep the full history.
 - Only security and serious regression fixes are backported once the next minor
   ships. New features never are.
+
+### Docs versions
+
+headplane.net serves the newest release line at the root and every older line
+under `/X.Y/`, assembled from docs archives attached to each line's newest
+release. `main` deploys the separate beta docs.
+
+- Each stable release builds and attaches its docs, then republishes the site.
+- Docs fixes for a released version go to its `release/X.Y` branch. Pushing
+  docs changes there rebuilds that line's archives under its newest release and
+  republishes, without a new release.
