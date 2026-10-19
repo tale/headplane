@@ -117,8 +117,16 @@ needs the email on both sides. Once an account is linked, the link is stored
 and later sign-ins don't need to match again.
 
 If the clients are separate and the provider sends no email, accounts can't be
-matched at all. People can still sign in, but stay unlinked until an admin
-links them, so they can't create auth keys for themselves or use Browser SSH.
+matched at all. People can still sign in, but they can't create auth keys for
+themselves or use Browser SSH until their account is linked.
+
+### When nothing matches
+
+An account that matches no Headscale user stays unlinked. Owners, admins and
+IT admins see a **Link your account** screen after signing in, where they pick
+their own Headscale user. Everyone else has to be linked from the **Users**
+page by one of them. [Linking by hand](/features/users-roles#linking-by-hand)
+walks through both.
 
 ## Roles from the identity provider
 

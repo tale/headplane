@@ -45,13 +45,26 @@ Headscale creates users through SSO too, an account links as soon as its first
 device joins. The [SSO page](/features/sso#how-accounts-match-headscale-users)
 covers when subjects match.
 
-When nothing matches, the account has to be linked by hand:
+When nothing matches, the account stays unlinked until someone links it by
+hand.
 
-- **Admins** get a one-time screen after signing in to pick their own Headscale
-  user. They can skip it and link later from the **Users** page.
-- **Everyone else** is linked by an admin from the **Users** page. Until then,
-  their home page asks them to contact an administrator.
+### Linking by hand
 
-Only admins can pick a user for themselves, because a link grants access to that
-user's machines and auth keys. Letting anyone pick would let a new account claim
-someone else's Headscale identity.
+Owners, admins and IT admins can link any account from the **Users** page:
+
+1. If the person has no Headscale user yet, create one with **Add user**.
+2. Open the menu on the account's row and choose **Link Headscale user**.
+3. Pick the Headscale user. Only users that aren't linked to another account
+   are listed.
+
+**Change linked user** in the same menu moves an existing link. An account's
+role can only be changed once it's linked.
+
+Owners, admins and IT admins who sign in through SSO without a match see a
+**Link your account** screen right after signing in, where they pick their own
+Headscale user. **Skip for now** leaves the account unlinked, to link later from
+the **Users** page.
+
+Other roles can't pick a user for themselves, because a link grants access to
+that user's machines and auth keys. Until someone links them, their home page
+asks them to contact an administrator.
