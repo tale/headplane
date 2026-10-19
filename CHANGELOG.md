@@ -1,10 +1,14 @@
 # Next
 
+The `__INTERNAL_PREFIX` build variable has been removed. Use `server.base_path`
+in your configuration to keep a custom dashboard URL prefix.
+
 Going forward, Headplane only works with DNS records defined in `dns.extra_records_path` in your Headscale configuration.
 If you have any records defined inline under `dns.extra_records`, they will be read-only in Headplane.
 
 ## Changes
 
+- Configure the dashboard URL prefix with `server.base_path` without rebuilding Headplane. Existing installations continue to use `/admin` by default (closes [#637](https://github.com/tale/headplane/issues/637)).
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
 - Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.
 - The navigation bar is slimmer, and on small screens the pages now live in a menu instead of a second row of tabs.

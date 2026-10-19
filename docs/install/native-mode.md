@@ -241,24 +241,6 @@ server {
 
 ## Custom Path Prefix
 
-::: warning
-The only officially supported path prefix for Headplane is `/admin`. Using a
-custom path prefix may lead to unexpected issues and is not recommended.
-:::
-
-If for whatever reason you do not want to serve Headplane under `/admin`
-(e.g., you want to serve it under `/headplane`), you can set the prefix
-while building Headplane via the `__INTERNAL_PREFIX` environment variable.
-
-```bash
-# Example for /headplane prefix
-git clone https://github.com/tale/headplane.git
-cd headplane
-# Set the prefix here
-__INTERNAL_PREFIX=/headplane ./build.sh
-```
-
-When running Headplane, all requests will only be served under the specified
-path. Make sure to also adjust your reverse proxy configuration accordingly if
-you are using one. Additionally, if you want to change the path prefix again,
-you will need to rebuild Headplane with the new prefix.
+Set `server.base_path` to serve Headplane under a path other than `/admin`.
+See [Dashboard Path](../configuration/index.md#dashboard-path) for configuration,
+path restrictions, and migration instructions.

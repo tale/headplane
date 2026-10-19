@@ -17,6 +17,7 @@ import {
   createServer as createHttpsServer,
 } from "node:https";
 import { extname, normalize, resolve, sep } from "node:path";
+import { pipeline } from "node:stream/promises";
 
 import mime from "mime";
 import pino from "pino";
@@ -120,12 +121,7 @@ function createStaticHandler(opts: StaticOptions) {
       return true;
     }
 
-    await new Promise<void>((resolve_, reject) => {
-      const stream = createReadStream(file);
-      stream.on("error", reject);
-      stream.on("end", () => resolve_());
-      stream.pipe(res);
-    });
+    await pipeline(createReadStream(file), res);
 
     return true;
   };
@@ -159,16 +155,11 @@ export interface ListenerOptions {
   staticRoot?: string;
   assetsDir?: string;
   immutableAssets?: boolean;
+  assetManifest?: { path: string; body: string };
   requestListener: RequestListener;
   logger?: Logger;
 }
 
-/**
- * Composes the full Node `RequestListener` chain:
- *   1. `${basename}` → 302 to `${basename}/`
- *   2. Static asset serving (optional)
- *   3. Delegate to the downstream request listener
- */
 export function composeListener(opts: ListenerOptions): RequestListener {
   const log = opts.logger ?? defaultLogger;
   const basename = opts.basename;
@@ -181,38 +172,42 @@ export function composeListener(opts: ListenerOptions): RequestListener {
       })
     : null;
 
-  return (req, res) => {
-    if (req.url) {
-      try {
-        const url = new URL(req.url, "http://localhost");
-        if (url.pathname === basename) {
-          res.statusCode = 302;
-          res.setHeader("Location", `${basename}/${url.search}`);
-          res.end();
-          return;
-        }
-      } catch {}
-    }
+  return async (req, res) => {
+    try {
+      const url = URL.parse(req.url ?? "", "http://localhost");
+      if (url?.pathname === basename) {
+        res.writeHead(302, { Location: `${basename}/${url.search}` });
+        res.end();
+        return;
+      }
 
-    alignOriginScheme(req);
-    if (!serveStatic) {
-      opts.requestListener(req, res);
-      return;
-    }
+      const { assetManifest } = opts;
+      if (
+        assetManifest &&
+        url?.pathname === assetManifest.path &&
+        (req.method === "GET" || req.method === "HEAD")
+      ) {
+        res.writeHead(200, {
+          "Content-Type": "text/javascript; charset=utf-8",
+          "Cache-Control": "no-cache",
+        });
+        res.end(req.method === "HEAD" ? undefined : assetManifest.body);
+        return;
+      }
 
-    serveStatic(req, res)
-      .then((handled) => {
-        if (!handled) opts.requestListener(req, res);
-      })
-      .catch((err) => {
-        log.error("Static handler failed: %s", err);
-        if (!res.headersSent) {
-          res.statusCode = 500;
-          res.end("Internal Server Error");
-        } else {
-          res.destroy(err as Error);
-        }
-      });
+      alignOriginScheme(req);
+
+      if (serveStatic && (await serveStatic(req, res))) return;
+      await opts.requestListener(req, res);
+    } catch (error) {
+      log.error("Request handler failed: %s", error);
+      if (!res.headersSent) {
+        res.writeHead(500);
+        res.end("Internal Server Error");
+      } else {
+        res.destroy(error instanceof Error ? error : new Error(String(error)));
+      }
+    }
   };
 }
 
