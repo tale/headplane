@@ -9,8 +9,8 @@ import { use } from "react";
 import Header, { iconButtonClass } from "@/components/header";
 import { useMDXComponents } from "@/components/mdx";
 import Sidebar from "@/components/sidebar";
+import { upgradeToc } from "@/components/upgrade-notes";
 import { docs, source } from "@/lib/source";
-import { upgradeToc } from "@/lib/upgrading.server";
 
 import type { Route } from "./+types/docs";
 
@@ -26,7 +26,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     title: page.data.title,
     description: page.data.description,
     pageTree: await source.serializePageTree(source.getPageTree()),
-    extraToc: page.path === "upgrading.mdx" ? await upgradeToc() : [],
+    extraToc: page.path === "upgrading.mdx" ? upgradeToc() : [],
   };
 }
 

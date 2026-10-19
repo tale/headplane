@@ -11,6 +11,9 @@ import VersionPicker from "@/components/version-picker";
 export const iconButtonClass =
   "text-muted hover:bg-hover hover:text-fg inline-flex size-8 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&_svg]:size-4";
 
+const themeOptionClass =
+  "focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-[4px] focus-visible:outline-2 [&_svg]:size-3.5";
+
 const themeList = [
   { value: "light", label: "Light", Icon: Sun },
   { value: "dark", label: "Dark", Icon: Moon },
@@ -81,9 +84,11 @@ function ThemePicker() {
     () => false,
   );
 
-  const currentIndex = themeList.findIndex((item) => isMounted && item.value === theme);
-  const current = themeList[currentIndex] ?? themeList[2];
-  const next = themeList[(themeList.indexOf(current) + 1) % themeList.length];
+  // Until a choice is stored, the theme follows the system, the last option.
+  const storedIndex = isMounted ? themeList.findIndex((item) => item.value === theme) : -1;
+  const currentIndex = storedIndex === -1 ? themeList.length - 1 : storedIndex;
+  const current = themeList[currentIndex];
+  const next = themeList[(currentIndex + 1) % themeList.length];
 
   return (
     <>
@@ -108,11 +113,7 @@ function ThemePicker() {
             <button
               aria-checked={isActive}
               aria-label={label}
-              className={
-                isActive
-                  ? "bg-hover text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-[4px] focus-visible:outline-2 [&_svg]:size-3.5"
-                  : "text-muted hover:text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-[4px] focus-visible:outline-2 [&_svg]:size-3.5"
-              }
+              className={`${themeOptionClass} ${isActive ? "bg-hover text-fg" : "text-muted hover:text-fg"}`}
               key={value}
               onClick={() => setTheme(value)}
               role="radio"

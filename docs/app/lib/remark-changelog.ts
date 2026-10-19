@@ -2,6 +2,8 @@ import path from "node:path";
 
 import type { Heading, Nodes, Paragraph, Root, RootContent, Text } from "mdast";
 
+import type { ReleaseSummary } from "./changelog";
+
 const openerPattern = /\s*\((?:closes|via) $/;
 const separatorPattern = /^,\s*(?:(?:closes|via)\s+)?$/;
 const referencePattern = /^https:\/\/github\.com\/tale\/headplane\/(issues|pulls?)\/(\d+)$/;
@@ -9,9 +11,10 @@ const referencePattern = /^https:\/\/github\.com\/tale\/headplane\/(issues|pulls
 // Groups each `# 0.8.1 (October 16, 2026)` section of the changelog into a
 // <Release>, its `## Changes`/`## Fixes` into <ReleaseSection>s, and turns
 // trailing `(closes #612)` references into <Reference> chips. A <ReleaseList>
-// wraps it all with the version list for navigation.
+// wraps it all with the version list for navigation, and the list is exported
+// as `releases` for the Upgrading page.
 export function remarkChangelog() {
-  return (tree: Root, file: { path?: string }) => {
+  return (tree: Root, file: { path?: string; data: Record<string, unknown> }) => {
     if (!file.path || path.basename(file.path) !== "CHANGELOG.md") {
       return;
     }
@@ -27,7 +30,16 @@ export function remarkChangelog() {
       node.children = group(node.children, 2, section);
     }
 
-    const versions = releases.map((node) => node.attributes[0].value);
+    const releaseList: ReleaseSummary[] = releases.map((node) => ({
+      version: attribute(node, "version"),
+      hasUpgrading: node.children.some(
+        (child) => isElement(child, "ReleaseSection") && attribute(child, "title") === "Upgrading",
+      ),
+    }));
+    const exportList = (file.data["mdx-export"] ??= []) as { name: string; value: unknown }[];
+    exportList.push({ name: "releases", value: releaseList });
+
+    const versions = releaseList.map((release) => release.version);
     const list = element("ReleaseList", { versions: JSON.stringify(versions) });
     list.children = releases as unknown as RootContent[];
     tree.children = [
@@ -75,6 +87,14 @@ function group(nodes: RootContent[], depth: number, wrap: (heading: Heading) => 
   }
 
   return result as RootContent[];
+}
+
+function isElement(node: unknown, name: string): node is Element {
+  return (node as Element).type === "mdxJsxFlowElement" && (node as Element).name === name;
+}
+
+function attribute(node: Element, name: string) {
+  return node.attributes.find((item) => item.name === name)?.value ?? "";
 }
 
 function release(heading: Heading) {

@@ -1,11 +1,10 @@
-import { engines, packageManager } from "../../../package.json";
+import { engines } from "../../../package.json";
 
 // The one place to bump versions the docs mention. MDX pages import this and
 // write `{versions.headscale.minimum}`.
 export const versions = {
   node: engines.node,
   pnpm: engines.pnpm,
-  pnpmPinned: packageManager.replace("pnpm@", ""),
   headscale: {
     minimum: "0.27.0",
     agent: "0.28",

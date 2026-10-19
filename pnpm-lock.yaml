@@ -148,9 +148,6 @@ importers:
       lefthook:
         specifier: ^2.2.2
         version: 2.2.2
-      mdast-util-directive:
-        specifier: ^3.1.1
-        version: 3.1.1
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.3.0(react@19.3.0))(react@19.3.0)

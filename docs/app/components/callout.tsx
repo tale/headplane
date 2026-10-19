@@ -1,5 +1,5 @@
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
-import type { ComponentProps } from "react";
+import type { ReactNode } from "react";
 
 // Mirrors the variants in app/components/callout.tsx.
 const variants = {
@@ -10,12 +10,13 @@ const variants = {
   success: { box: "border-ok/25 bg-ok-subtle", icon: "text-ok", Icon: CircleCheck },
 };
 
-interface CalloutContainerProps extends ComponentProps<"div"> {
+interface CalloutContainerProps {
   type?: keyof typeof variants;
+  children: ReactNode;
 }
 
 export function CalloutContainer({ type = "neutral", children }: CalloutContainerProps) {
-  const { box, icon, Icon } = variants[type] ?? variants.neutral;
+  const { box, icon, Icon } = variants[type];
 
   return (
     <div className={`my-5 flex items-start gap-2.5 rounded-lg border px-3.5 py-3 text-sm ${box}`}>
@@ -25,10 +26,10 @@ export function CalloutContainer({ type = "neutral", children }: CalloutContaine
   );
 }
 
-export function CalloutTitle({ children }: ComponentProps<"p">) {
+export function CalloutTitle({ children }: { children: ReactNode }) {
   return <p className="text-fg my-0! font-medium">{children}</p>;
 }
 
-export function CalloutDescription({ children }: ComponentProps<"div">) {
+export function CalloutDescription({ children }: { children: ReactNode }) {
   return <div className="prose-no-margin leading-6">{children}</div>;
 }

@@ -3,18 +3,16 @@ import { TOCItem, TOCItems } from "fumadocs-ui/components/toc/default";
 import { CircleDot, GitPullRequest, History } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { releaseId, releaseLabel } from "@/lib/changelog";
+
 // Rendered by remark-changelog from CHANGELOG.md.
 
 // Clears the sticky header (and the beta banner, when shown).
 const stickyTop = "top-[calc(var(--fd-banner-height,0px)+5rem)]";
 
-function releaseId(version: string) {
-  return version === "Next" ? "next" : `v${version}`;
-}
-
 export function ReleaseList({ versions, children }: { versions: string; children: ReactNode }) {
   const toc = (JSON.parse(versions) as string[]).map((version) => ({
-    title: version === "Next" ? "Unreleased" : version,
+    title: releaseLabel(version),
     url: `#${releaseId(version)}`,
     depth: 2,
   }));
@@ -50,7 +48,6 @@ interface ReleaseProps {
 }
 
 export function Release({ version, date, children }: ReleaseProps) {
-  const isNext = version === "Next";
   const isPrerelease = version.includes("-");
   const id = releaseId(version);
 
@@ -61,7 +58,7 @@ export function Release({ version, date, children }: ReleaseProps) {
     >
       <header className="flex flex-wrap items-baseline gap-x-2 gap-y-1 self-start md:sticky md:top-[calc(var(--fd-banner-height,0px)+5rem)] md:flex-col">
         <a className="text-fg text-lg font-semibold tracking-tight" href={`#${id}`}>
-          {isNext ? "Unreleased" : version}
+          {releaseLabel(version)}
         </a>
         {date && <time className="text-muted text-sm">{date}</time>}
         {isPrerelease && (
@@ -76,6 +73,7 @@ export function Release({ version, date, children }: ReleaseProps) {
 }
 
 const sectionStyles: Record<string, string> = {
+  Upgrading: "bg-warn-subtle text-warn border-warn/30",
   Changes: "bg-accent-subtle text-accent border-accent/30",
   Fixes: "bg-ok-subtle text-ok border-ok/30",
 };

@@ -8,7 +8,8 @@ import remarkDirective from "remark-directive";
 import { defineConfig } from "vite";
 
 import { remarkChangelog } from "./app/lib/remark-changelog";
-// Callout variants from docs/app/components/callout.tsx
+
+// Maps each `:::type` directive to a variant in app/components/callout.tsx.
 const admonitionTypes = {
   note: "neutral",
   info: "neutral",

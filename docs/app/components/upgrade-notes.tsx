@@ -1,18 +1,35 @@
 import { Children, isValidElement, type ReactNode } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
+import { releaseId, releaseLabel, type ReleaseSummary } from "@/lib/changelog";
 import { changelog } from "@/lib/source";
-import { upgradeHeading } from "@/lib/upgrading";
 
-// Renders only the `## Upgrading` section of each release in CHANGELOG.md,
-// reusing the changelog's compiled <Release> and <ReleaseSection> elements.
-export default function UpgradeNotes() {
+function changelogEntry() {
   const entry = changelog.get("CHANGELOG.md");
   if (!entry) {
     throw new Error("CHANGELOG.md is missing from the changelog collection");
   }
 
-  const Body = entry.body;
+  return entry;
+}
+
+// Fumadocs only builds a page's TOC from its own headings, so the docs loader
+// adds the releases <UpgradeNotes> renders.
+export function upgradeToc() {
+  const releases = changelogEntry()._exports.releases as ReleaseSummary[];
+  return releases
+    .filter((release) => release.hasUpgrading)
+    .map((release) => ({
+      title: releaseLabel(release.version),
+      url: `#${releaseId(release.version)}`,
+      depth: 2,
+    }));
+}
+
+// Renders only the `## Upgrading` section of each release in CHANGELOG.md,
+// reusing the changelog's compiled <Release> and <ReleaseSection> elements.
+export default function UpgradeNotes() {
+  const Body = changelogEntry().body;
   const components = useMDXComponents();
 
   return (
@@ -29,10 +46,9 @@ export default function UpgradeNotes() {
             return null;
           }
 
-          const { id, title } = upgradeHeading(version);
           return (
             <>
-              <components.h2 id={id}>{title}</components.h2>
+              <components.h2 id={releaseId(version)}>{releaseLabel(version)}</components.h2>
               {section.props.children}
             </>
           );
