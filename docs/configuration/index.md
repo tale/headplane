@@ -21,8 +21,9 @@ Headplane. In Docker, mount it as a volume.
 
 ## Environment variables
 
-Any option can also be set with an environment variable, which overrides the
-config file. Take the option's path, join the parts with double underscores,
+Any option that takes a single value can also be set with an environment
+variable, which overrides the config file. Lists and maps, such as
+`server.proxy_auth.allowed_cidrs`, only work in the file. Take the option's path, join the parts with double underscores,
 uppercase it and prefix it with `HEADPLANE_`:
 
 | Option               | Environment variable            |

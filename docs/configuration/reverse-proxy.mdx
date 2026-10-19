@@ -7,10 +7,9 @@ import { traefikCompose } from "./compose-examples";
 
 # Reverse proxy
 
-The simplest setup serves both from one domain, the way Tailscale serves its
-admin console: Headplane under `/admin`, Headscale on everything else. Both
-then share one certificate, and because the browser sees a single origin, no
-CORS headers are needed.
+The recommended setup serves both from one domain: Headplane under `/admin`,
+Headscale on everything else. Both then share one certificate, and because the
+browser sees a single origin, no CORS headers are needed.
 
 Whatever the proxy:
 
@@ -28,7 +27,7 @@ sign-in won't stick.
 
 ## Caddy
 
-Caddy forwards WebSocket upgrades on its own:
+Caddy forwards WebSocket upgrades without extra configuration:
 
 ```caddyfile
 headscale.example.com {
@@ -91,8 +90,8 @@ server {
 ## Traefik
 
 With Traefik's Docker provider, the routing goes in container labels. Add a
-certificate setup to the `traefik` service; it forwards WebSocket upgrades
-on its own.
+certificate setup to the `traefik` service. Traefik forwards WebSocket upgrades
+without extra configuration.
 
 <DynamicCodeBlock lang="yaml" code={traefikCompose} />
 
@@ -101,29 +100,21 @@ on its own.
 Headplane and Headscale can also live on different domains, such as
 `headplane.example.com` and `headscale.example.com`. Everything works the same
 except [Browser SSH](/features/ssh), which connects from the browser straight
-to Headscale. Since that's now a cross-origin request, Headscale's responses
-need CORS headers that allow Headplane's origin:
-
-| Header                         | Value                                           |
-| ------------------------------ | ----------------------------------------------- |
-| `Access-Control-Allow-Origin`  | Headplane's origin                              |
-| `Access-Control-Allow-Methods` | `GET, POST, OPTIONS`                            |
-| `Access-Control-Allow-Headers` | `Content-Type, Upgrade, Sec-WebSocket-Protocol` |
-
-In Caddy:
+to Headscale. Its WebSocket connections aren't subject to CORS, but it first
+fetches Headscale's public key with a plain cross-origin request, so
+Headscale's responses need an `Access-Control-Allow-Origin` header with
+Headplane's origin. In Caddy:
 
 ```caddyfile
 headscale.example.com {
     reverse_proxy localhost:8080
 
     header Access-Control-Allow-Origin "https://headplane.example.com"
-    header Access-Control-Allow-Methods "GET, POST, OPTIONS"
-    header Access-Control-Allow-Headers "Content-Type, Upgrade, Sec-WebSocket-Protocol"
 }
 ```
 
-In nginx, add the same headers to Headscale's `location` with
-`add_header ... always;`.
+In nginx, add `add_header Access-Control-Allow-Origin "https://headplane.example.com" always;`
+to Headscale's `location`.
 
 ## Serving HTTPS without a proxy
 

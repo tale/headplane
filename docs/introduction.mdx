@@ -14,8 +14,8 @@ import machineDark from "./assets/machine-dark.png";
 
 [Headscale](https://headscale.net) is a self-hosted implementation of the
 Tailscale control server: it lets Tailscale clients form a private network
-without Tailscale's servers. It doesn't come with a web interface. Headplane
-is one, built to feel like Tailscale's own admin console.
+without Tailscale's servers. It doesn't come with a web interface, and Headplane
+is one, modeled on Tailscale's admin console.
 
 <Figure
   alt="Headplane Dashboard"
@@ -39,7 +39,7 @@ Headplane manages:
   caption="DNS management in Headplane"
 />
 
-It also goes beyond what Headscale offers on its own:
+It also adds features Headscale doesn't have:
 
 - **Single sign-on** through any OpenID Connect provider, or through a
   reverse proxy, with roles for each person
@@ -61,8 +61,7 @@ Headscale three ways, and each one unlocks part of the UI:
 
 <Architecture />
 
-Only the API is required, and everything it covers works on its own. Giving
-Headplane Headscale's config file is covered under
+Only the API is required. Access to Headscale's config file is covered under
 [Integrations](/configuration/integrations), and the agent has
 [its own page](/features/agent).
 

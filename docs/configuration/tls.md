@@ -51,9 +51,9 @@ server:
 It serves HTTP/1.1 only. For HTTP/2 or HTTP/3, put a
 [reverse proxy](/configuration/reverse-proxy) in front instead.
 
-With TLS on, `server.cookie_secure` is always `true`, since browsers drop
-non-secure cookies over HTTPS. Headplane logs a warning if the config sets it
-to `false`. The Docker healthcheck follows the change on its own.
+With TLS on, `server.cookie_secure` is always `true`, and Headplane logs a
+warning if the config sets it to `false`. The Docker healthcheck needs no
+changes.
 
 This suits a single machine without a proxy. When Headscale sits behind a proxy
 anyway, terminating TLS there lets both share one certificate.

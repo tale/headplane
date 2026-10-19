@@ -24,12 +24,13 @@ and auth keys are theirs.
 | **Member**        | No access to the dashboard. They see a home page that helps them connect their devices.        |
 
 The first person to sign in becomes the owner. Everyone after that starts as a
-member, until an owner or admin changes their role on the **Users** page.
+member, until an owner, admin or IT admin changes their role on the **Users**
+page.
 With SSO, new accounts can start with a different role, or take theirs from
 the identity provider. See [Roles from the identity provider](/features/sso#roles-from-the-identity-provider).
 
-Signing in with a Headscale API key skips roles entirely and grants full access,
-since the key already has full control of Headscale.
+Signing in with a Headscale API key grants full access, with no role. See
+[API keys](/configuration/api-keys).
 
 ## Linking to Headscale users
 
@@ -38,7 +39,7 @@ machines and auth keys the account's own. Auditors and viewers need a link to
 create auth keys for themselves, and [Browser SSH](/features/ssh) uses it to
 pick who to connect as.
 
-Headplane links an account by itself when it finds an unclaimed Headscale user
+Headplane links an account automatically when it finds an unclaimed Headscale user
 with the same SSO subject or the same email address. It tries when someone
 signs in, and again whenever an unlinked account opens Headplane. So if
 Headscale creates users through SSO too, an account links as soon as its first

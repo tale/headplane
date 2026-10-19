@@ -14,9 +14,8 @@ runs on Node.js.
 ## Prerequisites
 
 - Linux
-- Headscale {versions.headscale.minimum} or newer, already running
-- A Headplane config file with at least `headscale.url` and
-  `server.cookie_secret` set (see [Before installing](/install#before-installing))
+- Headscale and a Headplane config file, as described in
+  [Before installing](/install#before-installing)
 - To build: Go matching the `go` directive in `go.mod`, and pnpm{" "}
   <code>{versions.pnpm}</code>
 - To run: Node.js <code>{versions.node}</code>
@@ -112,7 +111,7 @@ path.
 
 ## Next steps
 
-At this point Headplane can manage machines, users, auth keys and ACLs. To edit
-DNS settings and sign-in restrictions from the UI, set up the
-[proc integration](/configuration/integrations#proc). After that, put
-Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- To edit DNS and sign-in restrictions from the UI, set up the
+  [proc integration](/configuration/integrations#proc).
+- Put Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- See [After installing](/install#after-installing) for the rest.

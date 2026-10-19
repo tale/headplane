@@ -3,8 +3,6 @@ title: Docker
 description: Install Headplane with Docker.
 ---
 
-import { versions } from "@/lib/versions";
-
 # Docker
 
 The Docker image is the recommended way to run Headplane. It includes the web
@@ -14,9 +12,8 @@ all prebuilt.
 ## Prerequisites
 
 - Docker with Docker Compose
-- Headscale {versions.headscale.minimum} or newer, already running
-- A Headplane config file with at least `headscale.url` and
-  `server.cookie_secret` set (see [Before installing](/install#before-installing))
+- Headscale and a Headplane config file, as described in
+  [Before installing](/install#before-installing)
 
 ## Installation
 
@@ -56,18 +53,15 @@ See [API keys](/configuration/api-keys) for how keys and sessions work.
 ## Health checks
 
 The image has a built-in healthcheck, so `docker ps` reports whether Headplane
-is up without any extra configuration. It follows Headplane's port and TLS
-settings on its own. To change its timing, override it in the compose file:
+is up. It follows Headplane's port and TLS settings, and runs every 30 seconds
+with a 5 second timeout and 3 retries. To change the timing, override it in the
+compose file:
 
 ```yaml
 services:
   headplane:
     healthcheck:
-      test: ["CMD", "/bin/hp_healthcheck"]
-      interval: 30s
-      timeout: 5s
-      start_period: 5s
-      retries: 3
+      interval: 2m
 ```
 
 ## Debugging
@@ -78,7 +72,7 @@ with `bash` and `curl`.
 
 ## Next steps
 
-At this point Headplane can manage machines, users, auth keys and ACLs. To edit
-DNS settings and sign-in restrictions from the UI, set up the
-[Docker integration](/configuration/integrations#docker). After that, put
-Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- To edit DNS and sign-in restrictions from the UI, set up the
+  [Docker integration](/configuration/integrations#docker).
+- Put Headplane behind a [reverse proxy](/configuration/reverse-proxy).
+- See [After installing](/install#after-installing) for the rest.

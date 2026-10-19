@@ -19,8 +19,6 @@ role attached. The session ends when the key expires.
 headscale apikeys create --expiration 90d
 ```
 
-A short expiration is fine here. Signing in again only takes a new key.
-
 ## The server's key
 
 `headscale.api_key` is a key Headplane keeps for itself. People who sign in

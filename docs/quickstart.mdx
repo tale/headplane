@@ -9,8 +9,7 @@ import { quickstartCompose, quickstartFetch } from "./quickstart-examples";
 
 This sets up a complete server from scratch: Headscale, Headplane and Caddy in
 one Compose project, on one domain. Caddy handles HTTPS, Headplane is served
-under `/admin`, and every page in Headplane works, including DNS and
-sign-in restrictions.
+under `/admin`, and Headplane can edit Headscale's settings, including DNS.
 
 Already running Headscale? Skip to [Installation](/install) instead.
 
@@ -37,7 +36,7 @@ policy:
   mode: database
 
 dns:
-  # Any domain that isn't, and doesn't end in, the server's domain
+  # Not the server's domain, and not a domain it ends in, such as example.com
   base_domain: tailnet.example.com
   extra_records_path: /etc/headscale/extra-records.json
 ```

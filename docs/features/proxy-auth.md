@@ -42,8 +42,8 @@ the account's identity in Headplane, as `proxy:<value>`, so it has to stay the
 same for each person. The email, name and `picture_header` headers are
 optional and fill in the profile.
 
-Accounts work as described in [Users & roles](/features/users-roles): the first
-person to sign in becomes the owner, and everyone after starts as a member.
+Roles and account linking work as described in
+[Users & roles](/features/users-roles).
 
 ## Which requests are trusted
 

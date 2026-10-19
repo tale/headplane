@@ -60,8 +60,8 @@ Add the flake as an input, then import its module and overlay:
 The module writes `settings` to `/etc/headplane/config.yaml`, so every option
 from the [configuration file](/configuration) is available under
 `services.headplane.settings`. The [NixOS options](/reference/nixos-options)
-reference lists them all. It also points the agent at its Nix package on its
-own, so enabling it is all the agent needs.
+reference lists them all. It also points the agent at its Nix package, so
+`integration.agent.enabled = true` is all the agent needs.
 
 ## How it runs
 
@@ -71,8 +71,8 @@ which restarts Headscale through systemd when settings change in the UI.
 
 Generating `headscale.config_path` from `services.headscale.settings`, as
 above, puts the file in the Nix store, which is read-only. Headplane shows
-Headscale's DNS settings and sign-in restrictions but can't change them, so
-keep managing those in the Nix configuration. DNS records are the exception:
+Headscale's DNS settings without changing them and hides sign-in restrictions,
+so keep managing both in the Nix configuration. DNS records are the exception:
 point Headscale's `dns.extra_records_path` at a writable file outside the store
 and Headplane can edit them.
 

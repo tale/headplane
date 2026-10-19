@@ -26,17 +26,17 @@ machine with Tailscale SSH.
 
 ## Requirements
 
-- **Headscale {versions.headscale.ssh} or newer.** Headscale 0.29.0 through
-  0.29.1 break it; use 0.28.x or 0.29.2 and newer.
-- **Tailscale SSH on the target machine**, turned on with `tailscale up --ssh`.
-  A regular SSH server doesn't work, because the browser signs in through
-  Tailscale, not with a password or key.
-- **The [Headplane Agent](/features/agent)**, turned on.
-- **An account linked to a Headscale user.** The session connects as that
-  user, so it needs [SSO](/features/sso) or
-  [proxy authentication](/features/proxy-auth). API key sessions can't use
+- Headscale {versions.headscale.ssh} or newer, except 0.29.0 through 0.29.1,
+  which break it.
+- Tailscale SSH on the target machine, turned on with `tailscale up --ssh`. A
+  regular SSH server doesn't work, because the browser signs in through
+  Tailscale rather than with a password or key.
+- The [Headplane Agent](/features/agent), turned on.
+- An account linked to a Headscale user, since the session connects as that
+  user. That takes [SSO](/features/sso) or
+  [proxy authentication](/features/proxy-auth); API key sessions can't use
   Browser SSH.
-- **Headscale reachable from people's browsers**, with WebSocket upgrades
+- Headscale reachable from people's browsers, with WebSocket upgrades
   forwarded, and CORS headers if Headplane is on another domain. See
   [Reverse proxy](/configuration/reverse-proxy).
 
@@ -94,7 +94,7 @@ session has none. Sign in with SSO or proxy authentication instead.
 
 The account isn't linked to a Headscale user yet. If Headscale uses SSO too,
 signing in to Headscale from a device creates the user, and Headplane links it
-on its own. Otherwise, an admin links it from the **Users** page. See
+automatically. Otherwise, an admin links it from the **Users** page. See
 [Linking by hand](/features/users-roles#linking-by-hand).
 
 ### Node not found
@@ -111,13 +111,14 @@ it isn't, an error page offers **Try again** once the machine is back online.
 
 ### Connection fails or hangs
 
-- **Headscale 0.29.0 through 0.29.1** reject the browser's connection. The
-  browser console shows `405 Method Not Allowed` for `/ts2021`. Upgrade
-  Headscale to 0.29.2 or newer.
+- **A `405 Method Not Allowed` for `/ts2021`** in the browser console means
+  Headscale 0.29.0 through 0.29.1. Upgrade to 0.29.2 or newer.
 - **`server_url` in Headscale's config** has to include the port when it isn't
   443, such as `https://hs.example.com:8443`, since the embedded DERP server
-  advertises its port from it. Don't change Headplane's `headscale.public_url`
-  for this; it only affects what the UI shows.
+  advertises its port from it.
+- **Headplane's `headscale.public_url`**, or `headscale.url` when it's unset,
+  is the address the browser connects to, so it has to be Headscale's public
+  URL.
 - **The proxy in front of Headscale** has to forward WebSocket upgrades.
 - **On separate domains**, the browser console shows CORS errors when
   Headscale's responses lack the CORS headers.
