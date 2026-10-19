@@ -8,7 +8,7 @@ import { versions } from "@/lib/versions";
 # Docker
 
 The Docker image is the recommended way to run Headplane. It includes the web
-UI, [machine details](/features/machine-details) and the [Browser SSH](/features/ssh) module,
+UI, the [agent](/features/agent) and the [Browser SSH](/features/ssh) module,
 all prebuilt.
 
 ## Prerequisites
@@ -21,7 +21,7 @@ all prebuilt.
 ## Installation
 
 Mount your config file and a directory for Headplane's own data, which holds
-its database and the Tailscale state for machine details:
+its database and the agent's state:
 
 ```yaml
 services:

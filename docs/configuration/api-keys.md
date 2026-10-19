@@ -26,9 +26,8 @@ A short expiration is fine here. Signing in again only takes a new key.
 `headscale.api_key` is a key Headplane keeps for itself. People who sign in
 through SSO or a proxy have no Headscale key of their own, so Headplane checks
 their role and then makes the request with this key. The
-agent behind [machine details](/features/machine-details) uses it too, to join
-the tailnet. SSO, proxy authentication and machine details don't start without
-it.
+[agent](/features/agent) uses it too, to join the tailnet. SSO, proxy
+authentication and the agent don't start without it.
 
 ```bash
 headscale apikeys create --expiration 365d
@@ -43,8 +42,8 @@ To keep the key out of the config file, use `api_key_path` instead. See
 [Sensitive values](/configuration/sensitive-values).
 
 Give this key a long expiration and note when it runs out. Once it expires,
-every request made for SSO and proxy-auth users fails, and machine details
-stop updating. Headplane reads the key at startup, so it needs a restart to pick up a
+every request made for SSO and proxy-auth users fails, and the agent stops
+syncing. Headplane reads the key at startup, so it needs a restart to pick up a
 new one.
 
 `oidc.headscale_api_key` is the old name for this option. It still works when

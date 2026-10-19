@@ -42,7 +42,7 @@ joins the tailnet for the duration of the SSH session.
 - Users must sign in with [SSO](/features/sso) or
   [proxy authentication](/features/proxy-auth). API key sessions can't use
   Browser SSH.
-- [Machine details](/features/machine-details) must be turned on.
+- The **Headplane Agent** must be [enabled and configured](/features/agent).
 
 :::warning[Headscale 0.29.0 beta through 0.29.1]
 Browser SSH does not work with Headscale 0.29 beta releases through 0.29.1 due
@@ -92,9 +92,9 @@ flag.
 
 **Error:** "Turn on the Headplane agent to use browser SSH."
 
-Machine details aren't turned on. Browser SSH depends on their agent for
-tailnet connectivity and to clean up its temporary machines. See
-[Machine details](/features/machine-details).
+The Headplane Agent is not enabled. Browser SSH depends on the agent for
+Tailnet connectivity and ephemeral node cleanup. See the
+[Agent documentation](/features/agent) for setup instructions.
 
 ### OIDC Required
 
