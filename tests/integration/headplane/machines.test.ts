@@ -93,20 +93,9 @@ describe("DNS on a real tailnet", () => {
     await tailnet?.dispose();
   });
 
-  test("a record added in Headplane restarts Headscale and reaches the machines", async () => {
+  test("a record added in Headplane reaches the machines", async () => {
     const { dnsAction } = await import("~/routes/dns/dns-actions");
-    const app = await tailnet.headplane({
-      config: {
-        integration: {
-          docker: {
-            enabled: true,
-            container_label: `${HARNESS_LABEL}=${tailnet.id}`,
-            socket: process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock",
-          },
-        },
-      },
-    });
-
+    const app = await tailnet.headplane();
     const node = await tailnet.node({ name: "dns-client", user: "alice@" });
     const { cookie } = await app.signIn("owner");
     const result = await app.call(dnsAction, "/dns", {
@@ -120,11 +109,44 @@ describe("DNS on a real tailnet", () => {
     });
 
     expect(statusOf(result)).toBe(200);
+    await tailnet.server.reloadRecords();
     await waitFor(
       "the record in the node's netmap",
       async () => {
         const netmap = await node.tailscale(["debug", "netmap"]);
         expect(netmap).toContain("intranet.tailnet.test");
+      },
+      { timeout: 60_000 },
+    );
+  });
+
+  test("renaming the tailnet restarts Headscale and reaches the machines", async () => {
+    const { dnsAction } = await import("~/routes/dns/dns-actions");
+    const app = await tailnet.headplane({
+      config: {
+        integration: {
+          docker: {
+            enabled: true,
+            container_label: `${HARNESS_LABEL}=${tailnet.id}`,
+            socket: process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock",
+          },
+        },
+      },
+    });
+
+    const node = await tailnet.node({ name: "renamed-client", user: "alice@" });
+    const { cookie } = await app.signIn("owner");
+    const result = await app.call(dnsAction, "/dns", {
+      as: cookie,
+      form: { intent: "rename_tailnet", name: "renamed.test" },
+    });
+
+    expect(statusOf(result)).toBe(200);
+    await waitFor(
+      "the new domain on the node",
+      async () => {
+        const self = (await node.status()).Self as { DNSName: string };
+        expect(self.DNSName).toBe("renamed-client.renamed.test.");
       },
       { timeout: 60_000 },
     );

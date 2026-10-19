@@ -9,7 +9,10 @@ test.concurrent.for<[string, Scenario]>([
   ["homelab", homelab],
   ["minimal", minimal],
 ])("the %s scenario starts", async ([, scenario]) => {
-  await using tailnet = await createTailnet({ headscaleConfig: scenario.headscaleConfig });
+  await using tailnet = await createTailnet({
+    headscaleConfig: scenario.headscaleConfig,
+    records: scenario.records,
+  });
   await applyScenario(tailnet, scenario);
 
   const nodes = await tailnet.api.nodes.list();

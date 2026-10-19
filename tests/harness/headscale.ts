@@ -44,7 +44,6 @@ export function headscaleConfig(overrides: Record<string, unknown> = {}) {
       override_local_dns: true,
       nameservers: { global: ["1.1.1.1"] },
       search_domains: [],
-      extra_records: [],
     },
     unix_socket: "/var/run/headscale/headscale.sock",
     unix_socket_permission: "0770",
@@ -115,10 +114,12 @@ export async function startHeadscale(options: {
   config?: Record<string, unknown>;
   // Serves HTTPS on 443, as nodes need.
   tls?: boolean;
+  records?: Array<{ name: string; type: string; value: string }>;
 }) {
   // Mounted rather than copied so Headplane can edit it like a real deployment.
   const configDir = await mkdtemp(join(tmpdir(), "hp-harness-headscale-"));
   const configPath = join(configDir, "config.yaml");
+  const recordsPath = join(configDir, "extra-records.json");
   const tls = options.tls ? await certificate() : undefined;
   const listen = tls
     ? {
@@ -134,9 +135,14 @@ export async function startHeadscale(options: {
     await writeFile(join(configDir, "tls.key"), tls.key, { mode: 0o644 });
   }
 
-  await writeFile(configPath, stringify(headscaleConfig({ ...listen, ...options.config })), {
-    mode: 0o644,
-  });
+  // Headplane only edits DNS records kept in their own file.
+  const config = headscaleConfig({ ...listen, ...options.config });
+  const dns = {
+    ...(config.dns as object),
+    extra_records_path: "/etc/headscale/extra-records.json",
+  };
+  await writeFile(recordsPath, JSON.stringify(options.records ?? []), { mode: 0o644 });
+  await writeFile(configPath, stringify({ ...config, dns }), { mode: 0o644 });
   await chmod(configDir, 0o755);
   const containerPort = tls ? 443 : 8080;
 
@@ -189,12 +195,22 @@ export async function startHeadscale(options: {
     version: options.version,
     container,
     configPath,
+    recordsPath,
     url: tls ? `https://localhost:${port}` : `http://${container.getHost()}:${port}`,
     controlUrl: tls ? `https://${ALIAS}` : `http://${ALIAS}:8080`,
     certPath: tls?.certPath,
     caCert: tls?.cert,
     createApiKey,
     apiKey: await createApiKey(),
+
+    // Docker on macOS delivers a host write as one combined inotify event,
+    // which Headscale's records watcher ignores. A write from inside Docker
+    // arrives as separate events, so rewrite the file from there.
+    async reloadRecords() {
+      await container.copyFilesToContainer([
+        { source: recordsPath, target: "/etc/headscale/extra-records.json" },
+      ]);
+    },
 
     async stop() {
       await container.stop({ remove: true, removeVolumes: true });

@@ -8,6 +8,7 @@ export interface Scenario {
   nodes: Array<NodeOptions & { approve?: string[]; offline?: boolean }>;
   policy?: TailnetOptions["policy"];
   headscaleConfig?: TailnetOptions["headscaleConfig"];
+  records?: TailnetOptions["records"];
 }
 
 export async function applyScenario(tailnet: Tailnet, scenario: Scenario) {

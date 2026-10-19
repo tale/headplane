@@ -61,7 +61,11 @@ if (!HEADSCALE_VERSIONS.includes(version)) {
 const scenario = await loadScenario(name);
 console.log(`Starting ${name} on Headscale ${version}: ${scenario.description}`);
 
-const tailnet = await createTailnet({ version, headscaleConfig: scenario.headscaleConfig });
+const tailnet = await createTailnet({
+  version,
+  headscaleConfig: scenario.headscaleConfig,
+  records: scenario.records,
+});
 let headplane: ReturnType<typeof spawn> | undefined;
 
 async function shutdown() {
@@ -93,6 +97,7 @@ await writeFile(
       api_key: tailnet.server.apiKey,
       tls_cert_path: tailnet.server.certPath,
       config_path: tailnet.server.configPath,
+      dns_records_path: tailnet.server.recordsPath,
     },
     integration: {
       docker: {

@@ -13,6 +13,7 @@ export interface TailnetOptions {
   version?: HeadscaleVersion;
   policy?: string | object;
   headscaleConfig?: Record<string, unknown>;
+  records?: Array<{ name: string; type: string; value: string }>;
 }
 
 export type Tailnet = Awaited<ReturnType<typeof createTailnet>>;
@@ -26,6 +27,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
     id,
     network,
     config: options.headscaleConfig,
+    records: options.records,
     tls: true,
   });
 
@@ -78,6 +80,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
         headscale: {
           tls_cert_path: server.certPath,
           config_path: server.configPath,
+          dns_records_path: server.recordsPath,
           ...appOptions.config?.headscale,
         },
       },

@@ -15,9 +15,9 @@ export default {
       override_local_dns: true,
       nameservers: { global: ["1.1.1.1", "9.9.9.9"], split: { "lan.home.arpa": ["192.168.1.1"] } },
       search_domains: ["lan.home.arpa"],
-      extra_records: [{ name: "grafana.home.arpa", type: "A", value: "100.64.0.4" }],
     },
   },
+  records: [{ name: "grafana.home.arpa", type: "A", value: "100.64.0.4" }],
   policy: {
     groups: { "group:admins": ["alice@"], "group:family": ["alice@", "bob@", "carol@"] },
     tagOwners: {
