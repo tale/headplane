@@ -1,16 +1,11 @@
 import type { NodeOptions } from "./node";
 import type { Tailnet, TailnetOptions } from "./tailnet";
 
-export interface ScenarioNode extends NodeOptions {
-  // Routes to approve once the node has joined.
-  approve?: string[];
-  offline?: boolean;
-}
-
 export interface Scenario {
   description: string;
   users: Array<{ name: string; email?: string; displayName?: string }>;
-  nodes: ScenarioNode[];
+  // `approve` lists routes to approve once the node has joined.
+  nodes: Array<NodeOptions & { approve?: string[]; offline?: boolean }>;
   policy?: TailnetOptions["policy"];
   headscaleConfig?: TailnetOptions["headscaleConfig"];
 }

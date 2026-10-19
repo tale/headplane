@@ -9,7 +9,7 @@ import { parseArgs } from "node:util";
 
 import { stringify } from "yaml";
 
-import { HARNESS_LABEL } from "./constants";
+import { HARNESS_LABEL } from "./headscale";
 import { applyScenario, type Scenario } from "./scenario";
 import { createTailnet } from "./tailnet";
 import { HEADSCALE_VERSIONS, type HeadscaleVersion, LATEST_HEADSCALE } from "./versions";
@@ -89,10 +89,10 @@ await writeFile(
       data_path: dataDir,
     },
     headscale: {
-      url: tailnet.headscale.url,
-      api_key: tailnet.headscale.apiKey,
-      tls_cert_path: tailnet.headscale.certPath,
-      config_path: tailnet.headscale.configPath,
+      url: tailnet.server.url,
+      api_key: tailnet.server.apiKey,
+      tls_cert_path: tailnet.server.certPath,
+      config_path: tailnet.server.configPath,
     },
     integration: {
       docker: {
@@ -105,12 +105,12 @@ await writeFile(
 );
 
 console.log(`
-Headscale    ${tailnet.headscale.url}
-API key      ${tailnet.headscale.apiKey}
-CA cert      ${tailnet.headscale.certPath}
-Config       ${tailnet.headscale.configPath}
+Headscale    ${tailnet.server.url}
+API key      ${tailnet.server.apiKey}
+CA cert      ${tailnet.server.certPath}
+Config       ${tailnet.server.configPath}
 Headplane    ${configPath}
-Exec         docker exec ${tailnet.headscale.container.getId().slice(0, 12)} headscale <command>
+Exec         docker exec ${tailnet.server.container.getId().slice(0, 12)} headscale <command>
 `);
 
 if (values.headplane) {

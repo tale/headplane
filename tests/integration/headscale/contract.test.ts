@@ -59,8 +59,8 @@ for (const version of testedVersions()) {
     });
 
     test("capabilities follow the version", () => {
-      expect(tailnet.hs.version.unknown).toBe(false);
-      expect(tailnet.hs.capabilities).toEqual({
+      expect(tailnet.headscale.version.unknown).toBe(false);
+      expect(tailnet.headscale.capabilities).toEqual({
         preAuthKeysHaveStableIds: hasStableKeyIds,
         nodeTagsAreFlat: hasStableKeyIds,
         nodeOwnerIsImmutable: hasStableKeyIds,
@@ -70,12 +70,12 @@ for (const version of testedVersions()) {
     });
 
     test("a wrong API key is unauthorized", async () => {
-      const message = await rejection(tailnet.hs.client("not-a-key").users.list());
+      const message = await rejection(tailnet.headscale.client("not-a-key").users.list());
       expect(message).toBe("Unauthorized");
     });
 
     test("an API key that can't be a header never reaches Headscale", async () => {
-      const message = await rejection(tailnet.hs.client("not\na-key").users.list());
+      const message = await rejection(tailnet.headscale.client("not\na-key").users.list());
       expect(message).toBe("Couldn't reach Headscale. Check that it's running and try again.");
     });
 
@@ -256,8 +256,8 @@ for (const version of testedVersions()) {
     test("API keys are listed by prefix", async () => {
       const keys = await api.apiKeys.list();
       const prefix = hasStableKeyIds
-        ? `${tailnet.headscale.apiKey.slice(0, 22)}-***`
-        : tailnet.headscale.apiKey.slice(0, 7);
+        ? `${tailnet.server.apiKey.slice(0, 22)}-***`
+        : tailnet.server.apiKey.slice(0, 7);
 
       expect(keys.map((k) => k.prefix)).toContain(prefix);
     });

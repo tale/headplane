@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createOidcService, type OidcConfig } from "~/server/oidc/provider";
 
-import { type DexEnv, startDex } from "../../harness/dex";
+import { startDex } from "../../harness/dex";
 
-let dex: DexEnv;
+let dex: Awaited<ReturnType<typeof startDex>>;
 
 beforeAll(async () => {
   dex = await startDex();

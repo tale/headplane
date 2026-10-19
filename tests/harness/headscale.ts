@@ -1,4 +1,6 @@
-import { chmod, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { chmod, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { type AddressInfo, createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -6,28 +8,17 @@ import { join } from "node:path";
 import tc from "testcontainers";
 import { stringify } from "yaml";
 
-import { HARNESS_LABEL, HEADSCALE_ALIAS } from "./constants";
-import { harnessCertificate } from "./tls";
 import type { HeadscaleVersion } from "./versions";
 
-export { HARNESS_LABEL, HEADSCALE_ALIAS };
-
-export interface HeadscaleOptions {
-  version: HeadscaleVersion;
-  network?: tc.StartedNetwork;
-  // Merged over the defaults one top-level key at a time.
-  config?: Record<string, unknown>;
-  labels?: Record<string, string>;
-  // Serves HTTPS on 443 with the harness certificate, as nodes need.
-  tls?: boolean;
-  id: string;
-}
+export const HARNESS_LABEL = "me.tale.headplane.harness";
+const ALIAS = "headscale";
+const CERT_DIR = join(tmpdir(), "headplane-harness-tls");
 
 export type StartedHeadscale = Awaited<ReturnType<typeof startHeadscale>>;
 
 export function headscaleConfig(overrides: Record<string, unknown> = {}) {
   return {
-    server_url: `http://${HEADSCALE_ALIAS}:8080`,
+    server_url: `http://${ALIAS}:8080`,
     listen_addr: "0.0.0.0:8080",
     metrics_listen_addr: "127.0.0.1:9090",
     grpc_listen_addr: "127.0.0.1:50443",
@@ -62,6 +53,51 @@ export function headscaleConfig(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Nodes retry control over TLS on 443 after a reconnect, so a tailnet's
+// Headscale needs TLS. One self-signed pair is shared by every worker.
+async function certificate() {
+  const certPath = join(CERT_DIR, "cert.pem");
+  const keyPath = join(CERT_DIR, "key.pem");
+  if (!existsSync(certPath) || !existsSync(keyPath)) {
+    await mkdir(CERT_DIR, { recursive: true });
+    const scratch = await mkdtemp(join(CERT_DIR, "new-"));
+    execFileSync(
+      "openssl",
+      [
+        "req",
+        "-x509",
+        "-newkey",
+        "ec",
+        "-pkeyopt",
+        "ec_paramgen_curve:prime256v1",
+        "-nodes",
+        "-days",
+        "3650",
+        "-subj",
+        `/CN=${ALIAS}`,
+        "-addext",
+        `subjectAltName=DNS:${ALIAS},DNS:localhost,IP:127.0.0.1`,
+        "-keyout",
+        join(scratch, "key.pem"),
+        "-out",
+        join(scratch, "cert.pem"),
+      ],
+      { stdio: "ignore" },
+    );
+
+    // Renames are atomic, so parallel workers never see half a pair.
+    await rename(join(scratch, "key.pem"), keyPath);
+    await rename(join(scratch, "cert.pem"), certPath);
+    await rm(scratch, { recursive: true, force: true });
+  }
+
+  return {
+    certPath,
+    cert: await readFile(certPath, "utf8"),
+    key: await readFile(keyPath, "utf8"),
+  };
+}
+
 async function freePort() {
   const server = createServer();
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
@@ -70,30 +106,39 @@ async function freePort() {
   return port;
 }
 
-export async function startHeadscale(options: HeadscaleOptions) {
+export async function startHeadscale(options: {
+  version: HeadscaleVersion;
+  // Labels the container `${HARNESS_LABEL}=${id}`.
+  id: string;
+  network?: tc.StartedNetwork;
+  // Merged over the defaults one top-level key at a time.
+  config?: Record<string, unknown>;
+  // Serves HTTPS on 443, as nodes need.
+  tls?: boolean;
+}) {
   // Mounted rather than copied so Headplane can edit it like a real deployment.
   const configDir = await mkdtemp(join(tmpdir(), "hp-harness-headscale-"));
   const configPath = join(configDir, "config.yaml");
-  const certificate = options.tls ? await harnessCertificate() : undefined;
-  const listen = certificate
+  const tls = options.tls ? await certificate() : undefined;
+  const listen = tls
     ? {
-        server_url: `https://${HEADSCALE_ALIAS}`,
+        server_url: `https://${ALIAS}`,
         listen_addr: "0.0.0.0:443",
         tls_cert_path: "/etc/headscale/tls.crt",
         tls_key_path: "/etc/headscale/tls.key",
       }
     : {};
 
-  if (certificate) {
-    await writeFile(join(configDir, "tls.crt"), certificate.cert, { mode: 0o644 });
-    await writeFile(join(configDir, "tls.key"), certificate.key, { mode: 0o644 });
+  if (tls) {
+    await writeFile(join(configDir, "tls.crt"), tls.cert, { mode: 0o644 });
+    await writeFile(join(configDir, "tls.key"), tls.key, { mode: 0o644 });
   }
 
   await writeFile(configPath, stringify(headscaleConfig({ ...listen, ...options.config })), {
     mode: 0o644,
   });
   await chmod(configDir, 0o755);
-  const containerPort = certificate ? 443 : 8080;
+  const containerPort = tls ? 443 : 8080;
 
   // A fixed host port survives restarts, which Headplane's Docker
   // integration does after editing the config.
@@ -102,56 +147,52 @@ export async function startHeadscale(options: HeadscaleOptions) {
       .withCommand(["serve"])
       .withExposedPorts({ container: containerPort, host: port })
       .withBindMounts([{ source: configDir, target: "/etc/headscale" }])
-      .withLabels({ [HARNESS_LABEL]: options.id, ...options.labels })
+      .withLabels({ [HARNESS_LABEL]: options.id })
       .withWaitStrategy(
-        certificate
+        tls
           ? tc.Wait.forHttp("/health", containerPort).usingTls().allowInsecure().forStatusCode(200)
           : tc.Wait.forHttp("/health", containerPort).forStatusCode(200),
       )
       .withStartupTimeout(30_000);
 
     if (options.network) {
-      builder = builder.withNetwork(options.network).withNetworkAliases(HEADSCALE_ALIAS);
+      builder = builder.withNetwork(options.network).withNetworkAliases(ALIAS);
     }
 
     return builder.start();
   }
 
   // Another process can take the free port before Docker binds it.
-  let port = await freePort();
-  async function startWithRetry(attempt = 1): Promise<tc.StartedTestContainer> {
-    try {
-      return await start(port);
-    } catch (error) {
-      if (attempt === 3 || !String(error).includes("address already in use")) throw error;
-      port = await freePort();
-      return startWithRetry(attempt + 1);
+  async function startOnFreePort() {
+    for (let attempt = 1; ; attempt++) {
+      const port = await freePort();
+      try {
+        return { port, container: await start(port) };
+      } catch (error) {
+        if (attempt === 3 || !String(error).includes("address already in use")) throw error;
+      }
     }
   }
 
-  const container = await startWithRetry();
-
-  async function exec(args: string[]) {
-    const result = await container.exec(["headscale", ...args]);
-    if (result.exitCode !== 0) {
-      throw new Error(`headscale ${args.join(" ")} failed:\n${result.output}`);
-    }
-
-    return result.stdout;
-  }
+  const { port, container } = await startOnFreePort();
 
   async function createApiKey() {
-    return JSON.parse(await exec(["apikeys", "create", "-o", "json"])) as string;
+    const result = await container.exec(["headscale", "apikeys", "create", "-o", "json"]);
+    if (result.exitCode !== 0) {
+      throw new Error(`headscale apikeys create failed:\n${result.output}`);
+    }
+
+    return JSON.parse(result.stdout) as string;
   }
 
   return {
     version: options.version,
     container,
     configPath,
-    url: certificate ? `https://localhost:${port}` : `http://${container.getHost()}:${port}`,
-    controlUrl: certificate ? `https://${HEADSCALE_ALIAS}` : `http://${HEADSCALE_ALIAS}:8080`,
-    certPath: certificate?.certPath,
-    exec,
+    url: tls ? `https://localhost:${port}` : `http://${container.getHost()}:${port}`,
+    controlUrl: tls ? `https://${ALIAS}` : `http://${ALIAS}:8080`,
+    certPath: tls?.certPath,
+    caCert: tls?.cert,
     createApiKey,
     apiKey: await createApiKey(),
 

@@ -1,15 +1,10 @@
 import { setTimeout as sleep } from "node:timers/promises";
 
-export interface WaitOptions {
-  timeout?: number;
-  interval?: number;
-}
-
 // Retries until `check` returns without throwing, then returns its value.
 export async function waitFor<T>(
   description: string,
   check: () => T | Promise<T>,
-  { timeout = 30_000, interval = 250 }: WaitOptions = {},
+  { timeout = 30_000, interval = 250 }: { timeout?: number; interval?: number } = {},
 ): Promise<T> {
   const deadline = Date.now() + timeout;
   let lastError: unknown;

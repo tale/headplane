@@ -2,12 +2,7 @@ import tc from "testcontainers";
 
 import { DEX_IMAGE } from "./versions";
 
-export interface DexEnv {
-  container: tc.StartedTestContainer;
-  issuerUrl: string;
-}
-
-export async function startDex(): Promise<DexEnv> {
+export async function startDex() {
   const container = await new tc.GenericContainer(DEX_IMAGE)
     .withExposedPorts(5556)
     .withEnvironment({
@@ -18,15 +13,7 @@ export async function startDex(): Promise<DexEnv> {
     .withWaitStrategy(tc.Wait.forLogMessage("listening on", 1).withStartupTimeout(30_000))
     .start();
 
-  const host = container.getHost();
-  const port = container.getMappedPort(5556);
-
-  // Dex's issuer is configured as http://0.0.0.0:5556 inside the
-  // container. The external URL uses the mapped port. Discovery
-  // will return endpoints with the internal issuer, but that's fine
-  // for testing discovery + startFlow. The issuer mismatch is
-  // expected and logged at debug level.
-  const issuerUrl = `http://${host}:${port}`;
-
+  // Reachable from the host, unlike the issuer Dex advertises.
+  const issuerUrl = `http://${container.getHost()}:${container.getMappedPort(5556)}`;
   return { container, issuerUrl };
 }

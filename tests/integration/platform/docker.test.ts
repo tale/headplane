@@ -4,10 +4,9 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import DockerIntegration from "~/server/config/integration/docker";
 import { createHeadscale } from "~/server/headscale/api";
 
-import { type StartedHeadscale, startHeadscale } from "../../harness/headscale";
+import { HARNESS_LABEL, type StartedHeadscale, startHeadscale } from "../../harness/headscale";
 import { LATEST_HEADSCALE } from "../../harness/versions";
 
-const LABEL_KEY = "me.tale.headplane.integration-test";
 const LABEL_VALUE = `docker-${process.pid}`;
 const SOCKET = process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock";
 
@@ -18,7 +17,6 @@ describe("Docker integration", () => {
     headscale = await startHeadscale({
       version: LATEST_HEADSCALE,
       id: LABEL_VALUE,
-      labels: { [LABEL_KEY]: LABEL_VALUE },
     });
   });
 
@@ -46,22 +44,24 @@ describe("Docker integration", () => {
   test("finds Headscale by label or by name", async () => {
     const name = headscale.container.getName().replace(/^\//, "");
 
-    expect(await integration({ label: `${LABEL_KEY}=${LABEL_VALUE}` }).isAvailable()).toBe(true);
+    expect(await integration({ label: `${HARNESS_LABEL}=${LABEL_VALUE}` }).isAvailable()).toBe(
+      true,
+    );
     expect(await integration({ name }).isAvailable()).toBe(true);
   });
 
   test("isn't available without a matching container or a socket", async () => {
-    expect(await integration({ label: `${LABEL_KEY}=nothing` }).isAvailable()).toBe(false);
+    expect(await integration({ label: `${HARNESS_LABEL}=nothing` }).isAvailable()).toBe(false);
     expect(
       await integration({
-        label: `${LABEL_KEY}=${LABEL_VALUE}`,
+        label: `${HARNESS_LABEL}=${LABEL_VALUE}`,
         socket: "unix:///tmp/nonexistent-docker.sock",
       }).isAvailable(),
     ).toBe(false);
   });
 
   test("a config change restarts Headscale and waits for it to come back", async () => {
-    const docker = integration({ label: `${LABEL_KEY}=${LABEL_VALUE}` });
+    const docker = integration({ label: `${HARNESS_LABEL}=${LABEL_VALUE}` });
     expect(await docker.isAvailable()).toBe(true);
 
     const before = await startedAt();

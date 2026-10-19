@@ -24,7 +24,7 @@ describe.for(testedVersions())("API key sign-in on Headscale %s", (version) => {
   });
 
   test("a valid key starts a session for that key", async () => {
-    const apiKey = await tailnet.headscale.createApiKey();
+    const apiKey = await tailnet.server.createApiKey();
 
     const result = await signIn(app, { api_key: apiKey });
     expect(result).toBeInstanceOf(Response);
@@ -50,14 +50,14 @@ describe.for(testedVersions())("API key sign-in on Headscale %s", (version) => {
   );
 
   test("ignores whitespace pasted around the key", async () => {
-    const apiKey = await tailnet.headscale.createApiKey();
+    const apiKey = await tailnet.server.createApiKey();
 
     const result = await signIn(app, { api_key: `  ${apiKey}\n` });
     expect((result as Response).headers.get("Location")).toBe("/machines");
   });
 
   test("calls a key with stray characters invalid rather than blaming Headscale", async () => {
-    const apiKey = await tailnet.headscale.createApiKey();
+    const apiKey = await tailnet.server.createApiKey();
 
     expect(await signIn(app, { api_key: `${apiKey.slice(0, 10)}\n${apiKey.slice(10)}` })).toEqual({
       success: false,
