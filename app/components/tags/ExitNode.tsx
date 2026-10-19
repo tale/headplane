@@ -1,7 +1,3 @@
-import { Info } from "lucide-react";
-
-import cn from "~/utils/cn";
-
 import Chip from "../chip";
 import Tooltip from "../tooltip";
 
@@ -17,17 +13,13 @@ export function ExitNodeTag({ isEnabled }: ExitNodeTagProps) {
           <>This machine is acting as an exit node.</>
         ) : (
           <>
-            This machine is requesting to be used as an exit node. Review this from the "Edit route
-            settings..." option in the machine's menu.
+            This machine is requesting to be used as an exit node. Review it from "Edit route
+            settings" in the machine's menu.
           </>
         )
       }
     >
-      <Chip
-        text="Exit Node"
-        className={cn("bg-blue-300 text-blue-900 dark:bg-blue-900 dark:text-blue-300")}
-        rightIcon={isEnabled ? undefined : <Info className="h-full w-fit" />}
-      />
+      <Chip text="Exit node" variant={isEnabled ? "neutral" : "warn"} />
     </Tooltip>
   );
 }

@@ -180,11 +180,7 @@ export async function createAppRuntime(): Promise<AppRuntime> {
   const config = await loadConfig();
   const db = await createDbClient(/* ... */);
   const auth = createAuthService({ db /* ... */ });
-  const oidc = config.oidc
-    ? createOidcService({
-        /* ... */
-      })
-    : undefined;
+  const oidc = config.oidc ? createOidcService({/* ... */}) : undefined;
 
   return {
     config,

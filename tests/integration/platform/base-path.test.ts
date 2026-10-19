@@ -107,7 +107,7 @@ describe.each(["/admin", "/web", "/tools/web"])("production dashboard at %s", (p
     const page = await fetch(`${origin}${prefix}/login`);
     expect(page.status).toBe(200);
     const html = await page.text();
-    expect(html).toContain("Welcome to Headplane");
+    expect(html).toContain("Sign in to Headplane");
     expect(html).toContain(`"basename":"${prefix}"`);
     expect(html).toContain(`href="${prefix}/favicon.ico"`);
     expect(html).toContain(`name="headplane-base-path" content="${prefix}"`);
@@ -170,6 +170,7 @@ describe.each(["/admin", "/web", "/tools/web"])("production dashboard at %s", (p
   test("scopes sessions and live events to the dashboard path", async () => {
     const login = await fetch(`${origin}${prefix}/login`, {
       method: "POST",
+      headers: { Origin: origin.replace("http:", "https:") },
       body: new URLSearchParams({ api_key: "test.key" }),
       redirect: "manual",
     });
@@ -234,19 +235,19 @@ async function checkBrowserNavigation(origin: string, prefix: string) {
     expect(await page.locator('meta[name="headplane-base-path"]').getAttribute("content")).toBe(
       prefix,
     );
-    await page.getByLabel("API Key", { exact: true }).fill("test.key");
+    await page.getByLabel("API key", { exact: true }).fill("test.key");
     await Promise.all([
       page.waitForResponse(
         (response) =>
           new URL(response.url()).pathname === `${prefix}/login.data` &&
           response.request().method() === "POST",
       ),
-      page.getByRole("button", { name: "Sign In", exact: true }).click(),
+      page.getByRole("button", { name: "Sign in with API key", exact: true }).click(),
     ]);
     await page.getByRole("heading", { name: "Machines", exact: true }).waitFor();
     expect(new URL(page.url()).pathname).toBe(`${prefix}/machines`);
 
-    await page.getByRole("button", { name: "Sort by name", exact: true }).click();
+    await page.getByRole("button", { name: "Name", exact: true }).click();
     await expect.poll(() => page.locator('th[aria-sort="descending"]').count()).toBe(1);
 
     await page.getByRole("link", { name: "Users", exact: true }).click();

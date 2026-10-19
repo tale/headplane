@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
-import Text from "~/components/text";
-import Title from "~/components/title";
 import TokenList from "~/components/token-list";
 import { isValidGroupName, isValidTagName } from "~/utils/acl-policy";
+
+import EditorDialog from "./editor-dialog";
 
 export type NamedListKind = "group" | "tag";
 
@@ -56,14 +55,7 @@ export default function NamedListDialog({
 }: NamedListDialogProps) {
   const copy = COPY[kind];
   const [draftName, setDraftName] = useState(name ?? copy.prefix);
-  const [draftMembers, setDraftMembers] = useState<string[]>(members ?? []);
-
-  useEffect(() => {
-    if (isOpen) {
-      setDraftName(name ?? copy.prefix);
-      setDraftMembers(members ? [...members] : []);
-    }
-  }, [isOpen, name, members, copy.prefix]);
+  const [draftMembers, setDraftMembers] = useState<string[]>(() => [...(members ?? [])]);
 
   const trimmedName = draftName.trim();
   const isDuplicate = trimmedName !== name && existingNames.includes(trimmedName);
@@ -74,35 +66,32 @@ export default function NamedListDialog({
   const showNameError = !isPristine && nameIsInvalid;
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={setIsOpen}>
-      <DialogPanel
-        isDisabled={nameIsInvalid}
-        onSubmit={(event) => {
-          event.preventDefault();
-          onSave(trimmedName, draftMembers);
-          setIsOpen(false);
-        }}
-      >
-        <Title>{name ? `Edit ${copy.title} ${name}` : `New ${copy.title}`}</Title>
-        <Text>{copy.hint}</Text>
-        <Input
-          errorMessage={isDuplicate ? `A ${copy.title} with this name already exists.` : copy.hint}
-          invalid={showNameError}
-          label="Name"
-          onChange={setDraftName}
-          placeholder={`${copy.prefix}example`}
-          value={draftName}
-        />
-        <TokenList
-          description={copy.fieldDescription}
-          emptyText={copy.empty}
-          label={copy.field}
-          onChange={setDraftMembers}
-          placeholder={copy.placeholder}
-          suggestions={suggestions}
-          values={draftMembers}
-        />
-      </DialogPanel>
-    </Dialog>
+    <EditorDialog
+      description={copy.hint}
+      isDisabled={nameIsInvalid}
+      isOpen={isOpen}
+      onSubmit={() => onSave(trimmedName, draftMembers)}
+      setIsOpen={setIsOpen}
+      submitLabel={name ? `Update ${copy.title}` : `Add ${copy.title}`}
+      title={name ? `Edit ${copy.title} ${name}` : `New ${copy.title}`}
+    >
+      <Input
+        errorMessage={isDuplicate ? `A ${copy.title} with this name already exists.` : copy.hint}
+        invalid={showNameError}
+        label="Name"
+        onChange={setDraftName}
+        placeholder={`${copy.prefix}example`}
+        value={draftName}
+      />
+      <TokenList
+        description={copy.fieldDescription}
+        emptyText={copy.empty}
+        label={copy.field}
+        onChange={setDraftMembers}
+        placeholder={copy.placeholder}
+        suggestions={suggestions}
+        values={draftMembers}
+      />
+    </EditorDialog>
   );
 }

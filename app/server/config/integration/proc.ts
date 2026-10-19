@@ -6,7 +6,7 @@ import type { Headscale } from "~/server/headscale/api";
 import log from "~/utils/log";
 
 import { Integration } from "./abstract";
-import { findHeadscaleServe, signalAndWaitHealthy } from "./proc-helper";
+import { findHeadscaleServe, restartAndWaitHealthy } from "./proc-helper";
 
 const configSchema = {
   full: type({
@@ -19,8 +19,6 @@ const configSchema = {
 };
 
 export default class ProcIntegration extends Integration<typeof configSchema.full.infer> {
-  private pid: number | undefined;
-
   get name() {
     return "Native Linux (/proc)";
   }
@@ -42,8 +40,7 @@ export default class ProcIntegration extends Integration<typeof configSchema.ful
         return false;
       }
 
-      this.pid = result;
-      log.info("config", "Found headscale serve (PID %d)", this.pid);
+      log.info("config", "Found headscale serve (PID %d)", result);
       return true;
     } catch (error) {
       log.error("config", "Failed to scan /proc: %s", error);
@@ -52,13 +49,12 @@ export default class ProcIntegration extends Integration<typeof configSchema.ful
   }
 
   async onConfigChange(headscale: Headscale) {
-    if (!this.pid) {
-      return;
+    const pid = await findHeadscaleServe();
+    if (!pid) {
+      log.error("config", "Could not find headscale serve process");
+      return false;
     }
 
-    await signalAndWaitHealthy(headscale, {
-      pid: this.pid,
-      signal: "SIGHUP",
-    });
+    return restartAndWaitHealthy(headscale, pid);
   }
 }

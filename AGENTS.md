@@ -47,6 +47,15 @@ the respective `lint` and `format` scripts, you can pass flags to them. You can
 also run Headscale CLI commands with `docker exec headscale headscale <command>`
 when the dev environment is running.
 
+## Action errors
+
+Throw `ActionError` (`app/server/web/actions.ts`) for any state of the world an
+action can run into: config, permissions, data, Headscale's version or health.
+It shows its message in the form. Use it even when the UI already hides the
+action, since what the UI prevents changes over time. Throw a plain `Error`
+only for programmer bugs, code paths that should be impossible. Never fall back
+to a silent no-op.
+
 ## Docs
 
 The project has a documentation site available at the `docs/` directory built
@@ -65,3 +74,20 @@ Use it for compatibility notes and upgrade warnings.
 To cut a release, run `pnpm release cut <version>`. It renames `# Next` to the
 version, bumps `package.json`, commits, and tags. Pushing the tag builds the
 images and publishes the GitHub release from that changelog section.
+
+### Release lines
+
+`main` is the next minor release. Each released minor gets a `release/X.Y`
+branch cut from its `.0` tag (or the latest patch tag, when created later), and
+patch releases for that minor are cut from there.
+
+- Fixes land on `main` first. Backport with `git cherry-pick -x <sha>` onto
+  `release/X.Y`, adapting the code if `main` has diverged, and add the changelog
+  line to that branch's own `# Next`. A bug that only exists on the release line
+  is fixed directly on its branch.
+- Cut patches on the release branch with `pnpm release cut X.Y.Z`, then push
+  that branch with `--follow-tags` (not `main`).
+- Copy the released `# X.Y.Z` section into `main`'s `CHANGELOG.md` below
+  `# Next`, so the beta docs keep the full history.
+- Only security and serious regression fixes are backported once the next minor
+  ships. New features never are.

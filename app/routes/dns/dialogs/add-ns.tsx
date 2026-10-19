@@ -1,101 +1,55 @@
-import { type } from "arktype";
-import { Split } from "lucide-react";
+import { Plus } from "lucide-react";
+import { useState } from "react";
 
+import ActionDialog from "~/components/action-dialog";
 import Button from "~/components/button";
-import Chip from "~/components/chip";
-import Dialog, { DialogPanel } from "~/components/dialog";
 import Input from "~/components/input";
-import Switch from "~/components/switch";
-import Text from "~/components/text";
-import Title from "~/components/title";
-import Tooltip from "~/components/tooltip";
-import { useForm } from "~/hooks/use-form";
-import cn from "~/utils/cn";
+import { SwitchField } from "~/components/switch";
+import { fieldValidator } from "~/utils/form";
 
-const nsSchema = type({
-  ns: "string.ip",
-  split_name: "string > 0",
-});
+import { nameserver } from "../schemas";
 
-interface Props {
-  nameservers: Record<string, string[]>;
-}
+const validateNameserver = fieldValidator(nameserver);
 
-export default function AddNameserver({ nameservers }: Props) {
-  const form = useForm({
-    schema: nsSchema,
-    defaultValues: { split_name: "global" },
-    validate: (values) => {
-      const ns = values.ns as string;
-      const domain = values.split_name as string;
-      if (!ns) return undefined;
-
-      const isSplit = domain !== "global";
-      const isDuplicate = isSplit
-        ? nameservers[domain]?.includes(ns)
-        : Object.values(nameservers).some((nsList) => nsList.includes(ns));
-
-      if (isDuplicate) {
-        return { ns: "This nameserver already exists." };
-      }
-
-      return undefined;
-    },
-  });
-  const split = (form.values.split_name as string) !== "global";
+export default function AddNameserver() {
+  const [isSplit, setIsSplit] = useState(false);
 
   return (
-    <Dialog>
-      <Button>Add nameserver</Button>
-      <DialogPanel>
-        <Title className="mb-4">Add nameserver</Title>
-        <input name="action_id" type="hidden" value="add_ns" />
+    <ActionDialog
+      intent="add_ns"
+      onOpenChange={(isOpen) => isOpen && setIsSplit(false)}
+      submitLabel="Add nameserver"
+      title="Add nameserver"
+      trigger={
+        <Button>
+          <Plus className="size-3.5" />
+          Add nameserver
+        </Button>
+      }
+    >
+      <Input
+        description="Use this IPv4 or IPv6 address to resolve names."
+        label="Nameserver"
+        name="nameserver"
+        placeholder="1.2.3.4"
+        required
+        validate={validateNameserver}
+      />
+      <SwitchField
+        checked={isSplit}
+        description="Split DNS. Only Tailscale 1.8 and later use this nameserver."
+        label="Restrict to domain"
+        onCheckedChange={setIsSplit}
+      />
+      {isSplit && (
         <Input
-          {...form.field("ns")}
-          description="Use this IPv4 or IPv6 address to resolve names."
+          description="Only queries for this domain and its subdomains use the nameserver."
+          label="Domain"
+          name="split_domain"
+          placeholder="example.com"
           required
-          label="Nameserver"
-          placeholder="1.2.3.4"
         />
-        <div className="mt-8 flex items-center justify-between">
-          <div className="block">
-            <div className="inline-flex items-center gap-2">
-              <Text className="font-semibold">Restrict to domain</Text>
-              <Tooltip content="Only clients that support split DNS (Tailscale v1.8 or later for most platforms) will use this nameserver. Older clients will ignore it.">
-                <Chip
-                  className={cn("inline-flex items-center")}
-                  leftIcon={<Split className="mr-0.5 h-3 w-3" />}
-                  text="Split DNS"
-                />
-              </Tooltip>
-            </div>
-            <Text className="text-sm">This nameserver will only be used for some domains.</Text>
-          </div>
-          <Switch
-            label="Split DNS"
-            onCheckedChange={(checked) => {
-              form.setValue("split_name", checked ? "" : "global");
-            }}
-          />
-        </div>
-        {split ? (
-          <>
-            <Text className="mt-8 font-semibold">Domain</Text>
-            <Input
-              {...form.field("split_name")}
-              required
-              label="Domain"
-              placeholder="example.com"
-            />
-            <Text className="text-sm">
-              Only single-label or fully-qualified queries matching this suffix should use the
-              nameserver.
-            </Text>
-          </>
-        ) : (
-          <input name="split_name" type="hidden" value="global" />
-        )}
-      </DialogPanel>
-    </Dialog>
+      )}
+    </ActionDialog>
   );
 }

@@ -13,11 +13,8 @@ vi.mock("~/utils/log", () => ({
 
 function mockFormData(expiry: string): FormData {
   const formData = new FormData();
-  formData.set("action_id", "add_preauthkey");
+  formData.set("intent", "create");
   formData.set("user_id", "1");
-  formData.set("acl_tags", "");
-  formData.set("reusable", "off");
-  formData.set("ephemeral", "off");
   formData.set("expiry", expiry);
   return formData;
 }

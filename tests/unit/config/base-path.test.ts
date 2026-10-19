@@ -67,14 +67,23 @@ describe("dashboard base path", () => {
 
   test("scopes the OIDC state cookie to the custom callback", async () => {
     writeConfig("/tools/web");
-    const cookie = createOidcStateCookie(await loadConfig(configPath));
-    expect(
-      await cookie.serialize({
-        nonce: "n",
-        state: "s",
-        verifier: "v",
-        redirect_uri: "http://localhost/tools/web/oidc/callback",
-      }),
-    ).toContain("Path=/tools/web/oidc/callback");
+    const config = await loadConfig(configPath);
+    const cookie = createOidcStateCookie(config);
+    const state = {
+      nonce: "n",
+      state: "s",
+      verifier: "v",
+      redirect_uri: "http://localhost/tools/web/oidc/callback",
+    };
+    const serialized = await cookie.serialize(state);
+    expect(serialized).toContain("Path=/tools/web/oidc/callback");
+    const header = serialized.split(";")[0];
+    expect(await cookie.parse(header)).toEqual(state);
+    const otherSecret = createOidcStateCookie({
+      ...config,
+      server: { ...config.server, cookie_secret: "another-secret" },
+    });
+    expect(await otherSecret.parse(header)).toBeNull();
+    expect(await cookie.clear()).toContain("Path=/tools/web/oidc/callback");
   });
 });

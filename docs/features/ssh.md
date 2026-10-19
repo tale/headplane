@@ -132,7 +132,7 @@ are not needed. WebSocket upgrade forwarding is still required.
 
 ### SSH Not Available
 
-**Error:** "This version of Headplane was not built with browser SSH support."
+**Error:** "This build of Headplane doesn't include browser SSH."
 
 The WASM assets (`hp_ssh.wasm` and `wasm_exec.js`) are missing. Rebuild with
 `./build.sh --wasm` or ensure your Docker image was built with the `--wasm`
@@ -140,8 +140,7 @@ flag.
 
 ### Agent Required
 
-**Error:** "Browser SSH is only available when the Headplane agent integration
-is enabled."
+**Error:** "Turn on the Headplane agent to use browser SSH."
 
 The Headplane Agent is not enabled. Browser SSH depends on the agent for
 Tailnet connectivity and ephemeral node cleanup. See the
@@ -149,7 +148,7 @@ Tailnet connectivity and ephemeral node cleanup. See the
 
 ### OIDC Required
 
-**Error:** "Browser SSH is only available when OIDC authentication is enabled."
+**Error:** "Sign in with SSO to use browser SSH."
 
 Browser SSH requires OIDC authentication to generate pre-auth keys tied to a
 Headscale user. API key logins do not have an associated Headscale user
@@ -157,16 +156,16 @@ identity. Log in via your configured OIDC provider instead.
 
 ### User Not Linked
 
-**Error:** "You'll need to link your user account to a Headscale user before
-you can use Browser SSH."
+**Error:** "Browser SSH connects as your Headscale user."
 
 Your OIDC account does not match any user in Headscale. You must authenticate
 with Headscale at least once before using Browser SSH, so that a Headscale
-user is created and linked to your OIDC identity.
+user is created and linked to your OIDC identity. If Headscale doesn't use
+OIDC, ask an administrator to link your account from the **Users** page.
 
 ### Node Not Found
 
-**Error:** "No node found with hostname ..."
+**Error:** "There's no machine named ..."
 
 The node name in the URL does not match any node registered in Headscale. The
 node may have been renamed or removed. Navigate back to the machines list and
@@ -176,7 +175,7 @@ try again.
 
 Headplane checks whether the target node is connected to the Tailnet before
 attempting an SSH session. If the node is offline, you'll see an error page
-with a **Retry Connection** button. Ensure the node is running and connected
+with a **Try again** button. Ensure the node is running and connected
 to Headscale, then retry.
 
 ### Connection fails with EOF or hangs

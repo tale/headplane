@@ -1,6 +1,7 @@
 import { Combobox } from "@base-ui/react/combobox";
 import { Check, ChevronDown } from "lucide-react";
 
+import Field, { controlClass } from "~/components/field";
 import cn from "~/utils/cn";
 
 export interface SelectItem {
@@ -10,8 +11,7 @@ export interface SelectItem {
 
 export interface SelectProps {
   items: SelectItem[];
-  label?: string;
-  "aria-label"?: string;
+  label: string;
   name?: string;
   className?: string;
   placeholder?: string;
@@ -19,6 +19,7 @@ export interface SelectProps {
   required?: boolean;
   disabled?: boolean;
   invalid?: boolean;
+  errorMessage?: string;
   value?: string | null;
   defaultValue?: string | null;
   onValueChange?: (value: string | null) => void;
@@ -33,11 +34,11 @@ export default function Select({
   required,
   disabled,
   invalid,
+  errorMessage,
   value,
   defaultValue,
   onValueChange,
   name,
-  ...props
 }: SelectProps) {
   const selectedItem =
     value !== undefined ? (items.find((i) => i.value === value) ?? null) : undefined;
@@ -45,47 +46,36 @@ export default function Select({
     defaultValue !== undefined ? (items.find((i) => i.value === defaultValue) ?? null) : undefined;
 
   return (
-    <div className={cn("flex flex-col gap-1", className)}>
-      {label && (
-        <label className={cn("text-sm font-medium", "text-mist-700 dark:text-mist-200")}>
-          {label}
-        </label>
-      )}
+    <Field
+      className={className}
+      description={description}
+      disabled={disabled}
+      errorMessage={errorMessage}
+      invalid={invalid}
+      label={label}
+      name={name}
+    >
       <Combobox.Root
         items={items}
         value={selectedItem}
         defaultValue={defaultSelectedItem}
         onValueChange={(item) => onValueChange?.(item?.value ?? null)}
-        disabled={disabled}
         name={name}
-        aria-label={props["aria-label"]}
       >
-        <div
-          className={cn(
-            "relative rounded-md",
-            "focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:ring-offset-1",
-            "dark:focus-within:ring-indigo-400/40 dark:focus-within:ring-offset-mist-900",
-            "bg-white dark:bg-mist-900",
-            "border border-mist-200 dark:border-mist-800",
-            invalid && "ring-red-400",
-          )}
-        >
+        <div className={cn(controlClass, "relative")}>
           <Combobox.Input
             placeholder={placeholder}
             required={required}
-            className="w-full rounded-md bg-transparent px-3 py-2 pr-9 text-sm outline-hidden"
+            className="h-full w-full bg-transparent pr-8 pl-2.5 outline-hidden"
             data-1p-ignore
           />
           <Combobox.Trigger
             className={cn(
-              "absolute inset-y-0 right-0 flex items-center pr-3",
-              "text-mist-400 dark:text-mist-500",
-              disabled
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:text-mist-600 dark:hover:text-mist-300",
+              "absolute inset-y-0 right-0 flex items-center pr-2.5",
+              "text-faint hover:text-muted",
             )}
           >
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="size-4" />
           </Combobox.Trigger>
         </div>
         <Combobox.Portal>
@@ -96,13 +86,11 @@ export default function Select({
           >
             <Combobox.Popup
               className={cn(
-                "max-h-72 w-full overflow-auto rounded-lg p-1",
-                "bg-white dark:bg-mist-900",
-                "border border-mist-200 dark:border-mist-800",
-                "shadow-overlay",
+                "max-h-72 w-full overflow-auto rounded-lg p-1 outline-hidden",
+                "bg-raised border-overlay shadow-overlay",
               )}
             >
-              <Combobox.Empty className="px-3 py-2 text-sm text-mist-500 empty:hidden">
+              <Combobox.Empty className="text-muted px-3 py-2 text-sm empty:hidden">
                 No results found.
               </Combobox.Empty>
               <Combobox.List>
@@ -112,11 +100,11 @@ export default function Select({
                     value={item}
                     className={cn(
                       "flex items-center justify-between text-sm",
-                      "py-1.5 px-2.5 rounded-md",
+                      "h-8 px-2.5 rounded-sm",
                       "outline-hidden select-none cursor-default",
-                      "data-[highlighted]:bg-mist-100 dark:data-[highlighted]:bg-mist-800",
+                      "data-[highlighted]:bg-hover",
                       "data-[selected]:font-medium",
-                      "data-[disabled]:text-mist-300 dark:data-[disabled]:text-mist-600",
+                      "data-[disabled]:text-faint",
                     )}
                   >
                     {item.label}
@@ -130,9 +118,6 @@ export default function Select({
           </Combobox.Positioner>
         </Combobox.Portal>
       </Combobox.Root>
-      {description && (
-        <div className={cn("text-xs", "text-mist-500 dark:text-mist-400")}>{description}</div>
-      )}
-    </div>
+    </Field>
   );
 }

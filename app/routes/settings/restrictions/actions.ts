@@ -1,4 +1,4 @@
-import { data } from "react-router";
+import * as v from "valibot";
 
 import {
   authContext,
@@ -6,197 +6,74 @@ import {
   headscaleContext,
   integrationContext,
 } from "~/server/context";
+import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
+import { invalid, ok, parseValues } from "~/utils/form";
 
-import type { Route } from "./+types/overview";
+import { restrictionTypes, restrictionValue, type RestrictionType } from "./schemas";
 
-export async function restrictionAction({ request, context }: Route.ActionArgs) {
-  const auth = context.get(authContext);
-  const headscale = context.get(headscaleContext);
-  const headscaleConfig = context.get(headscaleConfigContext);
-  const integration = context.get(integrationContext);
+const configPaths = {
+  domain: { path: "oidc.allowed_domains", key: "allowedDomains" },
+  group: { path: "oidc.allowed_groups", key: "allowedGroups" },
+  user: { path: "oidc.allowed_users", key: "allowedUsers" },
+} as const;
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.configure_iam);
+const labels = { domain: "Domain", group: "Group", user: "User" };
 
-  if (!check) {
-    throw data("You do not have permission to modify IAM settings.", {
-      status: 403,
-    });
-  }
-
-  if (!headscaleConfig.writable()) {
-    throw data("The Headscale configuration file is not editable.", {
-      status: 403,
-    });
-  }
-
-  const formData = await request.formData();
-  const action = formData.get("action_id")?.toString();
-  if (!action) {
-    throw data("No action provided.", {
-      status: 400,
-    });
-  }
-
-  switch (action) {
-    case "add_domain": {
-      const domain = formData.get("domain")?.toString()?.trim();
-      if (!domain) {
-        throw data("No domain provided.", {
-          status: 400,
-        });
-      }
-
-      const domains = [
-        ...new Set([...(headscaleConfig.getOIDCConfig()?.allowedDomains ?? []), domain]),
-      ];
-
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_domains",
-          value: domains,
-        },
-      ]);
-
-      integration?.onConfigChange(headscale);
-      return data("Domain added successfully.");
+export const restrictionAction = createAction({
+  capability: Capabilities.configure_iam,
+  async setup({ request, context }) {
+    const principal = await context.get(authContext).require(request);
+    const headscale = context.get(headscaleContext);
+    const config = context.get(headscaleConfigContext);
+    const integration = context.get(integrationContext);
+    if (!config.writable()) {
+      throw new ActionError("The Headscale configuration is read-only.", 403);
     }
 
-    case "remove_domain": {
-      const domain = formData.get("domain")?.toString()?.trim();
-      if (!domain) {
-        throw data("No domain provided.", {
-          status: 400,
-        });
-      }
-
-      const storedDomains = headscaleConfig.getOIDCConfig()?.allowedDomains ?? [];
-      if (!storedDomains.includes(domain)) {
-        // Domain not found in the list
-        throw data(`Domain "${domain}" not found in allowed domains.`, {
-          status: 400,
-        });
-      }
-
-      // Filter out the domain to remove it from the list
-      const domains = storedDomains.filter((d: string) => d !== domain);
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_domains",
-          value: domains,
-        },
-      ]);
-      integration?.onConfigChange(headscale);
-      return data("Domain removed successfully.");
+    function current(type: RestrictionType) {
+      return config.getOIDCConfig()?.[configPaths[type].key] ?? [];
     }
 
-    case "add_group": {
-      const group = formData.get("group")?.toString()?.trim();
-      if (!group) {
-        throw data("No group provided.", {
-          status: 400,
-        });
+    async function save(type: RestrictionType, values: string[]) {
+      await config.patch([{ path: configPaths[type].path, value: values }]);
+      if (integration && !(await integration.onConfigChange(headscale))) {
+        throw new ActionError(
+          "Saved, but Headscale didn't come back after restarting. Check its logs.",
+          502,
+        );
       }
-
-      const groups = [
-        ...new Set([...(headscaleConfig.getOIDCConfig()?.allowedGroups ?? []), group]),
-      ];
-
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_groups",
-          value: groups,
-        },
-      ]);
-
-      integration?.onConfigChange(headscale);
-      return data("Group added successfully.");
     }
 
-    case "remove_group": {
-      const group = formData.get("group")?.toString()?.trim();
-      if (!group) {
-        throw data("No group provided.", {
-          status: 400,
-        });
-      }
+    return { principal, current, save };
+  },
+  intents: {
+    add: {
+      fields: { type: v.picklist(restrictionTypes), value: v.string() },
+      async handler(input, { current, save }) {
+        const value = parseValues(restrictionValue[input.type], input.value);
+        if (!value.ok) {
+          return invalid({ value: value.errors.form });
+        }
 
-      const storedGroups = headscaleConfig.getOIDCConfig()?.allowedGroups ?? [];
-      if (!storedGroups.includes(group)) {
-        // Group not found in the list
-        throw data(`Group "${group}" not found in allowed groups.`, {
-          status: 400,
-        });
-      }
+        const values = current(input.type);
+        if (values.includes(value.data)) {
+          return invalid({ value: `This ${input.type} is already in the list.` });
+        }
 
-      // Filter out the group to remove it from the list
-      const groups = storedGroups.filter((d: string) => d !== group);
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_groups",
-          value: groups,
-        },
-      ]);
-
-      integration?.onConfigChange(headscale);
-      return data("Group removed successfully.");
-    }
-
-    case "add_user": {
-      const user = formData.get("user")?.toString()?.trim();
-      if (!user) {
-        throw data("No user provided.", {
-          status: 400,
-        });
-      }
-
-      const users = [...new Set([...(headscaleConfig.getOIDCConfig()?.allowedUsers ?? []), user])];
-
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_users",
-          value: users,
-        },
-      ]);
-
-      integration?.onConfigChange(headscale);
-      return data("User added successfully.");
-    }
-
-    case "remove_user": {
-      const user = formData.get("user")?.toString()?.trim();
-      if (!user) {
-        throw data("No user provided.", {
-          status: 400,
-        });
-      }
-
-      const storedUsers = headscaleConfig.getOIDCConfig()?.allowedUsers ?? [];
-      if (!storedUsers.includes(user)) {
-        // User not found in the list
-        throw data(`User "${user}" not found in allowed users.`, {
-          status: 400,
-        });
-      }
-
-      // Filter out the user to remove it from the list
-      const users = storedUsers.filter((d: string) => d !== user);
-      await headscaleConfig.patch([
-        {
-          path: "oidc.allowed_users",
-          value: users,
-        },
-      ]);
-
-      integration?.onConfigChange(headscale);
-      return data("User removed successfully.");
-    }
-
-    default: {
-      throw data("Invalid action provided.", {
-        status: 400,
-      });
-    }
-  }
-}
+        await save(input.type, [...values, value.data]);
+        return ok(`${labels[input.type]} added`);
+      },
+    },
+    remove: {
+      fields: { type: v.picklist(restrictionTypes), value: v.string() },
+      async handler(input, { current, save }) {
+        await save(
+          input.type,
+          current(input.type).filter((value) => value !== input.value),
+        );
+        return ok(`${labels[input.type]} removed`);
+      },
+    },
+  },
+});

@@ -36,7 +36,7 @@ function getIntegration(integration: HeadplaneConfig["integration"]) {
     return;
   }
 
-  if (docker?.enabled && k8s?.enabled && proc?.enabled) {
+  if ([docker, k8s, proc].filter((i) => i?.enabled).length > 1) {
     log.error("config", "Multiple integrations enabled, please pick one only");
     return;
   }

@@ -66,6 +66,15 @@ describe("findOrCreateUser", () => {
     expect(user?.email).toBe("new@test.com");
   });
 
+  test("clears picture when the provider stops sending one", async () => {
+    await auth.findOrCreateUser("sub-1", { name: "Alice", picture: "https://old.test/a.png" });
+    await auth.findOrCreateUser("sub-1", { name: "Alice" });
+
+    const users = await auth.listUsers();
+    const user = users.find((u) => u.sub === "sub-1");
+    expect(user?.picture).toBeNull();
+  });
+
   test("syncs an existing non-owner role when explicitly provided", async () => {
     await auth.findOrCreateUser("sub-owner");
     await auth.findOrCreateUser("sub-1", { name: "User" });

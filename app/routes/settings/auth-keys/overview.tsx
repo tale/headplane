@@ -1,11 +1,11 @@
-import { FileKey2 } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import Code from "~/components/code";
+import Callout from "~/components/callout";
+import FilterDropdown from "~/components/filter-dropdown";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
-import Select from "~/components/select";
-import TableList from "~/components/table-list";
+import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
+import { Table, TableBody, TableHeader } from "~/components/table";
 import {
   appConfigContext,
   authContext,
@@ -18,6 +18,7 @@ import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import type { User } from "~/types/User";
 import log from "~/utils/log";
+import { toastClientAction } from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
@@ -113,8 +114,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export const action = authKeysAction;
+export const clientAction = toastClientAction;
 
-type Status = "all" | "active" | "expired" | "reusable" | "ephemeral";
+const STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "expired", label: "Expired" },
+  { value: "reusable", label: "Reusable" },
+  { value: "ephemeral", label: "Ephemeral" },
+] as const;
+
+type Status = (typeof STATUS_OPTIONS)[number]["value"];
+
+const TAG_ONLY = "__tag_only";
+
 export default function Page({
   loaderData: {
     keys,
@@ -127,19 +139,26 @@ export default function Page({
     currentSubject,
   },
 }: Route.ComponentProps) {
-  const [selectedUser, setSelectedUser] = useState("__headplane_all");
-  const [status, setStatus] = useState<Status>("active");
-  const isDisabled = !access || keys.flatMap(({ preAuthKeys }) => preAuthKeys).length === 0;
+  const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status | null>("active");
+  const allKeys = keys.flatMap(({ preAuthKeys }) => preAuthKeys);
+
+  const userOptions = [
+    ...keys
+      .filter((k): k is { user: User; preAuthKeys: PreAuthKey[] } => k.user !== null)
+      .map(({ user }) => ({ value: user.id, label: getUserDisplayName(user) })),
+    ...(keys.some(({ user }) => user === null) ? [{ value: TAG_ONLY, label: "Tags only" }] : []),
+  ];
 
   const filteredKeys = useMemo(() => {
     const now = new Date();
     return keys
       .filter(({ user }) => {
-        if (selectedUser === "__headplane_all") {
+        if (selectedUser === null) {
           return true;
         }
 
-        if (selectedUser === "__headplane_tag_only") {
+        if (selectedUser === TAG_ONLY) {
           return user === null;
         }
 
@@ -147,157 +166,122 @@ export default function Page({
       })
       .flatMap(({ preAuthKeys }) => preAuthKeys)
       .filter((key) => {
-        if (status === "all") {
-          return true;
-        }
+        const isPastExpiry = new Date(key.expiration) < now;
 
-        if (status === "ephemeral") {
-          return key.ephemeral;
-        }
-
-        if (status === "reusable") {
-          return key.reusable;
-        }
-
-        const expiry = new Date(key.expiration);
-        if (status === "expired") {
-          // Expired keys are either used or expired
-          // BUT only used if they are not reusable
-          if (key.used && !key.reusable) {
+        switch (status) {
+          case null:
             return true;
-          }
-
-          return expiry < now;
+          case "ephemeral":
+            return key.ephemeral;
+          case "reusable":
+            return key.reusable;
+          case "expired":
+            return isPastExpiry;
+          case "active":
+            return !isPastExpiry;
         }
-
-        if (status === "active") {
-          // Active keys are either not expired or reusable
-          if (expiry < now) {
-            return false;
-          }
-
-          if (!key.used) {
-            return true;
-          }
-
-          return key.reusable;
-        }
-
-        return false;
-      });
+      })
+      .sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
   }, [keys, selectedUser, status]);
 
   return (
-    <div className="flex flex-col md:w-2/3">
-      <p className="text-md mb-8">
-        <Link className="font-medium" to="/settings">
-          Settings
-        </Link>
-        <span className="mx-2">/</span> Pre-Auth Keys
-      </p>
-      {!access ? (
-        <Notice title="Pre-auth key permissions restricted" variant="warning">
-          You do not have the necessary permissions to generate pre-auth keys. Please contact your
-          administrator to request access or to generate a pre-auth key for you.
-        </Notice>
-      ) : missing.length > 0 ? (
-        <Notice title="Missing authentication keys" variant="error">
-          An error occurred while fetching the authentication keys for the following users:{" "}
-          {missing.map(({ user }, index) => (
-            <>
-              <Code key={user.id}>{getUserDisplayName(user)}</Code>
-              {index < missing.length - 1 ? ", " : ". "}
-            </>
-          ))}
-          Their keys may not be listed correctly. Please check the server logs for more information.
-        </Notice>
-      ) : undefined}
-      <h1 className="mb-2 text-2xl font-medium">Pre-Auth Keys</h1>
-      <p className="mb-4">
-        Headscale fully supports pre-authentication keys in order to easily add devices to your
-        Tailnet. To learn more about using pre-authentication keys, visit the{" "}
-        <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
-          Tailscale documentation
-        </Link>
-      </p>
-      <AddAuthKey
-        currentHeadscaleUserId={currentHeadscaleUserId}
-        currentSubject={currentSubject}
-        selfServiceOnly={selfServiceOnly}
-        url={url}
-        users={users}
+    <>
+      <PageHeader
+        isSubpage
+        actions={
+          access ? (
+            <AddAuthKey
+              currentHeadscaleUserId={currentHeadscaleUserId}
+              currentSubject={currentSubject}
+              selfServiceOnly={selfServiceOnly}
+              url={url}
+              users={users}
+            />
+          ) : undefined
+        }
+        description={
+          <>
+            Register machines without signing in.{" "}
+            <Link external styled to="https://tailscale.com/kb/1085/auth-keys/">
+              Docs
+            </Link>
+          </>
+        }
+        title="Auth keys"
       />
-      <div className="mt-4 flex items-center gap-4">
-        <Select
-          className="w-full"
-          defaultValue="__headplane_all"
-          disabled={isDisabled}
-          label="User"
-          onValueChange={(value) => setSelectedUser(value ?? "")}
-          placeholder="Select a user"
-          items={[
-            { value: "__headplane_all", label: "All" },
-            ...keys
-              .filter((k): k is { user: User; preAuthKeys: PreAuthKey[] } => k.user !== null)
-              .map(({ user }) => ({ value: user.id, label: getUserDisplayName(user) })),
-            ...(keys.some(({ user }) => user === null)
-              ? [{ value: "__headplane_tag_only", label: "Tag Only" }]
-              : []),
-          ]}
-        />
-        <Select
-          className="w-full"
-          defaultValue="active"
-          disabled={isDisabled}
-          label="Status"
-          onValueChange={(value) => setStatus((value ?? "active") as Status)}
-          placeholder="Select a status"
-          items={[
-            { value: "all", label: "All" },
-            { value: "active", label: "Active" },
-            { value: "expired", label: "Used/Expired" },
-            { value: "reusable", label: "Reusable" },
-            { value: "ephemeral", label: "Ephemeral" },
-          ]}
-        />
-      </div>
-      <TableList className="mt-4">
-        {keys.flatMap(({ preAuthKeys }) => preAuthKeys).length === 0 ? (
-          <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-            <FileKey2 />
-            <p className="font-semibold">No pre-auth keys have been created yet.</p>
-          </TableList.Item>
-        ) : filteredKeys.length === 0 ? (
-          <TableList.Item className="flex flex-col items-center gap-2.5 py-4 opacity-70">
-            <FileKey2 />
-            <p className="font-semibold">No pre-auth keys match the selected filters.</p>
-          </TableList.Item>
-        ) : (
-          filteredKeys.map((key) => {
-            // Tag-only keys have no user
-            if (!key.user) {
-              return (
-                <TableList.Item key={key.id}>
-                  <AuthKeyRow authKey={key} user={null} />
-                </TableList.Item>
-              );
-            }
+      {!access && (
+        <Callout className="mb-6">
+          Your permissions don't allow creating auth keys. Ask an administrator to create one for
+          you.
+        </Callout>
+      )}
+      {missing.length > 0 && (
+        <Callout className="mb-6" title="Some keys couldn't be loaded" variant="error">
+          Headplane couldn't fetch the keys for{" "}
+          {missing.map(({ user }) => getUserDisplayName(user)).join(", ")}. Check the server logs
+          for details.
+        </Callout>
+      )}
+      {allKeys.length === 0 ? (
+        <p className="text-muted text-sm">No auth keys yet.</p>
+      ) : (
+        <>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            {userOptions.length > 1 && (
+              <FilterDropdown
+                label="User"
+                onChange={setSelectedUser}
+                options={userOptions}
+                value={selectedUser}
+              />
+            )}
+            <FilterDropdown
+              label="Status"
+              onChange={(value) => setStatus(value as Status | null)}
+              options={STATUS_OPTIONS}
+              value={status}
+            />
+            <span className="text-muted ml-auto text-xs tabular-nums">
+              {filteredKeys.length} {filteredKeys.length === 1 ? "key" : "keys"}
+            </span>
+          </div>
+          {filteredKeys.length === 0 ? (
+            <p className="text-muted border-line border-t py-2.5 text-sm">
+              No keys match these filters.
+            </p>
+          ) : (
+            <Table>
+              <thead>
+                <tr>
+                  <TableHeader>Key</TableHeader>
+                  <TableHeader>User</TableHeader>
+                  <TableHeader>Expires</TableHeader>
+                  <TableHeader>Created</TableHeader>
+                  <TableHeader className="w-20">
+                    <span className="sr-only">Actions</span>
+                  </TableHeader>
+                </tr>
+              </thead>
+              <TableBody>
+                {filteredKeys.map((key) => {
+                  // Headscale reports some users by email instead of id.
+                  // https://github.com/juanfont/headscale/issues/2520
+                  const user = key.user ? users.find((u) => u.id === key.user?.id) : null;
+                  if (user === undefined) {
+                    return null;
+                  }
 
-            // TODO: Why is Headscale using email as the user ID here?
-            // https://github.com/juanfont/headscale/issues/2520
-            const user = users.find((user) => user.id === key.user?.id);
-            if (!user) {
-              return null;
-            }
-
-            return (
-              <TableList.Item key={key.id}>
-                <AuthKeyRow authKey={key} user={user} />
-              </TableList.Item>
-            );
-          })
-        )}
-      </TableList>
-    </div>
+                  return <AuthKeyRow authKey={key} key={key.id} user={user} />;
+                })}
+              </TableBody>
+            </Table>
+          )}
+        </>
+      )}
+    </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="auth keys" />;
 }

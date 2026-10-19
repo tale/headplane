@@ -144,9 +144,11 @@ interface HeadscaleConfig {
   getOIDCConfig: () => OIDCConfigView | undefined;
   hasOIDCConfig: () => boolean;
   dnsRecords: () => DNSRecord[];
+  hasRecordsFile: () => boolean;
+  recordsWritable: () => boolean;
   patch: (patches: PatchConfig[]) => Promise<void>;
-  addDNS: (record: DNSRecord) => Promise<boolean | void>;
-  removeDNS: (record: DNSRecord) => Promise<boolean | void>;
+  addDNS: (record: DNSRecord) => Promise<void>;
+  removeDNS: (record: DNSRecord) => Promise<void>;
 }
 
 function createHeadscaleConfig(
@@ -172,6 +174,8 @@ function createHeadscaleConfig(
     getOIDCConfig: () => getOIDCConfig(state),
     hasOIDCConfig: () => hasOIDCConfig(state),
     dnsRecords: () => dnsRecords(state),
+    hasRecordsFile: () => state.dns !== undefined,
+    recordsWritable: () => state.dns?.writable() ?? false,
     patch: (patches) => patchHeadscaleConfig(state, patches),
     addDNS: (record) => addDNS(state, record),
     removeDNS: (record) => removeDNS(state, record),
@@ -286,63 +290,29 @@ function splitPatchPath(path: string) {
   return key;
 }
 
+// We've made the executive decision to only allow adding/removing DNS records
+// through `dns.extra_records_path` and not through the main config file.
 async function addDNS(config: HeadscaleConfigState, record: DNSRecord) {
-  if (config.dns) {
-    if (!config.dns.readable() || !config.dns.writable()) {
-      log.debug("config", "DNS config is not writable");
-      return;
-    }
-
-    const records = config.dns.r;
-    if (records.some((i) => i.name === record.name && i.type === record.type)) {
-      log.debug("config", "DNS record already exists");
-      return;
-    }
-
-    return config.dns.patch([...records, record]);
+  if (!config.dns?.writable()) {
+    throw new Error("DNS records are only writable through dns.extra_records_path");
   }
 
-  const existing = dnsRecords(config);
-  if (existing.some((i) => i.name === record.name && i.type === record.type)) {
+  const records = config.dns.r;
+  if (records.some((i) => i.name === record.name && i.type === record.type)) {
     log.debug("config", "DNS record already exists");
     return;
   }
 
-  await patchHeadscaleConfig(config, [
-    {
-      path: "dns.extra_records",
-      value: [...existing, record],
-    },
-  ]);
-
-  return true;
+  await config.dns.patch([...records, record]);
 }
 
 async function removeDNS(config: HeadscaleConfigState, record: DNSRecord) {
-  if (config.dns) {
-    if (!config.dns.readable() || !config.dns.writable()) {
-      log.debug("config", "DNS config is not writable");
-      return;
-    }
-
-    const records = config.dns.r.filter((i) => i.name !== record.name || i.type !== record.type);
-    return config.dns.patch(records);
+  if (!config.dns?.writable()) {
+    throw new Error("DNS records are only writable through dns.extra_records_path");
   }
 
-  const existing = dnsRecords(config);
-  const filtered = existing.filter((i) => i.name !== record.name || i.type !== record.type);
-  if (existing.length === filtered.length) {
-    return;
-  }
-
-  await patchHeadscaleConfig(config, [
-    {
-      path: "dns.extra_records",
-      value: filtered,
-    },
-  ]);
-
-  return true;
+  const records = config.dns.r.filter((i) => i.name !== record.name || i.type !== record.type);
+  await config.dns.patch(records);
 }
 
 export async function loadHeadscaleConfig(path?: string, dnsPath?: string) {

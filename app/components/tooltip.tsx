@@ -15,11 +15,7 @@ export default function Tooltip({ children, content, className }: TooltipProps) 
       <BaseTooltip.Trigger
         delay={0}
         closeDelay={0}
-        className={cn(
-          "inline-flex items-center justify-center rounded-md",
-          "focus:outline-hidden focus:ring-2 focus:ring-indigo-500/40 focus:ring-offset-1",
-          "dark:focus:ring-indigo-400/40 dark:focus:ring-offset-mist-900",
-        )}
+        className={cn("inline-flex items-center justify-center rounded-md", "focus-ring")}
       >
         {children}
       </BaseTooltip.Trigger>
@@ -29,10 +25,8 @@ export default function Tooltip({ children, content, className }: TooltipProps) 
             className={cn(
               "z-50 rounded-lg p-3 text-sm w-48",
               "outline-hidden",
-              "bg-white dark:bg-mist-950",
-              "text-black dark:text-white",
-              "shadow-overlay",
-              "border border-mist-100 dark:border-mist-800",
+              "bg-raised text-fg",
+              "shadow-overlay border-overlay",
               className,
             )}
           >

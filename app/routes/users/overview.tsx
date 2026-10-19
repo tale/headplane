@@ -1,6 +1,10 @@
 import { createHash } from "node:crypto";
 
+import Callout from "~/components/callout";
+import Link from "~/components/link";
 import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
+import { Table, TableBody, TableHeader } from "~/components/table";
 import {
   appConfigContext,
   authContext,
@@ -14,14 +18,14 @@ import { Capabilities, Roles } from "~/server/web/roles";
 import type { Role } from "~/server/web/roles";
 import type { Machine, User } from "~/types";
 import { groupsForUser, parsePolicy } from "~/utils/acl-policy";
-import cn from "~/utils/cn";
 import log from "~/utils/log";
+import { toastClientAction } from "~/utils/toast";
 import { getUserDisplayName } from "~/utils/user";
 
 import type { Route } from "./+types/overview";
 import HeadplaneUserRow from "./components/headplane-user-row";
 import HeadscaleUserRow from "./components/headscale-user-row";
-import ManageBanner from "./components/manage-banner";
+import CreateUser from "./dialogs/create-user";
 import { userAction } from "./user-actions";
 
 export interface HeadplaneUserData {
@@ -52,15 +56,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const headscaleConfig = context.get(headscaleConfigContext);
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
-  const principal = await auth.require(request);
-  const check = await auth.can(principal, Capabilities.read_users);
-  if (!check) {
-    throw new Error(
-      "You do not have permission to view this page. Please contact your administrator.",
-    );
-  }
-
-  const writablePermission = await auth.can(principal, Capabilities.write_users);
+  const principal = await auth.requireCapability(request, Capabilities.read_users);
+  const writablePermission = auth.can(principal, Capabilities.write_users);
 
   // Primary data: Headplane users from the database (always available)
   const hpUsers = await auth.listUsers();
@@ -188,107 +185,107 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
 export const action = userAction;
 
+export const clientAction = toastClientAction;
+
 export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
-      <h1 className="mb-1.5 text-2xl font-medium">Users</h1>
-      <p className="text-md mb-8">Manage the users in your network and their permissions.</p>
-      <ManageBanner isDisabled={!loaderData.writable} oidc={loaderData.oidc} />
+      <PageHeader
+        actions={
+          <CreateUser isDisabled={!loaderData.writable} isOidc={loaderData.oidc !== undefined} />
+        }
+        description={
+          loaderData.oidc ? (
+            <>
+              People who can sign in to Headplane, managed through your{" "}
+              <Link external styled to={loaderData.oidc.issuer}>
+                OIDC provider
+              </Link>
+              .
+            </>
+          ) : (
+            <>
+              People in your tailnet, managed locally.{" "}
+              <Link external styled to="https://headscale.net/stable/ref/oidc">
+                Set up OIDC
+              </Link>
+            </>
+          )
+        }
+        title="Users"
+      />
 
       {loaderData.apiError && (
-        <div
-          className={cn(
-            "mb-6 flex items-start gap-3 rounded-lg border p-4",
-            "border-red-200 bg-red-50 text-red-800",
-            "dark:border-red-800 dark:bg-red-950 dark:text-red-200",
-          )}
-        >
-          <p className="text-sm">{loaderData.apiError}</p>
-        </div>
+        <Callout className="mb-6" variant="error">
+          {loaderData.apiError}
+        </Callout>
       )}
 
       <section>
-        <h2 className="mb-3 text-lg font-medium">Headplane Users</h2>
+        <h2 className="mb-2 font-semibold">Headplane users</h2>
         {loaderData.headplaneUsers.length === 0 ? (
-          <p className="text-sm text-mist-600 dark:text-mist-300">
-            No users have signed into Headplane yet.
-          </p>
+          <p className="text-muted text-sm">No users have signed into Headplane yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-mist-600 dark:text-mist-300">
-                <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-bold uppercase">User</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Role</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Last Login</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Status</th>
-                  <th className="w-12 pb-2">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={cn(
-                  "divide-y divide-mist-100 dark:divide-mist-800 align-top",
-                  "border-t border-mist-100 dark:border-mist-800",
-                )}
-              >
-                {loaderData.headplaneUsers.map((user) => (
-                  <HeadplaneUserRow
-                    canEditGroups={loaderData.canEditGroups}
-                    isSelf={user.id === loaderData.currentUserId}
-                    isOwner={loaderData.isOwner}
-                    key={user.id}
-                    headscaleUsers={loaderData.headscaleUsersForLink}
-                    policyGroups={loaderData.policyGroups}
-                    policyHasComments={loaderData.policyHasComments}
-                    user={user}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <thead>
+              <tr>
+                <TableHeader>User</TableHeader>
+                <TableHeader>Role</TableHeader>
+                <TableHeader>Last login</TableHeader>
+                <TableHeader>Last seen</TableHeader>
+                <TableHeader className="w-12">
+                  <span className="sr-only">Actions</span>
+                </TableHeader>
+              </tr>
+            </thead>
+            <TableBody>
+              {loaderData.headplaneUsers.map((user) => (
+                <HeadplaneUserRow
+                  canEditGroups={loaderData.canEditGroups}
+                  isSelf={user.id === loaderData.currentUserId}
+                  isOwner={loaderData.isOwner}
+                  key={user.id}
+                  headscaleUsers={loaderData.headscaleUsersForLink}
+                  policyGroups={loaderData.policyGroups}
+                  policyHasComments={loaderData.policyHasComments}
+                  user={user}
+                />
+              ))}
+            </TableBody>
+          </Table>
         )}
       </section>
 
       {!loaderData.apiError && loaderData.unlinkedHeadscaleUsers.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-1 text-lg font-medium">Unlinked Headscale Users</h2>
-          <p className="mb-3 text-sm text-mist-600 dark:text-mist-300">
-            These Headscale users are not linked to a Headplane account and cannot be managed
-            through Headplane.
+          <h2 className="font-semibold">Unlinked Headscale users</h2>
+          <p className="text-muted mb-2 text-sm">
+            These Headscale users have no Headplane account, so Headplane can't manage their access.
           </p>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] table-auto rounded-lg">
-              <thead className="text-mist-600 dark:text-mist-300">
-                <tr className="px-0.5 text-left">
-                  <th className="pb-2 text-xs font-bold uppercase">User</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Created At</th>
-                  <th className="pb-2 text-xs font-bold uppercase">Status</th>
-                  <th className="w-12 pb-2">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody
-                className={cn(
-                  "divide-y divide-mist-100 dark:divide-mist-800 align-top",
-                  "border-t border-mist-100 dark:border-mist-800",
-                )}
-              >
-                {loaderData.unlinkedHeadscaleUsers.map((user) => (
-                  <HeadscaleUserRow
-                    canEditGroups={loaderData.canEditGroups}
-                    key={user.id}
-                    policyGroups={loaderData.policyGroups}
-                    policyHasComments={loaderData.policyHasComments}
-                    user={user}
-                    writable={loaderData.writable}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <thead>
+              <tr>
+                <TableHeader>User</TableHeader>
+                <TableHeader>Created</TableHeader>
+                <TableHeader>Last seen</TableHeader>
+                <TableHeader className="w-12">
+                  <span className="sr-only">Actions</span>
+                </TableHeader>
+              </tr>
+            </thead>
+            <TableBody>
+              {loaderData.unlinkedHeadscaleUsers.map((user) => (
+                <HeadscaleUserRow
+                  canEditGroups={loaderData.canEditGroups}
+                  key={user.id}
+                  policyGroups={loaderData.policyGroups}
+                  policyHasComments={loaderData.policyHasComments}
+                  user={user}
+                  writable={loaderData.writable}
+                />
+              ))}
+            </TableBody>
+          </Table>
         </section>
       )}
     </>
@@ -296,5 +293,5 @@ export default function Page({ loaderData }: Route.ComponentProps) {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  return <PageError error={error} page="Users" />;
+  return <PageError error={error} page="users" />;
 }

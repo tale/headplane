@@ -1,22 +1,14 @@
-import {
-  AlertCircle,
-  Construction,
-  Eye,
-  FlaskConical,
-  Pencil,
-  Shield,
-  TagsIcon,
-} from "lucide-react";
+import { Construction, Eye, FileX, FlaskConical, Pencil, Shield, TagsIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
-import { isRouteErrorResponse, useFetcher, useRevalidator } from "react-router";
+import { Suspense, lazy, useMemo, useState } from "react";
+import { isRouteErrorResponse, useFetcher } from "react-router";
 
 import Button from "~/components/button";
-import Card from "~/components/card";
+import Callout from "~/components/callout";
 import Code from "~/components/code";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
-import PageError from "~/components/page-error";
+import PageError, { ErrorState } from "~/components/page-error";
+import PageHeader from "~/components/page-header";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "~/components/tabs";
 import { isApiError } from "~/server/headscale/api/error-client";
 import {
@@ -26,7 +18,8 @@ import {
   serializePolicy,
   type Policy,
 } from "~/utils/acl-policy";
-import toast from "~/utils/toast";
+import type { ActionResult } from "~/utils/form";
+import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { aclAction } from "./acl-action";
@@ -44,13 +37,19 @@ const LazyDiffer = lazy(() =>
 
 export const loader = aclLoader;
 export const action = aclAction;
+export const clientAction = toastClientAction;
 
 export default function Page({
   loaderData: { access, writable, policy, users, tagUsage },
 }: Route.ComponentProps) {
   const [codePolicy, setCodePolicy] = useState(policy);
-  const fetcher = useFetcher<typeof action>();
-  const { revalidate } = useRevalidator();
+  const [savedPolicy, setSavedPolicy] = useState(policy);
+  if (savedPolicy !== policy) {
+    setSavedPolicy(policy);
+    setCodePolicy(policy);
+  }
+
+  const fetcher = useFetcher<ActionResult>();
   const disabled = !access || !writable; // Disable if no permission or not writable
 
   const parsed = useMemo(() => parsePolicy(codePolicy), [codePolicy]);
@@ -63,25 +62,6 @@ export default function Page({
     [parsed, users],
   );
 
-  useEffect(() => {
-    // Update the codePolicy when the loader data changes
-    if (policy !== codePolicy) {
-      setCodePolicy(policy);
-    }
-  }, [policy]);
-
-  useEffect(() => {
-    if (!fetcher.data) {
-      // No data yet, return
-      return;
-    }
-
-    if (fetcher.data.success === true) {
-      toast("Updated policy");
-      revalidate();
-    }
-  }, [fetcher.data]);
-
   // The structured editors round-trip through the policy text, so the file
   // editor, the diff view and Save all work off one source of truth.
   function applyPolicy(next: Policy) {
@@ -92,10 +72,14 @@ export default function Page({
     if (!parsed.ok) {
       return (
         <div className="p-4">
-          <Notice title="Policy cannot be edited visually" variant="error">
+          <Callout
+            className="my-4 max-w-2xl"
+            title="Policy cannot be edited visually"
+            variant="error"
+          >
             The policy could not be parsed ({parsed.error}). Fix it in the <Code>Edit file</Code>{" "}
             tab and the visual editor will come back.
-          </Notice>
+          </Callout>
         </div>
       );
     }
@@ -103,10 +87,10 @@ export default function Page({
     return (
       <div className="flex flex-col gap-4 p-4">
         {parsed.hasComments ? (
-          <Notice title="Comments will be removed" variant="warning">
+          <Callout className="my-4 max-w-2xl" title="Comments will be removed" variant="warning">
             This policy contains comments. Saving a change made in the visual editor rewrites the
             policy and drops them.
-          </Notice>
+          </Callout>
         ) : null}
         {render(parsed.policy)}
       </div>
@@ -115,38 +99,41 @@ export default function Page({
 
   return (
     <div>
+      <PageHeader
+        description={
+          <>
+            The ACL file is used to define the access control rules for your network. You can find
+            more information about the ACL file in the{" "}
+            <Link external styled to="https://tailscale.com/kb/1018/acls">
+              Tailscale ACL guide
+            </Link>{" "}
+            and the{" "}
+            <Link external styled to="https://headscale.net/stable/ref/acls/">
+              Headscale docs
+            </Link>
+            .
+          </>
+        }
+        title="Access Control List (ACL)"
+      />
       {!access ? (
-        <Notice title="ACL Policy restricted" variant="warning">
+        <Callout className="my-4 max-w-2xl" title="ACL Policy restricted" variant="warning">
           You do not have the necessary permissions to edit the Access Control List policy. Please
           contact your administrator to request access or to make changes to the ACL policy.
-        </Notice>
+        </Callout>
       ) : !writable ? (
-        <Notice title="Read-only ACL Policy" variant="error">
+        <Callout className="my-4 max-w-2xl" title="Read-only ACL Policy" variant="error">
           The ACL policy mode is most likely set to <Code>file</Code> in your Headscale
           configuration. This means that the ACL file cannot be edited through the web interface. In
           order to resolve this, you'll need to set <Code>policy.mode</Code> to{" "}
           <Code>database</Code> in your Headscale configuration.
-        </Notice>
+        </Callout>
       ) : undefined}
-      <h1 className="mb-4 text-2xl font-medium">Access Control List (ACL)</h1>
-      <p className="mb-4 max-w-prose">
-        The ACL file is used to define the access control rules for your network. You can find more
-        information about the ACL file in the{" "}
-        <Link external styled to="https://tailscale.com/kb/1018/acls">
-          Tailscale ACL guide
-        </Link>{" "}
-        and the{" "}
-        <Link external styled to="https://headscale.net/stable/ref/acls/">
-          Headscale docs
-        </Link>
-        .
-      </p>
-      {fetcher.data?.error !== undefined ? (
-        <Notice title={fetcher.data.error.split(":")[0] ?? "Error"} variant="error">
-          {fetcher.data.error.split(":").slice(1).join(": ") ??
-            "An unknown error occurred while trying to update the ACL policy."}
-        </Notice>
-      ) : undefined}
+      {fetcher.data?.ok === false && (
+        <Callout className="my-4 max-w-2xl" title="Couldn't save the policy" variant="error">
+          {fetcher.data.errors.form ?? fetcher.data.errors.policy}
+        </Callout>
+      )}
       <Tabs className="mb-4" label="ACL Editor" defaultValue="rules">
         <TabsList>
           <TabsTab value="rules">
@@ -228,11 +215,9 @@ export default function Page({
           disabled || fetcher.state !== "idle" || codePolicy.length === 0 || codePolicy === policy
         }
         onClick={() => {
-          const formData = new FormData();
-          formData.append("policy", codePolicy);
-          fetcher.submit(formData, { method: "PATCH" });
+          fetcher.submit({ intent: "save", policy: codePolicy }, { method: "POST" });
         }}
-        variant="heavy"
+        variant="primary"
       >
         Save
       </Button>
@@ -243,7 +228,7 @@ export default function Page({
           setCodePolicy(policy);
         }}
       >
-        Discard Changes
+        Discard changes
       </Button>
     </div>
   );
@@ -257,36 +242,19 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
     error.data.rawData.includes("no such file or directory")
   ) {
     return (
-      <div className="flex flex-col gap-4">
-        <Card className="max-w-2xl" variant="flat">
-          <div className="flex items-center justify-between gap-4">
-            <Card.Title>ACL Policy Unavailable</Card.Title>
-            <AlertCircle className="mb-2 h-6 w-6 text-red-500" />
-          </div>
-          <Card.Text>
-            The ACL policy is currently unavailable because the policy file does not exist on the
-            server. This usually indicates that Headscale is running in <Code>file</Code> mode for
-            ACLs, and the specified policy file is missing.
-          </Card.Text>
-        </Card>
-        <Card className="max-w-2xl" variant="flat">
-          <Card.Text>
-            In order to resolve this issue, there are two possible actions you can take:
-          </Card.Text>
-          <ul className="mt-2 ml-4 list-outside list-disc space-y-1 text-sm">
-            <li>
-              Create the ACL policy file at the specified path in your Headscale configuration.
-            </li>
-            <li>
-              Alternatively, you can switch Headscale to use <Code>database</Code> mode for ACLs by
-              updating your Headscale configuration. This will allow Headplane to manage the ACL
-              policy directly through the web interface.
-            </li>
-          </ul>
-        </Card>
-      </div>
+      <ErrorState
+        description={
+          <>
+            Headscale is set to read its policy from a file, and that file doesn't exist. Create it
+            at the path in Headscale's config, or set <Code>policy.mode</Code> to{" "}
+            <Code>database</Code> so Headplane can manage the policy here.
+          </>
+        }
+        icon={<FileX />}
+        title="The policy file is missing"
+      />
     );
   }
 
-  return <PageError error={error} page="Access Control" />;
+  return <PageError error={error} page="the access control policy" />;
 }

@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
+import { cn } from "cn/vite";
 import { defineConfig } from "vite";
 import { parse } from "yaml";
 
@@ -53,6 +54,11 @@ export default defineConfig(({ command }) => {
       }),
       reactRouter(),
       tailwindcss(),
+      cn({
+        content: ["app/**/*.{ts,tsx}"],
+        css: "app/tailwind.css",
+        out: "app/utils/cn-tables.ts",
+      }),
     ],
     server: {
       host: server.host,

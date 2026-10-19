@@ -1,5 +1,6 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { createCn } from "cn/engine";
 
-const cn = (...inputs: ClassValue[]) => twMerge(clsx(inputs));
+import tables from "./cn-tables";
+
+const cn = createCn(tables);
 export default cn;

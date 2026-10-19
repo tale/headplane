@@ -64,52 +64,27 @@ export async function findHeadscaleServe(procPath = "/proc"): Promise<number | u
 }
 
 /**
- * Options for signaling the headscale process.
+ * Triggers a full restart of the headscale process and waits for it to
+ * come back again healthy. Returns true if successful, false otherwise.
  */
-export interface SignalHeadscaleOptions {
-  pid: number;
-  signal?: NodeJS.Signals;
-  maxAttempts?: number;
-  retryDelayMs?: number;
-}
-
-/**
- * Sends a signal to the headscale process and waits for it to become healthy.
- * @param headscale The Headscale instance to health-check
- * @param options Options for signaling and waiting
- * @returns True if headscale became healthy, false otherwise
- */
-export async function signalAndWaitHealthy(
-  headscale: Headscale,
-  options: SignalHeadscaleOptions,
-): Promise<boolean> {
-  const { pid, signal = "SIGHUP", maxAttempts = 10, retryDelayMs = 1000 } = options;
-
+export async function restartAndWaitHealthy(headscale: Headscale, pid: number): Promise<boolean> {
   try {
-    kill(pid, signal);
-    log.info("config", "Sent %s to Headscale (PID %d)", signal, pid);
+    kill(pid, "SIGTERM");
+    log.info("config", "Sent SIGTERM to Headscale (PID %d)", pid);
   } catch (error) {
-    log.error("config", "Failed to send %s to PID %d: %s", signal, pid, error);
+    log.error("config", "Failed to send SIGTERM to PID %d: %s", pid, error);
     return false;
   }
 
-  await setTimeout(retryDelayMs);
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const healthy = await headscale.health();
-      if (healthy) {
-        log.info("config", "Headscale is healthy after restart");
-        return true;
-      }
-    } catch {
-      // Still restarting
-    }
-
-    if (attempt < maxAttempts) {
-      await setTimeout(retryDelayMs);
+  for (let attempt = 0; attempt < 60; attempt++) {
+    await setTimeout(1000);
+    const current = await findHeadscaleServe();
+    if (current && current !== pid && (await headscale.health().catch(() => false))) {
+      log.info("config", "Headscale is healthy after restart (PID %d)", current);
+      return true;
     }
   }
 
-  log.error("config", "Headscale did not become healthy after %d attempts", maxAttempts);
+  log.error("config", "Headscale did not come back after SIGTERM, is it supervised?");
   return false;
 }

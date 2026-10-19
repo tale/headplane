@@ -73,7 +73,7 @@ function cut(version: string) {
   git("tag", "-m", tag, tag);
 
   console.log(`${tag} is committed and tagged. To ship it:\n`);
-  console.log("  git push origin main --follow-tags");
+  console.log(`  git push origin ${git("branch", "--show-current")} --follow-tags`);
 }
 
 function notes(tag?: string) {

@@ -1,26 +1,26 @@
-import { CheckCircle, CircleSlash, Info, UserCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { data } from "react-router";
 
 import Attribute from "~/components/attribute";
 import Button from "~/components/button";
-import Card from "~/components/card";
-import Chip from "~/components/chip";
 import Link from "~/components/link";
+import PageHeader from "~/components/page-header";
+import Section, { SettingList } from "~/components/section";
 import StatusCircle from "~/components/status-circle";
-import Tooltip from "~/components/tooltip";
 import {
   agentsContext,
+  authContext,
   headscaleConfigContext,
   headscaleContext,
   headscaleLiveStoreContext,
   requestApiContext,
 } from "~/server/context";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
-import cn from "~/utils/cn";
+import { Capabilities } from "~/server/web/roles";
 import { getOSInfo, getTSVersion } from "~/utils/host-info";
 import { extractTagOwnerTags, isNoExpiry, mapNodes, sortAssignableTags } from "~/utils/node-info";
-import { getUserDisplayName } from "~/utils/user";
+import { toastClientAction } from "~/utils/toast";
+import { getUserDisplayName, isTaggedDevicesUser } from "~/utils/user";
 
 import type { Route } from "./+types/machine";
 import { mapTagsToComponents, uiTagsForNode } from "./components/machine-row";
@@ -30,6 +30,7 @@ import { machineAction } from "./machine-actions";
 
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const agentsFeature = context.get(agentsContext);
+  const auth = context.get(authContext);
   const getRequestApi = context.get(requestApiContext);
   const headscale = context.get(headscaleContext);
   const headscaleConfig = context.get(headscaleConfigContext);
@@ -43,6 +44,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
     throw data(null, { status: 204 });
   }
 
+  await auth.requireCapability(request, Capabilities.read_machines);
   const magic = headscaleConfig.getMagicDNSBaseDomain();
 
   const { api } = await getRequestApi(request);
@@ -93,6 +95,8 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
 export const action = machineAction;
 
+export const clientAction = toastClientAction;
+
 export default function Page({
   loaderData: {
     node,
@@ -114,266 +118,188 @@ export default function Page({
     return tags;
   }, [node, agent]);
 
+  const { subnetApprovedRoutes, subnetWaitingRoutes, exitRoutes, exitApproved } =
+    node.customRouting;
+  const exitStatus =
+    exitRoutes.length === 0 ? "Not advertised" : exitApproved ? "Approved" : "Waiting for approval";
+
   return (
-    <div>
-      <p className="text-md mb-8">
-        <Link className="font-medium" to="/machines">
-          All Machines
+    <div className="max-w-5xl">
+      <nav aria-label="Breadcrumb" className="text-muted mb-3 text-sm">
+        <Link className="hover:text-fg" to="/machines">
+          Machines
         </Link>
-        <span className="mx-2">/</span>
-        {node.givenName}
-      </p>
-      <div
-        className={cn(
-          "flex justify-between items-center pb-2",
-          "border-b border-mist-100 dark:border-mist-800",
-        )}
-      >
-        <span className="flex items-baseline gap-x-4 text-sm">
-          <h1 className="text-2xl font-medium">{node.givenName}</h1>
-          <StatusCircle className="h-4 w-4" isOnline={node.online} />
-        </span>
-        <MenuOptions
-          existingTags={existingTags}
-          policyTags={policyTags}
-          isFullButton
-          magic={magic}
-          node={node}
-          users={users}
-          supportsNodeOwnerChange={supportsNodeOwnerChange}
-          supportsDisablingKeyExpiry={supportsDisablingKeyExpiry}
-        />
-      </div>
-      <div className="mb-4 flex gap-1">
-        <div className="border-r border-mist-100 p-2 pr-4 dark:border-mist-800">
-          <span className="flex items-center gap-x-1 text-sm text-mist-600 dark:text-mist-300">
-            Managed by
-            <Tooltip content="By default, a machine’s permissions match its creator’s.">
-              <Info className="p-1" />
-            </Tooltip>
-          </span>
-          <div className="mt-1 flex items-center gap-x-2.5">
-            <UserCircle />
-            {node.user ? getUserDisplayName(node.user) : "Tag-owned"}
-          </div>
-        </div>
-        <div className="p-2 pl-4">
-          <p className="text-sm text-mist-600 dark:text-mist-300">Status</p>
-          <div className="mt-1 mb-8 flex gap-1">
-            {mapTagsToComponents(node, uiTags)}
-            {tags.map((tag) => (
-              <Chip key={tag} text={tag} />
-            ))}
-          </div>
-        </div>
-      </div>
-      <Routes isOpen={showRouting} node={node} setIsOpen={setShowRouting} />
-      <h2 className="mt-8 text-xl font-medium">Subnets & Routing</h2>
-      <div className="mb-4 flex items-center justify-between">
-        <p>
-          Subnets let you expose physical network routes onto Tailscale.{" "}
-          <Link external styled to="https://tailscale.com/kb/1019/subnets">
-            Learn More
-          </Link>
-        </p>
-        <Button onClick={() => setShowRouting(true)}>Review</Button>
-      </div>
-      <Card
-        className={cn(
-          "w-full max-w-full grid sm:grid-cols-2",
-          "md:grid-cols-4 gap-8 mr-2 text-sm mb-8",
-        )}
-        variant="flat"
-      >
-        <div>
-          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
-            Approved
-            <Tooltip content="Traffic to these routes are being routed through this machine.">
-              <Info className="h-3.5 w-3.5" />
-            </Tooltip>
-          </span>
-          <div className="mt-1">
-            {node.customRouting.subnetApprovedRoutes.length === 0 ? (
-              <span className="opacity-50">—</span>
-            ) : (
-              <ul className="leading-normal">
-                {node.customRouting.subnetApprovedRoutes.map((route) => (
-                  <li key={route}>{route}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
-            Edit
-          </Button>
-        </div>
-        <div>
-          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
-            Awaiting Approval
-            <Tooltip content="This machine is advertising these routes, but they must be approved before traffic will be routed to them.">
-              <Info className="h-3.5 w-3.5" />
-            </Tooltip>
-          </span>
-          <div className="mt-1">
-            {node.customRouting.subnetWaitingRoutes.length === 0 ? (
-              <span className="opacity-50">—</span>
-            ) : (
-              <ul className="leading-normal">
-                {node.customRouting.subnetWaitingRoutes.map((route) => (
-                  <li key={route}>{route}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
-            Edit
-          </Button>
-        </div>
-        <div>
-          <span className="flex items-center gap-x-1 text-mist-600 dark:text-mist-300">
-            Exit Node
-            <Tooltip content="Whether this machine can act as an exit node for your tailnet.">
-              <Info className="h-3.5 w-3.5" />
-            </Tooltip>
-          </span>
-          <div className="mt-1">
-            {node.customRouting.exitRoutes.length === 0 ? (
-              <span className="opacity-50">—</span>
-            ) : node.customRouting.exitApproved ? (
-              <span className="flex items-center gap-x-1">
-                <CheckCircle className="h-3.5 w-3.5 text-green-700" />
-                Allowed
-              </span>
-            ) : (
-              <span className="flex items-center gap-x-1">
-                <CircleSlash className="h-3.5 w-3.5 text-red-700" />
-                Awaiting Approval
-              </span>
-            )}
-          </div>
-          <Button
-            className="mt-1.5 px-1.5 py-0.5"
-            onClick={() => setShowRouting(true)}
-            variant="ghost"
-          >
-            Edit
-          </Button>
-        </div>
-      </Card>
-      <h2 className="text-xl font-medium">Machine Details</h2>
-      <p className="mb-4">
-        Information about this machine’s network. Used to debug connection issues.
-      </p>
-      <Card
-        className="grid w-full max-w-full grid-cols-1 gap-y-2 sm:gap-x-12 lg:grid-cols-2"
-        variant="flat"
-      >
-        <div className="flex flex-col gap-1">
-          <Attribute
-            name="Creator"
-            value={node.user ? getUserDisplayName(node.user) : "Tag-owned"}
+        <span className="mx-1.5">/</span>
+        <span className="text-fg">{node.givenName}</span>
+      </nav>
+      <PageHeader
+        actions={
+          <MenuOptions
+            existingTags={existingTags}
+            policyTags={policyTags}
+            isFullButton
+            magic={magic}
+            node={node}
+            users={users}
+            supportsNodeOwnerChange={supportsNodeOwnerChange}
+            supportsDisablingKeyExpiry={supportsDisablingKeyExpiry}
           />
+        }
+        description={
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+            {node.user && !(isTaggedDevicesUser(node.user) && tags.length) ? (
+              <span>{getUserDisplayName(node.user)}</span>
+            ) : undefined}
+            {tags.map((tag) => (
+              <span className="font-mono" key={tag}>
+                {tag}
+              </span>
+            ))}
+            {mapTagsToComponents(node, uiTags)}
+          </span>
+        }
+        title={
+          <span className="flex items-center gap-2">
+            <StatusCircle isExpired={node.expired} isOnline={node.online && !node.expired} />
+            {node.givenName}
+          </span>
+        }
+      />
+      <Routes isOpen={showRouting} node={node} setIsOpen={setShowRouting} />
+      <Section
+        action={<Button onClick={() => setShowRouting(true)}>Edit routes</Button>}
+        description={
+          <>
+            Expose subnets or route all traffic through this machine.{" "}
+            <Link external styled to="https://tailscale.com/kb/1019/subnets">
+              Docs
+            </Link>
+          </>
+        }
+        title="Routing"
+      >
+        <SettingList>
+          <Attribute
+            isMono={subnetApprovedRoutes.length > 0}
+            name="Subnet routes"
+            tooltip="Traffic to these routes is sent through this machine."
+            value={subnetApprovedRoutes.length > 0 ? subnetApprovedRoutes.join("\n") : "None"}
+          />
+          {subnetWaitingRoutes.length > 0 ? (
+            <Attribute
+              isMono
+              name="Waiting for approval"
+              tooltip="This machine advertises these routes, but they must be approved before traffic is sent to them."
+              value={subnetWaitingRoutes.join("\n")}
+            />
+          ) : undefined}
+          <Attribute
+            name="Exit node"
+            tooltip="Whether this machine can route all internet traffic for your tailnet."
+            value={exitStatus}
+          />
+        </SettingList>
+      </Section>
+      <Section description="Who owns this machine and what it runs." title="Machine">
+        <SettingList>
+          <Attribute name="Owner" value={node.user ? getUserDisplayName(node.user) : "Tag-owned"} />
           <Attribute name="Machine name" value={node.givenName} />
           <Attribute
             name="OS hostname"
-            tooltip="OS hostname is published by the machine’s operating system and is used as the default name for the machine."
+            tooltip="Published by the machine's operating system and used as the default machine name."
             value={node.name}
           />
           {stats ? (
             <>
               <Attribute name="OS" value={getOSInfo(stats)} />
-              <Attribute name="Tailscale version" value={getTSVersion(stats)} />
+              <Attribute isMono name="Tailscale version" value={getTSVersion(stats)} />
             </>
           ) : undefined}
-          <Attribute
-            name="ID"
-            tooltip="ID for this machine. Used in the Headscale API."
-            value={node.id}
-          />
-          <Attribute
-            isCopyable
-            name="Node key"
-            tooltip="Public key which uniquely identifies this machine."
-            value={node.nodeKey}
-          />
           <Attribute name="Created" value={new Date(node.createdAt).toLocaleString()} />
           <Attribute
-            name="Last Seen"
+            name="Last seen"
             value={node.online ? "Connected" : new Date(node.lastSeen).toLocaleString()}
           />
           <Attribute
             name="Key expiry"
             value={!isNoExpiry(node.expiry) ? new Date(node.expiry!).toLocaleString() : "Never"}
           />
-          {magic ? (
-            <Attribute isCopyable name="Domain" value={`${node.givenName}.${magic}`} />
-          ) : undefined}
-        </div>
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold text-mist-600 uppercase dark:text-mist-300">
-            Addresses
-          </p>
+          <Attribute
+            isMono
+            name="ID"
+            tooltip="Used to refer to this machine in the Headscale API."
+            value={node.id}
+          />
           <Attribute
             isCopyable
+            isMono
+            name="Node key"
+            tooltip="Public key which uniquely identifies this machine."
+            value={node.nodeKey}
+          />
+        </SettingList>
+      </Section>
+      <Section description="How other machines in your tailnet reach this one." title="Addresses">
+        <SettingList>
+          <Attribute
+            isCopyable
+            isMono
             name="Tailscale IPv4"
-            tooltip="This machine’s IPv4 address within your tailnet (your private Tailscale network)."
+            tooltip="This machine's IPv4 address within your tailnet."
             value={getIpv4Address(node.ipAddresses)}
           />
           <Attribute
             isCopyable
+            isMono
             name="Tailscale IPv6"
-            tooltip="This machine’s IPv6 address within your tailnet (your private Tailscale network). Connections within your tailnet support IPv6 even if your ISP does not."
+            tooltip="This machine's IPv6 address within your tailnet. IPv6 works inside the tailnet even if your ISP does not support it."
             value={getIpv6Address(node.ipAddresses)}
           />
           <Attribute
             isCopyable
+            isMono
             name="Short domain"
-            tooltip="Users of your tailnet can use this DNS short name to access this machine."
+            tooltip="Machines in your tailnet can reach this one by this name."
             value={node.givenName}
           />
           {magic ? (
             <Attribute
               isCopyable
+              isMono
               name="Full domain"
-              tooltip="Users of your tailnet can use this DNS name to access this machine."
+              tooltip="The fully qualified MagicDNS name for this machine."
               value={`${node.givenName}.${magic}`}
             />
           ) : undefined}
-          {stats?.Endpoints ? (
-            <Attribute name="Endpoints" value={stats?.Endpoints?.join("\n") ?? "—"} />
-          ) : undefined}
-          {stats ? (
-            <>
-              <p className="mt-4 text-sm font-semibold text-mist-600 uppercase dark:text-mist-300">
-                Client Connectivity
-              </p>
-              <Attribute
-                name="Varies"
-                tooltip="Whether the machine is behind a difficult NAT that varies the machine’s IP address depending on the destination."
-                value={stats.NetInfo?.MappingVariesByDestIP ? "Yes" : "No"}
-              />
-              <Attribute
-                name="Hairpinning"
-                tooltip="Whether the machine needs to traverse NATs with hairpinning."
-                value={stats.NetInfo?.HairPinning ? "Yes" : "No"}
-              />
-              <Attribute name="IPv6" value={stats.NetInfo?.WorkingIPv6 ? "Yes" : "No"} />
-              <Attribute name="UDP" value={stats.NetInfo?.WorkingUDP ? "Yes" : "No"} />
-              <Attribute name="UPnP" value={stats.NetInfo?.UPnP ? "Yes" : "No"} />
-              <Attribute name="PCP" value={stats.NetInfo?.PCP ? "Yes" : "No"} />
-              <Attribute name="NAT-PMP" value={stats.NetInfo?.PMP ? "Yes" : "No"} />
-            </>
-          ) : undefined}
-        </div>
-      </Card>
+        </SettingList>
+      </Section>
+      {stats ? (
+        <Section
+          description="What the machine reported about its network. Useful when debugging connections."
+          title="Connectivity"
+        >
+          <SettingList>
+            {stats.Endpoints ? (
+              <Attribute isMono name="Endpoints" value={stats.Endpoints.join("\n")} />
+            ) : undefined}
+            <Attribute
+              name="Varies"
+              tooltip="Whether the machine is behind a difficult NAT that changes its IP address depending on the destination."
+              value={stats.NetInfo?.MappingVariesByDestIP ? "Yes" : "No"}
+            />
+            <Attribute
+              name="Hairpinning"
+              tooltip="Whether the machine needs to traverse NATs with hairpinning."
+              value={stats.NetInfo?.HairPinning ? "Yes" : "No"}
+            />
+            <Attribute name="IPv6" value={stats.NetInfo?.WorkingIPv6 ? "Yes" : "No"} />
+            <Attribute name="UDP" value={stats.NetInfo?.WorkingUDP ? "Yes" : "No"} />
+            <Attribute name="UPnP" value={stats.NetInfo?.UPnP ? "Yes" : "No"} />
+            <Attribute name="PCP" value={stats.NetInfo?.PCP ? "Yes" : "No"} />
+            <Attribute name="NAT-PMP" value={stats.NetInfo?.PMP ? "Yes" : "No"} />
+          </SettingList>
+        </Section>
+      ) : undefined}
     </div>
   );
 }

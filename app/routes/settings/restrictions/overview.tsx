@@ -1,28 +1,22 @@
 import { data } from "react-router";
 
+import Callout from "~/components/callout";
 import Link from "~/components/link";
-import Notice from "~/components/notice";
-import { authContext, headscaleConfigContext } from "~/server/context";
+import PageError from "~/components/page-error";
+import PageHeader from "~/components/page-header";
+import { authContext, headscaleConfigContext, integrationContext } from "~/server/context";
 import { Capabilities } from "~/server/web/roles";
+import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
 import { restrictionAction } from "./actions";
-import AddDomain from "./dialogs/add-domain";
-import AddGroup from "./dialogs/add-group";
-import AddUser from "./dialogs/add-user";
-import RestrictionTable from "./table";
+import RestrictionSection from "./restriction-section";
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const headscaleConfig = context.get(headscaleConfigContext);
 
-  const principal = await auth.require(request);
-  const check = auth.can(principal, Capabilities.read_users);
-  if (!check) {
-    throw data("You do not have permission to view IAM settings.", {
-      status: 403,
-    });
-  }
+  const principal = await auth.requireCapability(request, Capabilities.read_users);
 
   const oidc = headscaleConfig.getOIDCConfig();
   if (!oidc) {
@@ -39,55 +33,56 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       users: [...new Set(oidc.allowedUsers)],
     },
     writable: headscaleConfig.writable(),
+    isAutoApplied: context.get(integrationContext) !== undefined,
   };
 }
 
 export const action = restrictionAction;
+export const clientAction = toastClientAction;
 
-export default function Page({ loaderData: { access, writable, settings } }: Route.ComponentProps) {
-  const isDisabled = writable ? !access : true;
+export default function Page({
+  loaderData: { access, writable, isAutoApplied, settings },
+}: Route.ComponentProps) {
+  const isDisabled = !writable || !access;
 
   return (
-    <div className="flex max-w-(--breakpoint-lg) flex-col gap-4">
-      <div className="flex w-full flex-col sm:w-2/3">
-        <p className="text-md mb-4">
-          <Link className="font-medium" to="/settings">
-            Settings
-          </Link>
-          <span className="mx-2">/</span> Authentication Restrictions
-        </p>
-        {!access ? (
-          <Notice title="Authentication permissions restricted" variant="warning">
-            You do not have the necessary permissions to edit the Authentication Restrictions
-            settings. Please contact your administrator to request access or to make changes to
-            these settings.
-          </Notice>
-        ) : !writable ? (
-          <Notice title="Configuration Locked" variant="error">
-            The Headscale configuration file is not editable through the web interface. Please
-            ensure that you have correctly given Headplane write access to the file.
-          </Notice>
-        ) : undefined}
-        <h1 className="mt-4 mb-2 text-2xl font-medium">Authentication Restrictions</h1>
-        <p>
-          Headscale supports restricting OIDC authentication to only allow certain email domains,
-          groups, or users to authenticate. This can be used to limit access to your Tailnet to only
-          certain users or groups and Headplane will also respect these settings when
-          authenticating.{" "}
-          <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
-            Learn More
-          </Link>
-        </p>
-      </div>
-      <RestrictionTable isDisabled={isDisabled} type="domain" values={settings.domains}>
-        <AddDomain domains={settings.domains} isDisabled={isDisabled} />
-      </RestrictionTable>
-      <RestrictionTable isDisabled={isDisabled} type="group" values={settings.groups}>
-        <AddGroup groups={settings.groups} isDisabled={isDisabled} />
-      </RestrictionTable>
-      <RestrictionTable isDisabled={isDisabled} type="user" values={settings.users}>
-        <AddUser isDisabled={isDisabled} users={settings.users} />
-      </RestrictionTable>
-    </div>
+    <>
+      <PageHeader
+        isSubpage
+        description={
+          <>
+            Limit who can sign in through OIDC. Headscale and Headplane both enforce these.{" "}
+            <Link external styled to="https://headscale.net/stable/ref/oidc/#basic-configuration">
+              Docs
+            </Link>
+          </>
+        }
+        title="Sign-in restrictions"
+      />
+      {isDisabled && (
+        <Callout className="mb-6">
+          {access
+            ? "The Headscale configuration is read-only, so restrictions can't be changed here."
+            : "Your permissions don't allow changes to sign-in restrictions."}
+        </Callout>
+      )}
+      {!isDisabled && !isAutoApplied && (
+        <Callout className="mb-6" variant="warning">
+          Changes are saved to the Headscale configuration but only take effect once Headscale
+          restarts. Set up an{" "}
+          <Link external styled to="https://headplane.net/configuration/integrations">
+            integration
+          </Link>{" "}
+          to restart it automatically.
+        </Callout>
+      )}
+      <RestrictionSection isDisabled={isDisabled} type="domain" values={settings.domains} />
+      <RestrictionSection isDisabled={isDisabled} type="group" values={settings.groups} />
+      <RestrictionSection isDisabled={isDisabled} type="user" values={settings.users} />
+    </>
   );
+}
+
+export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
+  return <PageError error={error} page="sign-in restrictions" />;
 }
