@@ -9,6 +9,9 @@ on:
     paths:
       - "docs/**"
       - "CHANGELOG.md"
+      # Docs read version numbers from package.json and share the app's colors.
+      - "package.json"
+      - "app/tokens.css"
 
 concurrency:
   group: docs-build-${{ github.ref }}

@@ -38,7 +38,12 @@ jobs:
 
           LATEST=$(head -n 1 <<< "$RELEASES")
           LATEST_VERSION=${LATEST#v}
-          gh release download "$LATEST" -R "$REPO" -p docs-root.tar.gz -O - | tar -xz -C site
+          if ! gh release download "$LATEST" -R "$REPO" -p docs-root.tar.gz -O "$RUNNER_TEMP/root.tar.gz"; then
+            echo "::error::$LATEST has no docs-root.tar.gz. Run docs-build.yaml for its release line first."
+            exit 1
+          fi
+
+          tar -xzf "$RUNNER_TEMP/root.tar.gz" -C site
 
           # The newest line's path points back to the root until it's archived.
           echo "/${LATEST_VERSION%.*}/* /:splat 302" >> site/_redirects
