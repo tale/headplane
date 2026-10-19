@@ -1,14 +1,20 @@
 import { Dialog } from "@base-ui/react/dialog";
 import { useSearchContext } from "fumadocs-ui/contexts/search";
-import { Moon, Search, Sun } from "lucide-react";
+import { Monitor, Moon, Search, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type ReactNode, useSyncExternalStore } from "react";
 import { Link, useLocation } from "react-router";
 
 import LogoMark from "@/components/logo-mark";
 
 export const iconButtonClass =
   "text-muted hover:bg-hover hover:text-fg inline-flex size-8 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&_svg]:size-4";
+
+const themeList = [
+  { value: "light", label: "Light", Icon: Sun },
+  { value: "dark", label: "Dark", Icon: Moon },
+  { value: "system", label: "System", Icon: Monitor },
+];
 
 const links = [
   { to: "/introduction", label: "Docs" },
@@ -17,7 +23,6 @@ const links = [
 
 export default function Header({ menu }: { menu?: ReactNode }) {
   const { pathname } = useLocation();
-  const { resolvedTheme, setTheme } = useTheme();
   const isChangelog = pathname.startsWith("/changelog");
 
   return (
@@ -56,19 +61,53 @@ export default function Header({ menu }: { menu?: ReactNode }) {
           >
             <GitHubIcon />
           </a>
-          <button
-            aria-label="Toggle theme"
-            className={iconButtonClass}
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            type="button"
-          >
-            <Sun className="dark:hidden" />
-            <Moon className="hidden dark:block" />
-          </button>
+          <ThemePicker />
           {menu}
         </div>
       </div>
     </header>
+  );
+}
+
+function ThemePicker() {
+  const { theme, setTheme } = useTheme();
+
+  // The stored choice only exists in the browser, so prerendered HTML shows none selected.
+  const isMounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
+  return (
+    <div
+      aria-label="Theme"
+      className="border-line flex items-center rounded-full border p-0.5"
+      role="radiogroup"
+    >
+      {themeList.map(({ value, label, Icon }) => {
+        const isActive = isMounted && theme === value;
+
+        return (
+          <button
+            aria-checked={isActive}
+            aria-label={label}
+            className={
+              isActive
+                ? "bg-hover text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-full focus-visible:outline-2 [&_svg]:size-3.5"
+                : "text-muted hover:text-fg focus-visible:outline-accent inline-flex size-6 items-center justify-center rounded-full focus-visible:outline-2 [&_svg]:size-3.5"
+            }
+            key={value}
+            onClick={() => setTheme(value)}
+            role="radio"
+            title={label}
+            type="button"
+          >
+            <Icon />
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
