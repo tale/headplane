@@ -33,7 +33,8 @@ You'll need the following before proceeding:
 - An Identity Provider (IdP) that supports OAuth2 and OpenID Connect (OIDC).
 - `server.base_url` set to the public URL of your Headplane instance in your
   configuration file (the domain visible in the browser).
-- A Headscale API key with a relatively long expiration time (eg. 1 year).
+- `headscale.api_key` set to a long-lived key, as described in
+  [API keys](/configuration/api-keys#the-servers-key).
 
 ### Configuring the Client
 
@@ -285,8 +286,8 @@ own session and returns the user to the login page.
   setting. If Headplane is behind a reverse proxy with HTTPS, set it to `true`.
   If running without HTTPS (eg. local development), set it to `false`.
 
-- **Invalid API Key**: The `headscale.api_key` may have expired. Generate
-  a new one with `headscale apikeys create --expiration 999d`.
+- **Invalid API Key**: `headscale.api_key` may have expired. See
+  [rotating the server's key](/configuration/api-keys#rotating-the-servers-key).
 
 - **Missing the `sub` claim**: If your IdP omits `sub`, configure
   `oidc.subject_claims` with a stable fallback such as `open_id`. Only use

@@ -84,12 +84,14 @@ WantedBy=multi-user.target
 
 ## Signing in
 
-Headplane signs you in with a Headscale API key until you set up
-[SSO](/features/sso) or [proxy authentication](/features/proxy-auth):
+Until [SSO](/features/sso) or [proxy authentication](/features/proxy-auth) is
+set up, sign in with a Headscale API key:
 
 ```bash
 headscale apikeys create --expiration 90d
 ```
+
+See [API keys](/configuration/api-keys) for how keys and sessions work.
 
 ## Custom path prefix
 

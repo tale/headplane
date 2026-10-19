@@ -19,7 +19,8 @@ reverse proxy. This is useful when Headplane is already protected by middleware
 such as nginx basic auth, Authelia, Authentik, or another SSO-aware proxy and
 you do not want users to log in to Headplane separately.
 
-Proxy authentication is intentionally opt-in and requires `headscale.api_key`.
+Proxy authentication is intentionally opt-in and requires
+[`headscale.api_key`](/configuration/api-keys#the-servers-key).
 When enabled, Headplane trusts identity headers only on requests whose client IP
 matches `server.proxy_auth.allowed_cidrs`; all Headscale API calls then use the
 configured `headscale.api_key`.

@@ -43,13 +43,15 @@ Run `docker compose up -d`, then open `http://localhost:3000/admin`.
 
 ## Signing in
 
-Headplane signs you in with a Headscale API key until you set up
-[SSO](/features/sso) or [proxy authentication](/features/proxy-auth). Create
-one inside the Headscale container:
+Until [SSO](/features/sso) or [proxy authentication](/features/proxy-auth) is
+set up, sign in with a Headscale API key, created inside the Headscale
+container:
 
 ```bash
 docker exec headscale headscale apikeys create --expiration 90d
 ```
+
+See [API keys](/configuration/api-keys) for how keys and sessions work.
 
 ## Health checks
 
