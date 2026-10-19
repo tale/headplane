@@ -2,6 +2,7 @@ import { Children, isValidElement, type ReactNode } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
 import { changelog } from "@/lib/source";
+import { upgradeHeading } from "@/lib/upgrading";
 
 // Renders only the `## Upgrading` section of each release in CHANGELOG.md,
 // reusing the changelog's compiled <Release> and <ReleaseSection> elements.
@@ -28,12 +29,10 @@ export default function UpgradeNotes() {
             return null;
           }
 
-          const isNext = version === "Next";
+          const { id, title } = upgradeHeading(version);
           return (
             <>
-              <components.h2 id={isNext ? "next-release" : `v${version}`}>
-                {isNext ? "Next release" : version}
-              </components.h2>
+              <components.h2 id={id}>{title}</components.h2>
               {section.props.children}
             </>
           );

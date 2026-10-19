@@ -1,4 +1,5 @@
 import { useFumadocsLoader } from "fumadocs-core/source/client";
+import type { TOCItemType } from "fumadocs-core/toc";
 import { SidebarProvider, SidebarTrigger, useSidebar } from "fumadocs-ui/components/sidebar/base";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { DocsBody, DocsPage } from "fumadocs-ui/layouts/docs/page";
@@ -9,6 +10,7 @@ import Header, { iconButtonClass } from "@/components/header";
 import { useMDXComponents } from "@/components/mdx";
 import Sidebar from "@/components/sidebar";
 import { docs, source } from "@/lib/source";
+import { upgradeToc } from "@/lib/upgrading.server";
 
 import type { Route } from "./+types/docs";
 
@@ -24,6 +26,7 @@ export async function loader({ params }: Route.LoaderArgs) {
     title: page.data.title,
     description: page.data.description,
     pageTree: await source.serializePageTree(source.getPageTree()),
+    extraToc: page.path === "upgrading.mdx" ? await upgradeToc() : [],
   };
 }
 
@@ -36,7 +39,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
   return [title, { name: "description", content: loaderData.description }];
 }
 
-function Content({ path }: { path: string }) {
+function Content({ path, extraToc }: { path: string; extraToc: TOCItemType[] }) {
   const page = docs.getPage(path);
   if (!page) {
     throw new Error(`Unknown page: ${path}`);
@@ -46,7 +49,7 @@ function Content({ path }: { path: string }) {
   const Body = page.body;
 
   return (
-    <DocsPage toc={toc.filter((item) => item.depth > 1)}>
+    <DocsPage toc={[...extraToc, ...toc.filter((item) => item.depth > 1)]}>
       <DocsBody>
         <Body components={useMDXComponents()} />
       </DocsBody>
@@ -82,11 +85,11 @@ const slots = {
 };
 
 export default function Page({ loaderData }: Route.ComponentProps) {
-  const { path, pageTree } = useFumadocsLoader(loaderData);
+  const { path, pageTree, extraToc } = useFumadocsLoader(loaderData);
 
   return (
     <DocsLayout containerProps={{ style: containerStyle }} slots={slots} tree={pageTree}>
-      <Content path={path} />
+      <Content extraToc={extraToc} path={path} />
     </DocsLayout>
   );
 }
