@@ -11,10 +11,7 @@ unless `HEADPLANE_CONFIG_PATH` points somewhere else. The
 documents every option. Only `headscale.url` and `server.cookie_secret` are
 required; everything else has a default.
 
-:::note
-Before 0.5, Headplane was configured only through environment variables. When
-upgrading from one of those versions, move the settings into a config file.
-:::
+Upgrading from an older version? See [Upgrading](/upgrading) for what changed.
 
 ## Data directory
 
