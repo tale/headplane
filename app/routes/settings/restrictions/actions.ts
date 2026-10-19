@@ -68,9 +68,14 @@ export const restrictionAction = createAction({
     remove: {
       fields: { type: v.picklist(restrictionTypes), value: v.string() },
       async handler(input, { current, save }) {
+        const values = current(input.type);
+        if (!values.includes(input.value)) {
+          throw new ActionError(`This ${input.type} isn't in the list.`);
+        }
+
         await save(
           input.type,
-          current(input.type).filter((value) => value !== input.value),
+          values.filter((value) => value !== input.value),
         );
         return ok(`${labels[input.type]} removed`);
       },

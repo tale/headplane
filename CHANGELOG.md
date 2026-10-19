@@ -62,6 +62,7 @@
 - Removing or reordering a nameserver, search domain or DNS record that changed in another tab now says so, instead of restarting Headscale for nothing.
 - Turning off key expiry on Headscale 0.27 or 0.28 no longer signs the machine out. Headplane now explains that this needs Headscale 0.29 or newer.
 - Acting on a machine that was deleted elsewhere now says the machine no longer exists.
+- The ACL page no longer shows an empty, editable policy when Headscale can't load it. With Headscale's default file-mode configuration it now shows the policy as read-only, and other errors are reported instead of offering to overwrite the policy.
 
 # 0.8.1 (October 16, 2026)
 
