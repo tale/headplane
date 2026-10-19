@@ -10,7 +10,7 @@ Headplane has two test suites. Both run with [Vitest](https://vitest.dev).
 
 Every test should be able to fail because of a regression you can name. Tests
 that only restate the code, or check that something exists, get deleted. See
-`AGENTS.md` for the full rules.
+[`AGENTS.md`](../AGENTS.md) for the full rules.
 
 ## Unit tests
 
@@ -93,4 +93,4 @@ pnpm harness up fleet --version 0.28.0   # HP_FLEET_SIZE=200 for more machines
 `up` prints the Headscale URL and API key and keeps everything running until
 you press Ctrl-C. With `--headplane` it also starts the dev server against it on
 port 3001. Use scenarios to try a change by hand, to reproduce a setup from a
-bug report, and to take the screenshots in these docs.
+bug report, and to take the docs screenshots.

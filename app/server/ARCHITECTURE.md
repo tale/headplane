@@ -23,9 +23,11 @@ typed by an interface, such as `createOidcService` in `oidc/provider.ts`,
 
 ## Wiring
 
-`createAppContext` in `context.ts` builds every service once at startup.
-`app.ts` seeds a named React Router context for each, and routes read them
-with `context.get(authContext)` and so on.
+`createAppContext` in `context.ts` builds every service once at startup from
+the config alone. `createRouterContext` seeds a named React Router context for
+each, `app.ts` calls it for every request, and routes read them with
+`context.get(authContext)` and so on. Tests build the context the same way, so
+there's nothing to override.
 
 A service that can be switched off is a `Feature<T>` (`feature.ts`): either
 `enabled` with the service, or `disabled` with a reason the UI can show, as
@@ -44,6 +46,7 @@ the agent settings page and the OIDC callback do.
 ## Tests
 
 Unit tests (`tests/unit/`) create a fresh service with the config they need,
-so no module mocking or resets are involved. Integration tests
-(`tests/integration/`) run real dependencies in containers, such as Dex for
-OIDC and Tailscale clients for the agent.
+so no module mocking or resets are involved. Anything that talks to Headscale
+is an integration test (`tests/integration/`) against real containers: a
+disposable tailnet with Tailscale nodes, Dex for OIDC, and the agent. See
+[`tests/README.md`](../../tests/README.md).

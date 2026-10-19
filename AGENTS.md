@@ -18,6 +18,8 @@ Three rules guide every change:
   Browser SSH, a Tailscale client compiled to WebAssembly that runs in the
   browser. `hp_healthcheck` is the Docker healthcheck.
 - `docs/`: the docs site.
+- `tests/`: unit and integration tests and the container harness, see its
+  `README.md`.
 
 ## Tooling
 
