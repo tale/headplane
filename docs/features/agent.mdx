@@ -1,131 +1,103 @@
 ---
-title: Headplane Agent
-description: Configure the Headplane Agent for enhanced functionality.
+title: Agent
+description: Show each machine's Tailscale version and OS, and enable Browser SSH.
 ---
 
 import { versions } from "@/lib/versions";
 
 import machineDark from "../assets/machine-dark.png";
 import machineLight from "../assets/machine-light.png";
-import previewDark from "../assets/preview-dark.png";
-import previewLight from "../assets/preview-light.png";
 
-# Headplane Agent
+# Agent
 
-The Headplane Agent is an optional component that periodically syncs node
-information (such as version and OS details) from the Tailnet. Unlike previous
-versions, the agent does not require you to manually create or manage pre-auth
-keys — Headplane generates a fresh key for each agent startup and reuses the
-agent's existing Tailnet state across restarts.
+Headscale's API doesn't report which Tailscale version or OS a machine runs.
+The agent fills that in: Headplane runs a small Tailscale node that joins the
+tailnet and reads each machine's details from its view of the network, every
+three minutes by default. [Browser SSH](/features/ssh) needs it too.
 
-## Prerequisites
+<Figure
+  alt="A machine's details in Headplane"
+  light={machineLight}
+  dark={machineDark}
+  caption="Version and OS details come from the agent"
+/>
 
-Before enabling the agent, ensure the following:
+## Turning it on
 
-1. **Headscale {versions.headscale.agent} or newer** is required. The agent uses tag-only pre-auth
-   keys which are only available in Headscale {versions.headscale.agent}+.
-
-2. **`headscale.api_key`** must be set in your Headplane configuration file.
-   The agent uses this key to auto-generate pre-auth keys for connecting to the
-   Tailnet and to auto-approve its own registration when Headscale is configured
-   to require manual approval.
-
-## Configuration
-
-To enable the Headplane Agent, you'll need to modify the following fields in
-your Headplane configuration file. For more information on configuring Headplane
-please refer to the
-[example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml)
-for details.
-
-| Field                               | Description                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------- |
-| **`integration.agent.enabled`**     | Set to `true` to enable the agent.                                                |
-| `integration.agent.host_name`       | _Optional_. Headscale user name for the agent (default: `headplane-agent`).       |
-| `integration.agent.cache_ttl`       | _Optional_. How often to sync in milliseconds (default: `180000` / 3 minutes).    |
-| `integration.agent.work_dir`        | _Optional_. Working directory for the agent's tailnet state.                      |
-| `integration.agent.executable_path` | _Optional_. Path to the agent binary (default: `/usr/libexec/headplane/agent`).   |
-| `integration.agent.tailscale_netns` | _Optional_. Use Tailscale's socket-level routing-loop handling (default: `true`). |
-
-## Native Mode Configuration
-
-Once you've built Headplane locally, there will be a binary in the `./build`
-folder called `hp_agent`. Please move this binary to
-`/usr/libexec/headplane/agent` and ensure that it is executable.
-
-:::tip
-If for some reason you cannot move the binary to the intended location, you can
-define **`integration.agent.executable_path`** in your Headplane configuration
-file to point to the correct location of the agent binary.
-:::
-
-The agent will also use `/var/lib/headplane/agent` as its data directory by
-default. You can change this location by defining
-**`integration.agent.work_dir`** in your Headplane configuration file. Ensure
-that the specified directory exists and is writable by the user running
-Headplane.
-
-Headplane preserves the agent's `tailscaled.state` in this directory. This lets
-the agent retain its Tailnet identity across Headplane restarts instead of
-registering as a new host each time. If the agent's state is lost or unusable,
-Headplane falls back to the pre-auth key and registers a new agent node.
-
-## Tailscale socket routing handling
-
-By default, the agent uses Tailscale's socket handling to keep
-Tailscale-originated traffic from being routed back through Tailscale-managed
-routes. Tailscale attempts to apply its bypass mark to its outbound sockets so
-its routing and policy machinery can identify that traffic.
-
-With all capabilities dropped, `SO_MARK` returns `EPERM`. This does not break
-the container's routing; it causes Tailscale to fall back to
-`SO_BINDTODEVICE(DefaultRouteInterface())`. In a multi-network container, that
-fallback can pin the agent's Headscale connection to the default interface even
-though the container's Linux routing table has a correct Headscale-specific
-route through another interface. In this topology, a successful `SO_MARK` is
-not what selects the Headscale-facing interface; ordinary destination routing
-already makes the correct selection.
-
-After verifying that ordinary OS routing in the container's network namespace
-reaches Headscale correctly, the agent can rely on that routing instead:
+The agent needs Headscale {versions.headscale.agent} or newer, and
+[`headscale.api_key`](/configuration/api-keys#the-servers-key), which it uses
+to create its own pre-auth key. With both in place, enable it:
 
 ```yaml
 integration:
   agent:
     enabled: true
-    tailscale_netns: false
 ```
 
-Setting this to `false` disables Tailscale's mark-or-bind socket handling only
-inside the dedicated `hp_agent` process. `hp_agent` and the main Headplane
-process continue to share the container's Linux network namespace. The main
-process's networking behavior, container capabilities, Docker networks,
-interfaces, routing table, and default gateway remain unchanged. Leave this
-setting enabled unless the fallback is known to select the wrong interface;
-bare-metal and Tailscale-routed deployments may rely on its loop-avoidance
-behavior.
+The Docker image and the NixOS module include the agent. For a native install,
+copy `build/hp_agent` to `/usr/libexec/headplane/agent`, or point
+`integration.agent.executable_path` at it.
 
-## Interactive approval
+After a restart, the agent shows up in the machine list as `headplane-agent`,
+tagged `tag:headplane-agent`. **Settings → Agent** shows whether it's
+connected. If Headscale requires new machines to be approved, Headplane
+approves the agent with the API key, and the same page shows the approval link
+if that fails.
 
-Under normal circumstances, the agent connects headlessly using the auto-generated
-pre-auth key and no manual interaction is required. If your Headscale server is
-configured to require interactive approval, Headplane detects the auth URL the
-agent prints and automatically approves the request using the configured
-`headscale.api_key`. **Settings → Agent** still shows the approval link as a
-fallback in case auto-approval fails.
+## Access rules
 
-## Usage
+The agent only sees machines that are its peers. Headscale makes two machines
+peers when the ACL policy allows traffic between them in at least one
+direction, so under the default allow-all policy, the agent sees everything.
+Under a stricter policy, machines it can't see show no version or OS.
 
-<Figure
-  alt="Headplane Dashboard"
-  light={previewLight}
-  dark={previewDark}
-  caption="Headplane Dashboard"
-/>
+To let it see every machine, add its tag and a rule that lets machines reach
+it. The agent doesn't listen on any port, so the rule opens nothing on either
+side:
 
-After enabling and configuring the Headplane Agent, restart your Headplane
-instance. You should now see additional options in the UI, such as host
-information about each node and the ability to open SSH sessions directly from
-the browser if the nodes have Tailscale SSH enabled.
+```json
+{
+  "tagOwners": {
+    "tag:headplane-agent": []
+  },
+  "acls": [{ "action": "accept", "src": ["*"], "dst": ["tag:headplane-agent:*"] }]
+}
+```
 
-<Figure alt="Machine page" light={machineLight} dark={machineDark} caption="Machine page" />
+Headscale rejects a rule that names a tag missing from `tagOwners`, so both
+parts are needed. With a custom `host_name`, the tag follows it, as
+`tag:<host_name>`.
+
+## State
+
+The agent keeps its Tailscale state in `integration.agent.work_dir`,
+`/var/lib/headplane/agent` by default, so it stays the same machine across
+restarts. In Docker, that's inside the data volume already. If the state
+becomes unusable, the agent registers again and removes its previous machine.
+If the whole directory is lost, the old machine stays in the list until it's
+removed by hand.
+
+## Options
+
+| Option            | Default                        | Description                                          |
+| ----------------- | ------------------------------ | ---------------------------------------------------- |
+| `host_name`       | `headplane-agent`              | The agent's machine name, and the name of its tag    |
+| `cache_ttl`       | `180000`                       | How often to refresh machine details, in ms          |
+| `work_dir`        | `/var/lib/headplane/agent`     | Where the agent keeps its state                      |
+| `executable_path` | `/usr/libexec/headplane/agent` | The agent binary                                     |
+| `tailscale_netns` | `true`                         | See [the container networking fix](#troubleshooting) |
+
+## Troubleshooting
+
+- **The agent doesn't start**: Headplane's log says why. The usual causes are
+  a missing `headscale.api_key`, Headscale older than
+  {versions.headscale.agent}, or no binary at `executable_path`.
+- **Some machines have no version or OS**: the ACL policy keeps them from
+  being the agent's peers. See [access rules](#access-rules).
+- **The agent can't reach Headscale from a container**: in a container with
+  all capabilities dropped and more than one network, the agent can end up
+  sending its connection to Headscale out the default network instead of
+  following the container's routes. If Headscale is reachable from inside the
+  container, set `integration.agent.tailscale_netns: false`. Leave it on
+  otherwise, since outside containers it keeps the agent's traffic from looping
+  back through Tailscale.
