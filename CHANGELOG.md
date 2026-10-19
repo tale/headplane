@@ -55,6 +55,9 @@
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
 - If the agent's machine is deleted while Headplane is stopped, the agent registers again on the next start instead of waiting for a login that never comes.
+- Creating or renaming a user to a name that's already taken now says so, instead of showing a database error from Headscale.
+- Linking an account to a Headscale user that no longer exists now shows an error instead of saving a broken link.
+- Changing the owner's role or transferring ownership to yourself now explains why it can't be done, instead of asking to try again.
 
 # 0.8.1 (October 16, 2026)
 
