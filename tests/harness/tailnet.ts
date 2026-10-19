@@ -14,6 +14,7 @@ export interface TailnetOptions {
   policy?: string | object;
   headscaleConfig?: Record<string, unknown>;
   records?: Array<{ name: string; type: string; value: string }>;
+  policyFile?: string;
 }
 
 export type Tailnet = Awaited<ReturnType<typeof createTailnet>>;
@@ -28,6 +29,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
     network,
     config: options.headscaleConfig,
     records: options.records,
+    policyFile: options.policyFile,
     tls: true,
   });
 
@@ -100,6 +102,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
   return {
     id,
     version,
+    network,
     server,
     headscale,
     api,

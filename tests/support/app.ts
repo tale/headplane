@@ -82,7 +82,8 @@ export async function createTestApp(options: TestAppOptions) {
       return new Request(url, { headers });
     }
 
-    const body = new FormData();
+    // URL-encoded like the app's forms, which keeps newlines as they are.
+    const body = new URLSearchParams();
     for (const [key, value] of Object.entries(call.form)) {
       for (const item of [value].flat()) body.append(key, item);
     }

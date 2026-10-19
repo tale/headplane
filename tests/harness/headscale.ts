@@ -115,6 +115,8 @@ export async function startHeadscale(options: {
   // Serves HTTPS on 443, as nodes need.
   tls?: boolean;
   records?: Array<{ name: string; type: string; value: string }>;
+  // Puts Headscale's policy in `file` mode with this content.
+  policyFile?: string;
 }) {
   // Mounted rather than copied so Headplane can edit it like a real deployment.
   const configDir = await mkdtemp(join(tmpdir(), "hp-harness-headscale-"));
@@ -135,8 +137,18 @@ export async function startHeadscale(options: {
     await writeFile(join(configDir, "tls.key"), tls.key, { mode: 0o644 });
   }
 
+  if (options.policyFile !== undefined) {
+    await writeFile(join(configDir, "policy.json"), options.policyFile, { mode: 0o644 });
+  }
+
   // Headplane only edits DNS records kept in their own file.
-  const config = headscaleConfig({ ...listen, ...options.config });
+  const config = headscaleConfig({
+    ...listen,
+    ...(options.policyFile !== undefined && {
+      policy: { mode: "file", path: "/etc/headscale/policy.json" },
+    }),
+    ...options.config,
+  });
   const dns = {
     ...(config.dns as object),
     extra_records_path: "/etc/headscale/extra-records.json",
