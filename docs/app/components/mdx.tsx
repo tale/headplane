@@ -2,6 +2,7 @@ import { CodeBlock, Pre } from "fumadocs-ui/components/codeblock";
 import defaultMdxComponents from "fumadocs-ui/mdx";
 import type { MDXComponents } from "mdx/types";
 
+import Architecture from "@/components/architecture";
 import { CalloutContainer, CalloutDescription, CalloutTitle } from "@/components/callout";
 import DynamicCodeBlock from "@/components/dynamic-code-block";
 import Figure from "@/components/figure";
@@ -15,6 +16,7 @@ export function useMDXComponents(components?: MDXComponents) {
         <Pre>{props.children}</Pre>
       </CodeBlock>
     ),
+    Architecture,
     CalloutContainer,
     CalloutTitle,
     CalloutDescription,

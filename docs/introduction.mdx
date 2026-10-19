@@ -41,7 +41,7 @@ From Headplane you can manage:
 
 It also goes beyond what Headscale offers on its own:
 
-- **Single sign-on** through any OpenID Connect provider, or through your
+- **Single sign-on** through any OpenID Connect provider, or through a
   reverse proxy, with roles for each person
 - **Browser SSH** into any machine on the tailnet, with no client installed
 - **The agent**, which shows each machine's Tailscale version, OS and
@@ -53,3 +53,18 @@ It also goes beyond what Headscale offers on its own:
   dark={machineDark}
   caption="Machine management in Headplane"
 />
+
+## How it connects
+
+Headplane is a separate server that runs next to Headscale. It reaches
+Headscale three ways, and each one unlocks part of the UI:
+
+<Architecture />
+
+Only the API is required, and everything it covers works on its own. Giving
+Headplane Headscale's config file is covered under
+[Integrations](/configuration/integrations), and the agent has
+[its own page](/features/agent).
+
+To get started, follow the [Quickstart](/quickstart) for a new server, or
+[Installation](/install) to add Headplane to an existing Headscale.
