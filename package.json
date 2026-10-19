@@ -14,13 +14,13 @@
     "pretypecheck": "cn build -q --content 'app/**/*.{ts,tsx}' --css app/tailwind.css -o app/utils/cn-tables.ts",
     "typecheck": "react-router typegen && tsc",
     "test:unit": "vitest run --project unit",
-    "test:integration": "vitest run --project integration --project integration:agent",
-    "harness": "node --disable-warning=ExperimentalWarning --import tsx tests/harness/cli.ts",
+    "test:integration": "vitest run --project integration:*",
+    "harness": "node tests/harness/launch.ts",
     "docs:dev": "cd docs && react-router dev",
     "docs:build": "cd docs && react-router build && node scripts/finish-build.ts",
     "lint": "oxlint",
     "format": "oxfmt",
-    "release": "node --disable-warning=ExperimentalWarning scripts/release.ts"
+    "release": "node scripts/release.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -76,7 +76,6 @@
     "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",
     "testcontainers": "^12.2.1",
-    "tsx": "^4.23.15",
     "typescript": "7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.4"

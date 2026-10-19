@@ -9,15 +9,10 @@ import { parseArgs } from "node:util";
 
 import { stringify } from "yaml";
 
-// Headplane's modules expect the build-time globals Vite defines.
-Object.assign(globalThis, { __VERSION__: "harness", __PREFIX__: "/admin" });
-
-const { HARNESS_LABEL } = await import("./constants");
-const { applyScenario } = await import("./scenario");
-const { createTailnet } = await import("./tailnet");
-const { HEADSCALE_VERSIONS, LATEST_HEADSCALE } = await import("./versions");
-type Scenario = import("./scenario").Scenario;
-type HeadscaleVersion = import("./versions").HeadscaleVersion;
+import { HARNESS_LABEL } from "./constants";
+import { applyScenario, type Scenario } from "./scenario";
+import { createTailnet } from "./tailnet";
+import { HEADSCALE_VERSIONS, type HeadscaleVersion, LATEST_HEADSCALE } from "./versions";
 
 const scenariosDir = join(import.meta.dirname, "scenarios");
 

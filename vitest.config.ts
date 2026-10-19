@@ -29,7 +29,7 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: "integration",
+          name: "integration:app",
           include: ["tests/integration/**/*.test.ts"],
           exclude: ["node_modules/**", "build/**", "tests/integration/agent/**"],
           testTimeout: 120_000,
@@ -49,7 +49,6 @@ export default defineConfig({
     ],
     environment: "node",
     silent: "passed-only",
-    execArgv: ["--disable-warning=ExperimentalWarning"],
     exclude: ["node_modules/**", "build/**"],
   },
   resolve: {
