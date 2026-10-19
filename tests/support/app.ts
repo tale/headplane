@@ -23,6 +23,9 @@ export interface CallOptions {
   params?: Record<string, string>;
   form?: Record<string, string | string[]>;
   search?: string;
+  headers?: Record<string, string>;
+  // Aborts like a browser closing the connection.
+  signal?: AbortSignal;
 }
 
 export async function createTestApp(options: TestAppOptions) {
@@ -62,6 +65,8 @@ export async function createTestApp(options: TestAppOptions) {
     const userId = await ctx.auth.findOrCreateUser(subject, { name, email: profile.email });
     if (role !== "owner") {
       await ctx.auth.reassignUser(userId, role);
+    } else if ((await ctx.auth.listUsers()).find((user) => user.id === userId)?.role !== "owner") {
+      throw new Error("Only the first account becomes the owner, so sign in as it first");
     }
 
     const setCookie = await ctx.auth.createOidcSession(userId, { name, email: profile.email });
@@ -74,12 +79,12 @@ export async function createTestApp(options: TestAppOptions) {
   }
 
   function request(path: string, call: CallOptions = {}) {
-    const headers = new Headers();
+    const headers = new Headers(call.headers);
     if (call.as) headers.set("cookie", call.as);
 
     const url = `http://headplane.test${__PREFIX__}${path}${call.search ?? ""}`;
     if (!call.form) {
-      return new Request(url, { headers });
+      return new Request(url, { headers, signal: call.signal });
     }
 
     // URL-encoded like the app's forms, which keeps newlines as they are.
@@ -88,7 +93,7 @@ export async function createTestApp(options: TestAppOptions) {
       for (const item of [value].flat()) body.append(key, item);
     }
 
-    return new Request(url, { method: "POST", headers, body });
+    return new Request(url, { method: "POST", headers, body, signal: call.signal });
   }
 
   // Runs a loader or action and returns what it returned or threw, since

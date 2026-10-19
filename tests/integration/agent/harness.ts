@@ -20,7 +20,7 @@ const AGENT_TAG = `tag:${HOST_NAME}`;
 
 // Agents are counted by binary path, so each test file gets its own copy and
 // files can run in parallel.
-const workerBinary = join(tmpdir(), `hp_agent-${process.pid}`);
+export const workerBinary = join(tmpdir(), `hp_agent-${process.pid}`);
 copyFileSync(inject("agentPath"), workerBinary);
 chmodSync(workerBinary, 0o755);
 process.once("exit", () => rmSync(workerBinary, { force: true }));
