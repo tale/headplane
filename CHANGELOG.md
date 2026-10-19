@@ -54,6 +54,7 @@
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
+- If the agent's machine is deleted while Headplane is stopped, the agent registers again on the next start instead of waiting for a login that never comes.
 
 # 0.8.1 (October 16, 2026)
 
