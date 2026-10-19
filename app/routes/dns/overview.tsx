@@ -20,11 +20,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const headscaleConfig = context.get(headscaleConfigContext);
 
-  if (!headscaleConfig.readable()) {
-    throw new Error("No configuration is available");
-  }
-
   const principal = await auth.requireCapability(request, Capabilities.read_network);
+
+  // Without Headscale's config there's no DNS page, as the hidden tab suggests.
+  if (!headscaleConfig.readable()) {
+    throw new Response(null, { status: 404 });
+  }
 
   const writablePermission = auth.can(principal, Capabilities.write_network);
 

@@ -58,6 +58,8 @@
 - Creating or renaming a user to a name that's already taken now says so, instead of showing a database error from Headscale.
 - Linking an account to a Headscale user that no longer exists now shows an error instead of saving a broken link.
 - Changing the owner's role or transferring ownership to yourself now explains why it can't be done, instead of asking to try again.
+- Removing the last global nameserver while local DNS is overridden, or turning the override on without a global nameserver, no longer saves a config Headscale refuses to start with. Headplane now explains what to change first.
+- Removing or reordering a nameserver, search domain or DNS record that changed in another tab now says so, instead of restarting Headscale for nothing.
 
 # 0.8.1 (October 16, 2026)
 
