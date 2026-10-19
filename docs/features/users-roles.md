@@ -26,7 +26,7 @@ and auth keys are theirs.
 The first person to sign in becomes the owner. Everyone after that starts as a
 member, until an owner or admin changes their role on the **Users** page.
 With SSO, new accounts can start with a different role, or take theirs from
-your identity provider. See [Roles from your identity provider](/features/sso#roles-from-your-identity-provider).
+your identity provider. See [Roles from the identity provider](/features/sso#roles-from-the-identity-provider).
 
 Signing in with a Headscale API key skips roles entirely and grants full access,
 since the key already has full control of Headscale.
