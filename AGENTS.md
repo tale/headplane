@@ -74,7 +74,12 @@ Every user-facing change adds a line to the `# Next` section of `CHANGELOG.md`,
 under `## Changes` or `## Fixes`. That section is what nightly users read on the
 docs site, so write it as prose for them, not as a commit summary. Prose placed
 directly under `# Next`, above the subheadings, becomes the release preamble.
-Use it for compatibility notes and upgrade warnings.
+
+Anything an operator has to act on when upgrading, such as a new minimum
+Headscale version, a renamed option or a changed requirement, also gets a line
+under `## Upgrading`, placed above `## Changes`. Write each line as the step to
+take. The docs' Upgrading page is built from these sections, so a step that
+only appears in the preamble or under Changes is missing from it.
 
 To cut a release, run `pnpm release cut <version>`. It renames `# Next` to the
 version, bumps `package.json`, commits, and tags. Pushing the tag builds the

@@ -8,6 +8,8 @@ import remarkDirective from "remark-directive";
 import { defineConfig } from "vite";
 
 import { remarkChangelog } from "./app/lib/remark-changelog";
+import { remarkUpgrading } from "./app/lib/remark-upgrading";
+
 // Callout variants from docs/app/components/callout.tsx
 const admonitionTypes = {
   note: "neutral",
@@ -29,6 +31,7 @@ export default defineConfig({
           remarkPlugins: (plugins) => [
             remarkDirective,
             [remarkDirectiveAdmonition, { types: admonitionTypes }],
+            remarkUpgrading,
             ...plugins,
             remarkChangelog,
           ],

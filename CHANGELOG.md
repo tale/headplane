@@ -1,7 +1,11 @@
 # Next
 
-Going forward, Headplane only works with DNS records defined in `dns.extra_records_path` in your Headscale configuration.
-If you have any records defined inline under `dns.extra_records`, they will be read-only in Headplane.
+## Upgrading
+
+- DNS records are only read from and written to the file in Headscale's `dns.extra_records_path`. Records listed inline under `dns.extra_records` show as read-only, so move them into the file to keep editing them.
+- The `proc` and `kubernetes` integrations now restart Headscale instead of reloading it, so Headscale needs a supervisor that brings it back: systemd with `Restart=always`, which Headscale's own unit and the NixOS module already set, or the kubelet.
+- Enabling more than one integration now turns them all off, with an error in the log. Keep one.
+- After signing in with single sign-on, only owners, admins and IT admins can pick which Headscale user their account links to. Everyone else links automatically or is linked from the **Users** page.
 
 ## Changes
 
@@ -51,6 +55,11 @@ If you have any records defined inline under `dns.extra_records`, they will be r
 
 This release fixes actions failing with "Bad Request" or "Unexpected Server Error" when Headplane runs behind a reverse proxy that terminates HTTPS. If you made proxy rules rewriting the `Origin` header as a workaround, it's safe to remove them now.
 
+## Upgrading
+
+- Single sign-on stays off until `server.base_url` is set to Headplane's public URL.
+- Proxy rules that rewrite the `Origin` header, added as a workaround for 0.8.0, can be removed.
+
 ## Fixes
 
 - Fixed several broken actions (such as creating auth keys) that began failing with "Bad Request" or "Unexpected Server Error" after Headplane 0.8.0 when sitting behind a reverse proxy that terminates TLS. If you added a proxy rule rewriting the `Origin` header as a workaround, it's safe to remove (closes [#657](https://github.com/tale/headplane/issues/657), [#658](https://github.com/tale/headplane/issues/658)).
@@ -63,7 +72,9 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 # 0.8.0 (October 13, 2026)
 
-Building Headplane from source now requires Go 1.27.1 or newer.
+## Upgrading
+
+- Building from source needs Go 1.27.1 or newer.
 
 ## Changes
 
@@ -108,6 +119,16 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ---
 
 # 0.7.0
+
+## Upgrading
+
+- Headplane needs Headscale 0.27.0 or newer.
+- The agent needs Headscale 0.28 and `headscale.api_key`, and creates its own pre-auth key. Remove `integration.agent.pre_authkey` and `integration.agent.cache_path`.
+- `oidc.headscale_api_key` is now `headscale.api_key`. The old option still works, but is deprecated.
+- Logs are JSON, one object per line. Update anything that parses them.
+- Accounts are linked to Headscale users. Single sign-on accounts link by subject or email when they sign in. Accounts that don't match need linking by hand before they can create their own auth keys or use Browser SSH.
+
+## Changes
 
 - Switched to structured JSON logging (closes [#279](https://github.com/tale/headplane/issues/279)).
 - Added suggestions to pick existing tags to the machine tag dialog (closes [#560](https://github.com/tale/headplane/issues/560)).
@@ -196,6 +217,13 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 # 0.6.2 (February 26, 2026)
 
+## Upgrading
+
+- `oidc.redirect_uri` is replaced by `server.base_url`. Headplane logs the value to use when it finds the old option.
+- PKCE is opt-in. If the identity provider requires it, set `oidc.use_pkce: true`.
+
+## Changes
+
 - **Added support for Headscale 0.28.0** including all API and data model changes.
 - Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
@@ -242,6 +270,13 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 # 0.6.1 (October 12, 2025)
 
+## Upgrading
+
+- Headplane keeps a database, `hp_persist.db`, in `server.data_path`. The directory has to be persistent and writable, such as a Docker volume. Existing users migrate on their own.
+- The Docker image has no shell. For debugging, use the matching `-shell` tag, such as `ghcr.io/tale/headplane:0.6.1-shell`.
+
+## Changes
+
 - **Headplane now supports connecting to machines via SSH in the web browser.**
   - This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
   - This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
@@ -273,6 +308,12 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ---
 
 # 0.6.0 (May 25, 2025)
+
+## Upgrading
+
+- Headplane needs Headscale 0.26.0 or newer.
+
+## Changes
 
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
   - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
@@ -332,6 +373,12 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ---
 
 # 0.5.6 (April 2, 2025)
+
+## Upgrading
+
+- Single sign-on accounts get roles. New accounts start as members with no dashboard access, and the first person to sign in becomes the owner, so sign in right after upgrading to claim the owner account.
+
+## Changes
 
 ### IMPORTANT
 
@@ -405,6 +452,12 @@ If there are no users, the first user will be given an `owner` role which cannot
 > This release is a major overhaul and contains a significant breaking change.
 > We now use a config file for all settings instead of environment variables.
 > Please see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format.
+
+## Upgrading
+
+- Settings moved from environment variables to a config file. Start from [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml). Settings that used to be shared with Headscale, such as `public_url` and `oidc`, are now separate.
+
+## Changes
 
 - Completely redesigned the UI from the ground up for accessibility and performance.
 - Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format).
