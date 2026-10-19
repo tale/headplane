@@ -18,9 +18,25 @@ const admonitionTypes = {
   success: "success",
 };
 
+// Set by the docs workflows. Local builds have no channel. Beta builds use the
+// commit as their version, and the date is formatted here so the prerendered
+// HTML matches what the browser renders.
+const docsBuild = {
+  channel: process.env.HEADPLANE_DOCS_CHANNEL ?? "",
+  version: process.env.HEADPLANE_DOCS_VERSION ?? "",
+  date: process.env.HEADPLANE_DOCS_DATE
+    ? new Date(process.env.HEADPLANE_DOCS_DATE).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      })
+    : "",
+};
+
 export default defineConfig({
+  base: process.env.HEADPLANE_DOCS_BASE ?? "/",
   define: {
-    __HEADPLANE_BETA_DOCS__: JSON.stringify(process.env.HEADPLANE_BETA_DOCS === "true"),
+    __HEADPLANE_DOCS__: JSON.stringify(docsBuild),
   },
   plugins: [
     fumadocsMdx({

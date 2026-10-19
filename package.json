@@ -16,7 +16,7 @@
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration:*",
     "docs:dev": "cd docs && react-router dev",
-    "docs:build": "cd docs && react-router build && cp build/client/__spa-fallback.html build/client/404.html",
+    "docs:build": "cd docs && react-router build && node scripts/finish-build.ts",
     "lint": "oxlint",
     "format": "oxfmt",
     "release": "node --disable-warning=ExperimentalWarning scripts/release.ts"

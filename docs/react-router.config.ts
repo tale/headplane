@@ -7,6 +7,8 @@ const getUrl = createGetUrl("/");
 const ignoredDirs = ["app/", "build/", "public/", "node_modules/"];
 
 export default {
+  // Archived versions are built under their own path, such as `/0.8/`.
+  basename: process.env.HEADPLANE_DOCS_BASE ?? "/",
   ssr: false,
   async prerender({ getStaticPaths }) {
     const paths = getStaticPaths();

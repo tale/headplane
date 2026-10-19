@@ -1,11 +1,11 @@
 import "@fontsource-variable/inter/opsz.css";
-import { Banner } from "fumadocs-ui/components/banner";
 import { RootProvider } from "fumadocs-ui/provider/react-router";
 import type { ReactNode } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 
 import Header from "@/components/header";
 import DocsSearchDialog from "@/components/search";
+import VersionBanner from "@/components/version-banner";
 
 import type { Route } from "./+types/root";
 
@@ -17,26 +17,14 @@ export function Layout({ children }: { children: ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-        <link href="/favicon.ico" rel="icon" sizes="32x32" />
-        <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
+        <link href={`${import.meta.env.BASE_URL}favicon.ico`} rel="icon" sizes="32x32" />
+        <link href={`${import.meta.env.BASE_URL}favicon.svg`} rel="icon" type="image/svg+xml" />
         <Meta />
         <Links />
       </head>
       <body className="flex min-h-screen flex-col">
         <RootProvider search={{ SearchDialog: DocsSearchDialog }}>
-          {__HEADPLANE_BETA_DOCS__ && (
-            <Banner className="bg-warn-subtle text-warn h-9 text-sm">
-              <span className="sm:hidden">
-                <strong>Beta</strong> docs.
-              </span>
-              <span className="max-sm:hidden">
-                You're viewing the <strong>beta</strong> docs.
-              </span>
-              <a className="ml-2 underline" href="https://headplane.net">
-                Stable docs →
-              </a>
-            </Banner>
-          )}
+          <VersionBanner />
           {children}
         </RootProvider>
         <ScrollRestoration />
@@ -61,7 +49,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         {import.meta.env.DEV && error instanceof Error && (
           <pre className="text-muted text-xs">{error.message}</pre>
         )}
-        <a className="text-accent" href="/">
+        <a className="text-accent" href={import.meta.env.BASE_URL}>
           Back to the docs
         </a>
       </main>

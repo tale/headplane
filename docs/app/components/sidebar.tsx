@@ -13,6 +13,8 @@ import {
 import { createPageTreeRenderer } from "fumadocs-ui/components/sidebar/page-tree";
 import type { ComponentProps } from "react";
 
+import VersionPicker from "@/components/version-picker";
+
 // Matches the settings nav in the app (app/routes/settings/layout.tsx).
 const itemClass =
   "flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-start text-sm leading-5 text-muted transition-colors hover:bg-hover hover:text-fg data-[active=true]:bg-subtle data-[active=true]:font-medium data-[active=true]:text-fg [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-faint";
@@ -72,9 +74,10 @@ function SidebarLinks() {
   );
 }
 
-function SidebarFooter() {
+function SidebarFooter({ hasVersionPicker = false }: { hasVersionPicker?: boolean }) {
   return (
-    <div className="border-line text-faint flex gap-x-3 border-t px-5 py-3 text-xs">
+    <div className="border-line text-faint flex items-center gap-x-3 border-t px-5 py-3 text-xs">
+      {hasVersionPicker && <VersionPicker className="mr-auto -ml-2" />}
       <a className="hover:text-fg" href="https://github.com/sponsors/tale">
         Sponsor
       </a>
@@ -98,7 +101,7 @@ export default function Sidebar() {
       <SidebarDrawerOverlay className="bg-backdrop data-[state=closed]:animate-fd-fade-out data-[state=open]:animate-fd-fade-in fixed inset-0 z-40" />
       <SidebarDrawerContent className="bg-canvas border-line shadow-overlay data-[state=closed]:animate-fd-sidebar-out data-[state=open]:animate-fd-sidebar-in fixed inset-y-0 right-0 z-40 flex w-[85%] max-w-80 flex-col border-l">
         <SidebarLinks />
-        <SidebarFooter />
+        <SidebarFooter hasVersionPicker />
       </SidebarDrawerContent>
     </>
   );

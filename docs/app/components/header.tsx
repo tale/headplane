@@ -6,6 +6,7 @@ import { Fragment, type ReactNode, useSyncExternalStore } from "react";
 import { Link, useLocation } from "react-router";
 
 import LogoMark from "@/components/logo-mark";
+import VersionPicker from "@/components/version-picker";
 
 export const iconButtonClass =
   "text-muted hover:bg-hover hover:text-fg inline-flex size-8 shrink-0 items-center justify-center rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent [&_svg]:size-4";
@@ -32,6 +33,7 @@ export default function Header({ menu }: { menu?: ReactNode }) {
           <LogoMark className="size-[18px] shrink-0" />
           <span className="text-sm font-semibold tracking-tight">headplane</span>
         </Link>
+        <VersionPicker className="-ml-3 max-sm:hidden" />
         <nav className="hidden items-center gap-x-0.5 text-[13px] font-medium md:flex">
           {links.map((link) => {
             const isActive =
