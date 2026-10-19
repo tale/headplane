@@ -1,7 +1,13 @@
 import { redirect } from "react-router";
 import * as v from "valibot";
 
-import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
+import {
+  authContext,
+  headscaleContext,
+  headscaleLiveStoreContext,
+  requestApiContext,
+} from "~/server/context";
+import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { nodesResource } from "~/server/headscale/live-store";
 import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
@@ -18,12 +24,16 @@ export const machineAction = createAction({
     const { principal, api } = await context.get(requestApiContext)(request);
     const auth = context.get(authContext);
     const liveStore = context.get(headscaleLiveStoreContext);
+    const { capabilities } = context.get(headscaleContext);
 
     async function requireNode(id: string) {
-      const node = await api.nodes.get(id);
-      if (!node) {
-        throw new ActionError("This machine no longer exists.", 404);
-      }
+      const node = await api.nodes.get(id).catch((error: unknown) => {
+        if (isDataWithApiError(error) && error.data.statusCode === 404) {
+          throw new ActionError("This machine no longer exists.", 404);
+        }
+
+        throw error;
+      });
 
       if (!auth.canManageNode(principal, node)) {
         throw new ActionError("You don't have permission to manage this machine.", 403);
@@ -35,6 +45,7 @@ export const machineAction = createAction({
     return {
       principal,
       api,
+      capabilities,
       requireNode,
       refresh: () => liveStore.refresh(nodesResource, api),
     };
@@ -89,9 +100,15 @@ export const machineAction = createAction({
     },
     toggle_expiry: {
       fields: { node_id: nodeId, disable_expiry: toggle },
-      async handler(input, { api, requireNode, refresh }) {
+      async handler(input, { api, capabilities, requireNode, refresh }) {
         const node = await requireNode(input.node_id);
         const disableExpiry = input.disable_expiry === "true";
+
+        // Older versions take this as a request to expire the machine now.
+        if (disableExpiry && !capabilities.keyExpiryCanBeDisabled) {
+          throw new ActionError("Turning off key expiry needs Headscale 0.29 or newer.");
+        }
+
         await api.nodes.toggleExpiry(node.id, disableExpiry);
         await refresh();
         return ok(disableExpiry ? "Key expiry disabled" : "Key expiry enabled");

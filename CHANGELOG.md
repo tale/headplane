@@ -60,6 +60,8 @@
 - Changing the owner's role or transferring ownership to yourself now explains why it can't be done, instead of asking to try again.
 - Removing the last global nameserver while local DNS is overridden, or turning the override on without a global nameserver, no longer saves a config Headscale refuses to start with. Headplane now explains what to change first.
 - Removing or reordering a nameserver, search domain or DNS record that changed in another tab now says so, instead of restarting Headscale for nothing.
+- Turning off key expiry on Headscale 0.27 or 0.28 no longer signs the machine out. Headplane now explains that this needs Headscale 0.29 or newer.
+- Acting on a machine that was deleted elsewhere now says the machine no longer exists.
 
 # 0.8.1 (October 16, 2026)
 
