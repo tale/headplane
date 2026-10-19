@@ -1,51 +1,37 @@
-# Core Concepts
+# Headplane
 
-Headplane is a web application to manage Headscale, a self-hosted implementation
-of the Tailscale control server. There are a few tenets that guide the entire
-development of the project:
+Headplane is a web UI for Headscale, the self-hosted Tailscale control server.
+Three rules guide every change:
 
-- **Simple starts**: We want to make it as easy as possible to set up and use
-  Headplane, while still providing powerful features for advanced users. This
-  means that we prioritize a clean and intuitive user interface, as well as
-  straightforward installation and configuration processes.
+- **Simple starts.** Setup should take as little as possible, with advanced
+  features opt-in.
+- **No breaking changes.** Keep existing configs and setups working. When
+  something has to change, give operators an upgrade step (see Releases).
+- **Docs ship with the change.** A feature isn't done until its docs are.
 
-- **No breaking changes**: We want to avoid making breaking changes to the
-  project as much as possible. This means that we will strive to maintain
-  backward compatibility and provide clear migration paths when necessary.
+## Layout
 
-- **Documentation**: This is the most important part of the project, without it
-  the entire project falls apart and is hard to use.
+- `app/`: the React Router 7 app (framework mode, Vite). Server code lives in
+  `app/server/`, see its `ARCHITECTURE.md`.
+- `cmd/` and `internal/`: Go code. `hp_agent` is the agent, a Tailscale node
+  that reads machine details the Headscale API doesn't have. `hp_ssh` is
+  Browser SSH, a Tailscale client compiled to WebAssembly that runs in the
+  browser. `hp_healthcheck` is the Docker healthcheck.
+- `docs/`: the docs site.
 
-## Project Management
+## Tooling
 
-It's hard to manage this project easily, use the `gh` CLI when responding to
-prompts to get context. Some common issue tags to keep track of include a
-"Needs Triage", "Needs Info", "Bug", "Enhancement", and several other tags based
-on what parts of the project are affected.
+Use the Node and pnpm versions from `engines` in `package.json`.
 
-## Headplane Agent
+- `pnpm run typecheck`, `pnpm run lint` and `pnpm run format`, which accept
+  extra flags.
+- `pnpm test:unit` and `pnpm test:integration`.
+- `pnpm dev` runs the app against the Docker dev environment. Run Headscale
+  commands there with `docker exec headscale headscale <command>`.
 
-The Headplane Agent is a lightweight component that runs on the same server as
-Headplane and connects directly to the Tailnet in order to pull in details about
-nodes that aren't available through the Headscale API such as versions, etc.
-
-## WebSSH
-
-This is an ephemeral WASM shim that runs in the browser and connects directly
-to the Tailnet using Tailscale's go packages. It allows anyone to open up an
-ephemeral machine in the Tailnet that directly SSHes into a target node.
-
-## Build/Tooling
-
-Headplane is a React Router 7 (framework mode) project built with Vite. Take
-care to use our preferred PNPM version and Node version as defined in the
-`engines` field of `package.json`. We also use TypeScript Go and Oxfmt for
-type-checking and formatting respectively.
-
-When typechecking, use `pnpm run typecheck`, when linting and formatting, use
-the respective `lint` and `format` scripts, you can pass flags to them. You can
-also run Headscale CLI commands with `docker exec headscale headscale <command>`
-when the dev environment is running.
+Use the `gh` CLI for issues and PRs. Issues are triaged with labels such as
+Needs Triage, Needs Info, Bug and Feature, plus area labels like Agent,
+Integrations and Web SSH.
 
 ## Action errors
 
@@ -58,38 +44,38 @@ to a silent no-op.
 
 ## Docs
 
-The project has a documentation site available at the `docs/` directory built
-with Fumadocs on React Router (`pnpm docs:dev`). Pages are Markdown, or MDX when
-they use components or expressions, and the sidebar order lives in each folder's
-`meta.json`. Link between pages by site path (`/install/docker`). Version
-numbers (Headscale minimums, Node, pnpm) come from `docs/app/lib/versions.ts`:
-import it in an MDX page and write `{versions.headscale.minimum}`. The site
-shares the app's color tokens through `app/tokens.css`. If making changes to
-staple features, please take care to also update the documentation to reflect
-any changes in functionality or usage.
+The docs site in `docs/` is Fumadocs on React Router (`pnpm docs:dev`).
+
+- Pages are Markdown, or MDX when they use components or expressions. Each
+  folder's `meta.json` sets the sidebar order.
+- Link between pages by site path, such as `/install/docker`.
+- Version numbers (Headscale minimums, Node, pnpm) come from
+  `docs/app/lib/versions.ts`. In MDX, write `{versions.headscale.minimum}`.
+- Write steps in the imperative and explanations as plain description. Don't
+  address the reader as "you".
 
 ## Releases
 
-Every user-facing change adds a line to the `# Next` section of `CHANGELOG.md`,
-under `## Changes` or `## Fixes`. That section is what nightly users read on the
-docs site, so write it as prose for them, not as a commit summary. Prose placed
-directly under `# Next`, above the subheadings, becomes the release preamble.
+Every user-facing change adds a line to `# Next` in `CHANGELOG.md`, under
+`## Changes` or `## Fixes`. Nightly users read it on the docs site, so write it
+as prose for them, not as a commit summary. Prose directly under `# Next`,
+above the subheadings, becomes the release preamble.
 
 Anything an operator has to act on when upgrading, such as a new minimum
 Headscale version, a renamed option or a changed requirement, also gets a line
-under `## Upgrading`, placed above `## Changes`. Write each line as the step to
-take. The docs' Upgrading page is built from these sections, so a step that
-only appears in the preamble or under Changes is missing from it.
+under `## Upgrading`, above `## Changes`. Write each line as the step to take.
+The docs' Upgrading page is built from these sections, so a step that only
+appears in the preamble or under Changes is missing from it.
 
-To cut a release, run `pnpm release cut <version>`. It renames `# Next` to the
-version, bumps `package.json`, commits, and tags. Pushing the tag builds the
-images and publishes the GitHub release from that changelog section.
+`pnpm release cut <version>` renames `# Next` to the version, bumps
+`package.json`, commits and tags. Pushing the tag builds the images and
+publishes the GitHub release from that changelog section.
 
 ### Release lines
 
 `main` is the next minor release. Each released minor gets a `release/X.Y`
-branch cut from its `.0` tag (or the latest patch tag, when created later), and
-patch releases for that minor are cut from there.
+branch cut from its `.0` tag (or its latest patch tag, when created later), and
+that minor's patches are cut from there.
 
 - Fixes land on `main` first. Backport with `git cherry-pick -x <sha>` onto
   `release/X.Y`, adapting the code if `main` has diverged, and add the changelog
@@ -99,8 +85,8 @@ patch releases for that minor are cut from there.
   that branch with `--follow-tags` (not `main`).
 - Copy the released `# X.Y.Z` section into `main`'s `CHANGELOG.md` below
   `# Next`, so the beta docs keep the full history.
-- Only security and serious regression fixes are backported once the next minor
-  ships. New features never are.
+- Once the next minor ships, only security and serious regression fixes are
+  backported. New features never are.
 
 ### Docs versions
 
