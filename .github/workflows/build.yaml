@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   ci:
-    name: Build and Test
+    name: Build and unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -50,8 +50,48 @@ jobs:
       - name: Run unit tests
         run: pnpm run test:unit
 
+  # Starts alongside the build, since the tests build what they need. Files
+  # that call testedVersions() run once per Headscale version, the rest once.
+  integration:
+    name: Integration (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Keep in sync with HEADSCALE_VERSIONS in tests/harness/versions.ts.
+        include:
+          - { name: "Headscale 0.27.1", versions: "0.27.1", files: "-l" }
+          - { name: "Headscale 0.28.0", versions: "0.28.0", files: "-l" }
+          - { name: "Headscale 0.29.5", versions: "0.29.5", files: "-l" }
+          - { name: "version independent", versions: "", files: "-L" }
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+          cache: pnpm
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Run integration tests
-        run: pnpm run test:integration
+        run: pnpm run test:integration $(grep -r ${{ matrix.files }} testedVersions tests/integration --include='*.test.ts')
+        env:
+          HP_HEADSCALE_VERSIONS: ${{ matrix.versions }}
 
   nix:
     name: Nix Flake Check

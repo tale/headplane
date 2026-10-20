@@ -6,6 +6,10 @@ import { fileURLToPath } from "node:url";
 import tc from "testcontainers";
 import { build } from "vite";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
+import { stringify } from "yaml";
+
+import { headscaleConfig } from "../../harness/headscale";
+import { LATEST_HEADSCALE } from "../../harness/versions";
 
 // This is a little shim file that we use to execute the real proc-helper that
 // is bundled through Vite in order to test against a real Linux /proc FS.
@@ -68,13 +72,14 @@ describe("ProcIntegration", () => {
     await writeFile(
       join(tmpDir, "Dockerfile"),
       [
-        "FROM headscale/headscale:0.25.1-debug AS headscale",
+        `FROM headscale/headscale:${LATEST_HEADSCALE}-debug AS headscale`,
         "FROM node:24-alpine",
         "COPY --from=headscale /ko-app/headscale /usr/local/bin/headscale",
       ].join("\n"),
     );
 
-    const configPath = join(root, "tests/integration/setup/config.yaml");
+    const configPath = join(tmpDir, "config.yaml");
+    await writeFile(configPath, stringify(headscaleConfig()));
     const image = await tc.GenericContainer.fromDockerfile(tmpDir).build();
 
     container = await image

@@ -202,8 +202,20 @@ export async function createAgentManager(
 
       // tsnet prints an auth URL when it falls back to interactive login.
       const authMatch = text.match(
-        /To start this tsnet server, restart with TS_AUTHKEY set, or go to: (https:\/\/\S+)/,
+        /To start this tsnet server, restart with TS_AUTHKEY set, or go to: (https?:\/\/\S+)/,
       );
+
+      // Headscale no longer knows the saved identity, so register a new one.
+      if (authMatch && !authKey) {
+        if (!stopping.has(child)) {
+          log.warn("agent", "Headscale doesn't know the agent's saved node, re-registering it");
+          needsAuthKey = true;
+          pendingResync = true;
+          void stopProcess(child);
+        }
+        return;
+      }
+
       if (authMatch) {
         state.authUrl = authMatch[1];
         log.warn("agent", "Agent is waiting for interactive approval; visit: %s", state.authUrl);
@@ -433,6 +445,11 @@ export async function createAgentManager(
       }
 
       if (!line) {
+        // Stopped to re-register, which the queued resync does.
+        if (needsAuthKey) {
+          return;
+        }
+
         throw new Error("Agent process closed unexpectedly");
       }
 

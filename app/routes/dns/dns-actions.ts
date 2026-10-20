@@ -72,8 +72,14 @@ export const dnsAction = createAction({
     },
     override_dns: {
       fields: { enabled: toggle },
-      async handler(input, { config, restart }) {
-        await config.patch([{ path: "dns.override_local_dns", value: input.enabled === "true" }]);
+      async handler(input, { config, dns, restart }) {
+        const isEnabled = input.enabled === "true";
+        // Headscale won't start overriding local DNS without a global nameserver.
+        if (isEnabled && dns.nameservers.length === 0) {
+          throw new ActionError("Add a global nameserver before overriding local DNS.");
+        }
+
+        await config.patch([{ path: "dns.override_local_dns", value: isEnabled }]);
         await restart();
         return ok("DNS override updated");
       },
@@ -98,9 +104,20 @@ export const dnsAction = createAction({
     remove_ns: {
       fields: { nameserver: v.string(), split_domain: splitDomain },
       async handler(input, { config, dns, restart }) {
-        const servers = (
-          input.split_domain ? (dns.splitDns[input.split_domain] ?? []) : dns.nameservers
-        ).filter((server) => server !== input.nameserver);
+        const current = input.split_domain
+          ? (dns.splitDns[input.split_domain] ?? [])
+          : dns.nameservers;
+        if (!current.includes(input.nameserver)) {
+          throw new ActionError("This nameserver isn't in the list anymore.");
+        }
+
+        const servers = current.filter((server) => server !== input.nameserver);
+
+        if (!input.split_domain && servers.length === 0 && dns.overrideDns) {
+          throw new ActionError(
+            "Overriding local DNS needs a global nameserver. Turn off the override first.",
+          );
+        }
 
         // An empty split list is dropped so Headscale doesn't keep the domain.
         await config.patch([
@@ -123,13 +140,19 @@ export const dnsAction = createAction({
         const servers = input.split_domain
           ? (dns.splitDns[input.split_domain] ?? [])
           : dns.nameservers;
+        if (!servers.includes(input.nameserver)) {
+          throw new ActionError("This nameserver isn't in the list anymore.");
+        }
 
-        await config.patch([
-          {
-            path: nameserverPath(input.split_domain),
-            value: moveItem(servers, input.nameserver, input.direction),
-          },
-        ]);
+        // moveItem hands back the same list when there's nowhere to move.
+        const moved = moveItem(servers, input.nameserver, input.direction);
+        if (moved === servers) {
+          throw new ActionError(
+            `This nameserver is already at the ${input.direction === "up" ? "top" : "bottom"}.`,
+          );
+        }
+
+        await config.patch([{ path: nameserverPath(input.split_domain), value: moved }]);
         await restart();
         return ok();
       },
@@ -151,6 +174,10 @@ export const dnsAction = createAction({
     remove_domain: {
       fields: { domain: v.string() },
       async handler(input, { config, dns, restart }) {
+        if (!dns.searchDomains.includes(input.domain)) {
+          throw new ActionError("This search domain isn't in the list anymore.");
+        }
+
         await config.patch([
           {
             path: "dns.search_domains",
@@ -164,12 +191,18 @@ export const dnsAction = createAction({
     move_domain: {
       fields: { domain: v.string(), direction: v.picklist(["up", "down"]) },
       async handler(input, { config, dns, restart }) {
-        await config.patch([
-          {
-            path: "dns.search_domains",
-            value: moveItem(dns.searchDomains, input.domain, input.direction),
-          },
-        ]);
+        if (!dns.searchDomains.includes(input.domain)) {
+          throw new ActionError("This search domain isn't in the list anymore.");
+        }
+
+        const moved = moveItem(dns.searchDomains, input.domain, input.direction);
+        if (moved === dns.searchDomains) {
+          throw new ActionError(
+            `This search domain is already at the ${input.direction === "up" ? "top" : "bottom"}.`,
+          );
+        }
+
+        await config.patch([{ path: "dns.search_domains", value: moved }]);
         await restart();
         return ok();
       },
@@ -203,12 +236,16 @@ export const dnsAction = createAction({
     },
     remove_record: {
       fields: { type: v.string(), name: v.string() },
-      async handler(input, { config }) {
+      async handler(input, { config, dns }) {
         if (!config.recordsWritable()) {
           throw new ActionError(
             "DNS records can only be changed through dns.extra_records_path.",
             403,
           );
+        }
+
+        if (!dns.extraRecords.some((r) => r.name === input.name && r.type === input.type)) {
+          throw new ActionError("This record isn't in the list anymore.");
         }
 
         await config.removeDNS({ name: input.name, type: input.type, value: "" });

@@ -1,4 +1,5 @@
 import ActionDialog from "~/components/action-dialog";
+import { KEY_EXPIRY_DAYS } from "~/server/headscale/api/resources/nodes";
 import type { Machine } from "~/types";
 import { isNoExpiry } from "~/utils/node-info";
 
@@ -16,7 +17,7 @@ export default function KeyExpiry({ machine, isOpen, setIsOpen }: KeyExpiryProps
       description={
         isDisabling
           ? "The machine stays signed in until you expire or remove it."
-          : "The machine has to sign in again when its key expires."
+          : `The machine has to sign in again in ${KEY_EXPIRY_DAYS} days, when its key expires.`
       }
       fields={{ node_id: machine.id, disable_expiry: String(isDisabling) }}
       intent="toggle_expiry"

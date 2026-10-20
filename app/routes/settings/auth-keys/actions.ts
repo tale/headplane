@@ -2,8 +2,7 @@ import * as v from "valibot";
 
 import { authContext, requestApiContext } from "~/server/context";
 import { ActionError, createAction } from "~/server/web/actions";
-import { isUserPrincipal } from "~/server/web/auth";
-import { getOidcSubject } from "~/server/web/headscale-identity";
+import { ownsHeadscaleUser } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import { list, ok } from "~/utils/form";
@@ -43,17 +42,12 @@ export const authKeysAction = createAction({
       }
 
       const [user] = await api.users.list({ id: userId });
-      const ownsUser =
-        user &&
-        isUserPrincipal(principal) &&
-        (principal.user.headscaleUserId === userId ||
-          getOidcSubject(user) === principal.user.subject);
-      if (!ownsUser) {
+      if (!user || !ownsHeadscaleUser(principal, user)) {
         throw new ActionError("You can only manage your own auth keys.", 403);
       }
     }
 
-    return { principal, api, requireOwnUser };
+    return { principal, api, canGenerateAny, requireOwnUser };
   },
   intents: {
     create: {
@@ -64,11 +58,15 @@ export const authKeysAction = createAction({
         reusable: switchValue,
         ephemeral: switchValue,
       },
-      async handler(input, { api, requireOwnUser }) {
+      async handler(input, { api, canGenerateAny, requireOwnUser }) {
         const tags = input.tags.map((tag) => tag.trim()).filter((tag) => tag !== "");
         const user = input.user_id || null;
         if (!user && tags.length === 0) {
           throw new ActionError("Choose a user or add at least one tag.");
+        }
+
+        if (!user && !canGenerateAny) {
+          throw new ActionError("You can only manage your own auth keys.", 403);
         }
 
         if (user) {

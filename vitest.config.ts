@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+import { cn } from "cn/vite";
 import { defineConfig } from "vitest/config";
 
 const prefix = process.env.__INTERNAL_PREFIX || "/admin";
@@ -17,6 +18,14 @@ if (!version) {
 }
 
 export default defineConfig({
+  // The class tables app/utils/cn.ts imports are generated, not checked in.
+  plugins: [
+    cn({
+      content: ["app/**/*.{ts,tsx}"],
+      css: "app/tailwind.css",
+      out: "app/utils/cn-tables.ts",
+    }),
+  ],
   test: {
     projects: [
       {
@@ -24,24 +33,21 @@ export default defineConfig({
         test: {
           name: "unit",
           include: ["tests/unit/**/*.test.ts"],
-          setupFiles: ["tests/unit/setup/overlay-fs.ts"],
         },
       },
       {
         extends: true,
         test: {
-          name: "integration:api",
-          include: ["tests/integration/api/**/*.test.ts"],
-          setupFiles: ["tests/integration/setup/vitest-hook.ts"],
-          testTimeout: 60_000,
-        },
-      },
-      {
-        extends: true,
-        test: {
-          name: "integration:platform",
-          include: ["tests/integration/platform/**/*.test.ts"],
-          testTimeout: 60_000,
+          name: "integration:app",
+          include: ["tests/integration/**/*.test.ts"],
+          exclude: [
+            "node_modules/**",
+            "build/**",
+            "tests/integration/agent/**",
+            "tests/integration/ssh/**",
+          ],
+          testTimeout: 120_000,
+          hookTimeout: 120_000,
         },
       },
       {
@@ -50,8 +56,6 @@ export default defineConfig({
           name: "integration:agent",
           include: ["tests/integration/agent/**/*.test.ts"],
           globalSetup: ["tests/integration/agent/setup.ts"],
-          // Agents are counted by their binary path, which every file shares.
-          fileParallelism: false,
           testTimeout: 180_000,
           hookTimeout: 180_000,
         },
@@ -59,16 +63,16 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: "integration:oidc",
-          include: ["tests/integration/oidc/**/*.test.ts"],
-          testTimeout: 60_000,
+          name: "integration:ssh",
+          include: ["tests/integration/ssh/**/*.test.ts"],
+          globalSetup: ["tests/integration/ssh/setup.ts"],
+          testTimeout: 180_000,
+          hookTimeout: 180_000,
         },
       },
     ],
-    env: {
-      HEADPLANE_DEBUG_LOG: "true",
-    },
     environment: "node",
+    silent: "passed-only",
     exclude: ["node_modules/**", "build/**"],
   },
   resolve: {

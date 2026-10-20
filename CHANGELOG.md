@@ -39,6 +39,10 @@
 - The cookie that tracked SSO state was not signed. It is now signed with `server.cookie_secret` and cleared once SSO succeeds (closes [#659](https://github.com/tale/headplane/issues/659)).
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
+- The auth keys page only shows people with self-service keys (like auditors and viewers) their own keys. Previously it sent every user's keys to anyone signed in, in full on Headscale 0.27, even when the page itself said they had no access. Self-service users also can no longer create tag-only keys by submitting the form directly.
+- Syncing the agent now requires permission to view machines, like the agent page itself. Previously anyone signed in could trigger a sync.
+- Enabling key expiry on a machine no longer signs it out on the spot. Its key now expires in 180 days, matching Tailscale. On Headscale 0.29, where machines added with an auth key start with key expiry off, this affected every machine the first time expiry was turned on.
+- Signing in ignores spaces and line breaks pasted around an API key. A key with stray characters inside it is reported as invalid instead of "Couldn't reach Headscale."
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
 - The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
 - An unexpected error during a background agent sync no longer crashes Headplane.
@@ -50,6 +54,19 @@
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
+- If the agent's machine is deleted while Headplane is stopped, the agent registers again on the next start instead of waiting for a login that never comes.
+- Creating or renaming a user to a name that's already taken now says so, instead of showing a database error from Headscale.
+- Linking an account to a Headscale user that no longer exists now shows an error instead of saving a broken link.
+- Changing the owner's role or transferring ownership to yourself now explains why it can't be done, instead of asking to try again.
+- Removing the last global nameserver while local DNS is overridden, or turning the override on without a global nameserver, no longer saves a config Headscale refuses to start with. Headplane now explains what to change first.
+- Removing or reordering a nameserver, search domain or DNS record that changed in another tab now says so, instead of restarting Headscale for nothing.
+- Turning off key expiry on Headscale 0.27 or 0.28 no longer signs the machine out. Headplane now explains that this needs Headscale 0.29 or newer.
+- Acting on a machine that was deleted elsewhere now says the machine no longer exists.
+- The ACL page no longer shows an empty, editable policy when Headscale can't load it. With Headscale's default file-mode configuration it now shows the policy as read-only, and other errors are reported instead of offering to overwrite the policy.
+- Browser SSH shows why a session couldn't open, such as SSH rules that don't allow the chosen user, instead of a spinner that never ends. A session that stalls while connecting now gives up after 30 seconds.
+- Browser SSH works with SSH rules that use the `check` action on Headscale 0.29. The page links to the sign-in Headscale asks for, and the session opens once it's done (closes [#591](https://github.com/tale/headplane/issues/591)).
+- Browser SSH no longer opens a second SSH session right after the first one connects.
+- Browser SSH no longer says it isn't available when Headplane can't reach its own public address, as happens behind some reverse proxies. The page checks for its files when it loads them instead.
 
 # 0.8.1 (October 16, 2026)
 

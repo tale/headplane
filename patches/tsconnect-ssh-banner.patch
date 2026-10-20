@@ -1,0 +1,44 @@
+tsconnect: show SSH banners and time out stalled handshakes
+
+Rules with the check action send their sign-in URL as a pre-auth banner,
+which upstream drops, so the session hung with nothing on screen. Forward
+banners to the terminal and put a deadline on the handshake, extended
+while the person signs in.
+
+Applied to cmd/hp_ssh/wasm_js.go by scripts/sync-tsconnect.sh, after
+tsconnect-term-type.patch.
+
+--- a/wasm/wasm_js.go
++++ b/wasm/wasm_js.go
+@@ -435,6 +435,9 @@
+ 	}
+ 	defer c.Close()
+ 
++	// A handshake that stalls would otherwise hang the terminal forever.
++	c.SetDeadline(time.Now().Add(time.Duration(timeoutSeconds * float64(time.Second))))
++
+ 	config := &ssh.ClientConfig{
+ 		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+ 			// Host keys are not used with Tailscale SSH, but we can use this
+@@ -442,6 +445,13 @@
+ 			reportProgress("SSH connection established…")
+ 			return nil
+ 		},
++		// Rules with the check action send their sign-in URL as a banner, then
++		// wait for the person to finish signing in.
++		BannerCallback: func(message string) error {
++			writeFn.Invoke(strings.ReplaceAll(message, "\n", "\r\n"))
++			c.SetDeadline(time.Now().Add(5 * time.Minute))
++			return nil
++		},
+ 		User: s.username,
+ 	}
+ 
+@@ -452,6 +462,7 @@
+ 		return
+ 	}
+ 	defer sshConn.Close()
++	c.SetDeadline(time.Time{})
+ 
+ 	sshClient := ssh.NewClient(sshConn, nil, nil)
+ 	defer sshClient.Close()

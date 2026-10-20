@@ -1,12 +1,13 @@
 import { NavLink, Outlet } from "react-router";
 
 import PageHeader from "~/components/page-header";
-import { headscaleConfigContext } from "~/server/context";
+import { authContext, headscaleConfigContext } from "~/server/context";
 import cn from "~/utils/cn";
 
 import type { Route } from "./+types/layout";
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
+  await context.get(authContext).require(request);
   const headscaleConfig = context.get(headscaleConfigContext);
 
   return {

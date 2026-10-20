@@ -121,7 +121,7 @@ jobs:
           TAG: ${{ github.ref_name }}
           LATEST: ${{ needs.channel.outputs.latest }}
         run: |
-          node --disable-warning=ExperimentalWarning scripts/release.ts notes "$TAG" > "$RUNNER_TEMP/notes.md"
+          node scripts/release.ts notes "$TAG" > "$RUNNER_TEMP/notes.md"
           if [[ "$TAG" == *-* ]]; then
             gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --prerelease
           else
