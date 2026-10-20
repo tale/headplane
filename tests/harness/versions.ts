@@ -1,4 +1,5 @@
-// The newest patch of every Headscale minor Headplane supports.
+// The newest patch of every Headscale minor Headplane supports. CI runs one
+// job per version, listed in .github/workflows/build.yaml.
 export const HEADSCALE_VERSIONS = ["0.27.1", "0.28.0", "0.29.5"] as const;
 export type HeadscaleVersion = (typeof HEADSCALE_VERSIONS)[number];
 export const LATEST_HEADSCALE = HEADSCALE_VERSIONS[HEADSCALE_VERSIONS.length - 1];
