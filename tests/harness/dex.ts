@@ -106,12 +106,12 @@ export async function startTailnetDex(tailnet: Tailnet) {
       const location = response.headers.location;
       if (typeof location === "string") {
         await response.body.dump();
-        const next = new URL(location, target).href;
-        if (next.startsWith(HEADPLANE_URL)) {
-          return { status: response.statusCode, body: "", location: next };
+        const next = new URL(location, target);
+        if (next.origin === HEADPLANE_URL) {
+          return { status: response.statusCode, body: "", location: next.href };
         }
 
-        target = local(next);
+        target = local(next.href);
         form = undefined;
         continue;
       }
