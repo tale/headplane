@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
+import { cn } from "cn/vite";
 import { defineConfig } from "vitest/config";
 
 const prefix = process.env.__INTERNAL_PREFIX || "/admin";
@@ -17,6 +18,14 @@ if (!version) {
 }
 
 export default defineConfig({
+  // The class tables app/utils/cn.ts imports are generated, not checked in.
+  plugins: [
+    cn({
+      content: ["app/**/*.{ts,tsx}"],
+      css: "app/tailwind.css",
+      out: "app/utils/cn-tables.ts",
+    }),
+  ],
   test: {
     projects: [
       {
