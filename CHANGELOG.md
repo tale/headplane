@@ -1,5 +1,7 @@
 # Next
 
+# 0.8.2 (October 22, 2026)
+
 This release contains an important security update for Headplane that protects against the [compromised eMudhra intermediate CAs](https://emudhra.com/en/post/certificate-security-incident) with Node.js 24.22.1 and Go 1.27.3. Any native installations should also upgrade to these versions and rebuild the agent.
 
 ## Fixes
@@ -10,6 +12,8 @@ This release contains an important security update for Headplane that protects a
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
+
+---
 
 # 0.8.1 (October 16, 2026)
 
