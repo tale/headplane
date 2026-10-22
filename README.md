@@ -35,6 +35,7 @@ These are some of the features that Headplane offers:
 ## Deployment
 
 Refer to the [website](https://headplane.net) for detailed installation instructions.
+For one-click deployment, refer to [RepoCloud](https://repocloud.io/details/Headplane/).
 
 ## Versioning
 
