@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM golang:1.27.2 AS go-base
+FROM --platform=$BUILDPLATFORM golang:1.27.3 AS go-base
 WORKDIR /run
 RUN apt-get update && apt-get install -y --no-install-recommends patch && rm -rf /var/lib/apt/lists/*
 
@@ -66,7 +66,7 @@ WORKDIR /app
 CMD [ "/app/build/server/index.js" ]
 
 FROM node:24-alpine AS debug-shell
-RUN apk add --no-cache bash curl
+RUN apk add --no-cache bash curl ca-certificates
 
 COPY --from=js-base /run/build /app/build
 COPY --from=js-base /run/drizzle /app/drizzle
