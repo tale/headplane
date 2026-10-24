@@ -56,7 +56,7 @@ importers:
         version: 0.5.0
       drizzle-orm:
         specifier: 1.0.0-rc.4
-        version: 1.0.0-rc.4(@libsql/client@0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/better-sqlite3@7.6.13)(@types/mssql@9.1.9)(arktype@2.2.8)(better-sqlite3@11.10.0)(mssql@11.0.1)(valibot@1.5.0(typescript@7.0.2))(zod@4.6.7)
+        version: 1.0.0-rc.4(@libsql/client@0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/better-sqlite3@7.6.13)(@types/mssql@9.1.9)(@types/pg@8.23.1)(arktype@2.2.8)(better-sqlite3@11.10.0)(mssql@11.0.1)(pg@8.23.0)(valibot@1.5.0(typescript@7.0.2))(zod@4.6.7)
       isbot:
         specifier: 5.2.2
         version: 5.2.2
@@ -72,6 +72,9 @@ importers:
       mime:
         specifier: ^4.1.1
         version: 4.1.1
+      pg:
+        specifier: 8.23.0
+        version: 8.23.0
       pino:
         specifier: ^10.4.0
         version: 10.4.0
@@ -127,6 +130,9 @@ importers:
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
+      '@types/pg':
+        specifier: 8.23.1
+        version: 8.23.1
       '@types/react':
         specifier: ^19.3.0
         version: 19.3.0
@@ -1540,16 +1546,11 @@ packages:
   '@types/node@26.6.5':
     resolution: {integrity: sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==}
 
-<<<<<<< HEAD
-  '@types/react-dom@19.3.0':
-    resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
-=======
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
 
-  '@types/react-dom@19.2.5':
-    resolution: {integrity: sha512-fMPwH9v7r/pp43yUd2/Mbiex5KouJwwR3dzHkhLREUC6764VyDsqxhAxv6OFEYR1RhjOyD1naqba8ECDBe7ZQg==}
->>>>>>> d831d6b (feat(db): add PostgreSQL as an alternative storage backend)
+  '@types/react-dom@19.3.0':
+    resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
     peerDependencies:
       '@types/react': ^19.3.0
 
@@ -3572,6 +3573,40 @@ packages:
   pathe@2.0.3:
     resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
+  pg-cloudflare@1.4.1:
+    resolution: {integrity: sha512-6PQbsFWZcp9EmJEwy5cGQ2La+AMWpP46lgbb8X+U/XsHIUweYDNCpeuKck5RxL2MdVFi7krbbEi5nX4Zh7JhrQ==}
+
+  pg-connection-string@2.14.1:
+    resolution: {integrity: sha512-qR3kGNPBLpCNtz0evbKA0Y/MRFXwSSdT+pTJvYp/bXTcReZbvX1kzF0IyTc1QnxqF7AZbOeBhNL8R5mYQZV/MA==}
+
+  pg-int8@1.0.1:
+    resolution: {integrity: sha512-WCtabS6t3c8SkpDBUlb1kjOs7l66xsGdKpIPZsg4wR+B3+u9UAum2odSsF9tnvxg80h4ZxLWMy4pRjOsFIqQpw==}
+    engines: {node: '>=4.0.0'}
+
+  pg-pool@3.14.0:
+    resolution: {integrity: sha512-gKtPkFdQPU3DksooVLi9LsjZxrsBUZIpa+7aVx+LV5pNh0KzP4Zleud2po+ConrxbuXGBJ6Hfer6hdgpIBpBaw==}
+    peerDependencies:
+      pg: '>=8.0'
+
+  pg-protocol@1.16.1:
+    resolution: {integrity: sha512-p9VOFMiHB/ZbJATetbg+99PxssTVSQRnyuPSQ67mN1+1KBOjZaZ83ZQzltnxPhJwSsC3nwVjJ10DVJlerbFzLg==}
+
+  pg-types@2.2.0:
+    resolution: {integrity: sha512-qTAAlrEsl8s4OiEQY69wDvcMIdQN6wdz5ojQiOy6YRMuynxenON0O5oCpJI6lshc6scgAY8qvJ2On/p+CXY0GA==}
+    engines: {node: '>=4'}
+
+  pg@8.23.0:
+    resolution: {integrity: sha512-Ip2EQCngowJLGOfCwkFhPXU7/ljlhn6Rxlmy4XYfL2Y+vyRM59+8uR2xqRWKdYmbXmxCFOAmKxBuSUCdF34qLg==}
+    engines: {node: '>= 16.0.0'}
+    peerDependencies:
+      pg-native: '>=3.0.1'
+    peerDependenciesMeta:
+      pg-native:
+        optional: true
+
+  pgpass@1.0.5:
+    resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -4237,27 +4272,9 @@ packages:
       yaml:
         optional: true
 
-<<<<<<< HEAD
   vitest@5.0.4:
     resolution: {integrity: sha512-z0WxZRV2Sg48wF0FSgMq3TFG8JS38/Qr96vZVZdX6+Em9raQTvnXQvdTFJe2m3rfyJnEHeHQ/snceIdi8D1pVg==}
     engines: {node: ^22.12.0 || ^24.0.0 || >=26.0.0}
-=======
-  vitepress@2.0.0-alpha.20:
-    resolution: {integrity: sha512-uQWKmP9PaBkf9zxHn0iOml/ZPPDaGKqQXVMBHz3yjwyyd9Eg+BKLGxbqmOGlfOMCt6Fj8TLiAnE59qlKZ0A3xw==}
-    hasBin: true
-    peerDependencies:
-      markdown-it-mathjax3: ^4
-      postcss: ^8
-    peerDependenciesMeta:
-      markdown-it-mathjax3:
-        optional: true
-      postcss:
-        optional: true
-
-  vitest@4.1.11:
-    resolution: {integrity: sha512-fhACrNXUidIbGSBr5FlbuBkO7VWC1ZyLl0DO4CU2DrQoAPxX84Ysxs+HeGQpii5lZWV1Q4gBZTTu49mF+A6Edw==}
-    engines: {node: ^20.0.0 || ^22.0.0 || >=24.0.0}
->>>>>>> d831d6b (feat(db): add PostgreSQL as an alternative storage backend)
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
@@ -5645,17 +5662,13 @@ snapshots:
     dependencies:
       undici-types: 8.9.0
 
-<<<<<<< HEAD
-  '@types/react-dom@19.3.0(@types/react@19.3.0)':
-=======
   '@types/pg@8.23.1':
     dependencies:
-      '@types/node': 26.3.0
-      pg-protocol: 1.16.0
+      '@types/node': 26.6.5
+      pg-protocol: 1.16.1
       pg-types: 2.2.0
 
-  '@types/react-dom@19.2.5(@types/react@19.2.18)':
->>>>>>> d831d6b (feat(db): add PostgreSQL as an alternative storage backend)
+  '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:
       '@types/react': 19.3.0
 
@@ -6278,31 +6291,18 @@ snapshots:
       get-tsconfig: 4.13.7
       jiti: 2.7.0
 
-<<<<<<< HEAD
-  drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/better-sqlite3@7.6.13)(@types/mssql@9.1.9)(arktype@2.2.8)(better-sqlite3@11.10.0)(mssql@11.0.1)(valibot@1.5.0(typescript@7.0.2))(zod@4.6.7):
+  drizzle-orm@1.0.0-rc.4(@libsql/client@0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/better-sqlite3@7.6.13)(@types/mssql@9.1.9)(@types/pg@8.23.1)(arktype@2.2.8)(better-sqlite3@11.10.0)(mssql@11.0.1)(pg@8.23.0)(valibot@1.5.0(typescript@7.0.2))(zod@4.6.7):
     optionalDependencies:
       '@libsql/client': 0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@types/better-sqlite3': 7.6.13
       '@types/mssql': 9.1.9
+      '@types/pg': 8.23.1
       arktype: 2.2.8
       better-sqlite3: 11.10.0
       mssql: 11.0.1
+      pg: 8.23.0
       valibot: 1.5.0(typescript@7.0.2)
       zod: 4.6.7
-=======
-  drizzle-orm@1.0.0-beta.21(@libsql/client@0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(@types/better-sqlite3@7.6.13)(@types/mssql@9.1.9)(@types/pg@8.23.1)(arktype@2.2.3)(better-sqlite3@11.10.0)(mssql@11.0.1)(pg@8.23.0)(valibot@1.4.2(typescript@7.0.2)):
-    dependencies:
-      '@types/mssql': 9.1.9
-      mssql: 11.0.1
-    optionalDependencies:
-      '@libsql/client': 0.17.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      '@types/better-sqlite3': 7.6.13
-      '@types/pg': 8.23.1
-      arktype: 2.2.3
-      better-sqlite3: 11.10.0
-      pg: 8.23.0
-      valibot: 1.4.2(typescript@7.0.2)
->>>>>>> d831d6b (feat(db): add PostgreSQL as an alternative storage backend)
 
   dunder-proto@1.0.1:
     dependencies:
@@ -7779,6 +7779,41 @@ snapshots:
 
   pathe@2.0.3: {}
 
+  pg-cloudflare@1.4.1:
+    optional: true
+
+  pg-connection-string@2.14.1: {}
+
+  pg-int8@1.0.1: {}
+
+  pg-pool@3.14.0(pg@8.23.0):
+    dependencies:
+      pg: 8.23.0
+
+  pg-protocol@1.16.1: {}
+
+  pg-types@2.2.0:
+    dependencies:
+      pg-int8: 1.0.1
+      postgres-array: 2.0.0
+      postgres-bytea: 1.0.1
+      postgres-date: 1.0.7
+      postgres-interval: 1.2.0
+
+  pg@8.23.0:
+    dependencies:
+      pg-connection-string: 2.14.1
+      pg-pool: 3.14.0(pg@8.23.0)
+      pg-protocol: 1.16.1
+      pg-types: 2.2.0
+      pgpass: 1.0.5
+    optionalDependencies:
+      pg-cloudflare: 1.4.1
+
+  pgpass@1.0.5:
+    dependencies:
+      split2: 4.2.0
+
   picocolors@1.1.1: {}
 
   picomatch@4.0.7: {}
@@ -8639,70 +8674,11 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.1
 
-<<<<<<< HEAD
   vitest@5.0.4(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.15)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/mocker': 5.0.4(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.15)(yaml@2.9.1))
       chai: 6.3.0
-=======
-  vitepress@2.0.0-alpha.20(@types/node@26.3.0)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.26)(terser@5.39.0)(tsx@4.23.12)(typescript@7.0.2)(yaml@2.9.0):
-    dependencies:
-      '@docsearch/css': 4.7.0
-      '@docsearch/js': 4.7.0
-      '@docsearch/sidepanel-js': 4.7.0
-      '@iconify-json/simple-icons': 1.2.93
-      '@shikijs/transformers': 4.4.3
-      '@types/markdown-it': 14.1.2
-      '@vitejs/plugin-vue': 6.0.8(vite@8.2.2(@types/node@26.3.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.12)(yaml@2.9.0))(vue@3.5.42(typescript@7.0.2))
-      '@vue/devtools-api': 8.2.1
-      '@vue/shared': 3.5.42
-      '@vueuse/core': 14.4.0(vue@3.5.42(typescript@7.0.2))
-      '@vueuse/integrations': 14.4.0(focus-trap@8.2.2)(vue@3.5.42(typescript@7.0.2))
-      focus-trap: 8.2.2
-      mark.js: 8.11.1
-      minisearch: 7.2.0
-      shiki: 4.4.3
-      vite: 8.2.2(@types/node@26.3.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.12)(yaml@2.9.0)
-      vue: 3.5.42(typescript@7.0.2)
-    optionalDependencies:
-      postcss: 8.5.26
-    transitivePeerDependencies:
-      - '@types/node'
-      - '@vitejs/devtools'
-      - async-validator
-      - axios
-      - change-case
-      - drauu
-      - esbuild
-      - fuse.js
-      - idb-keyval
-      - jiti
-      - jwt-decode
-      - less
-      - nprogress
-      - qrcode
-      - sass
-      - sass-embedded
-      - sortablejs
-      - stylus
-      - sugarss
-      - terser
-      - tsx
-      - typescript
-      - universal-cookie
-      - yaml
-
-  vitest@4.1.11(@types/node@26.3.0)(vite@8.2.2(@types/node@26.3.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.12)(yaml@2.9.0)):
-    dependencies:
-      '@vitest/expect': 4.1.11
-      '@vitest/mocker': 4.1.11(vite@8.2.2(@types/node@26.3.0)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.39.0)(tsx@4.23.12)(yaml@2.9.0))
-      '@vitest/pretty-format': 4.1.11
-      '@vitest/runner': 4.1.11
-      '@vitest/snapshot': 4.1.11
-      '@vitest/spy': 4.1.11
-      '@vitest/utils': 4.1.11
->>>>>>> d831d6b (feat(db): add PostgreSQL as an alternative storage backend)
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
       magic-string: 1.4.3

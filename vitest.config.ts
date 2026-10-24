@@ -47,6 +47,15 @@ export default defineConfig({
       {
         extends: true,
         test: {
+          name: "integration:db",
+          include: ["tests/integration/db/**/*.test.ts"],
+          testTimeout: 120_000,
+          hookTimeout: 120_000,
+        },
+      },
+      {
+        extends: true,
+        test: {
           name: "integration:agent",
           include: ["tests/integration/agent/**/*.test.ts"],
           globalSetup: ["tests/integration/agent/setup.ts"],

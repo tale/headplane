@@ -4,7 +4,7 @@ import { access, constants, mkdir, readFile, rename, writeFile } from "node:fs/p
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
 
-import { inArray, notInArray } from "drizzle-orm";
+import { inArray, notInArray, sql } from "drizzle-orm";
 
 import { HostInfo, type Machine } from "~/types";
 import log from "~/utils/log";
@@ -472,23 +472,22 @@ export async function createAgentManager(
         const updatedAt = new Date();
         await db
           .insert(tables.hostInfo)
-          .values({
-            host_id: nodeKey,
-            payload,
-            updated_at: new Date(),
-          })
+          .values(
+            Object.entries(output.hosts).map(([nodeKey, payload]) => ({
+              host_id: nodeKey,
+              payload,
+              updated_at: updatedAt,
+            })),
+          )
           .onConflictDoUpdate({
             target: tables.hostInfo.host_id,
-            set: {
-              payload,
-              updated_at: new Date(),
-            },
+            set: { payload: sql`excluded.payload`, updated_at: sql`excluded.updated_at` },
           });
       }
 
-      await db.delete(hostInfo).where(
+      await db.delete(tables.hostInfo).where(
         notInArray(
-          hostInfo.host_id,
+          tables.hostInfo.host_id,
           nodes.map((node) => node.nodeKey),
         ),
       );
@@ -540,33 +539,10 @@ export async function createAgentManager(
     }
   }
 
-  /**
-   * Prunes any offline nodes marked as ephemeral. This is due to a Headscale
-   * bug where ephemeral nodes wouldn't be automatically removed on disconnect.
-   */
-  async function pruneStaleHostInfo() {
-    try {
-      const nodes = await apiClient.nodes.list();
-      const activeKeys = nodes.map((n) => n.nodeKey);
-
-      if (activeKeys.length === 0) {
-        return;
-      }
-
-      const deleted = await db
-        .delete(tables.hostInfo)
-        .where(notInArray(tables.hostInfo.host_id, activeKeys))
-        .returning();
-
-      if (deleted.length > 0) {
-        log.info("agent", "Pruned %d stale hostinfo entries", deleted.length);
-      }
-    } catch (error) {
-      log.debug(
-        "agent",
-        "Failed to prune stale hostinfo: %s",
-        error instanceof Error ? error.message : String(error),
-      );
+  void previousOwner.then(() => {
+    ownsWorkDir = true;
+    if (!disposed) {
+      void sync();
     }
   });
 
@@ -607,9 +583,9 @@ export async function createAgentManager(
       }
 
       const results = await db
-        .select({ id: hostInfo.host_id, updatedAt: hostInfo.updated_at })
-        .from(hostInfo)
-        .where(inArray(hostInfo.host_id, nodeKeys));
+        .select({ id: tables.hostInfo.host_id, updatedAt: tables.hostInfo.updated_at })
+        .from(tables.hostInfo)
+        .where(inArray(tables.hostInfo.host_id, nodeKeys));
 
       return Object.fromEntries(
         results.flatMap((r) => (r.updatedAt ? [[r.id, r.updatedAt]] : [])),

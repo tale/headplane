@@ -7,6 +7,7 @@ import { drizzle } from "drizzle-orm/node-sqlite";
 import { migrate } from "drizzle-orm/node-sqlite/migrator";
 import { expect, inject, vi } from "vitest";
 
+import { wrapSqliteClient } from "~/server/db/client.server";
 import { createHeadscale } from "~/server/headscale/api";
 import { type AgentManager, createAgentManager } from "~/server/hp-agent";
 
@@ -53,8 +54,9 @@ export async function createHarness(version: string, options: HarnessOptions = {
   const managers = new Set<AgentManager>();
 
   async function createManager(overrides: AgentOverrides = {}) {
-    const db = drizzle(":memory:");
-    migrate(db, { migrationsFolder: "./drizzle" });
+    const client = drizzle(":memory:");
+    migrate(client, { migrationsFolder: "./drizzle" });
+    const db = wrapSqliteClient(client);
 
     const manager = await createAgentManager(
       {

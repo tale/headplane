@@ -2,7 +2,7 @@ import { createHash, createHmac } from "node:crypto";
 import { isIP } from "node:net";
 
 import { eq, lt, sql } from "drizzle-orm";
-import { createCookie } from "react-router";
+import { createCookie, data } from "react-router";
 import { ulid } from "ulidx";
 
 import type { Machine } from "~/types";

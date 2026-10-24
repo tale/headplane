@@ -2,9 +2,7 @@
   "version": "8",
   "dialect": "postgres",
   "id": "9d9e5f3f-037e-4563-ae53-6580c50dc843",
-  "prevIds": [
-    "00000000-0000-0000-0000-000000000000"
-  ],
+  "prevIds": ["00000000-0000-0000-0000-000000000000"],
   "ddl": [
     {
       "isRlsEnabled": false,
@@ -332,9 +330,7 @@
       "table": "users"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "auth_sessions_pkey",
       "schema": "public",
@@ -342,9 +338,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "host_id"
-      ],
+      "columns": ["host_id"],
       "nameExplicit": false,
       "name": "host_info_pkey",
       "schema": "public",
@@ -352,9 +346,7 @@
       "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
+      "columns": ["id"],
       "nameExplicit": false,
       "name": "users_pkey",
       "schema": "public",
@@ -363,9 +355,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "sub"
-      ],
+      "columns": ["sub"],
       "nullsNotDistinct": false,
       "name": "users_sub_key",
       "schema": "public",
@@ -374,9 +364,7 @@
     },
     {
       "nameExplicit": false,
-      "columns": [
-        "headscale_user_id"
-      ],
+      "columns": ["headscale_user_id"],
       "nullsNotDistinct": false,
       "name": "users_headscale_user_id_key",
       "schema": "public",
