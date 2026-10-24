@@ -12,6 +12,7 @@ export const pathSupportedKeys = [
   "headscale.api_key",
   "oidc.client_secret",
   "oidc.headscale_api_key",
+  "server.database.password",
 ] as const;
 
 function normalizeStringArray(values: string[]): string[] {
@@ -49,6 +50,31 @@ const serverConfig = type({
   tls_cert_path: "string?",
   tls_key_path: "string?",
 
+  // Where Headplane keeps its own state. When absent, SQLite at
+  // `<data_path>/hp_persist.db` — the behaviour before this block existed.
+  //
+  // Deliberately plain `string` rather than `string.lower`: that keyword
+  // rewrites the value, which silently breaks any path containing a capital
+  // letter on a case-sensitive filesystem.
+  "database?": {
+    type: '"sqlite" | "postgres" = "sqlite"',
+
+    // sqlite
+    path: "string?",
+
+    // postgres — either `url`, or host/name/user (plus optional port and
+    // password). Validated when the target is resolved, since which fields are
+    // required depends on `type`.
+    url: "string?",
+    host: "string?",
+    port: "number.integer?",
+    name: "string?",
+    user: "string?",
+    password: "string?",
+    ssl_mode: '"disable" | "require" | "verify-full" = "require"',
+    max_connections: "number.integer = 10",
+  },
+
   "proxy_auth?": {
     enabled: "boolean",
     allowed_cidrs: "string[]?",
@@ -75,6 +101,19 @@ const partialServerConfig = type({
 
   tls_cert_path: "string?",
   tls_key_path: "string?",
+
+  "database?": {
+    type: '"sqlite" | "postgres"?',
+    path: "string?",
+    url: "string?",
+    host: "string?",
+    port: "number.integer?",
+    name: "string?",
+    user: "string?",
+    password: "string?",
+    ssl_mode: '"disable" | "require" | "verify-full"?',
+    max_connections: "number.integer?",
+  },
 
   "proxy_auth?": {
     enabled: "boolean?",

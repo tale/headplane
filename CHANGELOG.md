@@ -30,6 +30,9 @@
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 - When the Headscale configuration is writable but no integration is set up to restart Headscale, the DNS and sign-in restrictions pages now say that changes only take effect once Headscale restarts.
+- Added PostgreSQL as an alternative to the embedded SQLite database, configured through `server.database`. SQLite remains the default and existing installs are unaffected (closes [#605](https://github.com/tale/headplane/issues/605)).
+- Added `server.database`, which allows the Headplane database to live somewhere other than `server.data_path`. Omitting it keeps the existing location.
+- Added a `scripts/db-copy.ts` helper that copies an existing SQLite database onto PostgreSQL, so switching backends keeps user roles, Headscale links and active sessions.
 
 ## Fixes
 
@@ -50,6 +53,8 @@
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
+- Fixed concurrent first logins leaving Headplane with no owner. The check for an existing owner is now part of the promoting update rather than a separate count, so two people signing in at the same moment can no longer both skip the promotion.
+- Headplane now closes its database handle on shutdown instead of leaving it open.
 
 # 0.8.1 (October 16, 2026)
 

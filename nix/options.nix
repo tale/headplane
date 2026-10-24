@@ -90,6 +90,89 @@ in {
                   example = "headscale.example.com";
                 };
 
+                database = mkOption {
+                  type = types.submodule {
+                    options = {
+                      type = mkOption {
+                        type = types.enum ["sqlite" "postgres"];
+                        default = "sqlite";
+                        description = "Which database engine Headplane stores its own state in.";
+                      };
+
+                      path = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          Location of the SQLite database. When null it lives at
+                          hp_persist.db inside data_path, which is where it has always been.
+                          Set this to keep the database on a different volume.
+                        '';
+                        example = "/srv/state/headplane.db";
+                      };
+
+                      url = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = ''
+                          PostgreSQL connection string. Prefer password_path over embedding
+                          a password here, since this value lands in the Nix store.
+                        '';
+                        example = "postgres://headplane@10.0.0.5:5432/headplane";
+                      };
+
+                      host = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "PostgreSQL host, when not using url.";
+                      };
+
+                      port = mkOption {
+                        type = types.nullOr types.port;
+                        default = null;
+                        description = "PostgreSQL port. Defaults to 5432.";
+                      };
+
+                      name = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "PostgreSQL database name, when not using url.";
+                      };
+
+                      user = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "PostgreSQL user, when not using url.";
+                      };
+
+                      password_path = mkOption {
+                        type = types.nullOr types.path;
+                        default = null;
+                        description = ''
+                          Path to a file containing the PostgreSQL password. Preferred over
+                          putting the password in the configuration directly.
+                        '';
+                      };
+
+                      ssl_mode = mkOption {
+                        type = types.enum ["disable" "require" "verify-full"];
+                        default = "require";
+                        description = ''
+                          disable performs no encryption. require encrypts without verifying
+                          the server certificate. verify-full encrypts and verifies it.
+                        '';
+                      };
+
+                      max_connections = mkOption {
+                        type = types.ints.positive;
+                        default = 10;
+                        description = "Maximum size of the PostgreSQL connection pool.";
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Headplane's own database.";
+                };
+
                 proxy_auth = mkOption {
                   type = types.submodule {
                     options = {
