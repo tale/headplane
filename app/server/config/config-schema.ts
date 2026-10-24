@@ -31,6 +31,8 @@ function normalizeStringArray(values: string[]): string[] {
   return normalized;
 }
 
+const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
+
 const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
@@ -59,6 +61,20 @@ const serverConfig = type({
     name_header: "string?",
     picture_header: "string?",
   },
+
+  // Authentication from a signed JWT injected by an identity-aware proxy.
+  // All four identifying fields are required: each one missing is a way to
+  // accept assertions that were never meant for this instance.
+  "jwt_auth?": {
+    enabled: "boolean",
+    header: "string",
+    issuer: "string.url",
+    jwks_endpoint: "string.url",
+    audience: "string",
+    algorithms: "string[]?",
+    logout_url: "string?",
+    default_role: `${assignableRole} = "member"`,
+  },
 });
 
 const partialServerConfig = type({
@@ -85,6 +101,17 @@ const partialServerConfig = type({
     email_header: "string?",
     name_header: "string?",
     picture_header: "string?",
+  },
+
+  "jwt_auth?": {
+    enabled: "boolean?",
+    header: "string?",
+    issuer: "string.url?",
+    jwks_endpoint: "string.url?",
+    audience: "string?",
+    algorithms: "string[]?",
+    logout_url: "string?",
+    default_role: `${assignableRole}?`,
   },
 });
 
@@ -113,8 +140,6 @@ const partialHeadscaleConfig = type({
   dns_records_path: "string?",
   tls_cert_path: "string?",
 });
-
-const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
 
 const oidcConfig = type({
   enabled: "boolean = true",

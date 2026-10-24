@@ -161,6 +161,85 @@ in {
                   description = "Proxy authentication configuration.";
                 };
 
+                jwt_auth = mkOption {
+                  type = types.submodule {
+                    options = {
+                      enabled = mkOption {
+                        type = types.bool;
+                        default = false;
+                        description = ''
+                          Whether to authenticate requests from a signed JWT injected by an
+                          identity-aware proxy. The signature is verified against the proxy's
+                          JWKS. Requires headscale.api_key_path.
+                        '';
+                      };
+
+                      header = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Header carrying the signed assertion. Required when enabled.";
+                        example = "x-goog-iap-jwt-assertion";
+                      };
+
+                      issuer = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Expected iss claim, matched exactly. Required when enabled.";
+                        example = "https://cloud.google.com/iap";
+                      };
+
+                      jwks_endpoint = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Where the proxy publishes its signing keys. Required when enabled.";
+                        example = "https://www.gstatic.com/iap/verify/public_key-jwk";
+                      };
+
+                      audience = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Expected aud claim, matched exactly. Required when enabled.";
+                        example = "/projects/123456789/global/backendServices/987654321";
+                      };
+
+                      algorithms = mkOption {
+                        type = types.nullOr (types.listOf types.str);
+                        default = null;
+                        description = ''
+                          Accepted signing algorithms. Defaults to the asymmetric families;
+                          symmetric algorithms are refused.
+                        '';
+                        example = ["ES256"];
+                      };
+
+                      logout_url = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Where to send the browser on logout so the proxy drops its own session.";
+                        example = "/?gcp-iap-mode=CLEAR_LOGIN_COOKIE";
+                      };
+
+                      default_role = mkOption {
+                        type = types.enum [
+                          "admin"
+                          "network_admin"
+                          "it_admin"
+                          "auditor"
+                          "viewer"
+                          "member"
+                        ];
+                        default = "member";
+                        description = ''
+                          Role assigned to newly created users. The first user to sign in
+                          always becomes the owner regardless of this setting.
+                        '';
+                      };
+                    };
+                  };
+                  default = {};
+                  description = "Verified header JWT authentication configuration.";
+                };
+
                 data_path = mkOption {
                   type = types.path;
                   default = "/var/lib/headplane";
