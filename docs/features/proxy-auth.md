@@ -13,7 +13,9 @@ request is from through a header. People then sign in once, at the proxy.
 Headplane trusts the identity header from any address allowed below. If anyone
 else can reach Headplane from one of those addresses, they can sign in as
 anyone. When an OIDC provider is available, [SSO](/features/sso) is the safer
-choice.
+choice. When the proxy signs its identity header, as Google IAP, Cloudflare
+Access and Pomerium do, [JWT header authentication](/features/jwt-auth) verifies
+that signature instead of trusting the address.
 :::
 
 ## Setting it up

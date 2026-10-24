@@ -128,7 +128,12 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
     return <Logout />;
   }
 
-  const notice = urlState?.startsWith("error_") ? (
+  const notice = jwtAuthRejected ? (
+    <Callout className="mb-6" title="Proxy sign-in failed" variant="error">
+      The assertion from the identity-aware proxy was not accepted. The Headplane log has the
+      reason.
+    </Callout>
+  ) : urlState?.startsWith("error_") ? (
     <OidcErrorNotice code={urlState} />
   ) : oidcErrorCodes.includes("discovery_failed") ? (
     <OidcDiscoveryFailedNotice />

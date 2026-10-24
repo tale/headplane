@@ -30,6 +30,7 @@
 - Browser SSH's username prompt, offline machine page, and error pages use the sign-in layout, with shorter error messages that link straight to the matching troubleshooting section.
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 - When the Headscale configuration is writable but no integration is set up to restart Headscale, the DNS and sign-in restrictions pages now say that changes only take effect once Headscale restarts.
+- Added authentication from a signed assertion injected by an identity-aware proxy, via `server.jwt_auth`. Works with any proxy that signs a header, such as Google IAP, Cloudflare Access and Pomerium, by verifying the signature against the proxy's published keys, so identity does not depend on trusting the client address (closes [#606](https://github.com/tale/headplane/issues/606)).
 
 ## Fixes
 
