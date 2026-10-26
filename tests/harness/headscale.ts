@@ -55,9 +55,8 @@ export function headscaleConfig(overrides: Record<string, unknown> = {}) {
 // Nodes retry control over TLS on 443 after a reconnect, so a tailnet's
 // Headscale needs TLS. One self-signed pair is shared by every worker.
 async function certificate() {
-  const certPath = join(CERT_DIR, "cert.pem");
-  const keyPath = join(CERT_DIR, "key.pem");
-  if (!existsSync(certPath) || !existsSync(keyPath)) {
+  const pairDir = join(CERT_DIR, "pair");
+  if (!existsSync(pairDir)) {
     await mkdir(CERT_DIR, { recursive: true });
     const scratch = await mkdtemp(join(CERT_DIR, "new-"));
     execFileSync(
@@ -84,12 +83,19 @@ async function certificate() {
       { stdio: "ignore" },
     );
 
-    // Renames are atomic, so parallel workers never see half a pair.
-    await rename(join(scratch, "key.pem"), keyPath);
-    await rename(join(scratch, "cert.pem"), certPath);
-    await rm(scratch, { recursive: true, force: true });
+    // Publishing the whole directory is atomic, so the first worker's pair
+    // wins and parallel workers never mix a key with another's certificate.
+    await rename(scratch, pairDir).catch(async (error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOTEMPTY" && error.code !== "EEXIST") {
+        throw error;
+      }
+
+      await rm(scratch, { recursive: true, force: true });
+    });
   }
 
+  const certPath = join(pairDir, "cert.pem");
+  const keyPath = join(pairDir, "key.pem");
   return {
     certPath,
     cert: await readFile(certPath, "utf8"),
