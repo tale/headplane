@@ -41,6 +41,10 @@ function create(as: string, form: Record<string, string | string[]>) {
   });
 }
 
+function expire(as: string, form: Record<string, string>) {
+  return app.call(action, "/settings/auth-keys", { as, form: { intent: "expire", ...form } });
+}
+
 async function keysFor(user: User) {
   return app.api.preAuthKeys.listForUser(user.id);
 }
@@ -97,6 +101,26 @@ describe("self-service auth keys", () => {
 
     expect(statusOf(await create(cookie, { tags: tag }))).toBe(403);
     expect(await tagOnlyKeys()).toEqual([]);
+  });
+
+  test("a viewer can expire their own key", async () => {
+    const cookie = await signInAsAlice();
+    await create(cookie, { user_id: alice.id });
+    const [key] = await keysFor(alice);
+
+    expect(statusOf(await expire(cookie, { key_id: key.id, user_id: alice.id }))).toBe(200);
+    const [expired] = await keysFor(alice);
+    expect(new Date(expired.expiration).getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  test("a viewer can't expire someone else's key by naming their own user", async () => {
+    const { cookie: admin } = await app.signIn("admin");
+    await create(admin, { user_id: bob.id });
+    const [key] = await keysFor(bob);
+
+    const cookie = await signInAsAlice();
+    expect(statusOf(await expire(cookie, { key_id: key.id, user_id: alice.id }))).toBe(404);
+    expect((await keysFor(bob))[0].expiration).toBe(key.expiration);
   });
 
   test("a viewer only sees their own user and keys", async () => {
