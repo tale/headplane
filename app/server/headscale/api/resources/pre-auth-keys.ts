@@ -33,11 +33,12 @@ export function makePreAuthKeyApi(
   apiKey: string,
 ): PreAuthKeyApi {
   const api: PreAuthKeyApi = {
+    // Headscale 0.28+ ignores the user filter and returns every key.
     listForUser: async (userId) => {
       const { preAuthKeys } = await transport.request<{
         preAuthKeys: PreAuthKey[];
       }>({ method: "GET", path: "v1/preauthkey", apiKey, query: { user: userId } });
-      return preAuthKeys;
+      return preAuthKeys.filter((key) => key.user?.id === userId);
     },
 
     create: async ({ user, ephemeral, reusable, expiration, aclTags }) => {

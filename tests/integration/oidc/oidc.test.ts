@@ -1,14 +1,10 @@
-import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createOidcService, type OidcConfig } from "~/server/oidc/provider";
 
-import { type DexEnv, startDex } from "./start-dex";
+import { startDex } from "../../harness/dex";
 
-vi.mock("~/utils/log", () => ({
-  default: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
-
-let dex: DexEnv;
+let dex: Awaited<ReturnType<typeof startDex>>;
 
 beforeAll(async () => {
   dex = await startDex();

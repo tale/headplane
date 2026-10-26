@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
-import { findHeadscaleUserBySubject, getOidcSubject } from "~/server/web/headscale-identity";
+import type { Principal } from "~/server/web/auth";
+import { findHeadscaleUserBySubject, ownsHeadscaleUser } from "~/server/web/headscale-identity";
 import type { User } from "~/types/User";
 
 function makeUser(overrides: Partial<User> = {}): User {
@@ -12,23 +13,53 @@ function makeUser(overrides: Partial<User> = {}): User {
   };
 }
 
-describe("getOidcSubject", () => {
-  test("returns undefined for non-OIDC users", () => {
-    expect(getOidcSubject(makeUser({ provider: "local" }))).toBeUndefined();
-    expect(getOidcSubject(makeUser())).toBeUndefined();
+function signedIn(subject: string, headscaleUserId?: string): Principal {
+  return {
+    kind: "oidc",
+    sessionId: "session",
+    user: { id: "hp-1", subject, role: "member", headscaleUserId },
+    profile: { name: "Alice" },
+  };
+}
+
+describe("ownsHeadscaleUser", () => {
+  test("owns the linked Headscale user", () => {
+    expect(ownsHeadscaleUser(signedIn("sub-1", "1"), makeUser({ id: "1" }))).toBe(true);
+    expect(ownsHeadscaleUser(signedIn("sub-1", "2"), makeUser({ id: "1" }))).toBe(false);
   });
 
-  test("returns undefined when providerId is missing", () => {
-    expect(getOidcSubject(makeUser({ provider: "oidc" }))).toBeUndefined();
-    expect(getOidcSubject(makeUser({ provider: "oidc", providerId: "" }))).toBeUndefined();
+  test("owns the OIDC user whose providerId ends in their subject", () => {
+    const user = makeUser({ provider: "oidc", providerId: "https://idp.example.com/sub-1" });
+
+    expect(ownsHeadscaleUser(signedIn("sub-1"), user)).toBe(true);
+    expect(ownsHeadscaleUser(signedIn("sub-2"), user)).toBe(false);
   });
 
-  test("returns last path segment from providerId URL", () => {
-    const user = makeUser({
-      provider: "oidc",
-      providerId: "https://idp.example.com/abc-123",
-    });
-    expect(getOidcSubject(user)).toBe("abc-123");
+  test("decodes a URL-encoded subject", () => {
+    const user = makeUser({ provider: "oidc", providerId: "https://idp.example.com/a%7Cb" });
+
+    expect(ownsHeadscaleUser(signedIn("a|b"), user)).toBe(true);
+  });
+
+  test("never matches a subject on non-OIDC users or a missing providerId", () => {
+    for (const user of [
+      makeUser({ provider: "local", providerId: "https://idp.example.com/sub-1" }),
+      makeUser({ provider: "oidc" }),
+      makeUser({ provider: "oidc", providerId: "" }),
+    ]) {
+      expect(ownsHeadscaleUser(signedIn("sub-1"), user)).toBe(false);
+    }
+  });
+
+  test("API key sessions own no Headscale user", () => {
+    const principal: Principal = {
+      kind: "api_key",
+      sessionId: "session",
+      displayName: "API key",
+      apiKey: "hskey-api-x",
+    };
+
+    expect(ownsHeadscaleUser(principal, makeUser())).toBe(false);
   });
 });
 

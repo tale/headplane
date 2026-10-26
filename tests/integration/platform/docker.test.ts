@@ -1,118 +1,75 @@
-import { Client } from "undici";
+import { getContainerRuntimeClient } from "testcontainers";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import DockerIntegration from "~/server/config/integration/docker";
+import { createHeadscale } from "~/server/headscale/api";
 
-import { type HeadscaleEnv, startHeadscale } from "../setup/start-headscale";
+import { HARNESS_LABEL, type StartedHeadscale, startHeadscale } from "../../harness/headscale";
+import { LATEST_HEADSCALE } from "../../harness/versions";
 
-const TEST_LABEL_KEY = "me.tale.headplane.integration-test";
-const TEST_LABEL_VALUE = `docker-${Date.now()}`;
+const LABEL_VALUE = `docker-${process.pid}`;
+const SOCKET = process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock";
 
-function connect(socket: string) {
-  const url = new URL(socket);
-  if (url.protocol === "unix:") {
-    return new Client("http://localhost", { socketPath: url.pathname });
-  }
-
-  return new Client(url.href.replace(url.protocol, "http:"));
-}
-
-describe("DockerIntegration", () => {
-  let env: HeadscaleEnv;
-  let dockerSocket: string;
+describe("Docker integration", () => {
+  let headscale: StartedHeadscale;
 
   beforeAll(async () => {
-    dockerSocket = process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock";
-    env = await startHeadscale("0.25.1", {
-      labels: { [TEST_LABEL_KEY]: TEST_LABEL_VALUE },
+    headscale = await startHeadscale({
+      version: LATEST_HEADSCALE,
+      id: LABEL_VALUE,
     });
-  }, 60_000);
+  });
 
   afterAll(async () => {
-    await env?.container.stop({ remove: true, removeVolumes: true });
+    await headscale?.stop();
   });
 
-  test("isAvailable finds the headscale container by label", async () => {
-    const integration = new DockerIntegration({
+  function integration(options: { label?: string; name?: string; socket?: string }) {
+    return new DockerIntegration({
       enabled: true,
-      container_label: `${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}`,
-      socket: dockerSocket,
+      container_label: options.label ?? "unused=unused",
+      container_name: options.name,
+      socket: options.socket ?? SOCKET,
     });
+  }
 
-    expect(await integration.isAvailable()).toBe(true);
+  async function startedAt() {
+    const client = await getContainerRuntimeClient();
+    const info = await client.container.inspect(
+      client.container.getById(headscale.container.getId()),
+    );
+    return info.State.StartedAt;
+  }
+
+  test("finds Headscale by label or by name", async () => {
+    const name = headscale.container.getName().replace(/^\//, "");
+
+    expect(await integration({ label: `${HARNESS_LABEL}=${LABEL_VALUE}` }).isAvailable()).toBe(
+      true,
+    );
+    expect(await integration({ name }).isAvailable()).toBe(true);
   });
 
-  test("isAvailable finds the headscale container by name", async () => {
-    const name = env.container.getName().replace(/^\//, "");
-    const integration = new DockerIntegration({
-      enabled: true,
-      container_name: name,
-      container_label: "unused=unused",
-      socket: dockerSocket,
-    });
-
-    expect(await integration.isAvailable()).toBe(true);
+  test("isn't available without a matching container or a socket", async () => {
+    expect(await integration({ label: `${HARNESS_LABEL}=nothing` }).isAvailable()).toBe(false);
+    expect(
+      await integration({
+        label: `${HARNESS_LABEL}=${LABEL_VALUE}`,
+        socket: "unix:///tmp/nonexistent-docker.sock",
+      }).isAvailable(),
+    ).toBe(false);
   });
 
-  test("isAvailable returns false for a non-existent label", async () => {
-    const integration = new DockerIntegration({
-      enabled: true,
-      container_label: "me.tale.headplane.nonexistent=true",
-      socket: dockerSocket,
-    });
+  test("a config change restarts Headscale and waits for it to come back", async () => {
+    const docker = integration({ label: `${HARNESS_LABEL}=${LABEL_VALUE}` });
+    expect(await docker.isAvailable()).toBe(true);
 
-    expect(await integration.isAvailable()).toBe(false);
-  });
+    const before = await startedAt();
+    const client = await createHeadscale({ url: headscale.url });
+    await docker.onConfigChange(client);
 
-  test("isAvailable returns false for an invalid socket", async () => {
-    const integration = new DockerIntegration({
-      enabled: true,
-      container_label: `${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}`,
-      socket: "unix:///tmp/nonexistent-docker.sock",
-    });
-
-    expect(await integration.isAvailable()).toBe(false);
-  });
-
-  test("onConfigChange restarts the container", async () => {
-    const integration = new DockerIntegration({
-      enabled: true,
-      container_label: `${TEST_LABEL_KEY}=${TEST_LABEL_VALUE}`,
-      socket: dockerSocket,
-    });
-
-    expect(await integration.isAvailable()).toBe(true);
-
-    // Health check goes through the Docker socket to avoid stale port
-    // mappings after container restart.
-    const containerId = env.container.getId();
-    const dockerClient = connect(dockerSocket);
-
-    const versionRes = await dockerClient.request({
-      method: "GET",
-      path: "/version",
-    });
-    const versionInfo = (await versionRes.body.json()) as { ApiVersion?: string };
-    const apiVersion = versionInfo.ApiVersion ?? "1.24";
-
-    const mockHeadscale = {
-      health: async () => {
-        try {
-          const res = await dockerClient.request({
-            method: "GET",
-            path: `/v${apiVersion}/containers/${containerId}/json`,
-          });
-          const info = (await res.body.json()) as any;
-          return info.State?.Running === true;
-        } catch {
-          return false;
-        }
-      },
-    } as any;
-
-    await integration.onConfigChange(mockHeadscale);
-
-    const healthy = await mockHeadscale.health();
-    expect(healthy).toBe(true);
+    expect(await startedAt()).not.toBe(before);
+    expect(await client.health()).toBe(true);
+    await client.dispose();
   }, 60_000);
 });

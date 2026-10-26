@@ -1,30 +1,34 @@
-import { describe, expect, test } from "vitest";
+import { basename, dirname } from "node:path";
+
+import { afterEach, describe, expect, test } from "vitest";
 
 import type { PartialHeadplaneConfigWithPaths } from "~/server/config/config-schema";
 import { ConfigError } from "~/server/config/error";
 import { loadConfigKeyPaths } from "~/server/config/load";
 
-import { createFakeFile } from "../setup/overlay-fs";
+import { tempFile } from "../../support/temp";
+
+function withSecretPath(path: string, secret?: string) {
+  return {
+    server: { cookie_secret: secret, cookie_secret_path: path },
+  } as PartialHeadplaneConfigWithPaths;
+}
 
 describe("Configuration secret path handling", () => {
-  test("should correctly substitute server.cookie_secret", async () => {
-    createFakeFile("/secrets/cookie_secret.txt", "supersecretcookievalue");
-    const config = {
-      server: {
-        cookie_secret_path: "/secrets/cookie_secret.txt",
-      },
-    } as PartialHeadplaneConfigWithPaths;
+  afterEach(() => {
+    delete process.env.HP_TEST_COOKIE_SECRET_FILE;
+  });
+
+  test("reads the secret from the file and trims it", async () => {
+    const path = await tempFile("cookie_secret.txt", "supersecretcookievalue\n");
+    const config = withSecretPath(path);
 
     await loadConfigKeyPaths(config);
     expect(config.server?.cookie_secret).toBe("supersecretcookievalue");
   });
 
-  test("should throw error for missing secret file", async () => {
-    const config = {
-      server: {
-        cookie_secret_path: "/secrets/missing_cookie_secret.txt",
-      },
-    } as PartialHeadplaneConfigWithPaths;
+  test("a missing secret file is an error", async () => {
+    const config = withSecretPath("/secrets/missing_cookie_secret.txt");
 
     await expect(loadConfigKeyPaths(config)).rejects.toMatchObject(
       ConfigError.from("MISSING_SECRET_FILE", {
@@ -34,13 +38,8 @@ describe("Configuration secret path handling", () => {
     );
   });
 
-  test("should throw error for conflicting secret path and field", async () => {
-    const config = {
-      server: {
-        cookie_secret: "explicitsecretvalue",
-        cookie_secret_path: "/secrets/cookie_secret.txt",
-      },
-    } as PartialHeadplaneConfigWithPaths;
+  test("setting both the secret and its path is an error", async () => {
+    const config = withSecretPath("/secrets/cookie_secret.txt", "explicitsecretvalue");
 
     await expect(loadConfigKeyPaths(config)).rejects.toMatchObject(
       ConfigError.from("CONFLICTING_SECRET_PATH_FIELD", {
@@ -49,26 +48,17 @@ describe("Configuration secret path handling", () => {
     );
   });
 
-  test("should correctly interpolate env vars in secret paths", async () => {
-    process.env.HP_TEST_COOKIE_SECRET_FILE = "cookie_secret.txt";
-    createFakeFile(`/secrets/${process.env.HP_TEST_COOKIE_SECRET_FILE}`, "envvarsecretvalue");
-
-    const config = {
-      server: {
-        cookie_secret_path: "/secrets/${HP_TEST_COOKIE_SECRET_FILE}",
-      },
-    } as PartialHeadplaneConfigWithPaths;
+  test("interpolates env vars in the path", async () => {
+    const path = await tempFile("cookie_secret.txt", "envvarsecretvalue");
+    process.env.HP_TEST_COOKIE_SECRET_FILE = basename(path);
+    const config = withSecretPath(`${dirname(path)}/\${HP_TEST_COOKIE_SECRET_FILE}`);
 
     await loadConfigKeyPaths(config);
     expect(config.server?.cookie_secret).toBe("envvarsecretvalue");
   });
 
-  test("should throw error for missing interpolated env var in secret path", async () => {
-    const config = {
-      server: {
-        cookie_secret_path: "/secrets/${MISSING_ENV_VAR}",
-      },
-    } as PartialHeadplaneConfigWithPaths;
+  test("an unset interpolated env var is an error", async () => {
+    const config = withSecretPath("/secrets/${MISSING_ENV_VAR}");
 
     await expect(loadConfigKeyPaths(config)).rejects.toMatchObject(
       ConfigError.from("MISSING_INTERPOLATION_VARIABLE", {

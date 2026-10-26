@@ -35,7 +35,7 @@ export function createAction<
   C extends { principal: Principal },
   T extends Record<string, v.ObjectEntries>,
 >(options: ActionOptions<C, T>) {
-  return async (args: ActionFunctionArgs) => {
+  const action = async (args: ActionFunctionArgs) => {
     const auth = args.context.get(authContext);
 
     try {
@@ -73,4 +73,7 @@ export function createAction<
       throw error;
     }
   };
+
+  // Allows the testing harness to iterate all the intents
+  return Object.assign(action, { intents: Object.keys(options.intents) });
 }

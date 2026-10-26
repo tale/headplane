@@ -1,10 +1,11 @@
 import * as v from "valibot";
 
 import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
+import type { HeadscaleClient } from "~/server/headscale/api";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { usersResource } from "~/server/headscale/live-store";
 import { ActionError, createAction } from "~/server/web/actions";
-import { isUserPrincipal } from "~/server/web/auth";
+import { type AuthService, isUserPrincipal } from "~/server/web/auth";
 import { Capabilities, Roles, type Role } from "~/server/web/roles";
 import { isValidGroupName, parsePolicy, serializePolicy, setUserGroups } from "~/utils/acl-policy";
 import { invalid, list, ok } from "~/utils/form";
@@ -40,6 +41,7 @@ export const userAction = createAction({
     create: {
       fields: { name: username, display_name: optionalText, email: optionalText },
       async handler(input, { api, refresh }) {
+        await requireFreeName(api, input.name);
         await api.users.create({
           name: input.name,
           displayName: input.display_name,
@@ -76,6 +78,7 @@ export const userAction = createAction({
           throw new ActionError("Users managed by OIDC can't be renamed.", 403);
         }
 
+        await requireFreeName(api, input.name);
         await api.users.rename(user.id, input.name);
         await refresh();
         return ok("User renamed");
@@ -84,7 +87,12 @@ export const userAction = createAction({
     reassign: {
       fields: { headplane_user_id: id, role: v.picklist(assignableRoles, "Choose a role.") },
       async handler(input, { auth }) {
-        if (!(await auth.reassignUser(input.headplane_user_id, input.role))) {
+        const user = await requireHeadplaneUser(auth, input.headplane_user_id);
+        if (user.role === "owner") {
+          throw new ActionError("Transfer ownership to change the owner's role.", 403);
+        }
+
+        if (!(await auth.reassignUser(user.id, input.role))) {
           throw new ActionError("Couldn't change the role. Try again.", 500);
         }
 
@@ -96,6 +104,11 @@ export const userAction = createAction({
       async handler(input, { auth, principal }) {
         if (!isUserPrincipal(principal) || principal.user.role !== "owner") {
           throw new ActionError("Only the owner can transfer ownership.", 403);
+        }
+
+        const target = await requireHeadplaneUser(auth, input.headplane_user_id);
+        if (target.id === principal.user.id) {
+          throw new ActionError("You already own Headplane.");
         }
 
         if (!(await auth.transferOwnership(principal.user.id, input.headplane_user_id))) {
@@ -110,8 +123,14 @@ export const userAction = createAction({
         headplane_user_id: id,
         headscale_user_id: v.pipe(v.string(), v.minLength(1, "Choose a Headscale user.")),
       },
-      async handler(input, { auth }) {
-        if (!(await auth.linkHeadscaleUser(input.headplane_user_id, input.headscale_user_id))) {
+      async handler(input, { api, auth }) {
+        const user = await requireHeadplaneUser(auth, input.headplane_user_id);
+        const [headscaleUser] = await api.users.list({ id: input.headscale_user_id });
+        if (headscaleUser?.id !== input.headscale_user_id) {
+          throw new ActionError("That Headscale user no longer exists.", 404);
+        }
+
+        if (!(await auth.linkHeadscaleUser(user.id, headscaleUser.id))) {
           throw new ActionError("That Headscale user is already linked to another account.", 409);
         }
 
@@ -157,3 +176,19 @@ export const userAction = createAction({
     },
   },
 });
+
+async function requireFreeName(api: HeadscaleClient, name: string) {
+  const [existing] = await api.users.list({ name });
+  if (existing?.name === name) {
+    throw new ActionError(`A user named ${name} already exists.`, 409);
+  }
+}
+
+async function requireHeadplaneUser(auth: AuthService, id: string) {
+  const user = (await auth.listUsers()).find((user) => user.id === id);
+  if (!user) {
+    throw new ActionError("This user no longer exists.", 404);
+  }
+
+  return user;
+}

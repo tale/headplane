@@ -1,6 +1,6 @@
 import { join } from "node:path";
 
-import { createContext } from "react-router";
+import { createContext, RouterContextProvider } from "react-router";
 
 import log from "~/utils/log";
 
@@ -35,10 +35,8 @@ export async function createAppContext(config: HeadplaneConfig) {
     certPath: config.headscale.tls_cert_path,
   });
 
-  // Resolve the Headscale API key: headscale.api_key takes precedence,
-  // falling back to the deprecated oidc.headscale_api_key for compatibility.
+  // TODO: Remove this fallback on Headplane 1.0.0
   const headscaleApiKey = config.headscale.api_key ?? config.oidc?.headscale_api_key;
-
   const agents = await buildAgents(
     config,
     headscale.capabilities.preAuthKeysHaveStableIds,
@@ -71,20 +69,19 @@ export async function createAppContext(config: HeadplaneConfig) {
   });
 
   const oidc = buildOidc(config, headscaleApiKey);
-
   const hsLive = createLiveStore([nodesResource, usersResource]);
   const hs = await loadHeadscaleConfig(
     config.headscale.config_path,
     config.headscale.dns_records_path,
   );
-  const integration = await loadIntegration(config.integration);
 
-  // Disposers run in reverse-registration order on shutdown.
+  const integration = await loadIntegration(config.integration);
   const disposers: Array<() => Promise<void> | void> = [
     () => auth.stop(),
     () => hsLive.dispose(),
     () => headscale.dispose(),
   ];
+
   if (agents.state === "enabled") {
     disposers.push(() => agents.value.dispose());
   }
@@ -128,6 +125,22 @@ export async function createAppContext(config: HeadplaneConfig) {
   };
 }
 
+export function createRouterContext(ctx: AppContext) {
+  const context = new RouterContextProvider();
+  context.set(agentsContext, ctx.agents);
+  context.set(appConfigContext, ctx.config);
+  context.set(authContext, ctx.auth);
+  context.set(dbContext, ctx.db);
+  context.set(headscaleContext, ctx.headscale);
+  context.set(headscaleApiKeyContext, ctx.headscaleApiKey);
+  context.set(headscaleConfigContext, ctx.hs);
+  context.set(headscaleLiveStoreContext, ctx.hsLive);
+  context.set(integrationContext, ctx.integration);
+  context.set(oidcContext, ctx.oidc);
+  context.set(requestApiContext, ctx.apiForRequest);
+  return context;
+}
+
 function buildOidc(
   config: HeadplaneConfig,
   headscaleApiKey: string | undefined,
@@ -135,12 +148,15 @@ function buildOidc(
   if (!config.oidc) {
     return disabled("OIDC is not configured");
   }
+
   if (config.oidc.enabled === false) {
     return disabled("OIDC is disabled in the configuration");
   }
+
   if (!headscaleApiKey) {
     return disabled("OIDC requires headscale.api_key to be configured");
   }
+
   if (!config.server.base_url) {
     log.warn("config", "OIDC is disabled because `server.base_url` is not set");
     return disabled("OIDC requires server.base_url to be configured");
@@ -161,6 +177,7 @@ function buildOidc(
         config.oidc.token_endpoint_auth_method === "client_secret_jwt"
           ? undefined
           : config.oidc.token_endpoint_auth_method,
+
       usePkce: config.oidc.use_pkce,
       scope: config.oidc.scope,
       subjectClaims: config.oidc.subject_claims,
@@ -183,9 +200,11 @@ async function buildAgents(
   if (!agentConfig?.enabled) {
     return disabled("Agent is not enabled in the configuration");
   }
+
   if (!apiClient) {
     return disabled("Agent requires headscale.api_key to be configured");
   }
+
   if (!supportsTagOnlyKeys) {
     return disabled("Agent requires Headscale 0.28 or newer");
   }
@@ -197,8 +216,10 @@ async function buildAgents(
     supportsTagOnlyKeys,
     db,
   );
+
   if (!manager) {
     return disabled("Agent failed to initialize (see logs)");
   }
+
   return enabled(manager);
 }

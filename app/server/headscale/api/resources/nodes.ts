@@ -10,6 +10,9 @@ interface RawMachine extends Omit<Machine, "tags"> {
   invalidTags?: string[];
 }
 
+// When enabling expiry we set it to 180 days, following Tailscale.
+export const KEY_EXPIRY_DAYS = 180;
+
 export interface NodeApi {
   list(): Promise<Machine[]>;
   get(id: string): Promise<Machine>;
@@ -61,22 +64,24 @@ export function makeNodeApi(
       await transport.request({ method: "DELETE", path: `v1/node/${id}`, apiKey });
     },
     register: async (user, key) => {
-      // Headscale's node-register endpoint expects the registration
-      // params as both query string and body — preserved as-is.
-      // Pre-0.29 expects the raw 24-char registration ID; 0.29+ expects
-      // the full `hskey-authreq-<id>` AuthID.
+      // Headscale's node registration endpoint expects the key as both the
+      // query string and body input. Pre 0.29 also expects the raw ID, 0.29+
+      // expects the full `hskey-authreq-<id>` pattern.
       const registerKey = capabilities.registerKeyIncludesAuthReqPrefix
         ? key
         : key.replace(/^hskey-authreq-/, "");
+
       const qp = new URLSearchParams();
       qp.append("user", user);
       qp.append("key", registerKey);
+
       const { node } = await transport.request<{ node: RawMachine }>({
         method: "POST",
         path: `v1/node/register?${qp.toString()}`,
         apiKey,
         body: { user, key: registerKey },
       });
+
       return normalize(node);
     },
     approveRoutes: async (id, routes) => {
@@ -106,9 +111,12 @@ export function makeNodeApi(
       });
     },
     toggleExpiry: async (nodeId, disableExpiry) => {
+      const expiry = new Date(Date.now() + KEY_EXPIRY_DAYS * 86_400_000).toISOString();
+      const query = disableExpiry ? "disableExpiry=true" : `expiry=${encodeURIComponent(expiry)}`;
+
       await transport.request({
         method: "POST",
-        path: `v1/node/${nodeId}/expire?disableExpiry=${disableExpiry}`,
+        path: `v1/node/${nodeId}/expire?${query}`,
         apiKey,
       });
     },

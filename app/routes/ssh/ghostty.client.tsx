@@ -21,6 +21,7 @@ function createSSHTransport(
   ipAddress: string,
   username: string,
   onConnected: () => void,
+  onOutput: (output: string) => void,
 ): PtyTransport {
   let session: IPNSSHSession | null = null;
   let writeInput: ((data: string) => void) | null = null;
@@ -28,8 +29,14 @@ function createSSHTransport(
   return {
     connect(options) {
       session = ipn.ssh(ipAddress, username, {
-        writeFn: (data) => options.callbacks.onData?.(data),
-        writeErrorFn: (error) => options.callbacks.onData?.(error),
+        writeFn: (data) => {
+          options.callbacks.onData?.(data);
+          onOutput(data);
+        },
+        writeErrorFn: (error) => {
+          options.callbacks.onData?.(error);
+          onOutput(error);
+        },
         setReadFn: (readFn) => {
           writeInput = readFn;
         },
@@ -77,15 +84,16 @@ interface GhosttyProps {
   ipAddress: string;
   username: string;
   onConnected: () => void;
+  onOutput: (output: string) => void;
 }
 
-export default function Ghostty({ ipn, ipAddress, username, onConnected }: GhosttyProps) {
+export default function Ghostty({ ipn, ipAddress, username, onConnected, onOutput }: GhosttyProps) {
   const divRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!divRef.current) return;
 
-    const transport = createSSHTransport(ipn, ipAddress, username, onConnected);
+    const transport = createSSHTransport(ipn, ipAddress, username, onConnected, onOutput);
     const restty = new Restty({
       root: divRef.current,
       surface: {
@@ -140,7 +148,7 @@ export default function Ghostty({ ipn, ipAddress, username, onConnected }: Ghost
     return () => {
       restty.destroy();
     };
-  }, [ipn, ipAddress, username, onConnected]);
+  }, [ipn, ipAddress, username, onConnected, onOutput]);
 
   return <div className="min-h-0 min-w-0 flex-1 overflow-hidden bg-black" ref={divRef} />;
 }

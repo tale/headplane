@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { chmodSync, copyFileSync, rmSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -10,13 +11,21 @@ import { expect, inject, vi } from "vitest";
 import { createHeadscale } from "~/server/headscale/api";
 import { type AgentManager, createAgentManager } from "~/server/hp-agent";
 
-import { startHeadscale } from "../setup/start-headscale";
+import { startHeadscale } from "../../harness/headscale";
+import type { HeadscaleVersion } from "../../harness/versions";
 import { createFaultProxy } from "./fault-proxy";
 
 const HOST_NAME = "headplane-agent";
 const AGENT_TAG = `tag:${HOST_NAME}`;
 
-export function agentPids(agentPath = inject("agentPath")) {
+// Agents are counted by binary path, so each test file gets its own copy and
+// files can run in parallel.
+export const workerBinary = join(tmpdir(), `hp_agent-${process.pid}`);
+copyFileSync(inject("agentPath"), workerBinary);
+chmodSync(workerBinary, 0o755);
+process.once("exit", () => rmSync(workerBinary, { force: true }));
+
+export function agentPids(agentPath = workerBinary) {
   const rows = execFileSync("ps", ["-A", "-o", "pid=,command="], { encoding: "utf8" });
   return rows
     .split("\n")
@@ -38,12 +47,12 @@ export interface AgentOverrides {
   workDir?: string;
 }
 
-export async function createHarness(version: string, options: HarnessOptions = {}) {
-  const hs = await startHeadscale(version);
-  const proxy = await createFaultProxy(new URL(hs.apiUrl));
+export async function createHarness(version: HeadscaleVersion, options: HarnessOptions = {}) {
+  const hs = await startHeadscale({ version, id: `agent-${process.pid}` });
+  const proxy = await createFaultProxy(new URL(hs.url));
 
-  const inspectorKey = await createApiKey(hs.container);
-  const inspector = await createHeadscale({ url: hs.apiUrl });
+  const inspectorKey = await hs.createApiKey();
+  const inspector = await createHeadscale({ url: hs.url });
   const api = inspector.client(inspectorKey);
 
   const headscale = await createHeadscale({ url: proxy.url, retryIntervalMs: 500 });
@@ -61,7 +70,7 @@ export async function createHarness(version: string, options: HarnessOptions = {
         enabled: true,
         host_name: HOST_NAME,
         cache_ttl: 10 * 60_000,
-        executable_path: overrides.executablePath ?? inject("agentPath"),
+        executable_path: overrides.executablePath ?? workerBinary,
         work_dir: overrides.workDir ?? workDir,
         tailscale_netns: false,
       },
@@ -150,7 +159,7 @@ export async function createHarness(version: string, options: HarnessOptions = {
     await proxy.close();
     await headscale.dispose();
     await inspector.dispose();
-    await hs.container.stop({ remove: true, removeVolumes: true });
+    await hs.stop();
     await rm(workDir, { recursive: true, force: true });
   }
 
@@ -167,15 +176,6 @@ export async function createHarness(version: string, options: HarnessOptions = {
     expectSettled,
     dispose,
   };
-}
-
-async function createApiKey(container: Awaited<ReturnType<typeof startHeadscale>>["container"]) {
-  const exec = await container.exec(["headscale", "apikeys", "create", "-o", "json"]);
-  if (exec.exitCode !== 0) {
-    throw new Error(`headscale apikeys create failed:\n${exec.stderr}`);
-  }
-
-  return JSON.parse(exec.stdout.toString()) as string;
 }
 
 export async function waitForSync(manager: AgentManager, timeoutMs = 60_000) {
