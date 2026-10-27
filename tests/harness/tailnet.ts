@@ -66,6 +66,18 @@ export async function createTailnet(options: TailnetOptions = {}) {
     return started;
   }
 
+  async function setExpiry(nodeId: string, days: number) {
+    const args = ["headscale", "nodes", "expire", "-i", nodeId];
+    if (days > 0) {
+      args.push("--expiry", new Date(Date.now() + days * 86_400_000).toISOString());
+    }
+
+    const result = await server.container.exec(args);
+    if (result.exitCode !== 0) {
+      throw new Error(`Expiring node ${nodeId} failed:\n${result.output}`);
+    }
+  }
+
   async function pendingNode(nodeOptions: NodeOptions) {
     const pending = await startPendingNode(target, nodeOptions);
     disposers.push(() => pending.stop());
@@ -109,6 +121,7 @@ export async function createTailnet(options: TailnetOptions = {}) {
     setPolicy,
     user,
     node,
+    setExpiry,
     pendingNode,
     headplane,
     dispose,

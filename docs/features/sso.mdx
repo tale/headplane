@@ -3,6 +3,9 @@ title: Single sign-on
 description: Let people sign in to Headplane with an OpenID Connect provider.
 ---
 
+import linkLight from "../assets/link-light.png";
+import linkDark from "../assets/link-dark.png";
+
 # Single sign-on
 
 With single sign-on, people sign in to Headplane through an OpenID Connect
@@ -128,6 +131,13 @@ IT admins see a **Link your account** screen after signing in, where they pick
 their own Headscale user. Everyone else has to be linked from the **Users**
 page by one of them. [Linking by hand](/features/users-roles#linking-by-hand)
 walks through both.
+
+<Figure
+  alt="The Link your account screen"
+  light={linkLight}
+  dark={linkDark}
+  caption="Picking a Headscale user after the first sign-in"
+/>
 
 ## Roles from the identity provider
 

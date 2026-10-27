@@ -13,7 +13,7 @@ cd "$ROOT_DIR" || exit 1
 
 TARGET="cmd/hp_ssh/wasm_js.go"
 TYPES="app/routes/ssh/wasm_js.d.ts"
-PATCHES="patches/tsconnect-term-type.patch patches/tsconnect-ssh-banner.patch"
+PATCHES="patches/tsconnect-term-type.patch patches/tsconnect-ssh-banner.patch patches/tsconnect-utf8-chunks.patch"
 TYPES_PATCH="patches/tsconnect-types.patch"
 RAW="https://raw.githubusercontent.com/tailscale/tailscale"
 

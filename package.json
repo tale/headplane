@@ -72,6 +72,7 @@
     "oxlint": "^1.88.0",
     "oxlint-tsgolint": "^7.0.2004",
     "pino-pretty": "^13.2.0",
+    "playwright": "^1.64.1",
     "remark-directive": "^4.0.0",
     "tailwindcss": "^4.3.3",
     "tailwindcss-animate": "^1.0.7",

@@ -3,6 +3,15 @@ title: Users & roles
 description: How Headplane accounts, roles and links to Headscale users work.
 ---
 
+import usersLight from "../assets/users-light.png";
+import usersDark from "../assets/users-dark.png";
+import homeLight from "../assets/home-light.png";
+import homeDark from "../assets/home-dark.png";
+import usersRoleLight from "../assets/users-role-light.png";
+import usersRoleDark from "../assets/users-role-dark.png";
+import authKeysLight from "../assets/auth-keys-light.png";
+import authKeysDark from "../assets/auth-keys-dark.png";
+
 # Users & roles
 
 Headplane keeps its own accounts, separate from Headscale's users. An account is
@@ -10,6 +19,13 @@ created the first time someone signs in through [SSO](/features/sso) or
 [proxy authentication](/features/proxy-auth). Its role decides what that person
 can do in Headplane, and its link to a Headscale user decides which machines
 and auth keys are theirs.
+
+<Figure
+  alt="The Users page in Headplane"
+  light={usersLight}
+  dark={usersDark}
+  caption="Accounts, roles and linked Headscale users"
+/>
 
 ## Roles
 
@@ -23,11 +39,25 @@ and auth keys are theirs.
 | **Viewer**        | View machines and users, and create auth keys for themselves.                                  |
 | **Member**        | No access to the dashboard. They see a home page that helps them connect their devices.        |
 
+<Figure
+  alt="A member's home page"
+  light={homeLight}
+  dark={homeDark}
+  caption="Members get a page for connecting their devices"
+/>
+
 The first person to sign in becomes the owner. Everyone after that starts as a
 member, until an owner, admin or IT admin changes their role on the **Users**
 page.
 With SSO, new accounts can start with a different role, or take theirs from
 the identity provider. See [Roles from the identity provider](/features/sso#roles-from-the-identity-provider).
+
+<Figure
+  alt="Changing a person's role"
+  light={usersRoleLight}
+  dark={usersRoleDark}
+  caption="Changing a role from the Users page"
+/>
 
 Signing in with a Headscale API key grants full access, with no role. See
 [API keys](/configuration/api-keys).
@@ -38,6 +68,13 @@ Each account can be linked to one Headscale user, which makes that user's
 machines and auth keys the account's own. Auditors and viewers need a link to
 create auth keys for themselves, and [Browser SSH](/features/ssh) uses it to
 pick who to connect as.
+
+<Figure
+  alt="Auth keys in Headplane's settings"
+  light={authKeysLight}
+  dark={authKeysDark}
+  caption="Each auth key belongs to a Headscale user"
+/>
 
 Headplane links an account automatically when it finds an unclaimed Headscale user
 with the same SSO subject or the same email address. It tries when someone

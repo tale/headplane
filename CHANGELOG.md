@@ -38,6 +38,7 @@
 - Enabling two integrations at once is now caught at startup. Previously Headplane only refused when all three were on, and otherwise silently picked Docker.
 - The cookie that tracked SSO state was not signed. It is now signed with `server.cookie_secret` and cleared once SSO succeeds (closes [#659](https://github.com/tale/headplane/issues/659)).
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
+- Browser SSH correctly handles full-screen programs like `btop` and `htop` where it may have previously rendered layouts incorrectly.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
 - The auth keys page only shows people with self-service keys (like auditors and viewers) their own keys. Previously it sent every user's keys to anyone signed in, in full on Headscale 0.27, even when the page itself said they had no access. Self-service users also can no longer create tag-only keys or expire someone else's key by submitting the form directly.
 - Syncing the agent now requires permission to view machines, like the agent page itself. Previously anyone signed in could trigger a sync.

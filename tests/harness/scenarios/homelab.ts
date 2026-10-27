@@ -2,9 +2,10 @@ import type { Scenario } from "../scenario";
 
 // A small household tailnet, used for the docs screenshots.
 export default {
-  description: "Three people, a NAS sharing the home LAN, an exit node, and tagged servers",
+  description: "Three people, a NAS sharing the home LAN, and a tagged server",
   users: [
-    { name: "alice", email: "alice@example.com", displayName: "Alice Chen" },
+    // Created from the CLI, without an email.
+    { name: "alice", displayName: "Alice Chen" },
     { name: "bob", email: "bob@example.com", displayName: "Bob Okafor" },
     { name: "carol", email: "carol@example.com", displayName: "Carol Diaz" },
   ],
@@ -17,18 +18,17 @@ export default {
       search_domains: ["lan.home.arpa"],
     },
   },
-  records: [{ name: "grafana.home.arpa", type: "A", value: "100.64.0.4" }],
+  records: [{ name: "grafana.home.arpa", type: "A", value: "100.64.0.6" }],
   policy: {
     groups: { "group:admins": ["alice@"], "group:family": ["alice@", "bob@", "carol@"] },
     tagOwners: {
       "tag:server": ["group:admins"],
-      "tag:media": ["group:admins"],
-      "tag:ci": ["group:admins"],
+      "tag:headplane-agent": [],
     },
     acls: [
       { action: "accept", src: ["group:admins"], dst: ["*:*"] },
-      { action: "accept", src: ["group:family"], dst: ["tag:media:*", "192.168.1.0/24:*"] },
-      { action: "accept", src: ["tag:ci"], dst: ["tag:server:22,443"] },
+      { action: "accept", src: ["*"], dst: ["tag:headplane-agent:*"] },
+      { action: "accept", src: ["group:family"], dst: ["tag:server:443", "192.168.1.0/24:*"] },
     ],
     ssh: [
       {
@@ -39,22 +39,58 @@ export default {
       },
     ],
   },
+  // Personal devices expire like Tailscale's, while servers and tagged
+  // machines don't.
   nodes: [
-    { name: "alice-laptop", user: "alice" },
-    { name: "alice-phone", user: "alice" },
-    { name: "bob-desktop", user: "bob" },
-    { name: "bob-tablet", user: "bob", offline: true },
-    { name: "carol-laptop", user: "carol" },
+    {
+      name: "alice-laptop",
+      user: "alice",
+      expiresIn: 172,
+      hostInfo: { OS: "macOS", OSVersion: "26.1" },
+    },
+    {
+      name: "bob-desktop",
+      user: "bob",
+      expiresIn: 140,
+      tailscaleVersion: "1.102.5",
+      hostInfo: { OS: "windows", OSVersion: "10.0.26100.6584" },
+    },
+    {
+      name: "bob-tablet",
+      user: "bob",
+      expiresIn: 0,
+      offline: true,
+      hostInfo: { OS: "android", OSVersion: "15" },
+    },
+    {
+      name: "carol-laptop",
+      user: "carol",
+      expiresIn: 3,
+      hostInfo: { OS: "macOS", OSVersion: "15.7" },
+    },
     {
       name: "nas",
       user: "alice",
       ssh: true,
       routes: ["192.168.1.0/24"],
-      approve: ["192.168.1.0/24"],
+      exitNode: true,
+      approve: ["192.168.1.0/24", "0.0.0.0/0", "::/0"],
+      hostInfo: { OS: "linux", OSVersion: "6.12.15-production+truenas" },
     },
-    { name: "gateway", user: "alice", exitNode: true },
-    { name: "jellyfin", user: "alice", tags: ["tag:media"], ssh: true },
-    { name: "grafana", user: "alice", tags: ["tag:server"], ssh: true },
-    { name: "runner", user: "alice", tags: ["tag:ci"] },
+    {
+      name: "grafana",
+      user: "alice",
+      tags: ["tag:server"],
+      ssh: true,
+      hostInfo: { OS: "linux", OSVersion: "6.8.0-85-generic" },
+    },
+    {
+      name: "bob-pi",
+      user: "bob",
+      routes: ["192.168.50.0/24"],
+      exitNode: true,
+      expiresIn: 160,
+      hostInfo: { OS: "linux", OSVersion: "6.12.47+rpt-rpi-2712" },
+    },
   ],
 } satisfies Scenario;

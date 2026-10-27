@@ -5,6 +5,11 @@ description: Run Headscale and Headplane together on one server with Docker Comp
 
 import { quickstartCompose, quickstartFetch } from "./quickstart-examples";
 
+import addMachineLight from "./assets/add-machine-light.png";
+import addMachineDark from "./assets/add-machine-dark.png";
+import authKeyDialogLight from "./assets/auth-key-dialog-light.png";
+import authKeyDialogDark from "./assets/auth-key-dialog-dark.png";
+
 # Quickstart
 
 This sets up a complete server from scratch: Headscale, Headplane and Caddy in
@@ -107,6 +112,30 @@ docker exec headscale headscale apikeys create --expiration 90d
 ```
 
 Open `https://headscale.example.com/admin` and paste the key.
+
+## 6. Add a machine
+
+Create a user on the **Users** page for whoever owns the device, then choose
+**Add machine** on the **Machines** page:
+
+- **Register machine key** takes the key a device shows after
+  `tailscale up --login-server https://headscale.example.com`.
+- **Create auth key** makes a key that joins devices without that step, with
+  `tailscale up --login-server https://headscale.example.com --auth-key <key>`.
+
+<Figure
+  alt="The Add machine menu in Headplane"
+  light={addMachineLight}
+  dark={addMachineDark}
+  caption="Two ways to add a machine"
+/>
+
+<Figure
+  alt="Creating an auth key"
+  light={authKeyDialogLight}
+  dark={authKeyDialogDark}
+  caption="Auth keys can be reusable, ephemeral or tagged"
+/>
 
 ## Next steps
 

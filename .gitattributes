@@ -1,0 +1,4 @@
+# Written by scripts/sync-tsconnect.sh
+cmd/hp_ssh/wasm_js.go linguist-generated
+cmd/hp_ssh/build-tags.txt linguist-generated
+app/routes/ssh/wasm_js.d.ts linguist-generated

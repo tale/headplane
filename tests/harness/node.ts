@@ -8,12 +8,12 @@ import { waitFor } from "./wait";
 
 export interface NodeOptions {
   name: string;
-  // Owning Headscale user. Tag-only nodes leave this unset (0.28+).
   user?: string;
   tags?: string[];
   ssh?: boolean;
   routes?: string[];
   exitNode?: boolean;
+  tailscaleVersion?: string;
 }
 
 // The tailnet a node joins.
@@ -48,11 +48,14 @@ function upArgs(target: Target, options: NodeOptions, authKey?: string) {
 }
 
 async function startDaemon(target: Target, options: NodeOptions) {
-  // Runs tailscaled directly instead of containerboot, which exits on
-  // `tailscale down`.
-  const container = await new tc.GenericContainer(TAILSCALE_IMAGE)
+  const image = options.tailscaleVersion
+    ? `tailscale/tailscale:v${options.tailscaleVersion}`
+    : TAILSCALE_IMAGE;
+
+  const container = await new tc.GenericContainer(image)
     .withNetwork(target.network)
     .withName(`hp-harness-${target.id}-${options.name}`)
+    .withHostname(options.name)
     .withLabels({ [`${HARNESS_LABEL}.node`]: target.id })
     .withEntrypoint(["tailscaled"])
     .withCommand([
@@ -138,7 +141,10 @@ function nodeHandle(
   return {
     id,
     name,
+    exec: daemon.exec,
     tailscale: daemon.tailscale,
+    copyFiles: (files: Array<{ source: string; target: string; mode?: number }>) =>
+      daemon.container.copyFilesToContainer(files),
 
     machine() {
       return target.api.nodes.get(id);

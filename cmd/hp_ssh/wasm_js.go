@@ -29,6 +29,7 @@ import (
 	"strings"
 	"syscall/js"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/ssh"
 	"tailscale.com/control/controlclient"
@@ -481,8 +482,8 @@ func (s *jsSSHSession) Run() {
 		return
 	}
 
-	session.Stdout = termWriter{writeFn}
-	session.Stderr = termWriter{writeFn}
+	session.Stdout = &termWriter{f: writeFn}
+	session.Stderr = &termWriter{f: writeFn}
 
 	setReadFn.Invoke(js.FuncOf(func(this js.Value, args []js.Value) any {
 		input := args[0].String()
@@ -577,10 +578,25 @@ func (i *jsIPN) fetch(url string) js.Value {
 
 type termWriter struct {
 	f js.Value
+	// The start of a UTF-8 sequence that the next write finishes. Passing it
+	// on alone would turn it into replacement characters.
+	pending []byte
 }
 
-func (w termWriter) Write(p []byte) (n int, err error) {
-	r := bytes.Replace(p, []byte("\n"), []byte("\n\r"), -1)
+func (w *termWriter) Write(p []byte) (n int, err error) {
+	buf := append(w.pending, p...)
+	end := len(buf)
+	for i := len(buf) - 1; i >= 0 && i >= len(buf)-utf8.UTFMax; i-- {
+		if utf8.RuneStart(buf[i]) {
+			if !utf8.FullRune(buf[i:]) {
+				end = i
+			}
+			break
+		}
+	}
+
+	w.pending = bytes.Clone(buf[end:])
+	r := bytes.Replace(buf[:end], []byte("\n"), []byte("\n\r"), -1)
 	w.f.Invoke(string(r))
 	return len(p), nil
 }
