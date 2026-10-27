@@ -145,6 +145,7 @@ function testConfig(overrides?: Partial<OidcConfig>): OidcConfig {
     clientId: CLIENT_ID,
     clientSecret: CLIENT_SECRET,
     baseUrl: "https://headplane.example.com",
+    basePath: "/admin",
     ...overrides,
   };
 }

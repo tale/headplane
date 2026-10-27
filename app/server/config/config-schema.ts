@@ -31,8 +31,9 @@ function normalizeStringArray(values: string[]): string[] {
   return normalized;
 }
 
-const basePath = type(/^(\/(?!\.{1,2}(?:\/|$))[A-Za-z0-9._~-]+)+(?![\s\S])/).describe(
-  "an absolute path of non-empty URL-safe segments without a trailing slash",
+// Segments of unreserved URL characters, no "." or "..", no trailing slash.
+const basePath = type(/^(\/(?!\.\.?(\/|$))[\w.~-]+)+$/).describe(
+  "a path like /admin, without a trailing slash",
 );
 
 const serverConfig = type({

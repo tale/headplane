@@ -28,6 +28,7 @@ export function createTestAuth(
     db,
     cookie: {
       name: "_hp_test",
+      path: "/admin",
       secure: false,
       maxAge: 3600,
     },

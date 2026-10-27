@@ -1,7 +1,7 @@
 import type { ServerBuild } from "react-router";
 
 export function configureBuild(build: ServerBuild, prefix: string): ServerBuild {
-  const assetUrl = (url: string) => `${prefix}/${url.replace(/^\.\//, "").replace(/^\//, "")}`;
+  const assetUrl = (url: string) => `${prefix}/${url.replace(/^\.?\//, "")}`;
   const assets = build.assets;
   const mapAssets = <T extends { module: string; imports?: string[]; css?: string[] }>(
     entry: T,

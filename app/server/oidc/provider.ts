@@ -11,7 +11,7 @@ export interface OidcConfig {
   clientId: string;
   clientSecret: string;
   baseUrl: string;
-  basePath?: string;
+  basePath: string;
 
   authorizationEndpoint?: string;
   tokenEndpoint?: string;
@@ -307,8 +307,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
     const usePkce = config.usePkce !== false;
     const scope = config.scope ?? "openid email profile";
-    const redirectUri = new URL(`${config.basePath ?? "/admin"}/oidc/callback`, config.baseUrl)
-      .href;
+    const redirectUri = new URL(`${config.basePath}/oidc/callback`, config.baseUrl).href;
 
     const state = generateRandom();
     const nonce = generateRandom();
@@ -822,7 +821,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
     const postLogoutRedirectUri =
       config.postLogoutRedirectUri ??
-      new URL(`${config.basePath ?? "/admin"}/login?s=logout`, config.baseUrl).href;
+      new URL(`${config.basePath}/login?s=logout`, config.baseUrl).href;
     params.set("post_logout_redirect_uri", postLogoutRedirectUri);
 
     return `${endpoints.endSessionEndpoint}?${params.toString()}`;
