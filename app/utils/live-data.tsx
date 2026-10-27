@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useHref, useRevalidator } from "react-router";
 
 const LiveDataContext = createContext({
@@ -135,9 +143,11 @@ export function LiveDataProvider({ children }: LiveDataProps) {
 }
 
 export function useLiveData() {
-  const context = useContext(LiveDataContext);
-  return {
-    pause: () => context.setPaused(true),
-    resume: () => context.setPaused(false),
-  };
+  const { setPaused } = useContext(LiveDataContext);
+
+  // Stable, so effects can pause on mount and resume on unmount.
+  return useMemo(
+    () => ({ pause: () => setPaused(true), resume: () => setPaused(false) }),
+    [setPaused],
+  );
 }

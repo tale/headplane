@@ -81,17 +81,20 @@ export default function Page({ loaderData, actionData }: Route.ComponentProps) {
 
   const [showCookieWarning, setShowCookieWarning] = useState(false);
   const [params] = useSearchParams();
-  const { pause } = useLiveData();
+  const { pause, resume } = useLiveData();
   const navigation = useNavigation();
 
+  // There's no session to stream live data with until sign-in finishes.
   useEffect(() => {
-    // This page does NOT need stale while revalidate logic
     pause();
+    return resume;
+  }, [pause, resume]);
 
+  useEffect(() => {
     if (isCookieSecureEnabled && window.location.protocol !== "https:") {
       setShowCookieWarning(true);
     }
-  });
+  }, [isCookieSecureEnabled]);
 
   useEffect(() => {
     // State is a one time thing, we need to remove it after it has
