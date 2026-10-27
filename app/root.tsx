@@ -56,7 +56,8 @@ export function Layout({ children }: { readonly children: React.ReactNode }) {
           <meta name="headplane-base-path" content={getPrefix()} />
           <Meta />
           <Links />
-          <link href={`${getPrefix()}/favicon.ico`} rel="icon" />
+          <link href={`${getPrefix()}/favicon.ico`} rel="icon" sizes="32x32" />
+          <link href={`${getPrefix()}/favicon.svg`} rel="icon" type="image/svg+xml" />
         </head>
         <body className="w-full overflow-x-hidden overscroll-none">
           {children}

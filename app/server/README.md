@@ -1,7 +1,8 @@
 # `app/server/`
 
 Server-side application code for Headplane. Everything in this directory
-runs only on the Node process — never in the browser.
+runs only on the Node process — never in the browser. The patterns every
+service follows are in [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
 ## Layout
 

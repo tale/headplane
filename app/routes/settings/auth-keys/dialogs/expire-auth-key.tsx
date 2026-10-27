@@ -11,7 +11,7 @@ export default function ExpireAuthKey({ authKey, user }: ExpireAuthKeyProps) {
   return (
     <ActionDialog
       description="The key stops working for new devices right away."
-      fields={{ key_id: authKey.id, key: authKey.key, user_id: user.id }}
+      fields={{ key_id: authKey.id, user_id: user.id }}
       intent="expire"
       isDestructive
       submitLabel="Expire key"

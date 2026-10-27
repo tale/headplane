@@ -1,0 +1,57 @@
+---
+title: Installation
+description: Pick an installation method and get Headplane running.
+---
+
+import { versions } from "@/lib/versions";
+
+# Installation
+
+Every installation method ends in the same place: Headplane running next to an
+existing Headscale server, serving its UI under `/admin`. Pick the method that
+matches how Headscale already runs.
+
+| Method                         | Use it when                                              |
+| ------------------------------ | -------------------------------------------------------- |
+| [Docker](/install/docker)      | Headscale runs in Docker, or Docker is fine for both     |
+| [Native](/install/native-mode) | Headscale runs directly on the host, often under systemd |
+| [Nix/NixOS](/install/nix)      | The machine is managed with NixOS                        |
+
+Docker is the recommended method. It ships everything prebuilt, including the
+agent and Browser SSH, and it's the only setup where Headplane can restart
+Headscale without a supervisor.
+
+## Before installing
+
+Headplane needs Headscale {versions.headscale.minimum} or newer, already running.
+Headplane reads its settings from a YAML file, `/etc/headplane/config.yaml` by
+default. Start from the
+[example configuration](https://github.com/tale/headplane/blob/main/config.example.yaml)
+and set at least these two fields:
+
+```yaml
+headscale:
+  # How Headplane reaches Headscale, for example http://headscale:8080 in Docker
+  url: "http://headscale.example.com"
+
+server:
+  # Exactly 32 characters, for example from `openssl rand -hex 16`
+  cookie_secret: "<32 random characters>"
+```
+
+Everything else has a default. [Configuration](/configuration) covers the file
+in detail, including environment variables and keeping secrets out of it.
+
+## After installing
+
+Once Headplane is up, sign in with a Headscale API key and decide how much it
+should manage:
+
+- **Edit DNS and sign-in restrictions** from the UI by giving Headplane access to
+  Headscale's config file. See [Integrations](/configuration/integrations).
+- **Put it behind a reverse proxy** on the same domain as Headscale. See
+  [Reverse proxy](/configuration/reverse-proxy).
+- **Let people sign in with their own accounts** through [SSO](/features/sso) or
+  [proxy authentication](/features/proxy-auth).
+- **Show machine versions and open SSH sessions** from the browser with the
+  [agent](/features/agent) and [Browser SSH](/features/ssh).

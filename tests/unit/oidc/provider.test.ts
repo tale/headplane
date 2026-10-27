@@ -2,13 +2,9 @@ import { generateKeyPairSync, sign, type KeyObject } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 
 import { SignJWT, exportJWK, generateKeyPair } from "jose";
-import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import { createOidcService, type OidcConfig } from "~/server/oidc/provider";
-
-vi.mock("~/utils/log", () => ({
-  default: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
 
 let server: Server;
 let baseUrl: string;

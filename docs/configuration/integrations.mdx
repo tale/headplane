@@ -1,0 +1,172 @@
+---
+title: Integrations
+description: Let Headplane edit Headscale's DNS settings and sign-in restrictions, and restart Headscale to apply them.
+---
+
+import { dockerCompose } from "./compose-examples";
+
+# Integrations
+
+Headscale keeps its DNS settings and OIDC sign-in restrictions in its own
+config file, not behind its API. For Headplane to show or change them, it
+needs access to that file. To apply a change, Headscale has to restart, and an
+integration is what lets Headplane do that itself.
+
+## What each setup can do
+
+Machines, users, auth keys and ACLs go through Headscale's API and work in
+every setup. The rest depends on how much access Headplane has:
+
+| Setup                                | DNS settings and sign-in restrictions                       |
+| ------------------------------------ | ----------------------------------------------------------- |
+| No access to Headscale's config      | Not shown                                                   |
+| Config file mounted read-only        | DNS settings shown read-only, sign-in restrictions hidden   |
+| Writable config file, no integration | Saved to the file, applied the next time Headscale restarts |
+| Writable config file and integration | Applied right away, Headplane restarts Headscale            |
+
+Sign-in restrictions edit the `allowed_domains`, `allowed_groups` and
+`allowed_users` options in Headscale's `oidc` section, so they only appear when
+Headscale signs people in through OIDC.
+
+Running without access to the config was previously called Limited Mode. It's a
+fine setup when Headscale runs on another machine. The [agent](/features/agent),
+[Browser SSH](/features/ssh) and [SSO](/features/sso) all work without it.
+
+## Sharing Headscale's config file
+
+Set `headscale.config_path` to where Headplane can find Headscale's
+`config.yaml`. In a container, that's the path inside Headplane's container.
+Changes need write access to the file, and saving keeps its comments.
+
+```yaml
+headscale:
+  config_path: "/etc/headscale/config.yaml"
+```
+
+Pick one integration below to apply changes. Enabling more than one turns them
+all off, with an error in the log.
+
+:::info[Why a restart?]
+Headscale reloads only its ACL policy on `SIGHUP`. Every other setting in
+`config.yaml` is read once at startup, so changes need a full restart.
+:::
+
+## DNS records
+
+DNS records are the exception: Headplane only edits them through the JSON file
+Headscale reads from `dns.extra_records_path`. Headscale watches that file, so
+record changes apply right away, without an integration or a restart.
+
+```yaml
+# Headscale's config.yaml
+dns:
+  extra_records_path: /var/lib/headscale/extra-records.json
+```
+
+The file holds a JSON array of records:
+
+```json
+[{ "name": "grafana.example.com", "type": "A", "value": "100.64.0.3" }]
+```
+
+The path comes from Headscale's config, and the file has to be writable for
+Headplane. When it sits at a different path in Headplane's container, set
+`headscale.dns_records_path` to that path. Setting `dns_records_path` without
+an `extra_records_path` in Headscale's config stops Headplane from starting.
+
+Records listed inline under Headscale's `dns.extra_records` are shown
+read-only. Move them into the JSON file to manage them from Headplane.
+
+## Docker
+
+Use this when Headscale runs in a Docker container. The integration restarts
+the container through the Docker API, then waits for Headscale to come back.
+It needs:
+
+- Headscale's config file, mounted into both containers
+- The Docker socket, or a socket proxy such as
+  [docker-socket-proxy](https://github.com/Tecnativa/docker-socket-proxy) that
+  allows listing containers and `POST` requests (`CONTAINERS=1` and `POST=1`)
+- A way to find the Headscale container: the `me.tale.headplane.target=headscale`
+  label by default
+
+<DynamicCodeBlock lang="yaml" code={dockerCompose} />
+
+Then enable the integration in Headplane's config:
+
+```yaml
+integration:
+  docker:
+    enabled: true
+    # The defaults, shown for reference
+    container_label: "me.tale.headplane.target=headscale"
+    socket: "unix:///var/run/docker.sock"
+```
+
+To select the container by name instead, set `container_name`, which takes
+precedence over the label. For a remote Docker daemon, set `socket` to a
+`tcp://` address; HTTPS isn't supported.
+
+Docker API 1.24 (Docker Engine 1.12) and newer are supported, including
+Podman's Docker-compatible socket.
+
+## Kubernetes
+
+Use this when Headplane runs as a sidecar in the same pod as Headscale. The two
+containers share a process namespace, so Headplane can stop Headscale with
+`SIGTERM`. The kubelet then restarts the container, and Headplane waits for
+Headscale to come back.
+
+The pod needs:
+
+- `shareProcessNamespace: true`
+- Headscale's config file on a writable volume shared by both containers.
+  ConfigMap mounts are read-only, so copy the file onto a writable volume
+  first, for example with an init container
+- Headplane running as the same user as Headscale, or with the `KILL`
+  capability, so it can signal Headscale
+- The pod's name, passed to Headplane through the Downward API
+
+```yaml
+spec:
+  shareProcessNamespace: true
+  containers:
+    - name: headplane
+      image: ghcr.io/tale/headplane:latest
+      env:
+        - name: HEADPLANE_INTEGRATION__KUBERNETES__POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+```
+
+```yaml
+integration:
+  kubernetes:
+    enabled: true
+```
+
+At startup, Headplane checks through the Kubernetes API that the pod shares
+its process namespace. Its service account needs permission to `get` pods in
+its namespace. To skip the check and the permission, set
+`integration.kubernetes.validate_manifest: false`.
+
+## proc
+
+Use this when Headplane and Headscale run directly on the same Linux host. For
+each change, Headplane finds the `headscale serve` process in `/proc`, stops it
+with `SIGTERM` and waits for a new one to come up healthy.
+
+That only works if something restarts Headscale. Headscale's own systemd unit
+sets `Restart=always`, and so does the NixOS module. Without a supervisor,
+Headscale stays down after the first change, and Headplane reports that it
+didn't come back.
+
+Signaling Headscale also takes permission: run both as the same user, or
+Headplane as root.
+
+```yaml
+integration:
+  proc:
+    enabled: true
+```

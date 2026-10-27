@@ -1,14 +1,16 @@
 # Next
 
-The `__INTERNAL_PREFIX` build variable has been removed. Use `server.base_path`
-in your configuration to keep a custom dashboard URL prefix.
+## Upgrading
 
-Going forward, Headplane only works with DNS records defined in `dns.extra_records_path` in your Headscale configuration.
-If you have any records defined inline under `dns.extra_records`, they will be read-only in Headplane.
+- DNS records are only read from and written to the file in Headscale's `dns.extra_records_path`. Records listed inline under `dns.extra_records` show as read-only, so move them into the file to keep editing them.
+- The `proc` and `kubernetes` integrations now restart Headscale instead of reloading it, so Headscale needs a supervisor that brings it back: systemd with `Restart=always`, which Headscale's own unit and the NixOS module already set, or the kubelet.
+- Enabling more than one integration now turns them all off, with an error in the log. Keep one.
+- After signing in with single sign-on, only owners, admins and IT admins can pick which Headscale user their account links to. Everyone else links automatically or is linked from the **Users** page.
+- Builds no longer read `__INTERNAL_PREFIX`. If a build used it to serve Headplane somewhere other than `/admin`, set `server.base_path` to that path instead.
 
 ## Changes
 
-- Configure the dashboard URL prefix with `server.base_path` without rebuilding Headplane. Existing installations continue to use `/admin` by default (closes [#637](https://github.com/tale/headplane/issues/637)).
+- Headplane can be served under a path other than `/admin` by setting `server.base_path`, without building it from source (closes [#637](https://github.com/tale/headplane/issues/637)).
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
 - Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.
 - The navigation bar is slimmer, and on small screens the pages now live in a menu instead of a second row of tabs.
@@ -39,6 +41,10 @@ If you have any records defined inline under `dns.extra_records`, they will be r
 - The cookie that tracked SSO state was not signed. It is now signed with `server.cookie_secret` and cleared once SSO succeeds (closes [#659](https://github.com/tale/headplane/issues/659)).
 - Profile pictures from OIDC now correctly update on each sign-in. If the provider stops sending pictures, Headplane removes the picture instead of leaving a potentially broken image behind.
 - A machine's page now requires permission to view machines, like the machines list. Previously anyone signed in could open it by its address.
+- The auth keys page only shows people with self-service keys (like auditors and viewers) their own keys. Previously it sent every user's keys to anyone signed in, in full on Headscale 0.27, even when the page itself said they had no access. Self-service users also can no longer create tag-only keys or expire someone else's key by submitting the form directly.
+- Syncing the agent now requires permission to view machines, like the agent page itself. Previously anyone signed in could trigger a sync.
+- Enabling key expiry on a machine no longer signs it out on the spot. Its key now expires in 180 days, matching Tailscale. On Headscale 0.29, where machines added with an auth key start with key expiry off, this affected every machine the first time expiry was turned on.
+- Signing in ignores spaces and line breaks pasted around an API key. A key with stray characters inside it is reported as invalid instead of "Couldn't reach Headscale."
 - Errors on the machine page and in Settings no longer replace the whole app with an error message. The navigation bar and the Settings sidebar stay so you can move on.
 - The agent page loads while Headscale is unreachable, showing the agent's sync status without the machine details.
 - An unexpected error during a background agent sync no longer crashes Headplane.
@@ -50,10 +56,28 @@ If you have any records defined inline under `dns.extra_records`, they will be r
   - The agent now reuses its existing key and will delete leftover machines on Headscale if it detects a duplicate.
   - Restart resiliency and crash recovery have been improved. There is now a 20 second heartbeat to catch an unresponsive agent.
   - Headplane now rejects an agent work directory it can't write to.
+- If the agent's machine is deleted while Headplane is stopped, the agent registers again on the next start instead of waiting for a login that never comes.
+- Creating or renaming a user to a name that's already taken now says so, instead of showing a database error from Headscale.
+- Linking an account to a Headscale user that no longer exists now shows an error instead of saving a broken link.
+- Changing the owner's role or transferring ownership to yourself now explains why it can't be done, instead of asking to try again.
+- Removing the last global nameserver while local DNS is overridden, or turning the override on without a global nameserver, no longer saves a config Headscale refuses to start with. Headplane now explains what to change first.
+- Removing or reordering a nameserver, search domain or DNS record that changed in another tab now says so, instead of restarting Headscale for nothing.
+- Turning off key expiry on Headscale 0.27 or 0.28 no longer signs the machine out. Headplane now explains that this needs Headscale 0.29 or newer.
+- Acting on a machine that was deleted elsewhere now says the machine no longer exists.
+- The ACL page no longer shows an empty, editable policy when Headscale can't load it. With Headscale's default file-mode configuration it now shows the policy as read-only, and other errors are reported instead of offering to overwrite the policy.
+- Browser SSH shows why a session couldn't open, such as SSH rules that don't allow the chosen user, instead of a spinner that never ends. A session that stalls while connecting now gives up after 30 seconds.
+- Browser SSH works with SSH rules that use the `check` action on Headscale 0.29. The page links to the sign-in Headscale asks for, and the session opens once it's done (closes [#591](https://github.com/tale/headplane/issues/591)).
+- Browser SSH no longer opens a second SSH session right after the first one connects.
+- Browser SSH no longer says it isn't available when Headplane can't reach its own public address, as happens behind some reverse proxies. The page checks for its files when it loads them instead.
 
 # 0.8.1 (October 16, 2026)
 
 This release fixes actions failing with "Bad Request" or "Unexpected Server Error" when Headplane runs behind a reverse proxy that terminates HTTPS. If you made proxy rules rewriting the `Origin` header as a workaround, it's safe to remove them now.
+
+## Upgrading
+
+- Single sign-on stays off until `server.base_url` is set to Headplane's public URL.
+- Proxy rules that rewrite the `Origin` header, added as a workaround for 0.8.0, can be removed.
 
 ## Fixes
 
@@ -67,7 +91,9 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 # 0.8.0 (October 13, 2026)
 
-Building Headplane from source now requires Go 1.27.1 or newer.
+## Upgrading
+
+- Building from source needs Go 1.27.1 or newer.
 
 ## Changes
 
@@ -112,6 +138,16 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ---
 
 # 0.7.0
+
+## Upgrading
+
+- Headplane needs Headscale 0.27.0 or newer.
+- The agent needs Headscale 0.28 and `headscale.api_key`, and creates its own pre-auth key. Remove `integration.agent.pre_authkey` and `integration.agent.cache_path`.
+- `oidc.headscale_api_key` is now `headscale.api_key`. The old option still works, but is deprecated.
+- Logs are JSON, one object per line. Update anything that parses them.
+- Accounts are linked to Headscale users. Single sign-on accounts link by subject or email when they sign in. Accounts that don't match need linking by hand before they can create their own auth keys or use Browser SSH.
+
+## Changes
 
 - Switched to structured JSON logging (closes [#279](https://github.com/tale/headplane/issues/279)).
 - Added suggestions to pick existing tags to the machine tag dialog (closes [#560](https://github.com/tale/headplane/issues/560)).
@@ -200,6 +236,15 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 # 0.6.2 (February 26, 2026)
 
+## Upgrading
+
+- `oidc.redirect_uri` is replaced by `server.base_url`. Headplane logs the value to use when it finds the old option.
+- PKCE is opt-in. If the identity provider requires it, set `oidc.use_pkce: true`.
+- Environment variables are always read, so remove `HEADPLANE_LOAD_ENV_OVERRIDES`. `.env` files are no longer loaded.
+- Remove `oidc.strict_validation`. It has no effect.
+
+## Changes
+
 - **Added support for Headscale 0.28.0** including all API and data model changes.
 - Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
@@ -246,6 +291,13 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 # 0.6.1 (October 12, 2025)
 
+## Upgrading
+
+- Headplane keeps a database, `hp_persist.db`, in `server.data_path`. The directory has to be persistent and writable, such as a Docker volume. Existing users migrate on their own.
+- The Docker image has no shell. For debugging, use the matching `-shell` tag, such as `ghcr.io/tale/headplane:0.6.1-shell`.
+
+## Changes
+
 - **Headplane now supports connecting to machines via SSH in the web browser.**
   - This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
   - This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
@@ -278,6 +330,12 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 
 # 0.6.0 (May 25, 2025)
 
+## Upgrading
+
+- Headplane needs Headscale 0.26.0 or newer.
+
+## Changes
+
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
   - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
   - Older versions of Headscale will not work with Headplane.
@@ -299,7 +357,7 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 - Support Docker container discovery through labels (via [#194](https://github.com/tale/headplane/pull/194)).
 - AAAA records are now supported on the DNS page (closes [#189](https://github.com/tale/headplane/issues/189)).
 - Add support for `dns.extra_records_path` in the Headscale config (closes [#144](https://github.com/tale/headplane/issues/144)).
-- Tighten `proc` integration logic by checking for the `headscale serve` command (via #[195](https://github.com/tale/headplane/pull/195)).
+- Tighten `proc` integration logic by checking for the `headscale serve` command (via [#195](https://github.com/tale/headplane/pull/195)).
 - Strip newlines in the OIDC `client_secret_path` file if provided (closes [#199](https://github.com/tale/headplane/issues/199)).
 
 ---
@@ -336,6 +394,12 @@ Building Headplane from source now requires Go 1.27.1 or newer.
 ---
 
 # 0.5.6 (April 2, 2025)
+
+## Upgrading
+
+- Single sign-on accounts get roles. New accounts start as members with no dashboard access, and the first person to sign in becomes the owner, so sign in right after upgrading to claim the owner account.
+
+## Changes
 
 ### IMPORTANT
 
@@ -408,10 +472,16 @@ If there are no users, the first user will be given an `owner` role which cannot
 
 > This release is a major overhaul and contains a significant breaking change.
 > We now use a config file for all settings instead of environment variables.
-> Please see [config.example.yaml](/config.example.yaml) for the new format.
+> Please see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format.
+
+## Upgrading
+
+- Settings moved from environment variables to a config file. Start from [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml). Settings that used to be shared with Headscale, such as `public_url` and `oidc`, are now separate.
+
+## Changes
 
 - Completely redesigned the UI from the ground up for accessibility and performance.
-- Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](/config.example.yaml) for the new format).
+- Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format).
 - If the config is read-only, the options are still visible, just disabled (fixes [#48](https://github.com/tale/headplane/issues/48))
 - Added support for Headscale 0.25.0 (this drops support for any older versions).
 - Fixed issues where renaming, deleting, and changing node owners via users was not possible (fixes [#91](https://github.com/tale/headplane/issues/91))

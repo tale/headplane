@@ -2,10 +2,8 @@ import * as v from "valibot";
 
 import { authContext, requestApiContext } from "~/server/context";
 import { ActionError, createAction } from "~/server/web/actions";
-import { isUserPrincipal } from "~/server/web/auth";
-import { getOidcSubject } from "~/server/web/headscale-identity";
+import { ownsHeadscaleUser } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
-import type { PreAuthKey } from "~/types";
 import { list, ok } from "~/utils/form";
 
 const id = v.pipe(v.string(), v.minLength(1));
@@ -43,17 +41,12 @@ export const authKeysAction = createAction({
       }
 
       const [user] = await api.users.list({ id: userId });
-      const ownsUser =
-        user &&
-        isUserPrincipal(principal) &&
-        (principal.user.headscaleUserId === userId ||
-          getOidcSubject(user) === principal.user.subject);
-      if (!ownsUser) {
+      if (!user || !ownsHeadscaleUser(principal, user)) {
         throw new ActionError("You can only manage your own auth keys.", 403);
       }
     }
 
-    return { principal, api, requireOwnUser };
+    return { principal, api, canGenerateAny, requireOwnUser };
   },
   intents: {
     create: {
@@ -64,11 +57,15 @@ export const authKeysAction = createAction({
         reusable: switchValue,
         ephemeral: switchValue,
       },
-      async handler(input, { api, requireOwnUser }) {
+      async handler(input, { api, canGenerateAny, requireOwnUser }) {
         const tags = input.tags.map((tag) => tag.trim()).filter((tag) => tag !== "");
         const user = input.user_id || null;
         if (!user && tags.length === 0) {
           throw new ActionError("Choose a user or add at least one tag.");
+        }
+
+        if (!user && !canGenerateAny) {
+          throw new ActionError("You can only manage your own auth keys.", 403);
         }
 
         if (user) {
@@ -90,17 +87,19 @@ export const authKeysAction = createAction({
       },
     },
     expire: {
-      fields: { key_id: id, key: id, user_id: id },
+      fields: { key_id: id, user_id: id },
       async handler(input, { api, requireOwnUser }) {
         await requireOwnUser(input.user_id);
 
-        // `user` is the Headscale user id. Before 0.28, expiring posts it as a
-        // uint64 read from `key.user?.id`. 0.28 and later only use `key.id`.
-        await api.preAuthKeys.expire({
-          id: input.key_id,
-          key: input.key,
-          user: { id: input.user_id },
-        } as unknown as PreAuthKey);
+        // From 0.28 expiring only names the key, so find it among the keys of
+        // the user just checked rather than trusting the submitted id.
+        const keys = await api.preAuthKeys.listForUser(input.user_id);
+        const key = keys.find((key) => key.id === input.key_id);
+        if (!key) {
+          throw new ActionError("This auth key no longer exists.", 404);
+        }
+
+        await api.preAuthKeys.expire(key);
         return ok("Auth key expired");
       },
     },

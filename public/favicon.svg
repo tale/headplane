@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30">
+  <style>
+    .on { fill: #1f1e1e; }
+    .off { fill: #d6d2cf; }
+    @media (prefers-color-scheme: dark) {
+      .on { fill: #ebe8e6; }
+      .off { fill: #3b3836; }
+    }
+  </style>
+  <circle class="on" cx="7.5" cy="7.5" r="2.5"/>
+  <circle class="off" cx="15.0" cy="7.5" r="2.5"/>
+  <circle class="on" cx="22.5" cy="7.5" r="2.5"/>
+  <circle class="on" cx="7.5" cy="15.0" r="2.5"/>
+  <circle class="on" cx="15.0" cy="15.0" r="2.5"/>
+  <circle class="on" cx="22.5" cy="15.0" r="2.5"/>
+  <circle class="on" cx="7.5" cy="22.5" r="2.5"/>
+  <circle class="off" cx="15.0" cy="22.5" r="2.5"/>
+  <circle class="on" cx="22.5" cy="22.5" r="2.5"/>
+</svg>

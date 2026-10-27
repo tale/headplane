@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { data } from "react-router";
 
 import Callout from "~/components/callout";
 import FilterDropdown from "~/components/filter-dropdown";
@@ -14,6 +15,7 @@ import {
 } from "~/server/context";
 import { usersResource } from "~/server/headscale/live-store";
 import { isUserPrincipal } from "~/server/web/auth";
+import { ownsHeadscaleUser } from "~/server/web/headscale-identity";
 import { Capabilities } from "~/server/web/roles";
 import type { PreAuthKey } from "~/types";
 import type { User } from "~/types/User";
@@ -33,9 +35,19 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
   const { principal, api } = await getRequestApi(request);
+  const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
+  const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
+  if (!canGenerateAny && !canGenerateOwn) {
+    throw data("You don't have permission to do this. Ask your administrator for access.", {
+      status: 403,
+    });
+  }
 
+  // Self-service users only see their own user and its keys.
   const usersSnap = await headscaleLiveStore.get(usersResource, api);
-  const users = usersSnap.data;
+  const users = canGenerateAny
+    ? usersSnap.data
+    : usersSnap.data.filter((user) => ownsHeadscaleUser(principal, user));
 
   let keys: { user: User | null; preAuthKeys: PreAuthKey[] }[];
   let missing: { user: User; error: unknown }[] = [];
@@ -61,7 +73,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 
     keys = [];
     const tagOnly = keysByUser.get(null);
-    if (tagOnly?.length) {
+    if (canGenerateAny && tagOnly?.length) {
       keys.push({ preAuthKeys: tagOnly, user: null });
     }
     for (const user of users) {
@@ -97,9 +109,6 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       .filter((r): r is Extract<FetchResult, { success: false }> => !r.success)
       .map(({ user, error }) => ({ error, user }));
   }
-
-  const canGenerateAny = auth.can(principal, Capabilities.generate_authkeys);
-  const canGenerateOwn = auth.can(principal, Capabilities.generate_own_authkeys);
 
   return {
     access: canGenerateAny || canGenerateOwn,

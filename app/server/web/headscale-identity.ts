@@ -1,13 +1,15 @@
 import type { User } from "~/types/User";
 
+import { isUserPrincipal, type Principal } from "./auth";
+
 /**
  * Extracts the OIDC subject from a Headscale user's providerId.
  * Headscale stores providerId as a URL where the last path segment
  * is the subject (e.g. "https://idp.example.com/<uuid>"). This is
- * the ONLY place this parsing should occur — all other code should
+ * the ONLY place this parsing should occur, all other code should
  * use the stable headscale_user_id link on the Headplane user record.
  */
-export function getOidcSubject(user: User): string | undefined {
+function getOidcSubject(user: User): string | undefined {
   if (user.provider !== "oidc" || !user.providerId) {
     return;
   }
@@ -37,4 +39,18 @@ export function findHeadscaleUserBySubject(
   }
 
   return users.find((u) => u.email === email);
+}
+
+/**
+ * Checks if the given principal owns the given Headscale user. It checks
+ *  first with the stable linked headscale_user_id then OIDC.
+ */
+export function ownsHeadscaleUser(principal: Principal, user: User): boolean {
+  if (!isUserPrincipal(principal)) {
+    return false;
+  }
+
+  return (
+    principal.user.headscaleUserId === user.id || getOidcSubject(user) === principal.user.subject
+  );
 }

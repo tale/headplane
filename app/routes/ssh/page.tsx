@@ -1,10 +1,11 @@
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
 
 import Button from "~/components/button";
 import Callout from "~/components/callout";
 import Code from "~/components/code";
+import Link from "~/components/link";
 import Shell from "~/routes/auth/login/shell";
 import {
   agentsContext,
@@ -19,7 +20,7 @@ import type { Route } from "./+types/page";
 import { isSSHError, SSHError, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
-import { connectTailnet } from "./wasm.client";
+import { connectTailnet, MissingWasmError } from "./wasm.client";
 
 const SSH_PREAUTH_KEY_TTL_MS = 10 * 60 * 1000;
 
@@ -33,24 +34,6 @@ export async function loader({ request, params, context, url }: Route.LoaderArgs
   const headscale = context.get(headscaleContext);
   const getRequestApi = context.get(requestApiContext);
   const compatibilityWarning = getBrowserSSHCompatibilityWarning(headscale.version);
-
-  const origin = url.origin;
-  const assets = [
-    `${config.server.base_path}/wasm_exec.js`,
-    `${config.server.base_path}/hp_ssh.wasm`,
-  ];
-  const missing: string[] = [];
-
-  for (const file of assets) {
-    const res = await fetch(`${origin}${file}`, { method: "HEAD" });
-    if (!res.ok) {
-      missing.push(file);
-    }
-  }
-
-  if (missing.length > 0) {
-    throw data(sshErrors.wasm_missing, 405);
-  }
 
   if (agents.state !== "enabled") {
     throw data(sshErrors.agent_required, 400);
@@ -215,8 +198,19 @@ function SSHConsole({
   node: { ipAddress: string; controlURL: string; preAuthKey: string; ephemeralHostname: string };
 }) {
   const [ipn, setIpn] = useState<IPN | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [isTerminalShown, setIsTerminalShown] = useState(false);
+  const [isWasmMissing, setIsWasmMissing] = useState(false);
+  const [authUrl, setAuthUrl] = useState<string>();
   const [status, setStatus] = useState("Joining Tailnet…");
+
+  // Stable, so the terminal isn't torn down and reconnected on re-render.
+  const showTerminal = useCallback(() => setIsTerminalShown(true), []);
+  const onOutput = useCallback((output: string) => {
+    // Errors and check rules' sign-in banners arrive before the session.
+    setIsTerminalShown(true);
+    const url = output.match(/To authenticate, visit: (\S+)/)?.[1];
+    if (url) setAuthUrl(url);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -236,6 +230,11 @@ function SSHConsole({
       },
       (error: unknown) => {
         if (cancelled) return;
+        if (error instanceof MissingWasmError) {
+          setIsWasmMissing(true);
+          return;
+        }
+
         setStatus(`Failed to join Tailnet: ${error instanceof Error ? error.message : error}`);
       },
     );
@@ -245,9 +244,21 @@ function SSHConsole({
     };
   }, [node, hostname]);
 
+  if (isWasmMissing) {
+    return <SSHError {...sshErrors.wasm_missing} />;
+  }
+
   return (
     <div className="fixed inset-0 flex flex-col bg-black">
-      {!connected && (
+      {authUrl && (
+        <Callout className="m-4" title="Sign in to continue" variant="warning">
+          {hostname} needs you to sign in again before it opens the session.{" "}
+          <Link external styled to={authUrl}>
+            Sign in
+          </Link>
+        </Callout>
+      )}
+      {!isTerminalShown && (
         <div className="absolute inset-0 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="text-faint size-8 animate-spin" />
@@ -261,7 +272,8 @@ function SSHConsole({
           ipn={ipn}
           username={username}
           ipAddress={node.ipAddress}
-          onConnected={() => setConnected(true)}
+          onConnected={showTerminal}
+          onOutput={onOutput}
         />
       )}
     </div>

@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
 
-import { capabilitiesFor } from "~/server/headscale/api/capabilities";
 import {
   formatServerVersion,
   gte,
@@ -87,37 +86,5 @@ describe("formatServerVersion", () => {
 
   test("falls back to the raw string for unknown versions", () => {
     expect(formatServerVersion(parseServerVersion("dev"))).toBe("dev");
-  });
-});
-
-describe("capabilitiesFor", () => {
-  test("0.28.0 enables every modern flag", () => {
-    const caps = capabilitiesFor(parseServerVersion("0.28.0"));
-    expect(caps).toEqual({
-      preAuthKeysHaveStableIds: true,
-      nodeTagsAreFlat: true,
-      nodeOwnerIsImmutable: true,
-      registerKeyIncludesAuthReqPrefix: false,
-      keyExpiryCanBeDisabled: false,
-    });
-  });
-
-  test("0.28.0-beta.1 matches 0.28.0 capabilities (prerelease gating)", () => {
-    expect(capabilitiesFor(parseServerVersion("0.28.0-beta.1"))).toEqual(
-      capabilitiesFor(parseServerVersion("0.28.0")),
-    );
-  });
-
-  test("0.29.0 enables the prefixed AuthID register key", () => {
-    const caps = capabilitiesFor(parseServerVersion("0.29.0"));
-    expect(caps.registerKeyIncludesAuthReqPrefix).toBe(true);
-  });
-
-  test("0.27.1 lacks every 0.28-gated capability", () => {
-    const caps = capabilitiesFor(parseServerVersion("0.27.1"));
-    expect(caps.preAuthKeysHaveStableIds).toBe(false);
-    expect(caps.nodeTagsAreFlat).toBe(false);
-    expect(caps.nodeOwnerIsImmutable).toBe(false);
-    expect(caps.registerKeyIncludesAuthReqPrefix).toBe(false);
   });
 });

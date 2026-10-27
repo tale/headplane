@@ -1,14 +1,10 @@
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 
 import type { AuthService, Principal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { Machine } from "~/types";
 
 import { createTestAuth } from "./create-auth";
-
-vi.mock("~/utils/log", () => ({
-  default: { warn: vi.fn(), error: vi.fn(), debug: vi.fn(), info: vi.fn() },
-}));
 
 describe("findOrCreateUser", () => {
   let auth: AuthService;

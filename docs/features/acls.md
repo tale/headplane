@@ -6,9 +6,8 @@ description: Edit the Headscale ACL policy, tags and groups from the Headplane U
 # Access Control
 
 Headscale stores its Access Control List (ACL) as a single HuJSON policy. The
-**Access Control** page in Headplane exposes that policy in two ways: a
-structured editor for the parts most people change day to day, and the raw file
-editor for everything else.
+**Access Control** page edits it two ways: a structured editor for rules, tags
+and groups, and a file editor for the whole policy.
 
 ## Requirements
 
@@ -21,27 +20,25 @@ policy:
   mode: database
 ```
 
-In `file` mode the page is read-only and shows a notice explaining why. Editing
-also requires the `write_policy` capability, which the `owner`, `admin` and
-`network_admin` roles have.
+In `file` mode the page is read-only and shows a notice explaining why. Only
+owners, admins and network admins can edit the policy.
 
 ## Rules
 
 The **Rules** tab renders the policy as three lists:
 
-- **Access rules** — the `acls` section. Each rule allows traffic from a set of
+- **Access rules**: the `acls` section. Each rule allows traffic from a set of
   sources to a set of destinations. Destinations include a port range, for
   example `tag:web:80,443`. A destination entered without one gets `:*`
   appended, since Headscale rejects a destination that has no port.
-- **SSH rules** — the `ssh` section, including `check` mode and its check
+- **SSH rules**: the `ssh` section, including `check` mode and its check
   period.
-- **Hosts** — the `hosts` section, which names an IP address or CIDR range so
+- **Hosts**: the `hosts` section, which names an IP address or CIDR range so
   rules can reference it.
 
 Adding or editing an entry opens a dialog where sources and destinations are
 built from chips. Every group, tag, host and Headscale user already known to
-your tailnet is offered as a one-click suggestion, so rules can be written
-without memorising the syntax.
+the tailnet is offered as a suggestion.
 
 ## Tags and groups
 
@@ -64,20 +61,19 @@ name. Both surfaces write to the same `groups` section of the policy.
 
 ## Editing the file directly
 
-The **Edit file** tab is the original CodeMirror editor over the raw policy, and
+The **Edit file** tab edits the raw policy, and
 **Preview changes** shows a diff against the saved version. The structured
 editors write into the same buffer, so a change made visually shows up in the
 file editor and in the diff before it is saved.
 
 Nothing is sent to Headscale until **Save** is pressed.
 
-::: warning Comments are not preserved
+:::warning[Comments are not preserved]
 HuJSON allows comments and trailing commas. Headplane reads them, but the
 structured editors regenerate the policy text, which drops comments. The Rules
-and Tags & Groups tabs show a notice when the loaded policy contains comments —
-use the file editor if you want to keep them.
+and Tags & Groups tabs show a notice when the loaded policy contains comments.
+To keep them, edit in the file editor instead.
 :::
 
-Unknown top-level keys such as `autoApprovers` and `nodeAttrs` are preserved
-untouched, so using the visual editor never silently drops parts of a policy
-that Headplane does not model.
+Top-level keys the structured editor doesn't handle, such as `autoApprovers`
+and `nodeAttrs`, are kept as they are.

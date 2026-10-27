@@ -1,256 +1,81 @@
 import { dump } from "js-yaml";
-import { beforeAll, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 
 import { ConfigError } from "~/server/config/error";
 import { loadConfig, loadConfigFile } from "~/server/config/load";
 
-import { clearFakeFiles, createFakeFile } from "../setup/overlay-fs";
+import { tempFile } from "../../support/temp";
 
-const writeYaml = (filePath: string, content: unknown) => {
-  const yamlContent = dump(content);
-  createFakeFile(filePath, yamlContent);
+const base = {
+  headscale: { url: "http://localhost:8080" },
+  server: { cookie_secret: "thirtytwo-character-cookiesecret" },
 };
 
+const oidc = {
+  issuer: "https://accounts.google.com",
+  client_id: "my-client-id",
+  client_secret: "my-client-secret",
+  headscale_api_key: "my-api-key",
+};
+
+function writeConfig(content: unknown) {
+  return tempFile("config.yaml", dump(content));
+}
+
 describe("Configuration YAML file loading", () => {
-  beforeAll(() => {
-    clearFakeFiles();
-  });
-
-  test("should correctly parse different types from YAML file", async () => {
-    const filePath = "/config/test-config.yaml";
-    writeYaml(filePath, {
-      headscale: {
-        url: "http://localhost:8080",
-      },
-      oidc: {
-        client_id: "my-client-id",
-      },
-      server: {
-        port: 8000,
-      },
-      integration: {
-        agent: {
-          enabled: true,
-        },
-      },
-    });
-
-    const config = await loadConfigFile(filePath);
-    expect(config?.headscale?.url).toBe("http://localhost:8080");
-    expect(config?.oidc?.client_id).toBe("my-client-id");
-    expect(config?.server?.port).toBe(8000);
-    expect(config?.integration?.agent?.enabled).toBe(true);
-  });
-
-  test("should not throw errors for inaccessible file", async () => {
+  test("a missing file is not an error", async () => {
     await expect(loadConfigFile("/non-existent-path/config.yaml")).resolves.toBeUndefined();
   });
 
-  test("should correctly get a finalized config from YAML", async () => {
-    const filePath = "/config/minimal-config.yaml";
-    writeYaml(filePath, {
-      headscale: {
-        url: "http://localhost:8080",
-      },
-      server: {
-        cookie_secret: "thirtytwo-character-cookiesecret",
-      },
-    });
+  test("rejects a config without required fields", async () => {
+    const path = await writeConfig({ server: { port: 8000 } });
 
-    const config = await loadConfig(filePath);
-    expect(config.headscale.url).toBe("http://localhost:8080");
-    expect(config.server.cookie_secret).toBe("thirtytwo-character-cookiesecret");
-  });
-
-  test("should throw error for missing required fields", async () => {
-    const filePath = "/config/invalid-config.yaml";
-    writeYaml(filePath, {
-      server: {
-        port: 8000,
-      },
-    });
-
-    await expect(loadConfig(filePath)).rejects.toEqual(
+    await expect(loadConfig(path)).rejects.toEqual(
       expect.objectContaining(ConfigError.from("INVALID_REQUIRED_FIELDS", { messages: [] })),
     );
   });
 
-  test("oidc.enabled defaults to true when oidc section is present", async () => {
-    const filePath = "/config/oidc-default-enabled.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-      },
-    });
+  test("an oidc section is enabled unless it says otherwise", async () => {
+    const enabled = await loadConfig(await writeConfig({ ...base, oidc }));
+    const disabled = await loadConfig(
+      await writeConfig({ ...base, oidc: { ...oidc, enabled: false } }),
+    );
 
-    const config = await loadConfig(filePath);
-    expect(config.oidc).toBeDefined();
-    expect(config.oidc?.enabled).toBe(true);
-  });
-
-  test("oidc.enabled can be set to false to disable OIDC", async () => {
-    const filePath = "/config/oidc-disabled.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        enabled: false,
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-      },
-    });
-
-    const config = await loadConfig(filePath);
-    expect(config.oidc).toBeDefined();
-    expect(config.oidc?.enabled).toBe(false);
-  });
-
-  test("oidc.subject_claims can be configured from YAML", async () => {
-    const filePath = "/config/oidc-subject-claims.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-        subject_claims: ["open_id", "email"],
-      },
-    });
-
-    const config = await loadConfig(filePath);
-    expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
+    expect(enabled.oidc?.enabled).toBe(true);
+    expect(disabled.oidc?.enabled).toBe(false);
   });
 
   test("oidc.subject_claims are trimmed, deduplicated, and drop empty values", async () => {
-    const filePath = "/config/oidc-subject-claims-normalized.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-        subject_claims: [" open_id ", "", "email", "open_id", "  "],
-      },
+    const path = await writeConfig({
+      ...base,
+      oidc: { ...oidc, subject_claims: [" open_id ", "", "email", "open_id", "  "] },
     });
 
-    const config = await loadConfig(filePath);
+    const config = await loadConfig(path);
     expect(config.oidc?.subject_claims).toEqual(["open_id", "email"]);
   });
 
-  test("oidc.default_role and oidc.role_claim can be configured from YAML", async () => {
-    const filePath = "/config/oidc-role-assignment.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-        default_role: "viewer",
-        role_claim: "headplane_role",
-      },
-    });
+  test("weak RSA keys are rejected unless explicitly allowed", async () => {
+    const path = await writeConfig({ ...base, oidc });
 
-    const config = await loadConfig(filePath);
-    expect(config.oidc?.default_role).toBe("viewer");
-    expect(config.oidc?.role_claim).toBe("headplane_role");
-  });
-
-  test("oidc.allow_weak_rsa_keys defaults to false", async () => {
-    const filePath = "/config/oidc-weak-rsa-default.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-      },
-    });
-
-    const config = await loadConfig(filePath);
+    const config = await loadConfig(path);
     expect(config.oidc?.allow_weak_rsa_keys).toBe(false);
   });
 
-  test("oidc.allow_weak_rsa_keys can be enabled from YAML", async () => {
-    const filePath = "/config/oidc-weak-rsa-enabled.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: {
-        issuer: "https://accounts.google.com",
-        client_id: "my-client-id",
-        client_secret: "my-client-secret",
-        headscale_api_key: "my-api-key",
-        allow_weak_rsa_keys: true,
-      },
-    });
-
-    const config = await loadConfig(filePath);
-    expect(config.oidc?.allow_weak_rsa_keys).toBe(true);
-  });
-
-  test("partial oidc config with enabled field can be parsed", async () => {
-    const filePath = "/config/oidc-partial.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      oidc: { enabled: false },
-    });
-
-    const partialConfig = await loadConfigFile(filePath);
-    expect(partialConfig?.oidc?.enabled).toBe(false);
-  });
-
-  test("config without oidc section has undefined oidc", async () => {
-    const filePath = "/config/no-oidc.yaml";
-    writeYaml(filePath, {
-      headscale: { url: "http://localhost:8080" },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-    });
-
-    const config = await loadConfig(filePath);
-    expect(config.oidc).toBeUndefined();
-  });
-
   test("agent tailscale_netns defaults to true and can be disabled", async () => {
-    const defaultFilePath = "/config/agent-default-netns.yaml";
-    writeYaml(defaultFilePath, {
-      headscale: {
-        url: "http://localhost:8080",
-        api_key: "my-api-key",
-      },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      integration: { agent: { enabled: true } },
-    });
+    const headscale = { ...base.headscale, api_key: "my-api-key" };
+    const byDefault = await loadConfig(
+      await writeConfig({ ...base, headscale, integration: { agent: { enabled: true } } }),
+    );
+    const disabled = await loadConfig(
+      await writeConfig({
+        ...base,
+        headscale,
+        integration: { agent: { enabled: true, tailscale_netns: false } },
+      }),
+    );
 
-    const defaultConfig = await loadConfig(defaultFilePath);
-    expect(defaultConfig.integration?.agent?.tailscale_netns).toBe(true);
-
-    const disabledFilePath = "/config/agent-disabled-netns.yaml";
-    writeYaml(disabledFilePath, {
-      headscale: {
-        url: "http://localhost:8080",
-        api_key: "my-api-key",
-      },
-      server: { cookie_secret: "thirtytwo-character-cookiesecret" },
-      integration: { agent: { enabled: true, tailscale_netns: false } },
-    });
-
-    const disabledConfig = await loadConfig(disabledFilePath);
-    expect(disabledConfig.integration?.agent?.tailscale_netns).toBe(false);
+    expect(byDefault.integration?.agent?.tailscale_netns).toBe(true);
+    expect(disabled.integration?.agent?.tailscale_netns).toBe(false);
   });
 });

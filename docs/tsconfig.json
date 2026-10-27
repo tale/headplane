@@ -1,12 +1,22 @@
 {
-  "include": [".vitepress/**/*"],
+  "include": ["**/*", ".react-router/types/**/*"],
+  "exclude": ["build", "node_modules"],
   "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "types": ["node", "vite/client"],
+    "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "jsx": "react-jsx",
+    "rootDirs": [".", "./.react-router/types"],
+    "paths": {
+      "@/*": ["./app/*"]
+    },
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
     "noEmit": true,
-    "strict": true,
-    "skipLibCheck": true
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true
   }
 }

@@ -1,0 +1,3 @@
+{
+  "pages": ["users-roles", "sso", "proxy-auth", "acls", "agent", "ssh"]
+}
