@@ -25,7 +25,7 @@ const ISSUER = "http://dex:5556";
 export const HEADPLANE_URL = "http://headplane.test";
 
 // bcrypt of "password"
-const PASSWORD_HASH = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
+export const PASSWORD_HASH = "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W";
 
 const CONFIG = `
 issuer: ${ISSUER}

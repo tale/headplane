@@ -1,16 +1,14 @@
 // pnpm harness up [scenario] [--version 0.29.5] [--headplane] | pnpm harness list
+// pnpm harness screenshots [--version 0.29.5]
 
-import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { mkdtemp, readdir, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import type { ChildProcess } from "node:child_process";
+import { readdir } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { parseArgs } from "node:util";
 
-import { stringify } from "yaml";
-
-import { HARNESS_LABEL } from "./headscale";
+import { startHeadplane, writeHeadplaneConfig } from "./headplane";
 import { applyScenario, type Scenario } from "./scenario";
+import { takeScreenshots } from "./screenshots";
 import { createTailnet } from "./tailnet";
 import { HEADSCALE_VERSIONS, type HeadscaleVersion, LATEST_HEADSCALE } from "./versions";
 
@@ -45,8 +43,8 @@ if (command === "list") {
   process.exit(0);
 }
 
-if (command !== "up") {
-  console.error(`Unknown command ${command}. Use \`up\` or \`list\`.`);
+if (command !== "up" && command !== "screenshots") {
+  console.error(`Unknown command ${command}. Use \`up\`, \`list\` or \`screenshots\`.`);
   process.exit(1);
 }
 
@@ -58,6 +56,11 @@ if (!HEADSCALE_VERSIONS.includes(version)) {
   process.exit(1);
 }
 
+if (command === "screenshots") {
+  await takeScreenshots(version, Number(values.port));
+  process.exit(0);
+}
+
 const scenario = await loadScenario(name);
 console.log(`Starting ${name} on Headscale ${version}: ${scenario.description}`);
 
@@ -66,7 +69,7 @@ const tailnet = await createTailnet({
   headscaleConfig: scenario.headscaleConfig,
   records: scenario.records,
 });
-let headplane: ReturnType<typeof spawn> | undefined;
+let headplane: ChildProcess | undefined;
 
 async function shutdown() {
   console.log("\nStopping the tailnet...");
@@ -80,34 +83,7 @@ process.on("SIGTERM", shutdown);
 
 await applyScenario(tailnet, scenario);
 
-const dataDir = await mkdtemp(join(tmpdir(), "hp-harness-headplane-"));
-const configPath = join(dataDir, "config.yaml");
-await writeFile(
-  configPath,
-  stringify({
-    server: {
-      host: "127.0.0.1",
-      port: Number(values.port),
-      cookie_secret: randomBytes(16).toString("hex"),
-      cookie_secure: false,
-      data_path: dataDir,
-    },
-    headscale: {
-      url: tailnet.server.url,
-      api_key: tailnet.server.apiKey,
-      tls_cert_path: tailnet.server.certPath,
-      config_path: tailnet.server.configPath,
-      dns_records_path: tailnet.server.recordsPath,
-    },
-    integration: {
-      docker: {
-        enabled: true,
-        container_label: `${HARNESS_LABEL}=${tailnet.id}`,
-        socket: process.env.DOCKER_HOST ?? "unix:///var/run/docker.sock",
-      },
-    },
-  }),
-);
+const configPath = await writeHeadplaneConfig(tailnet, { port: Number(values.port) });
 
 console.log(`
 Headscale    ${tailnet.server.url}
@@ -119,10 +95,7 @@ Exec         docker exec ${tailnet.server.container.getId().slice(0, 12)} headsc
 `);
 
 if (values.headplane) {
-  headplane = spawn("pnpm", ["exec", "react-router", "dev", "--port", values.port!], {
-    stdio: "inherit",
-    env: { ...process.env, HEADPLANE_CONFIG_PATH: configPath },
-  });
+  headplane = startHeadplane(configPath, Number(values.port));
 
   console.log(`Headplane    http://127.0.0.1:${values.port}/admin (sign in with the API key)\n`);
 } else {

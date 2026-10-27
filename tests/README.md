@@ -98,5 +98,19 @@ pnpm harness up fleet --version 0.28.0   # HP_FLEET_SIZE=200 for more machines
 
 `up` prints the Headscale URL and API key and keeps everything running until
 you press Ctrl-C. With `--headplane` it also starts the dev server against it on
-port 3001. Use scenarios to try a change by hand, to reproduce a setup from a
-bug report, and to take the docs screenshots.
+port 3001. Use scenarios to try a change by hand, or to reproduce a setup from a
+bug report.
+
+## Docs screenshots
+
+`pnpm harness screenshots` seeds the `homelab` scenario, builds Headplane with
+the agent and Browser SSH, signs in through Dex as each person, and saves light
+and dark screenshots to `docs/assets`. Install the browser once with
+`pnpm exec playwright install chromium`.
+
+Runs come out close to the same, apart from dates. Machines join in order, so
+their IPs don't change, machine keys are swapped on the page, and the agent
+reports each machine's `hostInfo` from the scenario instead of the Docker
+host's kernel. The Browser SSH shots run `fastfetch` and `btop` live, against
+fake services from `loadgen.go`. Retake them after a UI change and commit the
+images with it.
