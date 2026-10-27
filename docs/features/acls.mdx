@@ -3,11 +3,21 @@ title: Access Control
 description: Edit the Headscale ACL policy, tags and groups from the Headplane UI.
 ---
 
+import aclsLight from "../assets/acls-light.png";
+import aclsDark from "../assets/acls-dark.png";
+
 # Access Control
 
 Headscale stores its Access Control List (ACL) as a single HuJSON policy. The
 **Access Control** page edits it two ways: a structured editor for rules, tags
 and groups, and a file editor for the whole policy.
+
+<Figure
+  alt="The Access Control page in Headplane"
+  light={aclsLight}
+  dark={aclsDark}
+  caption="Access rules in the structured editor"
+/>
 
 ## Requirements
 

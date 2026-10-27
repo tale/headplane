@@ -5,6 +5,9 @@ description: Let Headplane edit Headscale's DNS settings and sign-in restriction
 
 import { dockerCompose } from "./compose-examples";
 
+import restrictionsLight from "../assets/restrictions-light.png";
+import restrictionsDark from "../assets/restrictions-dark.png";
+
 # Integrations
 
 Headscale keeps its DNS settings and OIDC sign-in restrictions in its own
@@ -27,6 +30,13 @@ every setup. The rest depends on how much access Headplane has:
 Sign-in restrictions edit the `allowed_domains`, `allowed_groups` and
 `allowed_users` options in Headscale's `oidc` section, so they only appear when
 Headscale signs people in through OIDC.
+
+<Figure
+  alt="Sign-in restrictions in Headplane"
+  light={restrictionsLight}
+  dark={restrictionsDark}
+  caption="Limiting Headscale sign-ins to an email domain"
+/>
 
 Running without access to the config was previously called Limited Mode. It's a
 fine setup when Headscale runs on another machine. The [agent](/features/agent),

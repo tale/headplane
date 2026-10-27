@@ -5,8 +5,8 @@ description: Show each machine's Tailscale version and OS, and enable Browser SS
 
 import { versions } from "@/lib/versions";
 
-import machineDark from "../assets/machine-dark.png";
-import machineLight from "../assets/machine-light.png";
+import agentLight from "../assets/agent-light.png";
+import agentDark from "../assets/agent-dark.png";
 
 # Headplane Agent
 
@@ -16,10 +16,10 @@ runs, so the agent reads them from its view of the network, every three minutes
 by default. [Browser SSH](/features/ssh) needs it too.
 
 <Figure
-  alt="A machine's details in Headplane"
-  light={machineLight}
-  dark={machineDark}
-  caption="Version and OS details come from the agent"
+  alt="The agent's status in Headplane's settings"
+  light={agentLight}
+  dark={agentDark}
+  caption="Settings → Agent shows whether the agent is connected"
 />
 
 ## Turning it on
