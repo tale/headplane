@@ -1,7 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { useRevalidator } from "react-router";
-
-import { getPrefix } from "~/utils/prefix";
+import { useHref, useRevalidator } from "react-router";
 
 const LiveDataContext = createContext({
   paused: false,
@@ -20,6 +18,7 @@ interface ChangedEvent {
 
 export function LiveDataProvider({ children }: LiveDataProps) {
   const revalidator = useRevalidator();
+  const liveUrl = useHref("/events/live");
   const [paused, setPaused] = useState(false);
 
   // This ref is a bit sus but it's needed to ensure the SSE handshake does
@@ -52,7 +51,7 @@ export function LiveDataProvider({ children }: LiveDataProps) {
     }
 
     function connect() {
-      const sse = new EventSource(`${getPrefix()}/events/live`);
+      const sse = new EventSource(liveUrl);
       eventSourceRef.current = sse;
 
       sse.addEventListener("hello", (e) => {
@@ -105,7 +104,7 @@ export function LiveDataProvider({ children }: LiveDataProps) {
         reconnectTimer.current = null;
       }
     };
-  }, [paused, revalidateIfIdle]);
+  }, [paused, revalidateIfIdle, liveUrl]);
 
   // If the tab becomes visible and is marked dirty, revalidate
   useEffect(() => {

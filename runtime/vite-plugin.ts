@@ -14,12 +14,12 @@ import { composeListener } from "./http";
 
 export interface DevServerOptions {
   entry: string;
-  basename: string;
   publicDir: string;
 }
 
 interface AppModule {
   default: RequestListener;
+  config: { server: { base_path: string } };
   dispose?: () => Promise<void> | void;
 }
 
@@ -28,25 +28,12 @@ export function headplaneDevServer(options: DevServerOptions): Plugin {
     name: "headplane:dev-server",
     apply: "serve",
     configureServer(server) {
-      // Lazy reference to the loaded entry; recomputed per request so
-      // Vite's HMR picks up changes via `ssrLoadModule`.
-      let appListener: RequestListener = (_req, res) => {
-        res.statusCode = 503;
-        res.end("Server entry not loaded yet");
-      };
-
       // Track the last-loaded module identity so we can call its
       // `dispose` when Vite swaps in a new one on HMR. Without this
       // the LiveStore and other long-lived services leak intervals
       // and subprocesses on every reload.
       let currentModule: AppModule | null = null;
-
-      const composed = composeListener({
-        basename: options.basename,
-        staticRoot: options.publicDir,
-        immutableAssets: false,
-        requestListener: (req, res) => appListener(req, res),
-      });
+      let composed: RequestListener | null = null;
 
       // Defer registration so our middleware runs AFTER Vite's
       // transform/asset middlewares (those serve `/@vite/...`,
@@ -54,17 +41,25 @@ export function headplaneDevServer(options: DevServerOptions): Plugin {
       return () => {
         server.middlewares.use(async (req, res, next) => {
           try {
+            // Recomputed per request so Vite's HMR picks up changes.
             const mod = (await server.ssrLoadModule(options.entry)) as AppModule;
-            if (currentModule && currentModule !== mod) {
+            if (currentModule !== mod) {
               try {
-                await currentModule.dispose?.();
+                await currentModule?.dispose?.();
               } catch (err) {
                 server.config.logger.warn(`[headplane:dev-server] dispose failed: ${String(err)}`);
               }
+
+              currentModule = mod;
+              composed = composeListener({
+                basename: mod.config.server.base_path,
+                staticRoot: options.publicDir,
+                immutableAssets: false,
+                requestListener: mod.default,
+              });
             }
-            currentModule = mod;
-            appListener = mod.default;
-            composed(req, res);
+
+            composed!(req, res);
           } catch (err) {
             if (err instanceof Error) server.ssrFixStacktrace(err);
             next(err);

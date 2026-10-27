@@ -5,7 +5,6 @@ import type { ServerBuild } from "react-router";
 import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
-import { setServerPrefix } from "~/utils/prefix";
 
 import { ConfigError } from "./config/error";
 import { loadConfig } from "./config/load";
@@ -36,7 +35,6 @@ if ((config.server.tls_cert_path || config.server.tls_key_path) && !config.serve
   config.server.cookie_secure = true;
 }
 
-setServerPrefix(config.server.base_path);
 const ctx = await createAppContext(config).catch((error) => {
   const message = error instanceof ConfigError ? error.message : error;
   log.error("server", "Failed to start Headplane: %s", message);

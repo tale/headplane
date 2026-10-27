@@ -85,7 +85,7 @@ describe.each(["/admin", "/tools/web"])("the production build at %s", (prefix) =
 
     const html = await (await fetch(`${origin}${prefix}/login`)).text();
     expect(html).toContain(`"basename":"${prefix}"`);
-    expect(html).toContain(`name="headplane-base-path" content="${prefix}"`);
+    expect(html).toContain(`href="${prefix}/favicon.svg"`);
 
     const assets = [...html.matchAll(/(?:href|src)="([^"]+\.(?:js|css|ico|svg))"/g)].map(
       ([, url]) => url,

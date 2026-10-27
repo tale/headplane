@@ -5,7 +5,6 @@ import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { cn } from "cn/vite";
 import { defineConfig } from "vite";
-import { parse } from "yaml";
 
 import { headplaneDevServer } from "./runtime/vite-plugin";
 
@@ -37,9 +36,6 @@ if (!VERSION) {
   throw new Error("Unable to determine version");
 }
 
-const config = await readFile(process.env.HEADPLANE_CONFIG_PATH || "config.example.yaml", "utf-8");
-const server = parse(config)?.server ?? {};
-
 export default defineConfig(({ command }) => {
   const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
 
@@ -49,7 +45,6 @@ export default defineConfig(({ command }) => {
     plugins: [
       headplaneDevServer({
         entry: DEV_ENTRY,
-        basename: process.env.HEADPLANE_SERVER__BASE_PATH || server.base_path || "/admin",
         publicDir: new URL("./public", import.meta.url).pathname,
       }),
       reactRouter(),
@@ -61,8 +56,8 @@ export default defineConfig(({ command }) => {
       }),
     ],
     server: {
-      host: server.host,
-      port: server.port,
+      host: "0.0.0.0",
+      port: 3000,
     },
     resolve: {
       tsconfigPaths: true,
