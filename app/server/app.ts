@@ -1,12 +1,12 @@
 import { exit, versions } from "node:process";
 
 import { createRequestListener } from "@react-router/node";
+import type { ServerBuild } from "react-router";
 import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
 import { setServerPrefix } from "~/utils/prefix";
 
-import { configureBuild } from "./assets";
 import { ConfigError } from "./config/error";
 import { loadConfig } from "./config/load";
 import { createAppContext, createRouterContext } from "./context";
@@ -62,11 +62,9 @@ interface ClientAddress {
   address?: string;
 }
 
-export const runtimeBuild = import.meta.env.PROD
-  ? configureBuild(build, config.server.base_path)
-  : { ...build, basename: config.server.base_path };
-export default createRequestListener({
-  build: runtimeBuild,
-  mode: import.meta.env.MODE,
-  getLoadContext,
-});
+export function createListener(build: ServerBuild) {
+  return createRequestListener({ build, mode: import.meta.env.MODE, getLoadContext });
+}
+
+export { build };
+export default createListener({ ...build, basename: config.server.base_path });

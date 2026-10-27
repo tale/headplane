@@ -15,11 +15,15 @@ import { exit } from "node:process";
 import log from "~/utils/log";
 
 import { type StartOptions, composeListener, startHttpServer } from "../../runtime/http";
-import requestListener, { config, dispose, runtimeBuild } from "./app";
+import { build, config, createListener, dispose } from "./app";
+import { configureBuild } from "./assets";
 
 // `import.meta.url` resolves to `build/server/index.js`; the built
 // client lives next to it at `build/client/`.
 const clientDir = resolve(import.meta.dirname, "../client");
+
+// The client build has relative asset URLs, so point them at the configured path.
+const runtimeBuild = configureBuild(build, config.server.base_path);
 
 let tls: StartOptions["tls"];
 const { tls_cert_path: certPath, tls_key_path: keyPath } = config.server;
@@ -74,7 +78,7 @@ startHttpServer({
       body: `window.__reactRouterManifest=${JSON.stringify(runtimeBuild.assets)};`,
     },
     logger: runtimeLogger,
-    requestListener,
+    requestListener: createListener(runtimeBuild),
   }),
   onShutdown: dispose,
 });

@@ -38,7 +38,7 @@ if (!VERSION) {
 }
 
 const config = await readFile(process.env.HEADPLANE_CONFIG_PATH || "config.example.yaml", "utf-8");
-const { server } = parse(config);
+const server = parse(config)?.server ?? {};
 
 export default defineConfig(({ command }) => {
   const ssrNoExternal = command === "build" ? true : REACT_ROUTER_SSR_NO_EXTERNAL;
