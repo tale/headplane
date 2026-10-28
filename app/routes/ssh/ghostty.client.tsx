@@ -1,9 +1,8 @@
 import { useEffect, useRef } from "react";
+import { useHref } from "react-router";
 import { Restty } from "restty";
 import type { GhosttyTheme } from "restty";
 import type { PtyTransport } from "restty/internal";
-
-const FONT_BASE = `${__PREFIX__}/fonts`;
 
 // Ghostty's default canvas background is rgb(20,23,26) — a dark gray, not black.
 // Override it so the terminal matches the page and pane container backgrounds.
@@ -89,6 +88,7 @@ interface GhosttyProps {
 
 export default function Ghostty({ ipn, ipAddress, username, onConnected, onOutput }: GhosttyProps) {
   const divRef = useRef<HTMLDivElement>(null);
+  const fontBase = useHref("/fonts");
 
   useEffect(() => {
     if (!divRef.current) return;
@@ -111,27 +111,27 @@ export default function Ghostty({ ipn, ipAddress, username, onConnected, onOutpu
         ligatures: true,
         fonts: [
           {
-            url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Regular.ttf`,
+            url: `${fontBase}/JetBrainsMonoNLNerdFontMono-Regular.ttf`,
             name: "JetBrains Mono Nerd Font",
           },
           {
-            url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Bold.ttf`,
+            url: `${fontBase}/JetBrainsMonoNLNerdFontMono-Bold.ttf`,
             name: "JetBrains Mono Nerd Font Bold",
             weight: 700,
           },
           {
-            url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-Italic.ttf`,
+            url: `${fontBase}/JetBrainsMonoNLNerdFontMono-Italic.ttf`,
             name: "JetBrains Mono Nerd Font Italic",
             style: "italic",
           },
           {
-            url: `${FONT_BASE}/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf`,
+            url: `${fontBase}/JetBrainsMonoNLNerdFontMono-BoldItalic.ttf`,
             name: "JetBrains Mono Nerd Font Bold Italic",
             weight: 700,
             style: "italic",
           },
           {
-            url: `${FONT_BASE}/SymbolsNerdFontMono-Regular.ttf`,
+            url: `${fontBase}/SymbolsNerdFontMono-Regular.ttf`,
             name: "Symbols Nerd Font",
           },
         ],
@@ -148,7 +148,7 @@ export default function Ghostty({ ipn, ipAddress, username, onConnected, onOutpu
     return () => {
       restty.destroy();
     };
-  }, [ipn, ipAddress, username, onConnected, onOutput]);
+  }, [ipn, ipAddress, username, onConnected, onOutput, fontBase]);
 
   return <div className="min-h-0 min-w-0 flex-1 overflow-hidden bg-black" ref={divRef} />;
 }

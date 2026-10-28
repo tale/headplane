@@ -41,7 +41,7 @@ staticClients:
   - id: headplane
     secret: headplane-secret
     name: Headplane
-    redirectURIs: ["${HEADPLANE_URL}${__PREFIX__}/oidc/callback"]
+    redirectURIs: ["${HEADPLANE_URL}/admin/oidc/callback"]
 staticPasswords:
   - { email: alice@allowed.test, username: alice, userID: "1", hash: "${PASSWORD_HASH}" }
   - { email: mallory@other.test, username: mallory, userID: "2", hash: "${PASSWORD_HASH}" }

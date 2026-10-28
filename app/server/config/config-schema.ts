@@ -31,10 +31,16 @@ function normalizeStringArray(values: string[]): string[] {
   return normalized;
 }
 
+// Segments of unreserved URL characters, no "." or "..", no trailing slash.
+const basePath = type(/^(\/(?!\.\.?(\/|$))[\w.~-]+)+$/).describe(
+  "a path like /admin, without a trailing slash",
+);
+
 const serverConfig = type({
   host: 'string.ip = "0.0.0.0"',
   port: "number.integer = 3000",
   base_url: "string.url?",
+  base_path: basePath.default("/admin"),
   data_path: 'string = "/var/lib/headplane/"',
   info_secret: "string?",
 
@@ -65,6 +71,7 @@ const partialServerConfig = type({
   host: "string.ip?",
   port: "number.integer?",
   base_url: "string.url?",
+  base_path: basePath.optional(),
   data_path: "string?",
   info_secret: "string?",
 
@@ -133,8 +140,8 @@ const oidcConfig = type({
       log.warn("config", "%s is deprecated and will be removed in 0.7.0", ctx.propString);
 
       const cleanedValue = new URL(value.trim());
-      if (cleanedValue.pathname.endsWith(`${__PREFIX__}/oidc/callback`)) {
-        cleanedValue.pathname = cleanedValue.pathname.replace(`${__PREFIX__}/oidc/callback`, "/");
+      if (cleanedValue.pathname.endsWith("/admin/oidc/callback")) {
+        cleanedValue.pathname = cleanedValue.pathname.replace("/admin/oidc/callback", "/");
 
         log.warn(
           "config",

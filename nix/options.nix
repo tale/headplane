@@ -44,6 +44,13 @@ in {
                   description = "The port to listen on.";
                 };
 
+                base_path = mkOption {
+                  type = types.str;
+                  default = "/admin";
+                  description = "Dashboard path prefix, with a leading slash and no trailing slash.";
+                  example = "/dashboard";
+                };
+
                 base_url = mkOption {
                   type = types.str;
                   default = "http://localhost:3000";

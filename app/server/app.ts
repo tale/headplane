@@ -1,6 +1,7 @@
 import { exit, versions } from "node:process";
 
 import { createRequestListener } from "@react-router/node";
+import type { ServerBuild } from "react-router";
 import * as build from "virtual:react-router/server-build";
 
 import log from "~/utils/log";
@@ -59,8 +60,9 @@ interface ClientAddress {
   address?: string;
 }
 
-export default createRequestListener({
-  build,
-  mode: import.meta.env.MODE,
-  getLoadContext,
-});
+export function createListener(build: ServerBuild) {
+  return createRequestListener({ build, mode: import.meta.env.MODE, getLoadContext });
+}
+
+export { build };
+export default createListener({ ...build, basename: config.server.base_path });

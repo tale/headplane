@@ -1,10 +1,9 @@
-export const WASM_MODULE_URL = `${__PREFIX__}/hp_ssh.wasm`;
-const WASM_HELPER_URL = `${__PREFIX__}/wasm_exec.js`;
-
 export interface TailnetConfig {
   controlURL: string;
   authKey: string;
   hostname: string;
+  wasmUrl: string;
+  wasmHelperUrl: string;
   onPanic: (error: string) => void;
 }
 
@@ -13,14 +12,14 @@ export class MissingWasmError extends Error {}
 
 let goHelper: Promise<void> | null = null;
 
-function loadGoHelper(): Promise<void> {
+function loadGoHelper(url: string): Promise<void> {
   if (typeof globalThis.Go !== "undefined") {
     return Promise.resolve();
   }
 
   goHelper ??= new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = WASM_HELPER_URL;
+    script.src = url;
     script.crossOrigin = "anonymous";
     // A proxy may answer with an HTML page, which loads but defines nothing.
     script.onload = () =>
@@ -37,9 +36,9 @@ function loadGoHelper(): Promise<void> {
  * Rejects if the pre-auth key is refused or the Go runtime panics.
  */
 export async function connectTailnet(config: TailnetConfig): Promise<IPN> {
-  await loadGoHelper();
+  await loadGoHelper(config.wasmHelperUrl);
 
-  const response = await fetch(WASM_MODULE_URL);
+  const response = await fetch(config.wasmUrl);
   if (!response.ok) {
     throw new MissingWasmError();
   }

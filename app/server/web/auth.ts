@@ -66,6 +66,7 @@ export interface AuthServiceOptions {
   db: NodeSQLiteDatabase;
   cookie: {
     name: string;
+    path: string;
     secure: boolean;
     maxAge: number;
     domain?: string;
@@ -257,7 +258,6 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function encodeCookie(payload: CookiePayload, maxAge: number): Promise<string> {
     const cookie = createCookie(opts.cookie.name, {
       ...opts.cookie,
-      path: __PREFIX__,
       maxAge,
     });
 
@@ -272,10 +272,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       throw new Error("No session cookie found");
     }
 
-    const cookie = createCookie(opts.cookie.name, {
-      ...opts.cookie,
-      path: __PREFIX__,
-    });
+    const cookie = createCookie(opts.cookie.name, opts.cookie);
 
     const raw = (await cookie.parse(cookieHeader)) as string | null;
     if (!raw) {
@@ -587,10 +584,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       }
     }
 
-    const cookie = createCookie(opts.cookie.name, {
-      ...opts.cookie,
-      path: __PREFIX__,
-    });
+    const cookie = createCookie(opts.cookie.name, opts.cookie);
 
     return cookie.serialize("", { expires: new Date(0) });
   }

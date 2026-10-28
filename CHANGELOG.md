@@ -6,9 +6,11 @@
 - The `proc` and `kubernetes` integrations now restart Headscale instead of reloading it, so Headscale needs a supervisor that brings it back: systemd with `Restart=always`, which Headscale's own unit and the NixOS module already set, or the kubelet.
 - Enabling more than one integration now turns them all off, with an error in the log. Keep one.
 - After signing in with single sign-on, only owners, admins and IT admins can pick which Headscale user their account links to. Everyone else links automatically or is linked from the **Users** page.
+- Builds no longer read `__INTERNAL_PREFIX`. If a build used it to serve Headplane somewhere other than `/admin`, set `server.base_path` to that path instead.
 
 ## Changes
 
+- Headplane can be served under a path other than `/admin` by setting `server.base_path`, without building it from source (closes [#637](https://github.com/tale/headplane/issues/637)).
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
 - Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.
 - The navigation bar is slimmer, and on small screens the pages now live in a menu instead of a second row of tabs.
@@ -33,6 +35,7 @@
 
 ## Fixes
 
+- Live updates work again right after signing in. Previously the machines list and other pages only refreshed on their own after a full page reload.
 - Changes to DNS settings and sign-in restrictions now actually apply with the `proc` and `kubernetes` integrations. Both sent `SIGHUP`, which only makes Headscale reload its ACL policy. They now stop Headscale with `SIGTERM` and wait for systemd or Kubernetes to restart it, so Headscale needs a supervisor that restarts it.
 - If Headscale doesn't come back after a change, Headplane now shows an error instead of reporting success.
 - Enabling two integrations at once is now caught at startup. Previously Headplane only refused when all three were on, and otherwise silently picked Docker.

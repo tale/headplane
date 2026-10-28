@@ -34,6 +34,9 @@ Create an OIDC client in the provider, and register this redirect URI, with
 https://headscale.example.com/admin/oidc/callback
 ```
 
+With a custom [`server.base_path`](/configuration/reverse-proxy#a-different-path),
+replace `/admin` with that path.
+
 If Headscale already signs people in through the same provider, add the URI to
 Headscale's client instead of creating a new one. With one shared client, the
 provider gives each person the same ID in both places, so Headplane can link
@@ -213,7 +216,7 @@ The sign-in page shows what went wrong, and Headplane's logs have the details.
   hand.
 - **The provider shows a redirect URI error**: the registered redirect URI
   doesn't match `server.base_url` followed by `/admin/oidc/callback` exactly,
-  including the scheme.
+  including the scheme, with `/admin` replaced by any custom `server.base_path`.
 - **Errors that mention `code_verifier` or PKCE**: the provider requires PKCE.
   Set `oidc.use_pkce: true`.
 - **"The SSO provider did not return a valid user identifier"**: the provider

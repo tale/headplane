@@ -24,6 +24,7 @@ function dexConfig(overrides?: Partial<OidcConfig>): OidcConfig {
     clientId: "test-client",
     clientSecret: "test-secret",
     baseUrl: "http://localhost",
+    basePath: "/admin",
     authorizationEndpoint: `${dex.issuerUrl}/auth`,
     tokenEndpoint: `${dex.issuerUrl}/token`,
     userinfoEndpoint: `${dex.issuerUrl}/userinfo`,
@@ -53,6 +54,7 @@ describe("discovery against real Dex", () => {
       clientId: "test-client",
       clientSecret: "test-secret",
       baseUrl: "http://localhost",
+      basePath: "/admin",
     });
 
     const result = await svc.discover();

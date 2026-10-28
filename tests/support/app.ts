@@ -49,6 +49,7 @@ export async function createTestApp(options: TestAppOptions) {
     throw new Error(`Invalid test config: ${config.summary}`);
   }
 
+  const basePath = config.server.base_path;
   const ctx = await createAppContext(config);
   const api = ctx.headscale.client(headscale.apiKey);
   let users = 0;
@@ -82,7 +83,7 @@ export async function createTestApp(options: TestAppOptions) {
     const headers = new Headers(call.headers);
     if (call.as) headers.set("cookie", call.as);
 
-    const url = `http://headplane.test${__PREFIX__}${path}${call.search ?? ""}`;
+    const url = `http://headplane.test${basePath}${path}${call.search ?? ""}`;
     if (!call.form) {
       return new Request(url, { headers, signal: call.signal });
     }
@@ -103,7 +104,7 @@ export async function createTestApp(options: TestAppOptions) {
       request: request(path, callOptions),
       params: callOptions.params ?? {},
       context: createRouterContext(ctx),
-      url: new URL(`http://headplane.test${__PREFIX__}${path}${callOptions.search ?? ""}`),
+      url: new URL(`http://headplane.test${basePath}${path}${callOptions.search ?? ""}`),
       pattern: path,
       unstable_pattern: path,
     };

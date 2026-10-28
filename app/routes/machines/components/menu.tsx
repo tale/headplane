@@ -1,5 +1,6 @@
 import { ChevronDown, Ellipsis, SquareTerminal } from "lucide-react";
 import { useState } from "react";
+import { useHref } from "react-router";
 
 import Button from "~/components/button";
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
@@ -41,6 +42,7 @@ export default function MachineMenu({
   supportsDisablingKeyExpiry,
 }: MenuProps) {
   const [modal, setModal] = useState<Modal>(null);
+  const sshUrl = useHref(`/ssh/${node.givenName}`);
   const supportsTailscaleSSH = node.hostInfo?.sshHostKeys && node.hostInfo?.sshHostKeys.length > 0;
 
   return (
@@ -120,11 +122,7 @@ export default function MachineMenu({
               // We need to use JS to open the SSH URL
               // in a new WINDOW since href can only
               // do a new TAB.
-              window.open(
-                `${__PREFIX__}/ssh/${node.givenName}`,
-                "_blank",
-                "noopener,noreferrer,width=800,height=600",
-              );
+              window.open(sshUrl, "_blank", "noopener,noreferrer,width=800,height=600");
             }}
             variant="primary"
           >
@@ -140,11 +138,7 @@ export default function MachineMenu({
             size="sm"
 
             onClick={() => {
-              window.open(
-                `${__PREFIX__}/ssh/${node.givenName}`,
-                "_blank",
-                "noopener,noreferrer,width=800,height=600",
-              );
+              window.open(sshUrl, "_blank", "noopener,noreferrer,width=800,height=600");
             }}
           >
             SSH

@@ -94,20 +94,8 @@ See [API keys](/configuration/api-keys) for how keys and sessions work.
 
 ## Custom path prefix
 
-:::warning
-`/admin` is the only supported prefix. Other prefixes aren't tested and may
-break.
-:::
-
-The prefix is fixed at build time. To serve Headplane somewhere else, such as
-`/headplane`, build it with `__INTERNAL_PREFIX`:
-
-```bash
-__INTERNAL_PREFIX=/headplane ./build.sh
-```
-
-Changing it again means rebuilding, and the reverse proxy has to route the new
-path.
+To serve Headplane somewhere other than `/admin`, set `server.base_path`. See
+[A different path](/configuration/reverse-proxy#a-different-path).
 
 ## Next steps
 

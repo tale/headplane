@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { data, isRouteErrorResponse, type ShouldRevalidateFunction } from "react-router";
+import { preload } from "react-dom";
+import { data, isRouteErrorResponse, type ShouldRevalidateFunction, useHref } from "react-router";
 
 import Button from "~/components/button";
 import Callout from "~/components/callout";
@@ -19,7 +20,7 @@ import type { Route } from "./+types/page";
 import { isSSHError, SSHError, sshErrors } from "./errors";
 import Ghostty from "./ghostty.client";
 import UserPrompt from "./user-prompt";
-import { connectTailnet, MissingWasmError, WASM_MODULE_URL } from "./wasm.client";
+import { connectTailnet, MissingWasmError } from "./wasm.client";
 
 const SSH_PREAUTH_KEY_TTL_MS = 10 * 60 * 1000;
 
@@ -118,18 +119,10 @@ function generateHostname(username: string) {
   return `ssh-${hex}-${username}`;
 }
 
-export const links: Route.LinksFunction = () => [
-  {
-    rel: "preload",
-    href: WASM_MODULE_URL,
-    as: "fetch",
-    type: "application/wasm",
-    crossOrigin: "anonymous",
-  },
-];
-
 export default function Page({ loaderData }: Route.ComponentProps) {
   const { hostname, username, offline, node, compatibilityWarning } = loaderData;
+  const wasmUrl = useHref("/hp_ssh.wasm");
+  preload(wasmUrl, { as: "fetch", type: "application/wasm", crossOrigin: "anonymous" });
 
   if (offline) {
     return (
@@ -159,7 +152,7 @@ export default function Page({ loaderData }: Route.ComponentProps) {
   return (
     <>
       <BrowserSSHCompatibilityBanner warning={compatibilityWarning} />
-      <SSHConsole hostname={hostname} username={username} node={node} />
+      <SSHConsole hostname={hostname} username={username} node={node} wasmUrl={wasmUrl} />
     </>
   );
 }
@@ -191,9 +184,11 @@ function SSHConsole({
   hostname,
   username,
   node,
+  wasmUrl,
 }: {
   hostname: string;
   username: string;
+  wasmUrl: string;
   node: { ipAddress: string; controlURL: string; preAuthKey: string; ephemeralHostname: string };
 }) {
   const [ipn, setIpn] = useState<IPN | null>(null);
@@ -201,6 +196,7 @@ function SSHConsole({
   const [isWasmMissing, setIsWasmMissing] = useState(false);
   const [authUrl, setAuthUrl] = useState<string>();
   const [status, setStatus] = useState("Joining Tailnet…");
+  const wasmHelperUrl = useHref("/wasm_exec.js");
 
   // Stable, so the terminal isn't torn down and reconnected on re-render.
   const showTerminal = useCallback(() => setIsTerminalShown(true), []);
@@ -218,6 +214,8 @@ function SSHConsole({
       controlURL: node.controlURL,
       authKey: node.preAuthKey,
       hostname: node.ephemeralHostname,
+      wasmUrl,
+      wasmHelperUrl,
       onPanic: (error) => {
         if (!cancelled) setStatus(`Tailnet node stopped: ${error}`);
       },
@@ -241,7 +239,7 @@ function SSHConsole({
     return () => {
       cancelled = true;
     };
-  }, [node, hostname]);
+  }, [node, hostname, wasmUrl, wasmHelperUrl]);
 
   if (isWasmMissing) {
     return <SSHError {...sshErrors.wasm_missing} />;

@@ -116,6 +116,22 @@ headscale.example.com {
 In nginx, add `add_header Access-Control-Allow-Origin "https://headplane.example.com" always;`
 to Headscale's `location`.
 
+## A different path
+
+To serve Headplane somewhere other than `/admin`, such as `/tools/headplane`,
+set `server.base_path` and restart Headplane:
+
+```yaml
+server:
+  base_path: "/tools/headplane"
+```
+
+The path starts with a slash, doesn't end with one, and can't be `/`. Route it
+to Headplane in the examples above in place of `/admin`, without stripping it.
+Keep the path out of `server.base_url`. With [SSO](/features/sso), register the
+callback under the new path. Changing the path signs everyone out, since
+sessions are tied to it.
+
 ## Serving HTTPS without a proxy
 
 Headplane can terminate TLS itself, which suits a single machine without a
