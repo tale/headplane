@@ -82,7 +82,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Fixes
 
-- Live updates work again right after signing in. Previously the machines list and other pages only refreshed on their own after a full page reload.
 - Fixed several broken actions (such as creating auth keys) that began failing with "Bad Request" or "Unexpected Server Error" after Headplane 0.8.0 when sitting behind a reverse proxy that terminates TLS. If you added a proxy rule rewriting the `Origin` header as a workaround, it's safe to remove (closes [#657](https://github.com/tale/headplane/issues/657), [#658](https://github.com/tale/headplane/issues/658)).
 - Fixed a bug where the **Add nameserver** dialog would not show the **Restrict to domain** switch in the correct state when closing and reopening the dialog after adding or canceling a split DNS nameserver (closes [#635](https://github.com/tale/headplane/issues/635)).
 - Single sign-on no longer fails with "Unexpected Server Error" when `server.base_url` is missing. Headplane now logs a warning at startup and turns off single sign-on until `server.base_url` is set to Headplane's public URL (closes [#585](https://github.com/tale/headplane/issues/585)).
@@ -107,7 +106,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Fixes
 
-- Live updates work again right after signing in. Previously the machines list and other pages only refreshed on their own after a full page reload.
 - The footer now stacks on narrow screens instead of forcing the whole page to scroll sideways on phones (closes [#648](https://github.com/tale/headplane/issues/648)).
 - User pickers across Headplane, including the pre-auth key, new machine, change owner, and machine filter menus, are now sorted alphabetically to match the Users page (closes [#622](https://github.com/tale/headplane/issues/622)).
 - Long dropdown menus, such as the user and tag filters on the Machines page, now scroll instead of running off the screen (closes [#621](https://github.com/tale/headplane/issues/621)).
@@ -132,7 +130,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Fixes
 
-- Live updates work again right after signing in. Previously the machines list and other pages only refreshed on their own after a full page reload.
 - Fixed untagged Headscale builds being read as version 0.0.0. The per-commit `main-*` and `development` images report a Go pseudo-version from `/version`, which is now treated as an unknown version instead of an ancient one (via [#590](https://github.com/tale/headplane/pull/590)).
 - Fixed the Browser SSH WASM module not building under Nix (via [#588](https://github.com/tale/headplane/pull/588)).
 - Fixed `server.data_path`, `headscale.config_path`, `headscale.dns_records_path` and `headscale.tls_cert_path` being silently lowercased, which pointed Headplane at a different location for any path containing a capital letter (closes [#612](https://github.com/tale/headplane/issues/612)).
