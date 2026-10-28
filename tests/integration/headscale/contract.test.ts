@@ -41,6 +41,7 @@ function gte(version: HeadscaleVersion, target: string) {
 for (const version of testedVersions()) {
   const hasStableKeyIds = gte(version, "0.28.0");
   const canDisableExpiry = gte(version, "0.29.0");
+  const acceptsGrants = gte(version, "0.29.0");
 
   // Tests use unique names so they can share one tailnet and run at once.
   describe.concurrent(`Headscale ${version} contract`, () => {
@@ -66,6 +67,7 @@ for (const version of testedVersions()) {
         nodeOwnerIsImmutable: hasStableKeyIds,
         registerKeyIncludesAuthReqPrefix: canDisableExpiry,
         keyExpiryCanBeDisabled: canDisableExpiry,
+        policySupportsGrants: acceptsGrants,
       });
     });
 
@@ -513,6 +515,16 @@ for (const version of testedVersions()) {
       expect(await rejection(tailnet.api.policy.set("{"))).toMatch(
         /^Setting policy: parsing policy: parsing HuJSON: /,
       );
+    });
+
+    test(`a policy with grants is ${acceptsGrants ? "accepted" : "rejected"}`, async () => {
+      const policy = '{"grants":[{"src":["*"],"dst":["*"],"ip":["*"]}]}';
+      const result = await tailnet.api.policy.set(policy).then(
+        () => "accepted",
+        (error: unknown) => headscaleErrorMessage(error),
+      );
+
+      expect(result).toMatch(acceptsGrants ? /^accepted$/ : /unknown field "grants"/);
     });
   });
 }

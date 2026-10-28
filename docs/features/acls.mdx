@@ -3,6 +3,8 @@ title: Access Control
 description: Edit the Headscale ACL policy, tags and groups from the Headplane UI.
 ---
 
+import { versions } from "@/lib/versions";
+
 import aclsLight from "../assets/acls-light.png";
 import aclsDark from "../assets/acls-dark.png";
 
@@ -46,7 +48,9 @@ The **Rules** tab renders the policy as five lists:
   destinations have no port. **Via** routes the traffic through subnet routers
   or exit nodes with the given tags. To route through an exit node, use
   `autogroup:internet` as the destination. App capabilities (`app`) are kept
-  but can only be edited in the file.
+  but can only be edited in the file. Grants need Headscale
+  {versions.headscale.grants} or newer, and the list is hidden on older
+  versions.
 - **SSH rules**: the `ssh` section, including `check` mode and its check
   period.
 - **Hosts**: the `hosts` section, which names an IP address or CIDR range so

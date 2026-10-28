@@ -16,6 +16,7 @@ interface RulesEditorProps {
   policy: Policy;
   onChange: (policy: Policy) => void;
   isDisabled: boolean;
+  canEditGrants: boolean;
   sources: string[];
   destinations: string[];
 }
@@ -32,6 +33,7 @@ export default function RulesEditor({
   policy,
   onChange,
   isDisabled,
+  canEditGrants,
   sources,
   destinations,
 }: RulesEditorProps) {
@@ -225,50 +227,52 @@ export default function RulesEditor({
         )}
       </Section>
 
-      <Section
-        description="Grants allow traffic like access rules, with ports and protocols set separately. Headscale combines them with the access rules."
-        isDisabled={isDisabled}
-        onAdd={() => setEditing({ kind: "grant", index: null })}
-        title="Grants"
-      >
-        {policy.grants.length === 0 ? (
-          <Empty text="No grants are defined yet." />
-        ) : (
-          policy.grants.map((entry, index) => (
-            <List.Item
-              className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
-              key={`grant-${index}`}
-            >
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <KeyRound className="h-4 w-4 shrink-0 opacity-60" />
-                <ChipRow values={entry.src} />
-                <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
-                <ChipRow values={entry.dst} />
-                {entry.ip.length > 0 ? (
-                  <>
-                    <span className="text-xs opacity-60">on</span>
-                    <ChipRow values={entry.ip} />
-                  </>
-                ) : null}
-                {entry.via.length > 0 ? (
-                  <>
-                    <span className="text-xs opacity-60">via</span>
-                    <ChipRow values={entry.via} />
-                  </>
-                ) : null}
-                {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
-              </div>
-              <RowActions
-                isDisabled={isDisabled}
-                onDelete={() =>
-                  onChange({ ...policy, grants: policy.grants.filter((_, i) => i !== index) })
-                }
-                onEdit={() => setEditing({ kind: "grant", index })}
-              />
-            </List.Item>
-          ))
-        )}
-      </Section>
+      {canEditGrants ? (
+        <Section
+          description="Grants allow traffic like access rules, with ports and protocols set separately. Headscale combines them with the access rules."
+          isDisabled={isDisabled}
+          onAdd={() => setEditing({ kind: "grant", index: null })}
+          title="Grants"
+        >
+          {policy.grants.length === 0 ? (
+            <Empty text="No grants are defined yet." />
+          ) : (
+            policy.grants.map((entry, index) => (
+              <List.Item
+                className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
+                key={`grant-${index}`}
+              >
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <KeyRound className="h-4 w-4 shrink-0 opacity-60" />
+                  <ChipRow values={entry.src} />
+                  <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
+                  <ChipRow values={entry.dst} />
+                  {entry.ip.length > 0 ? (
+                    <>
+                      <span className="text-xs opacity-60">on</span>
+                      <ChipRow values={entry.ip} />
+                    </>
+                  ) : null}
+                  {entry.via.length > 0 ? (
+                    <>
+                      <span className="text-xs opacity-60">via</span>
+                      <ChipRow values={entry.via} />
+                    </>
+                  ) : null}
+                  {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
+                </div>
+                <RowActions
+                  isDisabled={isDisabled}
+                  onDelete={() =>
+                    onChange({ ...policy, grants: policy.grants.filter((_, i) => i !== index) })
+                  }
+                  onEdit={() => setEditing({ kind: "grant", index })}
+                />
+              </List.Item>
+            ))
+          )}
+        </Section>
+      ) : null}
 
       <Section
         description="Control which nodes can be reached over Tailscale SSH and as which local user."
