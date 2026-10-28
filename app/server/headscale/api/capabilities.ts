@@ -49,6 +49,13 @@ export interface Capabilities {
    * Disabling of key expiry was introduced in 0.29.0.
    */
   readonly keyExpiryCanBeDisabled: boolean;
+
+  /**
+   * The policy accepts a `grants` section. Older Headscale rejects
+   * the whole policy with `unknown field "grants"`. Introduced in
+   * 0.29.0.
+   */
+  readonly policySupportsGrants: boolean;
 }
 
 export function capabilitiesFor(version: ServerVersion): Capabilities {
@@ -58,5 +65,6 @@ export function capabilitiesFor(version: ServerVersion): Capabilities {
     nodeOwnerIsImmutable: gte(version, "0.28.0"),
     registerKeyIncludesAuthReqPrefix: gte(version, "0.29.0"),
     keyExpiryCanBeDisabled: gte(version, "0.29.0"),
+    policySupportsGrants: gte(version, "0.29.0"),
   };
 }

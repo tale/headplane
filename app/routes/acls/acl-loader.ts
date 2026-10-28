@@ -1,4 +1,9 @@
-import { authContext, headscaleLiveStoreContext, requestApiContext } from "~/server/context";
+import {
+  authContext,
+  headscaleContext,
+  headscaleLiveStoreContext,
+  requestApiContext,
+} from "~/server/context";
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { nodesResource, usersResource } from "~/server/headscale/live-store";
 import { Capabilities } from "~/server/web/roles";
@@ -24,6 +29,7 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
     // Can the user write to the ACL policy
     access: auth.can(principal, Capabilities.write_policy),
     writable: false,
+    canEditGrants: context.get(headscaleContext).capabilities.policySupportsGrants,
     policy: "",
     // Context for the visual editor; both are optional.
     users: [] as string[],

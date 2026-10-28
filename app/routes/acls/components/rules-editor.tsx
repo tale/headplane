@@ -1,11 +1,13 @@
-import { ArrowRight, Terminal } from "lucide-react";
+import { ArrowRight, KeyRound, Route, Terminal } from "lucide-react";
 import { useState } from "react";
 
 import Chip from "~/components/chip";
 import List from "~/components/list";
-import type { AclRule, Policy, SshRule } from "~/utils/acl-policy";
+import type { AclRule, Grant, Policy, SshRule } from "~/utils/acl-policy";
 
 import AclRuleDialog from "../dialogs/acl-rule";
+import AutoApproverDialog, { type ApproverTarget } from "../dialogs/auto-approver";
+import GrantDialog from "../dialogs/grant";
 import HostDialog from "../dialogs/host";
 import SshRuleDialog from "../dialogs/ssh-rule";
 import { Empty, RowActions, Section } from "./editor-section";
@@ -14,6 +16,7 @@ interface RulesEditorProps {
   policy: Policy;
   onChange: (policy: Policy) => void;
   isDisabled: boolean;
+  canEditGrants: boolean;
   sources: string[];
   destinations: string[];
 }
@@ -21,6 +24,8 @@ interface RulesEditorProps {
 type Editing =
   | { kind: "acl"; index: number | null }
   | { kind: "ssh"; index: number | null }
+  | { kind: "grant"; index: number | null }
+  | { kind: "approver"; target?: ApproverTarget }
   | { kind: "host"; name: string | null }
   | null;
 
@@ -28,6 +33,7 @@ export default function RulesEditor({
   policy,
   onChange,
   isDisabled,
+  canEditGrants,
   sources,
   destinations,
 }: RulesEditorProps) {
@@ -38,6 +44,9 @@ export default function RulesEditor({
   const sshRule =
     editing?.kind === "ssh" && editing.index !== null ? policy.ssh[editing.index] : undefined;
   const hostName = editing?.kind === "host" ? editing.name : null;
+  const grant =
+    editing?.kind === "grant" && editing.index !== null ? policy.grants[editing.index] : undefined;
+  const { autoApprovers } = policy;
 
   function saveAcl(rule: AclRule) {
     const acls = [...policy.acls];
@@ -68,6 +77,47 @@ export default function RulesEditor({
     onChange({ ...policy, hosts });
   }
 
+  function saveGrant(next: Grant) {
+    const grants = [...policy.grants];
+    if (editing?.kind === "grant" && editing.index !== null) {
+      grants[editing.index] = next;
+    } else {
+      grants.push(next);
+    }
+    onChange({ ...policy, grants });
+  }
+
+  function setApprovers(target: ApproverTarget, approvers: string[]) {
+    if (target === null) {
+      onChange({ ...policy, autoApprovers: { ...autoApprovers, exitNode: approvers } });
+      return;
+    }
+
+    const routes = { ...autoApprovers.routes };
+    const previous = editing?.kind === "approver" ? editing.target : undefined;
+    if (typeof previous === "string" && previous !== target) {
+      delete routes[previous];
+    }
+    if (approvers.length > 0) {
+      routes[target] = approvers;
+    } else {
+      delete routes[target];
+    }
+    onChange({ ...policy, autoApprovers: { ...autoApprovers, routes } });
+  }
+
+  // Hosts and autogroups cannot approve routes.
+  const approverSuggestions = sources.filter(
+    (source) => source !== "*" && !source.startsWith("autogroup:") && !(source in policy.hosts),
+  );
+  const approverTarget = editing?.kind === "approver" ? editing.target : undefined;
+  const approverEntries: [ApproverTarget, string[]][] = [
+    ...Object.entries(autoApprovers.routes),
+    ...(autoApprovers.exitNode.length > 0
+      ? [[null, autoApprovers.exitNode] as [ApproverTarget, string[]]]
+      : []),
+  ];
+
   const hostEntries = Object.entries(policy.hosts).sort(([a], [b]) => a.localeCompare(b));
 
   return (
@@ -94,6 +144,38 @@ export default function RulesEditor({
             if (!open) setEditing(null);
           }}
           sources={sources}
+        />
+      ) : null}
+      {editing?.kind === "grant" ? (
+        <GrantDialog
+          destinations={destinations}
+          grant={grant}
+          isOpen
+          onSave={saveGrant}
+          setIsOpen={(open) => {
+            if (!open) setEditing(null);
+          }}
+          sources={sources}
+        />
+      ) : null}
+      {editing?.kind === "approver" ? (
+        <AutoApproverDialog
+          approvers={
+            approverTarget === undefined
+              ? undefined
+              : approverTarget === null
+                ? autoApprovers.exitNode
+                : autoApprovers.routes[approverTarget]
+          }
+          existingRoutes={Object.keys(autoApprovers.routes)}
+          exitNodeApprovers={autoApprovers.exitNode}
+          isOpen
+          onSave={setApprovers}
+          setIsOpen={(open) => {
+            if (!open) setEditing(null);
+          }}
+          suggestions={approverSuggestions}
+          target={approverTarget}
         />
       ) : null}
       {editing?.kind === "host" ? (
@@ -144,6 +226,53 @@ export default function RulesEditor({
           ))
         )}
       </Section>
+
+      {canEditGrants ? (
+        <Section
+          description="Grants allow traffic like access rules, with ports and protocols set separately. Headscale combines them with the access rules."
+          isDisabled={isDisabled}
+          onAdd={() => setEditing({ kind: "grant", index: null })}
+          title="Grants"
+        >
+          {policy.grants.length === 0 ? (
+            <Empty text="No grants are defined yet." />
+          ) : (
+            policy.grants.map((entry, index) => (
+              <List.Item
+                className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
+                key={`grant-${index}`}
+              >
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  <KeyRound className="h-4 w-4 shrink-0 opacity-60" />
+                  <ChipRow values={entry.src} />
+                  <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
+                  <ChipRow values={entry.dst} />
+                  {entry.ip.length > 0 ? (
+                    <>
+                      <span className="text-xs opacity-60">on</span>
+                      <ChipRow values={entry.ip} />
+                    </>
+                  ) : null}
+                  {entry.via.length > 0 ? (
+                    <>
+                      <span className="text-xs opacity-60">via</span>
+                      <ChipRow values={entry.via} />
+                    </>
+                  ) : null}
+                  {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
+                </div>
+                <RowActions
+                  isDisabled={isDisabled}
+                  onDelete={() =>
+                    onChange({ ...policy, grants: policy.grants.filter((_, i) => i !== index) })
+                  }
+                  onEdit={() => setEditing({ kind: "grant", index })}
+                />
+              </List.Item>
+            ))
+          )}
+        </Section>
+      ) : null}
 
       <Section
         description="Control which nodes can be reached over Tailscale SSH and as which local user."
@@ -203,6 +332,43 @@ export default function RulesEditor({
                   onChange({ ...policy, hosts });
                 }}
                 onEdit={() => setEditing({ kind: "host", name })}
+              />
+            </List.Item>
+          ))
+        )}
+      </Section>
+
+      <Section
+        description="Subnet routes and exit nodes advertised by these users, groups or tags are approved automatically."
+        isDisabled={isDisabled}
+        onAdd={() => setEditing({ kind: "approver" })}
+        title="Auto approvers"
+      >
+        {approverEntries.length === 0 ? (
+          <Empty text="No auto approvers are defined yet." />
+        ) : (
+          approverEntries.map(([target, approvers]) => (
+            <List.Item key={target ?? "exit-node"}>
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <Route className="h-4 w-4 shrink-0 opacity-60" />
+                <span className={target === null ? "text-sm" : "font-mono text-sm"}>
+                  {target ?? "Exit nodes"}
+                </span>
+                <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
+                <ChipRow values={approvers} />
+              </div>
+              <RowActions
+                isDisabled={isDisabled}
+                onDelete={() => {
+                  if (target === null) {
+                    onChange({ ...policy, autoApprovers: { ...autoApprovers, exitNode: [] } });
+                    return;
+                  }
+                  const routes = { ...autoApprovers.routes };
+                  delete routes[target];
+                  onChange({ ...policy, autoApprovers: { ...autoApprovers, routes } });
+                }}
+                onEdit={() => setEditing({ kind: "approver", target })}
               />
             </List.Item>
           ))

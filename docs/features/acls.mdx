@@ -3,6 +3,8 @@ title: Access Control
 description: Edit the Headscale ACL policy, tags and groups from the Headplane UI.
 ---
 
+import { versions } from "@/lib/versions";
+
 import aclsLight from "../assets/acls-light.png";
 import aclsDark from "../assets/acls-dark.png";
 
@@ -35,16 +37,27 @@ owners, admins and network admins can edit the policy.
 
 ## Rules
 
-The **Rules** tab renders the policy as three lists:
+The **Rules** tab renders the policy as five lists:
 
 - **Access rules**: the `acls` section. Each rule allows traffic from a set of
   sources to a set of destinations. Destinations include a port range, for
   example `tag:web:80,443`. A destination entered without one gets `:*`
   appended, since Headscale rejects a destination that has no port.
+- **Grants**: the `grants` section. Grants work like access rules, but
+  ports and protocols go in their own field, for example `tcp:443`, and
+  destinations have no port. **Via** routes the traffic through subnet routers
+  or exit nodes with the given tags. To route through an exit node, use
+  `autogroup:internet` as the destination. App capabilities (`app`) are kept
+  but can only be edited in the file. Grants need Headscale
+  {versions.headscale.grants} or newer, and the list is hidden on older
+  versions.
 - **SSH rules**: the `ssh` section, including `check` mode and its check
   period.
 - **Hosts**: the `hosts` section, which names an IP address or CIDR range so
   rules can reference it.
+- **Auto approvers**: the `autoApprovers` section. Subnet routes and exit
+  nodes advertised by the listed users, groups or tags are approved without
+  manual review.
 
 Adding or editing an entry opens a dialog where sources and destinations are
 built from chips. Every group, tag, host and Headscale user already known to
@@ -85,5 +98,5 @@ and Tags & Groups tabs show a notice when the loaded policy contains comments.
 To keep them, edit in the file editor instead.
 :::
 
-Top-level keys the structured editor doesn't handle, such as `autoApprovers`
-and `nodeAttrs`, are kept as they are.
+Top-level keys the structured editor doesn't handle, such as `nodeAttrs`
+and `tests`, are kept as they are.

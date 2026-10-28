@@ -112,6 +112,23 @@ describe.for(testedVersions())("where Headscale %s keeps the policy", (version) 
     expect(await readFile(path, "utf8")).toBe(file);
   });
 
+  test("grants save, or are refused with the Headscale version they need", async () => {
+    const { tailnet, save } = await open({});
+    await using _ = tailnet;
+
+    const result = await save('{"grants":[{"src":["*"],"dst":["*"],"ip":["*"]}]}');
+
+    if (tailnet.headscale.capabilities.policySupportsGrants) {
+      expect(statusOf(result)).toBe(200);
+      return;
+    }
+
+    expect(statusOf(result)).toBe(400);
+    expect(result).toMatchObject({
+      data: { errors: { form: expect.stringContaining("Grants need Headscale 0.29 or newer.") } },
+    });
+  });
+
   // Headscale's default configuration.
   test("file mode without a file is read-only rather than an empty editable policy", async () => {
     const { tailnet, load } = await open({
