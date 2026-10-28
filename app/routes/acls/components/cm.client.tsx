@@ -6,7 +6,8 @@ import Merge from "react-codemirror-merge";
 import { ErrorBoundary } from "react-error-boundary";
 
 import Button from "~/components/button";
-import { formatPolicy, validatePolicy } from "~/utils/acl-policy";
+import { formatPolicy, parsePolicy } from "~/utils/acl-policy";
+import cn from "~/utils/cn";
 
 import { headplaneTheme } from "./theme";
 
@@ -18,8 +19,12 @@ interface EditorProps {
 
 export function Editor(props: EditorProps) {
   const isEmpty = props.value.trim().length === 0;
-  const diagnostics = validatePolicy(props.value);
-  const firstError = diagnostics[0];
+  const parsed = parsePolicy(props.value);
+  const status = !parsed.ok
+    ? { Icon: CircleX, label: parsed.error, className: "text-bad" }
+    : isEmpty
+      ? { Icon: CircleDashed, label: "No policy yet", className: "text-muted" }
+      : { Icon: CircleCheck, label: "Valid HuJSON", className: "text-ok" };
 
   return (
     <div className="text-sm">
@@ -31,34 +36,18 @@ export function Editor(props: EditorProps) {
           </div>
         }
       >
-        <div className="flex items-center justify-between gap-4 border-b border-[var(--cm-gutter-border)] bg-[var(--cm-bg)] px-3 py-2 text-[var(--cm-fg)]">
-          <div
-            role="status"
-            className={
-              firstError
-                ? "flex min-w-0 items-center gap-2 text-red-600 dark:text-red-400"
-                : isEmpty
-                  ? "flex items-center gap-2 opacity-70"
-                  : "flex items-center gap-2 text-green-700 dark:text-green-400"
-            }
-          >
-            {firstError ? (
-              <CircleX className="size-4 shrink-0" />
-            ) : isEmpty ? (
-              <CircleDashed className="size-4 shrink-0" />
-            ) : (
-              <CircleCheck className="size-4 shrink-0" />
-            )}
-            <span className="truncate">
-              {firstError ? firstError.message : isEmpty ? "No policy yet" : "Valid HuJSON syntax"}
-            </span>
+        <div className="border-line bg-surface flex items-center justify-between gap-4 border-b px-3 py-2">
+          <div role="status" className={cn("flex min-w-0 items-center gap-2", status.className)}>
+            <status.Icon className="size-4 shrink-0" />
+            <span className="truncate">{status.label}</span>
           </div>
           <Button
-            disabled={props.isDisabled || isEmpty || firstError !== undefined}
+            disabled={props.isDisabled || isEmpty || !parsed.ok}
             onClick={() => {
               const result = formatPolicy(props.value);
               if (result.ok) props.onChange(result.value);
             }}
+            size="sm"
             type="button"
           >
             <Braces className="size-4" />
@@ -80,13 +69,16 @@ export function Editor(props: EditorProps) {
   );
 }
 
-const policyLinter = linter((view): Diagnostic[] =>
-  validatePolicy(view.state.doc.toString()).map((diagnostic) => ({
+const policyLinter = linter((view): Diagnostic[] => {
+  const parsed = parsePolicy(view.state.doc.toString());
+  if (parsed.ok) return [];
+
+  return parsed.diagnostics.map((diagnostic) => ({
     ...diagnostic,
     severity: "error",
     source: "HuJSON",
-  })),
-);
+  }));
+});
 
 interface DifferProps {
   left: string;

@@ -89,13 +89,12 @@ The **Edit file** tab edits the raw policy, and
 editors write into the same buffer, so a change made visually shows up in the
 file editor and in the diff before it is saved.
 
-The file editor validates HuJSON as you type and marks syntax errors inline.
-Invalid policies cannot be saved. **Format** applies consistent two-space
-indentation and spacing while keeping the existing line breaks, HuJSON comments
-and trailing commas.
+The file editor checks the HuJSON while it is edited and marks syntax errors
+inline, and a policy with syntax errors can't be saved. **Format** applies
+two-space indentation and consistent spacing, keeping line breaks, comments and
+trailing commas as they are.
 
-Nothing is sent to Headscale until **Save** is pressed. Headplane also repeats
-the syntax validation on the server before sending the policy to Headscale.
+Nothing is sent to Headscale until **Save** is pressed.
 
 :::warning[Comments are not preserved]
 HuJSON allows comments and trailing commas. Headplane reads them, but the

@@ -4,7 +4,7 @@ import { authContext, headscaleContext, requestApiContext } from "~/server/conte
 import { isDataWithApiError } from "~/server/headscale/api/error-client";
 import { ActionError, createAction } from "~/server/web/actions";
 import { Capabilities } from "~/server/web/roles";
-import { parsePolicy, validatePolicy } from "~/utils/acl-policy";
+import { parsePolicy } from "~/utils/acl-policy";
 import { invalid, ok } from "~/utils/form";
 
 // Headscale prefixes policy parse errors with one of these, for HuJSON syntax
@@ -28,14 +28,13 @@ export const aclAction = createAction({
         ),
       },
       async handler(input, { api, capabilities }) {
-        const syntaxErrors = validatePolicy(input.policy);
-        if (syntaxErrors.length > 0) {
-          return invalid({ form: `Syntax error: ${syntaxErrors[0].message}` });
+        const parsed = parsePolicy(input.policy);
+        if (!parsed.ok) {
+          return invalid({ form: `Syntax error: ${parsed.error}` });
         }
 
         // Older Headscale only says `unknown field "grants"`.
-        const parsed = parsePolicy(input.policy);
-        const hasGrants = parsed.ok && parsed.policy.keyOrder.includes("grants");
+        const hasGrants = parsed.policy.keyOrder.includes("grants");
         if (hasGrants && !capabilities.policySupportsGrants) {
           throw new ActionError(
             "Grants need Headscale 0.29 or newer. Remove the `grants` section or upgrade Headscale.",

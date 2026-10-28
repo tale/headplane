@@ -1,10 +1,13 @@
 import {
   applyEdits,
+  createScanner,
+  type Edit,
   format as formatJson,
   getNodeValue,
   parseTree,
   printParseErrorCode,
   type ParseError,
+  SyntaxKind,
 } from "jsonc-parser";
 
 import { scanHuJson } from "~/utils/node-info";
@@ -65,9 +68,11 @@ export interface Policy {
   keyOrder: string[];
 }
 
-export type ParseResult =
-  | { ok: true; policy: Policy; hasComments: boolean }
-  | { ok: false; error: string };
+// `error` is the first problem with its location, `diagnostics` every problem
+// as a range for the editor to mark.
+type ParseFailure = { ok: false; error: string; diagnostics: PolicyDiagnostic[] };
+
+export type ParseResult = { ok: true; policy: Policy; hasComments: boolean } | ParseFailure;
 
 export type FormatResult = { ok: true; value: string } | { ok: false; error: string };
 
@@ -143,12 +148,40 @@ export function formatPolicy(raw: string): FormatResult {
     keepLines: true,
     tabSize: 2,
   });
-  return { ok: true, value: applyEdits(raw, edits) };
+  return { ok: true, value: trimBracketPadding(applyEdits(raw, edits)) };
+}
+
+// The formatter writes single-line arrays as `[ "a" ]`, policies use `["a"]`.
+function trimBracketPadding(text: string): string {
+  const tokens: { kind: SyntaxKind; offset: number; length: number }[] = [];
+  const scanner = createScanner(text, false);
+  for (let kind = scanner.scan(); kind !== SyntaxKind.EOF; kind = scanner.scan()) {
+    tokens.push({ kind, offset: scanner.getTokenOffset(), length: scanner.getTokenLength() });
+  }
+
+  const isCode = (kind: SyntaxKind) =>
+    kind !== SyntaxKind.LineBreakTrivia &&
+    kind !== SyntaxKind.LineCommentTrivia &&
+    kind !== SyntaxKind.BlockCommentTrivia;
+
+  const edits: Edit[] = [];
+  for (let i = 1; i < tokens.length - 1; i++) {
+    const [before, space, after] = [tokens[i - 1], tokens[i], tokens[i + 1]];
+    if (space.kind !== SyntaxKind.Trivia) continue;
+
+    const isAfterOpen = before.kind === SyntaxKind.OpenBracketToken && isCode(after.kind);
+    const isBeforeClose = after.kind === SyntaxKind.CloseBracketToken && isCode(before.kind);
+    if (isAfterOpen || isBeforeClose) {
+      edits.push({ offset: space.offset, length: space.length, content: "" });
+    }
+  }
+
+  return applyEdits(text, edits);
 }
 
 type HuJsonResult =
   | { ok: true; parsed: Record<string, unknown>; hasComments: boolean }
-  | { ok: false; error: string };
+  | ParseFailure;
 
 function parseHuJson(raw: string): HuJsonResult {
   const errors: ParseError[] = [];
@@ -158,11 +191,17 @@ function parseHuJson(raw: string): HuJsonResult {
     return {
       ok: false,
       error: withLocation(raw, humanizeParseError(first), first.offset),
+      diagnostics: errors.map((error) => ({
+        from: error.offset,
+        to: Math.min(raw.length, error.offset + Math.max(1, error.length)),
+        message: humanizeParseError(error),
+      })),
     };
   }
 
   if (tree?.type !== "object") {
-    return { ok: false, error: "The policy must be a JSON object" };
+    const message = "The policy must be a JSON object";
+    return { ok: false, error: message, diagnostics: [{ from: 0, to: raw.length, message }] };
   }
 
   return {
@@ -172,34 +211,11 @@ function parseHuJson(raw: string): HuJsonResult {
   };
 }
 
-// An empty policy is not a syntax error; like `parsePolicy`, it is treated as
-// the "no policy yet" state and the caller decides what that means.
-export function validatePolicy(raw: string): PolicyDiagnostic[] {
-  if (raw.trim().length === 0) {
-    return [];
-  }
-
-  const errors: ParseError[] = [];
-  const tree = parseTree(raw, errors, { allowTrailingComma: true });
-  const diagnostics = errors.map((error) => ({
-    from: error.offset,
-    to: Math.min(raw.length, error.offset + Math.max(1, error.length)),
-    message: humanizeParseError(error),
-  }));
-
-  if (diagnostics.length === 0 && tree?.type !== "object") {
-    diagnostics.push({
-      from: 0,
-      to: raw.length,
-      message: "The policy must be a JSON object",
-    });
-  }
-
-  return diagnostics;
-}
-
 function humanizeParseError(error: ParseError): string {
-  return printParseErrorCode(error.error).replace(/([a-z])([A-Z])/g, "$1 $2");
+  return printParseErrorCode(error.error).replace(
+    /([a-z])([A-Z])/g,
+    (_, last, next) => `${last} ${next.toLowerCase()}`,
+  );
 }
 
 function withLocation(raw: string, message: string, offset: number): string {

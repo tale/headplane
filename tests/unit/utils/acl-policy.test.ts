@@ -14,7 +14,6 @@ import {
   policySources,
   serializePolicy,
   setUserGroups,
-  validatePolicy,
   withDefaultPort,
 } from "~/utils/acl-policy";
 
@@ -178,14 +177,21 @@ describe("parsePolicy", () => {
     });
   });
 
-  test("reports invalid JSON instead of throwing", () => {
-    const result = parsePolicy("{ not json");
-    expect(result.ok).toBe(false);
+  test("reports where invalid JSON goes wrong", () => {
+    const result = parsePolicy(`{\n  "acls": [ }`);
+    if (result.ok) throw new Error("expected a parse error");
+
+    expect(result.error).toBe("Value expected at line 2, column 13");
+    expect(result.diagnostics[0]).toEqual({ from: 14, to: 15, message: "Value expected" });
   });
 
   test("rejects a policy that is not an object", () => {
     const result = parsePolicy("[]");
-    expect(result).toEqual({ ok: false, error: "The policy must be a JSON object" });
+    expect(result).toEqual({
+      ok: false,
+      error: "The policy must be a JSON object",
+      diagnostics: [{ from: 0, to: 2, message: "The policy must be a JSON object" }],
+    });
   });
 
   test("tolerates sections with the wrong shape", () => {
@@ -211,7 +217,7 @@ describe("formatPolicy", () => {
 
     expect(result.value).toContain("// team");
     expect(result.value).toContain('  "groups": {');
-    expect(result.value).toContain('    "group:eng": [ "alice@", ],');
+    expect(result.value).toContain('    "group:eng": ["alice@",],');
     expect(result.value.endsWith("\n")).toBe(true);
     expect(parsePolicy(result.value).ok).toBe(true);
 
@@ -227,8 +233,16 @@ describe("formatPolicy", () => {
     if (!result.ok) return;
 
     expect(result.value).toBe(
-      `{\n  "groups": { "group:eng": [ "alice@", "bob@" ] },\n\n  "acls": [\n    // engineers\n    { "action": "accept", "src": [ "group:eng" ], "dst": [ "*:*" ] },\n\n    { "action": "accept", "src": [ "*" ], "dst": [ "*:22" ] },\n  ],\n}\n`,
+      `{\n  "groups": { "group:eng": ["alice@", "bob@"] },\n\n  "acls": [\n    // engineers\n    { "action": "accept", "src": ["group:eng"], "dst": ["*:*"] },\n\n    { "action": "accept", "src": ["*"], "dst": ["*:22"] },\n  ],\n}\n`,
     );
+  });
+
+  test("removes padding inside arrays, but not inside strings or comments", () => {
+    const result = formatPolicy(`{ "hosts": [ "a [ b ]", [ ] ], /* [ c ] */ "x": [ // d\n1 ] }`);
+    expect(result).toEqual({
+      ok: true,
+      value: `{ "hosts": ["a [ b ]", []], /* [ c ] */ "x": [ // d\n    1] }\n`,
+    });
   });
 
   test("does not format an empty policy", () => {
@@ -421,31 +435,6 @@ describe("destination ports", () => {
 });
 
 describe("validation", () => {
-  test("treats an empty policy as having no syntax errors", () => {
-    expect(validatePolicy("")).toEqual([]);
-    expect(validatePolicy("  \n")).toEqual([]);
-  });
-
-  test("accepts HuJSON comments and trailing commas", () => {
-    expect(validatePolicy(`{ "groups": {}, // comment\n }`)).toEqual([]);
-  });
-
-  test("reports syntax errors with source ranges", () => {
-    const diagnostics = validatePolicy(`{ "groups": [ }`);
-    expect(diagnostics.length).toBeGreaterThan(0);
-    expect(diagnostics[0]).toMatchObject({
-      from: expect.any(Number),
-      to: expect.any(Number),
-      message: expect.any(String),
-    });
-  });
-
-  test("requires a top-level object", () => {
-    expect(validatePolicy("[]")).toEqual([
-      { from: 0, to: 2, message: "The policy must be a JSON object" },
-    ]);
-  });
-
   test("accepts well-formed names", () => {
     expect(isValidGroupName("group:eng-team")).toBe(true);
     expect(isValidTagName("tag:web-01")).toBe(true);

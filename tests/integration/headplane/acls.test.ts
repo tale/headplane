@@ -56,7 +56,7 @@ describe("the ACL policy on a real tailnet", () => {
 
     expect(statusOf(result)).toBe(400);
     expect(result).toMatchObject({
-      data: { errors: { form: expect.stringMatching(/^Syntax error: hujson: line 1, column 11/) } },
+      data: { errors: { form: expect.stringMatching(/^Syntax error: .* at line 1, column 11$/) } },
     });
     expect(await tailnet.api.policy.get()).toEqual(before);
   });
