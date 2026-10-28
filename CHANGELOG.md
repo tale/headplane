@@ -33,9 +33,11 @@
 - Open pages notice within a few seconds when Headscale goes down or comes back, and update on their own. The "Can't reach Headscale" banner and error pages clear without a reload.
 - When the Headscale configuration is writable but no integration is set up to restart Headscale, the DNS and sign-in restrictions pages now say that changes only take effect once Headscale restarts.
 - The **Rules** tab on the Access Control page can now edit grants and auto approvers. Grants set ports and protocols separately from the destination, can route traffic through tagged subnet routers or exit nodes with `via`, and keep app capabilities as written. Grants need Headscale 0.29 or newer. Auto approvers cover both subnet routes and exit nodes.
+- The Access Control file editor now formats HuJSON, preserves comments while formatting, and shows syntax errors before an invalid policy can be saved.
 
 ## Fixes
 
+- Saving from the Rules or Tags & Groups tabs no longer drops the comma from text like `,}` or `,]` inside a policy value.
 - Live updates work again right after signing in. Previously the machines list and other pages only refreshed on their own after a full page reload.
 - Changes to DNS settings and sign-in restrictions now actually apply with the `proc` and `kubernetes` integrations. Both sent `SIGHUP`, which only makes Headscale reload its ACL policy. They now stop Headscale with `SIGTERM` and wait for systemd or Kubernetes to restart it, so Headscale needs a supervisor that restarts it.
 - If Headscale doesn't come back after a change, Headplane now shows an error instead of reporting success.

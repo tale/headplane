@@ -1,3 +1,15 @@
+import {
+  applyEdits,
+  createScanner,
+  type Edit,
+  format as formatJson,
+  getNodeValue,
+  parseTree,
+  printParseErrorCode,
+  type ParseError,
+  SyntaxKind,
+} from "jsonc-parser";
+
 import { scanHuJson } from "~/utils/node-info";
 
 // A structured view over the Headscale ACL policy (HuJSON), which Headscale
@@ -56,9 +68,19 @@ export interface Policy {
   keyOrder: string[];
 }
 
-export type ParseResult =
-  | { ok: true; policy: Policy; hasComments: boolean }
-  | { ok: false; error: string };
+// `error` is the first problem with its location, `diagnostics` every problem
+// as a range for the editor to mark.
+type ParseFailure = { ok: false; error: string; diagnostics: PolicyDiagnostic[] };
+
+export type ParseResult = { ok: true; policy: Policy; hasComments: boolean } | ParseFailure;
+
+export type FormatResult = { ok: true; value: string } | { ok: false; error: string };
+
+export interface PolicyDiagnostic {
+  from: number;
+  to: number;
+  message: string;
+}
 
 export const EMPTY_POLICY: Policy = {
   groups: {},
@@ -79,22 +101,12 @@ export function parsePolicy(raw: string): ParseResult {
     return { ok: true, policy: structuredClone(EMPTY_POLICY), hasComments: false };
   }
 
-  const { stripped, hasComments } = scanHuJson(raw);
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(stripped);
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : "The policy is not valid HuJSON",
-    };
-  }
+  const result = parseHuJson(raw);
+  if (!result.ok) return result;
 
-  if (parsed == null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    return { ok: false, error: "The policy must be a JSON object" };
-  }
+  const { parsed, hasComments } = result;
 
-  const record = parsed as Record<string, unknown>;
+  const record = parsed;
   const extra: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(record)) {
     if (!KNOWN_KEYS.includes(key)) {
@@ -117,6 +129,101 @@ export function parsePolicy(raw: string): ParseResult {
       keyOrder: Object.keys(record),
     },
   };
+}
+
+export function formatPolicy(raw: string): FormatResult {
+  if (raw.trim().length === 0) {
+    return { ok: false, error: "The policy is empty" };
+  }
+
+  const result = parseHuJson(raw);
+  if (!result.ok) return result;
+
+  // Line breaks are kept: a hand-written policy groups rules with blank lines
+  // and keeps short arrays inline, and reflowing would throw both away.
+  const edits = formatJson(raw, undefined, {
+    eol: "\n",
+    insertFinalNewline: true,
+    insertSpaces: true,
+    keepLines: true,
+    tabSize: 2,
+  });
+  return { ok: true, value: trimBracketPadding(applyEdits(raw, edits)) };
+}
+
+// The formatter writes single-line arrays as `[ "a" ]`, policies use `["a"]`.
+function trimBracketPadding(text: string): string {
+  const tokens: { kind: SyntaxKind; offset: number; length: number }[] = [];
+  const scanner = createScanner(text, false);
+  for (let kind = scanner.scan(); kind !== SyntaxKind.EOF; kind = scanner.scan()) {
+    tokens.push({ kind, offset: scanner.getTokenOffset(), length: scanner.getTokenLength() });
+  }
+
+  const isCode = (kind: SyntaxKind) =>
+    kind !== SyntaxKind.LineBreakTrivia &&
+    kind !== SyntaxKind.LineCommentTrivia &&
+    kind !== SyntaxKind.BlockCommentTrivia;
+
+  const edits: Edit[] = [];
+  for (let i = 1; i < tokens.length - 1; i++) {
+    const [before, space, after] = [tokens[i - 1], tokens[i], tokens[i + 1]];
+    if (space.kind !== SyntaxKind.Trivia) continue;
+
+    const isAfterOpen = before.kind === SyntaxKind.OpenBracketToken && isCode(after.kind);
+    const isBeforeClose = after.kind === SyntaxKind.CloseBracketToken && isCode(before.kind);
+    if (isAfterOpen || isBeforeClose) {
+      edits.push({ offset: space.offset, length: space.length, content: "" });
+    }
+  }
+
+  return applyEdits(text, edits);
+}
+
+type HuJsonResult =
+  | { ok: true; parsed: Record<string, unknown>; hasComments: boolean }
+  | ParseFailure;
+
+function parseHuJson(raw: string): HuJsonResult {
+  const errors: ParseError[] = [];
+  const tree = parseTree(raw, errors, { allowTrailingComma: true });
+  if (errors.length > 0) {
+    const first = errors[0];
+    return {
+      ok: false,
+      error: withLocation(raw, humanizeParseError(first), first.offset),
+      diagnostics: errors.map((error) => ({
+        from: error.offset,
+        to: Math.min(raw.length, error.offset + Math.max(1, error.length)),
+        message: humanizeParseError(error),
+      })),
+    };
+  }
+
+  if (tree?.type !== "object") {
+    const message = "The policy must be a JSON object";
+    return { ok: false, error: message, diagnostics: [{ from: 0, to: raw.length, message }] };
+  }
+
+  return {
+    ok: true,
+    parsed: getNodeValue(tree) as Record<string, unknown>,
+    hasComments: scanHuJson(raw).hasComments,
+  };
+}
+
+function humanizeParseError(error: ParseError): string {
+  return printParseErrorCode(error.error).replace(
+    /([a-z])([A-Z])/g,
+    (_, last, next) => `${last} ${next.toLowerCase()}`,
+  );
+}
+
+function withLocation(raw: string, message: string, offset: number): string {
+  const before = raw.slice(0, offset);
+  const line = before.split(/\r\n|\r|\n/).length;
+  const lastLineBreak = Math.max(before.lastIndexOf("\n"), before.lastIndexOf("\r"));
+  const column = offset - lastLineBreak;
+  return `${message} at line ${line}, column ${column}`;
 }
 
 export function serializePolicy(policy: Policy): string {

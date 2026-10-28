@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   asUserReference,
+  formatPolicy,
   groupsForUser,
   hasPortSpec,
   isValidGroupName,
@@ -176,14 +177,21 @@ describe("parsePolicy", () => {
     });
   });
 
-  test("reports invalid JSON instead of throwing", () => {
-    const result = parsePolicy("{ not json");
-    expect(result.ok).toBe(false);
+  test("reports where invalid JSON goes wrong", () => {
+    const result = parsePolicy(`{\n  "acls": [ }`);
+    if (result.ok) throw new Error("expected a parse error");
+
+    expect(result.error).toBe("Value expected at line 2, column 13");
+    expect(result.diagnostics[0]).toEqual({ from: 14, to: 15, message: "Value expected" });
   });
 
   test("rejects a policy that is not an object", () => {
     const result = parsePolicy("[]");
-    expect(result).toEqual({ ok: false, error: "The policy must be a JSON object" });
+    expect(result).toEqual({
+      ok: false,
+      error: "The policy must be a JSON object",
+      diagnostics: [{ from: 0, to: 2, message: "The policy must be a JSON object" }],
+    });
   });
 
   test("tolerates sections with the wrong shape", () => {
@@ -191,6 +199,58 @@ describe("parsePolicy", () => {
     expect(policy.groups).toEqual({});
     expect(policy.acls).toEqual([]);
     expect(policy.hosts).toEqual({});
+  });
+
+  test("does not treat trailing-comma-like text inside strings as syntax", () => {
+    const { policy } = parseOrThrow(`{ "custom": "keep ,} and ,] intact" }`);
+    expect(policy.extra.custom).toBe("keep ,} and ,] intact");
+  });
+});
+
+describe("formatPolicy", () => {
+  test("formats HuJSON and keeps comments and trailing commas", () => {
+    const result = formatPolicy(
+      `{\n"groups":{\n"group:eng":["alice@",],\n},// team\n"acls":[\n]\n}`,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value).toContain("// team");
+    expect(result.value).toContain('  "groups": {');
+    expect(result.value).toContain('    "group:eng": ["alice@",],');
+    expect(result.value.endsWith("\n")).toBe(true);
+    expect(parsePolicy(result.value).ok).toBe(true);
+
+    const formattedAgain = formatPolicy(result.value);
+    expect(formattedAgain).toEqual(result);
+  });
+
+  test("keeps blank lines and inline arrays", () => {
+    const result = formatPolicy(
+      `{\n"groups": { "group:eng": ["alice@", "bob@"] },\n\n"acls": [\n// engineers\n{ "action": "accept", "src": ["group:eng"], "dst": ["*:*"] },\n\n{ "action": "accept", "src": ["*"], "dst": ["*:22"] },\n],\n}\n`,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.value).toBe(
+      `{\n  "groups": { "group:eng": ["alice@", "bob@"] },\n\n  "acls": [\n    // engineers\n    { "action": "accept", "src": ["group:eng"], "dst": ["*:*"] },\n\n    { "action": "accept", "src": ["*"], "dst": ["*:22"] },\n  ],\n}\n`,
+    );
+  });
+
+  test("removes padding inside arrays, but not inside strings or comments", () => {
+    const result = formatPolicy(`{ "hosts": [ "a [ b ]", [ ] ], /* [ c ] */ "x": [ // d\n1 ] }`);
+    expect(result).toEqual({
+      ok: true,
+      value: `{ "hosts": ["a [ b ]", []], /* [ c ] */ "x": [ // d\n    1] }\n`,
+    });
+  });
+
+  test("does not format an empty policy", () => {
+    expect(formatPolicy("  \n").ok).toBe(false);
+  });
+
+  test("does not format invalid input", () => {
+    expect(formatPolicy(`{ "groups": [ }`).ok).toBe(false);
   });
 });
 

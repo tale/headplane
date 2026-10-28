@@ -21,11 +21,20 @@ export const aclAction = createAction({
   },
   intents: {
     save: {
-      fields: { policy: v.pipe(v.string(), v.nonEmpty("The policy can't be empty.")) },
+      fields: {
+        policy: v.pipe(
+          v.string(),
+          v.check((value) => value.trim().length > 0, "The policy can't be empty."),
+        ),
+      },
       async handler(input, { api, capabilities }) {
-        // Older Headscale only says `unknown field "grants"`.
         const parsed = parsePolicy(input.policy);
-        const hasGrants = parsed.ok && parsed.policy.keyOrder.includes("grants");
+        if (!parsed.ok) {
+          return invalid({ form: `Syntax error: ${parsed.error}` });
+        }
+
+        // Older Headscale only says `unknown field "grants"`.
+        const hasGrants = parsed.policy.keyOrder.includes("grants");
         if (hasGrants && !capabilities.policySupportsGrants) {
           throw new ActionError(
             "Grants need Headscale 0.29 or newer. Remove the `grants` section or upgrade Headscale.",
