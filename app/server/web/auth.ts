@@ -258,6 +258,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function encodeCookie(payload: CookiePayload, maxAge: number): Promise<string> {
     const cookie = createCookie(opts.cookie.name, {
       ...opts.cookie,
+      httpOnly: true,
       maxAge,
     });
 
@@ -544,7 +545,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     profile: NonNullable<CookiePayload["profile"]>,
     options?: { idToken?: string; maxAge?: number },
   ): Promise<string> {
-    const maxAge = options?.maxAge ?? opts.cookie.maxAge;
+    const maxAge = Math.min(options?.maxAge ?? opts.cookie.maxAge, opts.cookie.maxAge);
     const sid = ulid();
     await opts.db.insert(authSessions).values({
       id: sid,
@@ -562,16 +563,17 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
     displayName: string,
     maxAge: number,
   ): Promise<string> {
+    const sessionMaxAge = Math.min(maxAge, opts.cookie.maxAge * 1000);
     const sid = ulid();
     await opts.db.insert(authSessions).values({
       id: sid,
       kind: "api_key",
       api_key_hash: hashApiKey(apiKey),
       api_key_display: displayName,
-      expires_at: new Date(Date.now() + maxAge),
+      expires_at: new Date(Date.now() + sessionMaxAge),
     });
 
-    return encodeCookie({ sid, api_key: apiKey }, Math.floor(maxAge / 1000));
+    return encodeCookie({ sid, api_key: apiKey }, Math.floor(sessionMaxAge / 1000));
   }
 
   async function destroySession(request?: Request): Promise<string> {
@@ -584,7 +586,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       }
     }
 
-    const cookie = createCookie(opts.cookie.name, opts.cookie);
+    const cookie = createCookie(opts.cookie.name, { ...opts.cookie, httpOnly: true });
 
     return cookie.serialize("", { expires: new Date(0) });
   }

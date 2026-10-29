@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import type { AuthService, Principal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
@@ -211,6 +211,47 @@ describe("session round-trip", () => {
 
   beforeEach(() => {
     ({ auth } = createTestAuth());
+  });
+
+  test.each([
+    [7_200_000, 3_600_000],
+    [600_000, 600_000],
+  ])("API sessions respect the shorter configured or key lifetime (%i ms)", async (keyAge, age) => {
+    vi.useFakeTimers();
+    try {
+      const header = await auth.createApiKeySession("unit-test-key", "Test key", keyAge);
+      expect(header).toMatch(/; HttpOnly/i);
+      expect(header).toContain(`Max-Age=${age / 1000}`);
+      const request = new Request("http://localhost/admin/machines", {
+        headers: { cookie: header.split(";")[0] },
+      });
+      expect((await auth.require(request)).kind).toBe("api_key");
+      vi.advanceTimersByTime(age + 1);
+      await expect(auth.require(new Request(request))).rejects.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("OIDC sessions are HttpOnly and cannot outlive the configured session lifetime", async () => {
+    const userId = await auth.findOrCreateUser("session-limit-user");
+    vi.useFakeTimers();
+    try {
+      const header = await auth.createOidcSession(
+        userId,
+        { name: "Session limit" },
+        { maxAge: 7200 },
+      );
+      expect(header).toMatch(/; HttpOnly/i);
+      expect(header).toContain("Max-Age=3600");
+      const request = new Request("http://localhost/admin/machines", {
+        headers: { cookie: header.split(";")[0] },
+      });
+      vi.advanceTimersByTime(3_600_001);
+      await expect(auth.require(request)).rejects.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("createOidcSession + require resolves back to OIDC principal with correct user data", async () => {
