@@ -10,6 +10,7 @@ import {
 } from "react-router";
 
 import { LiveDataProvider } from "~/utils/live-data";
+import { ignoreSearchChanges } from "~/utils/revalidate";
 import ToastProvider from "~/utils/toast-provider";
 
 import type { Route } from "./+types/root";
@@ -26,6 +27,8 @@ export const meta: MetaFunction = () => [
     content: "A frontend for the headscale coordination server",
   },
 ];
+
+export const shouldRevalidate = ignoreSearchChanges;
 
 export async function loader({ request }: Route.LoaderArgs) {
   const colorScheme = await getColorScheme(request);
