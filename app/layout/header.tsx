@@ -27,6 +27,7 @@ export interface HeaderProps {
     machines: boolean;
     dns: boolean;
     users: boolean;
+    guests: boolean;
     policy: boolean;
     settings: boolean;
   };
@@ -36,6 +37,7 @@ export interface HeaderProps {
 const tabs = [
   { to: "/machines", label: "Machines", key: "machines" },
   { to: "/users", label: "Users", key: "users" },
+  { to: "/guests", label: "Guests", key: "guests" },
   { to: "/acls", label: "Access controls", key: "policy" },
   { to: "/dns", label: "DNS", key: "dns" },
   { to: "/settings", label: "Settings", key: "settings" },

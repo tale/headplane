@@ -10,6 +10,7 @@
 
 ## Changes
 
+- Owners and admins can prepare guest requests from the new **Guests** page, with searchable drafts, requested access durations, administrative notes, and revocation history. This first phase stores requests in Headplane only; it sends no invitations and grants no VPN access.
 - Headplane can be served under a path other than `/admin` by setting `server.base_path`, without building it from source (closes [#637](https://github.com/tale/headplane/issues/637)).
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
 - Dialogs can now be closed by clicking outside them, except the ones that confirm a destructive action like removing a machine.

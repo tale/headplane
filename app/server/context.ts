@@ -8,6 +8,7 @@ import type { HeadplaneConfig } from "./config/config-schema";
 import { loadIntegration } from "./config/integration";
 import { createDbClient } from "./db/client.server";
 import { disabled, enabled, type Feature } from "./feature";
+import { createGuestService } from "./guests";
 import { createHeadscale, type HeadscaleClient } from "./headscale/api";
 import { loadHeadscaleConfig } from "./headscale/config-loader";
 import { createLiveStore, nodesResource, usersResource } from "./headscale/live-store";
@@ -20,6 +21,7 @@ export const agentsContext = createContext<AppContext["agents"]>();
 export const appConfigContext = createContext<AppContext["config"]>();
 export const authContext = createContext<AppContext["auth"]>();
 export const dbContext = createContext<AppContext["db"]>();
+export const guestsContext = createContext<AppContext["guests"]>();
 export const headscaleContext = createContext<AppContext["headscale"]>();
 export const headscaleApiKeyContext = createContext<AppContext["headscaleApiKey"]>();
 export const headscaleConfigContext = createContext<AppContext["hs"]>();
@@ -30,6 +32,7 @@ export const requestApiContext = createContext<AppContext["apiForRequest"]>();
 
 export async function createAppContext(config: HeadplaneConfig) {
   const db = await createDbClient(join(config.server.data_path, "hp_persist.db"));
+  const guests = createGuestService(db);
   const headscale = await createHeadscale({
     url: config.headscale.url,
     certPath: config.headscale.tls_cert_path,
@@ -113,6 +116,7 @@ export async function createAppContext(config: HeadplaneConfig) {
     config,
     db,
     headscale,
+    guests,
     headscaleApiKey,
     agents,
     auth,
@@ -132,6 +136,7 @@ export function createRouterContext(ctx: AppContext) {
   context.set(appConfigContext, ctx.config);
   context.set(authContext, ctx.auth);
   context.set(dbContext, ctx.db);
+  context.set(guestsContext, ctx.guests);
   context.set(headscaleContext, ctx.headscale);
   context.set(headscaleApiKeyContext, ctx.headscaleApiKey);
   context.set(headscaleConfigContext, ctx.hs);

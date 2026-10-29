@@ -1,4 +1,5 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { sql } from "drizzle-orm";
+import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { HostInfo } from "~/types";
 
@@ -43,3 +44,48 @@ export const authSessions = sqliteTable("auth_sessions", {
 
 export type AuthSessionRecord = typeof authSessions.$inferSelect;
 export type AuthSessionInsert = typeof authSessions.$inferInsert;
+
+export const guests = sqliteTable(
+  "guests",
+  {
+    id: text("id").primaryKey(),
+    email: text("email").notNull(),
+    display_name: text("display_name"),
+    notes: text("notes"),
+    status: text("status", { enum: ["draft", "pending", "active", "expired", "revoked"] })
+      .notNull()
+      .default("draft"),
+    requested_duration_seconds: integer("requested_duration_seconds"),
+    requested_expires_at: integer("requested_expires_at", { mode: "timestamp" }),
+    activated_at: integer("activated_at", { mode: "timestamp" }),
+    expires_at: integer("expires_at", { mode: "timestamp" }),
+    revoked_at: integer("revoked_at", { mode: "timestamp" }),
+    created_at: integer("created_at", { mode: "timestamp" }).notNull(),
+    updated_at: integer("updated_at", { mode: "timestamp" }).notNull(),
+    // Historical attribution, retained even if the account is later removed.
+    // API key sessions have no local user ID and leave this null.
+    created_by: text("created_by"),
+    revision: integer("revision").notNull().default(1),
+  },
+  (table) => [
+    index("guests_email_idx").on(table.email),
+    index("guests_created_idx").on(table.created_at, table.id),
+    index("guests_status_created_idx").on(table.status, table.created_at, table.id),
+    // Phase 1 never represents a draft as provisioned network access.
+    check("guests_phase_one_status", sql`${table.status} IN ('draft', 'revoked')`),
+    check(
+      "guests_no_activation",
+      sql`${table.activated_at} IS NULL AND ${table.expires_at} IS NULL`,
+    ),
+    check(
+      "guests_requested_duration",
+      sql`(${table.requested_duration_seconds} IS NOT NULL AND ${table.requested_duration_seconds} IN (86400, 172800, 604800)) OR (${table.requested_duration_seconds} IS NULL AND ${table.requested_expires_at} IS NOT NULL)`,
+    ),
+    check(
+      "guests_revocation",
+      sql`(${table.status} = 'draft' AND ${table.revoked_at} IS NULL) OR (${table.status} = 'revoked' AND ${table.revoked_at} IS NOT NULL)`,
+    ),
+  ],
+);
+
+export type Guest = typeof guests.$inferSelect;

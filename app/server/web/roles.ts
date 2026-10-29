@@ -17,6 +17,7 @@ export const Capabilities = {
   use_tags: 1 << 13,
   write_tailnet: 1 << 14,
   owner: 1 << 15,
+  manage_guests: 1 << 17,
 } as const;
 
 export const Roles = {
@@ -36,7 +37,8 @@ export const Roles = {
     Capabilities.generate_authkeys |
     Capabilities.use_tags |
     Capabilities.write_tailnet |
-    Capabilities.owner,
+    Capabilities.owner |
+    Capabilities.manage_guests,
 
   admin:
     Capabilities.ui_access |
@@ -53,7 +55,8 @@ export const Roles = {
     Capabilities.write_users |
     Capabilities.generate_authkeys |
     Capabilities.use_tags |
-    Capabilities.write_tailnet,
+    Capabilities.write_tailnet |
+    Capabilities.manage_guests,
 
   network_admin:
     Capabilities.ui_access |

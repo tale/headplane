@@ -103,6 +103,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         settings: auth.can(principal, Capabilities.read_feature),
         ui: auth.can(principal, Capabilities.ui_access),
         users: auth.can(principal, Capabilities.read_users),
+        guests: auth.can(principal, Capabilities.manage_guests),
       },
       baseUrl: config.headscale.public_url ?? config.headscale.url,
       configAvailable: headscaleConfig.readable(),
