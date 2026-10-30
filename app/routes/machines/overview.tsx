@@ -36,6 +36,7 @@ import {
   sortAssignableTags,
   type PopulatedNode,
 } from "~/utils/node-info";
+import { ignoreSearchChanges } from "~/utils/revalidate";
 import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
@@ -44,6 +45,8 @@ import MachineRow from "./components/machine-row";
 import NewMachine from "./dialogs/new";
 import { useMachineFilterParams } from "./hooks/use-machine-filter-params";
 import { machineAction } from "./machine-actions";
+
+export const shouldRevalidate = ignoreSearchChanges;
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const agentsFeature = context.get(agentsContext);
