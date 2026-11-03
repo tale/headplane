@@ -1,4 +1,7 @@
+import { Plus } from "lucide-react";
+
 import ActionDialog from "~/components/action-dialog";
+import Button from "~/components/button";
 import CodeBlock from "~/components/code-block";
 import NumberInput from "~/components/number-input";
 import { SwitchField } from "~/components/switch";
@@ -16,6 +19,12 @@ export default function GenerateKey({ isDisabled }: GenerateKeyProps) {
       submitLabel="Generate"
       title="Generate pre-auth key"
       description="Use this key to connect a device to your tailnet without signing in manually."
+      trigger={
+        <Button variant="primary" disabled={isDisabled}>
+          <Plus className="size-3.5" />
+          Generate key
+        </Button>
+      }
       success={({ key }) => (
         <div className="flex flex-col gap-3">
           <p className="text-muted text-sm">
