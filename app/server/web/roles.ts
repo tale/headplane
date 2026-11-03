@@ -17,9 +17,6 @@ export const Capabilities = {
   use_tags: 1 << 13,
   write_tailnet: 1 << 14,
   owner: 1 << 15,
-  // Member-portal capabilities: scoped to the principal's own nodes only.
-  // These are deliberately separate from read_machines / write_machines,
-  // which grant access to the global node list.
   read_own_machines: 1 << 17,
   write_own_machines: 1 << 18,
 } as const;
@@ -41,9 +38,7 @@ export const Roles = {
     Capabilities.generate_authkeys |
     Capabilities.use_tags |
     Capabilities.write_tailnet |
-    Capabilities.owner |
-    Capabilities.read_own_machines |
-    Capabilities.write_own_machines,
+    Capabilities.owner,
 
   admin:
     Capabilities.ui_access |
@@ -60,9 +55,7 @@ export const Roles = {
     Capabilities.write_users |
     Capabilities.generate_authkeys |
     Capabilities.use_tags |
-    Capabilities.write_tailnet |
-    Capabilities.read_own_machines |
-    Capabilities.write_own_machines,
+    Capabilities.write_tailnet,
 
   network_admin:
     Capabilities.ui_access |
@@ -75,9 +68,7 @@ export const Roles = {
     Capabilities.read_users |
     Capabilities.generate_authkeys |
     Capabilities.use_tags |
-    Capabilities.write_tailnet |
-    Capabilities.read_own_machines |
-    Capabilities.write_own_machines,
+    Capabilities.write_tailnet,
 
   it_admin:
     Capabilities.ui_access |
@@ -90,9 +81,7 @@ export const Roles = {
     Capabilities.write_machines |
     Capabilities.read_users |
     Capabilities.write_users |
-    Capabilities.generate_authkeys |
-    Capabilities.read_own_machines |
-    Capabilities.write_own_machines,
+    Capabilities.generate_authkeys,
 
   auditor:
     Capabilities.ui_access |
@@ -101,20 +90,15 @@ export const Roles = {
     Capabilities.read_feature |
     Capabilities.read_machines |
     Capabilities.read_users |
-    Capabilities.generate_own_authkeys |
-    Capabilities.read_own_machines,
+    Capabilities.generate_own_authkeys,
 
   viewer:
     Capabilities.ui_access |
     Capabilities.read_machines |
     Capabilities.read_users |
-    Capabilities.generate_own_authkeys |
-    Capabilities.read_own_machines,
+    Capabilities.generate_own_authkeys,
 
-  // Member portal: can view and manage their own linked nodes only.
-  // Deliberately has no ui_access (so the admin dashboard stays off-limits),
-  // no read_machines (so the global node list is never exposed), and no
-  // generate_own_authkeys (to keep key generation admin-controlled by default).
+  // No access — user exists but has not been granted any role
   member: Capabilities.read_own_machines | Capabilities.write_own_machines,
 } as const;
 

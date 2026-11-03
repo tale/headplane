@@ -10,8 +10,7 @@
 
 ## Changes
 
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
+- feat: add a self-service /dashboard for standard users (mapped to the member role)
 
 - Headplane can be served under a path other than `/admin` by setting `server.base_path`, without building it from source (closes [#637](https://github.com/tale/headplane/issues/637)).
 - Headplane has a new color palette built from its logo: warm greys, black primary buttons, and a muted blue that marks links, focus, and the current page. Dark mode now separates the page, menus, and dialogs by shade so overlays stand out, and secondary text is easier to read in both themes (via [#651](https://github.com/tale/headplane/issues/651)).
@@ -105,9 +104,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Changes
 
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
-
 - Added a structured editor to the Access Control page with **Rules** and **Tags & Groups** tabs for editing `acls`, `ssh`, `hosts`, `groups`, and `tagOwners` without touching HuJSON. Sources and destinations are suggested from the groups, tags, hosts, and users in your tailnet. Nothing is applied until you press Save, and the file editor is still there for everything else. Editing through the structured editor drops comments from the policy, and Headplane warns you when that would happen (closes [#607](https://github.com/tale/headplane/issues/607), via [#608](https://github.com/tale/headplane/pull/608)).
 - The Users page now shows which policy groups each user belongs to, and **Edit groups** in the row menu lets you change them (requires the `write_policy` permission).
 - The machine tag dialog now flags tags that are missing from `tagOwners`, since Headscale accepts them but they never match any rule.
@@ -131,9 +127,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 # 0.7.1 (August 27, 2026)
 
 ## Changes
-
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
 
 - **Rebuilt the Browser SSH module to use Tailscale's `tsconnect`**, which should result in fewer bugs and better compatibility with future Tailscale releases.
 - Added `integration.agent.tailscale_netns`, an agent-only opt-out from Tailscale's routing-loop socket handling for deployments where its fallback pins the agent's Headscale connection to the wrong interface. Existing behavior remains enabled by default.
@@ -162,9 +155,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 - Accounts are linked to Headscale users. Single sign-on accounts link by subject or email when they sign in. Accounts that don't match need linking by hand before they can create their own auth keys or use Browser SSH.
 
 ## Changes
-
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
 
 - Switched to structured JSON logging (closes [#279](https://github.com/tale/headplane/issues/279)).
 - Added suggestions to pick existing tags to the machine tag dialog (closes [#560](https://github.com/tale/headplane/issues/560)).
@@ -262,9 +252,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Changes
 
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
-
 - **Added support for Headscale 0.28.0** including all API and data model changes.
 - Added search and sortable columns to the machines list page (closes [#351](https://github.com/tale/headplane/issues/351)).
 - Added support for Headscale 0.27.0 and 0.27.1
@@ -318,9 +305,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 
 ## Changes
 
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
-
 - **Headplane now supports connecting to machines via SSH in the web browser.**
   - This is an experimental feature and requires the `integration.agent` section to be set up in the config file.
   - This is built on top of a Go binary that runs in WebAssembly, using Xterm.js for the terminal interface.
@@ -358,9 +342,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 - Headplane needs Headscale 0.26.0 or newer.
 
 ## Changes
-
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
 
 - Headplane 0.6.0 now requires **Headscale 0.26.0** or newer.
   - Breaking API changes with routes and pre auth keys are now supported (closes [#204](https://github.com/tale/headplane/issues/204)).
@@ -426,9 +407,6 @@ This release fixes actions failing with "Bad Request" or "Unexpected Server Erro
 - Single sign-on accounts get roles. New accounts start as members with no dashboard access, and the first person to sign in becomes the owner, so sign in right after upgrading to claim the owner account.
 
 ## Changes
-
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
 
 ### IMPORTANT
 
@@ -508,9 +486,6 @@ If there are no users, the first user will be given an `owner` role which cannot
 - Settings moved from environment variables to a config file. Start from [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml). Settings that used to be shared with Headscale, such as `public_url` and `oidc`, are now separate.
 
 ## Changes
-
-- Members (accounts with no dashboard role) now have a self-service portal at `/dashboard` where they can view and manage their own linked devices — rename, delete, and generate pre-auth keys. The admin dashboard remains off-limits to them.
-- The `member` role now carries `read_own_machines` and `write_own_machines` capabilities that gate the new portal routes. All existing roles also receive these capabilities.
 
 - Completely redesigned the UI from the ground up for accessibility and performance.
 - Switched to a config-file setup (this introduces breaking changes, see [config.example.yaml](https://github.com/tale/headplane/blob/main/config.example.yaml) for the new format).
