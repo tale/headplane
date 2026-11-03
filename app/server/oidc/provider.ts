@@ -866,7 +866,15 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
 
     if (Array.isArray(value)) {
       const roles = new Set(value.filter((v): v is string => typeof v === "string"));
-      for (const role of ["admin", "network_admin", "it_admin", "auditor", "viewer", "member"]) {
+      for (const role of [
+        "admin",
+        "network_admin",
+        "it_admin",
+        "auditor",
+        "viewer",
+        "user",
+        "member",
+      ]) {
         if (roles.has(role)) {
           return role;
         }

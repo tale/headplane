@@ -52,10 +52,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     return redirect("/machines");
   }
 
-  // Members (read_own_machines but no ui_access) go to the self-service portal.
-  // This includes both linked and unlinked members — /dashboard handles the
-  // empty state for accounts not yet linked to a Headscale user.
-  if (auth.can(principal, Capabilities.read_own_machines)) {
+  // Accounts with read_own_machines (role: "user") go to the self-service dashboard
+  // once linked to a Headscale user. Unlinked accounts stay on the "Connect your devices"
+  // page to view initial connection instructions.
+  if (isLinked && auth.can(principal, Capabilities.read_own_machines)) {
     return redirect("/dashboard");
   }
 

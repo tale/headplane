@@ -93,6 +93,11 @@ function mapRoleToName(role: string) {
         name: "Viewer",
         desc: "Can view machines, users, and generate their own auth keys.",
       };
+    case "user":
+      return {
+        name: "User",
+        desc: "Can view and manage their own devices on the self-service dashboard.",
+      };
     case "member":
       return {
         name: "Member",

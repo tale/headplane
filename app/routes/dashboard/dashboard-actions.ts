@@ -31,7 +31,11 @@ export const dashboardAction = createAction({
     const { principal, api } = await context.get(requestApiContext)(request);
     const liveStore = context.get(headscaleLiveStoreContext);
 
-    if (!auth.can(principal, Capabilities.write_own_machines)) {
+    const canWrite =
+      auth.can(principal, Capabilities.write_own_machines) ||
+      auth.can(principal, Capabilities.write_machines);
+
+    if (!canWrite) {
       throw new ActionError("You don't have permission to do this.", 403);
     }
 
@@ -56,6 +60,7 @@ export const dashboardAction = createAction({
     return {
       principal,
       api,
+      auth,
       requireOwnNode,
       refresh: () => liveStore.refresh(nodesResource, api),
     };
@@ -86,15 +91,15 @@ export const dashboardAction = createAction({
         ephemeral: switchValue,
       },
       // api is forwarded from setup() context, so this is safe.
-      async handler(input, { principal, api }) {
-        // The Headscale user ID must come from the server-side principal —
-        // never from form data — so members cannot generate keys for others.
-        if (!isUserPrincipal(principal)) {
-          throw new ActionError("Pre-auth key generation requires an OIDC or proxy session.", 403);
+      async handler(input, { principal, api, auth }) {
+        const canGenerateGlobal = auth.can(principal, Capabilities.generate_authkeys);
+
+        let hsUserId: string | null = null;
+        if (isUserPrincipal(principal)) {
+          hsUserId = principal.user.headscaleUserId ?? null;
         }
 
-        const hsUserId = principal.user.headscaleUserId;
-        if (!hsUserId) {
+        if (!hsUserId && !canGenerateGlobal) {
           throw new ActionError(
             "Your account isn't linked to a Headscale user yet. Ask an administrator to link it.",
           );

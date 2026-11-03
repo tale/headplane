@@ -29,17 +29,9 @@ const PUBLIC = new Set([
   "routes/home.tsx",
 ]);
 
-// Members can manage their own machines.
-const MEMBER_ACTIONS = new Set([
-  "routes/dashboard/overview.tsx",
-  "routes/dashboard/dashboard-actions.ts",
-]);
-
 // Members get only access flags or change notifications from these.
 const MEMBER_VISIBLE = new Set([
   "layout/app.tsx",
-  "layout/dashboard.tsx",
-  "routes/dashboard/overview.tsx",
   "routes/settings/layout.tsx",
   "routes/util/live.ts",
 ]);
@@ -149,9 +141,7 @@ describe("route permissions", () => {
     async ([, entry]) => {
       const readOnly: Role[] = SELF_SERVICE.has(entry.file)
         ? ["member"]
-        : MEMBER_ACTIONS.has(entry.file)
-          ? ["viewer", "auditor"]
-          : ["member", "viewer", "auditor"];
+        : ["member", "viewer", "auditor"];
 
       expect(statusOf(await callAction(entry)), "signed out").not.toBe(200);
       for (const role of readOnly) {
