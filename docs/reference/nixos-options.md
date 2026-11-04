@@ -269,7 +269,7 @@ _Default:_ `false`
 _Description:_ Role assigned to newly created OIDC users after the first owner is bootstrapped.
 The owner role is reserved for the first-login bootstrap.
 
-_Type:_ one of "admin", "network_admin", "it_admin", "auditor", "viewer", "member"
+_Type:_ one of "admin", "network_admin", "it_admin", "auditor", "viewer", "user", "member"
 
 _Default:_ `"member"`
 

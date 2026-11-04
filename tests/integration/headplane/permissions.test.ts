@@ -180,7 +180,11 @@ describe("route permissions", () => {
     "%s is open to the owner",
     async ([, entry]) => {
       if (USER_ACTIONS.has(entry.file)) {
-        expect(statusOf(await callAction(entry, cookies.get("owner")))).toBe(403);
+        if (entry.intent === "create_key") {
+          expect(statusOf(await callAction(entry, cookies.get("owner")))).not.toBe(403);
+        } else {
+          expect(statusOf(await callAction(entry, cookies.get("owner")))).toBe(403);
+        }
       } else {
         expect(statusOf(await callAction(entry, cookies.get("owner")))).not.toBe(403);
       }

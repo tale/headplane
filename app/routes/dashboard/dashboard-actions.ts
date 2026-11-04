@@ -97,10 +97,9 @@ export const dashboardAction = createAction({
         }
 
         if (!hsUserId) {
-          throw new ActionError(
-            "Your account isn't linked to a Headscale user yet. Ask an administrator to link it.",
-            403,
-          );
+          throw new Response("Must be linked to a Headscale user to create a self-service key.", {
+            status: 400,
+          });
         }
 
         const expiration = new Date();

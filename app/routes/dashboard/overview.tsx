@@ -1,4 +1,4 @@
-import { Key, Laptop } from "lucide-react";
+import { Laptop } from "lucide-react";
 import { useState } from "react";
 import { data } from "react-router";
 
