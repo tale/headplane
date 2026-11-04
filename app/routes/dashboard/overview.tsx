@@ -13,6 +13,7 @@ import { isUserPrincipal } from "~/server/web/auth";
 import { Capabilities } from "~/server/web/roles";
 import type { Machine } from "~/types";
 import cn from "~/utils/cn";
+import { isNoExpiry } from "~/utils/node-info";
 import { toastClientAction } from "~/utils/toast";
 
 import type { Route } from "./+types/overview";
@@ -75,11 +76,7 @@ function NodeRow({ node, magic }: NodeRowProps) {
 
   const ipv4 = node.ipAddresses.find((ip) => !ip.includes(":"));
   const ipv6 = node.ipAddresses.find((ip) => ip.includes(":"));
-  const isExpired =
-    node.expiry !== null &&
-    node.expiry !== "0001-01-01T00:00:00Z" &&
-    node.expiry !== "" &&
-    new Date(node.expiry) < new Date();
+  const isExpired = !isNoExpiry(node.expiry) && new Date(node.expiry!) < new Date();
   const isOnline = node.online ?? false;
 
   return (
