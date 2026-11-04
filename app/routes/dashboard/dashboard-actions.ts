@@ -36,7 +36,7 @@ export const dashboardAction = createAction({
       auth.can(principal, Capabilities.write_machines);
 
     if (!canWrite) {
-      throw new Response("You don't have permission to do this.", { status: 403 });
+      throw new ActionError("You don't have permission to do this.", 403);
     }
 
     // Fetch the node and assert the caller owns it.

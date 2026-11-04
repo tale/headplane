@@ -90,6 +90,7 @@ describe("route permissions", () => {
   let tailnet: Tailnet;
   let app: TestApp;
   let form: Record<string, string>;
+  let userNode: Awaited<ReturnType<Tailnet["node"]>>;
   const cookies = new Map<Role, string>();
 
   beforeAll(async () => {
@@ -99,6 +100,10 @@ describe("route permissions", () => {
     for (const role of ["owner", "user", "member", "viewer", "auditor"] as const) {
       cookies.set(role, (await app.signIn(role)).cookie);
     }
+
+    const userAccount = await tailnet.user("test-user@");
+    await app.link("user", userAccount.id);
+    userNode = await tailnet.node({ name: "user-node", user: userAccount.name });
 
     // Valid enough for every intent, so checks inside handlers run too. The
     // machine belongs to a Headscale user none of the test users are.
@@ -186,7 +191,23 @@ describe("route permissions", () => {
     "%s enforces node ownership for users",
     async ([, entry]) => {
       if (USER_ACTIONS.has(entry.file)) {
+        if (entry.intent === "create_key") {
+          expect(statusOf(await callAction(entry, cookies.get("user")))).not.toBe(403);
+          return;
+        }
+
         expect(statusOf(await callAction(entry, cookies.get("user")))).toBe(403);
+
+        const allowedResult = await app.call(entry.module.action!, entry.path, {
+          as: cookies.get("user"),
+          form: {
+            ...form,
+            ...(entry.intent ? { intent: entry.intent } : {}),
+            node_id: userNode.id,
+          },
+          params: { id: userNode.id },
+        });
+        expect(statusOf(allowedResult)).not.toBe(403);
       }
     },
   );
