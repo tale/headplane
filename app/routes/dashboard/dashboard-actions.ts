@@ -31,9 +31,7 @@ export const dashboardAction = createAction({
     const { principal, api } = await context.get(requestApiContext)(request);
     const liveStore = context.get(headscaleLiveStoreContext);
 
-    const canWrite =
-      auth.can(principal, Capabilities.write_own_machines) ||
-      auth.can(principal, Capabilities.write_machines);
+    const canWrite = auth.can(principal, Capabilities.write_own_machines);
 
     if (!canWrite) {
       throw new ActionError("You don't have permission to do this.", 403);
@@ -50,7 +48,7 @@ export const dashboardAction = createAction({
 
       const hsUserId = isUserPrincipal(principal) ? principal.user.headscaleUserId : undefined;
       if (!hsUserId || node.user?.id !== hsUserId) {
-        throw new ActionError("You don't have permission to manage this machine.", 403);
+        throw new ActionError("This machine no longer exists.", 404);
       }
 
       return node;

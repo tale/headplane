@@ -184,7 +184,8 @@ describe("route permissions", () => {
   test.for(actions.map((entry) => [label(entry), entry] as const))(
     "%s is open to the owner",
     async ([, entry]) => {
-      if (USER_ACTIONS.has(entry.file)) {
+      const isPortal = USER_ACTIONS.has(entry.file);
+      if (isPortal) {
         expect(statusOf(await callAction(entry, cookies.get("owner")))).toBe(403);
       } else {
         expect(statusOf(await callAction(entry, cookies.get("owner")))).not.toBe(403);
@@ -201,7 +202,7 @@ describe("route permissions", () => {
           return;
         }
 
-        expect(statusOf(await callAction(entry, cookies.get("user")))).toBe(403);
+        expect(statusOf(await callAction(entry, cookies.get("user")))).toBe(404);
 
         const allowedResult = await app.call(entry.module.action!, entry.path, {
           as: cookies.get("user"),
