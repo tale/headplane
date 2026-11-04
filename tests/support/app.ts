@@ -74,13 +74,6 @@ export async function createTestApp(options: TestAppOptions) {
     return { userId, subject, cookie: setCookie.split(";")[0] };
   }
 
-  async function link(roleOrUserId: Role | string, headscaleUserId: string) {
-    const allUsers = await ctx.auth.listUsers();
-    const targetUser = allUsers.find((u) => u.role === roleOrUserId || u.id === roleOrUserId);
-    if (!targetUser) throw new Error(`No user found for ${roleOrUserId}`);
-    await ctx.auth.linkHeadscaleUser(targetUser.id, headscaleUserId);
-  }
-
   async function signInWithApiKey(apiKey = headscale.apiKey) {
     const setCookie = await ctx.auth.createApiKeySession(apiKey, "API key", 3_600_000);
     return { cookie: setCookie.split(";")[0] };
@@ -130,7 +123,6 @@ export async function createTestApp(options: TestAppOptions) {
     api,
     signIn,
     signInWithApiKey,
-    link,
     request,
     call,
     async dispose() {

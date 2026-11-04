@@ -97,12 +97,17 @@ describe("route permissions", () => {
     tailnet = await createTailnet();
     app = await tailnet.headplane();
 
+    let userSessionId = "";
     for (const role of ["owner", "user", "member", "viewer", "auditor"] as const) {
-      cookies.set(role, (await app.signIn(role)).cookie);
+      const session = await app.signIn(role);
+      cookies.set(role, session.cookie);
+      if (role === "user") {
+        userSessionId = session.userId;
+      }
     }
 
     const userAccount = await tailnet.user("test-user@");
-    await app.link("user", userAccount.id);
+    await app.ctx.auth.linkHeadscaleUser(userSessionId, userAccount.id);
     userNode = await tailnet.node({ name: "user-node", user: userAccount.name });
 
     // Valid enough for every intent, so checks inside handlers run too. The
