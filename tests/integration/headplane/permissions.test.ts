@@ -36,6 +36,19 @@ const MEMBER_VISIBLE = new Set([
   "routes/util/live.ts",
 ]);
 
+const USER_VISIBLE = new Set([
+  "layout/app.tsx",
+  "layout/dashboard.tsx",
+  "routes/dashboard/overview.tsx",
+  "routes/settings/layout.tsx",
+  "routes/util/live.ts",
+]);
+
+const USER_ACTIONS = new Set([
+  "routes/dashboard/overview.tsx",
+  "routes/dashboard/dashboard-actions.ts",
+]);
+
 // Read-only roles manage their own auth keys and may refresh the agent.
 const SELF_SERVICE = new Set([
   "routes/settings/auth-keys/overview.tsx",
@@ -83,7 +96,7 @@ describe("route permissions", () => {
     tailnet = await createTailnet();
     app = await tailnet.headplane();
 
-    for (const role of ["owner", "member", "viewer", "auditor"] as const) {
+    for (const role of ["owner", "user", "member", "viewer", "auditor"] as const) {
       cookies.set(role, (await app.signIn(role)).cookie);
     }
 
@@ -124,7 +137,12 @@ describe("route permissions", () => {
   test.for(loaders.map((entry) => [label(entry), entry] as const))(
     "%s loader turns away signed-out users and members",
     async ([, entry]) => {
-      const callers = MEMBER_VISIBLE.has(entry.file) ? [undefined] : [undefined, "member" as const];
+      const callers: Array<Role | undefined> = MEMBER_VISIBLE.has(entry.file)
+        ? [undefined]
+        : [undefined, "member" as const];
+      if (!USER_VISIBLE.has(entry.file)) {
+        callers.push("user");
+      }
       for (const role of callers) {
         const result = await app.call(entry.module.loader!, entry.path, {
           as: role && cookies.get(role),
@@ -142,6 +160,9 @@ describe("route permissions", () => {
       const readOnly: Role[] = SELF_SERVICE.has(entry.file)
         ? ["member"]
         : ["member", "viewer", "auditor"];
+      if (!USER_ACTIONS.has(entry.file)) {
+        readOnly.push("user");
+      }
 
       expect(statusOf(await callAction(entry)), "signed out").not.toBe(200);
       for (const role of readOnly) {
@@ -153,7 +174,20 @@ describe("route permissions", () => {
   test.for(actions.map((entry) => [label(entry), entry] as const))(
     "%s is open to the owner",
     async ([, entry]) => {
-      expect(statusOf(await callAction(entry, cookies.get("owner")))).not.toBe(403);
+      if (USER_ACTIONS.has(entry.file)) {
+        expect(statusOf(await callAction(entry, cookies.get("owner")))).toBe(403);
+      } else {
+        expect(statusOf(await callAction(entry, cookies.get("owner")))).not.toBe(403);
+      }
+    },
+  );
+
+  test.for(actions.map((entry) => [label(entry), entry] as const))(
+    "%s enforces node ownership for users",
+    async ([, entry]) => {
+      if (USER_ACTIONS.has(entry.file)) {
+        expect(statusOf(await callAction(entry, cookies.get("user")))).toBe(403);
+      }
     },
   );
 });

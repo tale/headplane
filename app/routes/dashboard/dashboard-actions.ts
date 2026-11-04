@@ -36,12 +36,10 @@ export const dashboardAction = createAction({
       auth.can(principal, Capabilities.write_machines);
 
     if (!canWrite) {
-      throw new ActionError("You don't have permission to do this.", 403);
+      throw new Response("You don't have permission to do this.", { status: 403 });
     }
 
-    // Fetch the node and assert the caller owns it. Uses the existing
-    // canManageNode() which returns true for write_machines holders OR when
-    // the node's user.id matches the principal's headscaleUserId.
+    // Fetch the node and assert the caller owns it.
     async function requireOwnNode(id: string) {
       const node = await api.nodes.get(id).catch((error: unknown) => {
         if (isDataWithApiError(error) && error.data.statusCode === 404) {
@@ -50,7 +48,8 @@ export const dashboardAction = createAction({
         throw error;
       });
 
-      if (!auth.canManageNode(principal, node)) {
+      const hsUserId = isUserPrincipal(principal) ? principal.user.headscaleUserId : undefined;
+      if (!hsUserId || node.user?.id !== hsUserId) {
         throw new ActionError("You don't have permission to manage this machine.", 403);
       }
 
@@ -91,17 +90,16 @@ export const dashboardAction = createAction({
         ephemeral: switchValue,
       },
       // api is forwarded from setup() context, so this is safe.
-      async handler(input, { principal, api, auth }) {
-        const canGenerateGlobal = auth.can(principal, Capabilities.generate_authkeys);
-
+      async handler(input, { principal, api }) {
         let hsUserId: string | null = null;
         if (isUserPrincipal(principal)) {
           hsUserId = principal.user.headscaleUserId ?? null;
         }
 
-        if (!hsUserId && !canGenerateGlobal) {
+        if (!hsUserId) {
           throw new ActionError(
             "Your account isn't linked to a Headscale user yet. Ask an administrator to link it.",
+            403,
           );
         }
 
