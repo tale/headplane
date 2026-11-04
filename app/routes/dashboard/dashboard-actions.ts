@@ -99,7 +99,7 @@ export const dashboardAction = createAction({
         if (!hsUserId) {
           throw new ActionError(
             "Must be linked to a Headscale user to create a self-service key.",
-            400,
+            403,
           );
         }
 
