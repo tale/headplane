@@ -121,7 +121,8 @@ const partialHeadscaleConfig = type({
   tls_cert_path: "string?",
 });
 
-const assignableRole = '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "member"';
+const assignableRole =
+  '"admin" | "network_admin" | "it_admin" | "auditor" | "viewer" | "user" | "member"';
 
 const oidcConfig = type({
   enabled: "boolean = true",

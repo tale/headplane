@@ -56,7 +56,7 @@ export default function HeadplaneUserRow({
           </div>
         </div>
       </TableCell>
-      <TableCell className={cn(user.role === "member" && "text-muted")}>
+      <TableCell className={cn((user.role === "member" || user.role === "user") && "text-muted")}>
         {mapRoleToName(user.role)}
       </TableCell>
       <TableCell className="text-muted whitespace-nowrap">
@@ -101,6 +101,8 @@ function mapRoleToName(role: Role) {
       return "Auditor";
     case "viewer":
       return "Viewer";
+    case "user":
+      return "User";
     case "member":
       return "Member";
     default:

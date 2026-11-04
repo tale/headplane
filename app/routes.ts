@@ -22,6 +22,9 @@ export default [
   index("routes/home.tsx"),
   route("/ssh/:id", "routes/ssh/page.tsx"),
 
+  // Member self-service portal — own devices only, no admin nav tabs
+  layout("layout/dashboard.tsx", [route("/dashboard", "routes/dashboard/overview.tsx")]),
+
   // All the main logged-in routes
   layout("layout/app.tsx", [
     ...prefix("/machines", [
