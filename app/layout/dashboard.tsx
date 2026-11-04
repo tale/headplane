@@ -14,41 +14,41 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const config = context.get(appConfigContext);
 
+  let principal;
   try {
-    const { principal } = await context.get(requestApiContext)(request);
-
-    // Users with full ui_access (admin and above) belong in the admin shell.
-    if (auth.can(principal, Capabilities.ui_access)) {
-      return redirect("/machines");
-    }
-
-    // Members without read_own_machines have truly no access.
-    if (!auth.can(principal, Capabilities.read_own_machines)) {
-      return redirect("/login", {
-        headers: { "Set-Cookie": await auth.destroySession(request) },
-      });
-    }
-
-    const user = isUserPrincipal(principal)
-      ? {
-          email: principal.profile.email,
-          name: principal.profile.name,
-          picture: principal.profile.picture,
-          subject: principal.user.subject,
-          username: principal.profile.username,
-        }
-      : { name: (principal as { displayName: string }).displayName, subject: "api_key" as const };
-
-    return {
-      user,
-      baseUrl: config.headscale.public_url ?? config.headscale.url,
-      isDebug: config.debug,
-    };
+    ({ principal } = await context.get(requestApiContext)(request));
   } catch {
+    // Not authenticated (or the session is invalid): clear it and sign in again.
     return redirect("/login", {
       headers: { "Set-Cookie": await auth.destroySession(request) },
     });
   }
+
+  // Users with full ui_access (admin and above) belong in the admin shell.
+  if (auth.can(principal, Capabilities.ui_access)) {
+    return redirect("/machines");
+  }
+
+  // Signed in, but not entitled to the portal: send them home and keep the session.
+  if (!auth.can(principal, Capabilities.read_own_machines)) {
+    return redirect("/");
+  }
+
+  const user = isUserPrincipal(principal)
+    ? {
+        email: principal.profile.email,
+        name: principal.profile.name,
+        picture: principal.profile.picture,
+        subject: principal.user.subject,
+        username: principal.profile.username,
+      }
+    : { name: (principal as { displayName: string }).displayName, subject: "api_key" as const };
+
+  return {
+    user,
+    baseUrl: config.headscale.public_url ?? config.headscale.url,
+    isDebug: config.debug,
+  };
 }
 
 // No nav tabs visible to members — all access flags are false.
