@@ -78,6 +78,7 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     {
       initialRole: claimedRole ?? config.oidc?.default_role,
       syncRole: claimedRole,
+      bootstrapOwner: !config.oidc?.role_claim,
     },
   );
 

@@ -170,6 +170,10 @@ sign-in, so a change at the provider reaches Headplane the next time that
 person signs in. `default_role` only applies when an account is created.
 Neither setting can grant or remove the owner role.
 
+With `oidc.role_claim` set, nobody is made owner on first sign-in either: roles
+come from the identity provider, so every instance of Headplane in front of the
+same Headscale gives a person the same role, whoever signs in first.
+
 ## Signing out of the provider
 
 By default, signing out only ends the Headplane session, and the provider still
