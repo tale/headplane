@@ -56,12 +56,30 @@ export const userAction = createAction({
       async handler(input, { api, auth, refresh }) {
         await api.users.delete(input.headscale_user_id);
         for (const user of await auth.listUsers()) {
+          // A Headplane account for a deleted Headscale user goes with it;
+          // unlinking is only left for accounts it couldn't delete.
           if (user.headscale_user_id === input.headscale_user_id) {
-            await auth.unlinkHeadscaleUser(user.id);
+            if (!(await auth.deleteUser(user.id))) {
+              await auth.unlinkHeadscaleUser(user.id);
+            }
           }
         }
 
         await refresh();
+        return ok("User deleted");
+      },
+    },
+    delete_panel: {
+      fields: { headplane_user_id: id },
+      async handler(input, { auth, principal }) {
+        if (isUserPrincipal(principal) && principal.user.id === input.headplane_user_id) {
+          throw new ActionError("You cannot delete yourself.", 400);
+        }
+
+        if (!(await auth.deleteUser(input.headplane_user_id))) {
+          throw new ActionError("This user cannot be deleted.", 400);
+        }
+
         return ok("User deleted");
       },
     },

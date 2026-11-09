@@ -106,3 +106,12 @@ the **Users** page.
 Other roles can't pick a user for themselves, because a link grants access to
 that user's machines and auth keys. Until someone links them, their home page
 asks them to contact an administrator.
+
+### Removing accounts
+
+Deleting a Headscale user from the **Users** page deletes the Headplane account
+linked to it too, and signs it out. Only the owner is spared and just unlinked.
+
+An account with no Headscale user behind it can be deleted on its own, from the
+menu on its row. This removes only the Headplane account and signs it out; the
+account at the identity provider stays.

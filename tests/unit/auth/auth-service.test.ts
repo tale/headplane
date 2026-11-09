@@ -134,6 +134,29 @@ describe("linkHeadscaleUser", () => {
   });
 });
 
+describe("deleteUser", () => {
+  test("removes the user and signs them out", async () => {
+    const { auth } = createTestAuth();
+    await auth.findOrCreateUser("sub-owner");
+    const id = await auth.findOrCreateUser("sub-guest", { name: "Guest" });
+    const cookie = await auth.createOidcSession(id, { name: "Guest" });
+    const request = new Request("http://localhost/", { headers: { Cookie: cookie.split(";")[0] } });
+
+    expect(await auth.deleteUser(id)).toBe(true);
+
+    expect((await auth.listUsers()).map((u) => u.sub)).toEqual(["sub-owner"]);
+    await expect(auth.require(request)).rejects.toBeDefined();
+  });
+
+  test("keeps the owner", async () => {
+    const { auth } = createTestAuth();
+    const owner = await auth.findOrCreateUser("sub-owner");
+
+    expect(await auth.deleteUser(owner)).toBe(false);
+    expect(await auth.listUsers()).toHaveLength(1);
+  });
+});
+
 describe("reassignUser", () => {
   let auth: AuthService;
 
