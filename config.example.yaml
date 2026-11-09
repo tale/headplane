@@ -257,6 +257,10 @@ integration:
 #   # `<server.base_url>/admin/login?s=logout` page.
 #   post_logout_redirect_uri: ""
 #
+#   # Optional. Where the Users page sends admins to manage users at the
+#   # identity provider. Defaults to the issuer.
+#   manage_url: ""
+#
 #   # The authentication method to use when communicating with the token endpoint.
 #   # This is fully optional and Headplane will attempt to auto-detect the best
 #   # method and fall back to `client_secret_basic` if unsure.
