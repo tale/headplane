@@ -16,8 +16,8 @@ export default function DeleteUser({ user, machines, isOpen, setIsOpen }: Delete
     <ActionDialog
       description={
         user.provider === "oidc"
-          ? "Deleted users can't be recovered. They sign in through your OIDC provider, so signing in again recreates them."
-          : "Deleted users can't be recovered."
+          ? "Deleted users can't be recovered. Their Headplane account is deleted with them and signed out; since they sign in through your OIDC provider, signing in again recreates both."
+          : "Deleted users can't be recovered. Their Headplane account is deleted with them and signed out."
       }
       fields={{ headscale_user_id: user.id }}
       intent="delete"
