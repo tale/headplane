@@ -39,6 +39,22 @@ describe("findOrCreateUser", () => {
     expect(role).toBe("owner");
   });
 
+  test("first created user keeps its initial role without owner bootstrap", async () => {
+    await auth.findOrCreateUser(
+      "sub-first",
+      { name: "First" },
+      { initialRole: "admin", bootstrapOwner: false },
+    );
+    const role = await auth.roleForSubject("sub-first");
+    expect(role).toBe("admin");
+  });
+
+  test("first created user without a role stays a member without owner bootstrap", async () => {
+    await auth.findOrCreateUser("sub-first", { name: "First" }, { bootstrapOwner: false });
+    const role = await auth.roleForSubject("sub-first");
+    expect(role).toBe("member");
+  });
+
   test("configured initial roles cannot grant owner", async () => {
     await auth.findOrCreateUser("sub-owner", { name: "Owner" });
     await auth.findOrCreateUser("sub-other", { name: "Other" }, { initialRole: "owner" });

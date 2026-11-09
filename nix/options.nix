@@ -459,7 +459,7 @@ in {
                   default = "member";
                   description = ''
                     Role assigned to newly created OIDC users after the first owner is bootstrapped.
-                    The owner role is reserved for the first-login bootstrap.
+                    The owner role is reserved for the first-login bootstrap, which doesn't run when role_claim is set.
                   '';
                 };
 

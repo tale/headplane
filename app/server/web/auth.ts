@@ -91,7 +91,7 @@ export interface AuthService {
   findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
-    options?: { initialRole?: string; syncRole?: string },
+    options?: { initialRole?: string; syncRole?: string; bootstrapOwner?: boolean },
   ): Promise<string>;
 
   linkHeadscaleUser(userId: string, headscaleUserId: string): Promise<boolean>;
@@ -592,7 +592,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
   async function findOrCreateUser(
     subject: string,
     profile?: { name?: string; email?: string; picture?: string },
-    options?: { initialRole?: string; syncRole?: string },
+    options?: { initialRole?: string; syncRole?: string; bootstrapOwner?: boolean },
   ): Promise<string> {
     const [existing] = await opts.db.select().from(users).where(eq(users.sub, subject)).limit(1);
 
@@ -625,6 +625,10 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       role: initialRole,
       caps: capsForRole(initialRole),
     });
+
+    if (options?.bootstrapOwner === false) {
+      return id;
+    }
 
     const [{ count }] = await opts.db.select({ count: sql<number>`count(*)` }).from(users);
 
