@@ -57,14 +57,16 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     redirectUri: redirect_uri,
   };
 
-  const result = await service.handleCallback(url.searchParams, flowState);
+  const allowedGroups = context.get(headscaleConfigContext).getOIDCConfig()?.allowedGroups ?? [];
+  const result = await service.handleCallback(url.searchParams, flowState, {
+    readGroups: allowedGroups.length > 0,
+  });
   if (!result.ok) {
     logOidcError("OIDC callback failed", result.error);
     return redirect("/login?s=error_auth_failed", { headers: { "Set-Cookie": clearState } });
   }
 
   const identity = result.value;
-  const allowedGroups = context.get(headscaleConfigContext).getOIDCConfig()?.allowedGroups ?? [];
   if (allowedGroups.length > 0 && identity.groups === undefined) {
     log.warn("auth", "Not checking oidc.allowed_groups: no groups claim for %s", identity.subject);
   }

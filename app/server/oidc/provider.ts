@@ -101,6 +101,7 @@ export interface OidcService {
   handleCallback(
     callbackParams: URLSearchParams,
     flowState: OidcFlowState,
+    options?: OidcCallbackOptions,
   ): Promise<Result<OidcIdentity, OidcError>>;
 
   buildEndSessionUrl(idToken?: string): string | undefined;
@@ -148,6 +149,22 @@ interface WeakRsaContext {
   alg: "RS256" | "RS384" | "RS512";
   decoded: DecodedJwtParts;
   candidateKeys: Array<JsonWebKey & { kid?: string }>;
+}
+
+export interface OidcCallbackOptions {
+  // Always asks userinfo, whose groups win over the ID token's, as in Headscale.
+  readGroups?: boolean;
+}
+
+// Headscale also accepts a single group sent as a plain string.
+function readGroups(value: unknown): string[] | undefined {
+  if (typeof value === "string") {
+    return value ? [value] : undefined;
+  }
+
+  return Array.isArray(value)
+    ? value.filter((group): group is string => typeof group === "string")
+    : undefined;
 }
 
 export function createOidcService(initialConfig: OidcConfig): OidcService {
@@ -344,6 +361,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
   async function handleCallback(
     callbackParams: URLSearchParams,
     flowState: OidcFlowState,
+    options: OidcCallbackOptions = {},
   ): Promise<Result<OidcIdentity, OidcError>> {
     const resolved = await discover();
     if (!resolved.ok) {
@@ -399,7 +417,12 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     }
 
     const claims = verifyResult.value;
-    const enriched = await enrichWithUserInfo(resolved.value, tokens.access_token, claims);
+    const enriched = await enrichWithUserInfo(
+      resolved.value,
+      tokens.access_token,
+      claims,
+      options.readGroups === true,
+    );
 
     if (!resolveSubject(enriched)) {
       return err({
@@ -704,6 +727,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
     ep: ResolvedEndpoints,
     accessToken: string,
     claims: OidcClaims,
+    needsGroupsEnrichment: boolean,
   ): Promise<OidcClaims> {
     const needsEnrichment =
       !claims.name && !claims.email && !claims.picture && !!resolveSubject(claims);
@@ -714,7 +738,8 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       (!needsEnrichment &&
         !needsSubjectEnrichment &&
         !needsRoleEnrichment &&
-        !needsPictureEnrichment) ||
+        !needsPictureEnrichment &&
+        !needsGroupsEnrichment) ||
       !ep.userinfoEndpoint
     ) {
       return claims;
@@ -752,7 +777,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
         ...(config.roleClaim && roleClaimValue !== undefined
           ? { [config.roleClaim]: roleClaimValue }
           : {}),
-        groups: claims.groups ?? userInfo.groups,
+        groups: userInfo.groups ?? claims.groups,
         name: claims.name ?? (userInfo.name as string | undefined),
         given_name: claims.given_name ?? (userInfo.given_name as string | undefined),
         family_name: claims.family_name ?? (userInfo.family_name as string | undefined),
@@ -805,9 +830,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       email: claims.email,
       picture,
       role: config.roleClaim ? resolveRoleClaim(claims, config.roleClaim) : undefined,
-      groups: Array.isArray(claims.groups)
-        ? claims.groups.filter((g): g is string => typeof g === "string")
-        : undefined,
+      groups: readGroups(claims.groups),
       idToken,
     };
   }
