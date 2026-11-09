@@ -5,7 +5,8 @@ import cn from "~/utils/cn";
 
 export function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
-    <div className="-mx-2 overflow-x-auto">
+    // Positioned so sr-only headers scroll with the table instead of widening the page.
+    <div className="relative -mx-2 overflow-x-auto">
       <table {...props} className={cn("w-full min-w-160 border-collapse text-sm", className)} />
     </div>
   );
