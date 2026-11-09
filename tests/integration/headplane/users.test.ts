@@ -115,14 +115,26 @@ describe("renaming users", () => {
 });
 
 describe("deleting users", () => {
-  test("unlinks the Headplane accounts that pointed at the user", async () => {
+  test("deletes the Headplane account that pointed at the user", async () => {
     const user = await tailnet.user(name("leo"));
     const member = await app.signIn("member");
     await app.ctx.auth.linkHeadscaleUser(member.userId, user.id);
 
     expect(statusOf(await act({ intent: "delete", headscale_user_id: user.id }))).toBe(200);
     expect(await headscaleUser(name("leo"))).toBeUndefined();
-    expect((await headplaneUser(member.userId))?.headscale_user_id).toBeNull();
+    expect(await headplaneUser(member.userId)).toBeUndefined();
+    await expect(app.ctx.auth.require(app.request("/", { as: member.cookie }))).rejects.toThrow();
+  });
+
+  test("only unlinks the owner, whose account can't be deleted", async () => {
+    const user = await tailnet.user(name("olga"));
+    await app.ctx.auth.linkHeadscaleUser(owner.userId, user.id);
+
+    expect(statusOf(await act({ intent: "delete", headscale_user_id: user.id }))).toBe(200);
+    expect(await headplaneUser(owner.userId)).toMatchObject({
+      role: "owner",
+      headscale_user_id: null,
+    });
   });
 
   test("keeps a user who still has machines, and their link", async () => {
@@ -136,6 +148,39 @@ describe("deleting users", () => {
     expect(statusOf(result)).toBe(400);
     expect(await headscaleUser(name("mallory"))).toBeDefined();
     expect((await headplaneUser(member.userId))?.headscale_user_id).toBe(user.id);
+  });
+});
+
+describe("deleting Headplane accounts", () => {
+  test("removes an account with no Headscale user and ends its session", async () => {
+    const member = await app.signIn("member");
+
+    expect(statusOf(await act({ intent: "delete_panel", headplane_user_id: member.userId }))).toBe(
+      200,
+    );
+    expect(await headplaneUser(member.userId)).toBeUndefined();
+    await expect(app.ctx.auth.require(app.request("/", { as: member.cookie }))).rejects.toThrow();
+  });
+
+  test("refuses an account whose Headscale user still exists", async () => {
+    const user = await tailnet.user(name("nina"));
+    const member = await app.signIn("member");
+    await app.ctx.auth.linkHeadscaleUser(member.userId, user.id);
+
+    const result = await act({ intent: "delete_panel", headplane_user_id: member.userId });
+
+    expect(statusOf(result)).toBe(400);
+    expect((await headplaneUser(member.userId))?.headscale_user_id).toBe(user.id);
+  });
+
+  test("removes an account whose Headscale user is already gone", async () => {
+    const member = await app.signIn("member");
+    await app.ctx.auth.linkHeadscaleUser(member.userId, "99999");
+
+    expect(statusOf(await act({ intent: "delete_panel", headplane_user_id: member.userId }))).toBe(
+      200,
+    );
+    expect(await headplaneUser(member.userId)).toBeUndefined();
   });
 });
 
