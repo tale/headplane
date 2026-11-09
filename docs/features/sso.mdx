@@ -172,9 +172,10 @@ Neither setting can grant or remove the owner role.
 
 With `oidc.role_claim` set, nobody is made owner on first sign-in either: roles
 come from the identity provider, so every instance of Headplane in front of the
-same Headscale gives a person the same role, whoever signs in first. Such an
-installation has no owner: admins can do everything else, but nobody can
-transfer ownership.
+same Headscale gives a person the same role, whoever signs in first. A new
+installation set up this way has no owner: admins can do everything else, but
+nobody can transfer ownership. An installation that already has an owner keeps
+them.
 
 ## Signing out of the provider
 
