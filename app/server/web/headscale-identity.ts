@@ -54,3 +54,13 @@ export function ownsHeadscaleUser(principal: Principal, user: User): boolean {
     principal.user.headscaleUserId === user.id || getOidcSubject(user) === principal.user.subject
   );
 }
+
+/**
+ * Headscale's oidc.allowed_groups gate: when set, sign-in needs at least one
+ * of the groups, mirroring who Headscale itself lets into the tailnet. A token
+ * without the claim skips the gate: the default scope doesn't request groups,
+ * so enforcing it would refuse everyone.
+ */
+export function allowedByGroups(groups: string[] | undefined, allowed: string[]): boolean {
+  return allowed.length === 0 || groups === undefined || groups.some((g) => allowed.includes(g));
+}

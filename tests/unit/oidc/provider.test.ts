@@ -925,6 +925,16 @@ describe("identity resolution", () => {
     expect(result.ok && result.value.role).toBe("admin");
   });
 
+  test("reads groups from the groups claim", async () => {
+    const result = await flowWithClaims({ sub: "u1", groups: ["mesh", 7, "admin"] });
+    expect(result.ok && result.value.groups).toEqual(["mesh", "admin"]);
+  });
+
+  test("leaves groups unset without the groups claim", async () => {
+    const result = await flowWithClaims({ sub: "u1" });
+    expect(result.ok && result.value.groups).toBeUndefined();
+  });
+
   test("fetches userinfo when configured role claim is missing from ID token", async () => {
     const svc = createOidcService(testConfig({ usePkce: false, roleClaim: "headplane_role" }));
     const flowResult = await svc.startFlow();

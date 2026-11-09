@@ -54,6 +54,7 @@ export interface OidcIdentity {
   email?: string;
   picture?: string;
   role?: string;
+  groups?: string[];
   idToken?: string;
 }
 
@@ -751,6 +752,7 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
         ...(config.roleClaim && roleClaimValue !== undefined
           ? { [config.roleClaim]: roleClaimValue }
           : {}),
+        groups: claims.groups ?? userInfo.groups,
         name: claims.name ?? (userInfo.name as string | undefined),
         given_name: claims.given_name ?? (userInfo.given_name as string | undefined),
         family_name: claims.family_name ?? (userInfo.family_name as string | undefined),
@@ -803,6 +805,9 @@ export function createOidcService(initialConfig: OidcConfig): OidcService {
       email: claims.email,
       picture,
       role: config.roleClaim ? resolveRoleClaim(claims, config.roleClaim) : undefined,
+      groups: Array.isArray(claims.groups)
+        ? claims.groups.filter((g): g is string => typeof g === "string")
+        : undefined,
       idToken,
     };
   }

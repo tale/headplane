@@ -1,7 +1,11 @@
 import { describe, expect, test } from "vitest";
 
 import type { Principal } from "~/server/web/auth";
-import { findHeadscaleUserBySubject, ownsHeadscaleUser } from "~/server/web/headscale-identity";
+import {
+  allowedByGroups,
+  findHeadscaleUserBySubject,
+  ownsHeadscaleUser,
+} from "~/server/web/headscale-identity";
 import type { User } from "~/types/User";
 
 function makeUser(overrides: Partial<User> = {}): User {
@@ -102,5 +106,21 @@ describe("findHeadscaleUserBySubject", () => {
     expect(findHeadscaleUserBySubject([oidcUser, otherOidc], "sub-2", "alice@example.com")).toBe(
       otherOidc,
     );
+  });
+});
+
+describe("allowedByGroups", () => {
+  test("lets everyone in when no groups are required", () => {
+    expect(allowedByGroups([], [])).toBe(true);
+  });
+
+  test("needs any one of the required groups", () => {
+    expect(allowedByGroups(["home", "mesh"], ["mesh", "admin"])).toBe(true);
+    expect(allowedByGroups(["home"], ["mesh", "admin"])).toBe(false);
+    expect(allowedByGroups([], ["mesh"])).toBe(false);
+  });
+
+  test("skips the check without a groups claim", () => {
+    expect(allowedByGroups(undefined, ["mesh"])).toBe(true);
   });
 });
