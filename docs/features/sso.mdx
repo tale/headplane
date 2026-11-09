@@ -61,9 +61,9 @@ use `client_secret_path`, as described in
 
 ### 3. Sign in
 
-Restart Headplane and choose **Continue with SSO** on the sign-in page. The
-first person to sign in becomes the owner, so whoever set it up should sign in
-before sharing the link.
+Restart Headplane and choose **Continue with SSO** on the sign-in page. Unless
+`oidc.role_claim` is set, the first person to sign in becomes the owner, so
+whoever set it up should sign in before sharing the link.
 
 The sign-in page keeps its API key form alongside SSO. With
 `oidc.disable_api_key_login: true`, it sends people straight to the provider
@@ -172,7 +172,9 @@ Neither setting can grant or remove the owner role.
 
 With `oidc.role_claim` set, nobody is made owner on first sign-in either: roles
 come from the identity provider, so every instance of Headplane in front of the
-same Headscale gives a person the same role, whoever signs in first.
+same Headscale gives a person the same role, whoever signs in first. Such an
+installation has no owner: admins can do everything else, but nobody can
+transfer ownership.
 
 ## Signing out of the provider
 
