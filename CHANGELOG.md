@@ -34,6 +34,7 @@
 - When the Headscale configuration is writable but no integration is set up to restart Headscale, the DNS and sign-in restrictions pages now say that changes only take effect once Headscale restarts.
 - The **Rules** tab on the Access Control page can now edit grants and auto approvers. Grants set ports and protocols separately from the destination, can route traffic through tagged subnet routers or exit nodes with `via`, and keep app capabilities as written. Grants need Headscale 0.29 or newer. Auto approvers cover both subnet routes and exit nodes.
 - The Access Control file editor now formats HuJSON, preserves comments while formatting, and shows syntax errors before an invalid policy can be saved.
+- Single sign-on now follows Headscale's `oidc.allowed_groups` when the provider sends a `groups` claim: people in none of those groups are refused at sign-in. Without the claim Headplane logs a warning and skips the check, so add `groups` to `oidc.scope` to enforce it.
 
 ## Fixes
 
