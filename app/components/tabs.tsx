@@ -53,7 +53,8 @@ function Tab({
       className={cn(
         "shrink-0 pl-2 pr-3 py-2.5 text-nowrap",
         "data-[selected]:bg-subtle",
-        "focus-ring z-10",
+        // Inset, since the scrolling row clips anything outside it.
+        "focus-ring focus-visible:-outline-offset-2 z-10",
         "border-r border-line",
         "first:rounded-tl-md last:rounded-tr-md last:border-r-0",
         className,
