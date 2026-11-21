@@ -1,7 +1,7 @@
 [tools]
-go = "1.27.2"
+go = "1.27.3"
 pnpm = "10.4.0"
-node = "24.2"
+node = "24.22.1"
 
 [tasks.build-nixos-docs]
 alias = ["nixos-docs"]
