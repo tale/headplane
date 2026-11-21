@@ -1,0 +1,18 @@
+headplane:
+  config:
+    headscale:
+      url: "https://vpn.test.example.com"
+  oidc:
+    # client_id: "test-headplane-client-id"
+    enabled: true
+    issuer: "http://mock-oidc-server"
+    redirect_uri: "https://headplane.test.example.com/admin/oidc/callback"
+headscale:
+  config:
+    server_url: "https://vpn.test.example.com"
+    dns:
+      base_domain: "test.vpn"
+  oidc:
+    client_id: "test-headscale-client-id"
+    enabled: true
+    issuer: "http://mock-oidc-server"
