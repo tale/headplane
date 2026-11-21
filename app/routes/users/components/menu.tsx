@@ -3,6 +3,7 @@ import { useState } from "react";
 
 import { Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger } from "~/components/menu";
 
+import DeletePanelUser from "../dialogs/delete-panel-user";
 import Delete from "../dialogs/delete-user";
 import LinkUser from "../dialogs/link-user";
 import Reassign from "../dialogs/reassign-user";
@@ -21,7 +22,7 @@ interface MenuProps {
   policyHasComments?: boolean;
 }
 
-type Modal = "delete" | "reassign" | "link" | "transfer" | "groups" | null;
+type Modal = "delete" | "delete_panel" | "reassign" | "link" | "transfer" | "groups" | null;
 
 export default function UserMenu({
   user,
@@ -52,6 +53,16 @@ export default function UserMenu({
             if (!isOpen) setModal(null);
           }}
           user={user.linkedHeadscaleUser}
+        />
+      )}
+      {modal === "delete_panel" && (
+        <DeletePanelUser
+          displayName={displayName}
+          headplaneUserId={user.id}
+          isOpen={modal === "delete_panel"}
+          setIsOpen={(isOpen) => {
+            if (!isOpen) setModal(null);
+          }}
         />
       )}
       {modal === "reassign" && (
@@ -130,6 +141,14 @@ export default function UserMenu({
             <>
               <MenuSeparator />
               <MenuItem variant="danger" onClick={() => setModal("delete")}>
+                Delete
+              </MenuItem>
+            </>
+          )}
+          {!user.linkedHeadscaleUser && !isSelf && user.role !== "owner" && (
+            <>
+              <MenuSeparator />
+              <MenuItem variant="danger" onClick={() => setModal("delete_panel")}>
                 Delete
               </MenuItem>
             </>
