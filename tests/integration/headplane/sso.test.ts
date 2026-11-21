@@ -107,6 +107,14 @@ describe.for(testedVersions())("single sign-on with Headscale %s", (version) => 
     expect((await tailnet.api.users.list({ id: user.id }))[0].name).toBe(user.name);
   });
 
+  test("nobody becomes owner on first sign-in when roles come from a claim", async () => {
+    const fresh = await headplane({ role_claim: "headplane_role", default_role: "admin" });
+
+    const { principal } = await signIn("alice@allowed.test", fresh);
+
+    expect(principal.user.role).toBe("admin");
+  });
+
   test("signing out ends the session here and at the provider when asked to", async () => {
     const endSession = `${HEADPLANE_URL}/provider-logout`;
     const withEndSession = await headplane({

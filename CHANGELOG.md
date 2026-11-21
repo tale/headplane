@@ -7,6 +7,7 @@
 - Enabling more than one integration now turns them all off, with an error in the log. Keep one.
 - After signing in with single sign-on, only owners, admins and IT admins can pick which Headscale user their account links to. Everyone else links automatically or is linked from the **Users** page.
 - Builds no longer read `__INTERNAL_PREFIX`. If a build used it to serve Headplane somewhere other than `/admin`, set `server.base_path` to that path instead.
+- With `oidc.role_claim` set, the first person to sign in no longer becomes the owner, so a new installation has no owner account and ownership can't be transferred. Roles come from the identity provider alone, and every Headplane in front of the same Headscale gives a person the same role.
 
 ## Changes
 

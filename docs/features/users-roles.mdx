@@ -31,7 +31,7 @@ and auth keys are theirs.
 
 | Role              | Can do                                                                                         |
 | ----------------- | ---------------------------------------------------------------------------------------------- |
-| **Owner**         | Everything, including transferring ownership. There's exactly one owner.                       |
+| **Owner**         | Everything, including transferring ownership. There's at most one owner.                       |
 | **Admin**         | Everything except transferring ownership.                                                      |
 | **Network Admin** | Manage ACLs, DNS and network settings, view machines and users, create auth keys.              |
 | **IT Admin**      | Manage machines, users, settings and sign-in restrictions. View, but not change, ACLs and DNS. |
@@ -46,8 +46,8 @@ and auth keys are theirs.
   caption="Members get a page for connecting their devices"
 />
 
-The first person to sign in becomes the owner. Everyone after that starts as a
-member, until an owner, admin or IT admin changes their role on the **Users**
+The first person to sign in becomes the owner, unless `oidc.role_claim` is set.
+Everyone after that starts as a member, until an owner, admin or IT admin changes their role on the **Users**
 page.
 With SSO, new accounts can start with a different role, or take theirs from
 the identity provider. See [Roles from the identity provider](/features/sso#roles-from-the-identity-provider).

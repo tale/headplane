@@ -267,7 +267,7 @@ _Default:_ `false`
 ## settings.oidc.default_role
 
 _Description:_ Role assigned to newly created OIDC users after the first owner is bootstrapped.
-The owner role is reserved for the first-login bootstrap.
+The owner role is reserved for the first-login bootstrap, which doesn't run when role_claim is set.
 
 _Type:_ one of "admin", "network_admin", "it_admin", "auditor", "viewer", "member"
 

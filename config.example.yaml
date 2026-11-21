@@ -300,7 +300,8 @@ integration:
 #   # This is useful with Headscale's OIDC allowed_domains / allowed_groups
 #   # restrictions when every permitted SSO user should receive the same
 #   # Headplane permissions. Valid values: admin, network_admin, it_admin,
-#   # auditor, viewer, member. The owner role is only granted to the first user.
+#   # auditor, viewer, member. The owner role is only granted to the first user,
+#   # and to nobody when role_claim is set.
 #   default_role: "member"
 #
 #   # Optional OIDC claim to read a Headplane role from when creating or syncing a user.
