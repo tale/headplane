@@ -51,7 +51,8 @@ export async function loader({ request, context, url }: Route.LoaderArgs) {
     oidcService &&
     config.oidc?.disable_api_key_login &&
     oidcStatus?.state === "ready" &&
-    urlState !== "logout"
+    urlState !== "logout" &&
+    !urlState?.startsWith("error_")
   ) {
     return redirect("/oidc/start");
   }

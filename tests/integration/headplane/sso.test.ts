@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
+import { loader as login } from "~/routes/auth/login/page";
 import { action as logout } from "~/routes/auth/logout";
 import { loader as oidcCallback } from "~/routes/auth/oidc-callback";
 import { loader as oidcStart } from "~/routes/auth/oidc-start";
@@ -105,6 +106,15 @@ describe.for(testedVersions())("single sign-on with Headscale %s", (version) => 
       data: { errors: { form: "Users managed by OIDC can't be renamed." } },
     });
     expect((await tailnet.api.users.list({ id: user.id }))[0].name).toBe(user.name);
+  });
+
+  test("a refused sign-in stays on the login page when SSO is the only way in", async () => {
+    const ssoOnly = await headplane({ disable_api_key_login: true });
+
+    expect(statusOf(await ssoOnly.call(login, "/login"))).toBe(302);
+    expect(statusOf(await ssoOnly.call(login, "/login", { search: "?s=error_not_allowed" }))).toBe(
+      200,
+    );
   });
 
   test("signing out ends the session here and at the provider when asked to", async () => {

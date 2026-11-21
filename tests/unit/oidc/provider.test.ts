@@ -882,6 +882,7 @@ describe("identity resolution", () => {
   async function flowWithClaims(
     claims: Record<string, unknown>,
     configOverrides?: Partial<OidcConfig>,
+    { userinfo, readGroups }: { userinfo?: Record<string, unknown>; readGroups?: boolean } = {},
   ) {
     const svc = createOidcService(testConfig({ usePkce: false, ...configOverrides }));
     const flowResult = await svc.startFlow();
@@ -897,9 +898,14 @@ describe("identity resolution", () => {
       res.end(JSON.stringify({ access_token: "at", id_token: idToken, token_type: "Bearer" }));
     };
 
-    userinfoHandler = undefined;
+    userinfoHandler = userinfo
+      ? (_req, res) => {
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify(userinfo));
+        }
+      : undefined;
     const params = new URLSearchParams({ code: "c", state: flowState.state });
-    return svc.handleCallback(params, flowState);
+    return svc.handleCallback(params, flowState, { readGroups });
   }
 
   test("uses name claim directly", async () => {
@@ -923,6 +929,46 @@ describe("identity resolution", () => {
     );
 
     expect(result.ok && result.value.role).toBe("admin");
+  });
+
+  test("reads groups from the groups claim", async () => {
+    const result = await flowWithClaims({ sub: "u1", groups: ["mesh", 7, "admin"] });
+    expect(result.ok && result.value.groups).toEqual(["mesh", "admin"]);
+  });
+
+  test("treats a single string groups claim as one group", async () => {
+    const result = await flowWithClaims({ sub: "u1", groups: "mesh" });
+    expect(result.ok && result.value.groups).toEqual(["mesh"]);
+  });
+
+  const complete = { sub: "u1", name: "A", email: "a@b.c", picture: "https://b.c/a.png" };
+
+  test("prefers userinfo groups over the ID token when groups are needed", async () => {
+    const result = await flowWithClaims(
+      { ...complete, groups: ["from-token"] },
+      {},
+      { userinfo: { groups: "from-userinfo" }, readGroups: true },
+    );
+    expect(result.ok && result.value.groups).toEqual(["from-userinfo"]);
+  });
+
+  test("keeps ID token groups when userinfo has none", async () => {
+    const result = await flowWithClaims(
+      { ...complete, groups: ["from-token"] },
+      {},
+      { userinfo: {}, readGroups: true },
+    );
+    expect(result.ok && result.value.groups).toEqual(["from-token"]);
+  });
+
+  test("doesn't ask userinfo for groups nobody checks", async () => {
+    const result = await flowWithClaims(complete, {}, { userinfo: { groups: ["mesh"] } });
+    expect(result.ok && result.value.groups).toBeUndefined();
+  });
+
+  test("leaves groups unset without the groups claim", async () => {
+    const result = await flowWithClaims({ sub: "u1" });
+    expect(result.ok && result.value.groups).toBeUndefined();
   });
 
   test("fetches userinfo when configured role claim is missing from ID token", async () => {

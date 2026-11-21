@@ -44,6 +44,13 @@ function getErrorMessage(code: string) {
         </p>
       );
 
+    case "error_not_allowed":
+      return (
+        <p>
+          Your account is not in a group that may use this network. Ask an administrator for access.
+        </p>
+      );
+
     default:
       return <p>An unknown error occurred during OIDC authentication. Please try again later.</p>;
   }
