@@ -624,6 +624,7 @@ export function createAuthService(opts: AuthServiceOptions): AuthService {
       picture: profile?.picture,
       role: initialRole,
       caps: capsForRole(initialRole),
+      last_login_at: new Date(),
     });
 
     const [{ count }] = await opts.db.select({ count: sql<number>`count(*)` }).from(users);
