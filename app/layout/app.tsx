@@ -41,6 +41,11 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
   return false;
 };
 
+// Sessions already end when their key expires, so this only catches keys
+// revoked early. Checking once a minute keeps it off every page load.
+const KEY_CHECK_INTERVAL = 60_000;
+const keyCheckedAt = new Map<string, number>();
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const auth = context.get(authContext);
   const config = context.get(appConfigContext);
@@ -62,23 +67,32 @@ export async function loader({ request, context }: Route.LoaderArgs) {
         }
       : { name: principal.displayName, subject: "api_key" };
 
-    // MARK: The session should stay valid if Headscale isn't healthy
-    const isHealthy = await headscale.health();
-    if (isHealthy) {
-      try {
-        await api.apiKeys.list();
-      } catch (error) {
-        if (isDataUnauthorizedError(error)) {
-          const displayName = isUserPrincipal(principal)
-            ? principal.profile.name
-            : principal.displayName;
-          log.warn("auth", "Logging out %s due to expired API key", displayName);
-          return redirect("/login", {
-            headers: {
-              "Set-Cookie": await auth.destroySession(request),
+    const apiKey = auth.getHeadscaleApiKey(principal);
+    const isKeyRecentlyChecked = Date.now() - (keyCheckedAt.get(apiKey) ?? 0) < KEY_CHECK_INTERVAL;
+    const [isHealthy, keyError] = await Promise.all([
+      headscale.health(),
+      isKeyRecentlyChecked
+        ? undefined
+        : api.apiKeys.list().then(
+            () => {
+              keyCheckedAt.set(apiKey, Date.now());
             },
-          });
-        }
+            (error: unknown) => error,
+          ),
+    ]);
+
+    // MARK: The session should stay valid if Headscale isn't healthy
+    if (isHealthy) {
+      if (isDataUnauthorizedError(keyError)) {
+        const displayName = isUserPrincipal(principal)
+          ? principal.profile.name
+          : principal.displayName;
+        log.warn("auth", "Logging out %s due to expired API key", displayName);
+        return redirect("/login", {
+          headers: {
+            "Set-Cookie": await auth.destroySession(request),
+          },
+        });
       }
 
       // Self-heal: if the linked Headscale user was deleted, clear the
