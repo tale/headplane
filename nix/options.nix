@@ -454,6 +454,7 @@ in {
                     "it_admin"
                     "auditor"
                     "viewer"
+                    "user"
                     "member"
                   ];
                   default = "member";

@@ -17,6 +17,8 @@ export const Capabilities = {
   use_tags: 1 << 13,
   write_tailnet: 1 << 14,
   owner: 1 << 15,
+  read_own_machines: 1 << 17,
+  write_own_machines: 1 << 18,
 } as const;
 
 export const Roles = {
@@ -95,6 +97,9 @@ export const Roles = {
     Capabilities.read_machines |
     Capabilities.read_users |
     Capabilities.generate_own_authkeys,
+
+  // Standard user: can view and manage their own linked nodes only.
+  user: Capabilities.read_own_machines | Capabilities.write_own_machines,
 
   // No access — user exists but has not been granted any role
   member: 0,
