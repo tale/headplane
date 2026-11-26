@@ -8,7 +8,7 @@ import { join } from "node:path";
 import tc from "testcontainers";
 import { stringify } from "yaml";
 
-import type { HeadscaleVersion } from "./versions";
+import type { HeadscaleImageVersion } from "./versions";
 
 export const HARNESS_LABEL = "me.tale.headplane.harness";
 const ALIAS = "headscale";
@@ -112,7 +112,7 @@ export async function freePort() {
 }
 
 export async function startHeadscale(options: {
-  version: HeadscaleVersion;
+  version: HeadscaleImageVersion;
   // Labels the container `${HARNESS_LABEL}=${id}`.
   id: string;
   network?: tc.StartedNetwork;

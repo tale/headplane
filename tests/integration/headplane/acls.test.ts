@@ -7,7 +7,7 @@ import { aclAction } from "~/routes/acls/acl-action";
 import { aclLoader } from "~/routes/acls/acl-loader";
 
 import { createTailnet, type Tailnet } from "../../harness/tailnet";
-import { testedVersions } from "../../harness/versions";
+import { GRANT_METADATA_VERSIONS, LATEST_HEADSCALE, testedVersions } from "../../harness/versions";
 import { waitFor } from "../../harness/wait";
 import { statusOf } from "../../support/app";
 
@@ -139,3 +139,53 @@ describe.for(testedVersions())("where Headscale %s keeps the policy", (version) 
     expect(await load()).toMatchObject({ policy: "", writable: false });
   });
 });
+
+// Run the patch boundary only in the latest-version job, not once per matrix entry.
+if (testedVersions().includes(LATEST_HEADSCALE)) {
+  for (const version of Object.values(GRANT_METADATA_VERSIONS)) {
+    const supportsMetadata = version === GRANT_METADATA_VERSIONS.first;
+
+    test(`grant descriptions are ${supportsMetadata ? "saved" : "rejected"} on Headscale ${version}`, async () => {
+      await using tailnet = await createTailnet({ version });
+      const app = await tailnet.headplane();
+      const { cookie } = await app.signIn("owner");
+      const load = () => app.call(aclLoader, "/acls", { as: cookie });
+      const save = (policy: string) =>
+        app.call(aclAction, "/acls", { as: cookie, form: { intent: "save", policy } });
+
+      const acls = [
+        { action: "accept", src: ["*"], dst: ["*:443"], "#description": "Allow HTTPS" },
+      ];
+      const grant = {
+        src: ["*"],
+        dst: ["*"],
+        app: { "example.com/cap/web": [{ "#description": "Part of the app payload" }] },
+      };
+      const original = JSON.stringify({ acls, grants: [grant] });
+      expect(statusOf(await save(original))).toBe(200);
+      expect(await load()).toMatchObject({
+        canEditGrants: true,
+        canEditGrantDescriptions: supportsMetadata,
+        policy: original,
+      });
+
+      const described = JSON.stringify({
+        acls,
+        grants: [{ ...grant, "#description": "Why web access is granted" }],
+      });
+      const result = await save(described);
+      if (supportsMetadata) {
+        expect(statusOf(result)).toBe(200);
+        expect(await load()).toMatchObject({ policy: described });
+        expect(statusOf(await save(original))).toBe(200);
+        expect(await load()).toMatchObject({ policy: original });
+      } else {
+        expect(statusOf(result)).toBe(400);
+        expect(result).toMatchObject({
+          data: { errors: { form: expect.stringContaining("need Headscale 0.29.4 or newer") } },
+        });
+        expect(await load()).toMatchObject({ policy: original });
+      }
+    });
+  }
+}

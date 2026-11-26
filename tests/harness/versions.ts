@@ -4,6 +4,12 @@ export const HEADSCALE_VERSIONS = ["0.27.1", "0.28.0", "0.29.5"] as const;
 export type HeadscaleVersion = (typeof HEADSCALE_VERSIONS)[number];
 export const LATEST_HEADSCALE = HEADSCALE_VERSIONS[HEADSCALE_VERSIONS.length - 1];
 
+// Only used by targeted policy tests, not by the full version matrix.
+export const GRANT_METADATA_VERSIONS = { before: "0.29.3", first: "0.29.4" } as const;
+export type HeadscaleImageVersion =
+  | HeadscaleVersion
+  | (typeof GRANT_METADATA_VERSIONS)[keyof typeof GRANT_METADATA_VERSIONS];
+
 export const TAILSCALE_IMAGE = "tailscale/tailscale:v1.104.1";
 export const DEX_IMAGE = "dexidp/dex:v2.41.1";
 // Stands in for the browser, on the Node version Headplane runs on.

@@ -24,12 +24,14 @@ export async function aclLoader({ request, context }: Route.LoaderArgs) {
   const headscaleLiveStore = context.get(headscaleLiveStoreContext);
 
   const principal = await auth.requireCapability(request, Capabilities.read_policy);
+  const { capabilities } = context.get(headscaleContext);
 
   const flags = {
     // Can the user write to the ACL policy
     access: auth.can(principal, Capabilities.write_policy),
     writable: false,
-    canEditGrants: context.get(headscaleContext).capabilities.policySupportsGrants,
+    canEditGrants: capabilities.policySupportsGrants,
+    canEditGrantDescriptions: capabilities.policySupportsGrantMetadata,
     policy: "",
     // Context for the visual editor; both are optional.
     users: [] as string[],

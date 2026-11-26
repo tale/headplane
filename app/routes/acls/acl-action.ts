@@ -41,6 +41,17 @@ export const aclAction = createAction({
           );
         }
 
+        if (
+          !capabilities.policySupportsGrantMetadata &&
+          parsed.policy.grants.some(({ extra }) =>
+            Object.keys(extra).some((key) => key.startsWith("#")),
+          )
+        ) {
+          throw new ActionError(
+            "Descriptions and other # metadata on grants need Headscale 0.29.4 or newer. Remove the # keys from the grant rules or upgrade Headscale.",
+          );
+        }
+
         try {
           await api.policy.set(input.policy);
         } catch (error) {

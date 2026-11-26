@@ -10,6 +10,7 @@ export const versions = {
     agent: "0.28",
     ssh: "0.28",
     grants: "0.29",
+    grantDescriptions: "0.29.4",
     example: "0.29.5",
   },
 };

@@ -2,14 +2,16 @@ import { useState } from "react";
 
 import Link from "~/components/link";
 import TokenList from "~/components/token-list";
-import { isValidTagName, type Grant } from "~/utils/acl-policy";
+import { isValidTagName, ruleDescription, withRuleDescription, type Grant } from "~/utils/acl-policy";
 
+import DescriptionField from "./description-field";
 import EditorDialog from "./editor-dialog";
 
 interface GrantDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   grant?: Grant;
+  canEditDescription: boolean;
   sources: string[];
   destinations: string[];
   onSave: (grant: Grant) => void;
@@ -22,11 +24,13 @@ export default function GrantDialog({
   isOpen,
   setIsOpen,
   grant,
+  canEditDescription,
   sources,
   destinations,
   onSave,
 }: GrantDialogProps) {
   const [draft, setDraft] = useState<Grant>(() => structuredClone(grant ?? EMPTY));
+  const [descriptionEdit, setDescriptionEdit] = useState<string>();
 
   // A grant that only carries app capabilities has no `ip`.
   const isInvalid =
@@ -49,7 +53,9 @@ export default function GrantDialog({
       }
       isDisabled={isInvalid}
       isOpen={isOpen}
-      onSubmit={() => onSave(draft)}
+      onSubmit={() => {
+        onSave(withRuleDescription(draft, canEditDescription ? descriptionEdit : undefined));
+      }}
       setIsOpen={setIsOpen}
       submitLabel={grant ? "Update grant" : "Add grant"}
       title={grant ? "Edit grant" : "New grant"}
@@ -91,6 +97,12 @@ export default function GrantDialog({
         validate={isValidTagName}
         values={draft.via}
       />
+      {canEditDescription ? (
+        <DescriptionField
+          onChange={setDescriptionEdit}
+          value={descriptionEdit ?? ruleDescription(draft) ?? ""}
+        />
+      ) : null}
     </EditorDialog>
   );
 }

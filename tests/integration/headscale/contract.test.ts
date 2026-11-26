@@ -33,15 +33,18 @@ async function rejection(promise: Promise<unknown>) {
 }
 
 function gte(version: HeadscaleVersion, target: string) {
-  const [a, b] = version.split(".").map(Number);
-  const [x, y] = target.split(".").map(Number);
-  return a !== x ? a > x : b >= y;
+  const [a, b, c] = version.split(".").map(Number);
+  const [x, y, z = 0] = target.split(".").map(Number);
+  if (a !== x) return a > x;
+  if (b !== y) return b > y;
+  return c >= z;
 }
 
 for (const version of testedVersions()) {
   const hasStableKeyIds = gte(version, "0.28.0");
   const canDisableExpiry = gte(version, "0.29.0");
   const acceptsGrants = gte(version, "0.29.0");
+  const acceptsGrantMetadata = gte(version, "0.29.4");
 
   // Tests use unique names so they can share one tailnet and run at once.
   describe.concurrent(`Headscale ${version} contract`, () => {
@@ -68,6 +71,7 @@ for (const version of testedVersions()) {
         registerKeyIncludesAuthReqPrefix: canDisableExpiry,
         keyExpiryCanBeDisabled: canDisableExpiry,
         policySupportsGrants: acceptsGrants,
+        policySupportsGrantMetadata: acceptsGrantMetadata,
       });
     });
 
@@ -502,8 +506,13 @@ for (const version of testedVersions()) {
       );
     });
 
-    test("a policy round-trips with its comments and trailing commas", async () => {
-      const policy = '// keep me\n{"acls":[{"action":"accept","src":["*"],"dst":["*:*"]}],}';
+    test("a policy round-trips with comments, trailing commas, and ACL descriptions", async () => {
+      const policy = `{
+        // keep me
+        "acls": [
+          {"action":"accept","src":["*"],"dst":["*:*"],"#description":"Why this rule exists"},
+        ],
+      }`;
       const saved = await tailnet.api.policy.set(policy);
       const read = await tailnet.api.policy.get();
 
@@ -525,6 +534,14 @@ for (const version of testedVersions()) {
       );
 
       expect(result).toMatch(acceptsGrants ? /^accepted$/ : /unknown field "grants"/);
+    });
+
+    test.runIf(acceptsGrantMetadata)("a grant description round-trips in the policy", async () => {
+      const policy = JSON.stringify({
+        grants: [{ src: ["*"], dst: ["*"], ip: ["tcp:443"], "#description": "Web access" }],
+      });
+      const saved = await tailnet.api.policy.set(policy);
+      expect(await tailnet.api.policy.get()).toEqual({ policy, updatedAt: saved.updatedAt });
     });
   });
 }
