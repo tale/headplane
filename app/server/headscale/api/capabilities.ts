@@ -56,6 +56,9 @@ export interface Capabilities {
    * 0.29.0.
    */
   readonly policySupportsGrants: boolean;
+
+  /** The policy accepts `#`-prefixed keys directly on grants. Introduced in 0.29.4. */
+  readonly policySupportsGrantMetadata: boolean;
 }
 
 export function capabilitiesFor(version: ServerVersion): Capabilities {
@@ -66,5 +69,6 @@ export function capabilitiesFor(version: ServerVersion): Capabilities {
     registerKeyIncludesAuthReqPrefix: gte(version, "0.29.0"),
     keyExpiryCanBeDisabled: gte(version, "0.29.0"),
     policySupportsGrants: gte(version, "0.29.0"),
+    policySupportsGrantMetadata: gte(version, "0.29.4"),
   };
 }

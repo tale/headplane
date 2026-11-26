@@ -12,9 +12,11 @@ import {
   parsePolicy,
   policyDestinations,
   policySources,
+  ruleDescription,
   serializePolicy,
   setUserGroups,
   withDefaultPort,
+  withRuleDescription,
 } from "~/utils/acl-policy";
 
 const POLICY = `{
@@ -146,6 +148,65 @@ describe("parsePolicy", () => {
     expect(serializePolicy(policy)).toContain(`"example.com/cap/web"`);
     expect(serializePolicy(policy)).not.toContain(`"ip"`);
   });
+
+  test("edits and removes ACL and grant descriptions without changing other policy values", () => {
+    const raw = {
+      acls: [{ action: "accept", src: ["*"], dst: ["*:443"], proto: "tcp", "#note": "keep" }],
+      grants: [
+        {
+          src: ["*"],
+          dst: ["tag:web"],
+          ip: ["tcp:443"],
+          via: ["tag:router"],
+          app: { "example.com/cap/web": [{ "#note": "keep" }] },
+        },
+      ],
+    };
+    const { policy } = parseOrThrow(
+      JSON.stringify({
+        ...raw,
+        grants: [{ ...raw.grants[0], "#description": "An existing explanation" }],
+      }),
+    );
+    const [acl] = policy.acls;
+    const [grant] = policy.grants;
+    expect(ruleDescription(acl)).toBeUndefined();
+    expect(ruleDescription(grant)).toBe("An existing explanation");
+
+    const description = "服务访问\nKeep the internal newline";
+    const next = {
+      ...policy,
+      acls: [withRuleDescription(acl, `  ${description}  `)],
+      grants: [withRuleDescription(grant, `  ${description}  `)],
+    };
+    const { policy: reloaded } = parseOrThrow(serializePolicy(next));
+    expect(ruleDescription(reloaded.acls[0])).toBe(description);
+    expect(ruleDescription(reloaded.grants[0])).toBe(description);
+    expect(ruleDescription(grant)).toBe("An existing explanation");
+
+    const cleared = serializePolicy({
+      ...reloaded,
+      acls: [withRuleDescription(reloaded.acls[0], "")],
+      grants: [withRuleDescription(reloaded.grants[0], " \n ")],
+    });
+    expect(JSON.parse(cleared)).toEqual(raw);
+  });
+
+  test.each([null, { text: "old metadata" }, "", " \t "])(
+    "preserves a description with no displayable text when left untouched (%j)",
+    (description) => {
+      const raw = {
+        acls: [{ action: "accept", src: ["*"], dst: ["*:*"], "#description": description }],
+      };
+      const { policy } = parseOrThrow(JSON.stringify(raw));
+      const [acl] = policy.acls;
+      expect(ruleDescription(acl)).toBeUndefined();
+      expect(JSON.parse(serializePolicy({ ...policy, acls: [withRuleDescription(acl)] }))).toEqual(
+        raw,
+      );
+      expect(ruleDescription(withRuleDescription(acl, "Replacement"))).toBe("Replacement");
+    },
+  );
 
   test("keeps rule actions and unknown rule keys as they were written", () => {
     const { policy } = parseOrThrow(`{

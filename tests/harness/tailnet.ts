@@ -7,10 +7,10 @@ import { createHeadscale } from "~/server/headscale/api";
 import { createTestApp, type TestAppOptions } from "../support/app";
 import { startHeadscale } from "./headscale";
 import { type NodeOptions, startNode, startPendingNode } from "./node";
-import { type HeadscaleVersion, LATEST_HEADSCALE } from "./versions";
+import { type HeadscaleImageVersion, LATEST_HEADSCALE } from "./versions";
 
 export interface TailnetOptions {
-  version?: HeadscaleVersion;
+  version?: HeadscaleImageVersion;
   policy?: string | object;
   headscaleConfig?: Record<string, unknown>;
   records?: Array<{ name: string; type: string; value: string }>;

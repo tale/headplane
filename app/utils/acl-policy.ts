@@ -258,6 +258,28 @@ export function serializePolicy(policy: Policy): string {
   return `${format(out, 0)}\n`;
 }
 
+const RULE_DESCRIPTION_KEY = "#description";
+
+export function ruleDescription(rule: AclRule | Grant): string | undefined {
+  const value = rule.extra[RULE_DESCRIPTION_KEY];
+  return typeof value === "string" && value.trim().length > 0 ? value : undefined;
+}
+
+export function withRuleDescription<T extends AclRule | Grant>(rule: T, description?: string): T {
+  // Undefined means the editor did not touch the field. Even an unusual value
+  // from a hand-written policy should survive an unrelated edit.
+  if (description === undefined) return rule;
+
+  const extra = { ...rule.extra };
+  const value = description.trim();
+  if (value.length > 0) {
+    extra[RULE_DESCRIPTION_KEY] = value;
+  } else {
+    delete extra[RULE_DESCRIPTION_KEY];
+  }
+  return { ...rule, extra };
+}
+
 // MARK: Catalog helpers
 
 export function policySources(policy: Policy, users: string[]): string[] {

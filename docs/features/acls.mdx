@@ -63,6 +63,12 @@ Adding or editing an entry opens a dialog where sources and destinations are
 built from chips. Every group, tag, host and Headscale user already known to
 the tailnet is offered as a suggestion.
 
+Add an optional **Description** to an access rule or grant to explain why it
+exists. It appears below the rule in the list. Clear the field and save the
+policy to remove it. Descriptions are stored as `"#description"` inside each
+rule, so they survive structured edits and do not affect access. Grant
+descriptions need Headscale {versions.headscale.grantDescriptions} or newer.
+
 ## Tags and groups
 
 The **Tags & Groups** tab manages the `groups` and `tagOwners` sections.

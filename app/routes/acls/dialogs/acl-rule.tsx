@@ -3,8 +3,14 @@ import { useState } from "react";
 import Input from "~/components/input";
 import Link from "~/components/link";
 import TokenList from "~/components/token-list";
-import { withDefaultPort, type AclRule } from "~/utils/acl-policy";
+import {
+  ruleDescription,
+  withDefaultPort,
+  withRuleDescription,
+  type AclRule,
+} from "~/utils/acl-policy";
 
+import DescriptionField from "./description-field";
 import EditorDialog from "./editor-dialog";
 
 interface AclRuleDialogProps {
@@ -27,6 +33,7 @@ export default function AclRuleDialog({
   onSave,
 }: AclRuleDialogProps) {
   const [draft, setDraft] = useState<AclRule>(() => structuredClone(rule ?? EMPTY));
+  const [descriptionEdit, setDescriptionEdit] = useState<string>();
 
   const isInvalid = draft.src.length === 0 || draft.dst.length === 0;
 
@@ -46,8 +53,14 @@ export default function AclRuleDialog({
       isDisabled={isInvalid}
       isOpen={isOpen}
       onSubmit={() => {
-        // A hand-written policy may be missing the port spec Headscale wants.
-        onSave({ ...draft, dst: draft.dst.map(withDefaultPort) });
+        // A description edit must not rewrite existing destinations that were left alone.
+        const preserveDestinations =
+          descriptionEdit !== undefined &&
+          rule !== undefined &&
+          draft.dst.length === rule.dst.length &&
+          draft.dst.every((dst, i) => dst === rule.dst[i]);
+        const next = preserveDestinations ? draft : { ...draft, dst: draft.dst.map(withDefaultPort) };
+        onSave(withRuleDescription(next, descriptionEdit));
       }}
       setIsOpen={setIsOpen}
       submitLabel={rule ? "Update rule" : "Add rule"}
@@ -78,6 +91,10 @@ export default function AclRuleDialog({
         onChange={(proto) => setDraft({ ...draft, proto: proto.length > 0 ? proto : undefined })}
         placeholder="tcp"
         value={draft.proto ?? ""}
+      />
+      <DescriptionField
+        onChange={setDescriptionEdit}
+        value={descriptionEdit ?? ruleDescription(draft) ?? ""}
       />
     </EditorDialog>
   );

@@ -3,7 +3,13 @@ import { useState } from "react";
 
 import Chip from "~/components/chip";
 import List from "~/components/list";
-import type { AclRule, Grant, Policy, SshRule } from "~/utils/acl-policy";
+import {
+  ruleDescription,
+  type AclRule,
+  type Grant,
+  type Policy,
+  type SshRule,
+} from "~/utils/acl-policy";
 
 import AclRuleDialog from "../dialogs/acl-rule";
 import AutoApproverDialog, { type ApproverTarget } from "../dialogs/auto-approver";
@@ -16,6 +22,7 @@ interface RulesEditorProps {
   policy: Policy;
   onChange: (policy: Policy) => void;
   isDisabled: boolean;
+  canEditGrantDescriptions: boolean;
   canEditGrants: boolean;
   sources: string[];
   destinations: string[];
@@ -33,6 +40,7 @@ export default function RulesEditor({
   policy,
   onChange,
   isDisabled,
+  canEditGrantDescriptions,
   canEditGrants,
   sources,
   destinations,
@@ -148,6 +156,7 @@ export default function RulesEditor({
       ) : null}
       {editing?.kind === "grant" ? (
         <GrantDialog
+          canEditDescription={canEditGrantDescriptions}
           destinations={destinations}
           grant={grant}
           isOpen
@@ -205,15 +214,18 @@ export default function RulesEditor({
               className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
               key={`acl-${index}`}
             >
-              <div className="flex min-w-0 flex-wrap items-center gap-2">
-                {/* An unknown action is shown verbatim, never relabelled. */}
-                <span className="text-xs font-semibold uppercase opacity-60">
-                  {rule.action === "accept" ? "Allow" : rule.action}
-                </span>
-                <ChipRow values={rule.src} />
-                <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
-                <ChipRow values={rule.dst} />
-                {rule.proto ? <Chip className="uppercase" text={rule.proto} /> : null}
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* An unknown action is shown verbatim, never relabelled. */}
+                  <span className="text-xs font-semibold uppercase opacity-60">
+                    {rule.action === "accept" ? "Allow" : rule.action}
+                  </span>
+                  <ChipRow values={rule.src} />
+                  <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
+                  <ChipRow values={rule.dst} />
+                  {rule.proto ? <Chip className="uppercase" text={rule.proto} /> : null}
+                </div>
+                <RuleDescription rule={rule} />
               </div>
               <RowActions
                 isDisabled={isDisabled}
@@ -242,24 +254,27 @@ export default function RulesEditor({
                 className="flex-col items-stretch gap-2 py-3 md:flex-row md:items-center"
                 key={`grant-${index}`}
               >
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <KeyRound className="h-4 w-4 shrink-0 opacity-60" />
-                  <ChipRow values={entry.src} />
-                  <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
-                  <ChipRow values={entry.dst} />
-                  {entry.ip.length > 0 ? (
-                    <>
-                      <span className="text-xs opacity-60">on</span>
-                      <ChipRow values={entry.ip} />
-                    </>
-                  ) : null}
-                  {entry.via.length > 0 ? (
-                    <>
-                      <span className="text-xs opacity-60">via</span>
-                      <ChipRow values={entry.via} />
-                    </>
-                  ) : null}
-                  {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
+                <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <KeyRound className="h-4 w-4 shrink-0 opacity-60" />
+                    <ChipRow values={entry.src} />
+                    <ArrowRight className="h-4 w-4 shrink-0 opacity-60" />
+                    <ChipRow values={entry.dst} />
+                    {entry.ip.length > 0 ? (
+                      <>
+                        <span className="text-xs opacity-60">on</span>
+                        <ChipRow values={entry.ip} />
+                      </>
+                    ) : null}
+                    {entry.via.length > 0 ? (
+                      <>
+                        <span className="text-xs opacity-60">via</span>
+                        <ChipRow values={entry.via} />
+                      </>
+                    ) : null}
+                    {"app" in entry.extra ? <Chip text="app capabilities" /> : null}
+                  </div>
+                  <RuleDescription rule={entry} />
                 </div>
                 <RowActions
                   isDisabled={isDisabled}
@@ -376,6 +391,13 @@ export default function RulesEditor({
       </Section>
     </div>
   );
+}
+
+function RuleDescription({ rule }: { rule: AclRule | Grant }) {
+  const description = ruleDescription(rule);
+  return description ? (
+    <p className="text-muted text-sm wrap-anywhere whitespace-pre-wrap">{description}</p>
+  ) : null;
 }
 
 function ChipRow({ values }: { values: string[] }) {
