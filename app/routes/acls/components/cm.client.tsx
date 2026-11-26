@@ -56,10 +56,10 @@ export function Editor(props: EditorProps) {
         </div>
         <CodeMirror
           editable={!props.isDisabled}
-          extensions={[shopify.jsonc(), policyLinter, lintGutter()]}
+          extensions={editorExtensions}
           minHeight="24rem"
           maxHeight="var(--height-editor)"
-          onChange={(value) => props.onChange(value)}
+          onChange={props.onChange}
           readOnly={props.isDisabled}
           theme={headplaneTheme}
           value={props.value}
@@ -79,6 +79,10 @@ const policyLinter = linter((view): Diagnostic[] => {
     source: "HuJSON",
   }));
 });
+
+// Keep extensions and onChange stable: when either changes identity,
+// react-codemirror reconfigures the editor and drops the search panel.
+const editorExtensions = [shopify.jsonc(), policyLinter, lintGutter()];
 
 interface DifferProps {
   left: string;
