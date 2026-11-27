@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: headplane-integrated
+rules:
+- apiGroups: ['apps']
+  resources: ['deployments']
+  verbs: ['get', 'list']
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "patch", "get"]
